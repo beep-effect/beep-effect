@@ -1,7 +1,7 @@
 {
   "name": "@beep/md",
   "version": "0.0.2",
-  "description": "An Effect native markdown library",
+  "description": "Schema-first Markdown AST, trust provenance, URL policy, and safe rendering",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -16,22 +16,21 @@
     "build": "tsc -b tsconfig.json && bun run babel",
     "check": "tsgo -b tsconfig.json",
     "coverage": "bunx vitest run --coverage",
-    "dtslint": "bunx tstyche dtslint/Md.tst.ts",
-    "dtslint:exports": "bunx tstyche --tsconfig dtslint/tsconfig.exports.json dtslint/exports.tst.ts",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "test": "bunx --bun vitest run",
-    "test:property": "bunx --bun vitest run",
-    "type-test": "bun run dtslint && bun run dtslint:exports"
+    "test:property": "bunx --bun vitest run"
   },
   "exports": {
     ".": "./src/index.ts",
     "./Md": "./src/Md.ts",
     "./Md.behavior": "./src/Md.behavior.ts",
     "./Md.escape": "./src/Md.escape.ts",
+    "./Md.html": "./src/Md.html.ts",
     "./Md.model": "./src/Md.model.ts",
     "./Md.render": "./src/Md.render.ts",
+    "./Md.safe": "./src/Md.safe.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -51,13 +50,16 @@
       "./Md": "./dist/Md.js",
       "./Md.behavior": "./dist/Md.behavior.js",
       "./Md.escape": "./dist/Md.escape.js",
+      "./Md.html": "./dist/Md.html.js",
       "./Md.model": "./dist/Md.model.js",
       "./Md.render": "./dist/Md.render.js",
+      "./Md.safe": "./dist/Md.safe.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
+    "@beep/html": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
@@ -66,7 +68,8 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "micromark": "catalog:"
   },
   "beep": {
     "family": "foundation",

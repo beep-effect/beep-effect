@@ -34,7 +34,8 @@ import type { OperationDefinition } from "./Definition.ts";
 /**
  * An effectful arrow from `A` to `B` requiring context `R` and failing with `E`.
  *
- * @example
+ * **Example** (Effectful string length)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { NLPOperation } from "@beep/nlp/Operations/Composable"
@@ -46,9 +47,8 @@ import type { OperationDefinition } from "./Definition.ts";
  * @effects The returned `Effect` performs the operation when executed; any
  * required services and typed failures are represented by its `R` and `E`
  * channels.
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NLPOperation<A, B, R = never, E = never> = (input: A) => Effect.Effect<B, E, R>;
 
@@ -56,8 +56,9 @@ export type NLPOperation<A, B, R = never, E = never> = (input: A) => Effect.Effe
  * A composable operation carrying its input/output schemas alongside its arrow,
  * parameterized by the decoded value types `A` (input) and `B` (output).
  *
- * @example
- * ```ts
+ * **Example** (Uppercase with schemas)
+ *
+ * ```ts import.meta.vitest name="Uppercase with schemas"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { OperationBuilder } from "@beep/nlp/Operations/Composable"
@@ -72,8 +73,8 @@ export type NLPOperation<A, B, R = never, E = never> = (input: A) => Effect.Effe
  * Effect.runPromise(operation.run("effect")).then(console.log) // "EFFECT"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class OperationBuilder<A, B, R = never, E = never> {
   readonly operation: NLPOperation<A, B, R, E>;
@@ -91,8 +92,9 @@ export class OperationBuilder<A, B, R = never, E = never> {
   /**
    * Execute the operation on a typed input.
    *
-   * @example
-   * ```ts
+   * **Example** (Run pure trim)
+   *
+   * ```ts import.meta.vitest name="Run pure trim"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
@@ -101,8 +103,8 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * Effect.runPromise(operation.run("  Effect  ")).then(console.log) // "Effect"
    * ```
    *
-   * @since 0.0.0
    * @category use-cases
+   * @since 0.0.0
    */
   run(input: A): Effect.Effect<B, E, R> {
     return this.operation(input);
@@ -111,8 +113,9 @@ export class OperationBuilder<A, B, R = never, E = never> {
   /**
    * Functor map: transform the result, supplying the new output schema.
    *
-   * @example
-   * ```ts
+   * **Example** (Map tokens to count)
+   *
+   * ```ts import.meta.vitest name="Map tokens to count"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
@@ -122,8 +125,8 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * Effect.runPromise(count.run("typed effects compose")).then(console.log) // 3
    * ```
    *
-   * @since 0.0.0
    * @category combinators
+   * @since 0.0.0
    */
   map<C>(f: (b: B) => C, outputSchema: S.Schema<C>): OperationBuilder<A, C, R, E> {
     return mapOperationBuilder(this, f, outputSchema);
@@ -133,8 +136,9 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * Monad flatMap: sequence into a dependent operation whose input is this
    * operation's output. The next operation's output schema becomes the result's.
    *
-   * @example
-   * ```ts
+   * **Example** (FlatMap trim then length)
+   *
+   * ```ts import.meta.vitest name="FlatMap trim then length"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
@@ -145,8 +149,8 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * Effect.runPromise(pipeline.run(" Effect ")).then(console.log) // 6
    * ```
    *
-   * @since 0.0.0
    * @category combinators
+   * @since 0.0.0
    */
   flatMap<C, R2, E2>(next: OperationBuilder<B, C, R2, E2>): OperationBuilder<A, C, R | R2, E | E2> {
     return new OperationBuilder(
@@ -160,8 +164,9 @@ export class OperationBuilder<A, B, R = never, E = never> {
   /**
    * Applicative product: run both operations on the same input, pairing results.
    *
-   * @example
-   * ```ts
+   * **Example** (Product length and upper)
+   *
+   * ```ts import.meta.vitest name="Product length and upper"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
@@ -172,8 +177,8 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * Effect.runPromise(summary.run("nlp")).then(console.log) // [3, "NLP"]
    * ```
    *
-   * @since 0.0.0
    * @category combinators
+   * @since 0.0.0
    */
   product<C, R2, E2>(
     that: OperationBuilder<A, C, R2, E2>,
@@ -185,8 +190,9 @@ export class OperationBuilder<A, B, R = never, E = never> {
   /**
    * Applicative zipWith: run both operations on the same input, combining results.
    *
-   * @example
-   * ```ts
+   * **Example** (ZipWith label size)
+   *
+   * ```ts import.meta.vitest name="ZipWith label size"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
@@ -197,8 +203,8 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * Effect.runPromise(label.run("nlp")).then(console.log) // "NLP:3"
    * ```
    *
-   * @since 0.0.0
    * @category combinators
+   * @since 0.0.0
    */
   zipWith<C, D, R2, E2>(
     that: OperationBuilder<A, C, R2, E2>,
@@ -249,31 +255,56 @@ const zipWithOperationBuilder = <A, B, C, D, R1, E1, R2, E2>(
 /**
  * Build an {@link OperationBuilder} from name, schemas, and an effectful arrow.
  *
- * @example
- * ```ts
+ * **Details**
+ *
+ * Supplying the schemas and the arrow without the name yields a data-last
+ * builder that takes the name last, so an operation can be named from a `pipe`.
+ *
+ * **Example** (Make effectful length)
+ *
+ * ```ts import.meta.vitest name="Make effectful length"
  * import { makeOperation } from "@beep/nlp/Operations/Composable"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import { Effect, pipe } from "effect"
  *
  * const length = makeOperation("len", S.String, S.Finite, (s) => Effect.succeed(s.length))
+ * const named = pipe("len", makeOperation(S.String, S.Finite, (s: string) => Effect.succeed(s.length)))
+ *
  * Effect.runPromise(length.run("Effect")).then(console.log) // 6
+ * Effect.runPromise(named.run("Effect")).then(console.log) // 6
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
-export const makeOperation = <A, B, R = never, E = never>(
-  name: string,
-  inputSchema: S.Schema<A>,
-  outputSchema: S.Schema<B>,
-  f: NLPOperation<A, B, R, E>
-): OperationBuilder<A, B, R, E> => new OperationBuilder(f, inputSchema, outputSchema, name);
+export const makeOperation: {
+  <A, B, R = never, E = never>(
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: NLPOperation<A, B, R, E>
+  ): (name: string) => OperationBuilder<A, B, R, E>;
+  <A, B, R = never, E = never>(
+    name: string,
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: NLPOperation<A, B, R, E>
+  ): OperationBuilder<A, B, R, E>;
+} = dual(
+  4,
+  <A, B, R = never, E = never>(
+    name: string,
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: NLPOperation<A, B, R, E>
+  ): OperationBuilder<A, B, R, E> => new OperationBuilder(f, inputSchema, outputSchema, name)
+);
 
 /**
  * Build an {@link OperationBuilder} from a structured {@link OperationDefinition}.
  *
- * @example
- * ```ts
+ * **Example** (From identity definition)
+ *
+ * ```ts import.meta.vitest name="From identity definition"
  * import { fromDefinition } from "@beep/nlp/Operations/Composable"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -288,8 +319,8 @@ export const makeOperation = <A, B, R = never, E = never>(
  * Effect.runPromise(operation.run("Effect")).then(console.log) // "Effect"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const fromDefinition = <A, B, R, E>(definition: OperationDefinition<A, B, R, E>): OperationBuilder<A, B, R, E> =>
   new OperationBuilder(definition.implementation, definition.inputSchema, definition.outputSchema, definition.name);
@@ -297,32 +328,52 @@ export const fromDefinition = <A, B, R, E>(definition: OperationDefinition<A, B,
 /**
  * Build a pure (context-free, infallible) operation from a plain function.
  *
- * @example
- * ```ts
+ * **Details**
+ *
+ * Supplying the schemas and the function without the name yields a data-last
+ * builder that takes the name last, so an operation can be named from a `pipe`.
+ *
+ * **Example** (Make pure uppercase)
+ *
+ * ```ts import.meta.vitest name="Make pure uppercase"
  * import { makePureOperation } from "@beep/nlp/Operations/Composable"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import { Effect, pipe } from "effect"
  *
  * const upper = makePureOperation("upper", S.String, S.String, (s) => s.toUpperCase())
+ * const named = pipe("upper", makePureOperation(S.String, S.String, (s: string) => s.toUpperCase()))
+ *
  * Effect.runPromise(upper.run("effect")).then(console.log) // "EFFECT"
+ * Effect.runPromise(named.run("effect")).then(console.log) // "EFFECT"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
-export const makePureOperation = <A, B>(
-  name: string,
-  inputSchema: S.Schema<A>,
-  outputSchema: S.Schema<B>,
-  f: (input: A) => B
-): OperationBuilder<A, B> => new OperationBuilder(flow(f, Effect.succeed), inputSchema, outputSchema, name);
+export const makePureOperation: {
+  <A, B>(
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: (input: A) => B
+  ): (name: string) => OperationBuilder<A, B>;
+  <A, B>(name: string, inputSchema: S.Schema<A>, outputSchema: S.Schema<B>, f: (input: A) => B): OperationBuilder<A, B>;
+} = dual(
+  4,
+  <A, B>(
+    name: string,
+    inputSchema: S.Schema<A>,
+    outputSchema: S.Schema<B>,
+    f: (input: A) => B
+  ): OperationBuilder<A, B> => new OperationBuilder(flow(f, Effect.succeed), inputSchema, outputSchema, name)
+);
 
 /**
  * Functor map for {@link OperationBuilder}, exposed as a dual helper for
  * data-first and data-last use.
  *
- * @example
- * ```ts
+ * **Example** (Dual map data-first last)
+ *
+ * ```ts import.meta.vitest name="Dual map data-first last"
  * import { Effect, pipe } from "effect"
  * import * as S from "effect/Schema"
  * import { makePureOperation, map } from "@beep/nlp/Operations/Composable"
@@ -336,8 +387,8 @@ export const makePureOperation = <A, B>(
  * Effect.runPromise(dataLast.run("nlp")).then(console.log) // 6
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const map: {
   <B, C>(options: {
@@ -360,8 +411,9 @@ export const map: {
  * Applicative product for {@link OperationBuilder}, exposed as a dual helper for
  * data-first and data-last use.
  *
- * @example
- * ```ts
+ * **Example** (Dual product data-first last)
+ *
+ * ```ts import.meta.vitest name="Dual product data-first last"
  * import { Effect, pipe } from "effect"
  * import * as S from "effect/Schema"
  * import { makePureOperation, product } from "@beep/nlp/Operations/Composable"
@@ -376,8 +428,8 @@ export const map: {
  * Effect.runPromise(dataLast.run("nlp")).then(console.log) // [3, "NLP"]
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const product: {
   <A, B, C, R2, E2>(options: {
@@ -401,8 +453,9 @@ export const product: {
  * Applicative zipWith for {@link OperationBuilder}, exposed as a dual helper for
  * data-first and data-last use.
  *
- * @example
- * ```ts
+ * **Example** (Dual zipWith data-first last)
+ *
+ * ```ts import.meta.vitest name="Dual zipWith data-first last"
  * import { Effect, pipe } from "effect"
  * import * as S from "effect/Schema"
  * import { makePureOperation, zipWith } from "@beep/nlp/Operations/Composable"
@@ -417,8 +470,8 @@ export const product: {
  * Effect.runPromise(dataLast.run("nlp")).then(console.log) // "NLP:3"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const zipWith: {
   <A, B, C, D, R2, E2>(options: {
@@ -450,8 +503,9 @@ export const zipWith: {
 /**
  * Sequential composition: feed the first operation's output into the second.
  *
- * @example
- * ```ts
+ * **Example** (Compose trim then length)
+ *
+ * ```ts import.meta.vitest name="Compose trim then length"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { compose, makePureOperation } from "@beep/nlp/Operations/Composable"
@@ -463,8 +517,8 @@ export const zipWith: {
  * Effect.runPromise(pipeline.run(" Effect ")).then(console.log) // 6
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const compose: {
   <B, C, R2, E2>(
@@ -485,8 +539,9 @@ export const compose: {
 /**
  * The identity operation: returns its input unchanged.
  *
- * @example
- * ```ts
+ * **Example** (Identity string passthrough)
+ *
+ * ```ts import.meta.vitest name="Identity string passthrough"
  * import { identity } from "@beep/nlp/Operations/Composable"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -494,8 +549,8 @@ export const compose: {
  * Effect.runPromise(identity(S.String).run("same")).then(console.log) // "same"
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const identity = <A>(schema: S.Schema<A>): OperationBuilder<A, A> =>
   makePureOperation("identity", schema, schema, (a) => a);
@@ -503,8 +558,9 @@ export const identity = <A>(schema: S.Schema<A>): OperationBuilder<A, A> =>
 /**
  * Traverse an array of inputs through an operation, collecting decoded results.
  *
- * @example
- * ```ts
+ * **Example** (Traverse lengths over array)
+ *
+ * ```ts import.meta.vitest name="Traverse lengths over array"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { makePureOperation, traverse } from "@beep/nlp/Operations/Composable"
@@ -515,8 +571,8 @@ export const identity = <A>(schema: S.Schema<A>): OperationBuilder<A, A> =>
  * Effect.runPromise(program).then(console.log) // [5, 3]
  * ```
  *
- * @since 0.0.0
  * @category sequencing
+ * @since 0.0.0
  */
 export const traverse =
   <A, B, R, E>(operation: OperationBuilder<A, B, R, E>) =>
@@ -524,24 +580,49 @@ export const traverse =
     Effect.forEach(inputs, (input) => operation.run(input));
 
 /**
+ * The aggregated result carried by a {@link Monoid.Monoid} over carrier `M`.
+ *
+ * **Details**
+ *
+ * `Aggregated<M>` distributes to `M` for every instantiation, so it denotes
+ * exactly the monoid carrier it is applied to. Spelling an aggregation's result
+ * through it keeps the carrier a deferred, named reference in both halves of a
+ * data-first / data-last pair, which is what relates the two signatures.
+ *
+ * **Example** (Naming an aggregated result)
+ *
+ * ```ts
+ * import type { Aggregated } from "@beep/nlp/Operations/Composable"
+ *
+ * const totalCharacters: Aggregated<number> = 8
+ * console.log(totalCharacters) // 8
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type Aggregated<M> = M extends unknown ? M : never;
+
+/**
  * Aggregate an array of values into a single value using a {@link Monoid.Monoid}.
  *
- * @example
- * ```ts
+ * **Example** (Aggregate total characters)
+ *
+ * ```ts import.meta.vitest name="Aggregate total characters"
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  * import { aggregate } from "@beep/nlp/Operations/Composable"
  *
  * const totalCharacters = aggregate(Monoid.NumberSum, (text: string) => text.length)
  *
- * console.log(totalCharacters(["typed", "nlp"])) // 8
+ * totalCharacters(["typed", "nlp"]) // => 8
  * ```
  *
- * @since 0.0.0
  * @category folding
+ * @since 0.0.0
  */
 export const aggregate: {
-  <A, M>(monoid: Monoid.Monoid<M>, f: (a: A) => M): (values: ReadonlyArray<A>) => M;
-  <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): M;
+  <A, M>(monoid: Monoid.Monoid<M>, f: (a: A) => M): (values: ReadonlyArray<A>) => Aggregated<M>;
+  <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): Aggregated<M>;
 } = dual(
   3,
   <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): M =>

@@ -1,16 +1,16 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "fallow-advisory-ratchets",
     "title": "Fallow Advisory Ratchets",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-06-11",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fallow-advisory-ratchets",
-  "lifecycle": "paused",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when a Fallow advisory lane regresses, or the post-P5 platform window opens.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Portfolio closeout recorded 2026-07-14: P0, P1, and P3 boundary-config freshness are retained; P2 health, P3 flags, and P4 are deferred until a Fallow advisory lane regresses or the post-P5 platform window opens.",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -75,18 +75,18 @@
     },
     {
       "id": "P2",
-      "name": "Health Ratchet",
-      "status": "pending"
+      "name": "Health Ratchet (recorded deferral)",
+      "status": "complete"
     },
     {
       "id": "P3",
-      "name": "Boundary And Flags Policy",
-      "status": "in-progress"
+      "name": "Boundary freshness shipped; flags recorded deferral",
+      "status": "complete"
     },
     {
       "id": "P4",
-      "name": "Guardrails And Close",
-      "status": "pending"
+      "name": "Guardrails And Close (recorded deferral)",
+      "status": "complete"
     }
   ],
   "verificationCommands": [

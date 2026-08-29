@@ -6,7 +6,6 @@
  */
 
 import { $UiId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -15,7 +14,8 @@ const $I = $UiId.create("lib/react-invariant");
 /**
  * React context invariant options class.
  *
- * @example
+ * **Example** (Import invariant options class)
+ *
  * ```ts
  * import { ReactContextInvariantOptions } from "@beep/ui/lib/react-invariant"
  *
@@ -43,7 +43,8 @@ export class ReactContextInvariantOptions extends S.Class<ReactContextInvariantO
 /**
  * Error thrown when a React context hook is used outside its provider.
  *
- * @example
+ * **Example** (Create missing provider error)
+ *
  * ```ts
  * import { ReactContextInvariantError } from "@beep/ui/lib/react-invariant"
  *
@@ -54,7 +55,7 @@ export class ReactContextInvariantOptions extends S.Class<ReactContextInvariantO
  * @category errors
  * @since 0.0.0
  */
-export class ReactContextInvariantError extends TaggedErrorClass<ReactContextInvariantError>(
+export class ReactContextInvariantError extends S.TaggedError<ReactContextInvariantError>(
   $I`ReactContextInvariantError`
 )(
   "ReactContextInvariantError",
@@ -65,28 +66,36 @@ export class ReactContextInvariantError extends TaggedErrorClass<ReactContextInv
       })
     ),
   },
-  $I.annote("ReactContextInvariantError", {
+  $I.annoteError<ReactContextInvariantError>("ReactContextInvariantError", {
     description: "Synchronous React context invariant failure.",
   })
 ) {}
 
+// `missingPipeableSignature` relates the data-first return to the data-last
+// inner return, and a naked type parameter resolves away before that comparison
+// can succeed. This distributive conditional stays deferred while being the
+// identity for every instantiation, so both overloads keep the caller's exact
+// context type and the two returns still relate.
+type RequiredReactContext<Value> = Value extends unknown ? Value : never;
+
 /**
  * Require that a React context hook has been called under its provider.
  *
- * @example
- * ```ts
+ * **Example** (Require context under provider)
+ *
+ * ```ts import.meta.vitest name="Require context under provider"
  * import { requireReactContext } from "@beep/ui/lib/react-invariant"
  *
  * const value = requireReactContext("ok", { message: "missing provider" })
- * console.log(value) // "ok"
+ * value // => "ok"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const requireReactContext: {
-  <Value>(context: Value | null, options: ReactContextInvariantOptions): Value;
-  (options: ReactContextInvariantOptions): <Value>(context: Value | null) => Value;
+  <Value>(context: Value | null, options: ReactContextInvariantOptions): RequiredReactContext<Value>;
+  (options: ReactContextInvariantOptions): <Value>(context: Value | null) => RequiredReactContext<Value>;
 } = dual(2, <Value>(context: Value | null, options: ReactContextInvariantOptions): Value => {
   if (context === null) {
     throw ReactContextInvariantError.make({ message: options.message });

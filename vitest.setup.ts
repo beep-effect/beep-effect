@@ -20,6 +20,40 @@ import picomatch from "picomatch";
 import * as Toml from "toml";
 import type { ServerResponse } from "node:http";
 
+// Node 26 exposes a configurable experimental `localStorage` getter even when
+// no `--localstorage-file` was supplied. Vitest consequently sees the property
+// as already present and does not install jsdom's working implementation, while
+// reading Node's getter yields `undefined` and emits an ExperimentalWarning.
+// Replace that distinct non-enumerable Node descriptor with an isolated
+// in-memory Web Storage before any browser-facing module evaluates.
+const localStorageDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+if (
+  typeof window !== "undefined" &&
+  typeof globalThis.Bun === "undefined" &&
+  localStorageDescriptor?.get !== undefined &&
+  localStorageDescriptor.enumerable === false
+) {
+  const values = new Map<string, string>();
+  const localStorage: Storage = {
+    get length(): number {
+      return values.size;
+    },
+    clear: (): void => values.clear(),
+    getItem: (key): string | null => values.get(key) ?? null,
+    key: (index): string | null => Array.from(values.keys())[index] ?? null,
+    removeItem: (key): void => {
+      values.delete(key);
+    },
+    setItem: (key, value): void => {
+      values.set(key, String(value));
+    },
+  };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: localStorage,
+  });
+}
+
 addEqualityTesters();
 
 // one-round-loop P1: env-raisable fast-check floor. Inline numRuns
@@ -129,7 +163,7 @@ const isObject = (value: unknown): value is object => P.isObjectKeyword(value) &
 const hasFunctionProperty = (value: unknown, key: string): boolean =>
   isObject(value) && typeof Reflect.get(value, key) === "function";
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- structural feature detection intentionally probes the Bun shim's required API surface
 const isBunTestShim = (value: unknown): value is BunTestShim =>
   isObject(value) &&
   P.hasProperty(value, "Glob") &&
@@ -163,7 +197,7 @@ const normalizeSpawnInput = (
   return { args, command, options: commandOrOptions };
 };
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Node adapter preserves Bun command, stdio, signal, and exit semantics
 const spawnSync = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>, options?: BunSpawnSyncOptions) => {
   const normalized = normalizeSpawnInput(commandOrOptions, options);
   const result = nodeSpawnSync(normalized.command, [...normalized.args], {
@@ -214,7 +248,7 @@ const file = (path: string | URL): BunFileShim => ({
   text: () => readFile(path, "utf8"),
 });
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Bun.write compatibility accepts strings, buffers, typed views, and blobs
 const writeInput = async (input: unknown): Promise<string | Uint8Array> => {
   if (typeof input === "string") {
     return input;
@@ -252,7 +286,7 @@ const responseHeaders = (response: Response): Record<string, string> => {
   return headers;
 };
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Node-to-Fetch bridge preserves repeated and optional request headers
 const requestHeaders = (messageHeaders: NodeJS.Dict<string | readonly string[]>): Headers => {
   const headers = new Headers();
   for (const [key, value] of Object.entries(messageHeaders)) {
@@ -282,7 +316,7 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
     const chunks: Array<Buffer> = [];
     request.on("data", (chunk: Buffer) => chunks.push(chunk));
     request.on("end", () => {
-      // fallow-ignore-next-line complexity
+      // fallow-ignore-next-line complexity -- Node-to-Bun fetch bridge owns request body, response, and error lifecycle
       void (async () => {
         try {
           const url = `http://${request.headers.host ?? `${hostname}:${port}`}${request.url ?? "/"}`;
@@ -338,7 +372,7 @@ const parseToml = (content: string): unknown => {
   }
 };
 
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- Bun JSONL compatibility tracks consumed bytes and partial parse failures
 const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
   const values: Array<unknown> = [];
   let read = 0;
@@ -374,6 +408,17 @@ const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
 };
 
 const normalizeFilePath = (value: string): string => value.replaceAll("\\", "/");
+const globMetaPattern = /[*?[{(!]/u;
+
+const scanRootForGlobPattern = (pattern: string): string => {
+  const segments = normalizeFilePath(pattern).split("/");
+  const firstMetaSegment = segments.findIndex((segment) => globMetaPattern.test(segment));
+  const staticSegments = firstMetaSegment === -1 ? segments.slice(0, -1) : segments.slice(0, firstMetaSegment);
+  return staticSegments.join("/");
+};
+
+const isMissingPathError = (cause: unknown): boolean =>
+  P.isError(cause) && P.hasProperty(cause, "code") && cause.code === "ENOENT";
 
 class GlobShim {
   private readonly matcher: (value: string) => boolean;
@@ -386,18 +431,32 @@ class GlobShim {
     return this.matcher(normalizeFilePath(relativePath));
   }
 
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- Bun.Glob compatibility owns scan options and recursive traversal
   scanSync(options?: BunGlobScanOptions): Iterable<string> {
     const cwd = options?.cwd ?? process.cwd();
     const entries: Array<string> = [];
-    const recursivePattern = this.pattern.includes("**");
+    const normalizedPattern = normalizeFilePath(this.pattern);
+    const patternDepth = normalizedPattern.split("/").length;
+    const recursivePattern = normalizedPattern.includes("**");
+    const scanRoot = scanRootForGlobPattern(normalizedPattern);
     const includeDirectories = options?.onlyFiles !== true && !this.pattern.endsWith("/**/*");
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
 
-    // fallow-ignore-next-line complexity
+    // fallow-ignore-next-line complexity -- recursive walker preserves Bun's dotfile, symlink, directory, and file semantics
     const visit = (absoluteDirectory: string, relativeDirectory: string): void => {
-      for (const dirent of readdirSync(absoluteDirectory, { withFileTypes: true })) {
+      const dirents = (() => {
+        try {
+          return readdirSync(absoluteDirectory, { withFileTypes: true });
+        } catch (cause) {
+          if (isMissingPathError(cause)) {
+            return [];
+          }
+          throw cause;
+        }
+      })();
+
+      for (const dirent of dirents) {
         if (options?.dot !== true && dirent.name.startsWith(".")) {
           continue;
         }
@@ -427,14 +486,19 @@ class GlobShim {
           if (includeDirectories && this.match(relativePath)) {
             entries.push(outputPath(relativePath, absolutePath));
           }
-          visit(absolutePath, relativePath);
+          if (recursivePattern || relativePath.split("/").length < patternDepth) {
+            visit(absolutePath, relativePath);
+          }
         } else if (this.match(relativePath)) {
           entries.push(outputPath(relativePath, absolutePath));
         }
       }
     };
 
-    visit(cwd, "");
+    if (scanRoot.length > 0 && includeDirectories && this.match(scanRoot)) {
+      entries.push(outputPath(scanRoot, join(cwd, scanRoot)));
+    }
+    visit(join(cwd, scanRoot), scanRoot);
     return entries.sort();
   }
 }

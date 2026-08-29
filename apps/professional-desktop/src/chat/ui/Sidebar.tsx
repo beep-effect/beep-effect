@@ -15,13 +15,15 @@
 "use client";
 
 import { createThreadAtom, editTargetAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { Button } from "@beep/ui/components/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@beep/ui/components/empty";
 import { toast } from "@beep/ui/components/sonner";
 import { A, DateTime, O } from "@beep/utils";
-import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { Order } from "effect";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Effect, Order, Stream } from "effect";
 import { AsyncResult } from "effect/unstable/reactivity";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { Thread } from "@beep/workspace-domain";
 import type { JSX } from "react";
@@ -32,10 +34,41 @@ type WorkspaceId = WorkspaceIdentity.WorkspaceId;
 // order sorts newest threads to the top.
 const byUpdatedDesc = Order.mapInput(Order.Number, (thread: Thread) => -DateTime.toEpochMillis(thread.updatedAt));
 
+const selectThreadAtom = professionalBrowserRuntime.fn<WorkspaceIdentity.ThreadId>()(
+  Effect.fnUntraced(function* (threadId, ctx) {
+    ctx.set(selectedThreadAtom, O.some(threadId));
+    ctx.set(editTargetAtom, O.none());
+  })
+);
+
+const createThreadFailureToastBindingAtom = professionalBrowserRuntime.atom((get) =>
+  get.stream(createThreadAtom).pipe(
+    Stream.runForEach((result) =>
+      AsyncResult.isFailure(result)
+        ? logRedactedCause(
+            result.cause,
+            LogRedactedCauseOptions.make({
+              message: "professional desktop thread creation failed",
+              level: "Warn",
+              attributes: { subsystem: "chat_sidebar" },
+            })
+          ).pipe(
+            Effect.andThen(
+              Effect.sync(() =>
+                toast.error("Couldn't create a thread — the desktop sidecar is unreachable or rejected the request.")
+              )
+            )
+          )
+        : Effect.void
+    )
+  )
+);
+
 /**
  * Renders the workspace thread list with creation and selection controls.
  *
- * @example
+ * **Example** (Log Sidebar component name)
+ *
  * ```tsx
  * import { Sidebar } from "@/chat/ui/Sidebar"
  *
@@ -48,19 +81,9 @@ const byUpdatedDesc = Order.mapInput(Order.Number, (thread: Thread) => -DateTime
 export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }): JSX.Element {
   const threads = useAtomValue(threadsAtoms(workspaceId));
   const selected = useAtomValue(selectedThreadAtom);
-  const select = useAtomSet(selectedThreadAtom);
-  const setEditTarget = useAtomSet(editTargetAtom);
+  const select = useAtomSet(selectThreadAtom);
   const createThread = useAtomSet(createThreadAtom);
-  // keep the create fiber subscribed — unobserved fn atoms get interrupted.
-  useAtomMount(createThreadAtom);
-
-  // A failed create must not die silently: without this the "+ New thread"
-  // button reads as dead when the sidecar is down or rejects the session.
-  useAtomSubscribe(createThreadAtom, (result) => {
-    if (AsyncResult.isFailure(result)) {
-      toast.error("Couldn't create a thread — the desktop sidecar is unreachable or rejected the request.");
-    }
-  });
+  useAtomMount(createThreadFailureToastBindingAtom);
 
   const sorted = AsyncResult.isSuccess(threads) ? A.sort(threads.value, byUpdatedDesc) : [];
   const loadFailed = AsyncResult.isFailure(threads);
@@ -132,11 +155,7 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
               className={`flex w-full min-w-0 flex-col items-start rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted ${
                 isActive ? "bg-muted" : ""
               }`}
-              onClick={() => {
-                select(O.some(thread.id));
-                // an in-progress edit belongs to the thread it started in.
-                setEditTarget(O.none());
-              }}
+              onClick={() => select(thread.id)}
               data-testid="sidebar-item"
             >
               {/* `w-full` is what makes `truncate` mean anything. The button lays its

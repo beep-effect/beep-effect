@@ -48,19 +48,21 @@ const DurationObjectHasValue = S.makeFilter(hasDurationObjectValue, {
 /**
  * Literal union of duration unit labels accepted by {@link DurationInput}.
  *
- * @example
- * ```ts
+ * **Example** (Decode a duration unit)
+ *
+ * ```ts import.meta.vitest name="Decode a duration unit"
  * import * as S from "effect/Schema"
  * import { DurationUnit } from "@beep/schema/Duration"
  *
  * const decode = S.decodeUnknownSync(DurationUnit)
  *
  * const unit = decode("hours")
- * console.log(unit) // "hours"
+ * unit // => "hours"
  * ```
  *
+ * @see {@link DurationInput} for the input schema that consumes these labels.
+ * @category schemas
  * @since 0.0.0
- * @category constructors
  */
 export const DurationUnit = LiteralKit([
   "nano",
@@ -88,7 +90,8 @@ export const DurationUnit = LiteralKit([
 /**
  * Duration unit string type extracted from {@link DurationUnit}.
  *
- * @example
+ * **Example** (Annotate a duration unit)
+ *
  * ```ts
  * import type { DurationUnit } from "@beep/schema/Duration"
  *
@@ -96,15 +99,17 @@ export const DurationUnit = LiteralKit([
  * console.log(unit)
  * ```
  *
+ * @see {@link DurationUnit} for the runtime schema and accepted labels.
+ * @category type-level
  * @since 0.0.0
- * @category models
  */
 export type DurationUnit = typeof DurationUnit.Type;
 
 /**
  * Backwards-compatible alias for {@link DurationUnit}.
  *
- * @example
+ * **Example** (Use the compatibility unit alias)
+ *
  * ```ts
  * import type { Unit } from "@beep/schema/Duration"
  *
@@ -112,31 +117,43 @@ export type DurationUnit = typeof DurationUnit.Type;
  * console.log(unit)
  * ```
  *
+ * @see {@link DurationUnit} for the canonical type name.
+ * @category type-level
  * @since 0.0.0
- * @category models
  */
 export type Unit = DurationUnit;
 
 /**
- * Structured duration input with additive unit fields.
+ * Represents structured duration input with additive unit fields.
  *
- * Each populated field contributes to the total duration.
- * At least one field must be set for validation to pass.
+ * **When to use**
  *
- * @example
- * ```ts
+ * Use when a duration is clearer as named units than as a scalar or tuple.
+ *
+ * **Details**
+ *
+ * Each populated field contributes to the total duration, and at least one
+ * field must be present for validation to pass.
+ *
+ * **Gotchas**
+ *
+ * Unit values must be non-negative integers.
+ *
+ * **Example** (Decode additive duration fields)
+ *
+ * ```ts import.meta.vitest name="Decode additive duration fields"
  * import * as S from "effect/Schema"
  * import { DurationObject } from "@beep/schema/Duration"
  *
  * const decode = S.decodeUnknownSync(DurationObject)
  *
  * const d = decode({ hours: 1, minutes: 30 })
- * console.log(d.hours) // 1
- * console.log(d.minutes) // 30
+ * d.hours // => 1
+ * d.minutes // => 30
  * ```
  *
+ * @category models
  * @since 0.0.0
- * @category constructors
  */
 export class DurationObject extends S.Class<DurationObject>($I`DurationObject`)(
   {
@@ -157,14 +174,22 @@ export class DurationObject extends S.Class<DurationObject>($I`DurationObject`)(
 const NonEmptyDurationObject = DurationObject.check(DurationObjectHasValue);
 
 /**
- * Union schema for all duration input shapes accepted by {@link DurationFromInput}.
+ * Accepts every duration input shape normalized by {@link DurationFromInput}.
  *
- * Accepts an existing `Duration`, a non-negative integer, a non-negative bigint,
- * a `[seconds, nanos]` tuple, a template literal like `"5 hours"`, or a
+ * **When to use**
+ *
+ * Use when validating transport input before converting it to an Effect
+ * `Duration`.
+ *
+ * **Details**
+ *
+ * Accepted values include an existing `Duration`, a non-negative integer or
+ * bigint, a `[seconds, nanos]` tuple, a string such as `"5 hours"`, or a
  * {@link DurationObject} with additive unit fields.
  *
- * @example
- * ```ts
+ * **Example** (Decode supported input shapes)
+ *
+ * ```ts import.meta.vitest name="Decode supported input shapes"
  * import * as S from "effect/Schema"
  * import { DurationInput } from "@beep/schema/Duration"
  *
@@ -172,11 +197,13 @@ const NonEmptyDurationObject = DurationObject.check(DurationObjectHasValue);
  *
  * const fromString = decode("5 hours")
  * const fromNumber = decode(1000)
- * const fromObject = decode({ minutes: 30 })
+ * const decodedObject = decode({ minutes: 30 })
+ * const decodedCount = [fromString, fromNumber, decodedObject].length // => 3
  * ```
  *
+ * @see {@link DurationFromInput} for normalization into an Effect `Duration`.
+ * @category schemas
  * @since 0.0.0
- * @category constructors
  */
 export const DurationInput = S.Union([
   S.Duration,
@@ -195,7 +222,8 @@ export const DurationInput = S.Union([
 /**
  * Duration input type extracted from {@link DurationInput}.
  *
- * @example
+ * **Example** (Annotate decoded duration input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DurationInput } from "@beep/schema/Duration"
@@ -204,15 +232,11 @@ export const DurationInput = S.Union([
  * console.log(fromString)
  * ```
  *
+ * @see {@link DurationInput} for the runtime schema and supported input forms.
+ * @category type-level
  * @since 0.0.0
- * @category models
  */
 export type DurationInput = typeof DurationInput.Type;
-
-const invalidDurationInputIssue = (input: DurationInput) =>
-  new SchemaIssue.InvalidValue(Option.some(input), {
-    message: "Expected a valid duration input.",
-  });
 
 const decodeDurationInput = (input: DurationInput): Effect.Effect<D.Duration, SchemaIssue.Issue> => {
   const duration = D.fromInput(input);
@@ -220,31 +244,50 @@ const decodeDurationInput = (input: DurationInput): Effect.Effect<D.Duration, Sc
   return pipe(
     duration,
     Option.match({
-      onNone: () => Effect.fail(invalidDurationInputIssue(input)),
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue({
+            message: "Expected a valid duration input.",
+          })
+        ),
       onSome: Effect.succeed,
     })
   );
 };
 
 /**
- * One-way schema that decodes {@link DurationInput} into an Effect `Duration`.
+ * Normalizes {@link DurationInput} into an Effect `Duration`.
  *
- * Encoding back to the original input is intentionally forbidden because the
- * additive object form and normalized duration values are not invertible.
+ * **When to use**
  *
- * @example
- * ```ts
+ * Use when heterogeneous duration input should become one runtime duration
+ * representation.
+ *
+ * **Details**
+ *
+ * Decoding accepts the complete {@link DurationInput} union and produces the
+ * same duration representation used by Effect.
+ *
+ * **Gotchas**
+ *
+ * Encoding is forbidden because normalized durations cannot recover an
+ * original scalar, tuple, string, or additive-object representation.
+ *
+ * **Example** (Normalize a duration string)
+ *
+ * ```ts import.meta.vitest name="Normalize a duration string"
  * import { Duration, Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { DurationFromInput } from "@beep/schema/Duration"
  *
  * const program = S.decodeUnknownEffect(DurationFromInput)("2 hours")
  * const duration = await Effect.runPromise(program)
- * console.log(Duration.toMillis(duration)) // 7200000
+ * Duration.toMillis(duration) // => 7200000
  * ```
  *
+ * @see {@link DurationInput} for the accepted encoded representations.
+ * @category schemas
  * @since 0.0.0
- * @category constructors
  */
 export const DurationFromInput = DurationInput.pipe(
   S.decodeTo(S.Duration, {
@@ -261,26 +304,29 @@ export const DurationFromInput = DurationInput.pipe(
 /**
  * Decoded duration type extracted from {@link DurationFromInput}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate a normalized duration)
+ *
+ * ```ts import.meta.vitest name="Annotate a normalized duration"
  * import { Duration, Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { DurationFromInput } from "@beep/schema/Duration"
  *
  * const program = S.decodeUnknownEffect(DurationFromInput)("2 hours")
  * const duration: Duration.Duration = await Effect.runPromise(program)
- * console.log(Duration.toMillis(duration)) // 7200000
+ * Duration.toMillis(duration) // => 7200000
  * ```
  *
+ * @see {@link DurationFromInput} for the runtime transformation schema.
+ * @category type-level
  * @since 0.0.0
- * @category models
  */
 export type DurationFromInput = typeof DurationFromInput.Type;
 
 /**
- * {@inheritDoc DurationInput}
+ * Compatibility schema alias for {@link DurationInput}.
  *
- * @example
+ * **Example** (Decode through the input alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Input } from "@beep/schema/Duration"
@@ -289,15 +335,17 @@ export type DurationFromInput = typeof DurationFromInput.Type;
  * console.log(decode("5 hours"))
  * ```
  *
+ * @see {@link DurationInput} for the canonical schema name.
+ * @category schemas
  * @since 0.0.0
- * @category constructors
  */
 export const Input = DurationInput;
 
 /**
- * {@inheritDoc DurationInput}
+ * Decoded input type exposed under the compatibility name {@link Input}.
  *
- * @example
+ * **Example** (Annotate input through the alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Input } from "@beep/schema/Duration"
@@ -306,15 +354,17 @@ export const Input = DurationInput;
  * console.log(fromString)
  * ```
  *
- * @category models
+ * @see {@link DurationInput} for the canonical decoded type.
+ * @category type-level
  * @since 0.0.0
  */
 export type Input = DurationInput;
 
 /**
- * Backwards-compatible alias for {@link DurationObject}.
+ * Re-exports {@link DurationObject} under the compatibility name `Object`.
  *
- * @category constructors
+ * @see {@link DurationObject} for the owning class and construction example.
+ * @category models
  * @since 0.0.0
  */
 export { DurationObject as Object };

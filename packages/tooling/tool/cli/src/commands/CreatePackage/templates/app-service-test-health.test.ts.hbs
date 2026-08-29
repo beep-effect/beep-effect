@@ -1,0 +1,36 @@
+import { provideScopedLayer } from "@beep/test-utils";
+import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import { describe, expect, it } from "@effect/vitest";
+import { Context, Effect, Layer, Match } from "effect";
+import * as S from "effect/Schema";
+import { FetchHttpClient, HttpClient, HttpRouter, HttpServer } from "effect/unstable/http";
+import { Health } from "@/Api";
+import { ApiLive } from "@/runtime/Layer";
+
+const decodeHealth = S.decodeUnknownEffect(S.fromJsonString(Health));
+
+const portOfServer = (server: HttpServer.HttpServer["Service"]): number =>
+  Match.value(server.address).pipe(
+    Match.tag("TcpAddress", (address) => address.port),
+    Match.orElse(() => 0)
+  );
+
+describe("{{scopedName}}", () => {
+  it.effect("serves GET /health", () =>
+    Effect.gen(function* () {
+      const built = yield* Layer.build(
+        HttpRouter.serve(ApiLive, { disableListenLog: true, disableLogger: true }).pipe(
+          Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }))
+        )
+      );
+      const server = Context.get(built, HttpServer.HttpServer);
+      const response = yield* HttpClient.get(`http://127.0.0.1:${portOfServer(server)}/health`);
+      const health = yield* Effect.flatMap(response.text, decodeHealth);
+
+      expect(health.status).toBe("ok");
+      // `provideScopedLayer` builds the layer inside a scope and provides the
+      // resulting Context; a bare `Effect.provide(<Layer>)` mid-pipeline trips
+      // the effect-LSP's strictEffectProvide rule.
+    }).pipe(Effect.scoped, provideScopedLayer(FetchHttpClient.layer))
+  );
+});

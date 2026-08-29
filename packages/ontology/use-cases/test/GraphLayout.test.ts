@@ -21,7 +21,7 @@ const classes = A.makeBy(12, (index) => `${EX}Class${index}`);
 
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeUnknownSync(SessionId)("session-1"),
+    id: S.decodeSync(SessionId)("session-1"),
     baseDataset: makeDataset(A.map(classes, (iri) => makeQuad(makeNamedNode(iri), RDF_TYPE, OWL_CLASS))),
   })
 );

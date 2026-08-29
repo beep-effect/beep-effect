@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -15,23 +15,25 @@ const $I = $RepoCliId.create("commands/Ci/Ci.errors");
 /**
  * Typed failure for CI helper commands.
  *
- * @example
+ * **Example** (Create typed CI error)
+ *
  * ```ts
  * import { CiCommandError } from "@beep/repo-cli/commands/Ci"
  *
  * const error = CiCommandError.make({ message: "Turbo summary not found" })
  * console.log(error.message) // "Turbo summary not found"
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class CiCommandError extends TaggedErrorClass<CiCommandError>($I`CiCommandError`)(
+export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandError`)(
   "CiCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CiCommandError", {
+  $I.annoteError<CiCommandError>("CiCommandError", {
     description: "Failure raised by CI helper commands.",
   })
 ) {

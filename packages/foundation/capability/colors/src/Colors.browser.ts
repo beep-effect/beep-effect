@@ -20,16 +20,19 @@ const identity: FormatterType = String;
 /**
  * Browser-safe formatter model.
  *
+ * **Details**
+ *
  * Browser builds keep the same API shape as the Node entrypoint, but never emit ANSI
  * escape sequences and keep `createColors` bound to the browser implementation.
  *
- * @example
- * ```typescript
+ * **Example** (Browser-safe bold formatting)
+ *
+ * ```ts import.meta.vitest name="Browser-safe bold formatting"
  * import { Colors, createColors } from "@beep/colors"
  *
  * const colors = createColors(false)
  * const rendered = colors.bold("hello")
- * console.log(rendered) // "hello"
+ * rendered // => "hello"
  * ```
  *
  * @category models
@@ -47,11 +50,12 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
 /**
  * Browser builds never emit ANSI escape sequences.
  *
- * @example
- * ```typescript
+ * **Example** (Check isColorSupported type)
+ *
+ * ```ts import.meta.vitest name="Check isColorSupported type"
  * import { isColorSupported } from "@beep/colors"
  *
- * console.log(typeof isColorSupported) // "boolean"
+ * typeof isColorSupported // => "boolean"
  * ```
  *
  * @category utilities
@@ -62,15 +66,16 @@ export const isColorSupported = false;
 /**
  * Browser builds always disable ANSI escape sequences.
  *
- * @example
- * ```typescript
- * import { supportsColor } from "@beep/colors"
+ * **Example** (supportsColor always false)
  *
- * console.log(supportsColor()) // false
+ * ```ts import.meta.vitest name="supportsColor always false"
+ * import { supportsColor } from "@beep/colors/Colors.browser"
+ *
+ * supportsColor() // => false
  * ```
  *
- * @category utilities
  * @returns Always `false` in browser-safe builds.
+ * @category utilities
  * @since 0.0.0
  */
 export const supportsColor = thunkFalse;
@@ -78,9 +83,12 @@ export const supportsColor = thunkFalse;
 /**
  * Create a browser-safe formatter set that never emits ANSI escape sequences.
  *
+ * **Details**
+ *
  * The optional flag is accepted for API parity with the Node entrypoint, but ignored.
  *
- * @example
+ * **Example** (Create formatters without ANSI)
+ *
  * ```typescript
  * import { createColors } from "@beep/colors"
  *
@@ -89,9 +97,9 @@ export const supportsColor = thunkFalse;
  * console.log(rendered) // "error" (no ANSI in browser builds)
  * ```
  *
- * @category utilities
  * @param _enabled - Ignored in browser-safe builds.
  * @returns A formatter set whose members coerce input with `String(...)`.
+ * @category utilities
  * @since 0.0.0
  */
 export const createColors = (_enabled?: undefined | boolean): Colors =>
@@ -143,12 +151,13 @@ export const createColors = (_enabled?: undefined | boolean): Colors =>
 /**
  * Default browser-safe formatter set.
  *
- * @example
- * ```typescript
+ * **Example** (Default green string output)
+ *
+ * ```ts import.meta.vitest name="Default green string output"
  * import colors from "@beep/colors"
  *
  * const rendered = colors.green("ok")
- * console.log(typeof rendered) // "string"
+ * typeof rendered // => "string"
  * ```
  *
  * @category utilities
@@ -159,12 +168,13 @@ const colors = createColors();
 /**
  * Schema describing a unary formatter function.
  *
- * @example
- * ```typescript
+ * **Example** (Use String as Formatter)
+ *
+ * ```ts import.meta.vitest name="Use String as Formatter"
  * import { type Formatter } from "@beep/colors"
  *
  * const fmt: Formatter = String
- * console.log(fmt(42)) // "42"
+ * fmt(42) // => "42"
  * ```
  *
  * @category models
@@ -175,7 +185,8 @@ export const Formatter = FormatterDefinition;
 /**
  * Runtime type for {@link Formatter}.
  *
- * @example
+ * **Example** (Annotate Formatter type)
+ *
  * ```typescript
  * import type { Formatter } from "@beep/colors"
  *

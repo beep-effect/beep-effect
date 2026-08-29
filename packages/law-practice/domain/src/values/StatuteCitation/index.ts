@@ -9,9 +9,8 @@
 /**
  * StatuteCitation model exports.
  *
- * **Example**
+ * **Example** (Import StatuteCitation export)
  *
- * @example
  * ```ts
  * import { StatuteCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StatuteCitation.model.js";
+export * from "./StatuteCitation.model.ts";

@@ -34,8 +34,10 @@ Scope:
   research justifies them; otherwise reuse existing SKOS/RDF constants.
 - Out: SPARQL engine wiring, graph store, FalkorDB, law-practice entities
   (`TrademarkAsset`, docketing entities), document-intake implementation,
-  edits to `goals/ip-law-knowledge-graph`, package source outside target
-  surfaces, unmanifested third-party TTL/OWL.
+  ontology-survey work beyond the scope absorbed here from
+  `explorations/legal-ontology-landscape`, package source outside target
+  surfaces, unmanifested third-party TTL/OWL. The old packet fence is moot;
+  that packet was removed 2026-07-14.
 
 Workflow:
 

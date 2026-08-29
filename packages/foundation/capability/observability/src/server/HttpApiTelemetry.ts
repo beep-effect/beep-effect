@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { HttpMethod } from "@beep/schema/HttpMethod";
+import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { A } from "@beep/utils";
 import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, SchemaAST } from "effect";
 import * as Eq from "effect/Equal";
@@ -16,6 +16,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { HttpApiMiddleware, HttpApiSchema } from "effect/unstable/httpapi";
 import { observeHttpRequest, statusClass } from "../Metric.ts";
+import type { NonNegativeInt } from "@beep/schema";
 import type * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import type { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
@@ -23,45 +24,12 @@ const $I = $ObservabilityId.create("server/HttpApiTelemetry");
 const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 
 /**
- * HTTP status code in the standard 100-599 range.
- *
- * @example
- * ```typescript
- * import { HttpStatusCode } from "@beep/observability/server"
- * import * as S from "effect/Schema"
- *
- * const status = S.decodeUnknownSync(HttpStatusCode)(404)
- * console.log(status)
- * // 404
- * ```
+ * Compatibility export for the canonical schema-owned HTTP status code.
  *
  * @category schemas
  * @since 0.0.0
  */
-export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
-  $I.annoteSchema("HttpStatusCode", {
-    description: "HTTP status code in the standard 100-599 range.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * HTTP status code in the standard 100-599 range.
- *
- * @example
- * ```typescript
- * import { HttpStatusCode } from "@beep/observability/server"
- * import * as S from "effect/Schema"
- *
- * const status: HttpStatusCode = S.decodeUnknownSync(HttpStatusCode)(404)
- * console.log(status)
- * // 404
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export type HttpStatusCode = typeof HttpStatusCode.Type;
+export { HttpStatusCode };
 
 class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusField`)(
   { status: HttpStatusCode },
@@ -75,7 +43,8 @@ class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusFie
 /**
  * Shared HTTP API telemetry descriptor.
  *
- * @example
+ * **Example** (Make telemetry descriptor)
+ *
  * ```typescript
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -93,8 +62,8 @@ class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusFie
  * console.log(descriptor.route)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class HttpApiTelemetryDescriptor extends S.Class<HttpApiTelemetryDescriptor>($I`HttpApiTelemetryDescriptor`)(
   {
@@ -132,9 +101,18 @@ interface HttpApiTelemetryMiddlewareOptions {
   readonly metrics: HttpApiMetricSet;
 }
 
+interface HttpApiEndpointMetadata extends HttpApiEndpoint.Constraint {
+  readonly error: Iterable<S.Top>;
+  readonly identifier: string;
+  readonly method: HttpMethod;
+  readonly middlewares: Iterable<unknown>;
+  readonly path: string;
+  readonly success: Iterable<S.Top>;
+}
+
 interface ObserveHttpApiEffectOptions {
   readonly descriptor: HttpApiTelemetryDescriptor;
-  readonly endpoint: HttpApiEndpoint.AnyWithProps;
+  readonly endpoint: HttpApiEndpointMetadata;
   readonly metrics: HttpApiMetricSet;
 }
 
@@ -160,7 +138,8 @@ const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.leng
 /**
  * Resolve the declared success status from an HttpApiSchema value.
  *
- * @example
+ * **Example** (Resolve success status)
+ *
  * ```typescript
  * import * as S from "effect/Schema"
  * import { httpApiSuccessStatus } from "@beep/observability/server"
@@ -169,12 +148,12 @@ const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.leng
  * console.log(status)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const httpApiSuccessStatus: {
   (schema: S.Top, fallback?: number): NonNegativeInt;
-  (fallback: number): (schema: S.Top) => NonNegativeInt;
+  (fallback?: number): (schema: S.Top) => NonNegativeInt;
 } = dual(
   isHttpApiSuccessStatusDataFirst,
   (schema: S.Top, fallback = 200): NonNegativeInt =>
@@ -184,12 +163,12 @@ export const httpApiSuccessStatus: {
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): NonNegativeInt =>
   HttpStatusCode.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback);
 
-const endpointSuccessSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyArray<S.Top> => {
+const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
   return A.isReadonlyArrayNonEmpty(schemas) ? schemas : A.make(HttpApiSchema.NoContent);
 };
 
-const endpointErrorSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyArray<S.Top> => {
+const endpointErrorSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<S.Top> => {
   let schemas = A.fromIterable(endpoint.error);
   const containsSchema = A.containsWith<S.Top>(Eq.equals);
 
@@ -209,7 +188,8 @@ const endpointErrorSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyA
 /**
  * Create a reusable HTTP API metric set for one metric prefix.
  *
- * @example
+ * **Example** (Create API metric set)
+ *
  * ```typescript
  * import { makeHttpApiMetrics } from "@beep/observability/server"
  *
@@ -217,10 +197,19 @@ const endpointErrorSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyA
  * console.log(metrics.requestsTotal)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
-export const makeHttpApiMetrics = (prefix: string, descriptionPrefix = "HTTP API request"): HttpApiMetricSet => ({
+// unary by contract: `prefix` and `descriptionPrefix` are both `string`, so a
+// dual is undecidable — a lone string cannot be told apart from a data-last
+// call. `descriptionPrefix` is REMOVED FROM THE PUBLIC TYPE, not merely
+// relocated: it keeps its runtime default but no caller can supply it through
+// any export. That was a deliberate narrowing (it had zero callers); widening
+// the signature back re-arms the diagnostic.
+export const makeHttpApiMetrics: (prefix: string) => HttpApiMetricSet = (
+  prefix: string,
+  descriptionPrefix = "HTTP API request"
+): HttpApiMetricSet => ({
   requestsTotal: Metric.counter(`${prefix}_requests_total`, {
     description: `${descriptionPrefix} count.`,
     incremental: true,
@@ -288,8 +277,9 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
 /**
  * Create a telemetry descriptor directly from Effect HttpApi metadata.
  *
- * @example
- * ```typescript
+ * **Example** (Descriptor from HttpApi metadata)
+ *
+ * ```ts import.meta.vitest name="Descriptor from HttpApi metadata"
  * import * as S from "effect/Schema"
  * import { makeHttpApiTelemetryDescriptor } from "@beep/observability/server"
  * import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
@@ -299,27 +289,20 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
  *   success: S.Struct({ id: S.String }).pipe(HttpApiSchema.status(201))
  * })
  * const descriptor = makeHttpApiTelemetryDescriptor("TodoApi", group, endpoint)
- * console.log(descriptor.successStatus) // 201
+ * descriptor.successStatus // => 201
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const makeHttpApiTelemetryDescriptor: {
-  (
-    apiName: string,
-    group: HttpApiGroup.AnyWithProps,
-    endpoint: HttpApiEndpoint.AnyWithProps
-  ): HttpApiTelemetryDescriptor;
-  (
-    group: HttpApiGroup.AnyWithProps,
-    endpoint: HttpApiEndpoint.AnyWithProps
-  ): (apiName: string) => HttpApiTelemetryDescriptor;
-} = dual(3, (apiName: string, group: HttpApiGroup.AnyWithProps, endpoint: HttpApiEndpoint.AnyWithProps) =>
+  (apiName: string, group: HttpApiGroup.Constraint, endpoint: HttpApiEndpointMetadata): HttpApiTelemetryDescriptor;
+  (group: HttpApiGroup.Constraint, endpoint: HttpApiEndpointMetadata): (apiName: string) => HttpApiTelemetryDescriptor;
+} = dual(3, (apiName: string, group: HttpApiGroup.Constraint, endpoint: HttpApiEndpointMetadata) =>
   HttpApiTelemetryDescriptor.make({
     apiName,
     groupName: group.identifier,
-    endpointName: endpoint.name,
+    endpointName: endpoint.identifier,
     method: endpoint.method,
     route: endpoint.path,
     successStatus: httpApiSuccessStatus(endpointSuccessSchemas(endpoint)[0]),
@@ -330,7 +313,8 @@ export const makeHttpApiTelemetryDescriptor: {
  * Resolve the concrete status of a failed HTTP API effect from the runtime
  * error first, then from matching endpoint error schemas.
  *
- * @example
+ * **Example** (Resolve failure status option)
+ *
  * ```typescript
  * import * as S from "effect/Schema"
  * import { httpApiFailureStatus } from "@beep/observability/server"
@@ -343,15 +327,15 @@ export const makeHttpApiTelemetryDescriptor: {
  * console.log(status) // Option.none()
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const httpApiFailureStatus: {
-  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): O.Option<NonNegativeInt>;
-  (error: unknown): (endpoint: HttpApiEndpoint.AnyWithProps) => O.Option<NonNegativeInt>;
+  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt>;
+  (error: unknown): (endpoint: HttpApiEndpointMetadata) => O.Option<NonNegativeInt>;
 } = dual(
   2,
-  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): O.Option<NonNegativeInt> =>
+  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt> =>
     HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
       O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.fromUnknown(400)) : O.none())),
@@ -372,7 +356,8 @@ export const httpApiFailureStatus: {
  * Observe one encoded HTTP API effect where the success value is an
  * `HttpServerResponse`.
  *
- * @example
+ * **Example** (Observe encoded response effect)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -393,8 +378,8 @@ export const httpApiFailureStatus: {
  * console.log(status) // 200
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const observeHttpApiEffectImpl = <E, R>(
   effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
@@ -470,7 +455,8 @@ const observeHttpApiEffectImpl = <E, R>(
 /**
  * Observes an HTTP API Effect and records request metrics.
  *
- * @example
+ * **Example** (Observe effect with metrics)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { NonNegativeInt } from "@beep/schema"
@@ -502,7 +488,6 @@ const observeHttpApiEffectImpl = <E, R>(
  * ```
  *
  * @effects Updates HTTP API request metrics, annotates spans, and preserves the wrapped response effect.
- *
  * @category observability
  * @since 0.0.0
  */
@@ -520,7 +505,7 @@ export const observeHttpApiEffect: {
   isObserveHttpApiEffectDataFirst,
   Effect.fnUntraced(function* <E, R>(
     effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R> | HttpApiTelemetryDescriptor,
-    options: ObserveHttpApiEffectOptions | HttpApiEndpoint.AnyWithProps
+    options: ObserveHttpApiEffectOptions | HttpApiEndpointMetadata
   ): Effect.fn.Return<HttpServerResponse.HttpServerResponse, E, R> {
     if (Effect.isEffect(effect) && isObserveHttpApiEffectOptions(options)) {
       return yield* observeHttpApiEffectImpl(effect, options);
@@ -550,7 +535,8 @@ export const observeHttpApiEffect: {
  * Shared server-side HttpApi middleware service for request metrics, span
  * annotations, and log correlation.
  *
- * @example
+ * **Example** (Build middleware service layer)
+ *
  * ```typescript
  * import { Layer } from "effect"
  * import {
@@ -567,8 +553,8 @@ export const observeHttpApiEffect: {
  * console.log(middlewareLayer)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class HttpApiTelemetryMiddleware extends HttpApiMiddleware.Service<HttpApiTelemetryMiddleware>()(
   $I`HttpApiTelemetryMiddleware`
@@ -578,7 +564,8 @@ export class HttpApiTelemetryMiddleware extends HttpApiMiddleware.Service<HttpAp
  * Build a layer that instruments all endpoints where the middleware is
  * applied.
  *
- * @example
+ * **Example** (Layer instrumenting all endpoints)
+ *
  * ```typescript
  * import { makeHttpApiMetrics, layerHttpApiTelemetryMiddleware } from "@beep/observability/server"
  *
@@ -590,8 +577,8 @@ export class HttpApiTelemetryMiddleware extends HttpApiMiddleware.Service<HttpAp
  * console.log(TelemetryLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerHttpApiTelemetryMiddleware = (
   options: HttpApiTelemetryMiddlewareOptions
@@ -614,8 +601,9 @@ export const layerHttpApiTelemetryMiddleware = (
 /**
  * Observe one HTTP API handler with shared span/log annotations.
  *
- * @example
- * ```typescript
+ * **Example** (Observe handler with annotations)
+ *
+ * ```ts import.meta.vitest name="Observe handler with annotations"
  * import { Effect } from "effect"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -637,11 +625,11 @@ export const layerHttpApiTelemetryMiddleware = (
  * const metrics = makeHttpApiMetrics("todox_api")
  * const handler = Effect.succeed({ status: 200 })
  * const observed = observeHttpApiHandler(handler, { descriptor, metrics })
- * console.log(Effect.runSync(observed).status) // 200
+ * Effect.runSync(observed).status // => 200
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(function* <
   A,
@@ -684,7 +672,8 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
 /**
  * Observes an HTTP API handler Effect and records request metrics.
  *
- * @example
+ * **Example** (Observe handler request metrics)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { NonNegativeInt } from "@beep/schema"
@@ -713,7 +702,6 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
  * ```
  *
  * @effects Updates HTTP API request metrics and annotates spans around the wrapped handler effect.
- *
  * @category observability
  * @since 0.0.0
  */

@@ -23,10 +23,10 @@ import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../internal/cli/Json.js";
-import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
-import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.js";
-import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.js";
+} from "../../../internal/cli/Json.ts";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.ts";
+import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.ts";
+import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerEval");
 
@@ -79,12 +79,14 @@ const decodeCodexSdkPackageMetadataJson = S.decodeUnknownEffect(S.fromJsonString
 /**
  * Worker provider supported by `docgen quality-worker-eval`.
  *
- * @example
+ * **Example** (Check codex provider)
+ *
  * ```ts
  * import { DocgenQualityWorkerEvalProvider } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(DocgenQualityWorkerEvalProvider.is.codex("codex"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -97,13 +99,15 @@ export const DocgenQualityWorkerEvalProvider = LiteralKit(["codex", "ollama", "l
 /**
  * Worker provider supported by `docgen quality-worker-eval`.
  *
- * @example
+ * **Example** (Type codex provider)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalProvider } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const provider: DocgenQualityWorkerEvalProvider = "codex"
  * console.log(provider) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -112,12 +116,14 @@ export type DocgenQualityWorkerEvalProvider = typeof DocgenQualityWorkerEvalProv
 /**
  * Codex reasoning effort supported by `docgen quality-worker-eval`.
  *
- * @example
+ * **Example** (Check low reasoning effort)
+ *
  * ```ts
  * import { DocgenQualityWorkerEvalReasoningEffort } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(DocgenQualityWorkerEvalReasoningEffort.is.low("low"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -130,13 +136,15 @@ export const DocgenQualityWorkerEvalReasoningEffort = LiteralKit(["minimal", "lo
 /**
  * Codex reasoning effort supported by `docgen quality-worker-eval`.
  *
- * @example
+ * **Example** (Type low reasoning effort)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalReasoningEffort } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const effort: DocgenQualityWorkerEvalReasoningEffort = "low"
  * console.log(effort) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -145,12 +153,14 @@ export type DocgenQualityWorkerEvalReasoningEffort = typeof DocgenQualityWorkerE
 /**
  * Source mode used to build a worker eval queue.
  *
- * @example
+ * **Example** (Check input scope)
+ *
  * ```ts
  * import { DocgenQualityWorkerEvalScope } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(DocgenQualityWorkerEvalScope.is.input("input"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -163,13 +173,15 @@ export const DocgenQualityWorkerEvalScope = LiteralKit(["input", "package", "all
 /**
  * Source mode used to build a worker eval queue.
  *
- * @example
+ * **Example** (Type package scope)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalScope } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const scope: DocgenQualityWorkerEvalScope = "package"
  * console.log(scope) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -178,12 +190,14 @@ export type DocgenQualityWorkerEvalScope = typeof DocgenQualityWorkerEvalScope.T
 /**
  * Read-only packet execution status for worker eval.
  *
- * @example
+ * **Example** (Check completed packet status)
+ *
  * ```ts
  * import { DocgenQualityWorkerEvalPacketStatus } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(DocgenQualityWorkerEvalPacketStatus.is.completed("completed"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -196,13 +210,15 @@ export const DocgenQualityWorkerEvalPacketStatus = LiteralKit(["completed", "fai
 /**
  * Read-only packet execution status for worker eval.
  *
- * @example
+ * **Example** (Type failed packet status)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalPacketStatus } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const status: DocgenQualityWorkerEvalPacketStatus = "failed"
  * console.log(status) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -211,12 +227,14 @@ export type DocgenQualityWorkerEvalPacketStatus = typeof DocgenQualityWorkerEval
 /**
  * Advisory disposition assigned to a worker draft.
  *
- * @example
+ * **Example** (Check candidate disposition)
+ *
  * ```ts
  * import { DocgenQualityWorkerEvalReviewDisposition } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(DocgenQualityWorkerEvalReviewDisposition.is.candidate("candidate"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -229,13 +247,15 @@ export const DocgenQualityWorkerEvalReviewDisposition = LiteralKit(["candidate",
 /**
  * Advisory disposition assigned to a worker draft.
  *
- * @example
+ * **Example** (Type needs-human-review disposition)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalReviewDisposition } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const disposition: DocgenQualityWorkerEvalReviewDisposition = "needs-human-review"
  * console.log(disposition) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -244,12 +264,14 @@ export type DocgenQualityWorkerEvalReviewDisposition = typeof DocgenQualityWorke
 /**
  * Closed repo-policy issue code emitted by a worker eval.
  *
- * @example
+ * **Example** (Check trivial-example code)
+ *
  * ```ts
  * import { DocgenQualityWorkerEvalPolicyViolationCode } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(DocgenQualityWorkerEvalPolicyViolationCode.is["trivial-example"]("trivial-example"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -274,13 +296,15 @@ export const DocgenQualityWorkerEvalPolicyViolationCode = LiteralKit([
 /**
  * Closed repo-policy issue code emitted by a worker eval.
  *
- * @example
+ * **Example** (Type wrong-import-alias code)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalPolicyViolationCode } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const code: DocgenQualityWorkerEvalPolicyViolationCode = "wrong-import-alias"
  * console.log(code) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -289,13 +313,15 @@ export type DocgenQualityWorkerEvalPolicyViolationCode = typeof DocgenQualityWor
 /**
  * Structured response expected from the Codex worker.
  *
- * @example
+ * **Example** (Pick localScore field)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalWorkerOutput } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const output: Pick<DocgenQualityWorkerEvalWorkerOutput, "localScore"> = { localScore: 7 }
  * console.log(output.localScore)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -375,13 +401,15 @@ class DocgenQualityWorkerEvalSummary extends S.Class<DocgenQualityWorkerEvalSumm
 /**
  * JSON report emitted by `docgen quality-worker-eval`.
  *
- * @example
+ * **Example** (Pick schemaVersion field)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalReport } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const report: Pick<DocgenQualityWorkerEvalReport, "schemaVersion"> = { schemaVersion: 1 }
  * console.log(report.schemaVersion)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -411,13 +439,15 @@ export class DocgenQualityWorkerEvalReport extends S.Class<DocgenQualityWorkerEv
 /**
  * Completed worker turn returned by the Codex runner.
  *
- * @example
+ * **Example** (Create runner result)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalRunnerResult } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const result: DocgenQualityWorkerEvalRunnerResult = { finalResponse: "{}" }
  * console.log(result.finalResponse)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -435,13 +465,15 @@ export class DocgenQualityWorkerEvalRunnerResult extends S.Class<DocgenQualityWo
 /**
  * Inputs passed to the Codex runner for one remediation packet.
  *
- * @example
+ * **Example** (Pick model field)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalRunnerInput } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const input: Pick<DocgenQualityWorkerEvalRunnerInput, "model"> = { model: "qwen3-coder" }
  * console.log(input.model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -464,7 +496,8 @@ export class DocgenQualityWorkerEvalRunnerInput extends S.Class<DocgenQualityWor
 /**
  * Runner used to execute one Codex eval turn.
  *
- * @example
+ * **Example** (Run mock Codex runner)
+ *
  * ```ts
  * import type { DocgenQualityWorkerEvalRunner } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  * import { Effect } from "effect"
@@ -481,6 +514,7 @@ export class DocgenQualityWorkerEvalRunnerInput extends S.Class<DocgenQualityWor
  * )
  * console.log(result.finalResponse)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -508,13 +542,15 @@ type PacketCandidate = {
 /**
  * Options for one worker eval run.
  *
- * @example
+ * **Example** (Pick options model)
+ *
  * ```ts
  * import type { AnalyzeDocgenQualityWorkerEvalOptions } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const options: Pick<AnalyzeDocgenQualityWorkerEvalOptions, "model"> = { model: "qwen3-coder" }
  * console.log(options.model)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -701,16 +737,18 @@ const packetCandidate = (report: DocgenQualityReport, packet: QualityRemediation
 /**
  * Select remediation packets for a capped worker eval run.
  *
- * @param candidates - Packet candidates grouped by package path for deterministic selection.
- * @param packetLimit - Maximum number of candidates to select; zero suppresses worker turns.
- * @returns Selected packet candidates in deterministic package-stratified order.
- * @example
+ * **Example** (Select empty packet list)
+ *
  * ```ts
  * import { selectQualityWorkerEvalPackets } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const selected = selectQualityWorkerEvalPackets([], 5)
  * console.log(selected.length)
  * ```
+ *
+ * @param candidates - Packet candidates grouped by package path for deterministic selection.
+ * @param packetLimit - Maximum number of candidates to select; zero suppresses worker turns.
+ * @returns Selected packet candidates in deterministic package-stratified order.
  * @category utilities
  * @since 0.0.0
  */
@@ -1088,9 +1126,8 @@ const recommendationForSummary = (summary: DocgenQualityWorkerEvalSummary): stri
 /**
  * Decode a saved `docgen quality` JSON report for worker eval.
  *
- * @param content - JSON text emitted by `beep docgen quality --json`.
- * @returns Effect that yields the decoded quality report.
- * @example
+ * **Example** (Decode quality report JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { decodeDocgenQualityReportForWorkerEval } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
@@ -1110,6 +1147,9 @@ const recommendationForSummary = (summary: DocgenQualityWorkerEvalSummary): stri
  * )
  * console.log(subjectCount) // example value
  * ```
+ *
+ * @param content - JSON text emitted by `beep docgen quality --json`.
+ * @returns Effect that yields the decoded quality report.
  * @category decoding
  * @since 0.0.0
  */
@@ -1123,14 +1163,16 @@ export const decodeDocgenQualityReportForWorkerEval = (
 /**
  * Compute the source packet limit used for generated quality reports.
  *
- * @param packetLimit - Worker packet limit requested by the caller.
- * @returns Source quality-report packet cap used before worker-side selection.
- * @example
+ * **Example** (Compute source packet limit)
+ *
  * ```ts
  * import { qualityWorkerEvalSourcePacketLimit } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(qualityWorkerEvalSourcePacketLimit(5))
  * ```
+ *
+ * @param packetLimit - Worker packet limit requested by the caller.
+ * @returns Source quality-report packet cap used before worker-side selection.
  * @category utilities
  * @since 0.0.0
  */
@@ -1140,13 +1182,15 @@ export const qualityWorkerEvalSourcePacketLimit = (packetLimit: number): number 
 /**
  * Default packet cap for `docgen quality-worker-eval`.
  *
- * @returns Default maximum number of worker packet turns.
- * @example
+ * **Example** (Get default packet limit)
+ *
  * ```ts
  * import { defaultQualityWorkerEvalPacketLimit } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(defaultQualityWorkerEvalPacketLimit())
  * ```
+ *
+ * @returns Default maximum number of worker packet turns.
  * @category constants
  * @since 0.0.0
  */
@@ -1155,13 +1199,15 @@ export const defaultQualityWorkerEvalPacketLimit = (): number => DEFAULT_WORKER_
 /**
  * Default hosted Codex reasoning effort for worker eval.
  *
- * @returns Default hosted Codex reasoning effort for worker eval.
- * @example
+ * **Example** (Get default reasoning effort)
+ *
  * ```ts
  * import { defaultQualityWorkerEvalReasoningEffort } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * console.log(defaultQualityWorkerEvalReasoningEffort())
  * ```
+ *
+ * @returns Default hosted Codex reasoning effort for worker eval.
  * @category constants
  * @since 0.0.0
  */
@@ -1170,10 +1216,8 @@ export const defaultQualityWorkerEvalReasoningEffort = (): DocgenQualityWorkerEv
 /**
  * Build a read-only worker eval report from a quality report.
  *
- * @effects
- * - Creates an isolated temporary working directory for packet-only worker turns.
- * - Runs read-only Codex worker turns through the configured runner; never edits source files.
- * @example
+ * **Example** (Build worker eval report)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {
@@ -1207,6 +1251,10 @@ export const defaultQualityWorkerEvalReasoningEffort = (): DocgenQualityWorkerEv
  * )
  * console.log(selectedPacketCount) // example value
  * ```
+ *
+ * @effects
+ * - Creates an isolated temporary working directory for packet-only worker turns.
+ * - Runs read-only Codex worker turns through the configured runner; never edits source files.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1288,9 +1336,8 @@ export const analyzeDocgenQualityWorkerEval = Effect.fn("DocgenQualityWorkerEval
 /**
  * Render a worker eval report as stable JSON.
  *
- * @param report - Worker eval report to render.
- * @returns Effect that yields stable pretty JSON.
- * @example
+ * **Example** (Render report as JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {
@@ -1326,6 +1373,9 @@ export const analyzeDocgenQualityWorkerEval = Effect.fn("DocgenQualityWorkerEval
  * )
  * console.log(hasSchemaVersion) // example value
  * ```
+ *
+ * @param report - Worker eval report to render.
+ * @returns Effect that yields stable pretty JSON.
  * @category formatting
  * @since 0.0.0
  */

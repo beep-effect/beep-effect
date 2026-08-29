@@ -35,8 +35,8 @@ entailment** (vectors + an LLM, revisable guesses); **right of it, everything do
 
 | Product capability | What it means to Tom | Carrier in the repo | Status |
 |---|---|---|---|
-| **Canonical documents** | The file is the truth; format is per-document | `@beep/md` (`packages/foundation/modeling/md`), DOCX/PDF bridge `@beep/pandoc-ast` | **Have** (core slice) |
-| **Editor as portal** | Hover Figure 1 → CAD; term → definition; party → matter | `@beep/lexical-schema` `ArtifactRefNode` (`packages/foundation/modeling/lexical/src/Lexical.model.ts`) | **Have** (primitive) |
+| **Canonical documents** | The file is the truth; format is per-document | `@beep/md` is the canonical AST; `@beep/pandoc-ast` keeps a lossless interchange wire beside its strict semantic profile; `@beep/html` owns conformant and policy-approved projections | **Have** (core slice; Pandoc tables remain an explicit mapping gap) |
+| **Editor as portal** | Hover Figure 1 → CAD; term → definition; party → matter | `@beep/lexical-schema` keeps a lossless compatibility wire beside the strict runtime grammar; `@beep/editor` consumes only the strict state and renders incompatible wire read-only | **Have** (primitive) |
 | **Read & ground to the exact line** | "Show me the source," highlighted | `@beep/langextract` `GroundedExtraction.span` (`…/capability/langextract/src/Extraction`) | **Have** (capability) |
 | **NLP precision (offsets, entities)** | The machinery behind span highlighting | `@beep/nlp-mcp` (42 tools, `AiToken.start/end`) over `@beep/nlp` + `@beep/wink` (`packages/drivers/nlp-mcp`) | **Have** (driver) |
 | **Typed claims + evidence + provenance** | Every fact knows what justifies it and who approved it | `@beep/epistemic-domain` — `CandidateClaim`, `Evidence`, `Activity`, `UsageRecord` (`packages/epistemic/domain/src/entities`) | **Have** (domain) |
@@ -55,7 +55,7 @@ entailment** (vectors + an LLM, revisable guesses); **right of it, everything do
 
 ## 3. The four faces, mapped
 
-1. **Document portal** — `@beep/lexical-schema` (editor state + `artifact-ref`) over `@beep/md`/`@beep/pandoc-ast`; the app's `@beep/editor`. Links are subgraph edges; the editor is the window.
+1. **Document portal** — `@beep/md` is the canonical document AST; `@beep/pandoc-ast` is the strict/lossless interchange boundary; `@beep/lexical-schema` is the strict/lossless editor wire; and the app's `@beep/editor` is the runtime projection. Links are subgraph edges; the editor is the window.
 2. **DMS** — canonical files on disk + sync to interchangeable backends; **identity is minted and stable**, locators (`box:fileId`, `s3:key`, `sha256`) are properties. (Sync engine = build.)
 3. **Knowledge graph** — authority in `@beep/epistemic-domain` + `@beep/semantic-web` + `@beep/rdf`; projection in FalkorDB; governed by the ontology TBox.
 4. **Ask & check** — GraphRAG over the corpus + conflict checks across walled matters; a query only one unified graph can answer.
@@ -111,7 +111,7 @@ manifests**. The librarian/ingestion lane (build) reads that surface, runs span-
 extraction, and emits candidate claims into the authority spine.
 
 > **Boundary that must hold:** the real corpus and any privileged data stay **outside the
-> repository** (`/home/elpresidank/data-home/oppold-corpus/`). The repo carries only synthetic
+> repository** (the machine-local Oppold corpus home, outside any checkout). The repo carries only synthetic
 > fixtures. Dogfooding runs on the local machine, not in git.
 
 ## 7. Have vs. build — the honest ledger

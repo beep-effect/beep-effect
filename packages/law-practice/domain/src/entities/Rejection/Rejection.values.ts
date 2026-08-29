@@ -8,7 +8,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.values");
 
@@ -26,7 +26,8 @@ const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).annotate(
  * combination rationale; subject-matter (§101) and written-description /
  * definiteness (§112) rejections cite no prior art.
  *
- * @example
+ * **Example** (Decode §102 anticipation ground)
+ *
  * ```ts
  * import { RejectionGround } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -68,7 +69,8 @@ export const RejectionGround = RejectionStatute.toTaggedUnion("statute")({
 /**
  * Type-level tagged union produced by {@link RejectionGround}.
  *
- * @example
+ * **Example** (Satisfy §103 obviousness ground)
+ *
  * ```ts
  * import type { RejectionGround } from "@beep/law-practice-domain"
  *

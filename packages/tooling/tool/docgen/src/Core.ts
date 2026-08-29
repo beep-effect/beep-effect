@@ -15,12 +15,12 @@ import markdownToc from "@effect/markdown-toc";
 import { Effect, FileSystem, flow, HashSet, Order, Path, pipe, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
-import * as Checker from "./Checker.js";
-import * as Configuration from "./Configuration.js";
-import * as Domain from "./Domain.js";
-import * as Parser from "./Parser.js";
-import * as Printer from "./Printer.js";
-import { writeDocgenProofManifest } from "./ProofManifest.js";
+import * as Checker from "./Checker.ts";
+import * as Configuration from "./Configuration.ts";
+import * as Domain from "./Domain.ts";
+import * as Parser from "./Parser.ts";
+import * as Printer from "./Printer.ts";
+import { writeDocgenProofManifest } from "./ProofManifest.ts";
 
 const $I = $RepoDocgenId.create("Core");
 
@@ -41,6 +41,44 @@ class FencedCodeBlock extends S.Class<FencedCodeBlock>($I`FencedCodeBlock`)(
   },
   $I.annote("FencedCodeBlock", {
     description: "Extracted TypeScript fenced code payload and generated file extension.",
+  })
+) {}
+
+/**
+ * Detailed source spans for one extracted TypeScript fence.
+ *
+ * **When to use**
+ *
+ * Use when a caller must edit fence metadata or code against the exact source
+ * slice that was analyzed.
+ *
+ * **Example** (Inspect a fence info span)
+ *
+ * ```ts
+ * import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core"
+ *
+ * const source = ["~~" + "~ts name=sample", "const value = 1", "~~" + "~"].join("\n")
+ * const [fences] = extractFencedCodeBlockDetails(source)
+ * console.log(fences[0]?.infoString) // "ts name=sample"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FencedCodeBlockDetail extends S.Class<FencedCodeBlockDetail>($I`FencedCodeBlockDetail`)(
+  {
+    code: S.String,
+    extension: FencedCodeBlockExtension,
+    infoString: S.String,
+    fenceStart: S.Natural,
+    fenceEnd: S.Natural,
+    infoStart: S.Natural,
+    infoEnd: S.Natural,
+    codeStart: S.Natural,
+    codeEnd: S.Natural,
+  },
+  $I.annote("FencedCodeBlockDetail", {
+    description: "Extracted TypeScript fence with raw metadata and half-open source offsets.",
   })
 ) {}
 
@@ -85,7 +123,7 @@ const readSourceFiles = Effect.gen(function* () {
   const path = yield* Path.Path;
   const patterns = resolveSourceGlobs(config, path);
   const paths = yield* Effect.forEach(patterns, (pattern) => globFiles(pattern, config.exclude), {
-    concurrency: "inherit",
+    concurrency: "unbounded",
   }).pipe(Effect.map(flow(A.flatten, A.filter(isDocgenSourceFile), A.dedupe, A.sort(Order.String))));
   yield* Effect.logInfo(chalk.bold(`${paths.length} module(s) found`));
 
@@ -100,7 +138,7 @@ const readSourceFiles = Effect.gen(function* () {
           })
         )
       ),
-    { concurrency: "inherit" }
+    { concurrency: "unbounded" }
   );
 });
 
@@ -156,8 +194,7 @@ const parseModules = (files: ReadonlyArray<Domain.File>) =>
     )
   );
 
-const typeCheckAndRunExamples = Effect.fn("typeCheckAndRunExamples")(function* (modules: ReadonlyArray<Domain.Module>) {
-  const config = yield* Configuration.Configuration;
+const typeCheckExamples = Effect.fn("typeCheckExamples")(function* (modules: ReadonlyArray<Domain.Module>) {
   yield* cleanupExamples;
   const files = yield* getExampleFiles(modules);
   const len = files.length;
@@ -168,12 +205,6 @@ const typeCheckAndRunExamples = Effect.fn("typeCheckAndRunExamples")(function* (
     yield* createExamplesTsConfigJson;
     yield* Effect.logInfo("Typechecking examples...");
     yield* runTscOnExamples;
-    if (config.runExamples) {
-      yield* Effect.logInfo("Running examples...");
-      yield* runBunOnExamples;
-    } else {
-      yield* Effect.logInfo(chalk.gray("Skipping running examples"));
-    }
   } else {
     yield* Effect.logInfo("No examples found.");
   }
@@ -199,7 +230,17 @@ const extractPrefixedNestedNamespaces = (
 /**
  * Fence metadata token that removes an example from generated type-check files.
  *
- * @example
+ * **When to use**
+ *
+ * Use with a TypeScript fence that documents intentionally non-compiling code.
+ *
+ * **Details**
+ *
+ * The fence remains available to rendered documentation but is omitted from
+ * docgen's generated example project.
+ *
+ * **Example** (Exclude an intentionally invalid fence)
+ *
  * ```ts
  * import { extractFencedCodeBlocks, SKIP_TYPE_CHECKING_FENCE_METADATA } from "@beep/repo-docgen/Core"
  *
@@ -209,6 +250,8 @@ const extractPrefixedNestedNamespaces = (
  *
  * console.log(examples.length) // 0 — skip-type-checking fences are excluded
  * ```
+ *
+ * @see {@link extractFencedCodeBlocks} for metadata-aware fence extraction.
  * @category constants
  * @since 0.0.0
  */
@@ -217,18 +260,28 @@ export const SKIP_TYPE_CHECKING_FENCE_METADATA = "skip-type-checking";
 /**
  * Extracts type-checkable fenced code block text from markdown.
  *
- * @internal
- * @param content - Markdown text scanned for fenced code blocks.
- * @returns A tuple of the extracted example code strings and any parser warnings.
- * @remarks
+ * **When to use**
+ *
+ * Use when callers need plain code strings and do not need generated file
+ * extensions.
+ *
+ * **Details**
+ *
  * Fences tagged with {@link SKIP_TYPE_CHECKING_FENCE_METADATA} are intentionally ignored.
  * Unterminated fences are reported as warnings so docgen can continue parsing the module.
- * @example
+ *
+ * **Example** (Extract a TypeScript fence)
+ *
  * ```ts
  * import { extractFencedCode } from "@beep/repo-docgen/Core"
  * const [examples] = extractFencedCode("~~~ts\nconst value = 1\n~~~")
  * console.log(examples[0])
  * ```
+ *
+ * @internal
+ * @param content - Markdown text scanned for fenced code blocks.
+ * @returns A tuple of the extracted example code strings and any parser warnings.
+ * @see {@link extractFencedCodeBlocks} when generated `.ts` or `.tsx` extensions are required.
  * @category parsing
  * @since 0.0.0
  */
@@ -248,41 +301,66 @@ const isTypeScriptFence = (metadata: string): boolean =>
     A.some((prefix) => Str.startsWith(prefix)(metadata))
   );
 
+const fencePattern = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
+
+const fenceMatches = (content: string): ReadonlyArray<RegExpMatchArray> =>
+  pipe(content, Str.matchAll(fencePattern), A.fromIterable);
+
+const fenceWarnings = (content: string, matches: ReadonlyArray<RegExpMatchArray>): Array<string> =>
+  pipe(
+    matches,
+    A.filter((match) => match[3] === undefined),
+    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
+  );
+
+const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
+  const metadata = Str.toLowerCase(match[1] ?? "");
+  const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
+  return isTypeScriptFence(metadata) && !isSkipTypeChecking;
+};
+
 /**
  * Extracts type-checkable fenced TypeScript code blocks with their generated file extensions.
  *
- * @internal
- * @param content - Markdown text scanned for fenced TypeScript code blocks.
- * @returns A tuple of the extracted fenced code blocks with extensions and any parser warnings.
- * @remarks
+ * **When to use**
+ *
+ * Use when extracted examples must preserve whether docgen should emit a
+ * `.ts` or `.tsx` file.
+ *
+ * **Details**
+ *
  * `tsx` and `typescript jsx` fences are emitted as `.tsx`; `ts` and `typescript` fences are emitted as `.ts`.
- * @example
+ * Fences carrying {@link SKIP_TYPE_CHECKING_FENCE_METADATA} are omitted.
+ *
+ * **Gotchas**
+ *
+ * An unterminated fence is returned through the warnings tuple rather than
+ * failing extraction.
+ *
+ * **Example** (Preserve a TSX fence extension)
+ *
  * ```ts
  * import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core"
  * const [examples] = extractFencedCodeBlocks("~~~tsx\nconst view = <div />\n~~~")
  * console.log(examples[0]?.extension)
  * ```
+ *
+ * @internal
+ * @param content - Markdown text scanned for fenced TypeScript code blocks.
+ * @returns A tuple of the extracted fenced code blocks with extensions and any parser warnings.
+ * @see {@link extractFencedCode} when callers only need code strings.
  * @category parsing
  * @since 0.0.0
  */
 export const extractFencedCodeBlocks = (
   content: string
 ): [examples: Array<FencedCodeBlock>, warnings: Array<string>] => {
-  const fenceRegex = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
-  const matches = pipe(content, Str.matchAll(fenceRegex), A.fromIterable);
-  const warnings = pipe(
-    matches,
-    A.filter((match) => match[3] === undefined),
-    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
-  );
+  const matches = fenceMatches(content);
+  const warnings = fenceWarnings(content, matches);
 
   const examples = pipe(
     matches,
-    A.filter((match) => {
-      const metadata = Str.toLowerCase(match[1] ?? "");
-      const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
-      return isTypeScriptFence(metadata) && !isSkipTypeChecking;
-    }),
+    A.filter(isTypeCheckableFenceMatch),
     A.map((match) =>
       FencedCodeBlock.make({
         code: Str.trim(match[2] ?? ""),
@@ -292,6 +370,70 @@ export const extractFencedCodeBlocks = (
   );
 
   return [examples, warnings];
+};
+
+/**
+ * Extracts TypeScript fences with raw info strings and half-open source spans.
+ *
+ * **When to use**
+ *
+ * Use when a codemod must prove that the opening fence and body have not
+ * changed between analysis and mutation.
+ *
+ * **Details**
+ *
+ * This extractor shares the same match pass, language filtering, and warnings
+ * as {@link extractFencedCodeBlocks}; offsets refer to the supplied string.
+ *
+ * **Example** (Read exact source offsets)
+ *
+ * ```ts
+ * import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core"
+ *
+ * const source = ["before", "~~" + "~ts", "const value = 1", "~~" + "~", "after"].join("\n")
+ * const [fences] = extractFencedCodeBlockDetails(source)
+ * const fence = fences[0]
+ * console.log(fence === undefined ? "" : source.slice(fence.infoStart, fence.infoEnd)) // "ts"
+ * ```
+ *
+ * @param content - Markdown or JSDoc text scanned for fenced TypeScript blocks.
+ * @returns Detailed fences and the same unterminated-fence warnings as the compatibility extractor.
+ * @see {@link extractFencedCodeBlocks} for the stable code-and-extension output shape.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const extractFencedCodeBlockDetails = (
+  content: string
+): [examples: Array<FencedCodeBlockDetail>, warnings: Array<string>] => {
+  const matches = fenceMatches(content);
+  const examples = pipe(
+    matches,
+    A.filter(isTypeCheckableFenceMatch),
+    A.map((match) => {
+      const matched = match[0];
+      const infoString = match[1] ?? "";
+      const rawCode = match[2] ?? "";
+      const fenceStart = match.index ?? 0;
+      const infoStart = fenceStart + 3;
+      const infoEnd = infoStart + infoString.length;
+      const codeStart = infoEnd + 1;
+      const closingLength = match[3]?.length ?? 0;
+      const fenceEnd = fenceStart + matched.length;
+      const codeEnd = fenceEnd - closingLength;
+      return FencedCodeBlockDetail.make({
+        code: Str.trim(rawCode),
+        extension: fenceExtension(infoString),
+        infoString,
+        fenceStart,
+        fenceEnd,
+        infoStart,
+        infoEnd,
+        codeStart,
+        codeEnd,
+      });
+    })
+  );
+  return [examples, fenceWarnings(content, matches)];
 };
 
 const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: ReadonlyArray<Domain.Module>) {
@@ -358,6 +500,7 @@ const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: Readonl
         getFiles("class")(c),
         A.flatMap(c.methods, getFiles(`${c.name}-method`)),
         A.flatMap(c.staticMethods, getFiles(`${c.name}-staticmethod`)),
+        A.flatMap(c.properties, getFiles(`${c.name}-property`)),
       ])
     );
     const allPrefixedInterfaces = A.appendAll(
@@ -455,6 +598,7 @@ const runTscOnExamples = Effect.gen(function* () {
   const tsconfig = path.normalize(path.join(cwd, config.outDir, "examples", "tsconfig.json"));
   const command = ChildProcess.make(config.tscExecutable, ["--noEmit", "--project", tsconfig], {
     cwd,
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -471,35 +615,6 @@ const runTscOnExamples = Effect.gen(function* () {
   if (exitCode !== 0) {
     return yield* Domain.DocgenError.make({
       message: `Something went wrong while running tsc on examples:\n\n${output}`,
-    });
-  }
-});
-
-const runBunOnExamples = Effect.gen(function* () {
-  const config = yield* Configuration.Configuration;
-  const process = yield* Domain.Process;
-  const cwd = yield* process.cwd;
-  const path = yield* Path.Path;
-  const examplesDir = path.normalize(path.join(cwd, config.outDir, "examples"));
-  const index = path.join(examplesDir, "index.ts");
-  const command = ChildProcess.make("bun", [index], {
-    cwd: examplesDir,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  yield* Effect.logDebug("Running bun on examples...");
-  const { output, exitCode } = yield* collectCommandOutput(command).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Core.runBunOnExamples] Failed to run bun examples\n${String(cause)}`,
-      })
-    )
-  );
-
-  if (exitCode !== 0) {
-    return yield* Domain.DocgenError.make({
-      message: `Something went wrong while running example files:\n\n${output}`,
     });
   }
 });
@@ -664,7 +779,7 @@ const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray
     path.normalize(path.join(config.outDir, "**", `*${extension}.md`))
   );
   yield* Effect.logDebug(`Deleting ${chalk.black(A.join(patterns, ", "))}...`);
-  const paths = yield* Effect.forEach(patterns, (pattern) => globFiles(pattern), { concurrency: "inherit" }).pipe(
+  const paths = yield* Effect.forEach(patterns, (pattern) => globFiles(pattern), { concurrency: "unbounded" }).pipe(
     Effect.map(flow(A.flatten, A.dedupe))
   );
   yield* Effect.forEach(
@@ -686,25 +801,42 @@ const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray
 });
 
 /**
- * Runs the full docgen workflow from source parsing through markdown emission.
+ * Runs docgen from source discovery through checked examples and rendered
+ * markdown output.
+ *
+ * **When to use**
+ *
+ * Use as the main executable workflow after providing a docgen configuration
+ * and its required services.
+ *
+ * **Details**
+ *
+ * Source checking and markdown rendering run concurrently. Full-package runs
+ * write a proof manifest after output is emitted.
+ *
+ * **Gotchas**
+ *
+ * Focused include runs skip the proof manifest because their output set does
+ * not represent the complete package.
+ *
+ * **Example** (Attach error logging to the workflow)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { program } from "@beep/repo-docgen/Core"
+ *
+ * const logged = program.pipe(
+ *   Effect.tapError((error) => Effect.logError(error.message))
+ * )
+ * console.log(Effect.isEffect(logged)) // true
+ * ```
  *
  * @internal
- * @remarks
- * Full-package runs write a proof manifest after docs are emitted. Focused include runs skip the manifest
- * because the output set does not represent the whole package.
  * @effects
  * - Reads configured source files and optional generated docs configuration from the current package.
  * - Writes markdown pages, generated example files, example `tsconfig.json`, and full-run proof manifests.
  * - Runs the configured TypeScript compiler against extracted examples and optionally executes them with Bun.
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import { program } from "@beep/repo-docgen/Core"
- * const logged = program.pipe(
- *   Effect.tapError((error) => Effect.logError(error.message))
- * )
- * console.log(logged)
- * ```
+ * @see {@link Configuration.Configuration} for the service that supplies workflow settings.
  * @category workflows
  * @since 0.0.0
  */
@@ -725,7 +857,7 @@ export const program = Effect.gen(function* () {
             message: `The following errors occurred while checking the modules:\n\n${A.join("\n\n")(errors)}`,
           });
         }
-        yield* typeCheckAndRunExamples(modules);
+        yield* typeCheckExamples(modules);
       }),
       Effect.gen(function* () {
         yield* Effect.logInfo("Creating markdown files...");

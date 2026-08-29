@@ -8,38 +8,44 @@
  */
 "use client";
 
-import { EditorStateFromJson, SerializedEditorState } from "@beep/lexical-schema";
+import { EditorStateFromJson } from "@beep/lexical-schema";
+import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
 import { ContentEditable } from "@beep/ui/components/editor/editor-ui/content-editable";
 import { O } from "@beep/utils";
+import { useAtomSet } from "@effect/atom-react";
 import { TRANSFORMERS } from "@lexical/markdown";
-import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
-import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { Effect, Exit } from "effect";
+import { Result } from "effect";
 import * as S from "effect/Schema";
+import { editorCapabilityCatalog } from "./capability/catalog.ts";
+import { compatibilityProfile } from "./capability/profiles.ts";
+import { resolveEditorProfile } from "./capability/resolver.ts";
+import { ResolvedExtensions } from "./capability/runtime.tsx";
+import { logEditorErrorFn } from "./chat/atoms.ts";
 import { editorNodes } from "./nodes.ts";
+import { decodeEditorStateForRuntimeResult, runtimeInitialStateOption } from "./runtime.ts";
 import { editorTheme } from "./theme.ts";
+import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
+import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { JSX } from "react";
 
-const onError = (error: Error) => {
-  Effect.runSync(Effect.logError(error));
-};
+const resolvedCompatibilityProfile = Result.getOrThrow(
+  resolveEditorProfile(editorCapabilityCatalog, compatibilityProfile)
+);
 
 /**
  * The markdown shortcut transformers registered by {@link EditorComposer} —
  * exported so apps can compose their own plugin stacks.
  *
- * @example
- * ```ts
+ * **Example** (Import markdown transformers)
+ *
+ * ```ts import.meta.vitest name="Import markdown transformers"
  * import { markdownTransformers } from "@beep/editor/composer"
  *
- * console.log(markdownTransformers.length > 0) // true
+ * markdownTransformers.length > 0 // => true
  * ```
  *
  * @category configuration
@@ -47,25 +53,74 @@ const onError = (error: Error) => {
  */
 export const markdownTransformers = TRANSFORMERS;
 
-interface EditorComposerProps {
+/**
+ * React props for {@link EditorComposer}.
+ *
+ * **Example** (Type EditorComposer props)
+ *
+ * ```ts import.meta.vitest name="Type EditorComposer props"
+ * import type { EditorComposerProps } from "@beep/editor/composer"
+ *
+ * const props: EditorComposerProps = { placeholder: "Draft response" }
+ * props.placeholder // => "Draft response"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorComposerProps {
   /** Optional class for the editable content container. */
-  readonly className?: string;
-  /** Optional schema-decoded initial editor state. */
-  readonly initialState?: SerializedEditorState.Type;
+  readonly className?: string | undefined;
+  /**
+   * Optional schema-decoded initial editor state. Lexical reads it once; change
+   * the component `key` to replace it after mount.
+   */
+  readonly initialState?: SerializedEditorState.Type | undefined;
   /**
    * Called with the schema-decoded state on every content change; states
    * that fail the v1 schema are logged and skipped.
    */
-  readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
+  readonly onSerializedChange?: ((state: SerializedEditorState.Type) => void) | undefined;
   /** Composer placeholder text. */
-  readonly placeholder?: string;
+  readonly placeholder?: string | undefined;
+}
+
+/**
+ * React props for {@link EditorWireComposer}.
+ *
+ * **Example** (Type wire composer props)
+ *
+ * ```ts import.meta.vitest name="Type wire composer props"
+ * import type { EditorWireComposerProps } from "@beep/editor/composer"
+ *
+ * const props: EditorWireComposerProps = {
+ *   input: {
+ *     root: {
+ *       type: "root", version: 1,
+ *       children: [{
+ *         type: "paragraph", version: 1, children: [],
+ *         direction: null, format: "", indent: 0
+ *       }]
+ *     }
+ *   },
+ * }
+ * typeof props.input // => "object"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface EditorWireComposerProps extends Omit<EditorComposerProps, "initialState"> {
+  /** Unknown persisted input admitted before any editable Lexical surface mounts. */
+  readonly input: unknown;
 }
 
 /**
  * Editable Lexical composer over the `@beep/lexical-schema` v1 node
  * vocabulary with markdown shortcuts.
  *
- * @example
+ * **Example** (Render draft editor)
+ *
  * ```tsx
  * import { EditorComposer } from "@beep/editor/composer"
  *
@@ -88,6 +143,12 @@ export function EditorComposer({
   className,
   onSerializedChange,
 }: EditorComposerProps): JSX.Element {
+  const logEditorError = useAtomSet(logEditorErrorFn);
+  const runtimeInitialState = runtimeInitialStateOption(initialState);
+  if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+    return <EditorWireViewer input={initialState} className={className} />;
+  }
+
   return (
     <LexicalComposer
       initialConfig={{
@@ -95,9 +156,9 @@ export function EditorComposer({
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(O.fromUndefinedOr(initialState), S.encodeSync(EditorStateFromJson)),
+          editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)),
         }),
-        onError,
+        onError: (error) => logEditorError(error),
       }}
     >
       {/* Non-flex wrapper: Lexical warns when the content editable's direct
@@ -114,24 +175,79 @@ export function EditorComposer({
           ErrorBoundary={LexicalErrorBoundary}
         />
       </div>
-      <HistoryPlugin />
-      <ListPlugin />
-      <CheckListPlugin />
-      <LinkPlugin />
-      <MarkdownShortcutPlugin transformers={[...markdownTransformers]} />
+      <ResolvedExtensions resolved={resolvedCompatibilityProfile} />
       {onSerializedChange === undefined ? null : (
         <OnChangePlugin
           ignoreSelectionChange={true}
           onChange={(nextEditorState) => {
-            const exit = Effect.runSyncExit(S.decodeUnknownEffect(SerializedEditorState)(nextEditorState.toJSON()));
-            Exit.match(exit, {
+            Result.match(decodeEditorStateForRuntimeResult(nextEditorState.toJSON()), {
               onSuccess: onSerializedChange,
-              onFailure: (cause) =>
-                Effect.runSync(Effect.logError("EditorComposer produced out-of-schema state", cause)),
+              onFailure: (error) =>
+                logEditorError({
+                  message: "EditorComposer produced out-of-schema state",
+                  error,
+                }),
             });
           }}
         />
       )}
     </LexicalComposer>
   );
+}
+
+/**
+ * Editable admission surface for persisted Lexical wire. Compatible v1 input
+ * mounts {@link EditorComposer}; runtime-incompatible content, including empty
+ * roots and future/extension wire, remains escaped and read-only so it can
+ * never reach a load or save callback. A changed compatible `input` remounts
+ * the inner editor with its canonical encoded state.
+ *
+ * **Example** (Mount wire composer)
+ *
+ * ```tsx
+ * import { EditorWireComposer } from "@beep/editor/composer"
+ *
+ * const wire = {
+ *   root: {
+ *     type: "root", version: 1,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
+ * }
+ * const editor = <EditorWireComposer input={wire} placeholder="Draft" />
+ * console.log(editor.type.name) // "EditorWireComposer"
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function EditorWireComposer({
+  input,
+  className,
+  onSerializedChange,
+  placeholder,
+}: EditorWireComposerProps): JSX.Element {
+  return Result.match(analyzeEditorStateCompatibilityResult(input), {
+    onFailure: () => <EditorWireViewer input={input} className={className} />,
+    onSuccess: (result) =>
+      O.match(result.state, {
+        onNone: () => <EditorCompatibilityViewer result={result} className={className} />,
+        onSome: (initialState) => {
+          const encodedInitialState = S.encodeSync(EditorStateFromJson)(initialState);
+          return (
+            <EditorComposer
+              key={encodedInitialState}
+              initialState={initialState}
+              {...O.getSomesStruct({
+                className: O.fromUndefinedOr(className),
+                onSerializedChange: O.fromUndefinedOr(onSerializedChange),
+                placeholder: O.fromUndefinedOr(placeholder),
+              })}
+            />
+          );
+        },
+      }),
+  });
 }

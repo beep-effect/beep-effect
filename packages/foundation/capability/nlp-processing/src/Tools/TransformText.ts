@@ -72,12 +72,15 @@ class TransformTextSuccess extends S.Class<TransformTextSuccess>($I`TransformTex
  * Defines the agent-facing tool contract for applying ordered text
  * normalization operations.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs deterministic cleanup such as lowercasing,
  * trimming, whitespace normalization, punctuation removal, or stop-word
  * removal before another NLP operation.
  *
- * @example
- * ```ts
+ * **Example** (Decode transform parameters)
+ *
+ * ```ts import.meta.vitest name="Decode transform parameters"
  * import * as S from "effect/Schema"
  * import { TransformText } from "@beep/nlp-processing/Tools/TransformText"
  *

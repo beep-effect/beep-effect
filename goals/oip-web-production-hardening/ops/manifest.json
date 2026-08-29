@@ -66,7 +66,7 @@
     "vercelAuthentication": "verified: Vercel API reports no password, trusted IP, or Vercel Authentication protection",
     "localCsp": "verified: next.config.ts headers present through portless HTTPS and Chromium runtime has no console errors",
     "stagingLighthouse": "historical: staging.opip.law scored 100 performance, accessibility, best-practices, seo, and agentic-browsing; refresh after staging.oip.law cutover",
-    "mdnObservatory": "blocked: B+ score 80 because next.config.ts static CSP needs unsafe-inline; A+ requires nonce/proxy or generated hashes",
+    "mdnObservatory": "accepted for shipped static posture: B+ score 80; nonce/proxy or generated hashes is the future A+ path",
     "sanityLiveProject": "blocked: OIP_SECRETS has no OIP Sanity project id/dataset/token",
     "hubspotForms": "deferred: service key lacks HubSpot forms scope; CRM contact upsert is active",
     "vercelInsights": "deferred: scripts are gated behind NEXT_PUBLIC_ENABLE_VERCEL_INSIGHTS until Vercel analytics asset is enabled"
@@ -109,7 +109,12 @@
   "initiative": {
     "id": "oip-web-production-hardening",
     "title": "OIP Web Production Hardening",
-    "status": "paused"
+    "status": "completed-retained",
+    "updated": "2026-07-14"
   },
-  "statusNote": "legacy status: local_hardening_and_oip_s3_rename_applied_provider_dns_gates_remaining"
+  "statusNote": "Completed as shipped: implementation and audit are complete; remaining provider operations and the production cutover approval gate are retained in history/outputs/launch-runbook.md.",
+  "followUpRunbook": "history/outputs/launch-runbook.md",
+  "schemaVersion": "initiative-manifest/v2",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/oip-web-production-hardening"
 }

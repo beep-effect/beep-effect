@@ -8,7 +8,8 @@
 /**
  * Turn row converter exports.
  *
- * @example
+ * **Example** (Log toTurnInsert export)
+ *
  * ```ts
  * import * as Turn from "@beep/workspace-tables/entities/Turn"
  *
@@ -22,11 +23,12 @@ export * from "./Turn.converters.ts";
 /**
  * Turn table exports.
  *
- * @example
+ * **Example** (Log table entity type)
+ *
  * ```ts
  * import * as Turn from "@beep/workspace-tables/entities/Turn"
  *
- * console.log(Turn.Table.definition.entityId.entityType)
+ * console.log(Turn.TABLE_NAME)
  * ```
  *
  * @category tables

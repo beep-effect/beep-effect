@@ -16,19 +16,23 @@ import type {
   ProbeProviderInstanceCommand,
   RemoveProviderInstanceCommand,
   UpdateProviderInstanceCommand,
-} from "./ProviderInstance.commands.js";
-import type { ProviderActionError } from "./ProviderInstance.errors.js";
+} from "./ProviderInstance.commands.ts";
+import type { ProviderActionError } from "./ProviderInstance.errors.ts";
 
 const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.use-cases");
 
-/** Callable provider-instance application operations.
- * @example
+/**
+ *  Callable provider-instance application operations.
+ *
+ * **Example** (Satisfying use cases shape)
+ *
  * ```ts
  * import type { ProviderInstanceUseCasesShape } from "@beep/agents-use-cases/public"
  * import { Effect } from "effect"
  * const useCases = { add: () => Effect.die("example"), update: () => Effect.die("example"), remove: () => Effect.void, probe: () => Effect.die("example"), get: () => Effect.die("example"), list: () => Effect.succeed([]) } satisfies ProviderInstanceUseCasesShape
  * console.log(useCases.list)
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -47,14 +51,18 @@ export interface ProviderInstanceUseCasesShape {
   ) => Effect.Effect<Domain.ProviderInstance, ProviderActionError>;
 }
 
-/** Context tag for provider-instance use cases.
- * @example
+/**
+ *  Context tag for provider-instance use cases.
+ *
+ * **Example** (Yielding use cases context)
+ *
  * ```ts
  * import { ProviderInstanceUseCases } from "@beep/agents-use-cases/public"
  * import { Effect } from "effect"
  * const program = Effect.gen(function* () { return yield* ProviderInstanceUseCases })
  * console.log(program)
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

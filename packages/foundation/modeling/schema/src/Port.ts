@@ -46,19 +46,21 @@ const PortDecimalString = S.String.check(
 /**
  * Branded schema for usable transport-layer port numbers.
  *
- * @remarks
+ * **Details**
+ *
  * Transport protocols use 16-bit port-number spaces, but this schema excludes
  * port `0` because it is reserved in the IANA TCP/UDP registry and commonly
  * used by local APIs as an allocation sentinel rather than a service port.
  *
- * @example
- * ```ts
+ * **Example** (Decode HTTPS port number)
+ *
+ * ```ts import.meta.vitest name="Decode HTTPS port number"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Port } from "@beep/schema/Port"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(Port)(443))
- * console.log(port) // 443
+ * port // => 443
  * ```
  *
  * @invariant Port values are integers from 1 through 65535.
@@ -75,8 +77,9 @@ export const Port = S.Int.check(PortRange).pipe(
 /**
  * Type-level value inferred from {@link Port}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow unknown to Port)
+ *
+ * ```ts import.meta.vitest name="Narrow unknown to Port"
  * import * as S from "effect/Schema"
  * import { Port } from "@beep/schema/Port"
  * import type { Port as PortValue } from "@beep/schema/Port"
@@ -84,7 +87,7 @@ export const Port = S.Int.check(PortRange).pipe(
  * const input: unknown = 5432
  * if (S.is(Port)(input)) {
  *   const port: PortValue = input
- *   console.log(port) // 5432
+ *   port // => 5432
  * }
  * ```
  *
@@ -96,19 +99,21 @@ export type Port = typeof Port.Type;
 /**
  * Codec that decodes decimal port strings into branded {@link Port} values.
  *
- * @remarks
+ * **Details**
+ *
  * The encoded side accepts only ASCII decimal digits before number decoding,
  * avoiding JavaScript number-coercion forms such as whitespace or hexadecimal
  * strings.
  *
- * @example
- * ```ts
+ * **Example** (Decode decimal port string)
+ *
+ * ```ts import.meta.vitest name="Decode decimal port string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { PortFromString } from "@beep/schema/Port"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)("8080"))
- * console.log(port) // 8080
+ * port // => 8080
  * ```
  *
  * @invariant Decoded values satisfy {@link Port}.
@@ -125,8 +130,9 @@ export const PortFromString = PortDecimalString.pipe(
 /**
  * Type-level value inferred from {@link PortFromString}.
  *
- * @example
- * ```ts
+ * **Example** (Decoded string as Port type)
+ *
+ * ```ts import.meta.vitest name="Decoded string as Port type"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Port, PortFromString } from "@beep/schema/Port"
@@ -135,7 +141,7 @@ export const PortFromString = PortDecimalString.pipe(
  * const input: unknown = "3000"
  * const acceptsPortStringValue = (value: PortFromStringValue) => S.is(Port)(value)
  * const value = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)(input))
- * console.log(acceptsPortStringValue(value)) // true
+ * acceptsPortStringValue(value) // => true
  * ```
  *
  * @category models

@@ -34,19 +34,21 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
 /**
  * Branded schema for protobuf `double` values.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Protobufjs writes `double` as IEEE-754 binary64 and exposes the JavaScript
  * value as a `number`. IEEE-754 special values are valid protobuf scalar
  * payloads, so this schema accepts `NaN`, `Infinity`, and `-Infinity`.
  *
- * @example
- * ```ts
+ * **Example** (Decode double number value)
+ *
+ * ```ts import.meta.vitest name="Decode double number value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Double } from "@beep/schema/Double"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Double)(1.25))
- * console.log(value) // 1.25
+ * value // => 1.25
  * ```
  *
  * @invariant Values are JavaScript numbers in the protobuf `double` domain, including IEEE-754 special values.
@@ -73,8 +75,9 @@ export const Double = ProtobufNumber.annotate({
 /**
  * Type-level value inferred from {@link Double}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow unknown to Double)
+ *
+ * ```ts import.meta.vitest name="Narrow unknown to Double"
  * import * as S from "effect/Schema"
  * import { Double } from "@beep/schema/Double"
  * import type { Double as DoubleValue } from "@beep/schema/Double"
@@ -82,7 +85,7 @@ export const Double = ProtobufNumber.annotate({
  * const input: unknown = 1.25
  * if (S.is(Double)(input)) {
  *   const value: DoubleValue = input
- *   console.log(value) // 1.25
+ *   value // => 1.25
  * }
  * ```
  *

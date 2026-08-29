@@ -3,18 +3,16 @@
   "exploration": {
     "slug": "local-first-voice",
     "title": "Local-First Voice & Microphone Capability",
-    "status": "active",
-    "stage": "shape",
-    "openQuestions": [
-      "Spike outcome: does push-to-talk dictation (local Moonshine) + read-aloud (local Kokoro) in the professional-desktop composer prove out the UX and the webview/worker hard bits (secure context, COOP/COEP, getUserMedia, local model load)?",
-      "After the spike: graduate which goal(s) from the 7-packet MAP, and reshape BRIEF accordingly."
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/voice-composer-slice"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-27",
-    "updated": "2026-06-27"
+    "updated": "2026-08-13",
+    "sources": ["research/SOURCES.md"]
   }
 }

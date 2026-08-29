@@ -9,9 +9,8 @@
 /**
  * Component-span model exports.
  *
- * **Example**
+ * **Example** (Import CaseComponentSpan)
  *
- * @example
  * ```ts
  * import { CaseComponentSpan } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ComponentSpan.models.js";
+export * from "./ComponentSpan.models.ts";

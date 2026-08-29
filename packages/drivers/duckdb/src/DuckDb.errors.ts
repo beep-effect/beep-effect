@@ -1,7 +1,8 @@
 /**
  * Typed error models and normalization helpers for the DuckDB driver boundary.
  *
- * @remarks
+ * **Details**
+ *
  * Native `@duckdb/node-api` failures enter this package as `unknown`. The
  * exported normalizer converts them into a single tagged error shape so callers
  * can catch `DuckDbError` without depending on native error internals.
@@ -11,13 +12,13 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $DuckdbId.create("DuckDb.errors");
-const DuckDbDefect = S.Defect({ includeStack: true });
+const DuckDbDefect = Defect({ includeStack: true });
 
 type DuckDbErrorContextInput = {
   readonly cause?: unknown;
@@ -44,7 +45,8 @@ const errorOptionsFromInput = (options: DuckDbErrorContextInput): DuckDbErrorFro
 /**
  * Driver operation names surfaced in {@link DuckDbError} diagnostics.
  *
- * @example
+ * **Example** (Log query operation enum)
+ *
  * ```ts
  * import { DuckDbOperation } from "@beep/duckdb"
  *
@@ -63,7 +65,8 @@ export const DuckDbOperation = LiteralKit(["copyTableToParquet", "query", "run",
 /**
  * Runtime TypeScript type represented by {@link DuckDbOperation}.
  *
- * @example
+ * **Example** (Type a query operation)
+ *
  * ```ts
  * import type { DuckDbOperation } from "@beep/duckdb"
  *
@@ -76,16 +79,32 @@ export const DuckDbOperation = LiteralKit(["copyTableToParquet", "query", "run",
  */
 export type DuckDbOperation = typeof DuckDbOperation.Type;
 
+const DuckDbErrorLeadingContextFields = {
+  cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Inspectable originating defect, when available.",
+  }),
+  databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "DuckDB database path active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+const DuckDbErrorTrailingContextFields = {
+  statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "SQL statement active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+
 /**
  * Diagnostic context captured while normalizing an unknown DuckDB failure.
  *
- * @remarks
+ * **Details**
+ *
  * `databasePath` and `statement` are copied into the resulting
  * {@link DuckDbError} when present. The unknown failure value supplied to
  * {@link DuckDbError.fromUnknown} is retained only when it has an inspectable
  * defect shape, keeping opaque native values out of the public error payload.
  *
- * @example
+ * **Example** (Make diagnostic options)
+ *
  * ```ts
  * import { DuckDbErrorFromUnknownOptions } from "@beep/duckdb"
  * import * as O from "effect/Option"
@@ -105,18 +124,11 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
   $I`DuckDbErrorFromUnknownOptions`
 )(
   {
-    cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "DuckDB database path active when the failure occurred.",
-    }),
+    ...DuckDbErrorLeadingContextFields,
     message: S.String.pipe(SchemaUtils.withKeyDefaults("DuckDB operation failed.")).annotateKey({
       description: "Human-readable failure summary.",
     }),
-    statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "SQL statement active when the failure occurred.",
-    }),
+    ...DuckDbErrorTrailingContextFields,
   },
   $I.annote("DuckDbErrorFromUnknownOptions", {
     description: "Options used when normalizing unknown DuckDB boundary failures.",
@@ -126,13 +138,15 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
 /**
  * Recoverable technical failure raised by the DuckDB driver boundary.
  *
- * @remarks
+ * **Details**
+ *
  * The error captures the driver operation that failed plus optional database
  * path and SQL statement context. Native failures are normalized through
  * {@link DuckDbError.fromUnknown}; callers usually handle this error by tag in
  * the Effect failure channel.
  *
- * @example
+ * **Example** (Catch and recover error)
+ *
  * ```ts
  * import { DuckDbError } from "@beep/duckdb"
  * import { Effect } from "effect"
@@ -152,26 +166,19 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
  * @category errors
  * @since 0.0.0
  */
-export class DuckDbError extends TaggedErrorClass<DuckDbError>($I`DuckDbError`)(
+export class DuckDbError extends S.TaggedError<DuckDbError>($I`DuckDbError`)(
   "DuckDbError",
   {
-    cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "DuckDB database path active when the failure occurred.",
-    }),
+    ...DuckDbErrorLeadingContextFields,
     message: S.String.annotateKey({
       description: "Human-readable failure summary.",
     }),
     operation: DuckDbOperation.annotateKey({
       description: "DuckDB driver operation that failed.",
     }),
-    statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "SQL statement active when the failure occurred.",
-    }),
+    ...DuckDbErrorTrailingContextFields,
   },
-  $I.annote("DuckDbError", {
+  $I.annoteError<DuckDbError>("DuckDbError", {
     description: "Technical DuckDB driver failure scoped to a driver operation.",
   })
 ) {
@@ -180,13 +187,15 @@ export class DuckDbError extends TaggedErrorClass<DuckDbError>($I`DuckDbError`)(
   /**
    * Normalize an unknown native DuckDB failure into a tagged driver error.
    *
-   * @remarks
+   * **Details**
+   *
    * Existing {@link DuckDbError} values are returned unchanged, which lets
    * adapter code call the normalizer at multiple boundaries without wrapping
    * the same failure repeatedly. The helper supports both data-first and
    * data-last forms for use in `Effect.mapError` and `Effect.try*` callbacks.
    *
-   * @example
+   * **Example** (Normalize with database path)
+   *
    * ```ts
    * import { DuckDbError } from "@beep/duckdb"
    *

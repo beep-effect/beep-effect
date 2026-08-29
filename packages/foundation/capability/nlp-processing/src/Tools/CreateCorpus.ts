@@ -52,12 +52,15 @@ class CreateCorpusParameters extends S.Class<CreateCorpusParameters>($I`CreateCo
  * Defines the agent-facing tool contract for creating a stateful BM25-style
  * corpus session.
  *
+ * **Details**
+ *
  * Use this tool before `LearnCorpus`, `QueryCorpus`, or `CorpusStats` when the
  * caller needs a reusable in-memory corpus with optional BM25 parameter
  * overrides.
  *
- * @example
- * ```ts
+ * **Example** (Decode CreateCorpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode CreateCorpus parameters"
  * import * as S from "effect/Schema"
  * import { CreateCorpus } from "@beep/nlp-processing/Tools/CreateCorpus"
  *

@@ -30,7 +30,7 @@ const SyncDriftTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(11);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(11);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const syncInput = (vaultRootPath: string) => SyncOnceInput.make({ vaultRootPath, workspaceId });
 const listConflictsInput = ListOpenConflictsInput.make({ workspaceId });
@@ -63,8 +63,9 @@ const findTrackedItem = (relPath: string) =>
   );
 
 describe("@beep/documents-server VaultSyncEngine drift detection", () => {
-  it.effect("classifies foreign remote events, ignores echoes, and dedupes across polls", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "classifies foreign remote events, ignores echoes, and dedupes across polls",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -147,11 +148,12 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       );
       const replayStatus = yield* engine.syncOnce(syncInput(root));
       expect(replayStatus.openConflicts).toBe(2);
-    }).pipe(provideScopedLayer(SyncDriftTestLayer))
+    }, provideScopedLayer(SyncDriftTestLayer))
   );
 
-  it.effect("flags a remote delete as a conflict and keeps the local file untouched", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "flags a remote delete as a conflict and keeps the local file untouched",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const fs = yield* FileSystem.FileSystem;
       const handle = yield* DmsMirrorFixtureHandle;
@@ -179,11 +181,12 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       expect(A.map(conflicts, (conflict) => conflict.conflictKind)).toEqual(["remoteDelete"]);
       // One-way push posture: remote drift never mutates the local vault.
       expect(yield* fs.readFileString(path.join(root, "kept.txt"))).toBe("kept body");
-    }).pipe(provideScopedLayer(SyncDriftTestLayer))
+    }, provideScopedLayer(SyncDriftTestLayer))
   );
 
-  it.effect("marks a reviewed conflict and removes it from the open listing", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "marks a reviewed conflict and removes it from the open listing",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -212,11 +215,12 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
 
       expect(reviewed.resolutionStatus).toBe("reviewed");
       expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);
-    }).pipe(provideScopedLayer(SyncDriftTestLayer))
+    }, provideScopedLayer(SyncDriftTestLayer))
   );
 
-  it.effect("survives an engine restart without duplicate pushes and resumes the stored cursor", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "survives an engine restart without duplicate pushes and resumes the stored cursor",
+    Effect.fnUntraced(function* () {
       const cursorRepository = yield* SyncCursorRepository;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -241,6 +245,27 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       expect(counts.uploadFile).toBe(1);
       expect(counts.uploadFileVersion).toBe(0);
       expect(positions).toEqual([O.none(), O.some(storedCursor.streamPosition)]);
-    }).pipe(provideScopedLayer(SyncDriftTestLayer))
+    }, provideScopedLayer(SyncDriftTestLayer))
+  );
+
+  it.effect(
+    "records a remote poll failure on the durable cursor without failing the sync pass",
+    Effect.fnUntraced(function* () {
+      const cursorRepository = yield* SyncCursorRepository;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      const engine = yield* makeVaultSyncEngine();
+
+      yield* engine.syncOnce(syncInput(root));
+      yield* handle.failNext("pollEvents", false);
+      yield* engine.syncOnce(syncInput(root));
+
+      const cursor = yield* cursorRepository
+        .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
+        .pipe(Effect.flatMap(Effect.fromOption));
+
+      expect(cursor.status).toBe("error");
+      expect(cursor.lastError).toEqual(O.some("fixture injected pollEvents failure"));
+    }, provideScopedLayer(SyncDriftTestLayer))
   );
 });

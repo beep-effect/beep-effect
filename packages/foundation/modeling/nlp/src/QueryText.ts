@@ -14,17 +14,19 @@ const firstCapture = (pattern: RegExp, input: string): O.Option<string> =>
 /**
  * Canonicalize a free-form user question for deterministic matching.
  *
- * @remarks
+ * **Details**
+ *
  * The helper trims only boundary whitespace and collapses internal whitespace.
  * It intentionally preserves punctuation, casing, and path-like separators so
  * downstream extractors can still distinguish prose from literal references.
  *
- * @example
- * ```typescript
+ * **Example** (Collapse question whitespace)
+ *
+ * ```ts import.meta.vitest name="Collapse question whitespace"
  * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const normalized = QueryText.normalizeQuestion("  hello   world  ")
- * console.log(normalized) // "hello world"
+ * normalized // => "hello world"
  * ```
  *
  * @category normalization
@@ -35,17 +37,19 @@ export const normalizeQuestion: (input: string) => string = flow(Str.trim, Str.r
 /**
  * Normalize a short extracted phrase after it has been pulled from prose.
  *
- * @remarks
+ * **Details**
+ *
  * Boundary quotes, brackets, and trailing sentence punctuation are discarded,
  * while whitespace around `/`, `.`, `_`, and `-` is collapsed. This keeps
  * package names, file paths, and symbol-ish phrases stable across user wording.
  *
- * @example
- * ```typescript
+ * **Example** (Strip phrase quotes and spaces)
+ *
+ * ```ts import.meta.vitest name="Strip phrase quotes and spaces"
  * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const normalized = QueryText.normalizePhrase('"hello / world"')
- * console.log(normalized) // "hello/world"
+ * normalized // => "hello/world"
  * ```
  *
  * @category normalization
@@ -62,13 +66,14 @@ export const normalizePhrase: (input: string) => string = flow(
 /**
  * Extract the first value enclosed in backticks from a user question.
  *
- * @example
- * ```typescript
+ * **Example** (Extract first backtick value)
+ *
+ * ```ts import.meta.vitest name="Extract first backtick value"
  * import * as O from "effect/Option"
  * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const result = QueryText.extractBacktickValue("What is `Effect.gen`?")
- * console.log(O.getOrElse(result, () => "none")) // "Effect.gen"
+ * O.getOrElse(result, () => "none") // => "Effect.gen"
  * ```
  *
  * @category parsing

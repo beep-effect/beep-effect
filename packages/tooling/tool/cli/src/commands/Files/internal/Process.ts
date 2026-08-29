@@ -8,6 +8,7 @@
 import {
   ArtifactId,
   ArtifactLocator,
+  ArtifactReference,
   ContentDigest,
   OperationId,
   SourceArtifact,
@@ -36,36 +37,55 @@ import {
   UnsupportedSelectedStrategy,
 } from "@beep/file-processing/Strategy";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
-import { makeLibpffFileProcessingEngine } from "@beep/libpff";
+import {
+  LibpffFileProcessingEngineDescriptor,
+  makeLibpffFileProcessingEngine,
+  makePffexportFileProcessingEngine,
+  PffexportEngineConfig,
+} from "@beep/libpff";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { NativePathToPosixPath, normalizePath } from "@beep/schema/PosixPath";
-import { makeTikaFileProcessingEngine } from "@beep/tika";
+import {
+  makeTikaAppFileProcessingEngine,
+  makeTikaServerFileProcessingEngine,
+  makeTikaServerFileProcessingEngineFromEnv,
+  TikaAppEngineConfig,
+  TikaFileProcessingEngineDescriptor,
+  TikaServerEngineConfig,
+} from "@beep/tika";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe, Ref } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FilesCommandError, formatPlatformError } from "../Files.errors.js";
-import { FilesConcurrency } from "../Files.progress.js";
-import { ProcessFilesSummary } from "../Files.schemas.js";
+import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
+import { FilesConcurrency } from "../Files.progress.ts";
+import { ProcessFilesSummary } from "../Files.schemas.ts";
 import type {
   FileProcessingFailureRecord,
   SourceProcessingRecord,
   SourceProcessingStatus,
 } from "@beep/file-processing/Extraction";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type { FileFormatFamily, FileProcessingSkipReason, SelectedStrategy } from "@beep/file-processing/Strategy";
+import type {
+  FileFormatFamily,
+  FileProcessingEngineDescriptor,
+  FileProcessingSkipReason,
+  SelectedStrategy,
+} from "@beep/file-processing/Strategy";
 import type { MimeType } from "@beep/schema/MimeType";
 import type { PosixPath } from "@beep/schema/PosixPath";
 import type * as Crypto from "effect/Crypto";
+import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ProcessFilesOptions } from "../Files.schemas.js";
+import type { ProcessFilesOptions } from "../Files.schemas.ts";
 
 type FilesProcessRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | Crypto.Crypto
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | HttpClient.HttpClient;
 
 interface ProcessCollectedFile {
   readonly canonicalPath: string;
@@ -76,13 +96,18 @@ interface ProcessCollectedFile {
   readonly sourcePath: string;
 }
 
-interface ProcessPreparedSource {
-  readonly bytes: Uint8Array;
+interface ProcessSourceIdentity {
+  readonly artifactId: ArtifactId;
   readonly digest: ContentDigest;
   readonly format: FileFormatFamily;
+  readonly locatorPath: PosixPath;
   readonly operationId: OperationId;
-  readonly source: SourceArtifact;
+  readonly relativePath: PosixPath;
   readonly sourceFile: ProcessCollectedFile;
+}
+
+interface ProcessPreparedSource extends ProcessSourceIdentity {
+  readonly bytes: Uint8Array;
 }
 
 interface ProcessInputCollection {
@@ -98,10 +123,18 @@ interface ProcessDirectoryCollection {
 
 interface ProcessSourceOutcome {
   readonly childRecords: ReadonlyArray<ChildArtifactRecord>;
+  readonly engineWarningCount: number;
   readonly failure: O.Option<FileProcessingFailureRecord>;
   readonly sourceRecord: SourceProcessingRecord;
   readonly strategy: SelectedStrategy;
   readonly text: O.Option<readonly [string, string]>;
+}
+
+interface ProcessSourceResult {
+  readonly engineWarningCount: number;
+  readonly failure: O.Option<FileProcessingFailureRecord>;
+  readonly sourceRecord: SourceProcessingRecord;
+  readonly strategy: SelectedStrategy;
 }
 
 const processPathSeparators = Str.replace(/\\/gu, "/");
@@ -162,35 +195,103 @@ const processOperationErrorSkipReason = (error: FileProcessingOperationError): O
     Match.orElse(O.none<FileProcessingSkipReason>)
   );
 
-const processEngineFor = (
-  engine: ProcessFilesOptions["engine"],
-  format: FileFormatFamily
-): FileProcessingEngineShape => {
-  if (engine === "test") {
-    return TestFileProcessingEngine;
-  }
-  if (engine === "libpff") {
-    return makeLibpffFileProcessingEngine();
-  }
-  if (engine === "tika") {
-    return makeTikaFileProcessingEngine();
-  }
-
-  return format === "pst" ? makeLibpffFileProcessingEngine() : makeTikaFileProcessingEngine();
-};
-
 const syntheticLibpffEngine = (): FileProcessingEngineShape =>
   makeLibpffFileProcessingEngine({ syntheticExport: true });
 
-const processEngineSupportsChildExport = (engine: FileProcessingEngineShape, format: FileFormatFamily): boolean =>
-  A.contains(engine.descriptor.capabilities, "export-children") &&
-  A.contains(engine.descriptor.supportedFormats, format);
+// Static engine descriptors let skip/deferral records name their engine
+// without constructing a real engine, so a run that never dispatches to a
+// family never probes its binary, URL, or environment configuration.
+const processDescriptorFor = (
+  engine: ProcessFilesOptions["engine"],
+  format: FileFormatFamily
+): FileProcessingEngineDescriptor => {
+  if (engine === "test") {
+    return format === "pst" ? LibpffFileProcessingEngineDescriptor : TestFileProcessingEngine.descriptor;
+  }
+  if (engine === "libpff") {
+    return LibpffFileProcessingEngineDescriptor;
+  }
+  if (engine === "tika") {
+    return TikaFileProcessingEngineDescriptor;
+  }
+
+  return format === "pst" ? LibpffFileProcessingEngineDescriptor : TikaFileProcessingEngineDescriptor;
+};
+
+type ProcessEngineResolver = (format: FileFormatFamily) => Effect.Effect<FileProcessingEngineShape, FilesCommandError>;
+
+// Engines are constructed lazily and memoized per family: only a source that
+// actually dispatches to a family (or an --engine forcing) pays that family's
+// construction cost, and a malformed configuration for an unused family can
+// never fail the run.
+const makeProcessEngineResolver = Effect.fn("Files.makeProcessEngineResolver")(function* (
+  options: ProcessFilesOptions,
+  outputDirectory: string
+): Effect.fn.Return<ProcessEngineResolver, never, FilesProcessRequirements> {
+  if (options.engine === "test") {
+    const syntheticEngine = syntheticLibpffEngine();
+    return (format) => Effect.succeed(format === "pst" ? syntheticEngine : TestFileProcessingEngine);
+  }
+
+  const path = yield* Path.Path;
+  const runtimeContext = yield* Effect.context<FilesProcessRequirements>();
+  const tikaUrl = options.tikaUrl;
+
+  const buildTikaEngine: Effect.Effect<FileProcessingEngineShape, FilesCommandError> =
+    options.tikaJarPath !== undefined
+      ? makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({
+            jarPath: options.tikaJarPath,
+            ...O.getSomesStruct({ javaPath: O.fromUndefinedOr(options.javaPath) }),
+          })
+        ).pipe(Effect.provide(runtimeContext))
+      : tikaUrl !== undefined
+        ? S.decodeEffect(TikaServerEngineConfig)({ baseUrl: tikaUrl }).pipe(
+            Effect.mapError((cause) =>
+              FilesCommandError.make({ cause, exitCode: 2, message: `Invalid --tika-url "${tikaUrl}"` })
+            ),
+            Effect.flatMap((config) => makeTikaServerFileProcessingEngine(config).pipe(Effect.provide(runtimeContext)))
+          )
+        : makeTikaServerFileProcessingEngineFromEnv().pipe(
+            Effect.provide(runtimeContext),
+            Effect.mapError((cause) =>
+              FilesCommandError.make({
+                cause,
+                exitCode: 2,
+                message: "Failed to resolve the Tika Server engine from the BEEP_TIKA_* environment configuration",
+              })
+            )
+          );
+  const tikaEngineOnce = yield* Effect.cached(buildTikaEngine);
+
+  const libpffEngineOnce = yield* Effect.cached(
+    makePffexportFileProcessingEngine(
+      PffexportEngineConfig.make({
+        exportRoot: path.join(outputDirectory, "children"),
+        ...O.getSomesStruct({ pffexportPath: O.fromUndefinedOr(options.pffexportPath) }),
+      })
+    ).pipe(Effect.provide(runtimeContext))
+  );
+
+  if (options.engine === "libpff") {
+    return () => libpffEngineOnce;
+  }
+  if (options.engine === "tika") {
+    return () => tikaEngineOnce;
+  }
+  return (format) => (format === "pst" ? libpffEngineOnce : tikaEngineOnce);
+});
+
+const processEngineSupportsChildExport = (
+  descriptor: FileProcessingEngineDescriptor,
+  format: FileFormatFamily
+): boolean => A.contains(descriptor.capabilities, "export-children") && A.contains(descriptor.supportedFormats, format);
 
 const processHashBytes = Effect.fn("Files.processHashBytes")(function* (
   bytes: Uint8Array,
   label: string
 ): Effect.fn.Return<string, FilesCommandError, Crypto.Crypto> {
-  return yield* S.decodeUnknownEffect(Sha256HexFromBytes)(bytes).pipe(
+  return yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
     FilesCommandError.mapError(`Failed to compute SHA-256 for ${label}`)
   );
 });
@@ -483,30 +584,50 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
   const relativePath = yield* decodeProcessPosixPath(sourceFile.relativePath).pipe(
     FilesCommandError.mapError(`Failed to normalize process source relative path for ${sourceFile.relativePath}`)
   );
-  const format = classifyProcessExtension(sourceFile.extension);
-  const mediaType = mediaTypeForProcessFormat(format);
-  const sourceText = A.contains(processTextLikeFormats, format)
-    ? O.some(processUtf8Decoder.decode(bytes))
-    : O.none<string>();
 
   return {
+    artifactId,
     bytes,
     digest,
-    format,
+    format: classifyProcessExtension(sourceFile.extension),
+    locatorPath,
     operationId,
-    source: SourceArtifact.make({
-      bytes,
-      digest,
-      extension: sourceFile.extension,
-      id: artifactId,
-      locator: ArtifactLocator.make({ kind: "file", value: locatorPath }),
-      name: sourceFile.name,
-      relativePath,
-      sizeBytes: sourceFile.sizeBytes,
-      ...O.getSomesStruct({ mediaType, text: sourceText }),
-    }),
+    relativePath,
     sourceFile,
   };
+});
+
+const processSourceIdentity = (prepared: ProcessPreparedSource): ProcessSourceIdentity => ({
+  artifactId: prepared.artifactId,
+  digest: prepared.digest,
+  format: prepared.format,
+  locatorPath: prepared.locatorPath,
+  operationId: prepared.operationId,
+  relativePath: prepared.relativePath,
+  sourceFile: prepared.sourceFile,
+});
+
+const makeDispatchSourceArtifact = Effect.fn("Files.makeDispatchSourceArtifact")(function* (
+  prepared: ProcessPreparedSource,
+  options: ProcessFilesOptions
+): Effect.fn.Return<SourceArtifact, FilesCommandError> {
+  const mediaType = mediaTypeForProcessFormat(prepared.format);
+  const text =
+    options.engine === "test" && A.contains(processTextLikeFormats, prepared.format)
+      ? O.some(processUtf8Decoder.decode(prepared.bytes))
+      : O.none<string>();
+
+  return SourceArtifact.make({
+    bytes: prepared.bytes,
+    digest: prepared.digest,
+    extension: prepared.sourceFile.extension,
+    id: prepared.artifactId,
+    locator: ArtifactLocator.make({ kind: "file", value: prepared.locatorPath }),
+    name: prepared.sourceFile.name,
+    relativePath: prepared.relativePath,
+    sizeBytes: prepared.sourceFile.sizeBytes,
+    ...O.getSomesStruct({ mediaType, text }),
+  });
 });
 
 const makeProcessSourceRecord = (
@@ -519,11 +640,11 @@ const makeProcessSourceRecord = (
   } = {}
 ): SourceProcessingRecord => {
   const base = {
-    artifactId: prepared.source.id,
+    artifactId: prepared.artifactId,
     digest: prepared.digest,
     format: prepared.format,
     operationId: prepared.operationId,
-    relativePath: prepared.source.relativePath,
+    relativePath: prepared.relativePath,
     sizeBytes: prepared.sourceFile.sizeBytes,
     ...O.getSomesStruct({
       engine: O.fromUndefinedOr(options.engine),
@@ -564,11 +685,11 @@ const makeProcessSkippedFailureRecord = (
   } = {}
 ): FileProcessingFailureRecord =>
   SkippedFileProcessingFailureRecord.make({
-    artifactId: prepared.source.id,
+    artifactId: prepared.artifactId,
     message,
     operationId: prepared.operationId,
     reason,
-    relativePath: prepared.source.relativePath,
+    relativePath: prepared.relativePath,
     status: "skipped",
     ...O.getSomesStruct({
       engine: O.fromUndefinedOr(options.engine),
@@ -586,11 +707,11 @@ const makeProcessFailedFailureRecord = (
   } = {}
 ): FileProcessingFailureRecord =>
   FailedFileProcessingFailureRecord.make({
-    artifactId: prepared.source.id,
+    artifactId: prepared.artifactId,
     message,
     operationId: prepared.operationId,
     reason,
-    relativePath: prepared.source.relativePath,
+    relativePath: prepared.relativePath,
     status: "failed",
     ...O.getSomesStruct({
       engine: O.fromUndefinedOr(options.engine),
@@ -599,7 +720,7 @@ const makeProcessFailedFailureRecord = (
   });
 
 const makeProcessStrategy = (
-  engine: FileProcessingEngineShape,
+  descriptor: FileProcessingEngineDescriptor,
   prepared: ProcessPreparedSource,
   disposition: SelectedStrategy["disposition"],
   skipReason: O.Option<FileProcessingSkipReason>
@@ -607,28 +728,28 @@ const makeProcessStrategy = (
   disposition === "supported"
     ? SupportedSelectedStrategy.make({
         disposition,
-        engine: engine.descriptor.engine,
+        engine: descriptor.engine,
         format: prepared.format,
         operationKind: prepared.format === "pst" ? "export-archive" : "extract",
       })
     : disposition === "deferred"
       ? DeferredSelectedStrategy.make({
           disposition,
-          engine: engine.descriptor.engine,
+          engine: descriptor.engine,
           format: prepared.format,
           operationKind: prepared.format === "pst" ? "export-archive" : "extract",
           skipReason: O.getOrElse(skipReason, () => "engine-unavailable"),
         })
       : UnsupportedSelectedStrategy.make({
           disposition,
-          engine: engine.descriptor.engine,
+          engine: descriptor.engine,
           format: prepared.format,
           operationKind: prepared.format === "pst" ? "export-archive" : "extract",
           skipReason: O.getOrElse(skipReason, () => "unsupported-format"),
         });
 
 const processFailureOutcome = (
-  engine: FileProcessingEngineShape,
+  descriptor: FileProcessingEngineDescriptor,
   prepared: ProcessPreparedSource,
   error: FileProcessingOperationError
 ): ProcessSourceOutcome => {
@@ -637,80 +758,123 @@ const processFailureOutcome = (
 
   return {
     childRecords: A.empty(),
+    engineWarningCount: 0,
     failure: O.some(
       status === "skipped" && O.isSome(skipReason)
         ? makeProcessSkippedFailureRecord(prepared, error.message, skipReason.value, {
-            engine: error.engine ?? engine.descriptor.name,
+            engine: error.engine ?? descriptor.name,
             format: error.format ?? prepared.format,
           })
         : makeProcessFailedFailureRecord(prepared, error.message, error.reason, {
-            engine: error.engine ?? engine.descriptor.name,
+            engine: error.engine ?? descriptor.name,
             format: error.format ?? prepared.format,
           })
     ),
     sourceRecord: makeProcessSourceRecord(prepared, status, {
-      engine: error.engine ?? engine.descriptor.name,
+      engine: error.engine ?? descriptor.name,
       ...O.getSomesStruct({ skipReason }),
     }),
-    strategy: makeProcessStrategy(engine, prepared, O.isNone(skipReason) ? "supported" : "deferred", skipReason),
+    strategy: makeProcessStrategy(descriptor, prepared, O.isNone(skipReason) ? "supported" : "deferred", skipReason),
     text: O.none<readonly [string, string]>(),
   };
 };
 
 const processSkippedOutcome = (
-  engine: FileProcessingEngineShape,
+  descriptor: FileProcessingEngineDescriptor,
   prepared: ProcessPreparedSource,
   message: string,
   reason: FileProcessingSkipReason
 ): ProcessSourceOutcome => ({
   childRecords: A.empty(),
+  engineWarningCount: 0,
   failure: O.some(
     makeProcessSkippedFailureRecord(prepared, message, reason, {
-      engine: engine.descriptor.name,
+      engine: descriptor.name,
       format: prepared.format,
     })
   ),
   sourceRecord: makeProcessSourceRecord(prepared, "skipped", {
-    engine: engine.descriptor.name,
+    engine: descriptor.name,
     skipReason: reason,
   }),
-  strategy: makeProcessStrategy(engine, prepared, "deferred", O.some(reason)),
+  strategy: makeProcessStrategy(descriptor, prepared, "deferred", O.some(reason)),
   text: O.none<readonly [string, string]>(),
 });
 
-const processExtractionSuccessOutcome = (
-  engine: FileProcessingEngineShape,
+const processDuplicateOutcome = (
+  options: ProcessFilesOptions,
   prepared: ProcessPreparedSource,
-  text: O.Option<string>
+  representative: ProcessSourceIdentity
+): ProcessSourceOutcome =>
+  processSkippedOutcome(
+    processDescriptorFor(options.engine, prepared.format),
+    prepared,
+    `Duplicate content of "${representative.relativePath}"; the representative source was processed once.`,
+    "operation-not-required"
+  );
+
+const processExtractionSuccessOutcome = (
+  descriptor: FileProcessingEngineDescriptor,
+  prepared: ProcessPreparedSource,
+  text: O.Option<string>,
+  engineWarningCount: number
 ): ProcessSourceOutcome => {
   const textRelativePath = O.map(text, () => normalizePath(`text/${prepared.operationId}.txt`));
 
   return {
     childRecords: A.empty(),
+    engineWarningCount,
     failure: O.none<FileProcessingFailureRecord>(),
     sourceRecord: makeProcessSourceRecord(prepared, "succeeded", {
-      engine: engine.descriptor.name,
+      engine: descriptor.name,
       ...O.getSomesStruct({ textPath: textRelativePath }),
     }),
-    strategy: makeProcessStrategy(engine, prepared, "supported", O.none<FileProcessingSkipReason>()),
+    strategy: makeProcessStrategy(descriptor, prepared, "supported", O.none<FileProcessingSkipReason>()),
     text:
       O.isNone(text) || O.isNone(textRelativePath) ? O.none() : O.some([textRelativePath.value, text.value] as const),
   };
 };
 
 const processArchiveSuccessOutcome = (
-  engine: FileProcessingEngineShape,
+  descriptor: FileProcessingEngineDescriptor,
   prepared: ProcessPreparedSource,
-  children: ReadonlyArray<ChildArtifactRecord>
+  children: ReadonlyArray<ChildArtifactRecord>,
+  engineWarningCount: number
 ): ProcessSourceOutcome => ({
   childRecords: children,
+  engineWarningCount,
   failure: O.none<FileProcessingFailureRecord>(),
   sourceRecord: makeProcessSourceRecord(prepared, "succeeded", {
-    engine: engine.descriptor.name,
+    engine: descriptor.name,
   }),
-  strategy: makeProcessStrategy(engine, prepared, "supported", O.none<FileProcessingSkipReason>()),
+  strategy: makeProcessStrategy(descriptor, prepared, "supported", O.none<FileProcessingSkipReason>()),
   text: O.none<readonly [string, string]>(),
 });
+
+// Real pffexport children are relative to the engine's export root
+// (children/); the manifest contract requires output-root-relative paths, so
+// they are rebased here. The synthetic test engine already emits
+// output-root-relative children.
+const processChildRecord = (
+  options: ProcessFilesOptions,
+  prepared: ProcessPreparedSource,
+  child: ArtifactReference
+): ChildArtifactRecord =>
+  ChildArtifactRecord.make({
+    child:
+      options.engine === "test"
+        ? child
+        : ArtifactReference.make({
+            id: child.id,
+            relativePath: normalizePath(`children/${child.relativePath}`),
+            ...O.getSomesStruct({
+              digest: O.fromUndefinedOr(child.digest),
+              mediaType: O.fromUndefinedOr(child.mediaType),
+              sizeBytes: O.fromUndefinedOr(child.sizeBytes),
+            }),
+          }),
+    sourceArtifactId: prepared.artifactId,
+  });
 
 const makeZeroProcessStatusCounts = (): Record<SourceProcessingStatus, number> => ({
   failed: 0,
@@ -743,16 +907,14 @@ const sourceRecordHasTextPath = (record: SourceProcessingRecord): boolean =>
 
 const processPreparedSource = Effect.fn("Files.processPreparedSource")(function* (
   prepared: ProcessPreparedSource,
-  options: ProcessFilesOptions
-): Effect.fn.Return<ProcessSourceOutcome, never, Crypto.Crypto> {
-  const engine =
-    options.engine === "test" && prepared.format === "pst"
-      ? syntheticLibpffEngine()
-      : processEngineFor(options.engine, prepared.format);
+  options: ProcessFilesOptions,
+  engineFor: ProcessEngineResolver
+): Effect.fn.Return<ProcessSourceOutcome, FilesCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  const descriptor = processDescriptorFor(options.engine, prepared.format);
 
   if (prepared.format === "docm" || prepared.format === "xls" || prepared.format === "xlsx") {
     return processSkippedOutcome(
-      engine,
+      descriptor,
       prepared,
       `${prepared.format} was classified deterministically; deep extraction is out of scope for V1.`,
       "format-out-of-scope"
@@ -761,7 +923,7 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
 
   if (prepared.format === "unknown") {
     return processSkippedOutcome(
-      engine,
+      descriptor,
       prepared,
       "Source format is not supported by the V1 proof.",
       "unsupported-format"
@@ -770,63 +932,68 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
 
   if (prepared.format === "pst") {
     if (!options.exportChildren) {
-      return processSkippedOutcome(engine, prepared, "PST child export was not requested.", "operation-not-required");
+      return processSkippedOutcome(
+        descriptor,
+        prepared,
+        "PST child export was not requested.",
+        "operation-not-required"
+      );
     }
 
-    if (!processEngineSupportsChildExport(engine, prepared.format)) {
+    if (!processEngineSupportsChildExport(descriptor, prepared.format)) {
       return processSkippedOutcome(
-        engine,
+        descriptor,
         prepared,
-        `${engine.descriptor.name} does not support PST child export in the P1 proof.`,
+        `${descriptor.name} does not support PST child export in the P1 proof.`,
         "engine-unavailable"
       );
     }
 
+    const engine = yield* engineFor(prepared.format);
+    const source = yield* makeDispatchSourceArtifact(prepared, options);
     return yield* engine
       .exportArchive({
         format: prepared.format,
         operationId: prepared.operationId,
         operationKind: "export-archive",
         preference: { engine: options.engine },
-        source: prepared.source,
+        source,
         ...O.getSomesStruct({
           maxMaterializedBytes: O.fromUndefinedOr(options.maxMaterializedBytes),
         }),
       })
       .pipe(
         Effect.matchEffect({
-          onFailure: (error) => Effect.succeed(processFailureOutcome(engine, prepared, error)),
+          onFailure: (error) => Effect.succeed(processFailureOutcome(descriptor, prepared, error)),
           onSuccess: (result) =>
             Effect.succeed(
               processArchiveSuccessOutcome(
-                engine,
+                descriptor,
                 prepared,
-                A.map(result.children, (child) =>
-                  ChildArtifactRecord.make({
-                    child,
-                    sourceArtifactId: prepared.source.id,
-                  })
-                )
+                A.map(result.children, (child) => processChildRecord(options, prepared, child)),
+                A.length(result.warnings)
               )
             ),
         })
       );
   }
 
+  const engine = yield* engineFor(prepared.format);
+  const source = yield* makeDispatchSourceArtifact(prepared, options);
   return yield* engine
     .extract({
       format: prepared.format,
       operationId: prepared.operationId,
       operationKind: "extract",
       preference: { engine: options.engine },
-      source: prepared.source,
+      source,
       ...O.getSomesStruct({
         maxMaterializedBytes: O.fromUndefinedOr(options.maxMaterializedBytes),
       }),
     })
     .pipe(
       Effect.matchEffect({
-        onFailure: (error) => Effect.succeed(processFailureOutcome(engine, prepared, error)),
+        onFailure: (error) => Effect.succeed(processFailureOutcome(descriptor, prepared, error)),
         onSuccess: (result) => {
           if (
             options.maxMaterializedBytes !== undefined &&
@@ -835,11 +1002,11 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
           ) {
             return Effect.succeed(
               processFailureOutcome(
-                engine,
+                descriptor,
                 prepared,
                 FileProcessingOperationError.fromReason("output-limit-exceeded", {
-                  artifactId: prepared.source.id,
-                  engine: engine.descriptor.name,
+                  artifactId: prepared.artifactId,
+                  engine: descriptor.name,
                   format: prepared.format,
                   message: "Extracted text exceeded --max-materialized-bytes.",
                   operationId: prepared.operationId,
@@ -848,7 +1015,14 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
             );
           }
 
-          return Effect.succeed(processExtractionSuccessOutcome(engine, prepared, O.fromUndefinedOr(result.text)));
+          return Effect.succeed(
+            processExtractionSuccessOutcome(
+              descriptor,
+              prepared,
+              O.fromUndefinedOr(result.text),
+              A.length(result.warnings)
+            )
+          );
         },
       })
     );
@@ -902,10 +1076,38 @@ const writeProcessStringFile = Effect.fn("Files.writeProcessStringFile")(functio
     .pipe(Effect.mapError((cause) => formatPlatformError("Failed to write process output", outputPath, { cause })));
 });
 
+const writeProcessOutcomeArtifacts = Effect.fn("Files.writeProcessOutcomeArtifacts")(function* (
+  outputDirectory: string,
+  outcome: ProcessSourceOutcome
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+
+  if (O.isSome(outcome.text)) {
+    yield* writeProcessStringFile(path.join(outputDirectory, outcome.text.value[0]), outcome.text.value[1]);
+  }
+
+  if (A.length(outcome.childRecords) > 0) {
+    const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
+      encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
+    );
+    yield* writeProcessStringFile(
+      path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
+      A.join("")(childLines)
+    );
+  }
+});
+
+const releaseProcessOutcomePayload = (outcome: ProcessSourceOutcome): ProcessSourceResult => ({
+  engineWarningCount: outcome.engineWarningCount,
+  failure: outcome.failure,
+  sourceRecord: outcome.sourceRecord,
+  strategy: outcome.strategy,
+});
+
 const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(function* (
   outputDirectory: string,
   options: ProcessFilesOptions,
-  outcomes: ReadonlyArray<ProcessSourceOutcome>,
+  outcomes: ReadonlyArray<ProcessSourceResult>,
   coverage: FileProcessingCoverageSummary
 ): Effect.fn.Return<
   void,
@@ -944,22 +1146,80 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
   yield* writeProcessStringFile(path.join(outputDirectory, "coverage.json"), `${coverageJson}\n`);
   yield* writeProcessStringFile(path.join(outputDirectory, "sources.jsonl"), A.join("")(sourceLines));
   yield* writeProcessStringFile(path.join(outputDirectory, "failures.jsonl"), A.join("")(failureLines));
+});
 
-  for (const outcome of outcomes) {
-    if (O.isSome(outcome.text)) {
-      yield* writeProcessStringFile(path.join(outputDirectory, outcome.text.value[0]), outcome.text.value[1]);
-    }
+// SPEC exit policy: configuration, output preparation, and engine discovery
+// failures exit 2 instead of the per-source fail-on-error exit 1.
+const asConfigPhaseFailure = <A, R>(
+  effect: Effect.Effect<A, FilesCommandError, R>
+): Effect.Effect<A, FilesCommandError, R> =>
+  Effect.mapError(effect, (error) =>
+    FilesCommandError.make({
+      exitCode: 2,
+      message: error.message,
+      ...O.getSomesStruct({ cause: O.fromUndefinedOr(error.cause) }),
+    })
+  );
 
-    if (A.length(outcome.childRecords) > 0) {
-      const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
-        encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
-      );
-      yield* writeProcessStringFile(
-        path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
-        A.join("")(childLines)
-      );
+// Whether processPreparedSource would dispatch this source to an engine (as
+// opposed to resolving it with a descriptor-only skip).
+const processSourceDispatches = (options: ProcessFilesOptions, format: FileFormatFamily): boolean => {
+  if (format === "docm" || format === "xls" || format === "xlsx" || format === "unknown") {
+    return false;
+  }
+  if (format === "pst") {
+    return (
+      options.exportChildren && processEngineSupportsChildExport(processDescriptorFor(options.engine, format), format)
+    );
+  }
+  return true;
+};
+
+// Read, hash, and process bounded chunks rather than retaining source bytes or
+// extracted payloads for the complete corpus. Representative identities omit
+// bytes, and each outcome writes its text and child manifest before only its
+// lightweight records are retained for the run summaries.
+const processCollectedSources = Effect.fn("Files.processCollectedSources")(function* (
+  files: ReadonlyArray<ProcessCollectedFile>,
+  outputDirectory: string,
+  options: ProcessFilesOptions,
+  engineFor: ProcessEngineResolver
+): Effect.fn.Return<
+  ReadonlyArray<ProcessSourceResult>,
+  FilesCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
+  const processState = yield* Ref.make({
+    byId: R.empty<string, ProcessSourceIdentity>(),
+    outcomes: A.empty<ProcessSourceResult>(),
+  });
+  for (const chunk of A.chunksOf(files, FilesConcurrency.scan)) {
+    const preparedChunk = yield* Effect.forEach(
+      chunk,
+      (sourceFile) => prepareProcessSource(sourceFile, options.engine),
+      { concurrency: FilesConcurrency.scan }
+    );
+    for (const source of preparedChunk) {
+      const state = yield* Ref.get(processState);
+      const representative = R.get(state.byId, source.artifactId);
+      if (O.isSome(representative)) {
+        const outcome = processDuplicateOutcome(options, source, representative.value);
+        yield* writeProcessOutcomeArtifacts(outputDirectory, outcome);
+        yield* Ref.set(processState, {
+          ...state,
+          outcomes: A.append(state.outcomes, releaseProcessOutcomePayload(outcome)),
+        });
+      } else {
+        const outcome = yield* processPreparedSource(source, options, engineFor);
+        yield* writeProcessOutcomeArtifacts(outputDirectory, outcome);
+        yield* Ref.set(processState, {
+          byId: R.set(state.byId, source.artifactId, processSourceIdentity(source)),
+          outcomes: A.append(state.outcomes, releaseProcessOutcomePayload(outcome)),
+        });
+      }
     }
   }
+  return (yield* Ref.get(processState)).outcomes;
 });
 
 /**
@@ -973,22 +1233,32 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
 export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(function* (
   options: ProcessFilesOptions
 ): Effect.fn.Return<ProcessFilesSummary, FilesCommandError, FilesProcessRequirements> {
-  const collection = yield* collectProcessInputFiles(options.input);
+  const collection = yield* collectProcessInputFiles(options.input).pipe(asConfigPhaseFailure);
   const outputDirectory = yield* prepareProcessOutDir(
     options.outDir,
     collection.canonicalSourceRoot,
     options.overwrite
-  );
-  const outcomes = yield* Effect.forEach(
-    collection.files,
-    (sourceFile) =>
-      prepareProcessSource(sourceFile, options.engine).pipe(
-        Effect.flatMap((prepared) => processPreparedSource(prepared, options))
+  ).pipe(asConfigPhaseFailure);
+  const engineFor = yield* makeProcessEngineResolver(options, outputDirectory);
+
+  // Engine construction failures are configuration failures; forcing the
+  // required families up front keeps SPEC's exit-2 phase ahead of every
+  // engine side effect instead of surfacing mid-dispatch.
+  yield* Effect.forEach(
+    A.dedupeWith(
+      pipe(
+        collection.files,
+        A.map((source) => classifyProcessExtension(source.extension)),
+        A.filter((format) => processSourceDispatches(options, format))
       ),
-    {
-      concurrency: FilesConcurrency.scan,
-    }
+      (left, right) => (left === "pst") === (right === "pst")
+    ),
+    engineFor,
+    { discard: true }
   );
+
+  const outcomes = yield* processCollectedSources(collection.files, outputDirectory, options, engineFor);
+
   const { sourceRecords } = collectSourceOutcomeRecords(outcomes);
   const coverage = makeProcessCoverage(sourceRecords);
   const summary = ProcessFilesSummary.make({
@@ -998,10 +1268,13 @@ export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(fu
     succeededCount: coverage.succeededCount,
     textArtifactCount: coverage.textArtifactCount,
   });
+  const engineWarningCount = A.reduce(outcomes, 0, (total, outcome) => total + outcome.engineWarningCount);
 
   yield* writeProcessManifestTree(outputDirectory, options, outcomes, coverage);
   yield* Console.log(
-    `files process: ${summary.succeededCount} succeeded, ${summary.skippedCount} skipped, ${summary.failedCount} failed; wrote "${outputDirectory}".`
+    `files process: ${summary.succeededCount} succeeded, ${summary.skippedCount} skipped, ${summary.failedCount} failed${
+      engineWarningCount > 0 ? ` (${engineWarningCount} engine warning(s))` : ""
+    }; wrote "${outputDirectory}".`
   );
 
   if (options.failurePolicy === "fail-on-error" && summary.failedCount > 0) {

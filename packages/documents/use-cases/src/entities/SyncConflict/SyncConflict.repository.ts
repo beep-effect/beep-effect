@@ -7,10 +7,10 @@
  */
 
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass, UnknownRecord } from "@beep/schema";
+import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -19,9 +19,10 @@ import type { Effect } from "effect";
 const $I = $DocumentsUseCasesId.create("entities/SyncConflict/SyncConflict.repository");
 
 /**
- * Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.
+ * Creation input for one remote-drift record, excluding ProductEntity audit fields.
  *
- * @example
+ * **Example** (Make remote-edit seed)
+ *
  * ```ts
  * import { SyncConflictSeed } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -71,16 +72,17 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
     }),
   },
   $I.annote("SyncConflictSeed", {
-    description: "Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one remote-drift record, excluding ProductEntity audit fields.",
   })
 ) {}
 
 /**
  * Persistence failure raised when a SyncConflict row is absent.
  *
- * @example
+ * **Example** (Construct not-found error)
+ *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { SyncConflictRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as S from "effect/Schema"
  *
@@ -93,7 +95,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
  * @category errors
  * @since 0.0.0
  */
-export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflictRepositoryNotFound>(
+export class SyncConflictRepositoryNotFound extends S.TaggedError<SyncConflictRepositoryNotFound>(
   $I`SyncConflictRepositoryNotFound`
 )(
   "SyncConflictRepositoryNotFound",
@@ -102,7 +104,7 @@ export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflic
       description: "SyncConflict identity that could not be found.",
     }),
   },
-  $I.annote("SyncConflictRepositoryNotFound", {
+  $I.annoteError<SyncConflictRepositoryNotFound>("SyncConflictRepositoryNotFound", {
     title: "SyncConflict repository not found",
     description: "The SyncConflict repository could not find the requested entity.",
   })
@@ -113,7 +115,8 @@ export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflic
 /**
  * Persistence failure raised when the SyncConflict repository is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { SyncConflictRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncConflict/server"
  *
@@ -124,7 +127,7 @@ export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflic
  * @category errors
  * @since 0.0.0
  */
-export class SyncConflictRepositoryUnavailable extends TaggedErrorClass<SyncConflictRepositoryUnavailable>(
+export class SyncConflictRepositoryUnavailable extends S.TaggedError<SyncConflictRepositoryUnavailable>(
   $I`SyncConflictRepositoryUnavailable`
 )(
   "SyncConflictRepositoryUnavailable",
@@ -133,7 +136,7 @@ export class SyncConflictRepositoryUnavailable extends TaggedErrorClass<SyncConf
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncConflictRepositoryUnavailable", {
+  $I.annoteError<SyncConflictRepositoryUnavailable>("SyncConflictRepositoryUnavailable", {
     title: "SyncConflict repository unavailable",
     description: "The SyncConflict repository could not serve the request.",
   })
@@ -144,7 +147,8 @@ export class SyncConflictRepositoryUnavailable extends TaggedErrorClass<SyncConf
 /**
  * Listing input addressing the open drift records of one workspace mirror.
  *
- * @example
+ * **Example** (Build list-open input)
+ *
  * ```ts
  * import { ListOpenSyncConflictsInput } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -177,9 +181,10 @@ export class ListOpenSyncConflictsInput extends S.Class<ListOpenSyncConflictsInp
 /**
  * Review input addressing one drift record by identity.
  *
- * @example
+ * **Example** (Build mark-reviewed input)
+ *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { MarkSyncConflictReviewedInput } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as S from "effect/Schema"
  *
@@ -208,13 +213,15 @@ export class MarkSyncConflictReviewedInput extends S.Class<MarkSyncConflictRevie
 /**
  * SyncConflict repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * `record` deduplicates by provider event: when the seed's `remoteEventId` is
  * `Some` and a row already exists for the same `provider` and `remoteEventId`,
  * that existing row is returned unchanged instead of inserting a duplicate.
  * `markReviewed` flips the record's `resolutionStatus` to `reviewed`.
  *
- * @example
+ * **Example** (Stub repository shape)
+ *
  * ```ts
  * import {
  *   ListOpenSyncConflictsInput,
@@ -260,7 +267,8 @@ export interface SyncConflictRepositoryShape {
 /**
  * Context tag for the SyncConflict repository port.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import {
  *   SyncConflictRepository,

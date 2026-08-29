@@ -9,9 +9,8 @@
 /**
  * TreatyCitation model exports.
  *
- * **Example**
+ * **Example** (Import TreatyCitation export)
  *
- * @example
  * ```ts
  * import { TreatyCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./TreatyCitation.model.js";
+export * from "./TreatyCitation.model.ts";

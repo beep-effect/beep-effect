@@ -11,7 +11,8 @@ import type { IconProps } from "@phosphor-icons/react";
 /**
  * Spinner component.
  *
- * @example
+ * **Example** (Import Spinner component)
+ *
  * ```tsx
  * import { Spinner } from "@beep/ui/components/spinner"
  *

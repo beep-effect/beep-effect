@@ -7,16 +7,18 @@
 
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
+import { DmsMirrorDisconnectReason } from "./DmsMirror.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.errors");
 
 /**
  * Raised when the DMS mirror adapter cannot complete a remote operation.
  *
- * @example
+ * **Example** (Make DmsMirrorUnavailable error)
+ *
  * ```ts
  * import { DmsMirrorUnavailable } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -31,9 +33,14 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.errors");
  * @category errors
  * @since 0.0.0
  */
-export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>($I`DmsMirrorUnavailable`)(
+export class DmsMirrorUnavailable extends S.TaggedError<DmsMirrorUnavailable>($I`DmsMirrorUnavailable`)(
   "DmsMirrorUnavailable",
   {
+    // Optional-key so encodings from peers that predate the field still decode
+    // (missing key -> none) and older peers never see an unknown key for none.
+    disconnectReason: S.OptionFromOptionalKey(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Probe-facing classification of the failure; none when the adapter cannot classify it.",
+    }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider whose mirror adapter failed.",
     }),
@@ -44,7 +51,7 @@ export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>
       description: "Whether retrying the remote operation may succeed.",
     }),
   },
-  $I.annote("DmsMirrorUnavailable", {
+  $I.annoteError<DmsMirrorUnavailable>("DmsMirrorUnavailable", {
     description: "The DMS mirror adapter could not complete a remote operation.",
   })
 ) {}
@@ -52,7 +59,8 @@ export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>
 /**
  * Raised when scanning the local workspace vault fails.
  *
- * @example
+ * **Example** (Make VaultScanFailed error)
+ *
  * ```ts
  * import { VaultScanFailed } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -63,14 +71,14 @@ export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>
  * @category errors
  * @since 0.0.0
  */
-export class VaultScanFailed extends TaggedErrorClass<VaultScanFailed>($I`VaultScanFailed`)(
+export class VaultScanFailed extends S.TaggedError<VaultScanFailed>($I`VaultScanFailed`)(
   "VaultScanFailed",
   {
     reason: S.NonEmptyString.annotateKey({
       description: "Non-empty vault scan failure diagnostic.",
     }),
   },
-  $I.annote("VaultScanFailed", {
+  $I.annoteError<VaultScanFailed>("VaultScanFailed", {
     description: "Scanning the local workspace vault failed.",
   })
 ) {}
@@ -78,7 +86,8 @@ export class VaultScanFailed extends TaggedErrorClass<VaultScanFailed>($I`VaultS
 /**
  * Client-safe failure raised when a vault sync action cannot complete.
  *
- * @example
+ * **Example** (Create VaultSyncActionError instance)
+ *
  * ```ts
  * import { VaultSyncActionError } from "@beep/documents-use-cases/public"
  *
@@ -89,12 +98,12 @@ export class VaultScanFailed extends TaggedErrorClass<VaultScanFailed>($I`VaultS
  * @category errors
  * @since 0.0.0
  */
-export class VaultSyncActionError extends TaggedErrorClass<VaultSyncActionError>($I`VaultSyncActionError`)(
+export class VaultSyncActionError extends S.TaggedError<VaultSyncActionError>($I`VaultSyncActionError`)(
   "VaultSyncActionError",
   {
     message: S.String,
   },
-  $I.annote("VaultSyncActionError", {
+  $I.annoteError<VaultSyncActionError>("VaultSyncActionError", {
     description: "Client-safe failure raised when a vault sync action cannot complete.",
   })
 ) {

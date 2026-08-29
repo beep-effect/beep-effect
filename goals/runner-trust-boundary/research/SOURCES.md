@@ -1,0 +1,135 @@
+# Runner Trust Boundary: sources and provenance
+
+This goal was authored directly from operator-ratified decisions. P0 turned the
+source set below into `P0-FACTS.md`, `P0-THREAT-MODEL.md`,
+`P0-MECHANISM.md`, and the ratified `P0-GRILL.md` record.
+
+## Operator authority
+
+The 2026-08-24 charter ratifies these constraints:
+
+- **DEFANG THE FLEET, KEEP PRS ON IT.** Heavy PR lanes remain on EC2 because
+  hosted runners failed the live heavy-lane admission.
+- The primary boundary is a non-privileged runner class with no usable ambient
+  instance-role credentials, a sealed digest-verified AMI, and one ephemeral VM
+  per job.
+- Admission gating is defense in depth.
+- P0 was ratified on 2026-08-24. P1 through P4 are complete with deployed
+  evidence retained; P6 dashboard closure and P7 close followed on 2026-08-25.
+
+## P1 deployment evidence
+
+The tracked, sanitized chronology is
+[`P1-EVIDENCE.md`](./P1-EVIDENCE.md). GitHub run pages below are the hosted
+provenance for its accepted and retained-superseded results.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Red-team run 32763957629](https://github.com/beep-effect/beep-effect/actions/runs/32763957629) | Final run on the serving bake #3 image: Gates A–E, `AMI_PIN`, scoped deregistration, and EC2 teardown | Accepted P1 proof |
+| [Lane probe 32763957329](https://github.com/beep-effect/beep-effect/actions/runs/32763957329) | Final positive baked fast path after key, digest, owner, mode, and symlink checks | Accepted P1 proof |
+| [Red-team run 32760440289](https://github.com/beep-effect/beep-effect/actions/runs/32760440289) | Gates passed; wrapper failed because it double-counted shell source and waited fleet-wide | Retained, superseded |
+| [Red-team run 32761051746](https://github.com/beep-effect/beep-effect/actions/runs/32761051746) | Patched-wrapper PASS on bake #1 before `main` changed its lockfile | Retained, superseded |
+| [Lane probe 32761137404](https://github.com/beep-effect/beep-effect/actions/runs/32761137404) | Bake #1 image rejected after `main` changed the lockfile key | Retained negative-path evidence |
+| [Red-team run 32763386226](https://github.com/beep-effect/beep-effect/actions/runs/32763386226) | `AMI_PIN` rejected a pre-flip bake #1 worker after deploy #2 | Retained negative-path evidence |
+| [Lane probe 32763385680](https://github.com/beep-effect/beep-effect/actions/runs/32763385680) | Setup rejected the stale key on a pre-flip bake #1 worker | Retained negative-path evidence |
+
+## P2 workload-identity evidence
+
+The tracked, sanitized chronology is
+[`P2-EVIDENCE.md`](./P2-EVIDENCE.md). These run pages retain the canary,
+deployed workload-identity proof, live-sampling correction, lane proof, and
+rollout-loop record.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Red-team run 32786883010](https://github.com/beep-effect/beep-effect/actions/runs/32786883010) | Gates A through J and L exactly once; live `disabled applied`; `AMI_PIN`; scoped deregistration; one-second EC2 teardown | Accepted P2 proof |
+| [Red-team run 32787722297](https://github.com/beep-effect/beep-effect/actions/runs/32787722297) | Same gates on the pushed head `1d8e2b5f6b`, whose Gate L also requires `self_redisable`; live `disabled applied`; `AMI_PIN` | Confirmation on the pushed head |
+| [Canary shadow check 32785914235](https://github.com/beep-effect/beep-effect/actions/runs/32785914235) | Launch-template v13 self-disable and post-disable lock proof; informational `JIT residue: visible` | Accepted canary proof |
+| [Lane probe 32786113766](https://github.com/beep-effect/beep-effect/actions/runs/32786113766) | `test-integration` on a locked v13 worker with Bun `1.4.0` and lockfile key `f81ab29f…` | Accepted P2 lane proof |
+| [Red-team run 32786113945](https://github.com/beep-effect/beep-effect/actions/runs/32786113945) | All required gates and `AMI_PIN` passed; post-termination metadata read returned `disabled pending` | Retained, superseded by live sampling |
+| [Red-team run 32779945159](https://github.com/beep-effect/beep-effect/actions/runs/32779945159) | Launch-template v10 rollout loop left the proof queued and exposed the fleet-wide failure | Retained incident evidence |
+| [Lane probe 32779945093](https://github.com/beep-effect/beep-effect/actions/runs/32779945093) | Queued through the rollout loop, began after v9 restoration, and was cancelled rather than accepted as P2 proof | Retained, superseded |
+
+The two concurrent acceptance wrappers crossed local artifact filenames for
+runs `32786113766` and `32786113945`. The hosted workflow and job names above
+define their roles.
+
+## P3 admission evidence
+
+The tracked, sanitized chronology is
+[`P3-EVIDENCE.md`](./P3-EVIDENCE.md). These run pages retain the admission
+probes and the absent-group registration proof.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Check run 32880339636](https://github.com/beep-effect/beep-effect/actions/runs/32880339636) | #810: all five `Heavy / ...` jobs on group-4 runners through `heavy.yml@refs/heads/main` | Accepted P3 proof 3 |
+| [Lane probe 32880023142](https://github.com/beep-effect/beep-effect/actions/runs/32880023142) | Positive admission on `main` after the redeploy and drain; last positive baked fast path before #812 | Accepted P3 proof 2 and 3 |
+| [Shadow check 32880025557](https://github.com/beep-effect/beep-effect/actions/runs/32880025557) | Non-default-branch dispatch queued five minutes beside an idle group runner | Accepted P3 proof 4 |
+| [Lane probe 32882220360](https://github.com/beep-effect/beep-effect/actions/runs/32882220360) | Absent-group probe: eleven fail-closed launches, automatic restore, then admission | Accepted P3 proof 2 |
+
+## P4 boundary-verification evidence
+
+The tracked, sanitized chronology is
+[`P4-EVIDENCE.md`](./P4-EVIDENCE.md). These run pages retain the final-head
+proof of record and the everyday admission sample.
+
+| Run | Role in the evidence chain | Status |
+| --- | --- | --- |
+| [Red-team run 32893112867](https://github.com/beep-effect/beep-effect/actions/runs/32893112867) | Gates A through J, L, and M exactly once on head `4764cdb4ba`; live `disabled applied`; `AMI_PIN`; scoped deregistration; one-second EC2 teardown | Accepted P4 proof |
+| [Check run 32892496750](https://github.com/beep-effect/beep-effect/actions/runs/32892496750) | #812 push: `Build` and all five `Heavy / ...` jobs on group-4 runners on the post-lockfile-change head | Accepted P4 admission sample |
+
+## Source packets
+
+| Source | Location | Use |
+| --- | --- | --- |
+| 2026-08-10 Codex packet | `goals/codex-security-findings-2026-08-10/ops/triage.json` and CSF-001 through CSF-004 | First runner handoff and original exact IDs |
+| 2026-08-13 Codex packet | `goals/codex-security-findings-2026-08-13/ops/triage.json` and CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, CSF-008 | Repeated identities plus admission and workload-identity split |
+| 2026-08-24 Codex packet | `goals/codex-security-findings-2026-08-24/ops/triage.json` and CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, CSF-009 | Current six-open allowlist, four transfers, and two held deployment proofs |
+| Exact identity ledger | `goals/runner-trust-boundary/SPEC.md#findings-transfer` | Nine unique IDs and all sixteen source-packet mappings |
+
+Tracked packet records are sanitized. Do not copy raw finding bodies into this
+goal.
+
+## Fleet and placement evidence
+
+| Source | Location | Use |
+| --- | --- | --- |
+| Active fleet owner | `goals/ci-fleet-endgame/{README,SPEC,PLAN}.md` | Keeps performance and architecture ownership; current packet owns security only |
+| Red-team wrapper | `goals/ci-fleet-endgame/ops/redteam-verify.sh` | `P1` command, exact gate accounting, deregistration, and EC2 teardown contract |
+| Live Gate E precedent | `goals/ci-fleet-residue/research/p2-acceptance-evidence.md` | 2026-08-14 run `31779611279`, all gates and teardown; precedent only |
+| Baked AMI precedent | `goals/ci-fleet-residue/research/p0-activation-evidence.md` | Bake report, Pulumi pin, fast-path probe, and rollback motion |
+| Residue closeout | `goals/ci-fleet-residue/{README,ops/manifest.json}` | Confirms residue stays completed-retained |
+| Hosted re-fit falsification | `goals/ci-lane-economics/research/placement-decision.md` | Two hosted runner shutdowns, in-flight tasks exiting 137, and retained fleet placement |
+| Current workflow routing | `.github/workflows/check.yml` | Live heavy-lane labels to recheck during P0 |
+
+## First-party platform references
+
+These sources define fields and platform behavior to validate. They do not
+prove the current organization or deployed AWS state.
+
+| Provider | Source | P0 use |
+| --- | --- | --- |
+| GitHub | [Runner groups](https://docs.github.com/en/actions/concepts/runners/runner-groups) | Runner groups as organization controls and security boundaries |
+| GitHub | [Managing access to self-hosted runners using groups](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access) | Repository and workflow access, default-group behavior, and public-repository warning |
+| GitHub | [REST API endpoints for self-hosted runner groups](https://docs.github.com/en/rest/actions/self-hosted-runner-groups?apiVersion=2022-11-28) | Sanitized live inventory fields and read-only evidence commands |
+| GitHub | [Removing self-hosted runners](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/remove-runners) | Automatic removal of offline runners after 14 days and offline ephemeral runners after 1 day; classifies the stale pre-cutover registrations in `P4-EVIDENCE.md` |
+| AWS | [IAM roles for Amazon EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html) | Instance profiles, application role credentials, and instance identity distinction |
+| AWS | [Retrieve security credentials from instance metadata](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-metadata-security-credentials.html) | The application credential path that privileged probes must deny |
+| AWS | [Use the Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html) | IMDSv2 and metadata-option facts to inspect |
+
+No upstream code is authorized by this ledger. Official platform documentation
+is reference-only.
+
+## P0 evidence
+
+The dated, sanitized record is split by purpose:
+
+1. `P0-FACTS.md` records GitHub, launch-template, AMI-pin, role, boundary,
+   policy, runner, bake-freshness, and fleet-state facts.
+2. `P0-THREAT-MODEL.md` records the actor and failure-path analysis.
+3. `P0-MECHANISM.md` records the ratified mechanism and external proof plan.
+4. `P0-GRILL.md` records the four forks, options, pushback, rationale, packet
+   changes, and assumptions that still need live proof.
+
+Do not record tokens, raw API payloads, account numbers, instance IDs, email
+addresses, machine IDs, absolute home paths, or any 1Password value.

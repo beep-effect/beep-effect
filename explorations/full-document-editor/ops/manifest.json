@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "full-document-editor",
+    "title": "Full Document Editor",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": [
+      "research/SOURCES.md",
+      "research/CAPABILITY-REFERENCE.md",
+      "research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md",
+      "research/LEXICAL-PLAYGROUND-SOURCE-AUDIT.md"
+    ],
+    "links": {
+      "goals": [
+        "goals/lexical-playground-capability-atlas",
+        "goals/configurable-full-document-editor"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-04",
+    "updated": "2026-08-24"
+  }
+}

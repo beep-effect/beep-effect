@@ -24,6 +24,7 @@ import {
   DmsEventType,
   DmsMirror,
   DmsMirrorAvailability,
+  DmsMirrorDisconnectReason,
   DmsMirrorProbe,
   DmsMirrorUnavailable,
   DmsRemoteEvent,
@@ -36,6 +37,7 @@ import {
   Clock,
   Config,
   Context,
+  DateTime,
   Duration,
   Effect,
   flow,
@@ -66,7 +68,8 @@ const $I = $DocumentsServerId.create("aggregates/Sync/DmsMirrorBox");
 /**
  * Environment variable selecting the Box mirror root folder name.
  *
- * @example
+ * **Example** (Log env variable name)
+ *
  * ```ts
  * import { BOX_MIRROR_ROOT_NAME_ENV } from "@beep/documents-server/aggregates/Sync"
  *
@@ -81,7 +84,8 @@ export const BOX_MIRROR_ROOT_NAME_ENV = "DOCUMENTS_SYNC_BOX_MIRROR_ROOT";
 /**
  * Default Box folder name that receives the mirrored vault tree.
  *
- * @example
+ * **Example** (Log default root name)
+ *
  * ```ts
  * import { BOX_MIRROR_DEFAULT_ROOT_NAME } from "@beep/documents-server/aggregates/Sync"
  *
@@ -96,7 +100,8 @@ export const BOX_MIRROR_DEFAULT_ROOT_NAME = "beep-vault";
 /**
  * Resolved configuration value for the Box DMS mirror adapter.
  *
- * @example
+ * **Example** (Make config with root name)
+ *
  * ```ts
  * import { BoxMirrorConfigValue } from "@beep/documents-server/aggregates/Sync"
  *
@@ -121,7 +126,8 @@ export class BoxMirrorConfigValue extends S.Class<BoxMirrorConfigValue>($I`BoxMi
 /**
  * Typed runtime configuration service for the Box DMS mirror adapter.
  *
- * @example
+ * **Example** (Log config service key)
+ *
  * ```ts
  * import { BoxMirrorConfig } from "@beep/documents-server/aggregates/Sync"
  *
@@ -135,7 +141,8 @@ export class BoxMirrorConfig extends Context.Service<BoxMirrorConfig, BoxMirrorC
   /**
    * Escape hatch building a config layer from an explicit value.
    *
-   * @example
+   * **Example** (Build layer from value)
+   *
    * ```ts
    * import { BoxMirrorConfig, BoxMirrorConfigValue } from "@beep/documents-server/aggregates/Sync"
    *
@@ -161,7 +168,8 @@ const readBoxMirrorConfig = Effect.fn($I`readBoxMirrorConfig`)(function* () {
 /**
  * Live configuration layer backed by the ambient Effect ConfigProvider.
  *
- * @example
+ * **Example** (Log live config layer)
+ *
  * ```ts
  * import { BoxMirrorConfigLayer } from "@beep/documents-server/aggregates/Sync"
  *
@@ -237,8 +245,32 @@ const boxFailureReason = (error: BoxError): string => {
   return `Box ${method} failed: ${error.reason}${status}${code}`;
 };
 
+/**
+ * Probe-facing classification of a status-bearing Box failure: auth rejections
+ * point at the credentials, a missing root at the folder, and rate limits or
+ * server errors at Box itself; everything else stays the unclassified
+ * fallback.
+ */
+const disconnectReasonFromStatus: (status: number) => DmsMirrorDisconnectReason = Match.type<number>().pipe(
+  Match.withReturnType<DmsMirrorDisconnectReason>(),
+  Match.when(401, DmsMirrorDisconnectReason.thunk["auth-failed"]),
+  Match.whenOr(403, 404, DmsMirrorDisconnectReason.thunk["root-unreachable"]),
+  Match.when(transientBoxStatus, DmsMirrorDisconnectReason.thunk.transient),
+  Match.orElse(DmsMirrorDisconnectReason.thunk["probe-failed"])
+);
+
+const boxDisconnectReason = (error: BoxError): DmsMirrorDisconnectReason =>
+  O.match(error.status, {
+    onNone: () =>
+      BoxErrorReason.is.transport(error.reason)
+        ? DmsMirrorDisconnectReason.Enum.transient
+        : DmsMirrorDisconnectReason.Enum["probe-failed"],
+    onSome: disconnectReasonFromStatus,
+  });
+
 const boxUnavailable = (error: BoxError): DmsMirrorUnavailable =>
   DmsMirrorUnavailable.make({
+    disconnectReason: pipe(error, boxDisconnectReason, O.some),
     provider: "box",
     reason: boxFailureReason(error),
     retryable: isRetryableBoxFailure(error),
@@ -493,11 +525,14 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
 /**
  * Build the Box-backed {@link DmsMirror} implementation.
  *
+ * **Details**
+ *
  * The mirror root folder (named by {@link BoxMirrorConfig}) is ensured lazily
  * under the Box root on the first remote operation and cached for the life of
  * the service. A `none` parent in port inputs addresses that mirror root.
  *
- * @example
+ * **Example** (Log mirror constructor)
+ *
  * ```ts
  * import { makeDmsMirrorBox } from "@beep/documents-server/aggregates/Sync"
  *
@@ -689,7 +724,8 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
 /**
  * Box-backed {@link DmsMirror} layer; requires `Box` and {@link BoxMirrorConfig}.
  *
- * @example
+ * **Example** (Log Box mirror layer)
+ *
  * ```ts
  * import { DmsMirrorBoxLayer } from "@beep/documents-server/aggregates/Sync"
  *
@@ -705,7 +741,8 @@ export const DmsMirrorBoxLayer = Layer.effect(DmsMirror, makeDmsMirrorBox());
  * Convenience Box-backed {@link DmsMirror} layer with environment-backed
  * configuration; still requires the `Box` driver service.
  *
- * @example
+ * **Example** (Log live mirror layer)
+ *
  * ```ts
  * import { DmsMirrorBoxLive } from "@beep/documents-server/aggregates/Sync"
  *
@@ -748,16 +785,37 @@ type MirrorProbeCacheEntry = {
   readonly probe: DmsMirrorProbe;
 };
 
+type MirrorProbeFailure = DmsMirrorUnavailable | S.SchemaError;
+
+const probeDisconnectReason = (error: MirrorProbeFailure): DmsMirrorDisconnectReason =>
+  P.isTagged(error, "DmsMirrorUnavailable")
+    ? O.getOrElse(error.disconnectReason, DmsMirrorDisconnectReason.thunk["probe-failed"])
+    : DmsMirrorDisconnectReason.Enum["probe-failed"];
+
+/**
+ * BoxError fields are sanitized at the driver boundary, so the mirror failure
+ * diagnostic (reason literal, status, code) is safe to log verbatim; a schema
+ * failure here can only be a malformed folder id.
+ */
+const probeFailureDetail = (error: MirrorProbeFailure): string =>
+  P.isTagged(error, "DmsMirrorUnavailable") ? error.reason : "mirror root id decoding failed";
+
 /**
  * Availability layer probing the Box mirror adapter.
+ *
+ * **Details**
  *
  * The probe resolves the mirror-root folder id (cached for
  * {@link MIRROR_ROOT_CACHE_TTL}): success reports `connected: true` with
  * `rootRemoteId` set; any driver failure reports `connected: false` without
- * failing the probe. Applications supply their own disconnected variant when no
- * Box credentials are configured.
+ * failing the probe, carrying the {@link DmsMirrorDisconnectReason}
+ * classification captured from the Box failure (auth rejection, missing root,
+ * transient outage) plus the `probedAt` timestamp of the resolution, and logs
+ * the classified failure at warning level. Applications supply their own
+ * disconnected variant when no Box credentials are configured.
  *
- * @example
+ * **Example** (Log availability layer)
+ *
  * ```ts
  * import { DmsMirrorAvailabilityBoxLayer } from "@beep/documents-server/aggregates/Sync"
  *
@@ -775,14 +833,48 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
     const cache = yield* Ref.make<O.Option<MirrorProbeCacheEntry>>(O.none());
 
-    const resolve = resolveMirrorRootId.pipe(
-      Effect.flatMap(decodeRemoteItemId),
-      Effect.match({
-        onFailure: () => DmsMirrorProbe.make({ connected: false, provider: "box", rootRemoteId: O.none() }),
-        onSuccess: (rootRemoteId) =>
-          DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(rootRemoteId) }),
-      })
-    );
+    const resolve = (probedAt: DateTime.Utc) =>
+      resolveMirrorRootId.pipe(
+        Effect.flatMap(decodeRemoteItemId),
+        Effect.matchEffect({
+          onFailure: (error) => {
+            const disconnectReason = probeDisconnectReason(error);
+            return Effect.logWarning("Box mirror availability probe failed").pipe(
+              Effect.annotateLogs({
+                "documents.sync.disconnect_reason": disconnectReason,
+                "documents.sync.failure": probeFailureDetail(error),
+                "documents.sync.provider": "box",
+              }),
+              Effect.as(
+                DmsMirrorProbe.make({
+                  connected: false,
+                  disconnectReason: O.some(disconnectReason),
+                  probedAt: O.some(probedAt),
+                  provider: "box",
+                  rootRemoteId: O.none(),
+                })
+              )
+            );
+          },
+          onSuccess: (rootRemoteId) =>
+            Effect.succeed(
+              DmsMirrorProbe.make({
+                connected: true,
+                probedAt: O.some(probedAt),
+                provider: "box",
+                rootRemoteId: O.some(rootRemoteId),
+              })
+            ),
+        })
+      );
+
+    const probeNow = Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      const probe = yield* resolve(DateTime.makeUnsafe(now));
+      const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
+      yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
+      return probe;
+    });
 
     return DmsMirrorAvailability.of({
       probe: Effect.gen(function* () {
@@ -791,11 +883,12 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
         if (O.isSome(cached) && cached.value.expiresAt > now) {
           return cached.value.probe;
         }
-        const probe = yield* resolve;
-        const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
-        yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
-        return probe;
+        return yield* probeNow;
       }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)),
+      // An operator's explicit retry must re-ask Box, not replay the cached
+      // failure for the rest of its TTL; the fresh answer replaces the cache
+      // so passive reads immediately agree with what the retry saw.
+      refresh: probeNow.pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxRefresh`)),
     });
   })
 );

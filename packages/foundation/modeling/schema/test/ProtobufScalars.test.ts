@@ -40,8 +40,9 @@ const isProtobufFloatValue = (value: number) =>
   (globalThis.Number.isFinite(value) && value >= floatMinimum && value <= floatMaximum);
 
 describe("protobuf 32-bit integer scalar schemas", () => {
-  it.effect("accepts unsigned 32-bit protobuf number boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts unsigned 32-bit protobuf number boundaries",
+    Effect.fnUntraced(function* () {
       const decodeUint32 = S.decodeUnknownEffect(Uint32);
       const decodeFixed32 = S.decodeUnknownEffect(Fixed32);
 
@@ -52,8 +53,9 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts signed 32-bit protobuf number boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts signed 32-bit protobuf number boundaries",
+    Effect.fnUntraced(function* () {
       const decodeSint32 = S.decodeUnknownEffect(Sint32);
       const decodeSfixed32 = S.decodeUnknownEffect(Sfixed32);
 
@@ -64,8 +66,9 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("rejects out-of-range, fractional, and non-number 32-bit values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects out-of-range, fractional, and non-number 32-bit values",
+    Effect.fnUntraced(function* () {
       const decodeUint32 = S.decodeUnknownEffect(Uint32);
       const decodeSint32 = S.decodeUnknownEffect(Sint32);
       const decodeFixed32 = S.decodeUnknownEffect(Fixed32);
@@ -90,7 +93,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     const isFixed32 = S.is(Fixed32);
 
     fc.assert(
-      fc.property(S.toArbitrary(Uint32), (value) => {
+      fc.property(S.toArbitrary(Uint32)(fc), (value) => {
         expect(isUint32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(uint32Minimum);
@@ -100,7 +103,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Fixed32), (value) => {
+      fc.property(S.toArbitrary(Fixed32)(fc), (value) => {
         expect(isFixed32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(uint32Minimum);
@@ -115,7 +118,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     const isSfixed32 = S.is(Sfixed32);
 
     fc.assert(
-      fc.property(S.toArbitrary(Sint32), (value) => {
+      fc.property(S.toArbitrary(Sint32)(fc), (value) => {
         expect(isSint32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(sint32Minimum);
@@ -125,7 +128,7 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Sfixed32), (value) => {
+      fc.property(S.toArbitrary(Sfixed32)(fc), (value) => {
         expect(isSfixed32(value)).toBe(true);
         expect(globalThis.Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(sint32Minimum);
@@ -137,8 +140,9 @@ describe("protobuf 32-bit integer scalar schemas", () => {
 });
 
 describe("protobuf floating-point scalar schemas", () => {
-  it.effect("accepts protobuf float and double boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts protobuf float and double boundaries",
+    Effect.fnUntraced(function* () {
       const decodeFloat = S.decodeUnknownEffect(Float);
       const decodeDouble = S.decodeUnknownEffect(Double);
 
@@ -156,8 +160,9 @@ describe("protobuf floating-point scalar schemas", () => {
     })
   );
 
-  it.effect("rejects overflowing finite float values and non-number floating-point inputs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects overflowing finite float values and non-number floating-point inputs",
+    Effect.fnUntraced(function* () {
       const decodeFloat = S.decodeUnknownEffect(Float);
       const decodeDouble = S.decodeUnknownEffect(Double);
 
@@ -172,7 +177,7 @@ describe("protobuf floating-point scalar schemas", () => {
     const isDouble = S.is(Double);
 
     fc.assert(
-      fc.property(S.toArbitrary(Float), (value) => {
+      fc.property(S.toArbitrary(Float)(fc), (value) => {
         expect(isFloat(value)).toBe(true);
         expect(isProtobufFloatValue(value)).toBe(true);
       }),
@@ -180,7 +185,7 @@ describe("protobuf floating-point scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Double), (value) => {
+      fc.property(S.toArbitrary(Double)(fc), (value) => {
         expect(isDouble(value)).toBe(true);
         expect(typeof value).toBe("number");
       }),
@@ -190,8 +195,9 @@ describe("protobuf floating-point scalar schemas", () => {
 });
 
 describe("protobuf 64-bit integer scalar schemas", () => {
-  it.effect("accepts unsigned 64-bit protobuf bigint boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts unsigned 64-bit protobuf bigint boundaries",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
 
@@ -202,8 +208,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts protobufjs-compatible unsigned 64-bit input shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts protobufjs-compatible unsigned 64-bit input shapes",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
 
@@ -218,8 +225,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts signed 64-bit protobuf bigint boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts signed 64-bit protobuf bigint boundaries",
+    Effect.fnUntraced(function* () {
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeSfixed64 = S.decodeUnknownEffect(Sfixed64);
 
@@ -230,8 +238,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts protobufjs-compatible signed 64-bit input shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts protobufjs-compatible signed 64-bit input shapes",
+    Effect.fnUntraced(function* () {
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeSfixed64 = S.decodeUnknownEffect(Sfixed64);
 
@@ -246,8 +255,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("rejects out-of-range and invalid 64-bit values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects out-of-range and invalid 64-bit values",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
@@ -273,8 +283,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("rejects invalid decimal inputs before BigInt conversion", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects invalid decimal inputs before BigInt conversion",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const oversizedDecimal = "184467440737095516150";
       const coerceDecimal = vi.fn(() => "42");
@@ -300,7 +311,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     const isFixed64 = S.is(Fixed64);
 
     fc.assert(
-      fc.property(S.toArbitrary(Uint64), (value) => {
+      fc.property(S.toArbitrary(Uint64)(fc), (value) => {
         expect(isUint64(value)).toBe(true);
         expect(value >= uint64Minimum).toBe(true);
         expect(value <= uint64Maximum).toBe(true);
@@ -309,7 +320,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Fixed64), (value) => {
+      fc.property(S.toArbitrary(Fixed64)(fc), (value) => {
         expect(isFixed64(value)).toBe(true);
         expect(value >= uint64Minimum).toBe(true);
         expect(value <= uint64Maximum).toBe(true);
@@ -323,7 +334,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     const isSfixed64 = S.is(Sfixed64);
 
     fc.assert(
-      fc.property(S.toArbitrary(Sint64), (value) => {
+      fc.property(S.toArbitrary(Sint64)(fc), (value) => {
         expect(isSint64(value)).toBe(true);
         expect(value >= sint64Minimum).toBe(true);
         expect(value <= sint64Maximum).toBe(true);
@@ -332,7 +343,7 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     );
 
     fc.assert(
-      fc.property(S.toArbitrary(Sfixed64), (value) => {
+      fc.property(S.toArbitrary(Sfixed64)(fc), (value) => {
         expect(isSfixed64(value)).toBe(true);
         expect(value >= sint64Minimum).toBe(true);
         expect(value <= sint64Maximum).toBe(true);
@@ -343,8 +354,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
 });
 
 describe("protobuf bytes scalar schema", () => {
-  it.effect("accepts Uint8Array bytes values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts Uint8Array bytes values",
+    Effect.fnUntraced(function* () {
       const decodeBytes = S.decodeUnknownEffect(Bytes);
       const input = new Uint8Array([1, 2, 3]);
       const decoded = yield* decodeBytes(input);
@@ -354,8 +366,9 @@ describe("protobuf bytes scalar schema", () => {
     })
   );
 
-  it.effect("rejects non-Uint8Array bytes values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects non-Uint8Array bytes values",
+    Effect.fnUntraced(function* () {
       const decodeBytes = S.decodeUnknownEffect(Bytes);
 
       expect(Exit.isFailure(yield* Effect.exit(decodeBytes([1, 2, 3])))).toBe(true);
@@ -367,7 +380,7 @@ describe("protobuf bytes scalar schema", () => {
     const isBytes = S.is(Bytes);
 
     fc.assert(
-      fc.property(S.toArbitrary(Bytes), (value) => {
+      fc.property(S.toArbitrary(Bytes)(fc), (value) => {
         expect(isBytes(value)).toBe(true);
         expect(value).toBeInstanceOf(Uint8Array);
       }),

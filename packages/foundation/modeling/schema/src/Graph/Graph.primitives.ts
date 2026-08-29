@@ -11,21 +11,24 @@ import { $I } from "./Graph.shared.ts";
 /**
  * Branded schema for graph node indices.
  *
+ * **Details**
+ *
  * Validates that the value is a non-negative integer.
  *
- * @example
- * ```ts
+ * **Example** (Decode zero node index)
+ *
+ * ```ts import.meta.vitest name="Decode zero node index"
  * import * as S from "effect/Schema"
  * import { NodeIndex } from "@beep/schema/Graph"
  *
  * const decode = S.decodeUnknownSync(NodeIndex)
  *
  * const idx = decode(0)
- * console.log(idx) // 0
+ * idx // => 0
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const NodeIndex = S.Int.check(isNonNegative).pipe(
   S.brand("NodeIndex"),
@@ -37,36 +40,38 @@ export const NodeIndex = S.Int.check(isNonNegative).pipe(
 /**
  * Branded node index type extracted from {@link NodeIndex}.
  *
- * @example
- * ```ts
+ * **Example** (Type branded node index)
+ *
+ * ```ts import.meta.vitest name="Type branded node index"
  * import * as S from "effect/Schema"
  * import { NodeIndex } from "@beep/schema/Graph"
  *
  * const idx: NodeIndex = S.decodeUnknownSync(NodeIndex)(0)
- * console.log(idx) // 0
+ * idx // => 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NodeIndex = typeof NodeIndex.Type;
 
 /**
  * Decode a string-encoded graph node index into a branded {@link NodeIndex}.
  *
- * @example
- * ```ts
+ * **Example** (Decode string node index)
+ *
+ * ```ts import.meta.vitest name="Decode string node index"
  * import * as S from "effect/Schema"
  * import { NodeIndexFromString } from "@beep/schema/Graph"
  *
  * const decode = S.decodeUnknownSync(NodeIndexFromString)
  *
  * const idx = decode("3")
- * console.log(idx) // 3
+ * idx // => 3
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const NodeIndexFromString = S.FiniteFromString.pipe(
   S.decodeTo(NodeIndex),
@@ -78,7 +83,8 @@ export const NodeIndexFromString = S.FiniteFromString.pipe(
 /**
  * Branded schema for graph edge indices.
  *
- * @example
+ * **Example** (Decode edge index value)
+ *
  * ```ts
  * import { EdgeIndex } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -87,8 +93,8 @@ export const NodeIndexFromString = S.FiniteFromString.pipe(
  * console.log(index)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EdgeIndex = S.Int.check(isNonNegative).pipe(
   S.brand("EdgeIndex"),
@@ -100,7 +106,8 @@ export const EdgeIndex = S.Int.check(isNonNegative).pipe(
 /**
  * Branded edge index type extracted from {@link EdgeIndex}.
  *
- * @example
+ * **Example** (Type branded edge index)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EdgeIndex } from "@beep/schema/Graph"
@@ -109,15 +116,16 @@ export const EdgeIndex = S.Int.check(isNonNegative).pipe(
  * console.log(idx)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EdgeIndex = typeof EdgeIndex.Type;
 
 /**
  * Decode a string-encoded graph edge index into a branded {@link EdgeIndex}.
  *
- * @example
+ * **Example** (Decode string edge index)
+ *
  * ```ts
  * import { EdgeIndexFromString } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -126,8 +134,8 @@ export type EdgeIndex = typeof EdgeIndex.Type;
  * console.log(index)
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const EdgeIndexFromString = S.FiniteFromString.pipe(
   S.decodeTo(EdgeIndex),
@@ -139,7 +147,8 @@ export const EdgeIndexFromString = S.FiniteFromString.pipe(
 /**
  * Schema for graph kind discriminators.
  *
- * @example
+ * **Example** (Decode directed graph kind)
+ *
  * ```ts
  * import { GraphKind } from "@beep/schema/Graph"
  * import * as S from "effect/Schema"
@@ -148,8 +157,8 @@ export const EdgeIndexFromString = S.FiniteFromString.pipe(
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const GraphKind = S.Literals(["directed", "undirected"]).pipe(
   $I.annoteSchema("GraphKind", {
@@ -160,7 +169,8 @@ export const GraphKind = S.Literals(["directed", "undirected"]).pipe(
 /**
  * Graph kind discriminator type extracted from {@link GraphKind}.
  *
- * @example
+ * **Example** (Type directed graph kind)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { GraphKind } from "@beep/schema/Graph"
@@ -169,7 +179,7 @@ export const GraphKind = S.Literals(["directed", "undirected"]).pipe(
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GraphKind = typeof GraphKind.Type;

@@ -9,9 +9,8 @@
 /**
  * ResolutionResult model exports.
  *
- * **Example**
+ * **Example** (Import ResolutionResult export)
  *
- * @example
  * ```ts
  * import { ResolutionResult } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ResolutionResult.model.js";
+export * from "./ResolutionResult.model.ts";

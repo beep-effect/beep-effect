@@ -8,11 +8,12 @@
 /**
  * Re-export of all helpers from `effect/Equal`.
  *
- * @example
- * ```ts
+ * **Example** (Compare values with equals)
+ *
+ * ```ts import.meta.vitest name="Compare values with equals"
  * import {Eq} from "@beep/utils"
  *
- * console.log(Eq.equals(1, 1)) // true
+ * Eq.equals(1, 1) // => true
  * ```
  *
  * @category utilities

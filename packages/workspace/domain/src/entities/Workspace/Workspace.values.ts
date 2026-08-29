@@ -14,12 +14,11 @@ import * as Str from "effect/String";
 
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.values");
 
-const isFilePath = S.is(FilePath);
 const isAbsoluteWindowsDrivePath = (value: string): boolean =>
   WindowsDrivePath.is(value) && /^[A-Za-z]:[\\/]/u.test(value);
 
 const isAbsoluteVaultRootPath = (value: string): boolean =>
-  isFilePath(value) && (Str.startsWith("/")(value) || isAbsoluteWindowsDrivePath(value) || WindowsUncPath.is(value));
+  FilePath.is(value) && (Str.startsWith("/")(value) || isAbsoluteWindowsDrivePath(value) || WindowsUncPath.is(value));
 
 const WorkspaceVaultRootPathChecks = S.makeFilter(isAbsoluteVaultRootPath, {
   identifier: $I`WorkspaceVaultRootPathAbsoluteCheck`,
@@ -39,10 +38,13 @@ const WorkspaceVaultRootPathValue = S.String.check(WorkspaceVaultRootPathChecks)
 /**
  * Absolute local root path for a workspace document vault.
  *
+ * **Details**
+ *
  * Decoding normalizes trailing path separators, so `"/tmp/vault/"` and
  * `"/tmp/vault"` decode to the same value.
  *
- * @example
+ * **Example** (Decode trailing-slash vault path)
+ *
  * ```ts
  * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
  * import * as S from "effect/Schema"
@@ -66,16 +68,6 @@ export const WorkspaceVaultRootPath = S.String.pipe(
 
 /**
  * {@inheritDoc WorkspaceVaultRootPath}
- *
- * @example
- * ```ts
- * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
- * import * as S from "effect/Schema"
- *
- * const path: WorkspaceVaultRootPath = S.decodeUnknownSync(WorkspaceVaultRootPath)("/tmp/beep-documents-vault")
- * console.log(path)
- * ```
- *
  * @category value-objects
  * @since 0.0.0
  */

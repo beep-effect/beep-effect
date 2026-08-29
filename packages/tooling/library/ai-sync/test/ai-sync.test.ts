@@ -25,16 +25,20 @@ import {
   UnknownNativeSchemaCell,
   V1_SCHEMA_COVERAGE,
   V1_TRANSFORM_EVIDENCE,
+  validateDogfoodConfigs,
   validateRepoConfig,
+  validateRepoSafetyPolicy,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
-import { Effect, Exit, FileSystem, Path } from "effect";
+import { assert, expect, layer } from "@effect/vitest";
+import { Effect, Exit, FileSystem, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
@@ -42,10 +46,36 @@ import type { Layer } from "effect";
 
 const emptyHash = AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const previousHash = AiSyncContentHash.make("0000000000000000000000000000000000000000000000000000000000000000");
+const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
+  "Bash(git push --force:*)",
+  "Bash(git push -f:*)",
+  "Bash(git push --force-with-lease:*)",
+  "Bash(git push --mirror:*)",
+  "Bash(git stash clear:*)",
+  "Bash(git stash drop:*)",
+  "Bash(git stash pop:*)",
+  "Bash(git worktree remove --force:*)",
+  "Bash(bun run beep worktree remove --force:*)",
+  "Bash(git clean:*)",
+  "Bash(git reset --hard:*)",
+  "Bash(git checkout .)",
+  "Bash(git checkout -- .)",
+  "Bash(gh pr merge --admin:*)",
+  "Bash(gh repo delete:*)",
+  "Edit(**/.github/workflows/**)",
+  "Edit(**/docs/_internal/**)",
+  "Edit(**/.claude/settings.json)",
+];
+const repoSafeClaudePermissions = {
+  allow: ["Bash(gh pr view:*)"],
+  defaultMode: "default",
+  deny: requiredClaudeRepoDenyPermissions,
+};
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(S.decodeUnknownSync(schema)(S.encodeSync(schema)(value)), value)).toBe(true);
     }),
     fcRuns(25)
@@ -54,7 +84,7 @@ const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = S.encodeSync(schema)(value);
       expect(S.encodeSync(schema)(S.decodeUnknownSync(schema)(encoded))).toEqual(encoded);
     }),
@@ -208,7 +238,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
         domain: "hooks",
         reason: "Native hook payload schema is not public.",
       });
-      expect(yield* S.decodeUnknownEffect(NormalizedAgentInstructionDocument)("# Rules  \n\nUse Effect.  ")).toBe(
+      expect(yield* S.decodeEffect(NormalizedAgentInstructionDocument)("# Rules  \n\nUse Effect.  ")).toBe(
         "# Rules\n\nUse Effect."
       );
     })
@@ -269,6 +299,308 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
           expect(Exit.isFailure(invalid)).toBe(true);
           expect(String(invalid)).toContain('["skills"]["include_instructions"]');
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "separates native config compatibility from checked-in repository safety policy",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const codexPath = path.join(tmpDir, ".codex/config.toml");
+          const claudePath = path.join(tmpDir, ".claude/settings.json");
+
+          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          assert.strictEqual(
+            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
+            "codex-config"
+          );
+          yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
+
+          yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
+          const unsafeCodex = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(unsafeCodex.message, 'approval_policy must be "never"');
+          assert.include(unsafeCodex.message, 'sandbox_mode must be "danger-full-access"');
+
+          yield* writeText(codexPath, "");
+          const implicitCodex = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(implicitCodex.message, 'approval_policy must be explicitly set to "never"');
+          assert.include(implicitCodex.message, 'sandbox_mode must be explicitly set to "danger-full-access"');
+
+          yield* writeText(codexPath, 'approval_policy = "on-failure"\nsandbox_mode = "danger-full-access"\n');
+          const driftedCodexApproval = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(driftedCodexApproval.message, 'approval_policy must be "never"');
+
+          yield* writeText(
+            codexPath,
+            'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n\n[sandbox_workspace_write]\nnetwork_access = true\nwritable_roots = ["/tmp/outside"]\n'
+          );
+          assert.strictEqual(
+            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
+            "codex-config"
+          );
+          const unsafeWorkspaceWrite = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(
+            unsafeWorkspaceWrite.message,
+            "sandbox_workspace_write.network_access must be false or omitted"
+          );
+          assert.include(
+            unsafeWorkspaceWrite.message,
+            "sandbox_workspace_write.writable_roots must be empty or omitted"
+          );
+
+          yield* writeText(
+            codexPath,
+            'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n\n[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n'
+          );
+          yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
+
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: { allow: ["Bash(gh pr view:*)"], deny: requiredClaudeRepoDenyPermissions },
+            })
+          );
+          const implicitClaudeMode = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(implicitClaudeMode.message, 'permissions.defaultMode must be explicitly set to "default"');
+
+          const missingForcePushDeny = A.filter(
+            requiredClaudeRepoDenyPermissions,
+            (permission) => !Equal.equals(permission, "Bash(git push --force:*)")
+          );
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: { ...repoSafeClaudePermissions, deny: missingForcePushDeny },
+            })
+          );
+          assert.strictEqual(
+            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+            "claude-settings"
+          );
+          const missingCriticalDeny = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(missingCriticalDeny.message, "missing required deny rule: Bash(git push --force:*)");
+
+          const unexpectedDeny = "Bash(git branch -D:*)";
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: {
+                ...repoSafeClaudePermissions,
+                deny: A.append(requiredClaudeRepoDenyPermissions, unexpectedDeny),
+              },
+            })
+          );
+          const driftedDenyDomain = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(
+            driftedDenyDomain.message,
+            `unexpected deny rule outside exact repository policy: ${unexpectedDeny}`
+          );
+
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: {
+                ...repoSafeClaudePermissions,
+                allow: ["Bash(git push:*)"],
+              },
+            })
+          );
+          const directPushGrant = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(directPushGrant.message, "unapproved auto-approved permission: Bash(git push:*)");
+
+          yield* Effect.forEach(
+            ["Write(**/.github/workflows/**)", "WebFetch(domain:example.com)", "mcp__github__create_pull_request"],
+            Effect.fn(function* (permission) {
+              yield* writeText(
+                claudePath,
+                yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, allow: [permission] } })
+              );
+              const unsafeClaude = yield* Effect.flip(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              assert.include(unsafeClaude.message, `unapproved auto-approved permission: ${permission}`);
+            }),
+            { discard: true }
+          );
+
+          yield* Effect.forEach(
+            [
+              "Bash(gh:*)",
+              "Bash(gh *)",
+              "Bash(gh*)",
+              "Bash(*gh*)",
+              "Bash(*)",
+              "Bash",
+              "Bash(codex exec:*)",
+              "Bash(codex:*)",
+              "Bash(/usr/bin/gh:*)",
+              "Bash(env gh:*)",
+              "Bash(GH_PAGER=cat gh:*)",
+              "Bash(command codex exec:*)",
+              "Bash(bash:*)",
+              "Bash(timeout:*)",
+            ],
+            Effect.fn(function* (permission) {
+              yield* writeText(
+                claudePath,
+                yield* encodeJson({
+                  permissions: { ...repoSafeClaudePermissions, allow: [permission] },
+                  enabledMcpjsonServers: ["codegraph"],
+                })
+              );
+              assert.strictEqual(
+                (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+                "claude-settings"
+              );
+
+              const unsafeClaude = yield* Effect.flip(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              assert.include(unsafeClaude.message, permission);
+            }),
+            { discard: true }
+          );
+
+          yield* Effect.forEach(
+            ["acceptEdits", "plan", "auto", "dontAsk", "bypassPermissions"],
+            Effect.fn(function* (defaultMode) {
+              yield* writeText(
+                claudePath,
+                yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, defaultMode } })
+              );
+              assert.strictEqual(
+                (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+                "claude-settings"
+              );
+
+              const unsafeClaudeMode = yield* Effect.flip(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              assert.include(unsafeClaudeMode.message, `permissions.defaultMode must be "default"`);
+            }),
+            { discard: true }
+          );
+
+          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: {
+                ...repoSafeClaudePermissions,
+                allow: ["Bash(gh pr view:*)", "Bash(gh pr checks:*)", "Bash(gh run view:*)"],
+              },
+            })
+          );
+
+          const safeResults = yield* validateDogfoodConfigs(tmpDir);
+          assert.deepEqual(
+            A.map(safeResults, (result) => result.relativePath),
+            [".codex/config.toml", ".claude/settings.json"]
+          );
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "keeps check and audit cache keys coupled to repository safety configs",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..");
+      const turboText = yield* fs.readFileString(path.join(repoRoot, "packages/tooling/library/ai-sync/turbo.json"));
+      const turboConfig = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(turboText);
+      const tasks = R.get(turboConfig, "tasks").pipe(
+        O.flatMap(S.decodeUnknownOption(S.Record(S.String, S.Unknown))),
+        O.getOrThrow
+      );
+      const configInputs = ["$TURBO_ROOT$/.codex/config.toml", "$TURBO_ROOT$/.claude/settings.json"];
+
+      A.forEach(["check", "audit"], (taskName) => {
+        const task = R.get(tasks, taskName).pipe(
+          O.flatMap(S.decodeUnknownOption(S.Struct({ inputs: S.Array(S.String) }))),
+          O.getOrThrow
+        );
+        assert.deepEqual(A.intersection(task.inputs, configInputs), configInputs);
+      });
+    })
+  );
+
+  it.effect(
+    "keeps checked-in Claude grants inside the exact 47-value allow domain",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..");
+      const settingsText = yield* fs.readFileString(path.join(repoRoot, ".claude/settings.json"));
+      const settings = yield* S.decodeEffect(
+        S.fromJsonString(
+          S.Struct({
+            permissions: S.Struct({ allow: S.Array(S.String) }),
+          })
+        )
+      )(settingsText);
+
+      assert.lengthOf(settings.permissions.allow, 47);
+      assert.include(settings.permissions.allow, "Bash(git worktree prune:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep)");
+      assert.notInclude(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git worktree remove:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git push --delete:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git push origin --delete:*)");
+      assert.notInclude(settings.permissions.allow, "Bash(git push:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep yeet publish:*)");
+      yield* validateRepoSafetyPolicy({ repoRoot, config: ".claude/settings.json" });
+    })
+  );
+
+  it.effect(
+    "reads each mandatory config exactly once during combined validation",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const codexPath = path.join(tmpDir, ".codex/config.toml");
+          const claudePath = path.join(tmpDir, ".claude/settings.json");
+          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          yield* writeText(claudePath, yield* encodeJson({ permissions: repoSafeClaudePermissions }));
+
+          const readPaths = yield* Ref.make(A.empty<string>());
+          const countingFs: FileSystem.FileSystem = {
+            ...fs,
+            readFileString: (filePath, encoding) =>
+              Ref.update(readPaths, A.append(filePath)).pipe(Effect.andThen(fs.readFileString(filePath, encoding))),
+          };
+          const results = yield* validateDogfoodConfigs(tmpDir).pipe(
+            Effect.provideService(FileSystem.FileSystem, countingFs)
+          );
+
+          assert.deepEqual(yield* Ref.get(readPaths), [codexPath, claudePath]);
+          assert.deepEqual(
+            A.map(results, (result) => result.relativePath),
+            [".codex/config.toml", ".claude/settings.json"]
+          );
         })
       );
     })

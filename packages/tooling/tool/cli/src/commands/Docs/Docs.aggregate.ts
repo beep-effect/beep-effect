@@ -13,8 +13,8 @@ import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.ts";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),
@@ -26,6 +26,7 @@ const filterFlag = Flag.string("filter").pipe(
   Flag.optional
 );
 const cleanFlag = Flag.boolean("clean").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Remove the generated docs directory (docs/generated) before aggregating")
 );
 
@@ -66,10 +67,12 @@ const aggregateDocs = Effect.fn(function* (selector: O.Option<string>, clean: bo
 /**
  * Aggregate generated package docs into the root `docs/generated/` layout.
  *
- * @example
+ * **Example** (Log aggregate command name)
+ *
  * ```ts
  * console.log("docsAggregateCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -8,11 +8,12 @@
 /**
  * CandidateProject table exports.
  *
- * @example
+ * **Example** (Log CandidateProject entity type)
+ *
  * ```ts
  * import * as CandidateProject from "@beep/workspace-tables/entities/CandidateProject"
  *
- * console.log(CandidateProject.Table.definition.entityId.entityType)
+ * console.log(CandidateProject.TABLE_NAME)
  * ```
  *
  * @category tables

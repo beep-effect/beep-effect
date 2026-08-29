@@ -30,12 +30,13 @@ const getRangeEnd = (
 /**
  * Stable non-empty identifier for a text document moving through NLP pipelines.
  *
- * @example
- * ```ts
+ * **Example** (Make a DocumentId)
+ *
+ * ```ts import.meta.vitest name="Make a DocumentId"
  * import { DocumentId } from "@beep/nlp/Core/Document"
  *
  * const id = DocumentId.make("doc-001")
- * console.log(id) // "doc-001"
+ * id // => "doc-001"
  * ```
  *
  * @category models
@@ -52,12 +53,13 @@ export const DocumentId = S.NonEmptyString.pipe(
 /**
  * Runtime TypeScript type decoded by the {@link DocumentId} schema.
  *
- * @example
- * ```ts
+ * **Example** (Type a DocumentId parameter)
+ *
+ * ```ts import.meta.vitest name="Type a DocumentId parameter"
  * import type { DocumentId } from "@beep/nlp/Core/Document"
  *
  * const label = (id: DocumentId): string => `document:${id}`
- * console.log(typeof label) // "function"
+ * typeof label // => "function"
  * ```
  *
  * @category models
@@ -68,12 +70,13 @@ export type DocumentId = typeof DocumentId.Type;
 /**
  * Zero-based position of a document inside an ordered corpus or batch.
  *
- * @example
- * ```ts
+ * **Example** (Advance a DocumentIndex)
+ *
+ * ```ts import.meta.vitest name="Advance a DocumentIndex"
  * import type { DocumentIndex } from "@beep/nlp/Core/Document"
  *
  * const next = (index: DocumentIndex): number => index + 1
- * console.log(typeof next) // "function"
+ * typeof next // => "function"
  * ```
  *
  * @category models
@@ -84,12 +87,13 @@ export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
 /**
  * Construct a branded document index after validating it is non-negative.
  *
- * @example
- * ```ts
+ * **Example** (Validate non-negative index)
+ *
+ * ```ts import.meta.vitest name="Validate non-negative index"
  * import { documentIndex } from "@beep/nlp/Core/Document"
  *
  * const first = documentIndex(0)
- * console.log(first) // 0
+ * first // => 0
  * ```
  *
  * @category validation
@@ -102,12 +106,13 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
 /**
  * Schema that decodes non-negative numbers into {@link DocumentIndex} values.
  *
- * @example
- * ```ts
+ * **Example** (Decode index via schema)
+ *
+ * ```ts import.meta.vitest name="Decode index via schema"
  * import { DocumentIndex } from "@beep/nlp/Core/Document"
  *
  * const index = DocumentIndex.make(3)
- * console.log(index) // 3
+ * index // => 3
  * ```
  *
  * @category validation
@@ -169,12 +174,14 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
 /**
  * Immutable document containing source text plus aligned tokens and sentences.
  *
- * @remarks
+ * **Details**
+ *
  * `tokens` and `sentences` preserve source order. Filtering operations rebuild
  * sentence token spans so derived documents remain internally consistent.
  *
- * @example
- * ```ts
+ * **Example** (Construct empty Document)
+ *
+ * ```ts import.meta.vitest name="Construct empty Document"
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
@@ -186,7 +193,7 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
  *   sentences: Chunk.empty(),
  *   sentiment: O.none()
  * })
- * console.log(document.tokenCount) // 0
+ * document.tokenCount // => 0
  * ```
  *
  * @category models

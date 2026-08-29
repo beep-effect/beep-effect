@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import module exports)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/CandidateTask"
  *
@@ -18,18 +19,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./CandidateTask.model.js";
-/**
- * Module exports.
- *
- * @example
- * ```ts
- * import * as Module from "@beep/workspace-domain/entities/CandidateTask"
- *
- * console.log(Module)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CandidateTask.values.js";
+export * from "./CandidateTask.model.ts";

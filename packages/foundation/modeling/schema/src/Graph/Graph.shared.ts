@@ -6,7 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { flow, Graph as Graph_, Number as Num, Option, Order, pipe, SchemaIssue } from "effect";
+import { flow, Graph as Graph_, Number as Num, Order, pipe, SchemaIssue } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -14,7 +14,8 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 /**
  * Internal identity composer.
  *
- * @example
+ * **Example** (Reading the module identity)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { $I } from "../../src/Graph/Graph.shared.ts"
@@ -33,7 +34,8 @@ export const $I = $SchemaId.create("Graph");
 /**
  * Literal schema for the graph kind discriminator (`"directed"` or `"undirected"`).
  *
- * @example
+ * **Example** (Decoding a graph kind)
+ *
  * ```ts
  * import { GraphKindValue } from "../../src/Graph/Graph.shared.ts"
  *
@@ -52,7 +54,8 @@ export const GraphKindValue = LiteralKit(["directed", "undirected"]).pipe(
 /**
  * Companion type for {@link GraphKindValue}.
  *
- * @example
+ * **Example** (Typing a graph kind)
+ *
  * ```ts
  * import { GraphKindValue } from "../../src/Graph/Graph.shared.ts"
  *
@@ -69,7 +72,8 @@ export type GraphKindValue = typeof GraphKindValue.Type;
 /**
  * Raw (unvalidated) encoded edge shape prior to node/edge-index schema validation.
  *
- * @example
+ * **Example** (Shaping a raw encoded edge)
+ *
  * ```ts
  * import type { RawEdgeEncoded } from "../../src/Graph/Graph.shared.ts"
  *
@@ -90,7 +94,8 @@ export type RawEdgeEncoded<Data> = Readonly<{
 /**
  * Raw (unvalidated) encoded graph shape prior to node/edge-index schema validation.
  *
- * @example
+ * **Example** (Shaping a raw encoded graph)
+ *
  * ```ts
  * import type { RawGraphEncoded } from "../../src/Graph/Graph.shared.ts"
  *
@@ -127,49 +132,51 @@ const edgeEntryOrder = Order.mapInput(Num.Order, (edge: { readonly index: number
 /**
  * Builds a `SchemaIssue.InvalidValue` for a rejected graph value.
  *
- * @example
+ * **Example** (Building an invalid-graph issue)
+ *
  * ```ts
- * import * as O from "effect/Option"
  * import { makeInvalidGraphIssue } from "../../src/Graph/Graph.shared.ts"
  *
- * const issue = makeInvalidGraphIssue({ nodes: [] }, "Expected at least one node.")
- * console.log(issue._tag, O.isSome(issue.actual))
+ * const issue = makeInvalidGraphIssue("Expected at least one node.")
+ * console.log(issue._tag, String(issue))
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeInvalidGraphIssue = (actual: unknown, message: string): SchemaIssue.InvalidValue =>
-  new SchemaIssue.InvalidValue(Option.some(actual), { message });
+export const makeInvalidGraphIssue = (message: string): SchemaIssue.InvalidValue =>
+  new SchemaIssue.InvalidValue({ message });
 
 /** @internal */
 /**
  * Builds a `SchemaIssue.InvalidValue` describing a node/edge index mismatch
  * encountered while reconstructing a graph.
  *
- * @example
+ * **Example** (Reporting an index mismatch)
+ *
  * ```ts
  * import { makeGraphConstructionIssue } from "../../src/Graph/Graph.shared.ts"
  *
- * const issue = makeGraphConstructionIssue({ nodes: [] }, "node", 0, 1)
+ * const issue = makeGraphConstructionIssue({ entity: "node", expected: 0, received: 1 })
  * console.log(issue._tag)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeGraphConstructionIssue = (
-  actual: unknown,
-  entity: "node" | "edge",
-  expected: number,
-  received: number
-): SchemaIssue.InvalidValue => makeInvalidGraphIssue(actual, `Expected ${entity} index ${expected}, got ${received}`);
+export const makeGraphConstructionIssue = (mismatch: {
+  readonly entity: "node" | "edge";
+  readonly expected: number;
+  readonly received: number;
+}): SchemaIssue.InvalidValue =>
+  makeInvalidGraphIssue(`Expected ${mismatch.entity} index ${mismatch.expected}, got ${mismatch.received}`);
 
 /** @internal */
 /**
  * Sorts raw `[index, node]` entries by ascending node index.
  *
- * @example
+ * **Example** (Sorting raw node entries)
+ *
  * ```ts
  * import { sortRawNodeEntries } from "../../src/Graph/Graph.shared.ts"
  *
@@ -192,7 +199,8 @@ export const sortRawNodeEntries = <Node>(
 /**
  * Sorts raw encoded edge entries by ascending edge index.
  *
- * @example
+ * **Example** (Sorting raw edge entries)
+ *
  * ```ts
  * import { sortRawEdgeEntries } from "../../src/Graph/Graph.shared.ts"
  *
@@ -212,14 +220,15 @@ export const sortRawEdgeEntries = <Edge>(
 
 /** @internal */
 /**
- * Converts an Effect `Graph.Edge` instance into its raw encoded shape.
+ * Converts an Effect `Graph.Edge` value into its raw encoded shape.
  *
- * @example
+ * **Example** (Encoding one edge)
+ *
  * ```ts
  * import { Graph } from "effect"
  * import { toRawEdgeEncoded } from "../../src/Graph/Graph.shared.ts"
  *
- * const edge = new Graph.Edge({ source: 0, target: 1, data: "knows" })
+ * const edge: Graph.Edge<string> = { source: 0, target: 1, data: "knows" }
  * const raw = toRawEdgeEncoded(edge)
  * console.log(raw.data)
  * ```
@@ -237,7 +246,8 @@ export const toRawEdgeEncoded = <Data>(edge: Graph_.Edge<Data>): RawEdgeEncoded<
 /**
  * Converts an Effect `Graph.Graph` or `Graph.MutableGraph` into its raw encoded shape.
  *
- * @example
+ * **Example** (Encoding a whole graph)
+ *
  * ```ts
  * import { Graph } from "effect"
  * import { toRawGraphEncoded } from "../../src/Graph/Graph.shared.ts"
@@ -284,7 +294,8 @@ export const toRawGraphEncoded = <Node, Edge, Kind extends GraphKindValue>(
 /**
  * Renders a graph as a human-readable `Graph.<kind>({ nodes: [...], edges: [...] })` string.
  *
- * @example
+ * **Example** (Formatting a graph)
+ *
  * ```ts
  * import { Graph } from "effect"
  * import { formatGraph } from "../../src/Graph/Graph.shared.ts"
@@ -335,11 +346,35 @@ export const formatGraph: {
   }
 );
 
+/**
+ * Either graph representation accepted by {@link makeGraphEquivalence}.
+ */
+type GraphValue<Node, Edge> =
+  | Graph_.Graph<Node, Edge, GraphKindValue>
+  | Graph_.MutableGraph<Node, Edge, GraphKindValue>;
+
+/**
+ * Structural equivalence between two graphs.
+ *
+ * Named (rather than spelled inline) so the pipeable-signature analysis can
+ * relate the data-first and data-last returns of {@link makeGraphEquivalence}.
+ */
+type GraphEquivalence<Node, Edge> = (self: GraphValue<Node, Edge>, that: GraphValue<Node, Edge>) => boolean;
+
+/**
+ * The node-equivalence application step of the data-last
+ * {@link makeGraphEquivalence} form.
+ */
+type GraphEquivalenceForNodes<Node, Edge> = (
+  nodeEquivalence: (self: Node, that: Node) => boolean
+) => GraphEquivalence<Node, Edge>;
+
 /** @internal */
 /**
  * Builds a structural equivalence for two graphs given per-node and per-edge equivalences.
  *
- * @example
+ * **Example** (Comparing two graphs)
+ *
  * ```ts
  * import { Graph } from "effect"
  * import { makeGraphEquivalence } from "../../src/Graph/Graph.shared.ts"
@@ -358,31 +393,18 @@ export const formatGraph: {
  * @since 0.0.0
  */
 export const makeGraphEquivalence: {
+  <Node, Edge>(edgeEquivalence: (self: Edge, that: Edge) => boolean): GraphEquivalenceForNodes<Node, Edge>;
   <Node, Edge>(
     nodeEquivalence: (self: Node, that: Node) => boolean,
     edgeEquivalence: (self: Edge, that: Edge) => boolean
-  ): (
-    self: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>,
-    that: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>
-  ) => boolean;
-  <Node, Edge>(
-    edgeEquivalence: (self: Edge, that: Edge) => boolean
-  ): (
-    nodeEquivalence: (self: Node, that: Node) => boolean
-  ) => (
-    self: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>,
-    that: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>
-  ) => boolean;
+  ): GraphEquivalence<Node, Edge>;
 } = dual(
   2,
   <Node, Edge>(
     nodeEquivalence: (self: Node, that: Node) => boolean,
     edgeEquivalence: (self: Edge, that: Edge) => boolean
-  ) =>
-    (
-      self: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>,
-      that: Graph_.Graph<Node, Edge, GraphKindValue> | Graph_.MutableGraph<Node, Edge, GraphKindValue>
-    ): boolean => {
+  ): GraphEquivalence<Node, Edge> =>
+    (self: GraphValue<Node, Edge>, that: GraphValue<Node, Edge>): boolean => {
       const selfEncoded = toRawGraphEncoded(self);
       const thatEncoded = toRawGraphEncoded(that);
 
@@ -431,7 +453,8 @@ export const makeGraphEquivalence: {
 /**
  * Type guard for immutable (non-mutable) Effect `Graph.Graph` values.
  *
- * @example
+ * **Example** (Guarding an immutable graph)
+ *
  * ```ts
  * import { Graph } from "effect"
  * import { isImmutableGraphValue } from "../../src/Graph/Graph.shared.ts"
@@ -450,7 +473,8 @@ export const isImmutableGraphValue = <Node, Edge>(value: unknown): value is Grap
 /**
  * Type guard for mutable Effect `Graph.MutableGraph` values.
  *
- * @example
+ * **Example** (Guarding a mutable graph)
+ *
  * ```ts
  * import { Graph } from "effect"
  * import { isMutableGraphValue } from "../../src/Graph/Graph.shared.ts"
@@ -471,7 +495,8 @@ export const isMutableGraphValue = <Node, Edge>(
 /**
  * Trims leading and trailing whitespace from a graph description string.
  *
- * @example
+ * **Example** (Trimming a description)
+ *
  * ```ts
  * import { trimGraphDescription } from "../../src/Graph/Graph.shared.ts"
  *

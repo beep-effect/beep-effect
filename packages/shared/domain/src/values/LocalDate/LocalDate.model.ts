@@ -29,10 +29,13 @@ const LocalDateFields = S.Struct(CalendarParts.fields).check(
 /**
  * Schema class representing a calendar date without time or timezone.
  *
+ * **Details**
+ *
  * Stores year, month, and day as integer fields and validates that the
  * selected day exists in the selected month and year.
  *
- * @example
+ * **Example** (Create and format date)
+ *
  * ```ts
  * import { Model } from "@beep/shared-domain/values/LocalDate"
  *
@@ -57,7 +60,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
   /**
    * Format the date as an ISO 8601 local-date string.
    *
-   * @example
+   * **Example** (Padded year ISO format)
+   *
    * ```ts
    * import { Model } from "@beep/shared-domain/values/LocalDate"
    *
@@ -66,8 +70,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * console.log(date.toISOString()) // "0099-02-05"
    * ```
    *
-   * @category utilities
    * @returns ISO 8601 local-date text in `YYYY-MM-DD` format.
+   * @category utilities
    * @since 0.0.0
    */
   toISOString(): string {
@@ -80,7 +84,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
   /**
    * Convert the date to its canonical string representation.
    *
-   * @example
+   * **Example** (Canonical string output)
+   *
    * ```ts
    * import { Model } from "@beep/shared-domain/values/LocalDate"
    *
@@ -89,8 +94,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * console.log(date.toString()) // "2024-06-15"
    * ```
    *
-   * @category utilities
    * @returns ISO 8601 local-date text in `YYYY-MM-DD` format.
+   * @category utilities
    * @since 0.0.0
    */
   override readonly toString = (): string => this.toISOString();
@@ -98,7 +103,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
   /**
    * Compare two LocalDate values by calendar fields.
    *
-   * @example
+   * **Example** (Compare equal LocalDates)
+   *
    * ```ts
    * import { Equal } from "effect"
    * import { Model } from "@beep/shared-domain/values/LocalDate"
@@ -109,9 +115,9 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * console.log(Equal.equals(left, right)) // true
    * ```
    *
-   * @category utilities
    * @param that - Value to compare with this LocalDate.
    * @returns `true` when both dates have the same year, month, and day.
+   * @category utilities
    * @since 0.0.0
    */
   [Eq.symbol](that: Eq.Equal): boolean {
@@ -121,7 +127,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
   /**
    * Compute a stable hash from the canonical ISO date string.
    *
-   * @example
+   * **Example** (Hash matches ISO string)
+   *
    * ```ts
    * import { Hash } from "effect"
    * import { Model } from "@beep/shared-domain/values/LocalDate"
@@ -131,8 +138,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * console.log(Hash.hash(date) === Hash.string("2024-06-15")) // true
    * ```
    *
-   * @category utilities
    * @returns Stable hash code for the LocalDate.
+   * @category utilities
    * @since 0.0.0
    */
   [Hash.symbol](): number {
@@ -142,7 +149,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
   /**
    * Convert the date to an Effect `DateTime.Utc` at midnight UTC.
    *
-   * @example
+   * **Example** (Midnight UTC DateTime)
+   *
    * ```ts
    * import * as DateTime from "effect/DateTime"
    * import { Model } from "@beep/shared-domain/values/LocalDate"
@@ -153,8 +161,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * console.log(parts.hour) // 0
    * ```
    *
-   * @category utilities
    * @returns Effect `DateTime.Utc` for midnight at the start of the date.
+   * @category utilities
    * @since 0.0.0
    */
   toDateTime(): DateTime.Utc {
@@ -168,7 +176,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
   /**
    * Convert the date to a JavaScript `Date` at midnight UTC.
    *
-   * @example
+   * **Example** (Midnight UTC JavaScript Date)
+   *
    * ```ts
    * import { Model } from "@beep/shared-domain/values/LocalDate"
    *
@@ -177,8 +186,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * console.log(date.toDate().toISOString()) // "2024-06-15T00:00:00.000Z"
    * ```
    *
-   * @category utilities
    * @returns JavaScript `Date` for midnight at the start of the LocalDate.
+   * @category utilities
    * @since 0.0.0
    */
   readonly toDate = (): Date => DateTime.toDateUtc(this.toDateTime());

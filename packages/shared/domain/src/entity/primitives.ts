@@ -1,5 +1,5 @@
 /**
- * Shared-domain primitive schemas used by BaseEntity and entity schemas.
+ * Shared-domain primitive schemas used by ProductEntity and entity schemas.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -45,7 +45,8 @@ const StableToken = S.NonEmptyString.check(
 /**
  * SHA-256 digest encoded as lowercase hexadecimal text.
  *
- * @example
+ * **Example** (Decode SHA-256 hex digest)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Sha256 } from "@beep/shared-domain/entity/primitives"
@@ -59,15 +60,16 @@ const StableToken = S.NonEmptyString.check(
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const Sha256 = Sha256Hex;
 
 /**
  * Runtime type for {@link Sha256}.
  *
- * @example
+ * **Example** (Type a SHA-256 hash)
+ *
  * ```ts
  * import type { Sha256 } from "@beep/shared-domain/entity/primitives"
  *
@@ -75,15 +77,16 @@ export const Sha256 = Sha256Hex;
  * console.log(printHash)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Sha256 = Sha256HexType;
 
 /**
  * Ed25519 signature encoded as base64url text.
  *
- * @example
+ * **Example** (Decode base64url signature)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Ed25519Signature } from "@beep/shared-domain/entity/primitives"
@@ -96,8 +99,8 @@ export type Sha256 = Sha256HexType;
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const Ed25519Signature = Base64UrlToken.pipe(
   S.brand("Ed25519Signature"),
@@ -110,7 +113,8 @@ export const Ed25519Signature = Base64UrlToken.pipe(
 /**
  * Runtime type for {@link Ed25519Signature}.
  *
- * @example
+ * **Example** (Type an Ed25519 signature)
+ *
  * ```ts
  * import type { Ed25519Signature } from "@beep/shared-domain/entity/primitives"
  *
@@ -118,15 +122,16 @@ export const Ed25519Signature = Base64UrlToken.pipe(
  * console.log(printSignature)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Ed25519Signature = typeof Ed25519Signature.Type;
 
 /**
  * Stable encryption-key identifier.
  *
- * @example
+ * **Example** (Decode encryption key id)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { EncryptionKeyId } from "@beep/shared-domain/entity/primitives"
@@ -139,8 +144,8 @@ export type Ed25519Signature = typeof Ed25519Signature.Type;
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const EncryptionKeyId = StableToken.pipe(
   S.brand("EncryptionKeyId"),
@@ -153,7 +158,8 @@ export const EncryptionKeyId = StableToken.pipe(
 /**
  * Runtime type for {@link EncryptionKeyId}.
  *
- * @example
+ * **Example** (Type an encryption key id)
+ *
  * ```ts
  * import type { EncryptionKeyId } from "@beep/shared-domain/entity/primitives"
  *
@@ -161,15 +167,16 @@ export const EncryptionKeyId = StableToken.pipe(
  * console.log(printKeyId)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EncryptionKeyId = typeof EncryptionKeyId.Type;
 
 /**
  * Hybrid logical clock token.
  *
- * @example
+ * **Example** (Decode hybrid logical clock)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { HybridLogicalClock } from "@beep/shared-domain/entity/primitives"
@@ -182,8 +189,8 @@ export type EncryptionKeyId = typeof EncryptionKeyId.Type;
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const HybridLogicalClock = StableToken.pipe(
   S.brand("HybridLogicalClock"),
@@ -196,7 +203,8 @@ export const HybridLogicalClock = StableToken.pipe(
 /**
  * Runtime type for {@link HybridLogicalClock}.
  *
- * @example
+ * **Example** (Type a hybrid logical clock)
+ *
  * ```ts
  * import type { HybridLogicalClock } from "@beep/shared-domain/entity/primitives"
  *
@@ -204,15 +212,16 @@ export const HybridLogicalClock = StableToken.pipe(
  * console.log(printClock)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type HybridLogicalClock = typeof HybridLogicalClock.Type;
 
 /**
  * Vector-clock map keyed by replica or device identifier.
  *
- * @example
+ * **Example** (Decode vector clock map)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { VectorClock } from "@beep/shared-domain/entity/primitives"
@@ -225,8 +234,8 @@ export type HybridLogicalClock = typeof HybridLogicalClock.Type;
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const VectorClock = S.Record(S.NonEmptyString, NonNegativeInt).pipe(
   S.brand("VectorClock"),
@@ -239,7 +248,8 @@ export const VectorClock = S.Record(S.NonEmptyString, NonNegativeInt).pipe(
 /**
  * Runtime type for {@link VectorClock}.
  *
- * @example
+ * **Example** (Type a vector clock)
+ *
  * ```ts
  * import type { VectorClock } from "@beep/shared-domain/entity/primitives"
  *
@@ -247,7 +257,7 @@ export const VectorClock = S.Record(S.NonEmptyString, NonNegativeInt).pipe(
  * console.log(printClock)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type VectorClock = typeof VectorClock.Type;

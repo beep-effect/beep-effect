@@ -19,7 +19,7 @@ describe("RegExpStr", () => {
   });
 
   it("every schema-derived value is a valid pattern that decodes to itself", () => {
-    const arbitrary = S.toArbitrary(RegExpStr);
+    const arbitrary = S.toArbitrary(RegExpStr)(fc);
 
     fc.assert(
       fc.property(arbitrary, (value) => {
@@ -49,7 +49,7 @@ describe("RegExpFromStr", () => {
   });
 
   it("rejects non-string unknown input with the source schema error", () => {
-    expect(() => decode(1)).toThrow("Expected @beep/schema/RegExp/RegExpStr, got 1");
+    expect(() => decode(1)).toThrow("Expected @beep/schema/RegExp/RegExpStr");
   });
 
   it("forbids encoding RegExp values back to the original pattern string", () => {
@@ -57,7 +57,7 @@ describe("RegExpFromStr", () => {
   });
 
   it("every schema-derived value is a RegExp instance", () => {
-    const arbitrary = S.toArbitrary(RegExpFromStr);
+    const arbitrary = S.toArbitrary(RegExpFromStr)(fc);
 
     fc.assert(
       fc.property(arbitrary, (value) => value instanceof RegExp && S.is(S.RegExp)(value)),

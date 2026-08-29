@@ -39,8 +39,9 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
 /**
  * Web Annotation text-quote selector DTO.
  *
- * @example
- * ```ts
+ * **Example** (Decode text-quote selector)
+ *
+ * ```ts import.meta.vitest name="Decode text-quote selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTextQuoteSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -48,11 +49,11 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
  *   type: "TextQuoteSelector",
  *   exact: "quoted text"
  * })
- * console.log(selector.exact) // "quoted text"
+ * selector.exact // => "quoted text"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuoteSelector>(
   $I`WebAnnotationTextQuoteSelector`
@@ -75,8 +76,9 @@ export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuo
 /**
  * Web Annotation text-position selector DTO.
  *
- * @example
- * ```ts
+ * **Example** (Decode text-position selector)
+ *
+ * ```ts import.meta.vitest name="Decode text-position selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTextPositionSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -85,11 +87,11 @@ export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuo
  *   start: 10,
  *   end: 21
  * })
- * console.log(selector.start) // 10
+ * selector.start // => 10
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationTextPositionSelector>(
   $I`WebAnnotationTextPositionSelector`
@@ -111,8 +113,9 @@ export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationText
 /**
  * Web Annotation fragment selector DTO.
  *
- * @example
- * ```ts
+ * **Example** (Decode fragment selector)
+ *
+ * ```ts import.meta.vitest name="Decode fragment selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationFragmentSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -120,11 +123,11 @@ export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationText
  *   type: "FragmentSelector",
  *   value: "section-1"
  * })
- * console.log(selector.value) // "section-1"
+ * selector.value // => "section-1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragmentSelector>(
   $I`WebAnnotationFragmentSelector`
@@ -143,8 +146,9 @@ export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragment
 /**
  * Web Annotation selector union.
  *
- * @example
- * ```ts
+ * **Example** (Decode selector union)
+ *
+ * ```ts import.meta.vitest name="Decode selector union"
  * import * as S from "effect/Schema"
  * import { WebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -153,11 +157,11 @@ export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragment
  *   start: 0,
  *   end: 5
  * })
- * console.log(selector.type) // "TextPositionSelector"
+ * selector.type // => "TextPositionSelector"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const WebAnnotationSelector = S.Union([
   WebAnnotationTextQuoteSelector,
@@ -173,7 +177,8 @@ export const WebAnnotationSelector = S.Union([
 /**
  * Type for {@link WebAnnotationSelector}.
  *
- * @example
+ * **Example** (Accept selector type)
+ *
  * ```ts
  * import type { WebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -181,16 +186,17 @@ export const WebAnnotationSelector = S.Union([
  * console.log(acceptWebAnnotationSelector)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
 
 /**
  * Web Annotation target DTO.
  *
- * @example
- * ```ts
+ * **Example** (Decode annotation target)
+ *
+ * ```ts import.meta.vitest name="Decode annotation target"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -198,11 +204,11 @@ export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
  *   source: "https://example.org/document",
  *   selector: { type: "FragmentSelector", value: "section-1" }
  * })
- * console.log(target.selector.type) // "FragmentSelector"
+ * target.selector.type // => "FragmentSelector"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WebAnnotationTarget extends S.Class<WebAnnotationTarget>($I`WebAnnotationTarget`)(
   {
@@ -218,8 +224,9 @@ export class WebAnnotationTarget extends S.Class<WebAnnotationTarget>($I`WebAnno
 /**
  * Web Annotation DTO.
  *
- * @example
- * ```ts
+ * **Example** (Decode web annotation)
+ *
+ * ```ts import.meta.vitest name="Decode web annotation"
  * import * as S from "effect/Schema"
  * import { WebAnnotation } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -232,11 +239,11 @@ export class WebAnnotationTarget extends S.Class<WebAnnotationTarget>($I`WebAnno
  *     selector: { type: "TextQuoteSelector", exact: "quoted text" }
  *   }
  * })
- * console.log(annotation.type) // "Annotation"
+ * annotation.type // => "Annotation"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WebAnnotation extends S.Class<WebAnnotation>($I`WebAnnotation`)(
   {
@@ -322,8 +329,9 @@ const webAnnotationSelectorEncodedToEvidenceSelectorEncoded = (
 /**
  * Codec between package-owned evidence selectors and Web Annotation selector DTOs.
  *
- * @example
- * ```ts
+ * **Example** (Decode evidence to selector)
+ *
+ * ```ts import.meta.vitest name="Decode evidence to selector"
  * import * as S from "effect/Schema"
  * import { WebAnnotationSelectorFromEvidenceSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -331,11 +339,11 @@ const webAnnotationSelectorEncodedToEvidenceSelectorEncoded = (
  *   kind: "text-quote",
  *   exact: "quoted text"
  * })
- * console.log(selector.type) // "TextQuoteSelector"
+ * selector.type // => "TextQuoteSelector"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSelector).pipe(
   S.decodeTo(WebAnnotationSelector, {
@@ -355,7 +363,8 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
 /**
  * Type for {@link WebAnnotationSelectorFromEvidenceSelector}.
  *
- * @example
+ * **Example** (Accept codec type)
+ *
  * ```ts
  * import type { WebAnnotationSelectorFromEvidenceSelector } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -363,18 +372,17 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
  * console.log(acceptWebAnnotationSelector)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WebAnnotationSelectorFromEvidenceSelector = typeof WebAnnotationSelectorFromEvidenceSelector.Type;
 
 /**
  * Map an evidence selector to a Web Annotation selector DTO.
  *
- * @param selector - Evidence selector.
- * @returns Web Annotation selector DTO.
- * @example
- * ```ts
+ * **Example** (Map evidence to selector)
+ *
+ * ```ts import.meta.vitest name="Map evidence to selector"
  * import * as S from "effect/Schema"
  * import { evidenceSelectorToWebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
  * import { TextQuoteSelector } from "@beep/rdf/Evidence"
@@ -384,11 +392,13 @@ export type WebAnnotationSelectorFromEvidenceSelector = typeof WebAnnotationSele
  *   exact: "quoted text"
  * })
  * const selector = evidenceSelectorToWebAnnotationSelector(evidenceSelector)
- * console.log(selector.type) // "TextQuoteSelector"
+ * selector.type // => "TextQuoteSelector"
  * ```
  *
- * @since 0.0.0
+ * @param selector - Evidence selector.
+ * @returns Web Annotation selector DTO.
  * @category utilities
+ * @since 0.0.0
  */
 export const evidenceSelectorToWebAnnotationSelector = (selector: EvidenceSelector): WebAnnotationSelector =>
   pipe(evidenceSelectorToWebAnnotationSelectorEncoded(selector), decodeWebAnnotationSelector, Result.getOrThrow);
@@ -396,10 +406,9 @@ export const evidenceSelectorToWebAnnotationSelector = (selector: EvidenceSelect
 /**
  * Map a Web Annotation selector DTO to an evidence selector.
  *
- * @param selector - Web Annotation selector DTO.
- * @returns Evidence selector.
- * @example
- * ```ts
+ * **Example** (Map selector to evidence)
+ *
+ * ```ts import.meta.vitest name="Map selector to evidence"
  * import * as S from "effect/Schema"
  * import {
  *   WebAnnotationTextPositionSelector,
@@ -412,11 +421,13 @@ export const evidenceSelectorToWebAnnotationSelector = (selector: EvidenceSelect
  *   end: 5
  * })
  * const selector = webAnnotationSelectorToEvidenceSelector(annotationSelector)
- * console.log(selector.kind) // "text-position"
+ * selector.kind // => "text-position"
  * ```
  *
- * @since 0.0.0
+ * @param selector - Web Annotation selector DTO.
+ * @returns Evidence selector.
  * @category utilities
+ * @since 0.0.0
  */
 export const webAnnotationSelectorToEvidenceSelector = (selector: WebAnnotationSelector): EvidenceSelector =>
   webAnnotationSelectorToEvidenceSelectorValue(selector);
@@ -453,8 +464,9 @@ const webAnnotationTargetEncodedToEvidenceTargetEncoded = (
 /**
  * Codec between evidence targets and Web Annotation target DTOs.
  *
- * @example
- * ```ts
+ * **Example** (Decode evidence to target)
+ *
+ * ```ts import.meta.vitest name="Decode evidence to target"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTargetFromEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -462,11 +474,11 @@ const webAnnotationTargetEncodedToEvidenceTargetEncoded = (
  *   source: "https://example.org/document",
  *   selector: { kind: "fragment", value: "section-1" }
  * })
- * console.log(target.selector.type) // "FragmentSelector"
+ * target.selector.type // => "FragmentSelector"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget).pipe(
   S.decodeTo(WebAnnotationTarget, {
@@ -486,7 +498,8 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
 /**
  * Type for {@link WebAnnotationTargetFromEvidenceTarget}.
  *
- * @example
+ * **Example** (Accept target codec type)
+ *
  * ```ts
  * import type { WebAnnotationTargetFromEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -494,8 +507,8 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
  * console.log(acceptWebAnnotationTarget)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WebAnnotationTargetFromEvidenceTarget = typeof WebAnnotationTargetFromEvidenceTarget.Type;
 
@@ -534,8 +547,9 @@ const webAnnotationEncodedToEvidenceAnchorEncoded = (
 /**
  * Codec between evidence anchors and Web Annotation DTOs.
  *
- * @example
- * ```ts
+ * **Example** (Decode evidence to annotation)
+ *
+ * ```ts import.meta.vitest name="Decode evidence to annotation"
  * import * as S from "effect/Schema"
  * import { WebAnnotationFromEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -546,11 +560,11 @@ const webAnnotationEncodedToEvidenceAnchorEncoded = (
  *     selector: { kind: "fragment", value: "section-1" }
  *   }
  * })
- * console.log(annotation.type) // "Annotation"
+ * annotation.type // => "Annotation"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
   S.decodeTo(WebAnnotation, {
@@ -570,7 +584,8 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
 /**
  * Type for {@link WebAnnotationFromEvidenceAnchor}.
  *
- * @example
+ * **Example** (Accept annotation codec type)
+ *
  * ```ts
  * import type { WebAnnotationFromEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -578,18 +593,17 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
  * console.log(acceptWebAnnotation)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WebAnnotationFromEvidenceAnchor = typeof WebAnnotationFromEvidenceAnchor.Type;
 
 /**
  * Map an evidence target to a Web Annotation target DTO.
  *
- * @param target - Evidence target.
- * @returns Web Annotation target DTO.
- * @example
- * ```ts
+ * **Example** (Map evidence to target)
+ *
+ * ```ts import.meta.vitest name="Map evidence to target"
  * import * as S from "effect/Schema"
  * import { evidenceTargetToWebAnnotationTarget } from "@beep/rdf/Adapters/WebAnnotation"
  * import { EvidenceTarget } from "@beep/rdf/Evidence"
@@ -599,11 +613,13 @@ export type WebAnnotationFromEvidenceAnchor = typeof WebAnnotationFromEvidenceAn
  *   selector: { kind: "fragment", value: "section-1" }
  * })
  * const target = evidenceTargetToWebAnnotationTarget(evidenceTarget)
- * console.log(target.selector.type) // "FragmentSelector"
+ * target.selector.type // => "FragmentSelector"
  * ```
  *
- * @since 0.0.0
+ * @param target - Evidence target.
+ * @returns Web Annotation target DTO.
  * @category utilities
+ * @since 0.0.0
  */
 export const evidenceTargetToWebAnnotationTarget = (target: EvidenceTarget): WebAnnotationTarget =>
   pipe(evidenceTargetToWebAnnotationTargetEncoded(target), decodeWebAnnotationTarget, Result.getOrThrow);
@@ -611,10 +627,9 @@ export const evidenceTargetToWebAnnotationTarget = (target: EvidenceTarget): Web
 /**
  * Map a Web Annotation target DTO to an evidence target.
  *
- * @param target - Web Annotation target DTO.
- * @returns Evidence target.
- * @example
- * ```ts
+ * **Example** (Map target to evidence)
+ *
+ * ```ts import.meta.vitest name="Map target to evidence"
  * import * as S from "effect/Schema"
  * import { WebAnnotationTarget, webAnnotationTargetToEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -623,11 +638,13 @@ export const evidenceTargetToWebAnnotationTarget = (target: EvidenceTarget): Web
  *   selector: { type: "FragmentSelector", value: "section-1" }
  * })
  * const target = webAnnotationTargetToEvidenceTarget(annotationTarget)
- * console.log(target.selector.kind) // "fragment"
+ * target.selector.kind // => "fragment"
  * ```
  *
- * @since 0.0.0
+ * @param target - Web Annotation target DTO.
+ * @returns Evidence target.
  * @category utilities
+ * @since 0.0.0
  */
 export const webAnnotationTargetToEvidenceTarget = (target: WebAnnotationTarget): EvidenceTarget =>
   webAnnotationTargetToEvidenceTargetValue(target);
@@ -635,10 +652,9 @@ export const webAnnotationTargetToEvidenceTarget = (target: WebAnnotationTarget)
 /**
  * Map an evidence anchor to a Web Annotation DTO.
  *
- * @param anchor - Evidence anchor.
- * @returns Web Annotation DTO.
- * @example
- * ```ts
+ * **Example** (Map evidence to annotation)
+ *
+ * ```ts import.meta.vitest name="Map evidence to annotation"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { evidenceAnchorToWebAnnotation } from "@beep/rdf/Adapters/WebAnnotation"
@@ -653,11 +669,13 @@ export const webAnnotationTargetToEvidenceTarget = (target: WebAnnotationTarget)
  *   }
  * })
  * const annotation = evidenceAnchorToWebAnnotation(anchor)
- * console.log(O.getOrUndefined(annotation.bodyValue)) // "supports the claim"
+ * O.getOrUndefined(annotation.bodyValue) // => "supports the claim"
  * ```
  *
- * @since 0.0.0
+ * @param anchor - Evidence anchor.
+ * @returns Web Annotation DTO.
  * @category utilities
+ * @since 0.0.0
  */
 export const evidenceAnchorToWebAnnotation = (anchor: EvidenceAnchor): WebAnnotation =>
   pipe(evidenceAnchorToWebAnnotationEncoded(anchor), decodeWebAnnotation, Result.getOrThrow);
@@ -665,10 +683,9 @@ export const evidenceAnchorToWebAnnotation = (anchor: EvidenceAnchor): WebAnnota
 /**
  * Map a Web Annotation DTO to an evidence anchor.
  *
- * @param annotation - Web Annotation DTO.
- * @returns Evidence anchor.
- * @example
- * ```ts
+ * **Example** (Map annotation to evidence)
+ *
+ * ```ts import.meta.vitest name="Map annotation to evidence"
  * import * as S from "effect/Schema"
  * import { WebAnnotation, webAnnotationToEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
@@ -681,11 +698,13 @@ export const evidenceAnchorToWebAnnotation = (anchor: EvidenceAnchor): WebAnnota
  *   }
  * })
  * const anchor = webAnnotationToEvidenceAnchor(annotation)
- * console.log(anchor.target.selector.kind) // "fragment"
+ * anchor.target.selector.kind // => "fragment"
  * ```
  *
- * @since 0.0.0
+ * @param annotation - Web Annotation DTO.
+ * @returns Evidence anchor.
  * @category utilities
+ * @since 0.0.0
  */
 export const webAnnotationToEvidenceAnchor = (annotation: WebAnnotation): EvidenceAnchor =>
   webAnnotationToEvidenceAnchorValue(annotation);

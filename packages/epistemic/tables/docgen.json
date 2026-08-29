@@ -27,60 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/epistemic-tables": [
-        "../../../packages/epistemic/tables/src/index.ts"
-      ],
-      "@beep/epistemic-tables/entities": [
-        "../../../packages/epistemic/tables/src/entities/index.ts"
-      ],
-      "@beep/epistemic-tables/entities/UsageRecord": [
-        "../../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
-      ],
-      "@beep/drizzle": ["../../../packages/drivers/drizzle/src/index.ts"],
-      "@beep/epistemic-domain": [
-        "../../../packages/epistemic/domain/src/index.ts"
-      ],
-      "@beep/epistemic-domain/entities": [
-        "../../../packages/epistemic/domain/src/entities/index.ts"
-      ],
-      "@beep/epistemic-domain/entities/Activity": [
-        "../../../packages/epistemic/domain/src/entities/Activity/index.ts"
-      ],
-      "@beep/epistemic-domain/entities/CandidateClaim": [
-        "../../../packages/epistemic/domain/src/entities/CandidateClaim/index.ts"
-      ],
-      "@beep/epistemic-domain/entities/Evidence": [
-        "../../../packages/epistemic/domain/src/entities/Evidence/index.ts"
-      ],
-      "@beep/epistemic-domain/entities/UsageRecord": [
-        "../../../packages/epistemic/domain/src/entities/UsageRecord/index.ts"
-      ],
-      "@beep/epistemic-domain/values": [
-        "../../../packages/epistemic/domain/src/values/index.ts"
-      ],
-      "@beep/epistemic-domain/values/ClaimGate": [
-        "../../../packages/epistemic/domain/src/values/ClaimGate/index.ts"
-      ],
-      "@beep/epistemic-domain/values/ClaimLifecycle": [
-        "../../../packages/epistemic/domain/src/values/ClaimLifecycle/index.ts"
-      ],
-      "@beep/epistemic-domain/values/ClaimProjection": [
-        "../../../packages/epistemic/domain/src/values/ClaimProjection/index.ts"
-      ],
-      "@beep/epistemic-domain/values/EpistemicFixtureKey": [
-        "../../../packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
-      ],
-      "@beep/epistemic-domain/values/EvidenceSpan": [
-        "../../../packages/epistemic/domain/src/values/EvidenceSpan/index.ts"
-      ],
-      "@beep/test-utils": [
-        "../../../packages/tooling/test-kit/test-utils/src/index.ts"
-      ],
-      "@beep/test-utils/*": [
-        "../../../packages/tooling/test-kit/test-utils/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

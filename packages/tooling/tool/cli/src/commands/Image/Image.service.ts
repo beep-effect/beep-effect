@@ -15,8 +15,8 @@ import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ImageCommandError } from "./Image.errors.js";
-import { makeExtractFramesEvents } from "./Image.progress.js";
+import { ImageCommandError } from "./Image.errors.ts";
+import { makeExtractFramesEvents } from "./Image.progress.ts";
 import {
   decodeExtractFramesDirOptions,
   decodeExtractFramesOptions,
@@ -25,10 +25,10 @@ import {
   ExtractFramesDirSuccess,
   ExtractFramesDirVideo,
   ExtractFramesOptions,
-} from "./Image.schemas.js";
+} from "./Image.schemas.ts";
 import type { ExtractFramesResult, FFmpegError } from "@beep/ffmpeg";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ExtractFramesDirOptions } from "./Image.schemas.js";
+import type { ExtractFramesDirOptions } from "./Image.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Image/Image.service");
 
@@ -43,13 +43,15 @@ type ImageCommandServiceRequirements =
 /**
  * Service contract for image and video curation commands.
  *
- * @example
+ * **Example** (List shape method keys)
+ *
  * ```ts
  * import type { ImageCommandServiceShape } from "@beep/repo-cli/commands/Image"
  *
  * const methodNames: ReadonlyArray<keyof ImageCommandServiceShape> = ["extractFrames", "extractFramesDir"]
  * console.log(methodNames.length) // 2
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -76,7 +78,8 @@ export interface ImageCommandServiceShape {
 /**
  * Service tag for image and video curation operations.
  *
- * @example
+ * **Example** (Resolve service with Effect)
+ *
  * ```ts
  * import { ImageCommandService } from "@beep/repo-cli/commands/Image"
  * import { Effect } from "effect"
@@ -84,6 +87,7 @@ export interface ImageCommandServiceShape {
  * const program = Effect.service(ImageCommandService)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -286,13 +290,15 @@ const makeImageCommandService = Effect.fn("ImageCommandService.make")(function* 
 /**
  * Live service layer for image and video curation operations.
  *
- * @example
+ * **Example** (Confirm live layer identity)
+ *
  * ```ts
  * import { ImageCommandServiceLive } from "@beep/repo-cli/commands/Image"
  * import { Layer } from "effect"
  *
  * console.log(Layer.isLayer(ImageCommandServiceLive)) // true
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -302,9 +308,8 @@ export const ImageCommandServiceLive: Layer.Layer<ImageCommandService, never, Im
 /**
  * Extract PNG frames from a single video.
  *
- * @param options - Single-video frame extraction options.
- * @returns Frame extraction result.
- * @example
+ * **Example** (Wrap extractFrames as Effect)
+ *
  * ```ts
  * import { extractFrames } from "@beep/repo-cli/commands/Image"
  * import { Effect } from "effect"
@@ -312,6 +317,9 @@ export const ImageCommandServiceLive: Layer.Layer<ImageCommandService, never, Im
  * const program = Effect.succeed(extractFrames)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param options - Single-video frame extraction options.
+ * @returns Frame extraction result.
  * @category use-cases
  * @since 0.0.0
  */
@@ -325,9 +333,8 @@ export const extractFrames = Effect.fn("Image.extractFrames")(function* (
 /**
  * Extract PNG frames from every direct video in a directory.
  *
- * @param options - Directory frame extraction options.
- * @returns Directory extraction result.
- * @example
+ * **Example** (Wrap extractFramesDir as Effect)
+ *
  * ```ts
  * import { extractFramesDir } from "@beep/repo-cli/commands/Image"
  * import { Effect } from "effect"
@@ -335,6 +342,9 @@ export const extractFrames = Effect.fn("Image.extractFrames")(function* (
  * const program = Effect.succeed(extractFramesDir)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param options - Directory frame extraction options.
+ * @returns Directory extraction result.
  * @category use-cases
  * @since 0.0.0
  */

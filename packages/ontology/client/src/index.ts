@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/ontology-client`.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-client"
  *
@@ -27,4 +28,4 @@ export const VERSION = "0.0.0" as const;
  * @category atoms
  * @since 0.0.0
  */
-export * from "./aggregates/Session/index.js";
+export * from "./aggregates/Session/index.ts";

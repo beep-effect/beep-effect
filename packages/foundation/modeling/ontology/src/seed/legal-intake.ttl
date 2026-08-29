@@ -1,0 +1,34 @@
+@prefix beep: <https://ns.beep.sh/ontology/semantic-foundation/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+beep:taxonomy/legal-intake a skos:ConceptScheme ;
+  dcterms:title "Legal intake taxonomy"@en ;
+  beep:pathTemplateSegment "root", "client", "matter", "taxonomy-concept", "document-class", "file-name" ;
+  skos:hasTopConcept beep:concept/legal-document .
+
+beep:concept/legal-document a skos:Concept ;
+  skos:inScheme beep:taxonomy/legal-intake ;
+  skos:prefLabel "Legal document"@en ;
+  skos:definition "Documents received, created, or maintained while delivering legal services."@en .
+
+beep:concept/correspondence a skos:Concept ;
+  skos:inScheme beep:taxonomy/legal-intake ;
+  skos:broader beep:concept/legal-document ;
+  skos:prefLabel "Correspondence"@en .
+
+beep:concept/email-message a skos:Concept ;
+  skos:inScheme beep:taxonomy/legal-intake ;
+  skos:broader beep:concept/correspondence ;
+  skos:closeMatch <https://folio.openlegalstandard.org/RDQy4rbUg82ScgiiXEQ7ZBU> ;
+  skos:prefLabel "Email message"@en .
+
+beep:document-class/draft a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Draft"@en .
+beep:document-class/redline a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Redline"@en .
+beep:document-class/filed a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Filed"@en .
+beep:document-class/received a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Received"@en .
+beep:document-class/privileged a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Privileged"@en .
+beep:document-class/extracted-child a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Extracted child"@en .
+
+beep:filing-root/local-vault a skos:Concept ; beep:rootSegment "vault" ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Local vault"@en .
+beep:filing-root/box-mirror a skos:Concept ; beep:rootSegment "box-mirror" ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Box mirror"@en .

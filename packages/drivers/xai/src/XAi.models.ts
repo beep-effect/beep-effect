@@ -26,7 +26,8 @@ const XAiWebSocketCloseCode = S.Int.check(S.isBetween({ minimum: 1000, maximum: 
 /**
  * Numeric HTTP status code returned by the xAI driver.
  *
- * @example
+ * **Example** (Decode HTTP status code)
+ *
  * ```ts
  * import { XAiHttpStatusCode } from "@beep/xai"
  * import * as S from "effect/Schema"
@@ -48,7 +49,8 @@ export const XAiHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maximum
 /**
  * Type for {@link XAiHttpStatusCode}.
  *
- * @example
+ * **Example** (Annotate status code type)
+ *
  * ```ts
  * import type { XAiHttpStatusCode } from "@beep/xai"
  *
@@ -64,7 +66,8 @@ export type XAiHttpStatusCode = typeof XAiHttpStatusCode.Type;
 /**
  * URL query scalar accepted by xAI request options.
  *
- * @example
+ * **Example** (Assign string query scalar)
+ *
  * ```ts
  * import type { XAiQueryScalar } from "@beep/xai"
  *
@@ -85,7 +88,8 @@ export const XAiQueryScalar = S.Union([S.Boolean, S.Null, S.Finite, S.String]).p
 /**
  * Type for {@link XAiQueryScalar}.
  *
- * @example
+ * **Example** (Assign numeric query scalar)
+ *
  * ```ts
  * import type { XAiQueryScalar } from "@beep/xai"
  *
@@ -101,7 +105,8 @@ export type XAiQueryScalar = typeof XAiQueryScalar.Type;
 /**
  * URL query value accepted by xAI request options.
  *
- * @example
+ * **Example** (Assign array query value)
+ *
  * ```ts
  * import type { XAiQueryValue } from "@beep/xai"
  *
@@ -122,7 +127,8 @@ export const XAiQueryValue = S.Union([S.Array(XAiQueryScalar), XAiQueryScalar]).
 /**
  * Type for {@link XAiQueryValue}.
  *
- * @example
+ * **Example** (Assign string query value)
+ *
  * ```ts
  * import type { XAiQueryValue } from "@beep/xai"
  *
@@ -141,10 +147,13 @@ const emptyQueryRecord: Readonly<Record<string, XAiQueryValue>> = R.empty();
 /**
  * Request options accepted by every xAI endpoint method.
  *
+ * **Details**
+ *
  * `path` fills route parameters, `query` fills URL parameters, `body` sends
  * JSON, `formData` sends multipart/form-data, and `bytes` sends raw binary.
  *
- * @example
+ * **Example** (Make request with body)
+ *
  * ```ts
  * import { XAiRequestOptions } from "@beep/xai"
  *
@@ -173,12 +182,17 @@ export class XAiRequestOptions extends S.Class<XAiRequestOptions>($I`XAiRequestO
   $I.annote("XAiRequestOptions", {
     description: "Request options accepted by every xAI endpoint method.",
   })
-) {}
+) {
+  declare readonly headers: Readonly<Record<string, string>>;
+  declare readonly path: Readonly<Record<string, string>>;
+  declare readonly query: Readonly<Record<string, XAiQueryValue>>;
+}
 
 /**
  * JSON response returned by the xAI driver.
  *
- * @example
+ * **Example** (Construct JSON response)
+ *
  * ```ts
  * import { XAiJsonResponse } from "@beep/xai"
  *
@@ -210,7 +224,8 @@ export class XAiJsonResponse extends S.TaggedClass<XAiJsonResponse>($I`XAiJsonRe
 /**
  * Text response returned by the xAI driver.
  *
- * @example
+ * **Example** (Construct text response)
+ *
  * ```ts
  * import { XAiTextResponse } from "@beep/xai"
  *
@@ -242,7 +257,8 @@ export class XAiTextResponse extends S.TaggedClass<XAiTextResponse>($I`XAiTextRe
 /**
  * Binary response returned by the xAI driver.
  *
- * @example
+ * **Example** (Construct binary response)
+ *
  * ```ts
  * import { XAiBinaryResponse } from "@beep/xai"
  *
@@ -274,7 +290,8 @@ export class XAiBinaryResponse extends S.TaggedClass<XAiBinaryResponse>($I`XAiBi
 /**
  * Empty response returned by xAI endpoints that have no body.
  *
- * @example
+ * **Example** (Construct empty response)
+ *
  * ```ts
  * import { XAiNoBodyResponse } from "@beep/xai"
  *
@@ -304,7 +321,8 @@ export class XAiNoBodyResponse extends S.TaggedClass<XAiNoBodyResponse>($I`XAiNo
 /**
  * Response union returned by non-streaming xAI endpoint methods.
  *
- * @example
+ * **Example** (Read response tag)
+ *
  * ```ts
  * import type { XAiResponse } from "@beep/xai"
  *
@@ -326,7 +344,8 @@ export const XAiResponse = S.Union([XAiBinaryResponse, XAiJsonResponse, XAiNoBod
 /**
  * Type for {@link XAiResponse}.
  *
- * @example
+ * **Example** (Assign JSON response type)
+ *
  * ```ts
  * import { XAiJsonResponse } from "@beep/xai"
  * import type { XAiResponse } from "@beep/xai"
@@ -348,7 +367,8 @@ export type XAiResponse = typeof XAiResponse.Type;
 /**
  * Parsed server-sent event emitted by streaming xAI endpoints.
  *
- * @example
+ * **Example** (Make server-sent event)
+ *
  * ```ts
  * import { XAiServerSentEvent } from "@beep/xai"
  *
@@ -380,7 +400,8 @@ const XAiWebSocketEventKindBase = LiteralKit(["close", "error", "message"]);
 /**
  * WebSocket event kinds emitted by xAI realtime and streaming audio sessions.
  *
- * @example
+ * **Example** (Parse event kind string)
+ *
  * ```ts
  * import { XAiWebSocketEventKind } from "@beep/xai"
  *
@@ -405,7 +426,8 @@ export const XAiWebSocketEventKind = XAiWebSocketEventKindBase.pipe(
 /**
  * Type for {@link XAiWebSocketEventKind}.
  *
- * @example
+ * **Example** (Annotate event kind type)
+ *
  * ```ts
  * import type { XAiWebSocketEventKind } from "@beep/xai"
  *
@@ -431,7 +453,8 @@ type XAiWebSocketEventMember<T extends XAiWebSocketEventKind> = {
 /**
  * Event emitted by an xAI WebSocket endpoint session.
  *
- * @example
+ * **Example** (Create message event)
+ *
  * ```ts
  * import { XAiWebSocketEvent } from "@beep/xai"
  *
@@ -493,7 +516,8 @@ export const XAiWebSocketEvent = XAiWebSocketEventKind.mapMembers((members) => {
 /**
  * Type for {@link XAiWebSocketEvent}.
  *
- * @example
+ * **Example** (Annotate WebSocket event type)
+ *
  * ```ts
  * import type { XAiWebSocketEvent } from "@beep/xai"
  *

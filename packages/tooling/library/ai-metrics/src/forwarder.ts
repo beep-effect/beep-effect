@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -23,6 +23,7 @@ import {
   AiMetricsParquetExportMode,
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
+import { AiMetricsIdentityRegistryUpsertInput, upsertAiMetricsIdentityRegistry } from "./identity-registry.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
 import { fileSizeBytes } from "./internal/file-info.ts";
@@ -61,47 +62,72 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 );
 
 /**
- * Error raised by the durable AI metrics forwarder.
+ * Typed failure raised anywhere inside one durable forwarder run.
  *
- * @example
+ * **Details**
+ *
+ * Every stage of the run — discovery, ingest, archive, derived storage, OTLP
+ * export — maps its own failure into this single error so the caller has one
+ * tag to handle. The originating failure is preserved in `cause`, and `message`
+ * names the stage that failed.
+ *
+ * **Example** (Constructing the failure)
+ *
  * ```ts
  * import { AiMetricsForwarderError } from "@beep/repo-ai-metrics"
+ *
  * const error = AiMetricsForwarderError.make({
  *   cause: "boom",
- *   message: "Forwarder failed."
+ *   message: "Failed to upsert the AI metrics identity registry."
  * })
- * console.log(error)
+ *
+ * console.log(error._tag) // "AiMetricsForwarderError"
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsForwarderError extends TaggedErrorClass<AiMetricsForwarderError>($I`AiMetricsForwarderError`)(
+export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderError>($I`AiMetricsForwarderError`)(
   "AiMetricsForwarderError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsForwarderError", {
+  $I.annoteError<AiMetricsForwarderError>("AiMetricsForwarderError", {
     description: "Typed failure raised by the durable AI metrics forwarder.",
   })
 ) {}
 
 /**
- * Input for the durable AI metrics forwarder.
+ * Roots, budgets, and secrets that define one durable forwarder run.
  *
- * @example
+ * **Details**
+ *
+ * `dataRoot` is optional here but is not defaulted downstream: a `local` run
+ * that supplies neither `dataRoot` nor `homeDir` fails rather than writing into
+ * whichever clone happens to be the working directory. `maxFiles` and
+ * `maxFileBytes` bound one pass, and files they exclude are reported through
+ * {@link AiMetricsForwarderSourceCoverage} instead of being dropped silently.
+ *
+ * **Example** (Configuring a local run)
+ *
  * ```ts
  * import { AiMetricsForwarderInput } from "@beep/repo-ai-metrics"
  * import { Redacted } from "effect"
  *
  * const input = AiMetricsForwarderInput.make({
+ *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   hashSalt: "salt",
- *   homeDir: "/home/me",
+ *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
  *   repoRoot: "/repo"
  * })
- * console.log(input.parquetExportMode)
+ *
+ * console.log(input.parquetExportMode) // "snapshot"
+ * console.log(input.target) // "local"
  * ```
+ *
+ * @see {@link runAiMetricsForwarder} for the run this input drives.
  * @category models
  * @since 0.0.0
  */
@@ -142,9 +168,18 @@ export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I
 ) {}
 
 /**
- * Per-source coverage selected by one durable forwarder run.
+ * How much of one agent brand's transcript backlog a single run actually covered.
  *
- * @example
+ * **Details**
+ *
+ * The counts exist to make starvation visible. A shared `maxFiles` budget spent
+ * mostly on one brand leaves the other permanently behind, and without
+ * `candidateFileCount` beside `includedFileCount` that shows up only as a
+ * quietly stale dataset. `limitedByMaxFiles` and `sizeExcludedFileCount`
+ * attribute the shortfall to the budget that caused it.
+ *
+ * **Example** (Detecting a starved source)
+ *
  * ```ts
  * import { AiMetricsForwarderSourceCoverage } from "@beep/repo-ai-metrics"
  *
@@ -154,8 +189,11 @@ export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I
  *   limitedByMaxFiles: true,
  *   sourceKind: "codex"
  * })
- * console.log(coverage.limitedByMaxFiles)
+ *
+ * console.log(coverage.candidateFileCount - coverage.includedFileCount) // 2
+ * console.log(coverage.limitedByMaxFiles) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -178,9 +216,18 @@ export class AiMetricsForwarderSourceCoverage extends S.Class<AiMetricsForwarder
 ) {}
 
 /**
- * Successful derived OTLP export status attached to a forwarder run.
+ * Successful derived OTLP export recorded against a forwarder run.
  *
- * @example
+ * **Details**
+ *
+ * `spanCount` is the total shipped; `sessionSpanCount` and `turnSpanCount`
+ * break it down by span kind, so a run that produced sessions but no turns is
+ * distinguishable from one that shipped nothing. Only allowlisted, hashed
+ * attributes leave the machine, which is why these counts — not sample payloads
+ * — are the export's evidence.
+ *
+ * **Example** (Reading an export's span breakdown)
+ *
  * ```ts
  * import { AiMetricsForwarderOtlpExported } from "@beep/repo-ai-metrics"
  *
@@ -193,8 +240,11 @@ export class AiMetricsForwarderSourceCoverage extends S.Class<AiMetricsForwarder
  *   target: "local",
  *   turnSpanCount: 10
  * })
- * console.log(exported.spanCount)
+ *
+ * console.log(exported.sessionSpanCount + exported.turnSpanCount) // 12
  * ```
+ *
+ * @see {@link AiMetricsForwarderOtlpExport} for the tagged union that carries this member.
  * @category models
  * @since 0.0.0
  */
@@ -216,9 +266,22 @@ export class AiMetricsForwarderOtlpExported extends S.Class<AiMetricsForwarderOt
 ) {}
 
 /**
- * Failed derived OTLP export status attached to a forwarder run.
+ * Failed derived OTLP export recorded against a forwarder run.
  *
- * @example
+ * **Details**
+ *
+ * Export failure does not fail the run: the transcripts are already ingested and
+ * durable, and an unreachable collector is a transient condition the next run
+ * retries. Recording the failure against the same `ingestRunId` is what keeps
+ * "ingested but never exported" from looking identical to "never ingested".
+ *
+ * **Gotchas**
+ *
+ * `message` is sanitized for storage. Do not put a raw exporter error into it —
+ * endpoint errors can carry request bodies.
+ *
+ * **Example** (Recording an unreachable collector)
+ *
  * ```ts
  * import { AiMetricsForwarderOtlpExportFailed } from "@beep/repo-ai-metrics"
  *
@@ -229,8 +292,12 @@ export class AiMetricsForwarderOtlpExported extends S.Class<AiMetricsForwarderOt
  *   status: "failed",
  *   target: "local"
  * })
- * console.log(failed.message)
+ *
+ * console.log(failed.status) // "failed"
+ * console.log(failed.ingestRunId) // "forwarder-1"
  * ```
+ *
+ * @see {@link AiMetricsForwarderOtlpExport} for the tagged union that carries this member.
  * @category models
  * @since 0.0.0
  */
@@ -250,9 +317,17 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
 ) {}
 
 /**
- * Tagged derived OTLP export status attached to a forwarder run.
+ * Whether a run's derived OTLP export succeeded, tagged by its `status` field.
  *
- * @example
+ * **Details**
+ *
+ * Tagging on `status` rather than carrying a nullable failure message means a
+ * reader cannot look at `spanCount` on a failed export: the counts exist only on
+ * the `exported` member. A run that never attempted an export omits the field
+ * entirely, which is a third state distinct from both members.
+ *
+ * **Example** (Narrowing an export status)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderOtlpExport,
@@ -268,9 +343,11 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
  *   target: "local",
  *   turnSpanCount: 2
  * })
- * const isForwarderOtlpExport = AiMetricsForwarderOtlpExport.is(exported)
- * console.log(isForwarderOtlpExport)
+ *
+ * console.log(AiMetricsForwarderOtlpExport.is(exported)) // true
+ * console.log(exported.status) // "exported"
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -286,40 +363,53 @@ export const AiMetricsForwarderOtlpExport = S.Union([
 );
 
 /**
- * Runtime type for {@link AiMetricsForwarderOtlpExport}.
+ * Decoded export status carried by a forwarder run result.
  *
- * @example
- * ```ts
- * import type { AiMetricsForwarderOtlpExport } from "@beep/repo-ai-metrics"
- * const status: AiMetricsForwarderOtlpExport["status"] = "exported"
- * console.log(status)
- * ```
+ * **Details**
+ *
+ * Narrowing on `status` selects between the exported and failed members, so
+ * `spanCount` is reachable only after the `"exported"` check.
+ *
+ * @see {@link AiMetricsForwarderOtlpExport} for the runtime schema and its guard.
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsForwarderOtlpExport = typeof AiMetricsForwarderOtlpExport.Type;
 
 /**
- * Safe result emitted by one durable AI metrics forwarder run.
+ * Counts and storage paths a completed forwarder run is safe to report.
  *
- * @example
+ * **Details**
+ *
+ * Every field is either a count, a path, or an identifier — nothing derived from
+ * transcript content — so the result can be logged, printed by the CLI, or
+ * exported without a privacy review. `configSnapshotId` is the join back to the
+ * agent-configuration manifest that was in force for the run, which is what
+ * makes a metric attributable to a guidance change.
+ *
+ * **Example** (Reporting a completed run)
+ *
  * ```ts
  * import { AiMetricsForwarderRunResult } from "@beep/repo-ai-metrics"
  *
  * const result = AiMetricsForwarderRunResult.make({
  *   archiveObjectCount: 2,
  *   configSnapshotId: "config-1",
- *   duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
+ *   duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *   ingestRunId: "forwarder-1",
  *   parquetExportMode: "snapshot",
  *   parquetTables: ["ai_metrics_turns"],
- *   rawArchiveDir: ".beep/ai-metrics/raw",
+ *   rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw",
  *   sourceFileCount: 2,
  *   target: "local",
  *   turnCount: 24
  * })
- * console.log(result.turnCount)
+ *
+ * console.log(result.turnCount) // 24
+ * console.log(result.sourceCoverage.length) // 0
  * ```
+ *
+ * @see {@link AiMetricsForwarderSourceCoverage} for the per-brand selection counts this result carries.
  * @category models
  * @since 0.0.0
  */
@@ -348,9 +438,23 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
 ) {}
 
 /**
- * Input for rendering a workstation-owned forwarder timer.
+ * Parameters for the systemd user timer that owns scheduled forwarder collection.
  *
- * @example
+ * **Details**
+ *
+ * `command[0]` must be an absolute executable path; the schema refines that,
+ * because a unit's `ExecStart` resolves against the unit environment rather than
+ * the operator's shell. `intervalMinutes` becomes `OnUnitInactiveSec`, so it is
+ * the gap between runs, not a fixed wall-clock period.
+ *
+ * **Gotchas**
+ *
+ * `workingDirectory` becomes the unit's `WorkingDirectory`. Any relative path
+ * elsewhere in the command binds to it, which is exactly how a data root once
+ * ended up inside a clone — pass absolute paths for anything that is stored.
+ *
+ * **Example** (Describing a timer that runs every half hour)
+ *
  * ```ts
  * import { AiMetricsForwarderTimerInput } from "@beep/repo-ai-metrics"
  *
@@ -360,8 +464,12 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
  *   statusPath: "/tmp/beep-ai-metrics-forwarder.json",
  *   workingDirectory: "/repo"
  * })
- * console.log(input.intervalMinutes)
+ *
+ * console.log(input.intervalMinutes) // 30
+ * console.log(input.serviceName) // "beep-ai-metrics-forwarder"
  * ```
+ *
+ * @see {@link renderAiMetricsForwarderTimerPlan} for the units rendered from this input.
  * @category models
  * @since 0.0.0
  */
@@ -390,9 +498,23 @@ export class AiMetricsForwarderTimerInput extends S.Class<AiMetricsForwarderTime
 ) {}
 
 /**
- * Rendered systemd user units for the workstation-owned forwarder timer.
+ * Rendered systemd user units and the operator commands that install them.
  *
- * @example
+ * **Details**
+ *
+ * The plan is render-only: it produces unit text and a command list for a human
+ * to review and run. Nothing in it touches systemd, writes a unit file, or
+ * enables a timer.
+ *
+ * **Gotchas**
+ *
+ * `installCommands` includes a step that truncates the collector's environment
+ * file before repopulating it from the secret store. Running the list without an
+ * authenticated secret session destroys the hash salt, which silently breaks
+ * every hash join in an existing store. Review the list before running it.
+ *
+ * **Example** (Inspecting a rendered plan)
+ *
  * ```ts
  * import { AiMetricsForwarderTimerPlan } from "@beep/repo-ai-metrics"
  *
@@ -405,8 +527,11 @@ export class AiMetricsForwarderTimerInput extends S.Class<AiMetricsForwarderTime
  *   timerUnit: "[Timer]\nOnUnitInactiveSec=30m",
  *   timerUnitName: "beep-ai-metrics-forwarder.timer"
  * })
- * console.log(plan.timerUnitName)
+ *
+ * console.log(plan.timerUnitName) // "beep-ai-metrics-forwarder.timer"
+ * console.log(plan.installCommands.length) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -482,9 +607,22 @@ const shellCommandFromArgv: (argv: ReadonlyArray<string>) => string = flow(A.map
 /**
  * Render a systemd user timer that repeatedly runs the forwarder with locking and status evidence.
  *
- * @param input - Timer rendering input with service names, command text, status path, and secret references.
- * @returns A render-only systemd timer/service plan for operator installation.
- * @example
+ * **Details**
+ *
+ * The service takes `lockPath` as a flock so an overrunning collection cannot
+ * overlap the next fire, and writes `statusPath` through a `.tmp` sibling and a
+ * rename so a reader never observes a partially written status file. Unit-field
+ * values are stripped of control characters before interpolation.
+ *
+ * **Gotchas**
+ *
+ * Rendering is pure and does nothing to the machine. Every path interpolated
+ * into the units must already be absolute — validate a data root with
+ * {@link requireAbsoluteAiMetricsDataRoot} before calling, because a relative
+ * path inside `ExecStart` silently binds to the unit's `WorkingDirectory`.
+ *
+ * **Example** (Rendering the units for an operator to review)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderTimerInput,
@@ -499,8 +637,13 @@ const shellCommandFromArgv: (argv: ReadonlyArray<string>) => string = flow(A.map
  *     workingDirectory: "/repo"
  *   })
  * )
- * console.log(plan.serviceUnitName)
+ *
+ * console.log(plan.serviceUnitName) // "beep-ai-metrics-forwarder.service"
+ * console.log(plan.timerUnit.includes("OnUnitInactiveSec=30m")) // true
  * ```
+ *
+ * @param input - Timer rendering input with service names, command text, status path, and secret references.
+ * @returns A render-only systemd timer/service plan for operator installation.
  * @category services
  * @since 0.0.0
  */
@@ -821,26 +964,57 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
 /**
  * Run durable ingest: encrypted raw archive, DuckDB projection, and Parquet export.
  *
- * @effects
- * - Scans local Codex, Claude, and OpenClaw source locations.
- * - Reads selected source files and writes encrypted raw archive objects.
- * - Writes config snapshot artifacts before and after derived storage succeeds.
- * - Upserts derived rows into DuckDB and optionally refreshes Parquet exports.
- * @example
+ * **Details**
+ *
+ * The run records identity before it records data. It resolves the install spec,
+ * upserts the canonical root into the identity registry, and only then snapshots
+ * configuration, archives raw transcripts, and projects derived rows — so a
+ * store can never contain rows whose provenance is unreconstructable.
+ * Configuration artifacts are written twice: once before derived storage as a
+ * crash record, and again afterwards to promote the diff pointer.
+ *
+ * **Gotchas**
+ *
+ * The `DuckDb` requirement is not provided internally. Wrap the run with
+ * {@link withAiMetricsDuckDb} so the connection scope closes with the run, and
+ * point it at the same data root the input resolves to.
+ *
+ * **Example** (One local collection pass)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderInput,
- *   runAiMetricsForwarder
+ *   aiMetricsDerivedDuckDbPath,
+ *   runAiMetricsForwarder,
+ *   withAiMetricsDuckDb
  * } from "@beep/repo-ai-metrics"
- * import { Redacted } from "effect"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect, Redacted } from "effect"
+ *
+ * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
+ *
  * const input = AiMetricsForwarderInput.make({
- *   homeDir: "/home/example",
+ *   dataRoot,
+ *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
  *   repoRoot: "/work/repo"
  * })
- * const program = runAiMetricsForwarder(input)
- * console.log(program)
+ *
+ * const program = withAiMetricsDuckDb(
+ *   runAiMetricsForwarder(input),
+ *   aiMetricsDerivedDuckDbPath(dataRoot)
+ * ).pipe(Effect.provide(NodeServices.layer))
+ *
+ * Effect.runPromise(program).then((result) => console.log(result.turnCount))
  * ```
+ *
+ * @effects
+ * - Scans local Codex, Claude, and OpenClaw source locations.
+ * - Upserts the run's canonical root into the identity registry.
+ * - Reads selected source files and writes encrypted raw archive objects.
+ * - Writes config snapshot artifacts before and after derived storage succeeds.
+ * - Upserts derived rows into DuckDB and optionally refreshes Parquet exports.
+ * @see {@link AiMetricsForwarderRunResult} for the counts and paths a completed run reports.
  * @category services
  * @since 0.0.0
  */
@@ -857,6 +1031,21 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to resolve AI metrics install storage layout.", cause)));
     const pathApi = yield* Path.Path;
+    yield* upsertAiMetricsIdentityRegistry(
+      AiMetricsIdentityRegistryUpsertInput.make({
+        dataRoot: installSpec.storage.dataRoot,
+        ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
+        homeDir: input.homeDir,
+        rootPath: pathApi.resolve(input.repoRoot),
+        // Every kind this run scans, so openclaw-derived rows keep source-instance
+        // provenance and stay joinable through the registry.
+        sourceKinds: [
+          AiMetricsTranscriptSource.Enum.codex,
+          AiMetricsTranscriptSource.Enum.claude,
+          AiMetricsTranscriptSource.Enum.openclaw,
+        ],
+      })
+    ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to upsert the AI metrics identity registry.", cause)));
     const configSnapshotDir = pathApi.join(installSpec.storage.dataRoot, "config-snapshots");
     const configSnapshot = yield* makeAiMetricsConfigSnapshot(
       AiMetricsConfigSnapshotInput.make({
@@ -925,30 +1114,41 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
 );
 
 /**
- * Render a durable forwarder run result as JSON.
+ * Encode a forwarder run result as the JSON the CLI prints and the status file stores.
  *
- * @example
+ * **Details**
+ *
+ * Encoding goes through the schema rather than `JSON.stringify`, so the text
+ * round-trips back through {@link AiMetricsForwarderRunResult} and absent
+ * optional keys stay absent instead of becoming `undefined`.
+ *
+ * **Example** (Encoding a completed run for the status file)
+ *
  * ```ts
  * import {
  *   AiMetricsForwarderRunResult,
  *   forwarderRunResultToJson
  * } from "@beep/repo-ai-metrics"
+ * import { Effect } from "effect"
+ *
  * const result = AiMetricsForwarderRunResult.make({
  *   archiveObjectCount: 0,
  *   configSnapshotId: "config-1",
- *   duckDbPath: ".ai-metrics/derived/ai-metrics.duckdb",
+ *   duckDbPath: "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb",
  *   ingestRunId: "forwarder-1",
- *   parquetExportDir: ".ai-metrics/derived/parquet/forwarder-1",
  *   parquetExportMode: "snapshot",
  *   parquetTables: [],
- *   rawArchiveDir: ".ai-metrics/raw",
+ *   rawArchiveDir: "/home/dev/.local/state/beep/ai-metrics/raw",
  *   sourceFileCount: 0,
  *   target: "local",
  *   turnCount: 0
  * })
- * const program = forwarderRunResultToJson(result)
- * console.log(program)
+ *
+ * const json = Effect.runSync(forwarderRunResultToJson(result))
+ *
+ * console.log(json.includes("forwarder-1")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -963,14 +1163,21 @@ export const forwarderRunResultToJson: (
 );
 
 /**
- * Render a forwarder timer plan as JSON.
+ * Encode a rendered timer plan as JSON for machine-readable operator output.
  *
- * @example
+ * **Details**
+ *
+ * The unit text is carried as JSON string fields rather than being written to
+ * disk, so a caller can diff a proposed plan against the units already
+ * installed before changing anything on the machine.
+ *
+ * **Example** (Encoding a plan for review)
+ *
  * ```ts
  * import { AiMetricsForwarderTimerPlan, forwarderTimerPlanToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
  *
- * const json = Effect.runPromise(
+ * const json = Effect.runSync(
  *   forwarderTimerPlanToJson(
  *     AiMetricsForwarderTimerPlan.make({
  *       installCommands: [],
@@ -983,8 +1190,11 @@ export const forwarderRunResultToJson: (
  *     })
  *   )
  * )
- * console.log(json)
+ *
+ * console.log(json.includes("beep-ai-metrics-forwarder.timer")) // true
  * ```
+ *
+ * @see {@link renderAiMetricsForwarderTimerPlan} for the renderer that produces the plan.
  * @category utilities
  * @since 0.0.0
  */

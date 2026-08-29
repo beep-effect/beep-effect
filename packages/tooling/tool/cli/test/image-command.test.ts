@@ -2,7 +2,7 @@ import { ExtractFramesManifest, FFmpegError } from "@beep/ffmpeg";
 import { imageCommand } from "@beep/repo-cli";
 import { ImageCommandError } from "@beep/repo-cli/commands/Image";
 import { A, Str } from "@beep/utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -19,11 +19,7 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  TestConsole.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
-);
+const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const runImageCommand = Command.runWith(imageCommand, { version: "0.0.0" });
 const decodeManifest = S.decodeUnknownSync(S.fromJsonString(ExtractFramesManifest));
 const CLI_ENTRYPOINT = new URL("../src/bin.ts", import.meta.url).pathname;
@@ -149,6 +145,7 @@ const runCliCommand = (
         env: {
           PATH: `${pathPrefix}:${Bun.env.PATH ?? ""}`,
         },
+        stdin: "ignore",
         stdout: "pipe",
         stderr: "pipe",
       });

@@ -12,7 +12,7 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Match } from "effect";
@@ -23,7 +23,8 @@ const $I = $PacerId.create("pacer/Pacer.errors");
 /**
  * Failure reasons for the PACER Authentication API.
  *
- * @example
+ * **Example** (Log invalid credentials reason)
+ *
  * ```ts
  * import { PacerAuthErrorReason } from "@beep/pacer"
  *
@@ -49,7 +50,8 @@ export const PacerAuthErrorReason = LiteralKit([
 /**
  * Type for {@link PacerAuthErrorReason}.
  *
- * @example
+ * **Example** (Type alias for auth reason)
+ *
  * ```ts
  * import { PacerAuthErrorReason } from "@beep/pacer"
  * import type { PacerAuthErrorReason as PacerAuthErrorReasonType } from "@beep/pacer"
@@ -66,7 +68,8 @@ export type PacerAuthErrorReason = typeof PacerAuthErrorReason.Type;
 /**
  * Failure raised by the PACER Authentication boundary.
  *
- * @example
+ * **Example** (Create error from login result)
+ *
  * ```ts
  * import { PacerAuthError } from "@beep/pacer"
  *
@@ -77,7 +80,7 @@ export type PacerAuthErrorReason = typeof PacerAuthErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class PacerAuthError extends TaggedErrorClass<PacerAuthError>($I`PacerAuthError`)(
+export class PacerAuthError extends S.TaggedError<PacerAuthError>($I`PacerAuthError`)(
   "PacerAuthError",
   {
     reason: PacerAuthErrorReason,
@@ -85,7 +88,7 @@ export class PacerAuthError extends TaggedErrorClass<PacerAuthError>($I`PacerAut
     description: S.optionalKey(S.String),
     cause: S.optionalKey(S.String),
   },
-  $I.annote("PacerAuthError", {
+  $I.annoteError<PacerAuthError>("PacerAuthError", {
     description: "Typed failure from the PACER cso-auth / cso-logout flow.",
   })
 ) {
@@ -130,7 +133,8 @@ export class PacerAuthError extends TaggedErrorClass<PacerAuthError>($I`PacerAut
 /**
  * Failure reasons for the PCL Case Locator API, mapped from HTTP status codes.
  *
- * @example
+ * **Example** (Log too-many-requests reason)
+ *
  * ```ts
  * import { PacerPclErrorReason } from "@beep/pacer"
  *
@@ -158,7 +162,8 @@ export const PacerPclErrorReason = LiteralKit([
 /**
  * Type for {@link PacerPclErrorReason}.
  *
- * @example
+ * **Example** (Type alias for PCL reason)
+ *
  * ```ts
  * import { PacerPclErrorReason } from "@beep/pacer"
  * import type { PacerPclErrorReason as PacerPclErrorReasonType } from "@beep/pacer"
@@ -175,7 +180,8 @@ export type PacerPclErrorReason = typeof PacerPclErrorReason.Type;
 /**
  * Failure raised by the PCL Case Locator boundary.
  *
- * @example
+ * **Example** (Create error from HTTP status)
+ *
  * ```ts
  * import { PacerPclError } from "@beep/pacer"
  *
@@ -186,7 +192,7 @@ export type PacerPclErrorReason = typeof PacerPclErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclError`)(
+export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError`)(
   "PacerPclError",
   {
     reason: PacerPclErrorReason,
@@ -194,7 +200,7 @@ export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclEr
     description: S.optionalKey(S.String),
     cause: S.optionalKey(S.String),
   },
-  $I.annote("PacerPclError", {
+  $I.annoteError<PacerPclError>("PacerPclError", {
     description: "Typed failure from a PCL Case Locator search.",
   })
 ) {
@@ -243,7 +249,8 @@ export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclEr
 /**
  * Failure raised while loading PACER configuration / secrets.
  *
- * @example
+ * **Example** (Make config error with message)
+ *
  * ```ts
  * import { PacerConfigError } from "@beep/pacer"
  *
@@ -254,12 +261,12 @@ export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclEr
  * @category errors
  * @since 0.0.0
  */
-export class PacerConfigError extends TaggedErrorClass<PacerConfigError>($I`PacerConfigError`)(
+export class PacerConfigError extends S.TaggedError<PacerConfigError>($I`PacerConfigError`)(
   "PacerConfigError",
   {
     cause: S.optionalKey(S.String),
   },
-  $I.annote("PacerConfigError", {
+  $I.annoteError<PacerConfigError>("PacerConfigError", {
     description: "Missing or unreadable PACER configuration / secret.",
   })
 ) {

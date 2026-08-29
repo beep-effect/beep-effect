@@ -10,11 +10,11 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Laws.command.js";
+export * from "./Laws.command.ts";
 /**
  * Public command module export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Laws.errors.js";
+export * from "./Laws.errors.ts";

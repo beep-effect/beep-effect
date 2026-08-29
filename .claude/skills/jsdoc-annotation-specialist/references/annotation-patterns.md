@@ -3,7 +3,7 @@
 Every schema definition must carry identity annotations via the file-local `$I`
 composer created from the package identity.
 
-## Class schemas (S.Class, Model.Class, TaggedErrorClass)
+## Class schemas (`S.Class`, `Model.Class`, `S.TaggedError`)
 
 The third argument to the class factory receives `$I.annote`:
 
@@ -16,12 +16,13 @@ class MyEntity extends S.Class<MyEntity>($I`MyEntity`)(
 ) {}
 ```
 
-## TaggedErrorClass
+## Tagged errors
 
-Same pattern, but imported from `@beep/schema`:
+Extend `S.TaggedError` from `effect/Schema` directly. Use the package `$I`
+composer when a distinct namespaced schema identifier is wanted:
 
 ```ts
-class MyError extends TaggedErrorClass<MyError>($I`MyError`)(
+class MyError extends S.TaggedError<MyError>($I`MyError`)(
   "MyError",
   { message: S.String, cause: S.Defect({ includeStack: true }) },
   $I.annote("MyError", {
@@ -29,6 +30,11 @@ class MyError extends TaggedErrorClass<MyError>($I`MyError`)(
   })
 ) {}
 ```
+
+If no distinct identifier is needed, use
+`S.TaggedError<MyError>()("MyError", fields)`. Never pass a bare identifier
+equal to the tag. Cause-carrying errors declare
+`cause: S.Defect({ includeStack: true })` explicitly.
 
 ## Non-class schemas
 
@@ -78,13 +84,15 @@ export const MySchema = S.String.pipe(
 )
 
 /**
- * Type for {@link MySchema}. {@inheritDoc MySchema}
+ * Decoded value produced by {@link MySchema}.
  *
+ * @see {@link MySchema} for the runtime schema and decoding behavior.
  * @category models
  * @since 0.0.0
  */
 export type MySchema = typeof MySchema.Type
 ```
 
-The type alias JSDoc uses `{@link}` and `{@inheritDoc}` to avoid duplicating
-the description.
+The same-name alias is pure type-level, so precise prose is required but an
+Example is not. Keep its `@see` described; do not duplicate the runtime schema's
+Example or add a legacy `@example` tag.

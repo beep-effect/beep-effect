@@ -101,7 +101,9 @@ const TestHomeLayer = Layer.succeed(AiProviderCliHome)(
 const PortsLive = Layer.mergeAll(ProviderInstanceRepositoryLive, ProviderProbeLive);
 const TestLayer = ProviderInstanceUseCasesLive.pipe(
   Layer.provideMerge(PortsLive),
-  Layer.provideMerge(AiProviderCli.makeLayerFromRunner(runner)),
+  Layer.provideMerge(
+    AiProviderCli.makeLayerFromRunner(runner, { claudePath: "/opt/bin/claude", codexPath: "~/opt/bin/codex" })
+  ),
   Layer.provideMerge(TestHomeLayer),
   Layer.provideMerge(TestActorScopeLayer),
   Layer.provideMerge(CuidState.Default),
@@ -153,7 +155,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         yield* prepareTable();
         const useCases = yield* ProviderInstanceUseCases;
         yield* Ref.set(runnerRequests, []);
-        const envVars = yield* S.decodeUnknownEffect(Domain.EnvVars)({ NO_PROXY: "localhost" });
+        const envVars = yield* S.decodeEffect(Domain.EnvVars)({ NO_PROXY: "localhost" });
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
             binaryPath: Domain.BinaryPath.make("/opt/bin/claude"),

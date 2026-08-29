@@ -9,10 +9,11 @@ import { $SchemaId } from "@beep/identity";
 import { Str } from "@beep/utils";
 import { identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import { Unknown } from "./Unknown.ts";
 
 const $I = $SchemaId.create("String");
-const encodeUnknownAsJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
-const isError = S.is(S.Error());
+const encodeUnknownAsJsonResult = Unknown.encodeUnknownResultFromJsonString;
+const isError = S.is(S.instanceOf(Error));
 
 const stringifyFallback = (value: unknown): string => {
   try {
@@ -46,17 +47,18 @@ const stringifyUnknown = (value: unknown): string => {
 /**
  * Branded non-empty trimmed string schema that strips whitespace and rejects empty results.
  *
- * @example
- * ```ts
+ * **Example** (Decode trimmed non-empty string)
+ *
+ * ```ts import.meta.vitest name="Decode trimmed non-empty string"
  * import * as S from "effect/Schema"
  * import { NonEmptyTrimmedStr } from "@beep/schema/String"
  *
  * const value = S.decodeUnknownSync(NonEmptyTrimmedStr)("  hello  ")
- * console.log(value) // "hello"
+ * value // => "hello"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" })).pipe(
   S.brand("NonEmptyTrimmedStr"),
@@ -69,24 +71,26 @@ export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String m
 /**
  * Type for {@link NonEmptyTrimmedStr}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate decoded trimmed string)
+ *
+ * ```ts import.meta.vitest name="Annotate decoded trimmed string"
  * import * as S from "effect/Schema"
  * import { NonEmptyTrimmedStr } from "@beep/schema/String"
  *
  * const label: NonEmptyTrimmedStr = S.decodeUnknownSync(NonEmptyTrimmedStr)("  hello  ")
- * console.log(label) // "hello"
+ * label // => "hello"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
 
 /**
  * Branded UUID string schema that validates RFC 4122 format.
  *
- * @example
+ * **Example** (Decode RFC 4122 UUID)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UUID } from "@beep/schema/String"
@@ -95,8 +99,8 @@ export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
   S.brand("UUID"),
@@ -109,7 +113,8 @@ export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
 /**
  * Type for {@link UUID}.
  *
- * @example
+ * **Example** (Annotate decoded UUID value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UUID } from "@beep/schema/String"
@@ -118,21 +123,22 @@ export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
  * console.log(userId)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type UUID = typeof UUID.Type;
 
 /**
  * A nullable string schema that accepts `string | null`.
  *
- * @example
- * ```ts
+ * **Example** (Decode string or null)
+ *
+ * ```ts import.meta.vitest name="Decode string or null"
  * import * as S from "effect/Schema"
  * import { NullableStr } from "@beep/schema/String"
  *
- * console.log(S.decodeUnknownSync(NullableStr)("hello")) // "hello"
- * console.log(S.decodeUnknownSync(NullableStr)(null)) // null
+ * S.decodeUnknownSync(NullableStr)("hello") // => "hello"
+ * S.decodeUnknownSync(NullableStr)(null) // => null
  * ```
  *
  * @category validation
@@ -148,13 +154,14 @@ export const NullableStr = S.String.pipe(
 /**
  * Type for {@link NullableStr}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate nullable string type)
+ *
+ * ```ts import.meta.vitest name="Annotate nullable string type"
  * import * as S from "effect/Schema"
  * import { NullableStr } from "@beep/schema/String"
  *
  * const name: NullableStr = S.decodeUnknownSync(NullableStr)(null)
- * console.log(name) // null
+ * name // => null
  * ```
  *
  * @category models
@@ -165,7 +172,8 @@ export type NullableStr = typeof NullableStr.Type;
 /**
  * A nullable string that decodes to `Option<string>` using `S.OptionFromNullOr`.
  *
- * @example
+ * **Example** (Decode null to Option.none)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { OptionFromNullableStr } from "@beep/schema/String"
@@ -187,14 +195,15 @@ export const OptionFromNullableStr = S.String.pipe(
 /**
  * Type for {@link OptionFromNullableStr}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate Option string type)
+ *
+ * ```ts import.meta.vitest name="Annotate Option string type"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OptionFromNullableStr } from "@beep/schema/String"
  *
  * const value: OptionFromNullableStr = S.decodeUnknownSync(OptionFromNullableStr)("hello")
- * console.log(O.isSome(value)) // true
+ * O.isSome(value) // => true
  * ```
  *
  * @category models
@@ -205,12 +214,15 @@ export type OptionFromNullableStr = typeof OptionFromNullableStr.Type;
 /**
  * Schema transformation that decodes any unknown input into a string.
  *
+ * **Details**
+ *
  * Strings pass through unchanged. Errors decode to their message. JSON-compatible
  * values decode to compact JSON text, and values that cannot be JSON encoded
  * fall back to JavaScript string coercion.
  *
- * @example
- * ```ts
+ * **Example** (Decode object to JSON string)
+ *
+ * ```ts import.meta.vitest name="Decode object to JSON string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { StrFromUnknown } from "@beep/schema/String"
@@ -218,7 +230,7 @@ export type OptionFromNullableStr = typeof OptionFromNullableStr.Type;
  * const program = S.decodeUnknownEffect(StrFromUnknown)({ ok: true })
  * const value = Effect.runSync(program)
  *
- * console.log(value) // "{\"ok\":true}"
+ * value // => "{\"ok\":true}"
  * ```
  *
  * @category codecs
@@ -240,14 +252,15 @@ export const StrFromUnknown = S.Unknown.pipe(
 /**
  * Type for {@link StrFromUnknown}.
  *
- * @example
- * ```ts
+ * **Example** (Decode Error to message)
+ *
+ * ```ts import.meta.vitest name="Decode Error to message"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { StrFromUnknown } from "@beep/schema/String"
  *
  * const text: StrFromUnknown = Effect.runSync(S.decodeUnknownEffect(StrFromUnknown)(new Error("boom")))
- * console.log(text) // "boom"
+ * text // => "boom"
  * ```
  *
  * @category models

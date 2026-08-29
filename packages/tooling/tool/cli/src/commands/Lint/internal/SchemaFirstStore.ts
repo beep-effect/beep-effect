@@ -7,24 +7,26 @@
 
 import { Effect, FileSystem, Inspectable, Path } from "effect";
 import * as O from "effect/Option";
-import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.js";
-import { SchemaFirstInventoryReadError } from "../Lint.errors.js";
+import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
 import {
   encodeSchemaFirstInventoryDocument,
   SchemaCrispeningPolicyDocument,
   SchemaCrispeningPolicyPath,
   SchemaFirstInventoryDocument,
   SchemaFirstInventoryPath,
-} from "../Lint.schemas.js";
+} from "../Lint.schemas.ts";
 
 /**
  * Read and decode the tracked schema-first inventory document, failing with
  * `SchemaFirstInventoryReadError` when the file exists but cannot be decoded.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A missing inventory file yields `Option.none` (fresh repo); a malformed one
  * fails loudly — the sanctioned replacement for the former silent
  * parse-swallow.
+ *
  * @category utilities
  * @since 0.0.0
  */

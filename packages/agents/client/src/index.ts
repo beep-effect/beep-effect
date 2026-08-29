@@ -9,7 +9,8 @@
 /**
  * Desktop chat surface atoms backed by the `ChatRpcs` wire contract.
  *
- * @example
+ * **Example** (Serializable threads atoms)
+ *
  * ```ts
  * import { threadsAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
@@ -24,12 +25,20 @@
  * @category atoms
  * @since 0.0.0
  */
-export * from "./Chat.atoms.js";
+export * from "./Chat.atoms.ts";
+/**
+ * Resolve the default browser or desktop-sidecar chat RPC endpoint.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export { resolveChatRpcHttpUrl } from "./Chat.layer.ts";
 /**
  * Env-gated client-side OTLP observability layer wired into the atom runtime so
  * the webview's rpc calls carry span context (joined traces).
  *
- * @example
+ * **Example** (Verify observability layer)
+ *
  * ```ts
  * import { ClientObservabilityLive } from "@beep/agents-client"
  * import { Layer } from "effect"
@@ -40,11 +49,12 @@ export * from "./Chat.atoms.js";
  * @category observability
  * @since 0.0.0
  */
-export * from "./ClientObservability.js";
+export * from "./ClientObservability.ts";
 /**
  * Reactive provider-instance list and lifecycle mutations.
  *
- * @example
+ * **Example** (Log provider instances atom)
+ *
  * ```ts
  * import { providerInstancesAtom } from "@beep/agents-client"
  *
@@ -54,11 +64,12 @@ export * from "./ClientObservability.js";
  * @category atoms
  * @since 0.0.0
  */
-export * from "./ProviderInstance.atoms.js";
+export * from "./ProviderInstance.atoms.ts";
 /**
  * Provider-instance RPC transport and atom client wiring.
  *
- * @example
+ * **Example** (Log provider instance client)
+ *
  * ```ts
  * import { ProviderInstanceClient } from "@beep/agents-client"
  *
@@ -68,4 +79,4 @@ export * from "./ProviderInstance.atoms.js";
  * @category clients
  * @since 0.0.0
  */
-export * from "./ProviderInstance.service.js";
+export * from "./ProviderInstance.service.ts";

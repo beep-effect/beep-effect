@@ -7,21 +7,23 @@
 
 import { A } from "@beep/utils";
 import { Console, Effect, Path } from "effect";
-import { TsconfigSyncPlan } from "./TsconfigSync.plan.js";
-import { TsconfigSyncModeMatch } from "./TsconfigSync.schemas.js";
-import type { TsconfigSyncChange, TsconfigSyncMode } from "./TsconfigSync.schemas.js";
+import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
+import { TsconfigSyncModeMatch } from "./TsconfigSync.schemas.ts";
+import type { TsconfigSyncChange, TsconfigSyncMode } from "./TsconfigSync.schemas.ts";
 
 const { relativeFromRoot } = TsconfigSyncPlan;
 /**
  * Render a tsconfig-sync change summary to the console.
  *
- * @example
+ * **Example** (Render tsconfig change summary)
+ *
  * ```ts
  * import { renderChanges } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.render"
  *
  * const result = renderChanges([{ file: "tsconfig.json", section: "references", status: "changed" }])
  * console.log(result) // rendered command output
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -58,12 +60,14 @@ const renderChanges = Effect.fn(function* (
 /**
  * Internal renderer surface used by the tsconfig-sync service.
  *
- * @example
+ * **Example** (Access renderChanges property)
+ *
  * ```ts
  * import { TsconfigSyncRender } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.render"
  *
  * console.log(TsconfigSyncRender.renderChanges)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

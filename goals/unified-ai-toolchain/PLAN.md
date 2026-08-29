@@ -1,7 +1,8 @@
 # Unified AI Toolchain Plan
 
-This plan executes [SPEC.md](./SPEC.md). P0 through P5 are complete for V1.
-V2 is active. V3 is planned.
+This plan records [SPEC.md](./SPEC.md). P0 through P5 are complete for V1.
+As of 2026-07-14, all ten remaining V2/V3 phases are won't-do-until a real
+agent-config drift incident.
 
 ## Status
 
@@ -9,16 +10,19 @@ V2 is active. V3 is planned.
 | --- | --- | --- | --- |
 | P0-P5 V1 | complete | Preserve schema truth layer evidence. | V1 evidence remains linked and package checks stay green. |
 | V2.0 Bootstrap | complete | Reopen packet for V2/V3 execution. | `GOAL.md`, spec, plan, manifest, and bootstrap evidence are updated. |
-| V2.1 Operator CLI | pending | Add root `beep ai-sync` commands. | `audit`, `check`, `drift`, and `refresh-pr` exist with tests. |
-| V2.2 Broad Dogfood | pending | Validate all registered repo agent config files. | Root/package checks cover `.codex/config.toml`, `.mcp.json`, `.claude/settings.json`, `AGENTS.md`, and `CLAUDE.md`. |
-| V2.3 Reports And Interop Evidence | pending | Add schema-first reports and rulesync audit/import evidence. | JSON reports decode through schemas; rulesync config/MCP evidence is tested; ruler remains research-only. |
-| V2.4 Drift Auto-PR | pending | Add weekly/manual scheduled refresh PR workflow. | Known drift can be refreshed into an automation PR with focused proof plus root check. |
-| V2.5 Closeout | pending | Prove V2 production-readiness. | V2 verification commands pass and closeout evidence is archived. |
-| V3.1 Canonical Models | planned | Add canonical per-domain config models. | Models decode fixtures and import current native repo files. |
-| V3.2 Canonical Source | planned | Introduce `.ai-sync/project.jsonc`. | File decodes, imports from native files, and is documented as the canonical source. |
-| V3.3 Native Plan/Apply | planned | Emit native files safely. | Dry-run plans, loss reports, temp-dir apply tests, and native validation pass. |
-| V3.4 Current-Matrix Emitters | planned | Support existing five target agents. | Claude Code, Codex, Grok Build, JetBrains AI Assistant, and Junie emitters are production-ready without guessing unknown cells. |
-| V3b Expansion | planned | Add a research-gated additional-agent batch. | Fresh source-map research selects a bounded batch with current evidence. |
+| V2.1 Operator CLI | wont-do | Add root `beep ai-sync` commands. | Reopen only after a real agent-config drift incident. |
+| V2.2 Broad Dogfood | wont-do | Validate all registered repo agent config files. | Reopen only after a real agent-config drift incident. |
+| V2.3 Reports And Interop Evidence | wont-do | Add schema-first reports and rulesync audit/import evidence. | Reopen only after a real agent-config drift incident. |
+| V2.4 Drift Auto-PR | wont-do | Add weekly/manual scheduled refresh PR workflow. | Reopen only after a real agent-config drift incident. |
+| V2.5 Closeout | wont-do | Prove V2 production-readiness. | Reopen only after a real agent-config drift incident. |
+| V3.1 Canonical Models | wont-do | Add canonical per-domain config models. | Reopen only after a real agent-config drift incident. |
+| V3.2 Canonical Source | wont-do | Introduce `.ai-sync/project.jsonc`. | Reopen only after a real agent-config drift incident. |
+| V3.3 Native Plan/Apply | wont-do | Emit native files safely. | Reopen only after a real agent-config drift incident. |
+| V3.4 Current-Matrix Emitters | wont-do | Support existing five target agents. | Reopen only after a real agent-config drift incident. |
+| V3b Expansion | wont-do | Add a research-gated additional-agent batch. | Reopen only after a real agent-config drift incident. |
+
+The known `claude-code-settings`, `rulesync-config`, and `rulesync-mcp` drift
+stays recorded as-is. It is not resolved by this disposition.
 
 ## V1 Closeout
 
@@ -57,7 +61,7 @@ Acceptance gate:
 
 ## V2.1 Operator CLI
 
-Status: pending.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Add an `ai-sync` command group to `@beep/repo-cli`.
 - Implement:
@@ -78,7 +82,7 @@ Acceptance gate:
 
 ## V2.2 Broad Dogfood
 
-Status: pending.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Promote all currently registered repo agent config files to mandatory
   dogfooding inputs:
@@ -99,7 +103,7 @@ Acceptance gate:
 
 ## V2.3 Reports And Interop Evidence
 
-Status: pending.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Add schema-first report models for audit, validation, drift, refresh, and
   compatibility evidence.
@@ -119,7 +123,7 @@ Acceptance gate:
 
 ## V2.4 Drift Auto-PR
 
-Status: pending.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Add `.github/workflows/ai-sync-drift.yml`.
 - Trigger weekly and via `workflow_dispatch`.
@@ -141,7 +145,7 @@ Acceptance gate:
 
 ## V2.5 Closeout
 
-Status: pending.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Archive V2 closeout evidence under `history/outputs/`.
 - Update `README.md`, `PLAN.md`, and `ops/manifest.json` from V2 active to V2
@@ -164,7 +168,7 @@ git diff --check -- goals/unified-ai-toolchain packages/tooling/library/ai-sync 
 
 ## V3.1 Canonical Models
 
-Status: planned.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Add schema-first canonical per-domain models in `@beep/ai-sync`.
 - Cover instructions/rules, skills, commands, hooks, plugins, MCP servers, and
@@ -180,7 +184,7 @@ Acceptance gate:
 
 ## V3.2 Canonical Source
 
-Status: planned.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Introduce `.ai-sync/project.jsonc` as the committed canonical source.
 - Decode it through canonical schemas.
@@ -195,7 +199,7 @@ Acceptance gate:
 
 ## V3.3 Native Plan/Apply
 
-Status: planned.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Add dry-run native emission plans with target paths, diffs, validation, and
   loss reports.
@@ -210,7 +214,7 @@ Acceptance gate:
 
 ## V3.4 Current-Matrix Emitters
 
-Status: planned.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Implement native emitters for Claude Code, Codex, Grok Build, JetBrains AI
   Assistant, and Junie.
@@ -224,7 +228,7 @@ Acceptance gate:
 
 ## V3b Expansion
 
-Status: planned.
+Status: recorded won't-do until a real agent-config drift incident.
 
 - Refresh public source maps before selecting additional agents.
 - Candidate agents must pass evidence criteria from [SPEC.md](./SPEC.md).

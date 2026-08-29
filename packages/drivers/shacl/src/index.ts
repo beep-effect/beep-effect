@@ -11,11 +11,11 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./Shacl.errors.js";
+export * from "./Shacl.errors.ts";
 /**
  * shacl-engine-backed semantic-web SHACL service Layer.
  *
  * @category layers
  * @since 0.0.0
  */
-export * from "./Shacl.validation.js";
+export * from "./Shacl.validation.ts";

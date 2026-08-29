@@ -47,14 +47,14 @@ port = 5432
   it.effect(
     "maps invalid TOML into SchemaIssue.InvalidValue",
     Effect.fnUntraced(function* () {
-      const result = yield* Effect.exit(S.decodeUnknownEffect(TomlTextToUnknown)("invalid = = ="));
+      const result = yield* Effect.exit(S.decodeEffect(TomlTextToUnknown)("invalid = = ="));
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 
         expect(rendered).toContain("Invalid TOML input");
-        expect(rendered).toContain("Unexpected =");
+        expect(rendered).toMatch(/Expected a value but found '='|Unexpected =/);
       }
     })
   );

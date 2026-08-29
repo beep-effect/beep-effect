@@ -7,8 +7,7 @@
 
 import { $AiProviderCliId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { collectProcessOutput } from "@beep/utils/Stream";
-import { Context, Effect, Layer, Match, Result, Tuple } from "effect";
+import { Context, Effect, Layer, Match, Result, Stream, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -33,12 +32,14 @@ const $I = $AiProviderCliId.create("AiProviderCli.service");
 /**
  * Injectable process runner used by provider CLI auth probes.
  *
- * @remarks
+ * **Details**
+ *
  * The service supplies the normalized provider, executable path, and status
  * arguments. Custom runners should return captured stdout, stderr, and exit
  * code without performing auth-status interpretation themselves.
  *
- * @example
+ * **Example** (Mock runner returning stdout)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
@@ -112,6 +113,8 @@ const commandFor = (
     codex: () => [paths.codexPath, ["login", "status"]] as const,
   });
 
+const executableEquivalence = S.toEquivalence(S.String);
+
 const runNative = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   request: AiProviderCliRunRequest
@@ -119,6 +122,7 @@ const runNative = (
   const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
     env: request.env,
     extendEnv: true,
+    // fallow-ignore-next-line code-duplication -- The approved process-hardening spec keeps output ownership inside each driver boundary.
     stdin: "ignore",
     stderr: "pipe",
     stdout: "pipe",
@@ -127,11 +131,29 @@ const runNative = (
   return Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+          handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
 
       return AiProviderCliProcessResult.make({ exitCode, stderr, stdout });
     })
   ).pipe(
+    Effect.tapError((error) =>
+      Effect.logDebug("AI provider CLI process failed").pipe(
+        Effect.annotateLogs({
+          "ai_provider_cli.operation": "checkAuth",
+          "ai_provider_cli.provider": request.provider,
+          "process.error_kind": error.reason._tag,
+          "process.method": error.reason.method,
+          "process.module": error.reason.module,
+        })
+      )
+    ),
     Effect.mapError(() =>
       AiProviderCliError.make({
         command: O.none(),
@@ -198,11 +220,23 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
   ) {
     const [defaultExecutable, args] = commandFor(paths, provider);
     const options = AiProviderCliProbeOptions.make(inputOptions ?? {});
+    const allowedExecutable = expandTildePath(defaultExecutable);
+    const executable = yield* Effect.filterOrFail(
+      Effect.succeed(expandTildePath(O.getOrElse(options.executable, () => defaultExecutable))),
+      (candidate) => executableEquivalence(candidate, allowedExecutable),
+      () =>
+        AiProviderCliError.make({
+          command: O.none(),
+          message: "Executable override is not allowed for this provider CLI status command.",
+          operation: "checkAuth",
+          provider,
+        })
+    );
     const result = yield* runner(
       AiProviderCliRunRequest.make({
         args,
         env: options.env,
-        executable: expandTildePath(O.getOrElse(options.executable, () => defaultExecutable)),
+        executable,
         provider,
       })
     );
@@ -234,7 +268,8 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
 /**
  * Effect service for redacted Claude and Codex CLI authentication checks.
  *
- * @remarks
+ * **Details**
+ *
  * `checkAuth` maps provider-specific status commands to a stable
  * `AiProviderCliAuthProbe`. It only treats exit code `0` as authenticated; the
  * returned probe never includes raw account, token, stdout, or stderr data.
@@ -243,7 +278,8 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * the Codex status line; undecodable output degrades to the exit-code-only
  * interpretation instead of leaking raw output.
  *
- * @example
+ * **Example** (checkAuth with injected runner)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
@@ -270,7 +306,6 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * Live layers spawn `claude auth status` or `codex login status` through
  * `ChildProcessSpawner`; injected-runner layers perform only the effects
  * encoded by the supplied runner.
- *
  * @category services
  * @since 0.0.0
  */
@@ -278,7 +313,8 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
   /**
    * Build a live provider CLI layer backed by native child processes.
    *
-   * @example
+   * **Example** (Live layer with paths)
+   *
    * ```ts
    * import { AiProviderCli } from "@beep/ai-provider-cli"
    *
@@ -293,7 +329,6 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
    * @effects
    * Services produced by this layer spawn the configured provider CLI command
    * whenever `checkAuth` is evaluated.
-   *
    * @category layers
    * @since 0.0.0
    */
@@ -312,7 +347,8 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
   /**
    * Build a deterministic test layer from an injected command runner.
    *
-   * @example
+   * **Example** (Injected runner test layer)
+   *
    * ```ts
    * import { Effect } from "effect"
    * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"

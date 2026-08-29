@@ -6,11 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { QualityIssue } from "../../Yeet.schemas.js";
+import { JsonStringCodec } from "../../../../internal/schema/JsonCodec.ts";
+import { QualityIssue } from "../../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Closeout.schemas");
 
@@ -71,7 +72,8 @@ const PrCloseoutGateStatus = LiteralKit(["passed", "blocked", "unknown", "writte
 /**
  * Durable PR closeout gate state.
  *
- * @example
+ * **Example** (Create passed gate state)
+ *
  * ```ts
  * import { PrCloseoutGateState } from "@beep/repo-cli/commands/Yeet"
  *
@@ -83,6 +85,7 @@ const PrCloseoutGateStatus = LiteralKit(["passed", "blocked", "unknown", "writte
  * })
  * console.log(state.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,7 +111,8 @@ export class PrCloseoutGateState extends S.Class<PrCloseoutGateState>($I`PrClose
 /**
  * One review-thread write action performed during closeout.
  *
- * @example
+ * **Example** (Create reply write action)
+ *
  * ```ts
  * import { PrCloseoutWriteAction } from "@beep/repo-cli/test/Yeet"
  *
@@ -120,6 +124,7 @@ export class PrCloseoutGateState extends S.Class<PrCloseoutGateState>($I`PrClose
  * })
  * console.log(action.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -139,6 +144,12 @@ export class PrCloseoutWriteAction extends S.Class<PrCloseoutWriteAction>($I`PrC
 /**
  * Structured PR closeout result emitted by Yeet.
  *
+ * **Details**
+ *
+ * `reviewedHeadSha` binds the inspection to the pull request head that was
+ * reviewed. It is optional only so legacy reports still decode; an absent head
+ * is stale and cannot satisfy merge readiness.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -151,6 +162,7 @@ export class PrCloseoutReport extends S.Class<PrCloseoutReport>($I`PrCloseoutRep
     issues: S.Array(QualityIssue),
     prNumber: S.Finite,
     prUrl: S.String,
+    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     retriggeredGreptile: S.Boolean,
     schemaVersion: S.Literal("yeet-pr-closeout/v1"),
     states: S.Array(PrCloseoutGateState).pipe(
@@ -163,6 +175,29 @@ export class PrCloseoutReport extends S.Class<PrCloseoutReport>($I`PrCloseoutRep
     ),
   },
   $I.annote("PrCloseoutReport", {
-    description: "Structured PR closeout result emitted by Yeet.",
+    description: "Structured PR closeout result bound to the reviewed pull request head.",
   })
 ) {}
+
+/**
+ * JSON-string codec for the durable `pr-closeout.json` artifact.
+ *
+ * **Details**
+ *
+ * The artifact writer and the `yeet status` reader must share one schema
+ * boundary: encoding through anything schema-blind leaks `Option` fields such
+ * as `reviewedHeadSha` as raw `{ _id: "Option" }` objects, which the reader
+ * then rejects as undecodable and merge readiness treats as a stale closeout.
+ *
+ * **Example** (Round-trip a closeout report)
+ *
+ * ```ts
+ * import { PrCloseoutReportJson } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof PrCloseoutReportJson.encode)
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export const PrCloseoutReportJson = JsonStringCodec(PrCloseoutReport);

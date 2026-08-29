@@ -55,8 +55,9 @@ import { WordCount as WordCountSource } from "./WordCount.ts";
 /**
  * Composite text-analysis result schema exported from the public tools barrel.
  *
- * @example
- * ```ts
+ * **Example** (Decode composite analysis schema)
+ *
+ * ```ts import.meta.vitest name="Decode composite analysis schema"
  * import * as S from "effect/Schema"
  * import { AiAnalysis } from "@beep/nlp-processing/Tools"
  *
@@ -79,8 +80,9 @@ export const AiAnalysis = AiAnalysisSource;
 /**
  * Resolved BM25 corpus configuration schema.
  *
- * @example
- * ```ts
+ * **Example** (Decode BM25 corpus config)
+ *
+ * ```ts import.meta.vitest name="Decode BM25 corpus config"
  * import * as S from "effect/Schema"
  * import { AiCorpusConfig } from "@beep/nlp-processing/Tools"
  *
@@ -101,8 +103,9 @@ export const AiCorpusConfig = AiCorpusConfigSource;
 /**
  * Inverse-document-frequency entry schema for corpus diagnostics.
  *
- * @example
- * ```ts
+ * **Example** (Decode corpus IDF entry)
+ *
+ * ```ts import.meta.vitest name="Decode corpus IDF entry"
  * import * as S from "effect/Schema"
  * import { AiCorpusIdf } from "@beep/nlp-processing/Tools"
  *
@@ -121,8 +124,9 @@ export const AiCorpusIdf = AiCorpusIdfSource;
 /**
  * Document-term matrix dimension schema returned by corpus stats.
  *
- * @example
- * ```ts
+ * **Example** (Decode matrix dimensions)
+ *
+ * ```ts import.meta.vitest name="Decode matrix dimensions"
  * import * as S from "effect/Schema"
  * import { AiCorpusMatrixShape } from "@beep/nlp-processing/Tools"
  *
@@ -141,8 +145,9 @@ export const AiCorpusMatrixShape = AiCorpusMatrixShapeSource;
 /**
  * Ranked corpus document schema returned by query tools.
  *
- * @example
- * ```ts
+ * **Example** (Decode ranked corpus document)
+ *
+ * ```ts import.meta.vitest name="Decode ranked corpus document"
  * import * as S from "effect/Schema"
  * import { AiCorpusRankedDocument } from "@beep/nlp-processing/Tools"
  *
@@ -163,8 +168,9 @@ export const AiCorpusRankedDocument = AiCorpusRankedDocumentSource;
 /**
  * Detailed corpus diagnostic schema including vocabulary and optional matrix data.
  *
- * @example
- * ```ts
+ * **Example** (Decode corpus diagnostic stats)
+ *
+ * ```ts import.meta.vitest name="Decode corpus diagnostic stats"
  * import * as S from "effect/Schema"
  * import { AiCorpusStats } from "@beep/nlp-processing/Tools"
  *
@@ -187,8 +193,9 @@ export const AiCorpusStats = AiCorpusStatsSource;
 /**
  * Managed corpus summary schema returned when a corpus is created.
  *
- * @example
- * ```ts
+ * **Example** (Decode managed corpus summary)
+ *
+ * ```ts import.meta.vitest name="Decode managed corpus summary"
  * import * as S from "effect/Schema"
  * import { AiCorpusSummary } from "@beep/nlp-processing/Tools"
  *
@@ -210,8 +217,9 @@ export const AiCorpusSummary = AiCorpusSummarySource;
 /**
  * Document-level statistics schema for word, sentence, and character counts.
  *
- * @example
- * ```ts
+ * **Example** (Decode document-level stats)
+ *
+ * ```ts import.meta.vitest name="Decode document-level stats"
  * import * as S from "effect/Schema"
  * import { AiDocumentStats } from "@beep/nlp-processing/Tools"
  *
@@ -232,8 +240,9 @@ export const AiDocumentStats = AiDocumentStatsSource;
 /**
  * Named-entity result schema with offsets, token boundaries, and source labels.
  *
- * @example
- * ```ts
+ * **Example** (Decode named entity result)
+ *
+ * ```ts import.meta.vitest name="Decode named entity result"
  * import * as S from "effect/Schema"
  * import { AiEntity } from "@beep/nlp-processing/Tools"
  *
@@ -257,8 +266,9 @@ export const AiEntity = AiEntitySource;
 /**
  * Ranked keyword schema used by keyword extraction results.
  *
- * @example
- * ```ts
+ * **Example** (Decode ranked keyword)
+ *
+ * ```ts import.meta.vitest name="Decode ranked keyword"
  * import * as S from "effect/Schema"
  * import { AiKeyword } from "@beep/nlp-processing/Tools"
  *
@@ -277,8 +287,9 @@ export const AiKeyword = AiKeywordSource;
 /**
  * Frequency-counted n-gram schema shared by bag-of-words and n-gram tools.
  *
- * @example
- * ```ts
+ * **Example** (Decode frequency n-gram)
+ *
+ * ```ts import.meta.vitest name="Decode frequency n-gram"
  * import * as S from "effect/Schema"
  * import { AiNGram } from "@beep/nlp-processing/Tools"
  *
@@ -297,8 +308,9 @@ export const AiNGram = AiNGramSource;
 /**
  * Phonetic-overlap result schema for two compared texts.
  *
- * @example
- * ```ts
+ * **Example** (Decode phonetic match result)
+ *
+ * ```ts import.meta.vitest name="Decode phonetic match result"
  * import * as S from "effect/Schema"
  * import { AiPhoneticMatch } from "@beep/nlp-processing/Tools"
  *
@@ -320,8 +332,9 @@ export const AiPhoneticMatch = AiPhoneticMatchSource;
 /**
  * Relevance-ranked candidate schema with source-array index and score.
  *
- * @example
- * ```ts
+ * **Example** (Decode ranked text candidate)
+ *
+ * ```ts import.meta.vitest name="Decode ranked text candidate"
  * import * as S from "effect/Schema"
  * import { AiRankedText } from "@beep/nlp-processing/Tools"
  *
@@ -340,8 +353,9 @@ export const AiRankedText = AiRankedTextSource;
 /**
  * Sentence result schema with text, offsets, order, and token count.
  *
- * @example
- * ```ts
+ * **Example** (Decode sentence result)
+ *
+ * ```ts import.meta.vitest name="Decode sentence result"
  * import * as S from "effect/Schema"
  * import { AiSentence } from "@beep/nlp-processing/Tools"
  *
@@ -363,8 +377,9 @@ export const AiSentence = AiSentenceSource;
 /**
  * Sentence-aligned chunk schema for bounded text chunks.
  *
- * @example
- * ```ts
+ * **Example** (Decode sentence-aligned chunk)
+ *
+ * ```ts import.meta.vitest name="Decode sentence-aligned chunk"
  * import * as S from "effect/Schema"
  * import { AiSentenceChunk } from "@beep/nlp-processing/Tools"
  *
@@ -386,7 +401,8 @@ export const AiSentenceChunk = AiSentenceChunkSource;
 /**
  * Structured operational failure schema returned by AI-facing NLP tools.
  *
- * @example
+ * **Example** (Construct operational tool error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AiToolError } from "@beep/nlp-processing/Tools"
@@ -409,8 +425,9 @@ export const AiToolError = AiToolErrorSource;
 /**
  * Token schema carrying linguistic annotations and source offsets.
  *
- * @example
- * ```ts
+ * **Example** (Decode annotated token)
+ *
+ * ```ts import.meta.vitest name="Decode annotated token"
  * import * as S from "effect/Schema"
  * import { AiToken } from "@beep/nlp-processing/Tools"
  *
@@ -435,8 +452,9 @@ export const AiToken = AiTokenSource;
 /**
  * Composite analysis tool contract exposed from the public tools barrel.
  *
- * @example
- * ```ts
+ * **Example** (Decode Analyze parameters)
+ *
+ * ```ts import.meta.vitest name="Decode Analyze parameters"
  * import * as S from "effect/Schema"
  * import { Analyze } from "@beep/nlp-processing/Tools"
  *
@@ -454,8 +472,9 @@ export const Analyze = AnalyzeSource;
 /**
  * Bag-of-words term-frequency tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode BagOfWords parameters)
+ *
+ * ```ts import.meta.vitest name="Decode BagOfWords parameters"
  * import * as S from "effect/Schema"
  * import { BagOfWords } from "@beep/nlp-processing/Tools"
  *
@@ -473,8 +492,9 @@ export const BagOfWords = BagOfWordsSource;
 /**
  * Bag-of-words cosine similarity tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode cosine similarity parameters)
+ *
+ * ```ts import.meta.vitest name="Decode cosine similarity parameters"
  * import * as S from "effect/Schema"
  * import { BowCosineSimilarity } from "@beep/nlp-processing/Tools"
  *
@@ -493,8 +513,9 @@ export const BowCosineSimilarity = BowCosineSimilaritySource;
 /**
  * Sentence-boundary chunking tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode sentence chunk parameters)
+ *
+ * ```ts import.meta.vitest name="Decode sentence chunk parameters"
  * import * as S from "effect/Schema"
  * import { ChunkBySentences } from "@beep/nlp-processing/Tools"
  *
@@ -513,8 +534,9 @@ export const ChunkBySentences = ChunkBySentencesSource;
 /**
  * Corpus diagnostics tool contract for vocabulary, IDF, and matrix inspection.
  *
- * @example
- * ```ts
+ * **Example** (Decode corpus stats parameters)
+ *
+ * ```ts import.meta.vitest name="Decode corpus stats parameters"
  * import * as S from "effect/Schema"
  * import { CorpusStats } from "@beep/nlp-processing/Tools"
  *
@@ -535,8 +557,9 @@ export const CorpusStats = CorpusStatsSource;
 /**
  * Corpus creation tool contract for starting a reusable BM25 session.
  *
- * @example
- * ```ts
+ * **Example** (Decode create corpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode create corpus parameters"
  * import * as S from "effect/Schema"
  * import { CreateCorpus } from "@beep/nlp-processing/Tools"
  *
@@ -555,8 +578,9 @@ export const CreateCorpus: typeof CreateCorpusSource = CreateCorpusSource;
 /**
  * Corpus deletion tool contract for releasing an in-memory corpus session.
  *
- * @example
- * ```ts
+ * **Example** (Decode delete corpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode delete corpus parameters"
  * import * as S from "effect/Schema"
  * import { DeleteCorpus } from "@beep/nlp-processing/Tools"
  *
@@ -574,8 +598,9 @@ export const DeleteCorpus = DeleteCorpusSource;
 /**
  * Document statistics tool contract for sizing and routing text.
  *
- * @example
- * ```ts
+ * **Example** (Decode document stats parameters)
+ *
+ * ```ts import.meta.vitest name="Decode document stats parameters"
  * import * as S from "effect/Schema"
  * import { DocumentStats } from "@beep/nlp-processing/Tools"
  *
@@ -593,8 +618,9 @@ export const DocumentStats = DocumentStatsSource;
 /**
  * Entity extraction tool contract for built-in and learned custom entities.
  *
- * @example
- * ```ts
+ * **Example** (Decode entity extraction parameters)
+ *
+ * ```ts import.meta.vitest name="Decode entity extraction parameters"
  * import * as S from "effect/Schema"
  * import { ExtractEntities } from "@beep/nlp-processing/Tools"
  *
@@ -613,8 +639,9 @@ export const ExtractEntities = ExtractEntitiesSource;
 /**
  * Keyword extraction tool contract for ranked topical terms.
  *
- * @example
- * ```ts
+ * **Example** (Decode keyword extraction parameters)
+ *
+ * ```ts import.meta.vitest name="Decode keyword extraction parameters"
  * import * as S from "effect/Schema"
  * import { ExtractKeywords } from "@beep/nlp-processing/Tools"
  *
@@ -633,8 +660,9 @@ export const ExtractKeywords = ExtractKeywordsSource;
 /**
  * Incremental corpus learning tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode learn corpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode learn corpus parameters"
  * import * as S from "effect/Schema"
  * import { LearnCorpus } from "@beep/nlp-processing/Tools"
  *
@@ -654,8 +682,9 @@ export const LearnCorpus = LearnCorpusSource;
 /**
  * Custom entity learning tool contract for bracket-token patterns.
  *
- * @example
- * ```ts
+ * **Example** (Decode custom entity learning)
+ *
+ * ```ts import.meta.vitest name="Decode custom entity learning"
  * import * as S from "effect/Schema"
  * import { LearnCustomEntities } from "@beep/nlp-processing/Tools"
  *
@@ -675,8 +704,9 @@ export const LearnCustomEntities = LearnCustomEntitiesSource;
 /**
  * Character n-gram extraction tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode n-gram extraction parameters)
+ *
+ * ```ts import.meta.vitest name="Decode n-gram extraction parameters"
  * import * as S from "effect/Schema"
  * import { NGrams } from "@beep/nlp-processing/Tools"
  *
@@ -697,8 +727,9 @@ export const NGrams = NGramsSource;
 /**
  * Paragraph splitting tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode paragraphize parameters)
+ *
+ * ```ts import.meta.vitest name="Decode paragraphize parameters"
  * import * as S from "effect/Schema"
  * import { Paragraphize } from "@beep/nlp-processing/Tools"
  *
@@ -716,8 +747,9 @@ export const Paragraphize = ParagraphizeSource;
 /**
  * Phonetic matching tool contract for similar-sounding text comparison.
  *
- * @example
- * ```ts
+ * **Example** (Decode phonetic match parameters)
+ *
+ * ```ts import.meta.vitest name="Decode phonetic match parameters"
  * import * as S from "effect/Schema"
  * import { PhoneticMatch } from "@beep/nlp-processing/Tools"
  *
@@ -738,8 +770,9 @@ export const PhoneticMatch = PhoneticMatchSource;
 /**
  * Learned-corpus query tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode query corpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode query corpus parameters"
  * import * as S from "effect/Schema"
  * import { QueryCorpus } from "@beep/nlp-processing/Tools"
  *
@@ -760,8 +793,9 @@ export const QueryCorpus = QueryCorpusSource;
 /**
  * One-shot text relevance ranking tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode relevance ranking parameters)
+ *
+ * ```ts import.meta.vitest name="Decode relevance ranking parameters"
  * import * as S from "effect/Schema"
  * import { RankByRelevance } from "@beep/nlp-processing/Tools"
  *
@@ -781,8 +815,9 @@ export const RankByRelevance = RankByRelevanceSource;
 /**
  * Stop-word removal tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode stop-word removal parameters)
+ *
+ * ```ts import.meta.vitest name="Decode stop-word removal parameters"
  * import * as S from "effect/Schema"
  * import { RemoveStopWords } from "@beep/nlp-processing/Tools"
  *
@@ -800,8 +835,9 @@ export const RemoveStopWords = RemoveStopWordsSource;
 /**
  * Sentence segmentation tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode sentence segmentation parameters)
+ *
+ * ```ts import.meta.vitest name="Decode sentence segmentation parameters"
  * import * as S from "effect/Schema"
  * import { Sentences } from "@beep/nlp-processing/Tools"
  *
@@ -819,8 +855,9 @@ export const Sentences = SentencesSource;
 /**
  * Word stemming tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode stemming parameters)
+ *
+ * ```ts import.meta.vitest name="Decode stemming parameters"
  * import * as S from "effect/Schema"
  * import { Stem } from "@beep/nlp-processing/Tools"
  *
@@ -838,8 +875,9 @@ export const Stem = StemSource;
 /**
  * BM25-vector text similarity tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode text similarity parameters)
+ *
+ * ```ts import.meta.vitest name="Decode text similarity parameters"
  * import * as S from "effect/Schema"
  * import { TextSimilarity } from "@beep/nlp-processing/Tools"
  *
@@ -858,8 +896,9 @@ export const TextSimilarity = TextSimilaritySource;
 /**
  * Linguistic tokenization tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode tokenize parameters)
+ *
+ * ```ts import.meta.vitest name="Decode tokenize parameters"
  * import * as S from "effect/Schema"
  * import { Tokenize } from "@beep/nlp-processing/Tools"
  *
@@ -877,8 +916,9 @@ export const Tokenize = TokenizeSource;
 /**
  * Ordered text-normalization tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode text transform parameters)
+ *
+ * ```ts import.meta.vitest name="Decode text transform parameters"
  * import * as S from "effect/Schema"
  * import { TransformText } from "@beep/nlp-processing/Tools"
  *
@@ -897,8 +937,9 @@ export const TransformText = TransformTextSource;
 /**
  * Asymmetric Tversky similarity tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode Tversky similarity parameters)
+ *
+ * ```ts import.meta.vitest name="Decode Tversky similarity parameters"
  * import * as S from "effect/Schema"
  * import { TverskySimilarity } from "@beep/nlp-processing/Tools"
  *
@@ -919,8 +960,9 @@ export const TverskySimilarity = TverskySimilaritySource;
 /**
  * Word and character counting tool contract.
  *
- * @example
- * ```ts
+ * **Example** (Decode word count parameters)
+ *
+ * ```ts import.meta.vitest name="Decode word count parameters"
  * import * as S from "effect/Schema"
  * import { WordCount } from "@beep/nlp-processing/Tools"
  *
@@ -939,7 +981,8 @@ export const WordCount = WordCountSource;
 /**
  * Effect AI toolkit containing the full driver-neutral NLP tool set.
  *
- * @example
+ * **Example** (List toolkit tool names)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { NlpToolkit } from "@beep/nlp-processing/Tools"
@@ -957,7 +1000,8 @@ export const NlpToolkit: typeof NlpToolkitSource = NlpToolkitSource;
 /**
  * Stable ordered list of NLP tool contracts used to build the toolkit.
  *
- * @example
+ * **Example** (Map ordered tool names)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { NlpTools } from "@beep/nlp-processing/Tools"
@@ -975,8 +1019,9 @@ export const NlpTools: typeof NlpToolsSource = NlpToolsSource;
 /**
  * Effectful adapter that exports toolkit tools as positional descriptors.
  *
- * @example
- * ```ts
+ * **Example** (Export toolkit tool names)
+ *
+ * ```ts import.meta.vitest name="Export toolkit tool names"
  * import { Effect } from "effect"
  * import { exportTools } from "@beep/nlp-processing/Tools"
  *

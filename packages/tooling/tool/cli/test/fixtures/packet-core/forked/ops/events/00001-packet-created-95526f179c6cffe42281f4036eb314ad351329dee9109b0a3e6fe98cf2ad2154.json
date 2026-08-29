@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T00:00:00.000Z",
+  "body": {
+    "ordinal": 0,
+    "stage": "capture",
+    "status": "active",
+    "type": "packet-created"
+  },
+  "expectedRevision": 0,
+  "packet": "forked",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 1
+}

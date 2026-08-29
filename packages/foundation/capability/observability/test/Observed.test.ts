@@ -1,12 +1,11 @@
 import { ObservedCause, ObservedExit } from "@beep/observability";
-import { TaggedErrorClass } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Cause, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
-class TestObservedError extends TaggedErrorClass<TestObservedError>()("TestObservedError", {
+class TestObservedError extends S.TaggedError<TestObservedError>()("TestObservedError", {
   message: S.String,
 }) {}
 
@@ -50,7 +49,7 @@ describe("Observed", () => {
   });
 
   it("schema-derived arbitrary values are members of ObservedCause", () => {
-    const arbitrary = S.toArbitrary(ObservedCause);
+    const arbitrary = S.toArbitrary(ObservedCause)(fc);
 
     fc.assert(
       fc.property(arbitrary, (cause) => {
@@ -61,7 +60,7 @@ describe("Observed", () => {
   });
 
   it("schema-derived arbitrary values are members of ObservedExit", () => {
-    const arbitrary = S.toArbitrary(ObservedExit);
+    const arbitrary = S.toArbitrary(ObservedExit)(fc);
 
     fc.assert(
       fc.property(arbitrary, (exit) => {

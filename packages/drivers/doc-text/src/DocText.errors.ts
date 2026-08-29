@@ -6,17 +6,24 @@
  */
 
 import { $I as $RootId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $RootId.create("doc-text").create("DocText.errors");
-const DocTextErrorReasonBase = LiteralKit(["empty-text-layer", "extraction", "source-bytes-unavailable"]);
+const DocTextErrorReasonBase = LiteralKit([
+  "empty-text-layer",
+  "extraction",
+  "input-limit",
+  "source-bytes-unavailable",
+]);
 
 /**
  * Technical failure reasons emitted by the document text driver.
  *
- * @example
+ * **Example** (Check empty-text-layer membership)
+ *
  * ```ts
  * import { DocTextErrorReason } from "@beep/doc-text"
  *
@@ -36,7 +43,8 @@ export const DocTextErrorReason = DocTextErrorReasonBase.pipe(
 /**
  * Type for {@link DocTextErrorReason}.
  *
- * @example
+ * **Example** (Type an extraction reason)
+ *
  * ```ts
  * import type { DocTextErrorReason } from "@beep/doc-text"
  *
@@ -49,10 +57,13 @@ export const DocTextErrorReason = DocTextErrorReasonBase.pipe(
  */
 export type DocTextErrorReason = typeof DocTextErrorReason.Type;
 
+const isDocTextErrorReason = S.is(DocTextErrorReason);
+
 /**
  * Options used when constructing {@link DocTextError} instances.
  *
- * @example
+ * **Example** (Make options with cause)
+ *
  * ```ts
  * import { DocTextErrorOptions } from "@beep/doc-text"
  *
@@ -77,7 +88,8 @@ export class DocTextErrorOptions extends S.Class<DocTextErrorOptions>($I`DocText
 /**
  * Technical failure raised inside the document text driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { DocTextError } from "@beep/doc-text"
  *
@@ -88,7 +100,7 @@ export class DocTextErrorOptions extends S.Class<DocTextErrorOptions>($I`DocText
  * @category errors
  * @since 0.0.0
  */
-export class DocTextError extends TaggedErrorClass<DocTextError>($I`DocTextError`)(
+export class DocTextError extends S.TaggedError<DocTextError>($I`DocTextError`)(
   "DocTextError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
@@ -101,14 +113,15 @@ export class DocTextError extends TaggedErrorClass<DocTextError>($I`DocTextError
       description: "Redacted technical error reason.",
     }),
   },
-  $I.annote("DocTextError", {
+  $I.annoteError<DocTextError>("DocTextError", {
     description: "Redacted technical failure raised inside the JS-native document text driver boundary.",
   })
 ) {
   /**
    * Create a document text driver error with sanitized context.
    *
-   * @example
+   * **Example** (Create error and log tag)
+   *
    * ```ts
    * import { DocTextError } from "@beep/doc-text"
    *
@@ -119,20 +132,24 @@ export class DocTextError extends TaggedErrorClass<DocTextError>($I`DocTextError
    * @category constructors
    * @since 0.0.0
    */
-  static readonly fromReason = (
-    reason: DocTextErrorReason,
-    options: DocTextErrorOptions = DocTextErrorOptions.make({})
-  ): DocTextError =>
-    DocTextError.make({
-      cause: O.fromUndefinedOr(options.cause),
-      reason,
-    });
+  static readonly fromReason: {
+    (options?: DocTextErrorOptions): (reason: DocTextErrorReason) => DocTextError;
+    (reason: DocTextErrorReason, options?: DocTextErrorOptions): DocTextError;
+  } = dual(
+    (args) => isDocTextErrorReason(args[0]),
+    (reason: DocTextErrorReason, options: DocTextErrorOptions = DocTextErrorOptions.make({})): DocTextError =>
+      DocTextError.make({
+        cause: O.fromUndefinedOr(options.cause),
+        reason,
+      })
+  );
 }
 
 /**
  * Create a document text driver error with a typed reason.
  *
- * @example
+ * **Example** (Make extraction reason error)
+ *
  * ```ts
  * import { makeDocTextError } from "@beep/doc-text"
  *

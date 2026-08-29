@@ -10,6 +10,7 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsDomainId.create("entities/Fixture.values");
 const fixtureKeyPattern = /^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+$/u;
+const skillNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
 const FixtureKey = S.NonEmptyString.check(
   S.isPattern(fixtureKeyPattern, {
@@ -23,7 +24,8 @@ const FixtureKey = S.NonEmptyString.check(
 /**
  * Stable dotted fixture key for an agent entity.
  *
- * @example
+ * **Example** (Decode agent fixture key)
+ *
  * ```ts
  * import { AgentFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -44,7 +46,8 @@ export const AgentFixtureKey = FixtureKey.pipe(
 /**
  * Type accepted by the {@link AgentFixtureKey} schema.
  *
- * @example
+ * **Example** (Type agent fixture key)
+ *
  * ```ts
  * import { AgentFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -61,7 +64,8 @@ export type AgentFixtureKey = typeof AgentFixtureKey.Type;
 /**
  * Stable dotted fixture key for a skill entity.
  *
- * @example
+ * **Example** (Decode skill fixture key)
+ *
  * ```ts
  * import { SkillFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -82,7 +86,8 @@ export const SkillFixtureKey = FixtureKey.pipe(
 /**
  * Type accepted by the {@link SkillFixtureKey} schema.
  *
- * @example
+ * **Example** (Type skill fixture key)
+ *
  * ```ts
  * import { SkillFixtureKey } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -99,7 +104,8 @@ export type SkillFixtureKey = typeof SkillFixtureKey.Type;
 /**
  * Non-empty display name for a fixture-backed agent.
  *
- * @example
+ * **Example** (Decode agent display name)
+ *
  * ```ts
  * import { AgentName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -120,7 +126,8 @@ export const AgentName = S.NonEmptyString.pipe(
 /**
  * Type accepted by the {@link AgentName} schema.
  *
- * @example
+ * **Example** (Type agent display name)
+ *
  * ```ts
  * import { AgentName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
@@ -135,14 +142,15 @@ export const AgentName = S.NonEmptyString.pipe(
 export type AgentName = typeof AgentName.Type;
 
 /**
- * Non-empty display name for a fixture-backed skill.
+ * Agent Skills-compatible name for a fixture-backed skill.
  *
- * @example
+ * **Example** (Decode skill display name)
+ *
  * ```ts
  * import { SkillName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
  *
- * const name = S.decodeUnknownSync(SkillName)("Review")
+ * const name = S.decodeUnknownSync(SkillName)("review-skill")
  * console.log(name)
  * ```
  *
@@ -150,20 +158,31 @@ export type AgentName = typeof AgentName.Type;
  * @since 0.0.0
  */
 export const SkillName = S.NonEmptyString.pipe(
+  S.check(
+    S.makeFilterGroup([
+      S.isMaxLength(64, {
+        message: "Skill name must be at most 64 characters long",
+      }),
+      S.isPattern(skillNamePattern, {
+        message: "Skill names may contain lowercase letters, digits, and single hyphens between segments",
+      }),
+    ])
+  ),
   $I.annoteSchema("SkillName", {
-    description: "Non-empty display name for a fixture-backed skill.",
+    description: "Agent Skills-compatible lowercase name for a fixture-backed skill.",
   })
 );
 
 /**
  * Type accepted by the {@link SkillName} schema.
  *
- * @example
+ * **Example** (Type skill display name)
+ *
  * ```ts
  * import { SkillName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
  *
- * const name: SkillName = S.decodeUnknownSync(SkillName)("Review")
+ * const name: SkillName = S.decodeUnknownSync(SkillName)("review-skill")
  * console.log(name)
  * ```
  *

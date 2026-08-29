@@ -6,7 +6,7 @@ import {
   providerInstanceTable,
   toProviderInstanceInsert,
 } from "@beep/agents-tables/entities/ProviderInstance";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -14,11 +14,11 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderInstance);
+const ProviderInstanceArbitrary = S.toArbitrary(DomainProviderInstance.ProviderInstance)(fc);
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
 
 const providerInstanceRow = {
-  ...baseEntityFixtureInput(DomainProviderInstance.ProviderInstance.definition.entityId.entityType, 10),
+  ...productEntityFixtureInput("AgentsProviderInstance", 10),
   binaryPath: "/usr/local/bin/codex",
   envVars: {},
   homePath: null,
@@ -33,9 +33,7 @@ describe("ProviderInstance table", () => {
 
     expect(getTableConfig(providerInstanceTable).name).toBe("agents_provider_instance");
     expect(PROVIDER_INSTANCE_TABLE_NAME).toBe("agents_provider_instance");
-    expect(providerInstanceTable.definition).toBe(DomainProviderInstance.ProviderInstance.definition);
-    expect(providerInstanceTable.definition.entityId.entityType).toBe("AgentsProviderInstance");
-    expect(providerInstanceTable.entitySchema).toBe(DomainProviderInstance.ProviderInstance);
+    expect(DomainProviderInstance.ProviderInstance.sql.tableName).toBe("agents_provider_instance");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.hasDefault).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
@@ -51,6 +49,15 @@ describe("ProviderInstance table", () => {
     expect(columns.label.name).toBe("label");
     expect(columns.lastProbe.name).toBe("last_probe");
     expect(columns.lastProbe.notNull).toBe(false);
+    const indexNames = getTableConfig(providerInstanceTable).indexes.map((index) => index.config.name);
+    expect(indexNames).toHaveLength(3);
+    expect(indexNames).toEqual(
+      expect.arrayContaining([
+        "agents_provider_instance_org_id_btree_idx",
+        "agents_provider_instance_source_btree_idx",
+        "agents_provider_instance_public_id_unique_idx",
+      ])
+    );
   });
 
   it("persists only the exact token-free ProviderInstance column set", () => {

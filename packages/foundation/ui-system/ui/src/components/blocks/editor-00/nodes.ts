@@ -13,7 +13,8 @@ import type { Klass, LexicalNode, LexicalNodeReplacement } from "lexical";
 /**
  * Lexical node classes registered by the editor block.
  *
- * @example
+ * **Example** (Log registered nodes length)
+ *
  * ```ts
  * import { nodes } from "@beep/ui/components/blocks/editor-00/nodes"
  *

@@ -20,7 +20,7 @@
  */
 
 import { layerLocalLgtmServer, ServerObservabilityConfig } from "@beep/observability/server";
-import { O } from "@beep/utils";
+import { O, thunkFalse } from "@beep/utils";
 import { Config, Effect, HashSet, identity, Layer, References, Result } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 
@@ -37,12 +37,9 @@ import { FetchHttpClient } from "effect/unstable/http";
 const localDevToolsHostnames = HashSet.make("localhost", "127.0.0.1", "::1", "[::1]");
 
 const isLocalDevToolsUrl = (url: string): boolean =>
-  Result.try({
-    try: () => HashSet.has(localDevToolsHostnames, new URL(url).hostname),
-    catch: (error) => Result.fail(error),
-  }).pipe(
+  Result.try(() => HashSet.has(localDevToolsHostnames, new URL(url).hostname)).pipe(
     Result.match({
-      onFailure: () => false,
+      onFailure: thunkFalse,
       onSuccess: identity,
     })
   );
@@ -104,11 +101,13 @@ const ObservabilityConfigLive: Layer.Layer<never> = Layer.unwrap(
 /**
  * Sidecar observability layer: OTLP export plus optional Effect DevTools.
  *
- * @example
+ * **Example** (Verifying Layer instance)
+ *
  * ```ts
  * import { ObservabilityLive } from "@/runtime/Observability"
+ * import { Layer } from "effect"
  *
- * console.log(ObservabilityLive)
+ * console.log(Layer.isLayer(ObservabilityLive)) // true
  * ```
  *
  * @category layers

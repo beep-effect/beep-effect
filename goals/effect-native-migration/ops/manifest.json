@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "effect-native-migration",
     "title": "Effect-Native Migration",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-05-20",
-    "updated": "2026-05-20",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "mission": "Migrate native JS Map/Set/String/Object/Date/JSON/Array usage in first-party packages/** and apps/** to Effect-native equivalents, preferring @beep/utils wrappers where importable.",
@@ -39,25 +39,25 @@
     },
     "phase1": {
       "id": "symbol-inventories",
-      "status": "pending",
+      "status": "complete",
       "agents": 7,
       "outputs": "ops/inventory/symbols/effect-native-<Category>.json",
-      "reuse": "standards/repo-exports.catalog.{md,jsonc}"
+      "reuse": "historical phase complete; current symbol discovery uses live source and barrel searches"
     },
     "phase1_5": {
       "id": "grill-with-docs-stress-test",
-      "status": "pending",
+      "status": "complete",
       "skill": ".claude/skills/grill-with-docs"
     },
     "phase2": {
       "id": "discovery",
-      "status": "pending",
+      "status": "complete",
       "prompt": "ops/prompts/discovery.agent.md",
       "outputs": "ops/inventory/usages/<sanitized-package>/<Category>.json"
     },
     "phase3": {
       "id": "remediation",
-      "status": "pending",
+      "status": "complete",
       "prompt": "ops/prompts/remediation.agent.md",
       "gate": "typecheck + lint + effect-first checks scoped to package",
       "commitPolicy": "one commit per package"
@@ -74,7 +74,7 @@
     "check": "bun run check",
     "lint": "bun run lint"
   },
-  "nextAction": "Run Phase 1: spawn 7 parallel agents to build the symbol inventories.",
+  "nextAction": "External driver may apply the completed-retained status flip after portfolio-consolidation verification.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -82,5 +82,7 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "statusNote": "legacy status: bootstrapped-phase-1-pending"
+  "statusNote": "Historical migration complete: 5 phases, 7 symbol inventories, and 75 package entries are done in ops/progress.json. Packet bookkeeping reconciled on 2026-07-14; initiative status remains externally managed.",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/effect-native-migration"
 }

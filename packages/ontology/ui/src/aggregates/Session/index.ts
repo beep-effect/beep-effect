@@ -6,16 +6,62 @@
  */
 
 /**
- * Ontology Session tree view-model exports.
- *
  * @category components
  * @since 0.0.0
  */
-export * from "./Session.tree.js";
+export { OntologyChangeLogRegion } from "./Session.changelog.tsx";
 /**
- * Ontology workbench screen exports.
- *
  * @category components
  * @since 0.0.0
  */
-export * from "./Session.workbench.js";
+export { documentToolbarState, OntologyDocumentRegion } from "./Session.document.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyExplorerRegion } from "./Session.explorer.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyGraphRegion } from "./Session.graph.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyInspectorRegion } from "./Session.inspector.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyMetricsRegion } from "./Session.metrics.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologySourceRegion } from "./Session.source.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologySparqlRegion } from "./Session.sparql.tsx";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { ontologyTreeItemsFor } from "./Session.tree.ts";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyValidationRegion } from "./Session.validation.tsx";
+/**
+ * @category forms
+ * @since 0.0.0
+ */
+export { valueFromEvent } from "./Session.workbench.shared.ts";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyWorkbench } from "./Session.workbench.tsx";

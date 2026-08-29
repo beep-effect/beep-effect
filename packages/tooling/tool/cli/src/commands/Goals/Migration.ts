@@ -16,12 +16,13 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification } from "../../internal/cli/Jsonc.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
-import { GoalStatus, isGoalPhaseStatus, isGoalStatus } from "./Goals.schemas.js";
+import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { GoalStatus, isGoalPhaseStatus, isGoalStatus } from "./Goals.schemas.ts";
 import {
   isJsonRecord,
   parseGoalManifestText,
@@ -29,9 +30,9 @@ import {
   readmeMissionLine,
   readmeTitle,
   rewriteReadmeLifecycleToken,
-} from "./Inventory.js";
-import type { GoalPhaseStatus } from "./Goals.schemas.js";
-import type { GoalPacketRecord } from "./Inventory.js";
+} from "./Inventory.ts";
+import type { GoalPhaseStatus } from "./Goals.schemas.ts";
+import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Migration");
 
@@ -39,15 +40,19 @@ const $I = $RepoCliId.create("commands/Goals/Migration");
  * Legacy `initiative.status` (and bare top-level `status`) tokens mapped onto
  * the canonical domain, exactly as locked by the P0 census.
  *
+ * **Details**
+ *
  * Canonical tokens are intentionally absent: they map to themselves and never
  * record a `statusNote`.
  *
- * @example
+ * **Example** (Lookup complete status mapping)
+ *
  * ```ts
  * import { GOAL_STATUS_MIGRATIONS } from "@beep/repo-cli/commands/Goals/Migration"
  *
  * console.log(GOAL_STATUS_MIGRATIONS.complete) // "completed-retained"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -77,12 +82,14 @@ export const GOAL_STATUS_MIGRATIONS: Readonly<Record<string, GoalStatus>> = {
  * Legacy phase-status tokens mapped onto the canonical
  * `pending | in-progress | complete` domain (D2).
  *
- * @example
+ * **Example** (Lookup seeded phase mapping)
+ *
  * ```ts
  * import { GOAL_PHASE_STATUS_MIGRATIONS } from "@beep/repo-cli/commands/Goals/Migration"
  *
  * console.log(GOAL_PHASE_STATUS_MIGRATIONS.seeded) // "pending"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -103,10 +110,8 @@ export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStat
 /**
  * Map a goal status token (legacy or canonical) onto the canonical domain.
  *
- * @param token - Observed status token.
- * @returns The canonical status, or `None` for a token outside every mapping (the
- * park-with-recorded-question condition).
- * @example
+ * **Example** (Migrate known and unknown tokens)
+ *
  * ```ts
  * import { migrateGoalStatusToken } from "@beep/repo-cli/commands/Goals/Migration"
  * import * as O from "effect/Option"
@@ -115,6 +120,10 @@ export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStat
  * console.log(O.getOrNull(migrateGoalStatusToken("active"))) // "active"
  * console.log(O.isNone(migrateGoalStatusToken("wat"))) // true
  * ```
+ *
+ * @param token - Observed status token.
+ * @returns The canonical status, or `None` for a token outside every mapping (the
+ * park-with-recorded-question condition).
  * @category mapping
  * @since 0.0.0
  */
@@ -124,9 +133,8 @@ export const migrateGoalStatusToken = (token: string): O.Option<GoalStatus> =>
 /**
  * Map a phase status token (legacy or canonical) onto the canonical domain.
  *
- * @param token - Observed phase status token.
- * @returns The canonical phase status, or `None` for a token outside every mapping.
- * @example
+ * **Example** (Migrate phase status tokens)
+ *
  * ```ts
  * import { migrateGoalPhaseStatusToken } from "@beep/repo-cli/commands/Goals/Migration"
  * import * as O from "effect/Option"
@@ -134,6 +142,9 @@ export const migrateGoalStatusToken = (token: string): O.Option<GoalStatus> =>
  * console.log(O.getOrNull(migrateGoalPhaseStatusToken("done"))) // "complete"
  * console.log(O.isNone(migrateGoalPhaseStatusToken("wat"))) // true
  * ```
+ *
+ * @param token - Observed phase status token.
+ * @returns The canonical phase status, or `None` for a token outside every mapping.
  * @category mapping
  * @since 0.0.0
  */
@@ -143,12 +154,14 @@ export const migrateGoalPhaseStatusToken = (token: string): O.Option<GoalPhaseSt
 /**
  * The standard completion-gate statement written into backfilled manifests.
  *
- * @example
+ * **Example** (Check completion gate text)
+ *
  * ```ts
  * import { COMPLETION_GATE_STATEMENT } from "@beep/repo-cli/commands/Goals/Migration"
  *
  * console.log(COMPLETION_GATE_STATEMENT.includes("yeet")) // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -158,7 +171,8 @@ export const COMPLETION_GATE_STATEMENT =
 /**
  * One recorded backfill decision for a manifest-less packet.
  *
- * @example
+ * **Example** (Make backfill decision record)
+ *
  * ```ts
  * import { GoalManifestBackfill } from "@beep/repo-cli/commands/Goals/Migration"
  *
@@ -170,6 +184,7 @@ export const COMPLETION_GATE_STATEMENT =
  * })
  * console.log(backfill.slug)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -191,12 +206,14 @@ export class GoalManifestBackfill extends S.Class<GoalManifestBackfill>($I`GoalM
  * The five backfill decisions locked by the P0 census (status from each
  * packet's README evidence).
  *
- * @example
+ * **Example** (Count locked census backfills)
+ *
  * ```ts
  * import { GOAL_MANIFEST_BACKFILLS } from "@beep/repo-cli/commands/Goals/Migration"
  *
  * console.log(GOAL_MANIFEST_BACKFILLS.length) // 5
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -245,10 +262,8 @@ const backfillFor = (slug: string): O.Option<GoalManifestBackfill> =>
 /**
  * Build the JSON text of a backfilled v2 manifest for a manifest-less packet.
  *
- * @param backfill - The recorded backfill decision.
- * @param readmeText - The packet README, used for title and mission extraction.
- * @returns The manifest JSON text (2-space indent, trailing newline).
- * @example
+ * **Example** (Build backfilled manifest JSON)
+ *
  * ```ts
  * import { buildBackfillManifestText, GoalManifestBackfill } from "@beep/repo-cli/commands/Goals/Migration"
  * import * as O from "effect/Option"
@@ -262,10 +277,17 @@ const backfillFor = (slug: string): O.Option<GoalManifestBackfill> =>
  * const text = buildBackfillManifestText(backfill, O.none())
  * console.log(text.includes('"initiative-manifest/v2"')) // true
  * ```
+ *
+ * @param backfill - The recorded backfill decision.
+ * @param readmeText - The packet README, used for title and mission extraction.
+ * @returns The manifest JSON text (2-space indent, trailing newline).
  * @category constructors
  * @since 0.0.0
  */
-export const buildBackfillManifestText = (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string => {
+export const buildBackfillManifestText: {
+  (readmeText: O.Option<string>): (backfill: GoalManifestBackfill) => string;
+  (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string;
+} = dual(2, (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string => {
   const title = pipe(
     readmeText,
     O.flatMap(readmeTitle),
@@ -296,21 +318,25 @@ export const buildBackfillManifestText = (backfill: GoalManifestBackfill, readme
     },
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;
-};
+});
 
 /**
  * Planned migration outcome for one goal packet.
  *
+ * **Details**
+ *
  * `manifestText`/`readmeText` are present only when the surface changes;
  * `parked` records the question that blocks a mechanical migration.
  *
- * @example
+ * **Example** (Make empty migration plan)
+ *
  * ```ts
  * import { GoalPacketMigration } from "@beep/repo-cli/commands/Goals/Migration"
  *
  * const plan = GoalPacketMigration.make({ slug: "demo", edits: [] })
  * console.log(plan.edits.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -489,13 +515,14 @@ const planPhaseEdits = (manifest: Readonly<Record<string, unknown>>, edit: Manif
 /**
  * Plan the mechanical migration for one scanned packet.
  *
+ * **Details**
+ *
  * Pure: consumes the packet's raw surface texts and returns the edited texts
  * without touching the filesystem. Idempotent: planning an already-migrated
  * packet yields zero edits.
  *
- * @param record - The scanned packet record (manifest/README texts included).
- * @returns The planned migration outcome.
- * @example
+ * **Example** (Plan migration from record)
+ *
  * ```ts
  * import { planGoalPacketMigration } from "@beep/repo-cli/commands/Goals/Migration"
  * import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory"
@@ -511,6 +538,9 @@ const planPhaseEdits = (manifest: Readonly<Record<string, unknown>>, edit: Manif
  * )
  * console.log(plan.edits.length > 0) // true
  * ```
+ *
+ * @param record - The scanned packet record (manifest/README texts included).
+ * @returns The planned migration outcome.
  * @category use-cases
  * @since 0.0.0
  */

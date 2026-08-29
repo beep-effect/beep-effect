@@ -7,14 +7,15 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { empty, nameField, optionalDesc, optionalName } from "./_fields.js";
+import { empty, nameField, optionalDesc, optionalName } from "./_fields.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/tag-values/RemainingTagValues");
 
 /**
  * Schema-backed value for a parsed `alias` tag occurrence: an alias name for the symbol.
  *
- * @example
+ * **Example** (Creating alias tag value)
+ *
  * ```ts
  * import { AliasValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -22,6 +23,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/RemainingTagValues");
  * const tagName: "alias" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -36,7 +38,8 @@ export class AliasValue extends S.TaggedClass<AliasValue>($I`AliasValue`)(
 /**
  * Schema-backed value for a parsed `borrows` tag occurrence: copies documentation from another symbol.
  *
- * @example
+ * **Example** (Creating borrows tag value)
+ *
  * ```ts
  * import { BorrowsValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -44,6 +47,7 @@ export class AliasValue extends S.TaggedClass<AliasValue>($I`AliasValue`)(
  * const tagName: "borrows" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -58,7 +62,8 @@ export class BorrowsValue extends S.TaggedClass<BorrowsValue>($I`BorrowsValue`)(
 /**
  * Schema-backed value for a parsed `classdesc` tag occurrence: class-level description.
  *
- * @example
+ * **Example** (Creating classdesc tag value)
+ *
  * ```ts
  * import { ClassdescValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -66,6 +71,7 @@ export class BorrowsValue extends S.TaggedClass<BorrowsValue>($I`BorrowsValue`)(
  * const tagName: "classdesc" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -80,7 +86,8 @@ export class ClassdescValue extends S.TaggedClass<ClassdescValue>($I`ClassdescVa
 /**
  * Schema-backed value for a parsed `constructs` tag occurrence: marks a function as a constructor.
  *
- * @example
+ * **Example** (Creating constructs tag value)
+ *
  * ```ts
  * import { ConstructsValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -88,6 +95,7 @@ export class ClassdescValue extends S.TaggedClass<ClassdescValue>($I`ClassdescVa
  * const tagName: "constructs" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -102,7 +110,8 @@ export class ConstructsValue extends S.TaggedClass<ConstructsValue>($I`Construct
 /**
  * Schema-backed value for a parsed `copyright` tag occurrence: copyright information.
  *
- * @example
+ * **Example** (Creating copyright tag value)
+ *
  * ```ts
  * import { CopyrightValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -110,6 +119,7 @@ export class ConstructsValue extends S.TaggedClass<ConstructsValue>($I`Construct
  * const tagName: "copyright" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +134,8 @@ export class CopyrightValue extends S.TaggedClass<CopyrightValue>($I`CopyrightVa
 /**
  * Schema-backed value for a parsed `license` tag occurrence: license information.
  *
- * @example
+ * **Example** (Creating license tag value)
+ *
  * ```ts
  * import { LicenseValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -132,6 +143,7 @@ export class CopyrightValue extends S.TaggedClass<CopyrightValue>($I`CopyrightVa
  * const tagName: "license" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,7 +158,8 @@ export class LicenseValue extends S.TaggedClass<LicenseValue>($I`LicenseValue`)(
 /**
  * Schema-backed value for a parsed `external` tag occurrence: documents an external symbol.
  *
- * @example
+ * **Example** (Creating external tag value)
+ *
  * ```ts
  * import { ExternalValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -157,6 +170,7 @@ export class LicenseValue extends S.TaggedClass<LicenseValue>($I`LicenseValue`)(
  * const tagName: "external" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -171,7 +185,8 @@ export class ExternalValue extends S.TaggedClass<ExternalValue>($I`ExternalValue
 /**
  * Schema-backed value for a parsed `file` tag occurrence: file-level documentation.
  *
- * @example
+ * **Example** (Creating file tag value)
+ *
  * ```ts
  * import { FileValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -179,6 +194,7 @@ export class ExternalValue extends S.TaggedClass<ExternalValue>($I`ExternalValue
  * const tagName: "file" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -193,7 +209,8 @@ export class FileValue extends S.TaggedClass<FileValue>($I`FileValue`)(
 /**
  * Schema-backed value for a parsed `global` tag occurrence: marks a symbol as global.
  *
- * @example
+ * **Example** (Creating global tag value)
+ *
  * ```ts
  * import { GlobalValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -201,6 +218,7 @@ export class FileValue extends S.TaggedClass<FileValue>($I`FileValue`)(
  * const tagName: "global" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -215,7 +233,8 @@ export class GlobalValue extends S.TaggedClass<GlobalValue>($I`GlobalValue`)(
 /**
  * Schema-backed value for a parsed `hideconstructor` tag occurrence: hides the constructor from docs.
  *
- * @example
+ * **Example** (Creating hideconstructor tag value)
+ *
  * ```ts
  * import { HideconstructorValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -223,6 +242,7 @@ export class GlobalValue extends S.TaggedClass<GlobalValue>($I`GlobalValue`)(
  * const tagName: "hideconstructor" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -237,7 +257,8 @@ export class HideconstructorValue extends S.TaggedClass<HideconstructorValue>($I
 /**
  * Schema-backed value for a parsed `ignore` tag occurrence: excludes the symbol from documentation.
  *
- * @example
+ * **Example** (Creating ignore tag value)
+ *
  * ```ts
  * import { IgnoreValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -245,6 +266,7 @@ export class HideconstructorValue extends S.TaggedClass<HideconstructorValue>($I
  * const tagName: "ignore" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -259,7 +281,8 @@ export class IgnoreValue extends S.TaggedClass<IgnoreValue>($I`IgnoreValue`)(
 /**
  * Schema-backed value for a parsed `inner` tag occurrence: marks a symbol as an inner member.
  *
- * @example
+ * **Example** (Creating inner tag value)
+ *
  * ```ts
  * import { InnerValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -267,6 +290,7 @@ export class IgnoreValue extends S.TaggedClass<IgnoreValue>($I`IgnoreValue`)(
  * const tagName: "inner" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -281,7 +305,8 @@ export class InnerValue extends S.TaggedClass<InnerValue>($I`InnerValue`)(
 /**
  * Schema-backed value for a parsed `instance` tag occurrence: marks a symbol as an instance member.
  *
- * @example
+ * **Example** (Creating instance tag value)
+ *
  * ```ts
  * import { InstanceValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -289,6 +314,7 @@ export class InnerValue extends S.TaggedClass<InnerValue>($I`InnerValue`)(
  * const tagName: "instance" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -303,7 +329,8 @@ export class InstanceValue extends S.TaggedClass<InstanceValue>($I`InstanceValue
 /**
  * Schema-backed value for a parsed `kind` tag occurrence: specifies the kind of symbol.
  *
- * @example
+ * **Example** (Creating kind tag value)
+ *
  * ```ts
  * import { KindValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -311,6 +338,7 @@ export class InstanceValue extends S.TaggedClass<InstanceValue>($I`InstanceValue
  * const tagName: "kind" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -339,7 +367,8 @@ export class KindValue extends S.TaggedClass<KindValue>($I`KindValue`)(
 /**
  * Schema-backed value for a parsed `lends` tag occurrence: documents lending to another symbol.
  *
- * @example
+ * **Example** (Creating lends tag value)
+ *
  * ```ts
  * import { LendsValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -347,6 +376,7 @@ export class KindValue extends S.TaggedClass<KindValue>($I`KindValue`)(
  * const tagName: "lends" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -361,7 +391,8 @@ export class LendsValue extends S.TaggedClass<LendsValue>($I`LendsValue`)(
 /**
  * Schema-backed value for a parsed `mixin` tag occurrence: marks a symbol as a mixin.
  *
- * @example
+ * **Example** (Creating mixin tag value)
+ *
  * ```ts
  * import { MixinValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -369,6 +400,7 @@ export class LendsValue extends S.TaggedClass<LendsValue>($I`LendsValue`)(
  * const tagName: "mixin" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -383,7 +415,8 @@ export class MixinValue extends S.TaggedClass<MixinValue>($I`MixinValue`)(
 /**
  * Schema-backed value for a parsed `mixes` tag occurrence: documents mixin inclusion.
  *
- * @example
+ * **Example** (Creating mixes tag value)
+ *
  * ```ts
  * import { MixesValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -391,6 +424,7 @@ export class MixinValue extends S.TaggedClass<MixinValue>($I`MixinValue`)(
  * const tagName: "mixes" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -405,7 +439,8 @@ export class MixesValue extends S.TaggedClass<MixesValue>($I`MixesValue`)(
 /**
  * Schema-backed value for a parsed `name` tag occurrence: overrides the documented name.
  *
- * @example
+ * **Example** (Creating name tag value)
+ *
  * ```ts
  * import { NameValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -413,6 +448,7 @@ export class MixesValue extends S.TaggedClass<MixesValue>($I`MixesValue`)(
  * const tagName: "name" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -427,7 +463,8 @@ export class NameValue extends S.TaggedClass<NameValue>($I`NameValue`)(
 /**
  * Schema-backed value for a parsed `variation` tag occurrence: distinguishes overloaded symbols.
  *
- * @example
+ * **Example** (Creating variation tag value)
+ *
  * ```ts
  * import { VariationValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -435,6 +472,7 @@ export class NameValue extends S.TaggedClass<NameValue>($I`NameValue`)(
  * const tagName: "variation" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -449,7 +487,8 @@ export class VariationValue extends S.TaggedClass<VariationValue>($I`VariationVa
 /**
  * Schema-backed value for a parsed `tutorial` tag occurrence: links to a tutorial.
  *
- * @example
+ * **Example** (Creating tutorial tag value)
+ *
  * ```ts
  * import { TutorialValue } from "@beep/repo-utils/JSDoc/models/tag-values/RemainingTagValues"
  *
@@ -457,6 +496,7 @@ export class VariationValue extends S.TaggedClass<VariationValue>($I`VariationVa
  * const tagName: "tutorial" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

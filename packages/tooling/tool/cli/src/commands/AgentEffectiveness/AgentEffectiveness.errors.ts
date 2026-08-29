@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.errors");
@@ -14,7 +14,8 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.err
 /**
  * Operational failure raised while scoring a SkillOpt eval fixture.
  *
- * @example
+ * **Example** (Create eval scorer error)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScorerError } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
@@ -23,10 +24,11 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.err
  * })
  * console.log(error.file)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AgentEffectivenessEvalScorerError extends TaggedErrorClass<AgentEffectivenessEvalScorerError>(
+export class AgentEffectivenessEvalScorerError extends S.TaggedError<AgentEffectivenessEvalScorerError>(
   $I`AgentEffectivenessEvalScorerError`
 )(
   "AgentEffectivenessEvalScorerError",
@@ -35,9 +37,9 @@ export class AgentEffectivenessEvalScorerError extends TaggedErrorClass<AgentEff
     file: S.optionalKey(S.String),
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("AgentEffectivenessEvalScorerError", {
+  $I.annoteError<AgentEffectivenessEvalScorerError>("AgentEffectivenessEvalScorerError", {
     description: "Operational scorer failure; law and completion findings stay in score reports instead.",
   })
 ) {
@@ -53,13 +55,15 @@ export class AgentEffectivenessEvalScorerError extends TaggedErrorClass<AgentEff
 /**
  * Namespace containing option types for {@link AgentEffectivenessEvalScorerError}.
  *
- * @example
+ * **Example** (Define scorer error options)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScorerError } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.errors"
  *
  * const options: AgentEffectivenessEvalScorerError.Options = { file: "fixtures/task" }
  * console.log(options.file) // "fixtures/task"
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */

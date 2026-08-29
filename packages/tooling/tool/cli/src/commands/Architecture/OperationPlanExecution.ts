@@ -15,15 +15,15 @@ import {
   ArchitectureOperationCheck,
   OperationPlanApplyResult,
   OperationPlanCheckResult,
-} from "./Architecture.schemas.js";
-import { renderPackageJsonOperation } from "./OperationPlanPackageJson.js";
+} from "./Architecture.schemas.ts";
+import { renderPackageJsonOperation } from "./OperationPlanPackageJson.ts";
 import type {
   ArchitectureOperation,
   ArchitectureOperationCheckStatus,
   CanonicalSliceOperationPlan,
   WriteFileOperation,
   WritePackageJsonOperation,
-} from "./Architecture.schemas.js";
+} from "./Architecture.schemas.ts";
 
 type EnsureAbsentPathOperation = Extract<ArchitectureOperation, { readonly kind: "ensure-absent-path" }>;
 type EnsureFileOperation = Extract<ArchitectureOperation, { readonly kind: "ensure-file" }>;
@@ -162,8 +162,8 @@ const applyEnsureAbsentPathOperation = Effect.fn("Architecture.applyEnsureAbsent
 /**
  * Validate a decoded operation plan against a repository root.
  *
- * @effects Reads repository-relative files named by the plan and reports missing, differing, or unexpected paths.
- * @example
+ * **Example** (Validate plan against repository)
+ *
  * ```ts
  * import {
  *   checkCanonicalSliceOperationPlan,
@@ -175,6 +175,8 @@ const applyEnsureAbsentPathOperation = Effect.fn("Architecture.applyEnsureAbsent
  * const program = checkCanonicalSliceOperationPlan("/workspace/beep-effect", makeCanonicalSliceOperationPlan())
  * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then((result) => console.log(result.idempotent))
  * ```
+ *
+ * @effects Reads repository-relative files named by the plan and reports missing, differing, or unexpected paths.
  * @category utilities
  * @since 0.0.0
  */
@@ -257,8 +259,8 @@ export const checkCanonicalSliceOperationPlan: {
 /**
  * Apply a decoded operation plan with failsafe conflict behavior.
  *
- * @effects Creates parent directories, writes missing files, removes legacy paths, and reads existing files to reject conflicting content.
- * @example
+ * **Example** (Apply plan with failsafe)
+ *
  * ```ts
  * import {
  *   applyCanonicalSliceOperationPlan,
@@ -270,6 +272,8 @@ export const checkCanonicalSliceOperationPlan: {
  * const program = applyCanonicalSliceOperationPlan("/workspace/beep-effect", makeCanonicalSliceOperationPlan())
  * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then((result) => console.log(result.writtenPaths.length))
  * ```
+ *
+ * @effects Creates parent directories, writes missing files, removes legacy paths, and reads existing files to reject conflicting content.
  * @category utilities
  * @since 0.0.0
  */

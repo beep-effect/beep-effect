@@ -9,9 +9,8 @@
 /**
  * Citation-signal model exports.
  *
- * **Example**
+ * **Example** (Import CitationSignal)
  *
- * @example
  * ```ts
  * import { CitationSignal } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationSignal.model.js";
+export * from "./CitationSignal.model.ts";

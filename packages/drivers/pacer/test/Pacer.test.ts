@@ -13,6 +13,7 @@
 
 import * as Pacer from "@beep/pacer";
 import * as HttpStatus from "@beep/schema/HttpStatus";
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
 import * as A from "effect/Array";
@@ -24,7 +25,7 @@ import { FastCheck as fc } from "effect/testing";
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");
 const rotatedToken = Str.repeat(128)("R");
-const encodeUnknownJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeUnknownJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const mockLayer = (options: Parameters<typeof Pacer.makePacerMockHttpClient>[0] = {}) =>
   Pacer.makePacerLayer(cfg, Pacer.makePacerMockHttpClient(options)).full;
@@ -44,9 +45,9 @@ const roundTrips = Effect.fn("PacerTest.roundTrips")(function* <Schema extends S
 });
 
 const sampleSchemaValues = <Schema extends S.Constraint>(schema: Schema, seed: number): ReadonlyArray<Schema["Type"]> =>
-  fc.sample(S.toArbitrary(schema), { numRuns: 24, seed });
+  fc.sample(S.toArbitrary(schema)(fc), { numRuns: 24, seed });
 
-const CourtCaseSearchDtoArbitrary = S.toArbitrary(Pacer.CourtCaseSearchDto);
+const CourtCaseSearchDtoArbitrary = S.toArbitrary(Pacer.CourtCaseSearchDto)(fc);
 
 const assertRoundTrips = Effect.fn("PacerTest.assertRoundTrips")(function* <Schema extends S.Constraint>(
   schema: Schema,

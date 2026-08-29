@@ -52,8 +52,9 @@ const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
 /**
  * Union of all node types (structural + linguistic annotations).
  *
- * @example
- * ```ts
+ * **Example** (Create TextNode as AnnotatedNode)
+ *
+ * ```ts import.meta.vitest name="Create TextNode as AnnotatedNode"
  * import { TextNode } from "@beep/nlp/Graph/Schema"
  * import type { AnnotatedNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
@@ -63,11 +64,11 @@ const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
  *   timestamp: 0
  * })
  *
- * console.log(node.type) // "sentence"
+ * node.type // => "sentence"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, DependencyNode, RelationNode]).pipe(
   $I.annoteSchema("AnnotatedNode", {
@@ -79,8 +80,9 @@ export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, 
 /**
  * Static TypeScript type for structural and linguistic annotation nodes.
  *
- * @example
- * ```ts
+ * **Example** (Validate POSNode with Schema)
+ *
+ * ```ts import.meta.vitest name="Validate POSNode with Schema"
  * import { POSNode } from "@beep/nlp/Graph/Schema"
  * import type { AnnotatedNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import * as S from "effect/Schema"
@@ -92,7 +94,7 @@ export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, 
  *   timestamp: 0
  * })
  *
- * console.log(S.is(POSNode)(node)) // true
+ * S.is(POSNode)(node) // => true
  * ```
  *
  * @category models
@@ -103,45 +105,49 @@ export type AnnotatedNode = typeof AnnotatedNode.Type;
 /**
  * Refine a heterogeneous annotated node to a structural text node.
  *
- * @example
- * ```ts
+ * **Example** (Check node is TextNode)
+ *
+ * ```ts import.meta.vitest name="Check node is TextNode"
  * import { isTextNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { TextNode } from "@beep/nlp/Graph/Schema"
  *
  * const node = TextNode.make({ text: "Hello.", type: "sentence", timestamp: 0 })
- * console.log(isTextNode(node)) // true
+ * isTextNode(node) // => true
  * ```
  *
  * @param node - The annotated node to refine.
  * @returns True if the node is a TextNode, false otherwise.
- * @since 0.0.0
  * @category refinements
+ * @since 0.0.0
  */
 export const isTextNode: (node: AnnotatedNode) => node is TextNode = S.is(TextNode);
 
 /**
  * Refine a heterogeneous annotated node to a POS annotation node.
  *
- * @example
- * ```ts
+ * **Example** (Check node is POSNode)
+ *
+ * ```ts import.meta.vitest name="Check node is POSNode"
  * import { isPOSNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { POSNode } from "@beep/nlp/Graph/Schema"
  *
  * const node = POSNode.make({ text: "runs", tag: "VBZ", position: 0, timestamp: 0 })
- * console.log(isPOSNode(node)) // true
+ * isPOSNode(node) // => true
  * ```
+ *
  * @param node - The annotated node to refine.
  * @returns True if the node is a POSNode, false otherwise.
- * @since 0.0.0
  * @category refinements
+ * @since 0.0.0
  */
 export const isPOSNode: (node: AnnotatedNode) => node is POSNode = S.is(POSNode);
 
 /**
  * Refine a heterogeneous annotated node to a named-entity node.
  *
- * @example
- * ```ts
+ * **Example** (Check node is EntityNode)
+ *
+ * ```ts import.meta.vitest name="Check node is EntityNode"
  * import { isEntityNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { EntityNode } from "@beep/nlp/Graph/Schema"
  *
@@ -152,36 +158,40 @@ export const isPOSNode: (node: AnnotatedNode) => node is POSNode = S.is(POSNode)
  *   timestamp: 0
  * })
  *
- * console.log(isEntityNode(node)) // true
+ * isEntityNode(node) // => true
  * ```
+ *
  * @param node - The annotated node to refine.
  * @returns True if the node is a EntityNode, false otherwise.
- * @since 0.0.0
  * @category refinements
+ * @since 0.0.0
  */
 export const isEntityNode: (node: AnnotatedNode) => node is EntityNode = S.is(EntityNode);
 
 /**
  * Refine a heterogeneous annotated node to a lemma node.
  *
- * @example
- * ```ts
+ * **Example** (Check node is LemmaNode)
+ *
+ * ```ts import.meta.vitest name="Check node is LemmaNode"
  * import { isLemmaNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { LemmaNode } from "@beep/nlp/Graph/Schema"
  *
  * const node = LemmaNode.make({ token: "running", lemma: "run", position: 0, timestamp: 0 })
- * console.log(isLemmaNode(node)) // true
+ * isLemmaNode(node) // => true
  * ```
- * @since 0.0.0
+ *
  * @category refinements
+ * @since 0.0.0
  */
 export const isLemmaNode: (node: AnnotatedNode) => node is LemmaNode = S.is(LemmaNode);
 
 /**
  * Refine a heterogeneous annotated node to a dependency node.
  *
- * @example
- * ```ts
+ * **Example** (Check node is DependencyNode)
+ *
+ * ```ts import.meta.vitest name="Check node is DependencyNode"
  * import { isDependencyNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { DependencyNode } from "@beep/nlp/Graph/Schema"
  *
@@ -193,19 +203,20 @@ export const isLemmaNode: (node: AnnotatedNode) => node is LemmaNode = S.is(Lemm
  *   timestamp: 0
  * })
  *
- * console.log(isDependencyNode(node)) // true
+ * isDependencyNode(node) // => true
  * ```
  *
- * @since 0.0.0
  * @category refinements
+ * @since 0.0.0
  */
 export const isDependencyNode: (node: AnnotatedNode) => node is DependencyNode = S.is(DependencyNode);
 
 /**
  * Refine a heterogeneous annotated node to a semantic-relation node.
  *
- * @example
- * ```ts
+ * **Example** (Check node is RelationNode)
+ *
+ * ```ts import.meta.vitest name="Check node is RelationNode"
  * import { isRelationNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { RelationNode } from "@beep/nlp/Graph/Schema"
  *
@@ -216,11 +227,11 @@ export const isDependencyNode: (node: AnnotatedNode) => node is DependencyNode =
  *   timestamp: 0
  * })
  *
- * console.log(isRelationNode(node)) // true
+ * isRelationNode(node) // => true
  * ```
  *
- * @since 0.0.0
  * @category refinements
+ * @since 0.0.0
  */
 export const isRelationNode: (node: AnnotatedNode) => node is RelationNode = S.is(RelationNode);
 
@@ -231,23 +242,25 @@ export const isRelationNode: (node: AnnotatedNode) => node is RelationNode = S.i
 /**
  * A directed text graph whose nodes may be structural or annotation nodes.
  *
- * @example
- * ```ts
+ * **Example** (Empty graph node count)
+ *
+ * ```ts import.meta.vitest name="Empty graph node count"
  * import { empty, nodeCount, type AnnotatedTextGraph } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
  * const graph: AnnotatedTextGraph = empty()
- * console.log(nodeCount(graph)) // 0
+ * nodeCount(graph) // => 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type AnnotatedTextGraph = Graph.DirectedGraph<AnnotatedNode, TextEdge>;
 
 /**
  * Mutable annotated graph used inside construction callbacks.
  *
- * @example
+ * **Example** (Accept mutable graph type)
+ *
  * ```ts
  * import type { MutableAnnotatedTextGraph } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
@@ -255,11 +268,12 @@ export type AnnotatedTextGraph = Graph.DirectedGraph<AnnotatedNode, TextEdge>;
  * console.log(acceptsMutable)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MutableAnnotatedTextGraph = Graph.MutableDirectedGraph<AnnotatedNode, TextEdge>;
 
+// fallow-ignore-next-line code-duplication -- AnnotatedTextGraph/TextGraph share node construction; jsdoc-carrier migration only rewrote comment carriers and Fallow attributes the pre-existing twin as introduced
 const makeTextNode = (fields: {
   readonly text: string;
   readonly type: TextNode["type"];
@@ -281,15 +295,16 @@ const makeTextNode = (fields: {
 /**
  * Create an empty annotated graph.
  *
- * @example
- * ```ts
+ * **Example** (Create empty annotated graph)
+ *
+ * ```ts import.meta.vitest name="Create empty annotated graph"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(nodeCount(empty())) // 0
+ * nodeCount(empty()) // => 0
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const empty = (): AnnotatedTextGraph => Graph.directed<AnnotatedNode, TextEdge>();
 
@@ -322,15 +337,17 @@ class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`
 /**
  * Build a fully annotated text graph from a document.
  *
+ * **Details**
+ *
  * Produces a document root, sentence children, and (per `options`) POS, lemma,
  * entity, and dependency annotation nodes linked to their sentences.
  *
- * @remarks
  * The returned effect requires `NLPBackend`. Dependency parsing is opt-in because
  * it is usually more expensive than POS, lemma, and entity annotation.
  *
- * @example
- * ```ts
+ * **Example** (Build graph from document)
+ *
+ * ```ts import.meta.vitest name="Build graph from document"
  * import { Effect } from "effect"
  * import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend"
  * import { fromDocumentAnnotated } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
@@ -360,7 +377,7 @@ class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`
  *   })
  * )
  *
- * console.log(nodeCount(graph)) // 2
+ * nodeCount(graph) // => 2
  * ```
  *
  * @effects Reads the `NLPBackend` service for sentence and annotation data and reads the Effect `Clock` while creating structural text nodes.
@@ -511,11 +528,13 @@ const addSentenceAnnotations = Effect.fn("AnnotatedTextGraph.addSentenceAnnotati
 /**
  * Add POS annotation children to each sentence node.
  *
- * @remarks
+ * **Details**
+ *
  * Existing POS children make the pass idempotent for that sentence. The effect
  * requires `NLPBackend` and links generated annotations with `contains` edges.
  *
- * @example
+ * **Example** (Add POS to empty graph)
+ *
  * ```ts
  * import { addPOSAnnotations, empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
@@ -523,8 +542,8 @@ const addSentenceAnnotations = Effect.fn("AnnotatedTextGraph.addSentenceAnnotati
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const addPOSAnnotations = (
   graph: AnnotatedTextGraph
@@ -539,7 +558,8 @@ export const addPOSAnnotations = (
 /**
  * Add lemma annotation children to each sentence node.
  *
- * @example
+ * **Example** (Add lemmas to empty graph)
+ *
  * ```ts
  * import { addLemmaAnnotations, empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
@@ -547,8 +567,8 @@ export const addPOSAnnotations = (
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const addLemmaAnnotations = (
   graph: AnnotatedTextGraph
@@ -563,7 +583,8 @@ export const addLemmaAnnotations = (
 /**
  * Add named-entity annotation nodes to each sentence node.
  *
- * @example
+ * **Example** (Add entities to empty graph)
+ *
  * ```ts
  * import { addEntityAnnotations, empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
@@ -571,8 +592,8 @@ export const addLemmaAnnotations = (
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const addEntityAnnotations = (
   graph: AnnotatedTextGraph
@@ -587,11 +608,13 @@ export const addEntityAnnotations = (
 /**
  * Add syntactic-dependency annotation nodes to each sentence node.
  *
- * @remarks
+ * **Details**
+ *
  * Dependency nodes are linked with `head-of` edges. This pass is separate from
  * the default constructor options because dependency parsing can be expensive.
  *
- * @example
+ * **Example** (Add dependencies to empty graph)
+ *
  * ```ts
  * import { addDependencyAnnotations, empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
@@ -599,8 +622,8 @@ export const addEntityAnnotations = (
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const addDependencyAnnotations = (
   graph: AnnotatedTextGraph
@@ -640,15 +663,16 @@ const entriesWhere: {
 /**
  * Return POS annotation nodes together with their graph indices.
  *
- * @example
- * ```ts
+ * **Example** (Get POS nodes from empty)
+ *
+ * ```ts import.meta.vitest name="Get POS nodes from empty"
  * import { empty, getPOSNodes } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(getPOSNodes(empty()).length) // 0
+ * getPOSNodes(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getPOSNodes = (
   graph: AnnotatedTextGraph
@@ -660,15 +684,16 @@ export const getPOSNodes = (
 /**
  * Return entity annotation nodes together with their graph indices.
  *
- * @example
- * ```ts
+ * **Example** (Get entity nodes from empty)
+ *
+ * ```ts import.meta.vitest name="Get entity nodes from empty"
  * import { empty, getEntityNodes } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(getEntityNodes(empty()).length) // 0
+ * getEntityNodes(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getEntityNodes = (
   graph: AnnotatedTextGraph
@@ -680,15 +705,16 @@ export const getEntityNodes = (
 /**
  * Return lemma annotation nodes together with their graph indices.
  *
- * @example
- * ```ts
+ * **Example** (Get lemma nodes from empty)
+ *
+ * ```ts import.meta.vitest name="Get lemma nodes from empty"
  * import { empty, getLemmaNodes } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(getLemmaNodes(empty()).length) // 0
+ * getLemmaNodes(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getLemmaNodes = (
   graph: AnnotatedTextGraph
@@ -700,15 +726,16 @@ export const getLemmaNodes = (
 /**
  * Return structural text nodes together with their graph indices.
  *
- * @example
- * ```ts
+ * **Example** (Get text nodes from empty)
+ *
+ * ```ts import.meta.vitest name="Get text nodes from empty"
  * import { empty, getTextNodes } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(getTextNodes(empty()).length) // 0
+ * getTextNodes(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getTextNodes = (
   graph: AnnotatedTextGraph
@@ -720,15 +747,16 @@ export const getTextNodes = (
 /**
  * Return entity nodes whose `entityType` matches the requested label.
  *
- * @example
- * ```ts
+ * **Example** (Filter empty graph by ORG)
+ *
+ * ```ts import.meta.vitest name="Filter empty graph by ORG"
  * import { empty, filterEntitiesByType } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(filterEntitiesByType(empty(), "ORG").length) // 0
+ * filterEntitiesByType(empty(), "ORG").length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const filterEntitiesByType: {
   (graph: AnnotatedTextGraph, entityType: string): ReadonlyArray<EntityNode>;
@@ -745,15 +773,16 @@ export const filterEntitiesByType: {
 /**
  * Return POS annotation nodes carrying a specific tag.
  *
- * @example
- * ```ts
+ * **Example** (Filter empty graph by NNP)
+ *
+ * ```ts import.meta.vitest name="Filter empty graph by NNP"
  * import { empty, filterByPOSTag } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(filterByPOSTag(empty(), "NNP").length) // 0
+ * filterByPOSTag(empty(), "NNP").length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const filterByPOSTag: {
   (graph: AnnotatedTextGraph, tag: string): ReadonlyArray<POSNode>;
@@ -770,15 +799,16 @@ export const filterByPOSTag: {
 /**
  * Count of nodes by kind (`text`/`pos`/`entity`/`lemma`/`dependency`/`relation`).
  *
- * @example
- * ```ts
+ * **Example** (Count entity nodes in empty)
+ *
+ * ```ts import.meta.vitest name="Count entity nodes in empty"
  * import { countNodesByType, empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(countNodesByType(empty()).entity) // 0
+ * countNodesByType(empty()).entity // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const countNodesByType = (graph: AnnotatedTextGraph): Record<string, number> =>
   A.reduce(
@@ -805,15 +835,16 @@ export const countNodesByType = (graph: AnnotatedTextGraph): Record<string, numb
 /**
  * Collect all structural and annotation nodes in backing graph order.
  *
- * @example
- * ```ts
+ * **Example** (Collect nodes from empty)
+ *
+ * ```ts import.meta.vitest name="Collect nodes from empty"
  * import { empty, toArray } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(toArray(empty()).length) // 0
+ * toArray(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const toArray = (graph: AnnotatedTextGraph): ReadonlyArray<AnnotatedNode> =>
   A.fromIterable(graph.pipe(Graph.nodes, Graph.values));
@@ -821,30 +852,32 @@ export const toArray = (graph: AnnotatedTextGraph): ReadonlyArray<AnnotatedNode>
 /**
  * Count all structural and annotation nodes.
  *
- * @example
- * ```ts
+ * **Example** (Count nodes in empty graph)
+ *
+ * ```ts import.meta.vitest name="Count nodes in empty graph"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(nodeCount(empty())) // 0
+ * nodeCount(empty()) // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const nodeCount = (graph: AnnotatedTextGraph): number => Graph.nodeCount(graph);
 
 /**
  * Return root node indices with no incoming edges.
  *
- * @example
- * ```ts
+ * **Example** (Get roots of empty graph)
+ *
+ * ```ts import.meta.vitest name="Get roots of empty graph"
  * import { empty, getRoots } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
- * console.log(getRoots(empty()).length) // 0
+ * getRoots(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getRoots = (graph: AnnotatedTextGraph): ReadonlyArray<Graph.NodeIndex> =>
   A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "incoming" })));

@@ -6,16 +6,16 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
-import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, Order, Path, pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import type { TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
+import { lawScanSourcePaths, runLawScan } from "./internal/LawScan.ts";
+import type { TSMorphService, TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
+import type { Path } from "effect";
 import type {
   ArrowFunction,
   CallExpression,
@@ -27,21 +27,17 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/EffectFn");
 
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
 const EFFECT_FN_RULE_ID = "beep-laws/effect-fn";
 
 const EffectFnRecommendation = LiteralKit(["Effect.fn", "Effect.fnUntraced"]);
 
 type EffectFnRecommendation = typeof EffectFnRecommendation.Type;
 type EffectFnOwner = ArrowFunction | FunctionDeclaration | FunctionExpression | MethodDeclaration;
-type ScannedSourceFile = readonly [file: string, sourceFile: SourceFile];
-
-const decodeProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
 
 /**
  * Runtime options for the Effect.fn supplemental law.
  *
- * @example
+ * **Example** (Configure Effect.fn scanning)
  * ```ts
  * import { EffectFnRulesOptions } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
@@ -52,6 +48,7 @@ const decodeProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspe
  *
  * console.log(options.strictCheck)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -65,6 +62,7 @@ export class EffectFnRulesOptions extends S.Class<EffectFnRulesOptions>($I`Effec
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("EffectFnRulesOptions", {
     description: "Runtime options for the repo-local Effect.fn supplemental law.",
@@ -74,7 +72,8 @@ export class EffectFnRulesOptions extends S.Class<EffectFnRulesOptions>($I`Effec
 /**
  * Single Effect.fn supplemental law diagnostic.
  *
- * @example
+ * **Example** (Construct an effect fn diagnostic)
+ *
  * ```ts
  * import { EffectFnDiagnostic } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
@@ -90,6 +89,7 @@ export class EffectFnRulesOptions extends S.Class<EffectFnRulesOptions>($I`Effec
  *
  * console.log(diagnostic.recommendation)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -111,7 +111,8 @@ export class EffectFnDiagnostic extends S.Class<EffectFnDiagnostic>($I`EffectFnD
 /**
  * Summary of Effect.fn supplemental law results.
  *
- * @example
+ * **Example** (Construct an effect fn rules summary)
+ *
  * ```ts
  * import { EffectFnRulesSummary } from "@beep/repo-cli/commands/Laws/EffectFn"
  *
@@ -124,6 +125,7 @@ export class EffectFnDiagnostic extends S.Class<EffectFnDiagnostic>($I`EffectFnD
  *
  * console.log(summary.strictFailure)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,8 +148,6 @@ export class EffectFnRulesSummary extends S.Class<EffectFnRulesSummary>($I`Effec
     description: "Summary of repo-local Effect.fn supplemental law results.",
   })
 ) {}
-
-const byScannedSourceFilePathAscending = Order.mapInput(Order.String, ([file]: ScannedSourceFile) => file);
 
 const isEffectFnOwner = (node: Node): node is EffectFnOwner =>
   Node.isArrowFunction(node) ||
@@ -370,10 +370,8 @@ const collectEffectFnDiagnostics = (
 /**
  * Run the repo-local Effect.fn supplemental law.
  *
- * @param options - Runtime options for the check.
- * @returns Effect that scans production TypeScript source and reports direct Effect.gen returns.
- * @effects Requires the shared TSMorph service and platform path service to inspect repo TypeScript source files.
- * @example
+ * **Example** (Run effect fn rules)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { runEffectFnRules, EffectFnRulesOptions } from "@beep/repo-cli/commands/Laws/EffectFn"
@@ -385,71 +383,23 @@ const collectEffectFnDiagnostics = (
  *
  * console.log(program) // example value
  * ```
+ *
+ * @param options - Runtime options for the check.
+ * @returns Effect that scans production TypeScript source and reports direct Effect.gen returns.
+ * @effects Requires the shared TSMorph service and platform path service to inspect repo TypeScript source files.
  * @category utilities
  * @since 0.0.0
  */
 export const runEffectFnRules = Effect.fn("EffectFn.runEffectFnRules")(function* (
   options: EffectFnRulesOptions
 ): Effect.fn.Return<EffectFnRulesSummary, S.SchemaError | TSMorphServiceError, TSMorphService | Path.Path> {
-  const service = yield* TSMorphService;
-  const path = yield* Path.Path;
-
-  const isExcludedFile = (filePath: string): boolean => {
-    const normalized = toPosixPath(filePath);
-    if (A.some(options.excludePaths, (excludePath) => normalized === toPosixPath(excludePath))) {
-      return true;
-    }
-
-    return isExcludedTypeScriptSourcePath(normalized);
-  };
-
-  const request = yield* decodeProjectInspectionRequest({
-    entrypoint: {
-      _tag: "tsconfig",
-      tsConfigPath: "tsconfig.json",
-    },
-    repoRootPath: null,
-    mode: "syntax",
-    referencePolicy: "workspaceOnly",
-    filePaths: A.empty(),
-    sourceFileGlobs: A.fromIterable(INCLUDED_GLOBS),
+  const scan = yield* runLawScan({
+    sourceFileGlobs: lawScanSourcePaths(options.includePaths),
+    includePaths: options.includePaths,
+    excludePaths: options.excludePaths,
+    strictCheck: options.strictCheck,
+    collect: collectEffectFnDiagnostics,
   });
 
-  return yield* service.inspectProject(request, ({ scope, sourceFiles }) => {
-    let scannedSourceFiles = A.empty<ScannedSourceFile>();
-
-    for (const sourceFile of sourceFiles) {
-      const relativeFilePath = toPosixPath(path.relative(scope.repoRootPath, sourceFile.getFilePath()));
-
-      if (isExcludedFile(relativeFilePath)) {
-        continue;
-      }
-
-      scannedSourceFiles = A.append(scannedSourceFiles, [relativeFilePath, sourceFile] as const);
-    }
-
-    scannedSourceFiles = A.sort(scannedSourceFiles, byScannedSourceFilePathAscending);
-
-    let diagnostics = A.empty<EffectFnDiagnostic>();
-    let affectedFiles = A.empty<string>();
-
-    for (const [relativeFilePath, sourceFile] of scannedSourceFiles) {
-      const fileDiagnostics = collectEffectFnDiagnostics(relativeFilePath, sourceFile);
-      if (A.isReadonlyArrayNonEmpty(fileDiagnostics)) {
-        affectedFiles = A.append(affectedFiles, relativeFilePath);
-        diagnostics = A.appendAll(diagnostics, fileDiagnostics);
-      }
-    }
-
-    const violationCount = A.length(diagnostics);
-
-    return EffectFnRulesSummary.make({
-      scannedFiles: A.length(scannedSourceFiles),
-      touchedFiles: A.length(affectedFiles),
-      violationCount,
-      strictFailure: options.strictCheck && violationCount > 0,
-      affectedFiles,
-      diagnostics,
-    });
-  });
+  return EffectFnRulesSummary.make(scan);
 });

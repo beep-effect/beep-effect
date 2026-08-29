@@ -1,0 +1,1013 @@
+/**
+ * Generated from `packages/_internal/db-admin/drizzle` by
+ * `scripts/sync-migration-bundle.ts`. Do not edit; refresh with
+ * `bun run --cwd apps/professional-desktop codegen`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import type { MigrationBundleEntry } from "@beep/postgres";
+
+/**
+ * Professional Desktop sidecar migration bundle, synced byte-exactly from
+ * the db-admin drizzle migration folders.
+ *
+ * **Example** (Count the bundled migrations)
+ *
+ * ```ts
+ * import { migrationBundle } from "@/runtime/Migrations.gen"
+ *
+ * console.log(migrationBundle.length)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const migrationBundle: ReadonlyArray<MigrationBundleEntry> = [
+  {
+    name: "20260813130540_baseline",
+    sql: `CREATE TABLE "architecture_lab_work_item" (
+	"id" text PRIMARY KEY,
+	"title" text NOT NULL,
+	"status" text NOT NULL,
+	"assignee_id" integer,
+	"priority" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "architecture_lab_worker" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"display_name" text NOT NULL,
+	"status" text NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "documents_sync_conflict" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"conflict_kind" text NOT NULL,
+	"local_rel_path" text,
+	"provider" text NOT NULL,
+	"remote_event_id" text,
+	"remote_id" text,
+	"remote_payload" jsonb NOT NULL,
+	"resolution_status" text NOT NULL,
+	"sync_item_id" integer,
+	"workspace_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "documents_sync_cursor" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"last_error" text,
+	"last_event_id" text,
+	"provider" text NOT NULL,
+	"status" text NOT NULL,
+	"stream_position" text NOT NULL,
+	"workspace_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "documents_sync_item" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"content_digest" text,
+	"content_size_bytes" integer,
+	"item_kind" text NOT NULL,
+	"last_error" text,
+	"last_pushed_digest" text,
+	"last_pushed_generation" integer,
+	"local_generation" integer NOT NULL,
+	"local_rel_path" text NOT NULL,
+	"provider" text NOT NULL,
+	"remote_id" text,
+	"remote_name" text,
+	"remote_parent_id" text,
+	"sync_state" text NOT NULL,
+	"workspace_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "documents_sync_operation" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"attempt_count" integer NOT NULL,
+	"idempotency_key" text NOT NULL,
+	"input_content_digest" text,
+	"input_generation" integer NOT NULL,
+	"last_error" text,
+	"operation_type" text NOT NULL,
+	"provider" text NOT NULL,
+	"status" text NOT NULL,
+	"sync_item_id" integer NOT NULL,
+	"target_name" text NOT NULL,
+	"target_parent_rel_path" text,
+	"target_rel_path" text NOT NULL,
+	"workspace_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_candidate_claim" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"fixture_key" text NOT NULL,
+	"lifecycle" text NOT NULL,
+	"snapshot" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_claim_disposition" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"claim_id" integer NOT NULL,
+	"reason" text NOT NULL,
+	"resolved_at" bigint NOT NULL,
+	"resolved_by" jsonb NOT NULL,
+	"status" text NOT NULL,
+	"violations" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_contradiction_candidate" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_key" text NOT NULL,
+	"candidate_digest" text NOT NULL,
+	"assessment" jsonb NOT NULL,
+	"match_basis" jsonb NOT NULL,
+	"belief_pair" jsonb NOT NULL,
+	"recorded_at" bigint NOT NULL,
+	"valid_from" bigint NOT NULL,
+	"valid_to" bigint,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_contradiction_disposition" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_id" integer NOT NULL,
+	"decision" jsonb NOT NULL,
+	"resolved_at" bigint NOT NULL,
+	"resolved_by" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_contradiction_receipt" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_id" integer NOT NULL,
+	"receipt_key" text NOT NULL,
+	"received_at" bigint NOT NULL,
+	"received_by" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_edge_version" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"evidence_scope" text,
+	"expired_at" bigint,
+	"fact" jsonb NOT NULL,
+	"logical_key" text NOT NULL,
+	"matter_scope" text,
+	"qualifiers" jsonb NOT NULL,
+	"recorded_at" bigint NOT NULL,
+	"relation" text NOT NULL,
+	"source_claim_id" integer,
+	"source_entity_ref" text,
+	"source_evidence_id" integer,
+	"source_kind" text NOT NULL,
+	"source_observation_ref" text,
+	"supersedes_id" integer,
+	"target_claim_id" integer,
+	"target_entity_ref" text,
+	"target_evidence_id" integer,
+	"target_kind" text NOT NULL,
+	"target_observation_ref" text,
+	"valid_from" bigint NOT NULL,
+	"valid_to" bigint,
+	"version" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_evidence" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"artifact_fixture_key" text NOT NULL,
+	"span_fixture_key" text NOT NULL,
+	"span" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_evidence_verification" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"evidence_id" integer NOT NULL,
+	"manifestation_key" text NOT NULL,
+	"verified_anchor" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_execution_decision" (
+	"run_key" text NOT NULL,
+	"seq" integer NOT NULL,
+	"prev_hash" text,
+	"hash" text NOT NULL,
+	"verdict" text NOT NULL,
+	"reason" text,
+	"operation_digest" text NOT NULL,
+	"sink_class" text NOT NULL,
+	"audience" text NOT NULL,
+	"destination_digest" text NOT NULL,
+	"grant_set_digest" text NOT NULL,
+	"policy_revision" text NOT NULL,
+	"decided_at" bigint NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_execution_outcome" (
+	"run_key" text NOT NULL,
+	"decision_hash" text PRIMARY KEY,
+	"decision_verdict" text DEFAULT 'allowed' NOT NULL,
+	"settlement" text NOT NULL,
+	"recorded_at" bigint NOT NULL,
+	"hash" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "epistemic_usage_record" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"activity_id" integer,
+	"actor" jsonb NOT NULL,
+	"cost_usd_approx_micros" integer,
+	"credential_reference" text,
+	"input_tokens" integer,
+	"latency_millis" integer,
+	"metadata" jsonb NOT NULL,
+	"model" text NOT NULL,
+	"output_tokens" integer,
+	"provider" text NOT NULL,
+	"total_tokens" integer,
+	"unit_count" integer,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_act_frame" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"act" jsonb NOT NULL,
+	"creates" jsonb NOT NULL,
+	"derivation_kind" jsonb NOT NULL,
+	"interpreter" jsonb NOT NULL,
+	"preconditions" jsonb NOT NULL,
+	"slots" jsonb NOT NULL,
+	"source_norm" jsonb NOT NULL,
+	"terminates" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_candor_disposition" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"citing_application" jsonb NOT NULL,
+	"decided_at" bigint NOT NULL,
+	"disposes" jsonb NOT NULL,
+	"lifecycle" text NOT NULL,
+	"litigation_frame_judgment" text,
+	"rule56_judgment" text,
+	"supersedes" integer,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_correction_delta" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_routing" text NOT NULL,
+	"corrected_elements" jsonb NOT NULL,
+	"frame" integer NOT NULL,
+	"reviewer" jsonb NOT NULL,
+	"reviewer_action" text NOT NULL,
+	"stage" text NOT NULL,
+	"supersedes" integer,
+	"validator_report" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_ids_submission_fact" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate_window" jsonb NOT NULL,
+	"citing_application" jsonb NOT NULL,
+	"content" jsonb NOT NULL,
+	"fees" jsonb NOT NULL,
+	"modeled_from" jsonb NOT NULL,
+	"office_treatment" jsonb,
+	"operative_date" bigint NOT NULL,
+	"statement" jsonb NOT NULL,
+	"submission_kind" text NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_legal_opposition_candidate" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"candidate" jsonb NOT NULL,
+	"priority_basis" jsonb,
+	"verdict_family" jsonb,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_legal_position_relator" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"asserting_interpreter" jsonb NOT NULL,
+	"bearer" jsonb NOT NULL,
+	"content" jsonb NOT NULL,
+	"counterparty" jsonb NOT NULL,
+	"grounding" jsonb NOT NULL,
+	"position_kind" text NOT NULL,
+	"scope" jsonb NOT NULL,
+	"source_norm" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_patent_citation_event" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"actor" text NOT NULL,
+	"citing_application" jsonb NOT NULL,
+	"discovery" jsonb NOT NULL,
+	"grounding" jsonb NOT NULL,
+	"observed_at" bigint NOT NULL,
+	"possible_duplicate_of" integer,
+	"quarantine" jsonb,
+	"reference" jsonb NOT NULL,
+	"supersedes" jsonb,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "law_practice_power_exercise" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"attempted_at" bigint NOT NULL,
+	"authority_basis" jsonb NOT NULL,
+	"frame" integer NOT NULL,
+	"precondition_assertions" jsonb NOT NULL,
+	"result" jsonb NOT NULL,
+	"slot_assignments" jsonb NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "workspace_message" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"content" jsonb NOT NULL,
+	"role" text NOT NULL,
+	"thread_id" integer NOT NULL,
+	"turn_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "workspace_thread" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"title" text NOT NULL,
+	"workspace_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "workspace_turn" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"items" jsonb NOT NULL,
+	"parent_turn_id" integer,
+	"thread_id" integer NOT NULL,
+	"turn_index" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "workspace_workspace" (
+	"created_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"row_version" integer NOT NULL,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"fixture_key" text NOT NULL,
+	"name" text NOT NULL,
+	"organization_fixture_key" text NOT NULL,
+	"owner_principal_fixture_key" text NOT NULL,
+	"vault_root_path" text,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX "architecture_lab_worker_org_id_btree_idx" ON "architecture_lab_worker" ("org_id");--> statement-breakpoint
+CREATE INDEX "architecture_lab_worker_source_btree_idx" ON "architecture_lab_worker" ("source");--> statement-breakpoint
+CREATE INDEX "architecture_lab_worker_status_lookup_idx" ON "architecture_lab_worker" ("status");--> statement-breakpoint
+CREATE UNIQUE INDEX "architecture_lab_worker_public_id_unique_idx" ON "architecture_lab_worker" ("public_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_conflict_org_id_btree_idx" ON "documents_sync_conflict" ("org_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_conflict_source_btree_idx" ON "documents_sync_conflict" ("source");--> statement-breakpoint
+CREATE INDEX "documents_sync_conflict_conflict_kind_lookup_idx" ON "documents_sync_conflict" ("conflict_kind");--> statement-breakpoint
+CREATE INDEX "documents_sync_conflict_remote_event_id_lookup_idx" ON "documents_sync_conflict" ("remote_event_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_conflict_resolution_status_lookup_idx" ON "documents_sync_conflict" ("resolution_status");--> statement-breakpoint
+CREATE INDEX "documents_sync_conflict_workspace_id_btree_idx" ON "documents_sync_conflict" ("workspace_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_sync_conflict_public_id_unique_idx" ON "documents_sync_conflict" ("public_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_cursor_org_id_btree_idx" ON "documents_sync_cursor" ("org_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_cursor_source_btree_idx" ON "documents_sync_cursor" ("source");--> statement-breakpoint
+CREATE INDEX "documents_sync_cursor_workspace_id_btree_idx" ON "documents_sync_cursor" ("workspace_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_sync_cursor_public_id_unique_idx" ON "documents_sync_cursor" ("public_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_item_org_id_btree_idx" ON "documents_sync_item" ("org_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_item_source_btree_idx" ON "documents_sync_item" ("source");--> statement-breakpoint
+CREATE INDEX "documents_sync_item_local_rel_path_lookup_idx" ON "documents_sync_item" ("local_rel_path");--> statement-breakpoint
+CREATE INDEX "documents_sync_item_remote_id_lookup_idx" ON "documents_sync_item" ("remote_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_item_sync_state_lookup_idx" ON "documents_sync_item" ("sync_state");--> statement-breakpoint
+CREATE INDEX "documents_sync_item_workspace_id_btree_idx" ON "documents_sync_item" ("workspace_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_sync_item_public_id_unique_idx" ON "documents_sync_item" ("public_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_operation_org_id_btree_idx" ON "documents_sync_operation" ("org_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_operation_source_btree_idx" ON "documents_sync_operation" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_sync_operation_idempotency_key_unique_idx" ON "documents_sync_operation" ("idempotency_key");--> statement-breakpoint
+CREATE INDEX "documents_sync_operation_status_lookup_idx" ON "documents_sync_operation" ("status");--> statement-breakpoint
+CREATE INDEX "documents_sync_operation_sync_item_id_lookup_idx" ON "documents_sync_operation" ("sync_item_id");--> statement-breakpoint
+CREATE INDEX "documents_sync_operation_workspace_id_btree_idx" ON "documents_sync_operation" ("workspace_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "documents_sync_operation_public_id_unique_idx" ON "documents_sync_operation" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_candidate_claim_org_id_btree_idx" ON "epistemic_candidate_claim" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_candidate_claim_source_btree_idx" ON "epistemic_candidate_claim" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_candidate_claim_public_id_unique_idx" ON "epistemic_candidate_claim" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_claim_disposition_org_id_btree_idx" ON "epistemic_claim_disposition" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_claim_disposition_source_btree_idx" ON "epistemic_claim_disposition" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_claim_disposition_public_id_unique_idx" ON "epistemic_claim_disposition" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_org_id_btree_idx" ON "epistemic_contradiction_candidate" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_source_btree_idx" ON "epistemic_contradiction_candidate" ("source");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_recorded_at_btree_idx" ON "epistemic_contradiction_candidate" ("recorded_at");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_candidate_valid_from_btree_idx" ON "epistemic_contradiction_candidate" ("valid_from");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_candidate_public_id_unique_idx" ON "epistemic_contradiction_candidate" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_disposition_org_id_btree_idx" ON "epistemic_contradiction_disposition" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_disposition_source_btree_idx" ON "epistemic_contradiction_disposition" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_disposition_candidate_id_unique_idx" ON "epistemic_contradiction_disposition" ("candidate_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_disposition_public_id_unique_idx" ON "epistemic_contradiction_disposition" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_receipt_org_id_btree_idx" ON "epistemic_contradiction_receipt" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_receipt_source_btree_idx" ON "epistemic_contradiction_receipt" ("source");--> statement-breakpoint
+CREATE INDEX "epistemic_contradiction_receipt_candidate_id_btree_idx" ON "epistemic_contradiction_receipt" ("candidate_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_receipt_public_id_unique_idx" ON "epistemic_contradiction_receipt" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_edge_version_org_id_btree_idx" ON "epistemic_edge_version" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_edge_version_source_btree_idx" ON "epistemic_edge_version" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_edge_version_public_id_unique_idx" ON "epistemic_edge_version" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_org_id_btree_idx" ON "epistemic_evidence" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_source_btree_idx" ON "epistemic_evidence" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_evidence_public_id_unique_idx" ON "epistemic_evidence" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_verification_org_id_btree_idx" ON "epistemic_evidence_verification" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_verification_source_btree_idx" ON "epistemic_evidence_verification" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_evidence_verification_public_id_unique_idx" ON "epistemic_evidence_verification" ("public_id");--> statement-breakpoint
+CREATE INDEX "epistemic_usage_record_org_id_btree_idx" ON "epistemic_usage_record" ("org_id");--> statement-breakpoint
+CREATE INDEX "epistemic_usage_record_source_btree_idx" ON "epistemic_usage_record" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_usage_record_public_id_unique_idx" ON "epistemic_usage_record" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_act_frame_org_id_btree_idx" ON "law_practice_act_frame" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_act_frame_source_btree_idx" ON "law_practice_act_frame" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_act_frame_public_id_unique_idx" ON "law_practice_act_frame" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_candor_disposition_org_id_btree_idx" ON "law_practice_candor_disposition" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_candor_disposition_source_btree_idx" ON "law_practice_candor_disposition" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_candor_disposition_public_id_unique_idx" ON "law_practice_candor_disposition" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_correction_delta_org_id_btree_idx" ON "law_practice_correction_delta" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_correction_delta_source_btree_idx" ON "law_practice_correction_delta" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_correction_delta_public_id_unique_idx" ON "law_practice_correction_delta" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_ids_submission_fact_org_id_btree_idx" ON "law_practice_ids_submission_fact" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_ids_submission_fact_source_btree_idx" ON "law_practice_ids_submission_fact" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_ids_submission_fact_public_id_unique_idx" ON "law_practice_ids_submission_fact" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_legal_opposition_candidate_org_id_btree_idx" ON "law_practice_legal_opposition_candidate" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_legal_opposition_candidate_source_btree_idx" ON "law_practice_legal_opposition_candidate" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_legal_opposition_candidate_public_id_unique_idx" ON "law_practice_legal_opposition_candidate" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_legal_position_relator_org_id_btree_idx" ON "law_practice_legal_position_relator" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_legal_position_relator_source_btree_idx" ON "law_practice_legal_position_relator" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_legal_position_relator_public_id_unique_idx" ON "law_practice_legal_position_relator" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_patent_citation_event_org_id_btree_idx" ON "law_practice_patent_citation_event" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_patent_citation_event_source_btree_idx" ON "law_practice_patent_citation_event" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_patent_citation_event_public_id_unique_idx" ON "law_practice_patent_citation_event" ("public_id");--> statement-breakpoint
+CREATE INDEX "law_practice_power_exercise_org_id_btree_idx" ON "law_practice_power_exercise" ("org_id");--> statement-breakpoint
+CREATE INDEX "law_practice_power_exercise_source_btree_idx" ON "law_practice_power_exercise" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "law_practice_power_exercise_public_id_unique_idx" ON "law_practice_power_exercise" ("public_id");--> statement-breakpoint
+CREATE INDEX "workspace_message_org_id_btree_idx" ON "workspace_message" ("org_id");--> statement-breakpoint
+CREATE INDEX "workspace_message_source_btree_idx" ON "workspace_message" ("source");--> statement-breakpoint
+CREATE INDEX "workspace_message_role_lookup_idx" ON "workspace_message" ("role");--> statement-breakpoint
+CREATE INDEX "workspace_message_thread_id_btree_idx" ON "workspace_message" ("thread_id");--> statement-breakpoint
+CREATE INDEX "workspace_message_turn_id_btree_idx" ON "workspace_message" ("turn_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "workspace_message_public_id_unique_idx" ON "workspace_message" ("public_id");--> statement-breakpoint
+CREATE INDEX "workspace_thread_org_id_btree_idx" ON "workspace_thread" ("org_id");--> statement-breakpoint
+CREATE INDEX "workspace_thread_source_btree_idx" ON "workspace_thread" ("source");--> statement-breakpoint
+CREATE INDEX "workspace_thread_workspace_id_btree_idx" ON "workspace_thread" ("workspace_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "workspace_thread_public_id_unique_idx" ON "workspace_thread" ("public_id");--> statement-breakpoint
+CREATE INDEX "workspace_turn_org_id_btree_idx" ON "workspace_turn" ("org_id");--> statement-breakpoint
+CREATE INDEX "workspace_turn_source_btree_idx" ON "workspace_turn" ("source");--> statement-breakpoint
+CREATE INDEX "workspace_turn_parent_turn_id_btree_idx" ON "workspace_turn" ("parent_turn_id");--> statement-breakpoint
+CREATE INDEX "workspace_turn_thread_id_btree_idx" ON "workspace_turn" ("thread_id");--> statement-breakpoint
+CREATE INDEX "workspace_turn_turn_index_btree_idx" ON "workspace_turn" ("turn_index");--> statement-breakpoint
+CREATE UNIQUE INDEX "workspace_turn_public_id_unique_idx" ON "workspace_turn" ("public_id");--> statement-breakpoint
+CREATE INDEX "workspace_workspace_org_id_btree_idx" ON "workspace_workspace" ("org_id");--> statement-breakpoint
+CREATE INDEX "workspace_workspace_source_btree_idx" ON "workspace_workspace" ("source");--> statement-breakpoint
+CREATE UNIQUE INDEX "workspace_workspace_public_id_unique_idx" ON "workspace_workspace" ("public_id");`,
+  },
+  {
+    name: "20260813143745_baseline-functions",
+    sql: `CREATE EXTENSION IF NOT EXISTS btree_gist;--> statement-breakpoint
+DROP INDEX "epistemic_candidate_claim_org_id_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_candidate_claim_source_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_claim_disposition_org_id_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_claim_disposition_source_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_edge_version_org_id_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_edge_version_source_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_evidence_org_id_btree_idx";--> statement-breakpoint
+DROP INDEX "epistemic_evidence_source_btree_idx";--> statement-breakpoint
+ALTER TABLE "epistemic_edge_version"
+  ADD CONSTRAINT "epistemic_edge_source_claim_fk" FOREIGN KEY ("source_claim_id") REFERENCES "epistemic_candidate_claim" ("id"),
+  ADD CONSTRAINT "epistemic_edge_source_evidence_fk" FOREIGN KEY ("source_evidence_id") REFERENCES "epistemic_evidence" ("id"),
+  ADD CONSTRAINT "epistemic_edge_supersedes_fk" FOREIGN KEY ("supersedes_id") REFERENCES "epistemic_edge_version" ("id"),
+  ADD CONSTRAINT "epistemic_edge_target_claim_fk" FOREIGN KEY ("target_claim_id") REFERENCES "epistemic_candidate_claim" ("id"),
+  ADD CONSTRAINT "epistemic_edge_target_evidence_fk" FOREIGN KEY ("target_evidence_id") REFERENCES "epistemic_evidence" ("id"),
+  ADD CONSTRAINT "epistemic_edge_valid_ordered" CHECK ("valid_to" IS NULL OR "valid_from" < "valid_to"),
+  ADD CONSTRAINT "epistemic_edge_txn_ordered" CHECK ("expired_at" IS NULL OR "recorded_at" < "expired_at"),
+  ADD CONSTRAINT "epistemic_edge_no_self_supersede" CHECK ("supersedes_id" IS NULL OR "supersedes_id" <> "id"),
+  ADD CONSTRAINT "epistemic_edge_source_bounded" CHECK (
+    "source_kind" IN ('claim', 'evidence', 'entity', 'observation')
+    AND (("source_kind" = 'claim') = ("source_claim_id" IS NOT NULL))
+    AND (("source_kind" = 'evidence') = ("source_evidence_id" IS NOT NULL))
+    AND (("source_kind" = 'entity') = ("source_entity_ref" IS NOT NULL))
+    AND (("source_kind" = 'observation') = ("source_observation_ref" IS NOT NULL))
+  ),
+  ADD CONSTRAINT "epistemic_edge_target_bounded" CHECK (
+    "target_kind" IN ('claim', 'evidence', 'entity', 'observation')
+    AND (("target_kind" = 'claim') = ("target_claim_id" IS NOT NULL))
+    AND (("target_kind" = 'evidence') = ("target_evidence_id" IS NOT NULL))
+    AND (("target_kind" = 'entity') = ("target_entity_ref" IS NOT NULL))
+    AND (("target_kind" = 'observation') = ("target_observation_ref" IS NOT NULL))
+  ),
+  ADD CONSTRAINT "epistemic_edge_logical_version_unique" UNIQUE ("logical_key", "version"),
+  ADD CONSTRAINT "epistemic_edge_no_overlap" EXCLUDE USING gist (
+    "logical_key" WITH =,
+    int8range("valid_from", "valid_to", '[)') WITH &&
+  ) WHERE ("expired_at" IS NULL);--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_edge_open_head_idx"
+  ON "epistemic_edge_version" ("logical_key")
+  WHERE "valid_to" IS NULL AND "expired_at" IS NULL;--> statement-breakpoint
+CREATE INDEX "epistemic_edge_asof_idx"
+  ON "epistemic_edge_version" ("logical_key", "valid_from", "recorded_at");--> statement-breakpoint
+CREATE INDEX "epistemic_edge_qualifiers_gin_idx"
+  ON "epistemic_edge_version" USING gin ("qualifiers");--> statement-breakpoint
+ALTER TABLE "epistemic_claim_disposition"
+  ADD CONSTRAINT "epistemic_claim_disposition_claim_fk" FOREIGN KEY ("claim_id") REFERENCES "epistemic_candidate_claim" ("id"),
+  ADD CONSTRAINT "epistemic_claim_disposition_bounded" CHECK ("status" IN ('active', 'rejected', 'superseded'));--> statement-breakpoint
+ALTER TABLE "epistemic_execution_decision"
+  ADD CONSTRAINT "epistemic_execution_decision_pk" PRIMARY KEY ("run_key", "seq"),
+  ADD CONSTRAINT "epistemic_execution_decision_hash_unique" UNIQUE ("hash"),
+  ADD CONSTRAINT "epistemic_execution_decision_run_hash_unique" UNIQUE ("run_key", "hash"),
+  ADD CONSTRAINT "epistemic_execution_decision_hash_verdict_unique" UNIQUE ("hash", "verdict"),
+  ADD CONSTRAINT "epistemic_execution_decision_seq_nonnegative" CHECK ("seq" >= 0),
+  ADD CONSTRAINT "epistemic_execution_decision_genesis_prev" CHECK (("seq" = 0) = ("prev_hash" IS NULL)),
+  ADD CONSTRAINT "epistemic_execution_decision_verdict_bounded" CHECK ("verdict" IN ('allowed', 'denied')),
+  ADD CONSTRAINT "epistemic_execution_decision_reason_iff_denied" CHECK (("verdict" = 'denied') = ("reason" IS NOT NULL)),
+  ADD CONSTRAINT "epistemic_execution_decision_reason_bounded" CHECK (
+    "reason" IS NULL OR "reason" IN (
+      'no-grant-in-scope',
+      'grant-set-digest-mismatch',
+      'operation-not-granted',
+      'sink-class-not-granted',
+      'audience-not-granted',
+      'destination-not-granted',
+      'grant-expired',
+      'policy-revision-mismatch',
+      'ledger-unavailable'
+    )
+  ),
+  ADD CONSTRAINT "epistemic_execution_decision_sink_class_bounded" CHECK ("sink_class" IN ('network-egress', 'mcp-write')),
+  ADD CONSTRAINT "epistemic_execution_decision_audience_bounded" CHECK ("audience" IN ('local-workspace', 'external-network'));--> statement-breakpoint
+ALTER TABLE "epistemic_execution_outcome"
+  DROP CONSTRAINT "epistemic_execution_outcome_pkey",
+  ADD CONSTRAINT "epistemic_execution_outcome_pk" PRIMARY KEY ("decision_hash"),
+  ADD CONSTRAINT "epistemic_execution_outcome_decision_fk" FOREIGN KEY ("run_key", "decision_hash") REFERENCES "epistemic_execution_decision" ("run_key", "hash"),
+  ADD CONSTRAINT "epistemic_execution_outcome_decision_verdict_fk" FOREIGN KEY ("decision_hash", "decision_verdict") REFERENCES "epistemic_execution_decision" ("hash", "verdict"),
+  ADD CONSTRAINT "epistemic_execution_outcome_settles_allowed" CHECK ("decision_verdict" = 'allowed'),
+  ADD CONSTRAINT "epistemic_execution_outcome_hash_unique" UNIQUE ("hash"),
+  ADD CONSTRAINT "epistemic_execution_outcome_settlement_bounded" CHECK ("settlement" IN ('completed', 'failed', 'interrupted'));--> statement-breakpoint
+CREATE FUNCTION epistemic_execution_ledger_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+  RAISE EXCEPTION 'epistemic execution ledger is append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER epistemic_execution_decision_append_only
+  BEFORE UPDATE OR DELETE ON "epistemic_execution_decision"
+  FOR EACH ROW EXECUTE FUNCTION epistemic_execution_ledger_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_execution_outcome_append_only
+  BEFORE UPDATE OR DELETE ON "epistemic_execution_outcome"
+  FOR EACH ROW EXECUTE FUNCTION epistemic_execution_ledger_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_execution_decision_block_truncate
+  BEFORE TRUNCATE ON "epistemic_execution_decision"
+  FOR EACH STATEMENT EXECUTE FUNCTION epistemic_execution_ledger_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_execution_outcome_block_truncate
+  BEFORE TRUNCATE ON "epistemic_execution_outcome"
+  FOR EACH STATEMENT EXECUTE FUNCTION epistemic_execution_ledger_block_mutation();--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_candidate_org_key_unique_idx"
+  ON "epistemic_contradiction_candidate" ("org_id", "candidate_key");--> statement-breakpoint
+CREATE UNIQUE INDEX "epistemic_contradiction_receipt_org_id_receipt_key_unique_idx"
+  ON "epistemic_contradiction_receipt" ("org_id", "receipt_key");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate"
+  ADD CONSTRAINT "epistemic_contradiction_candidate_valid_interval_ordered" CHECK ("valid_to" IS NULL OR "valid_from" < "valid_to"),
+  ADD CONSTRAINT "epistemic_contradiction_candidate_key_sha256" CHECK ("candidate_key" ~ '^[0-9a-f]{64}$'),
+  ADD CONSTRAINT "epistemic_contradiction_candidate_digest_sha256" CHECK ("candidate_digest" ~ '^[0-9a-f]{64}$'),
+  ADD CONSTRAINT "epistemic_contradiction_candidate_org_id_id_unique" UNIQUE ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_receipt"
+  ADD CONSTRAINT "epistemic_contradiction_receipt_key_sha256" CHECK ("receipt_key" ~ '^[0-9a-f]{64}$'),
+  ADD CONSTRAINT "epistemic_contradiction_receipt_candidate_fk" FOREIGN KEY ("org_id", "candidate_id") REFERENCES "epistemic_contradiction_candidate" ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_disposition"
+  ADD CONSTRAINT "epistemic_contradiction_disposition_candidate_fk" FOREIGN KEY ("org_id", "candidate_id") REFERENCES "epistemic_contradiction_candidate" ("org_id", "id"),
+  ADD CONSTRAINT "epistemic_contradiction_disposition_decision_valid" CHECK (
+    jsonb_typeof("decision") = 'object'
+    AND "decision" ? 'status'
+    AND jsonb_typeof("decision" -> 'status') = 'string'
+    AND "decision" ->> 'status' IN ('rejected', 'superseded')
+    AND "decision" ? 'reason'
+    AND jsonb_typeof("decision" -> 'reason') = 'string'
+    AND (
+      char_length("decision" ->> 'reason')
+      + regexp_count("decision" ->> 'reason', '[\\U00010000-\\U0010FFFF]')
+    ) BETWEEN 1 AND 2000
+    AND trim(
+      BOTH U&'\\0009\\000A\\000B\\000C\\000D\\0020\\00A0\\1680\\2000\\2001\\2002\\2003\\2004\\2005\\2006\\2007\\2008\\2009\\200A\\2028\\2029\\202F\\205F\\3000\\FEFF'
+      FROM "decision" ->> 'reason'
+    ) <> ''
+    AND CASE "decision" ->> 'status'
+      WHEN 'rejected' THEN TRUE
+      WHEN 'superseded' THEN
+        "decision" ? 'formerEdgeVersionId'
+        AND jsonb_typeof("decision" -> 'formerEdgeVersionId') = 'number'
+        AND "decision" ->> 'formerEdgeVersionId' ~ '^[1-9][0-9]*$'
+        AND "decision" ? 'proposalDigest'
+        AND jsonb_typeof("decision" -> 'proposalDigest') = 'string'
+        AND "decision" ->> 'proposalDigest' ~ '^[0-9a-f]{64}$'
+        AND "decision" ? 'proposalId'
+        AND jsonb_typeof("decision" -> 'proposalId') = 'string'
+        AND "decision" ->> 'proposalId' ~ '^[0-9a-f]{64}$'
+        AND "decision" ? 'replacementEdgeVersionId'
+        AND jsonb_typeof("decision" -> 'replacementEdgeVersionId') = 'number'
+        AND "decision" ->> 'replacementEdgeVersionId' ~ '^[1-9][0-9]*$'
+      ELSE FALSE
+    END
+  );--> statement-breakpoint
+CREATE FUNCTION epistemic_contradiction_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+  RAISE EXCEPTION 'epistemic contradiction records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_candidate_append_only BEFORE UPDATE OR DELETE ON "epistemic_contradiction_candidate" FOR EACH ROW EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_receipt_append_only BEFORE UPDATE OR DELETE ON "epistemic_contradiction_receipt" FOR EACH ROW EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_disposition_append_only BEFORE UPDATE OR DELETE ON "epistemic_contradiction_disposition" FOR EACH ROW EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_candidate_block_truncate BEFORE TRUNCATE ON "epistemic_contradiction_candidate" FOR EACH STATEMENT EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_receipt_block_truncate BEFORE TRUNCATE ON "epistemic_contradiction_receipt" FOR EACH STATEMENT EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_contradiction_disposition_block_truncate BEFORE TRUNCATE ON "epistemic_contradiction_disposition" FOR EACH STATEMENT EXECUTE FUNCTION epistemic_contradiction_block_mutation();--> statement-breakpoint
+CREATE INDEX "epistemic_evidence_verification_as_of_idx"
+  ON "epistemic_evidence_verification" ("org_id", "evidence_id", "created_at", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_evidence"
+  ADD CONSTRAINT "epistemic_evidence_org_id_id_unique" UNIQUE ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "epistemic_evidence_verification"
+  ADD CONSTRAINT "epistemic_evidence_verification_evidence_fk" FOREIGN KEY ("org_id", "evidence_id") REFERENCES "epistemic_evidence" ("org_id", "id"),
+  ADD CONSTRAINT "epistemic_evidence_verification_manifestation_unique" UNIQUE ("org_id", "manifestation_key"),
+  ADD CONSTRAINT "epistemic_evidence_verification_manifestation_sha256" CHECK ("manifestation_key" ~ '^[0-9a-f]{64}$');--> statement-breakpoint
+CREATE FUNCTION epistemic_evidence_verification_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+  RAISE EXCEPTION 'epistemic evidence verification records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER epistemic_evidence_verification_append_only BEFORE UPDATE OR DELETE ON "epistemic_evidence_verification" FOR EACH ROW EXECUTE FUNCTION epistemic_evidence_verification_block_mutation();--> statement-breakpoint
+CREATE TRIGGER epistemic_evidence_verification_block_truncate BEFORE TRUNCATE ON "epistemic_evidence_verification" FOR EACH STATEMENT EXECUTE FUNCTION epistemic_evidence_verification_block_mutation();--> statement-breakpoint
+ALTER TABLE "law_practice_candor_disposition"
+  ADD CONSTRAINT "law_practice_candor_disposition_org_id_id_unique" UNIQUE ("org_id", "id"),
+  ADD CONSTRAINT "law_practice_candor_disposition_supersedes_fk" FOREIGN KEY ("org_id", "supersedes") REFERENCES "law_practice_candor_disposition" ("org_id", "id");--> statement-breakpoint
+ALTER TABLE "law_practice_patent_citation_event"
+  ADD CONSTRAINT "law_practice_patent_citation_event_org_id_id_unique" UNIQUE ("org_id", "id"),
+  ADD CONSTRAINT "law_practice_patent_citation_event_possible_duplicate_fk" FOREIGN KEY ("org_id", "possible_duplicate_of") REFERENCES "law_practice_patent_citation_event" ("org_id", "id");--> statement-breakpoint
+CREATE FUNCTION law_practice_candor_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+  RAISE EXCEPTION 'law practice candor records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER law_practice_patent_citation_event_append_only BEFORE UPDATE OR DELETE ON "law_practice_patent_citation_event" FOR EACH ROW EXECUTE FUNCTION law_practice_candor_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_patent_citation_event_block_truncate BEFORE TRUNCATE ON "law_practice_patent_citation_event" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_candor_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_candor_disposition_append_only BEFORE UPDATE OR DELETE ON "law_practice_candor_disposition" FOR EACH ROW EXECUTE FUNCTION law_practice_candor_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_candor_disposition_block_truncate BEFORE TRUNCATE ON "law_practice_candor_disposition" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_candor_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_ids_submission_fact_append_only BEFORE UPDATE OR DELETE ON "law_practice_ids_submission_fact" FOR EACH ROW EXECUTE FUNCTION law_practice_candor_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_ids_submission_fact_block_truncate BEFORE TRUNCATE ON "law_practice_ids_submission_fact" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_candor_block_mutation();--> statement-breakpoint
+CREATE FUNCTION law_practice_legal_position_block_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $guard$
+BEGIN
+  RAISE EXCEPTION 'law practice legal position records are append-only: % on %', TG_OP, TG_TABLE_NAME;
+END;
+$guard$;--> statement-breakpoint
+CREATE TRIGGER law_practice_legal_position_relator_append_only BEFORE UPDATE OR DELETE ON "law_practice_legal_position_relator" FOR EACH ROW EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_legal_position_relator_block_truncate BEFORE TRUNCATE ON "law_practice_legal_position_relator" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_act_frame_append_only BEFORE UPDATE OR DELETE ON "law_practice_act_frame" FOR EACH ROW EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_act_frame_block_truncate BEFORE TRUNCATE ON "law_practice_act_frame" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_power_exercise_append_only BEFORE UPDATE OR DELETE ON "law_practice_power_exercise" FOR EACH ROW EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_power_exercise_block_truncate BEFORE TRUNCATE ON "law_practice_power_exercise" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_correction_delta_append_only BEFORE UPDATE OR DELETE ON "law_practice_correction_delta" FOR EACH ROW EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_correction_delta_block_truncate BEFORE TRUNCATE ON "law_practice_correction_delta" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_legal_opposition_candidate_append_only BEFORE UPDATE OR DELETE ON "law_practice_legal_opposition_candidate" FOR EACH ROW EXECUTE FUNCTION law_practice_legal_position_block_mutation();--> statement-breakpoint
+CREATE TRIGGER law_practice_legal_opposition_candidate_block_truncate BEFORE TRUNCATE ON "law_practice_legal_opposition_candidate" FOR EACH STATEMENT EXECUTE FUNCTION law_practice_legal_position_block_mutation();
+`,
+  },
+  {
+    name: "20260814001821_law_practice_st13_office_identity",
+    sql: `CREATE FUNCTION law_practice_is_wipo_st13_office_code(office_code text) RETURNS boolean
+LANGUAGE sql IMMUTABLE STRICT
+RETURN office_code IN (
+  'AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AP', 'AR', 'AT', 'AU', 'AW', 'AZ',
+  'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BM', 'BN', 'BO', 'BQ', 'BR',
+  'BS', 'BT', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK',
+  'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM',
+  'DO', 'DZ', 'EA', 'EC', 'EE', 'EG', 'EH', 'EM', 'EP', 'ER', 'ES', 'ET', 'EU', 'FI',
+  'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GC', 'GD', 'GE', 'GG', 'GH', 'GI', 'GL',
+  'GM', 'GN', 'GQ', 'GR', 'GS', 'GT', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'IB',
+  'ID', 'IE', 'IL', 'IM', 'IN', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE',
+  'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI',
+  'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MG', 'MH', 'MK',
+  'ML', 'MM', 'MN', 'MO', 'MP', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ',
+  'NA', 'NE', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OA', 'OM', 'PA', 'PE',
+  'PG', 'PH', 'PK', 'PL', 'PT', 'PW', 'PY', 'QA', 'QZ', 'RO', 'RS', 'RU', 'RW', 'SA',
+  'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS',
+  'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO',
+  'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VN',
+  'VU', 'WO', 'WS', 'XN', 'XU', 'XV', 'YE', 'ZA', 'ZM', 'ZW'
+);
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM law_practice_candor_disposition
+    WHERE citing_application ->> 'kind' = 'WipoSt13'
+      AND (
+        NOT citing_application ? 'officeCode'
+        OR jsonb_typeof(citing_application -> 'officeCode') <> 'string'
+        OR NOT law_practice_is_wipo_st13_office_code(citing_application ->> 'officeCode')
+      )
+    UNION ALL
+    SELECT 1 FROM law_practice_ids_submission_fact
+    WHERE citing_application ->> 'kind' = 'WipoSt13'
+      AND (
+        NOT citing_application ? 'officeCode'
+        OR jsonb_typeof(citing_application -> 'officeCode') <> 'string'
+        OR NOT law_practice_is_wipo_st13_office_code(citing_application ->> 'officeCode')
+      )
+    UNION ALL
+    SELECT 1 FROM law_practice_patent_citation_event
+    WHERE citing_application ->> 'kind' = 'WipoSt13'
+      AND (
+        NOT citing_application ? 'officeCode'
+        OR jsonb_typeof(citing_application -> 'officeCode') <> 'string'
+        OR NOT law_practice_is_wipo_st13_office_code(citing_application ->> 'officeCode')
+      )
+  ) THEN
+    RAISE EXCEPTION 'legacy WipoSt13 candor identity requires explicit office resolution before migration';
+  END IF;
+END $$;
+--> statement-breakpoint
+ALTER TABLE law_practice_candor_disposition
+  ADD CONSTRAINT law_practice_candor_disposition_st13_office_check
+  CHECK (
+    citing_application ->> 'kind' <> 'WipoSt13'
+    OR (
+      citing_application ? 'officeCode'
+      AND jsonb_typeof(citing_application -> 'officeCode') = 'string'
+      AND law_practice_is_wipo_st13_office_code(citing_application ->> 'officeCode')
+    )
+  );
+--> statement-breakpoint
+ALTER TABLE law_practice_ids_submission_fact
+  ADD CONSTRAINT law_practice_ids_submission_fact_st13_office_check
+  CHECK (
+    citing_application ->> 'kind' <> 'WipoSt13'
+    OR (
+      citing_application ? 'officeCode'
+      AND jsonb_typeof(citing_application -> 'officeCode') = 'string'
+      AND law_practice_is_wipo_st13_office_code(citing_application ->> 'officeCode')
+    )
+  );
+--> statement-breakpoint
+ALTER TABLE law_practice_patent_citation_event
+  ADD CONSTRAINT law_practice_patent_citation_event_st13_office_check
+  CHECK (
+    citing_application ->> 'kind' <> 'WipoSt13'
+    OR (
+      citing_application ? 'officeCode'
+      AND jsonb_typeof(citing_application -> 'officeCode') = 'string'
+      AND law_practice_is_wipo_st13_office_code(citing_application ->> 'officeCode')
+    )
+  );
+`,
+  },
+];

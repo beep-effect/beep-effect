@@ -6,7 +6,7 @@
  */
 
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -15,7 +15,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
 /**
  * Raised when the FilingDecision port cannot classify a document.
  *
- * @example
+ * **Example** (Make FilingDecisionUnavailable error)
+ *
  * ```ts
  * import { FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
  *
@@ -26,14 +27,12 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
  * @category errors
  * @since 0.0.0
  */
-export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUnavailable>(
-  $I`FilingDecisionUnavailable`
-)(
+export class FilingDecisionUnavailable extends S.TaggedError<FilingDecisionUnavailable>($I`FilingDecisionUnavailable`)(
   "FilingDecisionUnavailable",
   {
     reason: S.NonEmptyString,
   },
-  $I.annote("FilingDecisionUnavailable", {
+  $I.annoteError<FilingDecisionUnavailable>("FilingDecisionUnavailable", {
     description: "The FilingDecision port could not decide a taxonomy concept.",
   })
 ) {}
@@ -41,7 +40,8 @@ export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUn
 /**
  * Raised when workspace vault materialization fails.
  *
- * @example
+ * **Example** (Make materialization failed error)
+ *
  * ```ts
  * import { DocumentMaterializationFailed } from "@beep/documents-use-cases/public"
  *
@@ -52,14 +52,14 @@ export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUn
  * @category errors
  * @since 0.0.0
  */
-export class DocumentMaterializationFailed extends TaggedErrorClass<DocumentMaterializationFailed>(
+export class DocumentMaterializationFailed extends S.TaggedError<DocumentMaterializationFailed>(
   $I`DocumentMaterializationFailed`
 )(
   "DocumentMaterializationFailed",
   {
     reason: S.NonEmptyString,
   },
-  $I.annote("DocumentMaterializationFailed", {
+  $I.annoteError<DocumentMaterializationFailed>("DocumentMaterializationFailed", {
     description: "The workspace vault materialization write failed.",
   })
 ) {}
@@ -67,7 +67,8 @@ export class DocumentMaterializationFailed extends TaggedErrorClass<DocumentMate
 /**
  * Internal typed failure raised by document intake.
  *
- * @example
+ * **Example** (Decode DocumentIntakeError schema)
+ *
  * ```ts
  * import { DocumentIntakeError, FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -92,7 +93,8 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
 /**
  * Internal typed failure raised by document intake.
  *
- * @example
+ * **Example** (Type annotate DocumentIntakeError)
+ *
  * ```ts
  * import type { DocumentIntakeError } from "@beep/documents-use-cases/public"
  * import { FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
@@ -109,7 +111,8 @@ export type DocumentIntakeError = typeof DocumentIntakeError.Type;
 /**
  * Client-safe failure raised when dropped-file intake cannot complete.
  *
- * @example
+ * **Example** (Create action error message)
+ *
  * ```ts
  * import { DocumentIntakeActionError } from "@beep/documents-use-cases/public"
  *
@@ -120,14 +123,12 @@ export type DocumentIntakeError = typeof DocumentIntakeError.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DocumentIntakeActionError extends TaggedErrorClass<DocumentIntakeActionError>(
-  $I`DocumentIntakeActionError`
-)(
+export class DocumentIntakeActionError extends S.TaggedError<DocumentIntakeActionError>($I`DocumentIntakeActionError`)(
   "DocumentIntakeActionError",
   {
     message: S.String,
   },
-  $I.annote("DocumentIntakeActionError", {
+  $I.annoteError<DocumentIntakeActionError>("DocumentIntakeActionError", {
     description: "Client-safe failure raised when dropped-file intake cannot complete.",
   })
 ) {

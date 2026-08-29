@@ -2,11 +2,11 @@
 
 ## Status
 
-**PENDING IMPLEMENTATION**
+**IMPLEMENTED AND MERGED**
 
-Created on 2026-06-04 as a packet-authoring pass. The `@beep/box` package is
-scaffolded (config + `BoxError` exist; the service is a stub and models are
-empty), but the full-surface driver is not implemented.
+Created on 2026-06-04 as a packet-authoring pass. The full-surface `@beep/box`
+driver subsequently shipped in merge commit `f306e8ca5b`; this specification is
+retained as the historical implementation contract.
 
 ## Owner
 
@@ -22,9 +22,10 @@ platform) without depending directly on the raw `box-node-sdk`, thrown SDK
 errors, raw API failures, or unbounded external wire shapes.
 
 `@beep/box` is not product language. It is a dev-safe wrapper around an external
-SDK and service. Because the Box surface is very large (~80 managers, ~305
-methods, ~301 models), the model and wrapper layers are **code-generated** from
-the SDK's own TypeScript types rather than hand-written.
+SDK and service. The HEAD artifacts contain 85 manager groups, 333 generated
+JSON operations, and 531 generated model schemas, so the model and wrapper
+layers are **code-generated** from the SDK's own TypeScript types rather than
+hand-written.
 
 ## Architecture Contract
 
@@ -114,17 +115,20 @@ resolve the design decisions below.
 
 ## Package State
 
-The package already exists; **do not** re-run `create-package`. Current state:
+The package is implemented; **do not** re-run `create-package`. Shipped state:
 
-- `packages/drivers/box/src/Box.config.ts` — `BoxConfigShape { token: Redacted }`,
-  `BoxConfig` service, live `layer` (reads `CLOUD_BOX_TOKEN`), and
-  `layerConfig(token)`. Extend this (see Auth/Config Requirements).
-- `packages/drivers/box/src/Box.errors.ts` — `BoxError` via `CauseTaggedError`
-  with `type/status/code/context_info/help_url/request_id`. Extend with
-  translation factories.
-- `packages/drivers/box/src/Box.service.ts` — a `"stub"` marker. Replace.
-- `packages/drivers/box/src/Box.models.ts` — empty. Replace with a re-export of
-  the generated models.
+- `packages/drivers/box/src/Box.config.ts` — developer-token and CCG config
+  models plus configuration Layers.
+- `packages/drivers/box/src/Box.errors.ts` — sanitized typed `BoxError`
+  translation.
+- `packages/drivers/box/src/Box.service.ts` — the Effect service and
+  developer-token, CCG, and client-injection Layers.
+- `packages/drivers/box/src/Box.streaming.ts` — hand-written byte/event
+  adapters.
+- `packages/drivers/box/src/Box.models.ts` — public generated-model re-export.
+- `packages/drivers/box/src/_generated/Box.models.gen.ts` and
+  `Box.operations.gen.ts` — 531 model schemas and 333 JSON operations across 85
+  manager groups.
 - `package.json` already depends on `box-node-sdk` (`catalog:`) and `@beep/identity`,
   `@beep/schema`. `$BoxId` is registered in `@beep/identity`.
 
@@ -175,11 +179,10 @@ divergence from firecrawl's hand-crafted Option bar):
   upgrades that add fields do not break decode;
 - each non-class schema export pairs with a same-name runtime type alias.
 
-This divergence is justified by scale (301 schemas), Box's open-enum/field
-evolution, and the runpod generated precedent. The implementation MUST record it
-as a `standards/architecture/DECISIONS.md` entry ("Generated drivers use
-pragmatic schema fidelity") following `ADR-FORMAT.md`, and add any named
-open-enum helper to `GLOSSARY.md`.
+This divergence is justified by scale (531 generated model schemas at HEAD),
+Box's open-enum/field evolution, and the runpod generated precedent. It remains
+a driver-level implementation decision; it was judged not to meet the bar for
+an architecture-wide `standards/architecture/DECISIONS.md` entry.
 
 Truly unrepresentable dynamic shapes must be constrained with the narrowest safe
 schema (`S.Record(S.String, S.Unknown)` or `S.Unknown`) and documented in the
@@ -302,8 +305,6 @@ Use `$quality-review-fix-loop` before PR readiness.
 bunx turbo run check test lint type-test --filter=@beep/box
 bunx turbo run test:integration --filter=@beep/box
 bun run docgen:local
-bun run repo-exports:catalog
-bun run repo-exports:catalog:check
 bun run lint:fix
 bun run audit:github quality
 ```

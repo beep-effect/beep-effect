@@ -24,6 +24,23 @@ the ≥2-current-consumers requirement:
 Both importers are grep-verifiable:
 `rg -n "@beep/api-transport" packages/drivers/govinfo/src packages/drivers/ecfr/src`.
 
+## Egress denial vocabulary
+
+`EgressDenied` is a deliberately reason-free tagged error: a governed egress
+boundary that refuses a destination tells the caller only THAT it refused —
+the bounded denial reason stays with the refusing policy's own record keeping
+and the server log, never the agent-facing channel. This package is its home
+as shared transport *vocabulary*, not as an enforcement seam.
+
+| Party | Package | Role |
+| --- | --- | --- |
+| Producer | `packages/epistemic/server` (**landed**, `agent-execution-authority` PR 6) | `GovernedEgressLive` installs a `FetchHttpClient.Fetch` that rejects a non-allowlisted destination with `EgressDenied` after appending its own write-ahead decision row to the execution ledger. |
+| Consumer | `packages/ontology/server` (**landed**, `agent-execution-authority` PR 6) | The `ontology_publish_provenance` handler matches `EgressDenied` inside the `TransportError` cause and returns a typed refusal through its existing `failureMode: "return"` envelope — byte-identical to a tier-gate refusal, so a destination denial cannot be told apart from an operation denial. |
+
+Neither side names the other; the binding happens at the app entrypoint
+(`apps/professional-desktop/server/OntologyMcpTransport.ts`), which provides
+the policy `fetch` via the `FetchHttpClient.Fetch` reference.
+
 ## Installation
 
 ```bash
@@ -68,7 +85,7 @@ bun run test:integration
 bun run lint:fix
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests and dtslint files import package source through `@beep/api-transport` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/api-transport` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 

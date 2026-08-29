@@ -8,17 +8,11 @@
  * @since 0.0.0
  */
 
+import { shouldRenderFailureCause } from "./internal/cli/FailureRendering.ts";
+import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
+
+const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
 const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
-const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
-  "circular",
-  "deprecated-apis",
-  "package-test-imports",
-  "reflection-artifacts",
-  "schema-catalog",
-  "schema-first",
-  "schema-topology",
-  "tooling-schema-first",
-];
 const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "--completions",
   "--help",
@@ -33,7 +27,6 @@ const rawArgv = Bun.argv.slice(2);
 
 const { A } = await import("@beep/utils");
 const { flow } = await import("effect");
-
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
   text
     .split(/\r?\n/)
@@ -84,7 +77,7 @@ const isQualityTaskName = (value: string | undefined): boolean =>
   value !== undefined && QUALITY_TASK_NAMES.includes(value);
 
 const isLintPolicySubcommand = (value: string | undefined): boolean =>
-  value !== undefined && LINT_POLICY_SUBCOMMANDS.includes(value);
+  value !== undefined && LINT_POLICY_SUBCOMMAND_NAMES.includes(value);
 
 const isRootCliGlobalFlag = (value: string): boolean =>
   ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) || ROOT_CLI_GLOBAL_FLAG_NAMES.some((name) => value.startsWith(`${name}=`));
@@ -96,9 +89,7 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
-const { BunChildProcessSpawner, BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import(
-  "@effect/platform-bun"
-);
+const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
 const { Cause, Effect, Exit, Layer, Runtime } = await import("effect");
 const O = await import("effect/Option");
 const P = await import("effect/Predicate");
@@ -127,8 +118,21 @@ const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) =>
     return;
   }
 
+  // Print the message, then the full cause. Previously this returned right after
+  // the message, so every typed error rendered as one bare sentence with no
+  // errno, path, or stack at ANY log level including --log-level debug. That is
+  // why the ai-metrics parquet-export regression sat unexplained for a month
+  // behind `Failed to read transcript input.`, and why the forwarder's systemd
+  // unit -- which captures 2000 bytes of stderr into status/latest.json -- had
+  // nothing useful to capture.
+  //
+  // The cause is appended rather than substituted so the common case still leads
+  // with the human-readable line.
   if (P.hasProperty(error, "message") && P.isString(error.message)) {
     process.stderr.write(`${error.message}\n`);
+    if (shouldRenderFailureCause(argv)) {
+      process.stderr.write(`${Cause.pretty(exit.cause)}\n`);
+    }
     return;
   }
 
@@ -168,6 +172,14 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
       renderCliFailure(exit);
       restoreSharedTerminal();
       Runtime.defaultTeardown(exit, onExit);
+      // The platform runner only hard-exits on failure or signal; success
+      // relies on the event loop draining, so any handle a child leaves
+      // behind (turbo daemon sockets, stuck bun wrappers) wedges the process
+      // after its work is done — the CI class where a lane prints success
+      // and never exits. Success must exit explicitly too.
+      if (Exit.isSuccess(exit)) {
+        process.exit(0);
+      }
     },
   });
 
@@ -184,14 +196,13 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
 let handledByQualityFastPath = false;
 
 if (canUseQualityTaskFastPath(argv)) {
-  const { parseQualityTaskInvocation, runQualityTask } = await import("./commands/Quality/Tasks.js");
+  const { parseQualityTaskInvocation, runQualityTask } = await import("./commands/Quality/Tasks.ts");
   const qualityTaskInvocation = parseQualityTaskInvocation(argv);
 
   if (O.isSome(qualityTaskInvocation)) {
     handledByQualityFastPath = true;
-    const QualityLayers = Layer.mergeAll(BunChildProcessSpawner.layer).pipe(Layer.provideMerge(BaseLayers));
     const qualityProgram = Effect.scoped(
-      Layer.build(QualityLayers).pipe(
+      Layer.build(BaseLayers).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
             return yield* runQualityTask(qualityTaskInvocation.value).pipe(Effect.provide(context));
@@ -208,16 +219,15 @@ let handledByCiFastPath = false;
 if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
   handledByCiFastPath = true;
   const [{ ciCommand }, { Command }] = await Promise.all([
-    import("./commands/Ci/index.js"),
+    import("./commands/Ci/index.ts"),
     import("effect/unstable/cli"),
   ]);
-  const CiLayers = Layer.mergeAll(BunChildProcessSpawner.layer).pipe(Layer.provideMerge(BaseLayers));
   const ciRootCommand = Command.make("beep-cli").pipe(
     Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
     Command.withSubcommands([ciCommand])
   );
   const ciProgram = Effect.scoped(
-    Layer.build(CiLayers).pipe(
+    Layer.build(BaseLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
           return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
@@ -229,12 +239,13 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
 }
 
 if (!handledByQualityFastPath && !handledByCiFastPath) {
-  const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }] = await Promise.all([
+  const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }, { MemoryStatsLive }] = await Promise.all([
     import("@beep/repo-utils"),
     import("effect/unstable/cli"),
-    import("./commands/Root.js"),
+    import("./commands/Root.ts"),
+    import("./internal/repo-run/QualityScheduler.ts"),
   ]);
-  const DerivedLayers = Layer.mergeAll(BunChildProcessSpawner.layer, FsUtilsLive, TSMorphServiceLive).pipe(
+  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, MemoryStatsLive).pipe(
     Layer.provideMerge(BaseLayers)
   );
   const commandProgram = Effect.scoped(

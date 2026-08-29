@@ -8,21 +8,23 @@
  * {@link IpcSpikePanel}.
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 import { Layer } from "effect";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import { TauriIpcSocketLive } from "./TauriIpcSocket.js";
+import { TauriIpcSocketLive } from "./TauriIpcSocket.ts";
 
 /**
  * The client rpc `Protocol`, bound to the Tauri-IPC socket and ndjson framing.
  *
- * @example
+ * **Example** (Verify as Effect Layer)
+ *
  * ```ts
  * import { IpcChatProtocolLive } from "@/transport/IpcChatClient"
+ * import { Layer } from "effect"
  *
- * console.log(IpcChatProtocolLive)
+ * console.log(Layer.isLayer(IpcChatProtocolLive)) // true
  * ```
  *
  * @category layers

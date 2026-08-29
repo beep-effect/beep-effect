@@ -7,56 +7,34 @@
 
 "use client";
 
-import { MarkVaultSyncConflictReviewedPayload } from "@beep/documents-use-cases/public";
-import { $ProfessionalDesktopId } from "@beep/identity";
+import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 import { Button } from "@beep/ui/components/button";
-import { A, O } from "@beep/utils";
+import { A, O, thunkNull } from "@beep/utils";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
-import * as S from "effect/Schema";
+import { DateTime, pipe } from "effect";
 import { AsyncResult } from "effect/unstable/reactivity";
-import { useState } from "react";
-import { DEFAULT_WORKSPACE_ID } from "@/intake/Intake.atoms";
-import { failureMessageOr } from "@/lib/failureMessage";
+import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {
-  markVaultSyncConflictReviewedAtom,
-  triggerVaultSyncAtom,
+  VaultSyncCommand,
+  VaultSyncPanelState,
+  vaultSyncCommandAtoms,
   vaultSyncConflictsAtom,
+  vaultSyncPanelStateAtoms,
+  vaultSyncRetryConnectionAtoms,
   vaultSyncStatusAtom,
-} from "./Sync.atoms.js";
+} from "./Sync.atoms.ts";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
 
-const $I = $ProfessionalDesktopId.create("sync/VaultSyncPanel");
-
-const syncFailureMessage = failureMessageOr("Vault sync failed.");
-
-// Sync outcomes are announced in one slot; the kind keeps a success from being
-// painted (and announced) as a failure.
-type ActionMessage = { readonly kind: "error" | "success"; readonly text: string };
-
-const reviewFailureMessage = failureMessageOr("Marking the conflict reviewed failed.");
-
-class StatusCountEntry extends S.Class<StatusCountEntry>($I`StatusCountEntry`)(
-  {
-    key: S.String,
-    label: S.String,
-    value: S.Finite,
-  },
-  $I.annote("StatusCountEntry", {
-    description: "",
-  })
-) {}
-
-const statusCounts = (status: VaultSyncStatus): ReadonlyArray<StatusCountEntry> => [
-  StatusCountEntry.make({ key: "pending", label: "Pending", value: status.pendingItems }),
-  StatusCountEntry.make({ key: "current", label: "Current", value: status.currentItems }),
-  StatusCountEntry.make({ key: "error", label: "Errors", value: status.errorItems }),
-  StatusCountEntry.make({ key: "conflict", label: "Conflicts", value: status.conflictItems }),
-  StatusCountEntry.make({ key: "queued-ops", label: "Queued ops", value: status.queuedOperations }),
-  StatusCountEntry.make({ key: "failed-ops", label: "Failed ops", value: status.failedOperations }),
-  StatusCountEntry.make({ key: "open-conflicts", label: "Open conflicts", value: status.openConflicts }),
+const statusCounts = (status: VaultSyncStatus) => [
+  { key: "pending", label: "Pending", value: status.pendingItems },
+  { key: "current", label: "Current", value: status.currentItems },
+  { key: "error", label: "Errors", value: status.errorItems },
+  { key: "conflict", label: "Conflicts", value: status.conflictItems },
+  { key: "queued-ops", label: "Queued ops", value: status.queuedOperations },
+  { key: "failed-ops", label: "Failed ops", value: status.failedOperations },
+  { key: "open-conflicts", label: "Open conflicts", value: status.openConflicts },
 ];
 
 const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.Element => (
@@ -64,7 +42,7 @@ const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.El
     className={
       connected
         ? "rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary"
-        : "rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600"
+        : "rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-300"
     }
     data-testid="vault-sync-connection"
   >
@@ -85,15 +63,23 @@ const VaultSyncStatusView = ({
         Loading sync status
       </p>
     ),
-    onFailure: () => (
+    onFailure: (failure) => (
       // The status query had no retry and nothing invalidates it, so a sidecar that
       // restarted -- or a single dropped request -- left this reading "unavailable"
       // for the rest of the session, long after sync had come back. A dead end with
-      // no way out is not a state; it is an abandonment.
+      // no way out is not a state; it is an abandonment. The waiting flag makes the
+      // retry visibly do something even when the refresh fails again immediately.
       <div className="mt-2 flex items-center gap-2" data-testid="vault-sync-status">
         <p className="text-xs text-destructive">Sync status is unavailable.</p>
-        <Button type="button" size="sm" variant="outline" onClick={onRetry} data-testid="vault-sync-status-retry">
-          Retry
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onRetry}
+          disabled={failure.waiting}
+          data-testid="vault-sync-status-retry"
+        >
+          {failure.waiting ? "Retrying…" : "Retry"}
         </Button>
       </div>
     ),
@@ -111,16 +97,123 @@ const VaultSyncStatusView = ({
     ),
   });
 
+// Disconnected copy keyed on the sidecar's honest disconnect reason. Telling
+// the operator to set CLOUD_BOX_TOKEN when the token IS set (but the probe
+// failed) sent QA chasing configuration that was never the problem — and one
+// generic note for every probe failure hid whether the fix was a fresh token,
+// the mirror root folder, or simply waiting Box out.
+const probeFailedCopy =
+  "Box credentials are configured, but the provider probe failed. The token may be expired or the mirror root " +
+  "folder is unreachable. Sync stays paused until Box answers.";
+
+const DisconnectedNote = ({
+  onRetry,
+  probedAt,
+  reason,
+  waiting,
+}: {
+  readonly onRetry: () => void;
+  readonly probedAt: O.Option<DateTime.Utc>;
+  readonly reason: O.Option<DmsMirrorDisconnectReason>;
+  readonly waiting: boolean;
+}): JSX.Element => {
+  // Dark mode needs the brighter amber text tier and an explicit high-contrast
+  // button treatment: amber-600 on the tinted alert surface fell below
+  // readable contrast on the near-black theme (QA round 104, R104-02).
+  const probeNote = (message: string) => (
+    <div
+      className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
+      data-testid="vault-sync-setup-note"
+    >
+      <p>{message}</p>
+      {pipe(
+        probedAt,
+        // The probe timestamp makes "Retry connection" visibly do something
+        // even when the outcome is unchanged: the last honest ask of Box moves.
+        O.map((value) => (
+          <p className="mt-1 opacity-80" data-testid="vault-sync-probed-at">
+            Last checked {DateTime.formatLocal(value, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          </p>
+        )),
+        O.getOrNull
+      )}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="mt-2 dark:border-amber-300/60 dark:text-amber-100 dark:hover:bg-amber-500/20"
+        onClick={onRetry}
+        disabled={waiting}
+        data-testid="vault-sync-reconnect"
+      >
+        {waiting ? "Checking…" : "Retry connection"}
+      </Button>
+    </div>
+  );
+  return O.match(reason, {
+    // A disconnected status without a reason is an older sidecar; the probe
+    // path is the only honest guess that does not claim the token is unset.
+    onNone: () => probeNote(probeFailedCopy),
+    onSome: (value) =>
+      DmsMirrorDisconnectReason.$match(value, {
+        "credentials-missing": () => (
+          <p
+            className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
+            data-testid="vault-sync-setup-note"
+          >
+            Configure CCG with DMS_BOX_CLIENT_ID, DMS_BOX_CLIENT_SECRET, and an enterprise or user subject, or set
+            CLOUD_BOX_TOKEN. Restart the app after changing credentials.
+          </p>
+        ),
+        // The renderer cannot see which auth mode the sidecar selected, so the
+        // copy names the fix for each: only developer tokens expire on their
+        // own; CCG self-refreshes, so an auth failure there means the client
+        // credentials or subject are wrong.
+        "auth-failed": () =>
+          probeNote(
+            "Box rejected the credentials. A developer token (CLOUD_BOX_TOKEN) lasts about 60 minutes. Restart the " +
+              "app with a fresh token. CCG refreshes automatically, so check DMS_BOX_CLIENT_ID, " +
+              "DMS_BOX_CLIENT_SECRET, and the enterprise or user subject."
+          ),
+        "root-unreachable": () =>
+          probeNote(
+            "The Box mirror root folder could not be listed or created. Check the mirror root folder name and the " +
+              "configured Box application's folder access."
+          ),
+        transient: () =>
+          probeNote("Box is unreachable or rate limiting. Retry shortly. Sync resumes once Box answers."),
+        "probe-failed": () => probeNote(probeFailedCopy),
+      }),
+  });
+};
+
+const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState }): JSX.Element | null =>
+  VaultSyncPanelState.match(state, {
+    idle: thunkNull,
+    syncing: thunkNull,
+    reviewing: thunkNull,
+    succeeded: ({ message }) => (
+      <span className="text-xs text-muted-foreground" role="status" data-testid="vault-sync-complete">
+        {message}
+      </span>
+    ),
+    failed: ({ message }) => (
+      <span className="text-xs text-destructive" role="status" data-testid="vault-sync-error">
+        {message}
+      </span>
+    ),
+  });
+
 const VaultSyncConflictsList = ({
   conflicts,
   onRetry,
   onReview,
-  reviewingId,
+  busy,
 }: {
+  readonly busy: boolean;
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
   readonly onRetry: () => void;
   readonly onReview: (conflict: SyncConflict) => void;
-  readonly reviewingId: SyncConflict["id"] | null;
 }): JSX.Element | null => {
   // A failed conflict query used to render as `null` — exactly like "no
   // conflicts" — so an operator could be told everything was clean while the
@@ -128,16 +221,21 @@ const VaultSyncConflictsList = ({
   if (AsyncResult.isFailure(conflicts)) {
     return (
       <div className="mt-3 flex items-center gap-2" role="alert" data-testid="vault-sync-conflicts-failed">
-        <p className="text-xs text-destructive">
-          Open conflicts could not be loaded. The count above may be out of date.
-        </p>
-        <Button type="button" size="sm" variant="outline" onClick={onRetry} data-testid="vault-sync-conflicts-retry">
-          Retry
+        <p className="text-xs text-destructive">Open conflicts could not be loaded.</p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onRetry}
+          disabled={conflicts.waiting}
+          data-testid="vault-sync-conflicts-retry"
+        >
+          {conflicts.waiting ? "Retrying…" : "Retry"}
         </Button>
       </div>
     );
   }
-  return AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
+  return AsyncResult.isSuccess(conflicts) && A.isReadonlyArrayNonEmpty(conflicts.value) ? (
     <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
       {A.map(conflicts.value, (conflict) => (
         <li
@@ -152,7 +250,7 @@ const VaultSyncConflictsList = ({
               variant="ghost"
               size="sm"
               onClick={() => onReview(conflict)}
-              disabled={reviewingId !== null}
+              disabled={busy}
               data-testid="vault-sync-conflict-review"
             >
               Mark reviewed
@@ -174,11 +272,14 @@ const VaultSyncConflictsList = ({
  * Floating vault sync status surface: provider connection badge, sync trigger,
  * reconciliation counts, and the open drift records with per-row review.
  *
+ * **Details**
+ *
  * While Box is not connected (no `CLOUD_BOX_TOKEN`), the panel shows setup
  * guidance and keeps the sync trigger disabled instead of surfacing a failing
  * remote call.
  *
- * @example
+ * **Example** (Create React element)
+ *
  * ```ts
  * import { VaultSyncPanel } from "@/sync/VaultSyncPanel"
  * import { createElement } from "react"
@@ -190,63 +291,21 @@ const VaultSyncConflictsList = ({
  * @category components
  * @since 0.0.0
  */
-// This existing panel coordinates status, sync, and conflict-review states in
-// one operator surface. The QA patch only makes each outcome visible; splitting
-// its state machine belongs with the broader atom migration.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- cognitive 14 = pre-existing hook/JSX tax (six atom-hook bindings plus the status/panel-state conditionals); this branch's change here was passing the new probedAt prop through to DisconnectedNote and added no branching
 export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
-  const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_WORKSPACE_ID));
-  // Nothing else invalidates a failed status, so the panel has to be able to ask again.
-  const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_WORKSPACE_ID));
-  const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(DEFAULT_WORKSPACE_ID));
-  const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_WORKSPACE_ID));
-  const triggerSync = useAtomSet(triggerVaultSyncAtom, { mode: "promise" });
-  const markReviewed = useAtomSet(markVaultSyncConflictReviewedAtom, { mode: "promise" });
-  const [syncing, setSyncing] = useState(false);
-  const [reviewingId, setReviewingId] = useState<SyncConflict["id"] | null>(null);
-  const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
+  const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  // A plain refresh inside the sidecar's 3s failure cache replays the cached
+  // failed probe; the explicit retry forces a fresh probe instead.
+  const retryConnection = useAtomSet(vaultSyncRetryConnectionAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const panelState = useAtomValue(vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const runCommand = useAtomSet(vaultSyncCommandAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
   const connected = AsyncResult.isSuccess(status) && status.value.connected;
-
-  const runSync = (): void => {
-    setSyncing(true);
-    setActionMessage(null);
-    void Effect.runPromise(
-      Effect.tryPromise({ try: () => triggerSync(DEFAULT_WORKSPACE_ID), catch: syncFailureMessage }).pipe(
-        Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
-          // A successful pass used to clear the message and return the button to
-          // its resting state, which is indistinguishable from having done
-          // nothing — especially when every count is zero.
-          onSuccess: () => Effect.sync(() => setActionMessage({ kind: "success", text: "Sync complete." })),
-        }),
-        Effect.ensuring(Effect.sync(() => setSyncing(false)))
-      )
-    );
-  };
-
-  const reviewConflict = (conflict: SyncConflict): void => {
-    setReviewingId(conflict.id);
-    setActionMessage(null);
-    void Effect.runPromise(
-      Effect.tryPromise({
-        try: () =>
-          markReviewed(
-            MarkVaultSyncConflictReviewedPayload.make({
-              conflictId: conflict.id,
-              workspaceId: DEFAULT_WORKSPACE_ID,
-            })
-          ),
-        catch: reviewFailureMessage,
-      }).pipe(
-        Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
-          onSuccess: () => Effect.sync(() => setActionMessage(null)),
-        }),
-        Effect.ensuring(Effect.sync(() => setReviewingId(null)))
-      )
-    );
-  };
+  const syncing = VaultSyncPanelState.guards.syncing(panelState);
+  const busy = syncing || VaultSyncPanelState.guards.reviewing(panelState);
 
   return (
     <section
@@ -268,39 +327,36 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       </div>
       <VaultSyncStatusView status={status} onRetry={refreshStatus} />
       {AsyncResult.isSuccess(status) && !status.value.connected ? (
-        <p
-          className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
-          data-testid="vault-sync-setup-note"
-        >
-          Set CLOUD_BOX_TOKEN and restart the app to connect Box. OAuth setup ships when the Box test tenant is
-          provisioned.
-        </p>
+        <DisconnectedNote
+          probedAt={status.value.probedAt}
+          reason={status.value.disconnectReason}
+          waiting={status.waiting}
+          onRetry={() => retryConnection()}
+        />
       ) : null}
       <div className="mt-3 flex items-center gap-2">
         <Button
           type="button"
           size="sm"
-          onClick={runSync}
-          disabled={syncing || !connected}
+          onClick={() => runCommand(VaultSyncCommand.cases.trigger.make())}
+          disabled={busy || !connected}
           data-testid="vault-sync-trigger"
         >
           {syncing ? "Syncing" : "Sync now"}
         </Button>
-        {actionMessage === null ? null : (
-          <span
-            className={actionMessage.kind === "error" ? "text-xs text-destructive" : "text-xs text-muted-foreground"}
-            role="status"
-            data-testid={actionMessage.kind === "error" ? "vault-sync-error" : "vault-sync-complete"}
-          >
-            {actionMessage.text}
-          </span>
-        )}
+        <VaultSyncActionStatus state={panelState} />
       </div>
       <VaultSyncConflictsList
+        busy={busy}
         conflicts={conflicts}
         onRetry={refreshConflicts}
-        onReview={reviewConflict}
-        reviewingId={reviewingId}
+        onReview={(conflict) =>
+          runCommand(
+            VaultSyncCommand.cases.review.make({
+              conflictId: conflict.id,
+            })
+          )
+        }
       />
     </section>
   );

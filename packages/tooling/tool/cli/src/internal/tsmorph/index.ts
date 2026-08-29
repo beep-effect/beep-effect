@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-export * from "./JsDoc.js";
-export * from "./OwnerResolver.js";
-export * from "./ProjectFactory.js";
-export * from "./TypePredicates.js";
+export * from "./JsDoc.ts";
+export * from "./OwnerResolver.ts";
+export * from "./ProjectFactory.ts";

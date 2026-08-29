@@ -5,12 +5,12 @@
 # the workflow passes it explicitly with `--config=osv-scanner.toml`, and the
 # local Bun audit wrapper mirrors ignored vulnerability ids found here.
 #
-# Add ignored vulnerabilities only after review, with a reason and expiry date.
-# The `ignoreUntil` expiry is enforced by both consumers: OSV Scanner honors it
-# natively, and the local Bun audit wrapper (runBunAudit in
-# packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts) only
-# mirrors an `--ignore` for entries whose `ignoreUntil` is still in the future,
-# so expired entries stop suppressing the advisory automatically.
+# Add exceptions only after review, with a reason and expiry date. Prefer an
+# exact `PackageOverrides` match when the exception is specific to one package
+# artifact; reserve `IgnoredVulns` for advisory-wide exceptions. OSV Scanner
+# enforces both expiry forms natively. The local Bun audit wrapper (runBunAudit
+# in packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts) mirrors
+# only active `IgnoredVulns` ids because Bun audit has no package-scoped ignore.
 #
 # Retired dependency-refresh ignores are intentionally absent when the lockfile
 # resolves fixed versions. The current lock resolves esbuild 0.25.12, form-data
@@ -19,6 +19,86 @@
 # comment-only note key.
 
 [[IgnoredVulns]]
+id = "GHSA-2v37-7h3g-55p8"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "OSV range-boundary false positive for nanoid 3.3.17 nested under postcss: the advisory marks 3.3.17 as the fixed release for the 3.x line, but osv-scanner reports the resolved 3.3.17 artifact as vulnerable while also naming 3.3.17 as the fixed version. The lockfile is unchanged from main and already resolves the first non-affected 3.x release. Revisit after the OSV scanner/database no longer includes the fixed boundary."
+
+[[IgnoredVulns]]
 id = "GHSA-8988-4f7v-96qf"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "@opentelemetry/core advisory affecting versions <2.8.0 (1.30.1, 2.1.0, 2.5.0, 2.7.0, 2.7.1 present in the tree); fixed in 2.8.0. @opentelemetry/core is a transitive dependency of the OpenTelemetry SDK/exporter stack, not a direct workspace dependency; the workspace already pins the otel SDK packages at 2.8.0 while the older core copies are pulled by transitive otel dependents that have not adopted 2.8.0. Newly published advisory, not introduced by the current PR (identical versions present on main); tracked for a repo-wide bump to >=2.8.0. Revisit when dependents widen their ranges."
+
+[[IgnoredVulns]]
+id = "GHSA-xcpc-8h2w-3j85"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed in 0.6.0. adm-zip is a transitive dependency of onnxruntime-node@1.27.0 (via @beep/face-detection), whose range ^0.5.16 cannot resolve to 0.6.0 — no lockfile bump fixes this without a root override against onnxruntime-node's declared range. Newly published advisory, not introduced by the current PR (identical version present on main); tracked for removal when onnxruntime-node widens its adm-zip range. Revisit on the next onnxruntime-node release."
+
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size ICNS-parser infinite-loop DoS affecting <=2.0.2; 2.0.2 IS the npm latest, so no fixed release exists to bump to (verified against the registry 2026-08-08). image-size is a direct dependency of @beep/repo-cli used only by the operator-invoked media tooling (Files/internal/Media*) over locally produced QA artifacts; the DoS requires attacker-supplied ICNS input and no CI lane feeds untrusted files to it, so worst case is an infinite loop inside a timeboxed job. Newly published advisory, not introduced by the current PR (identical version on main; main's Security lane is red on the same finding). Revisit when image-size publishes a release above 2.0.2."
+
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "image-size JXL/HEIF-parser infinite-loop DoS affecting <=2.0.2; same package, same exposure, and same no-fixed-release status as GHSA-w3rx-r6r6-pgpr above. Revisit when image-size publishes a release above 2.0.2."
+
+[[IgnoredVulns]]
+id = "GHSA-2pr8-phx7-x9h3"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "protobufjs 6.11.6 nested under onnx-proto@4.0.4 via @xenova/transformers@2.17.2 -> onnxruntime-web@1.14.0. onnx-proto declares protobufjs ^6.8.8, which cannot resolve to the fixed 7.5.6+ line without a root override against that range. Scratchpad-only embedding path; not introduced by the Effect RC catalog pin. Revisit when transformers/onnxruntime-web drop onnx-proto 4."
+
+[[IgnoredVulns]]
+id = "GHSA-66ff-xgx4-vchm"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-685m-2w69-288q"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-75px-5xx7-5xc7"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-f38q-mgvj-vph7"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-fx83-v9x8-x52w"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-jggg-4jg4-v7c6"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-jvwf-75h9-cwgg"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-q6x5-8v7m-xcrf"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-wcpc-wj8m-hjx6"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
+
+[[IgnoredVulns]]
+id = "GHSA-xq3m-2v4x-88gg"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."

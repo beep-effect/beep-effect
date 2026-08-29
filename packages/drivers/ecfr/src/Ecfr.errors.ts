@@ -6,7 +6,7 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -22,7 +22,8 @@ const EcfrErrorReasonBase = LiteralKit([
 /**
  * Technical error reasons emitted by the eCFR REST API driver.
  *
- * @example
+ * **Example** (Log AST error reason)
+ *
  * ```ts
  * import { EcfrErrorReason } from "@beep/ecfr"
  *
@@ -46,7 +47,8 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
 /**
  * Type for {@link EcfrErrorReason}.
  *
- * @example
+ * **Example** (Assign transport reason type)
+ *
  * ```ts
  * import type { EcfrErrorReason } from "@beep/ecfr"
  *
@@ -62,7 +64,8 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
 /**
  * Options used when constructing {@link EcfrError} instances.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { EcfrErrorOptions } from "@beep/ecfr"
  * import { NonNegativeInt } from "@beep/schema"
@@ -77,7 +80,7 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  */
 export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
@@ -98,7 +101,8 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
 /**
  * Technical failure raised by the eCFR REST API driver boundary.
  *
- * @example
+ * **Example** (Create transport EcfrError)
+ *
  * ```ts
  * import { EcfrError } from "@beep/ecfr"
  *
@@ -109,10 +113,10 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
  * @category errors
  * @since 0.0.0
  */
-export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
+export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
@@ -128,7 +132,7 @@ export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
       })
     ),
   },
-  $I.annote("EcfrError", {
+  $I.annoteError<EcfrError>("EcfrError", {
     description: "Redacted technical failure raised by the eCFR REST API driver boundary.",
   })
 ) {

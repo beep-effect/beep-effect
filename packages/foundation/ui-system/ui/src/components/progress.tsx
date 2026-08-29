@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Progress component.
  *
- * @example
+ * **Example** (Import Progress component)
+ *
  * ```tsx
  * import { Progress } from "@beep/ui/components/progress"
  *
@@ -41,7 +42,8 @@ function Progress({ className, children, value, ...props }: ProgressPrimitive.Ro
 /**
  * Progress track component.
  *
- * @example
+ * **Example** (Import ProgressTrack component)
+ *
  * ```tsx
  * import { ProgressTrack } from "@beep/ui/components/progress"
  *
@@ -64,7 +66,8 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
 /**
  * Progress indicator component.
  *
- * @example
+ * **Example** (Import ProgressIndicator component)
+ *
  * ```tsx
  * import { ProgressIndicator } from "@beep/ui/components/progress"
  *
@@ -90,7 +93,8 @@ function ProgressIndicator({ className, ...props }: ProgressPrimitive.Indicator.
 /**
  * Progress label component.
  *
- * @example
+ * **Example** (Import ProgressLabel component)
+ *
  * ```tsx
  * import { ProgressLabel } from "@beep/ui/components/progress"
  *
@@ -109,7 +113,8 @@ function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
 /**
  * Progress value component.
  *
- * @example
+ * **Example** (Import ProgressValue component)
+ *
  * ```tsx
  * import { ProgressValue } from "@beep/ui/components/progress"
  *

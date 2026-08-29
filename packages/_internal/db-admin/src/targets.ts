@@ -7,32 +7,19 @@
  */
 
 import { Effect } from "effect";
-import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.js";
-import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.js";
-import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.js";
-import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.js";
-import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.js";
+import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.ts";
+import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.ts";
+import { EpistemicContradictionTriageMigrationTarget } from "./migrations/EpistemicContradictionTriage.ts";
+import { EpistemicEdgeMigrationTarget } from "./migrations/EpistemicEdge.ts";
+import { EpistemicExecutionLedgerMigrationTarget } from "./migrations/EpistemicExecutionLedger.ts";
+import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.ts";
+import { LawPracticeCandorGateMigrationTarget } from "./migrations/LawPracticeCandorGate.ts";
+import { LawPracticeLegalPositionMigrationTarget } from "./migrations/LawPracticeLegalPosition.ts";
+import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.ts";
+import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.ts";
 
 /**
- * Architecture lab migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Documents sync migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Epistemic usage migration target export.
- *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Workspace thread migration target export.
+ * Registered db-admin migration target exports.
  *
  * @category configuration
  * @since 0.0.0
@@ -40,19 +27,25 @@ import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.js";
 export {
   ArchitectureLabMigrationTarget,
   DocumentsSyncMigrationTarget,
+  EpistemicContradictionTriageMigrationTarget,
+  EpistemicEdgeMigrationTarget,
+  EpistemicExecutionLedgerMigrationTarget,
   EpistemicUsageMigrationTarget,
+  LawPracticeCandorGateMigrationTarget,
+  LawPracticeLegalPositionMigrationTarget,
   WorkspaceThreadMigrationTarget,
 };
 
 /**
  * All db-admin migration targets owned by the current repo.
  *
- * @example
+ * **Example** (List the registered target names)
+ *
  * ```ts
  * import { DbAdminMigrationTargets } from "@beep/db-admin/targets"
  *
  * const targetNames = DbAdminMigrationTargets.map((target) => target.name)
- * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync"]
+ * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync", "epistemic-edge", "epistemic-execution-ledger"]
  * ```
  *
  * @category configuration
@@ -63,12 +56,18 @@ export const DbAdminMigrationTargets = [
   WorkspaceThreadMigrationTarget,
   EpistemicUsageMigrationTarget,
   DocumentsSyncMigrationTarget,
+  EpistemicEdgeMigrationTarget,
+  EpistemicContradictionTriageMigrationTarget,
+  EpistemicExecutionLedgerMigrationTarget,
+  LawPracticeCandorGateMigrationTarget,
+  LawPracticeLegalPositionMigrationTarget,
 ] as const;
 
 /**
  * List registered db-admin migration targets.
  *
- * @example
+ * **Example** (Run the registry query and read the target names)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { listDbAdminMigrationTargets } from "@beep/db-admin/targets"
@@ -78,7 +77,7 @@ export const DbAdminMigrationTargets = [
  *     Effect.map((targets) => targets.map((target) => target.name))
  *   )
  * )
- * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync"]
+ * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync", "epistemic-edge", "epistemic-execution-ledger"]
  * ```
  *
  * @effects

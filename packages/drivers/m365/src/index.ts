@@ -44,7 +44,8 @@ export * from "./M365.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/m365"
  *

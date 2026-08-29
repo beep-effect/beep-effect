@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -29,6 +29,7 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {
@@ -59,6 +60,7 @@
     "@beep/agents-client": "workspace:^",
     "@beep/cosmos": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/observability": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",
     "@beep/schema": "workspace:^",
@@ -68,6 +70,9 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "gl-bench": "catalog:"
   }
 }

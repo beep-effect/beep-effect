@@ -2,10 +2,10 @@
 
 ## Status
 
-Status: `paused` (parked by docs/ROADMAP.md 2026-07-11; resumes when a
-product feature pulls a named gov driver, per-driver not batch)
+Status: `terminal-as-descoped` (P0/P1 accepted; P2–P5 won't-do until a
+product feature pulls a named driver, per-driver not batch)
 
-Current phase on resume: **P2** — federal-register keyless driver. P1 completed
+P6 close bookkeeping completed 2026-07-14. P1 completed
 2026-07-11: `@beep/ecfr` grown to 15/15 operations (admin + search +
 versioner; agencies corrected to the admin family; full-title XML as typed
 raw string; `searchResultsAll` Stream helper; 6 offline tests incl.
@@ -17,11 +17,15 @@ official FedReg spec (14 ops) + CourtListener official machine-readable
 capture committed under `research/specs/`, DOL auth mechanism verified
 (query-param `X-API-KEY` → `ApiKeyQueryAuth`), CL deltas recorded (no
 official OpenAPI endpoint — dated D4 correction in `SPEC.md`; SCOTUS
-visualizations deprecated → excluded).
+visualizations deprecated → excluded). The empty Federal Register, DOL,
+and CourtListener scaffolds were deleted 2026-08-13 by
+`goals/honest-repo-signal`. Resume recreates each package in the same PR
+as the first real surface; do not extend deleted trees. See
+`goals/honest-repo-signal/research/FOLLOW-UPS.md`.
 
 ## Binding Sequencing
 
-Every phase follows the binding order:
+Implemented phases followed the binding order:
 **schema/data-model → `Context.Service` contract → implementation → verify.**
 Within a driver phase that means: committed spec + generated value models +
 `.config.ts`/`.errors.ts` schemas first; then the service shape
@@ -35,17 +39,18 @@ data/source-terms matrix exists (SPEC D2/Q8).
 
 Each phase ships as its own mergeable PR via `/yeet` (`bun run beep yeet`),
 normatively bounded by `SPEC.md` decisions D1–D7 and the inherited Q2/Q5/Q7/Q8
-constraints. Every phase branch carries its own committed changeset.
+constraints. Any product-pulled resume creates a per-driver execution slice;
+the deferred phases do not remain active branches of this packet.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 research: matrix + specs | complete (2026-07-11) | Author `research/data-source-terms-matrix.md` (Federal Register, eCFR, DOL, CourtListener, govinfo rows; D2 columns). Commit official upstream specs for federal-register and courtlistener (CL `/api/schema/`); record the DOL donor spec (MIT) as bootstrap with attribution. Verify the DOL auth mechanism (header vs query `X-API-KEY`) against developer.dol.gov and record it. Record CL deprecated-endpoint deltas (e.g. SCOTUS visualizations). Cross-link the predecessor packet (P2 superseded-by note). | Matrix committed + registered in manifest `currentSourceOfTruth[]`; specs committed with provenance rows in `research/SOURCES.md`; DOL auth fact + CL deltas recorded; predecessor cross-links landed; AC#1 gate observable. |
 | P1 ecfr breadth | complete (2026-07-11) | Grow the committed `packages/drivers/ecfr/openapi.json` from today's hand-maintained 2-operation subset to the full 15-operation official surface (ecfr.gov v1 docs as authority; donor `v1-openapi3.json` as diff reference; record conversion/trim provenance in `research/SOURCES.md`), then regenerate via the existing `scripts/generate.ts` + descriptor pattern (admin corrections, search family, versioner ancestry/full/structure/versions). Full-title XML as typed raw-string payload (D7). Add Stream `*All` helpers for paginated search results (D5). | AC#2: committed spec at 15 operations + 15/15 descriptor parity; offline tests per endpoint group + multi-page search test; `bun run check --filter @beep/ecfr` green offline; codegen deterministic; docgen green. |
-| P2 federal-register | pending | Build `@beep/federal-register` skeleton→finished keyless driver in the exact ecfr shape: deps + tsconfig refs, committed official spec + adapted `scripts/generate.ts` → `src/_generated/*`, `FederalRegister.config.ts`/`.errors.ts`/`.service.ts`, `ApiAuth.NoAuth`, 14 operations, page/per_page Stream helpers, source/status metadata preserved (Q8: FedReg is unofficial-prototype; reconcile to GovInfo). Agency-slug domain (LiteralKit vs branded string) decided in-phase against the ~470-slug enum. | AC#3: 14/14 parity; network-free build/check; offline tests incl. multi-page; CI drift lane extended; changeset; docgen green. |
-| P3 dol (GATED on matrix) | pending | Build `@beep/dol`: 6 operations from the committed spec; wire the existing `ApiAuth` branch matching the P0-verified mechanism (`ApiKeyHeaderAuth` header vs `ApiKeyQueryAuth` query — both already implemented in `@beep/api-transport`); `Config.redacted("DOL_API_KEY")` with graceful-omission Option pattern; `filter_object` DSL as tagged-union schemas; limit/offset + array-tail-metadata pagination Stream helper; xml/csv operations as typed raw-string payloads. | Matrix row cleared; AC#4: 6/6 parity; auth branch exercised offline (header/param presence, no secret leakage); DSL schemas round-trip under FastCheck; check green offline; docgen green. |
-| P4 courtlistener core (GATED on matrix) | pending | Build `@beep/courtlistener` core: wire the existing `TokenHeaderAuth` branch (literal `Authorization: Token`, `Config.redacted("COURTLISTENER_API_TOKEN")`); committed official v4 schema + adapted renderer; core resources — search, citation-lookup (POST), opinions, clusters, dockets, courts, people + positions; cursor Stream helper; `RateLimitError`/`wait_until` modeled; synthetic-only fixtures; in-process/ephemeral cache only. | Matrix row cleared; core descriptor parity; Token branch exercised offline (literal `Token`, not Bearer); cursor multi-page test; fixture audit clean; check green offline. |
-| P5 courtlistener long tail | pending | Extend to full parity with the P4 reconciled operation inventory (SPEC D4 P0 correction): financial-disclosure family, RECAP family, alerts/docket-alerts, audio, remaining people/judge resources, and the rest of the reconciled live inventory. Deprecated endpoints and donor-only roots absent from the live API root (e.g. `processing-queue`; see `research/courtlistener-deltas.md` §5) excluded per recorded P0 deltas. | AC#5: full parity minus recorded deltas; AC#6/AC#7/AC#8 across all four drivers; check green offline; docgen green. |
-| P6 close | pending | Write closeout reflection via `/reflect`; update statuses; mark the predecessor packet's P2 superseded-closed and its initiative status consistent with D1. | AC#9/AC#10 confirmed; `bun run beep lint reflection-artifacts` green; both packets' README + manifest statuses consistent. |
+| P2 federal-register | complete — won't-do-until-product-pull | Recreate `@beep/federal-register` from `research/specs/federal-register-openapi.json` in the same PR as the first real surface (FOLLOW-UPS). | Deferred with committed official spec as the restart point. |
+| P3 dol | complete — won't-do-until-product-pull | Recreate `@beep/dol` from `research/data-source-terms-matrix.md` and `research/SOURCES.md` in the same PR as the first real surface (FOLLOW-UPS). | Deferred with terms and auth research as the restart point. |
+| P4 courtlistener core | complete — won't-do-until-product-pull | Recreate `@beep/courtlistener` from the committed API-root capture and `research/courtlistener-deltas.md` in the same PR as the first real surface (FOLLOW-UPS). | Deferred with committed official machine-readable research as the restart point. |
+| P5 courtlistener long tail | complete — won't-do-until-product-pull | Resume only after a product-pulled CourtListener core, using the API-root capture, OPTIONS ledger, and delta report. | Deferred with a per-driver, core-first restart path. |
+| P6 close | complete (2026-07-14) | Record the descoped deliverable, per-driver deferrals, deleted empty scaffolds, successor/predecessor links, and closeout reflection. | Packet surfaces are internally consistent and ready for the later driver-applied status flip. |
 
 ## P6 Closeout Checklist
 
@@ -63,8 +68,8 @@ Before marking the packet closed (and `status` → `completed-retained` /
 2. Run `bun run beep lint reflection-artifacts` (this packet has
    `reflectionRequired: true`, so a missing/invalid reflection blocks
    closeout).
-3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses + `initiative.status`.
+3. Update `README.md` and manifest phase records. The lifecycle/status flip is
+   applied separately by the driver.
 4. Confirm the predecessor packet (`goals/gov-legal-data-driver-codegen`)
    records P2 as superseded by this packet and its lifecycle is consistent.
 
@@ -73,7 +78,8 @@ Before marking the packet closed (and `status` → `completed-retained` /
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative; update it only when the contract changes (dated
   superseding entries in the Locked Decisions table).
-- Do NOT start P3/P4/P5 before the data/source-terms matrix exists (D2/Q8).
+- Do not resume P2–P5 without a named product pull; resume per driver from the
+  committed research cited in its phase row.
 - If the matrix reveals prohibitive terms for an upstream, stop that driver's
   phase and report — do not work around the terms.
 - Reuse, don't rebuild: `packages/drivers/ecfr` (keyless shape + renderer),
@@ -84,7 +90,7 @@ Before marking the packet closed (and `status` → `completed-retained` /
   extends the `beep ci lane codegen` step list in
   `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` (+ its test).
 - Donor specs live at
-  `/home/elpresidank/YeeBois/research/law_stuff/repos/us-legal-tools/packages/*-sdk`
+  the machine-local `us-legal-tools` donor checkout, under `packages/*-sdk`
   (MIT; attribution in `research/SOURCES.md`; patterns and specs only — never
   the axios/zod runtime).
 - Keep this plan current; archive run outputs under `history/`.

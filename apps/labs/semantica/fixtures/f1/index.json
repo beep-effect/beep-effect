@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "f1-index/v1",
+  "fixtures": [
+    {
+      "id": "md-structure",
+      "relativePath": "documents/md-structure.md",
+      "mediaType": "text/markdown",
+      "expectation": "parses",
+      "degradedKind": null,
+      "sha256": "ccf4725c350d720d6c391d5e2396c86f0fafb78ea175cbf4ce79649fb1dd8491",
+      "bytes": 1508,
+      "summary": "Structured Markdown paper with headings, lists, a table, a code fence, and references."
+    },
+    {
+      "id": "md-unicode",
+      "relativePath": "documents/md-unicode.md",
+      "mediaType": "text/markdown",
+      "expectation": "parses",
+      "degradedKind": null,
+      "sha256": "a40ded8122757c518d81fe556717fdfd1407fd9b1841d5f0fd4784828569efeb",
+      "bytes": 525,
+      "summary": "CRLF Markdown with NFC and NFD text, emoji, RTL content, and a zero-width joiner."
+    },
+    {
+      "id": "md-invalid-utf8",
+      "relativePath": "documents/md-invalid-utf8.md",
+      "mediaType": "text/markdown",
+      "expectation": "degraded",
+      "degradedKind": "invalid-utf8",
+      "sha256": "8a0833e9681404c635c494091f2a58e5fb90b9ac3f94876422c1ba290c5e88f9",
+      "bytes": 226,
+      "summary": "Valid academic Markdown interrupted by one deliberately invalid UTF-8 byte sequence."
+    },
+    {
+      "id": "html-article",
+      "relativePath": "documents/html-article.html",
+      "mediaType": "text/html",
+      "expectation": "parses",
+      "degradedKind": null,
+      "sha256": "c81d571f80b02e976bf57e2cfeccb60bf3518ff48aad48b7fecd2787d0aad62a",
+      "bytes": 1302,
+      "summary": "Semantic HTML article with headings, paragraphs, affiliations, and a citation."
+    },
+    {
+      "id": "html-entities-tables",
+      "relativePath": "documents/html-entities-tables.html",
+      "mediaType": "text/html",
+      "expectation": "parses",
+      "degradedKind": null,
+      "sha256": "7208c33fa2e8e5898d09854df0910fae314f050fab56a77e1662636bd0a879a4",
+      "bytes": 1217,
+      "summary": "HTML entities and nested tables with script and style text that must not leak."
+    },
+    {
+      "id": "html-truncated",
+      "relativePath": "documents/html-truncated.html",
+      "mediaType": "text/html",
+      "expectation": "degraded",
+      "degradedKind": "truncated",
+      "sha256": "c106fce0a6387dd9539bc26f6a7b8ada744d17fa4bd329eddbf6e9c9b3aebeaf",
+      "bytes": 631,
+      "summary": "Academic HTML cut off inside an attribute after a deliberately bogus charset declaration."
+    },
+    {
+      "id": "pdf-two-column",
+      "relativePath": "documents/pdf-two-column.pdf",
+      "mediaType": "application/pdf",
+      "expectation": "parses",
+      "degradedKind": null,
+      "sha256": "8f268f20326b9ef07c9c996dd1986733955f12c6c654af0f22b3df0cfc5cedcd",
+      "bytes": 2909,
+      "summary": "Born-digital two-column PDF with a heading and explicit fictional relations."
+    },
+    {
+      "id": "pdf-multipage",
+      "relativePath": "documents/pdf-multipage.pdf",
+      "mediaType": "application/pdf",
+      "expectation": "parses",
+      "degradedKind": null,
+      "sha256": "a65434d8f21da004ab8793f75507a0109c772e5ad127cfc137243ddf0f56b8be",
+      "bytes": 3980,
+      "summary": "Three-page born-digital PDF with running headers, footers, and a footnote."
+    },
+    {
+      "id": "pdf-truncated",
+      "relativePath": "documents/pdf-truncated.pdf",
+      "mediaType": "application/pdf",
+      "expectation": "degraded",
+      "degradedKind": "extraction-failed",
+      "sha256": "d6402d6f7cdd4a60fdaadbf0d26ae7ba4c235126d801bb446ccf2aec00991201",
+      "bytes": 2672,
+      "summary": "The two-column PDF cut immediately before its explicit xref table."
+    }
+  ]
+}

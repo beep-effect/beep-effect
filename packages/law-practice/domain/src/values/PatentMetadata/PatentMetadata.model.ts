@@ -14,10 +14,10 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ApplicationNumber } from "../ApplicationNumber/index.js";
-import { KindCode } from "../KindCode/index.js";
-import { OfficeCode } from "../OfficeCode/index.js";
-import { PatentNumber } from "../PatentNumber/index.js";
+import { ApplicationNumber } from "../ApplicationNumber/index.ts";
+import { KindCode } from "../KindCode/index.ts";
+import { OfficeCode } from "../OfficeCode/index.ts";
+import { PatentNumber } from "../PatentNumber/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/PatentMetadata/PatentMetadata");
 
@@ -85,7 +85,8 @@ const normalizeDateText = (raw: string): O.Option<string> =>
 /**
  * Figure metadata extracted from patent content or API image URL maps.
  *
- * @example
+ * **Example** (Create labeled patent figure)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PatentFigure } from "@beep/law-practice-domain"
@@ -130,7 +131,8 @@ export class PatentFigure extends S.Class<PatentFigure>($I`PatentFigure`)(
 /**
  * Patent assignee metadata.
  *
- * @example
+ * **Example** (Create named patent assignee)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PatentAssignee } from "@beep/law-practice-domain"
@@ -168,7 +170,8 @@ export class PatentAssignee extends S.Class<PatentAssignee>($I`PatentAssignee`)(
 /**
  * Schema-first patent reference parsed from a raw document identifier.
  *
- * @example
+ * **Example** (Build structured patent reference)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { KindCode, OfficeCode, PatentNumber, PatentReference } from "@beep/law-practice-domain"
@@ -219,7 +222,8 @@ export class PatentReference extends S.Class<PatentReference>($I`PatentReference
 /**
  * Jurisdiction-aware patent metadata.
  *
- * @example
+ * **Example** (Create jurisdiction patent metadata)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { KindCode, OfficeCode, PatentMetadata, PatentNumber } from "@beep/law-practice-domain"
@@ -332,7 +336,8 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
 /**
  * Supported office presentation metadata keys.
  *
- * @example
+ * **Example** (Check US office code)
+ *
  * ```ts
  * import { PatentOfficeCode } from "@beep/law-practice-domain"
  *
@@ -353,7 +358,8 @@ export const PatentOfficeCode = LiteralKit(["US", "EP", "WO"]).pipe(
 /**
  * Type-level literal union produced by {@link PatentOfficeCode}.
  *
- * @example
+ * **Example** (Type EP office literal)
+ *
  * ```ts
  * import { PatentOfficeCode } from "@beep/law-practice-domain"
  * import type { PatentOfficeCode as PatentOfficeCodeType } from "@beep/law-practice-domain"
@@ -373,7 +379,8 @@ const toPatentOfficeCodeOption = flow(toUpperTrimmed, S.decodeUnknownOption(Pate
 /**
  * Patent document status derived from WIPO ST.16 kind codes.
  *
- * @example
+ * **Example** (Check granted patent status)
+ *
  * ```ts
  * import { PatentStatus } from "@beep/law-practice-domain"
  *
@@ -403,7 +410,8 @@ export const PatentStatus = LiteralKit([
 /**
  * Type-level literal union produced by {@link PatentStatus}.
  *
- * @example
+ * **Example** (Type application status literal)
+ *
  * ```ts
  * import { PatentStatus } from "@beep/law-practice-domain"
  * import type { PatentStatus as PatentStatusType } from "@beep/law-practice-domain"
@@ -421,7 +429,8 @@ export type PatentStatus = typeof PatentStatus.Type;
 /**
  * Office presentation metadata for patent UI surfaces.
  *
- * @example
+ * **Example** (Create USPTO office metadata)
+ *
  * ```ts
  * import { PatentOffice, PatentOfficeCode } from "@beep/law-practice-domain"
  *
@@ -475,7 +484,8 @@ export class PatentOffice extends S.Class<PatentOffice>($I`PatentOffice`)(
 /**
  * Office logo and flag metadata used for display.
  *
- * @example
+ * **Example** (Read EPO office label)
+ *
  * ```ts
  * import { PATENT_OFFICES } from "@beep/law-practice-domain"
  *
@@ -513,7 +523,8 @@ export const PATENT_OFFICES = {
 /**
  * Metadata accepted by {@link getPatentDisplay}.
  *
- * @example
+ * **Example** (Create mixed display metadata)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PatentDisplayMetadata } from "@beep/law-practice-domain"
@@ -548,7 +559,8 @@ export class PatentDisplayMetadata extends S.Class<PatentDisplayMetadata>($I`Pat
 /**
  * Companion namespace for {@link PatentDisplayMetadata}.
  *
- * @example
+ * **Example** (Encode display metadata shape)
+ *
  * ```ts
  * import { PatentDisplayMetadata } from "@beep/law-practice-domain"
  *
@@ -577,7 +589,8 @@ export declare namespace PatentDisplayMetadata {
 /**
  * Jurisdiction-aware display identity for a patent document.
  *
- * @example
+ * **Example** (Create granted patent display)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import {
@@ -623,7 +636,8 @@ export class PatentDisplay extends S.Class<PatentDisplay>($I`PatentDisplay`)(
 /**
  * Extracted IPC and CPC classification symbols.
  *
- * @example
+ * **Example** (Create IPC CPC classifications)
+ *
  * ```ts
  * import { PatentClassifications } from "@beep/law-practice-domain"
  *
@@ -651,7 +665,8 @@ export class PatentClassifications extends S.Class<PatentClassifications>($I`Pat
 /**
  * Patent section names supported by {@link parsePatentSections}.
  *
- * @example
+ * **Example** (Check claims section kind)
+ *
  * ```ts
  * import { PatentSectionKind } from "@beep/law-practice-domain"
  *
@@ -672,7 +687,8 @@ export const PatentSectionKind = LiteralKit(["abstract", "claims", "description"
 /**
  * Type-level literal union produced by {@link PatentSectionKind}.
  *
- * @example
+ * **Example** (Type abstract section literal)
+ *
  * ```ts
  * import { PatentSectionKind } from "@beep/law-practice-domain"
  * import type { PatentSectionKind as PatentSectionKindType } from "@beep/law-practice-domain"
@@ -690,7 +706,8 @@ export type PatentSectionKind = typeof PatentSectionKind.Type;
 /**
  * Parsed patent content sections.
  *
- * @example
+ * **Example** (Create sections with abstract)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PatentSections } from "@beep/law-practice-domain"
@@ -725,7 +742,8 @@ export class PatentSections extends S.Class<PatentSections>($I`PatentSections`)(
 /**
  * Resolve office presentation metadata from a country code.
  *
- * @example
+ * **Example** (Resolve office by code)
+ *
  * ```ts
  * import { getOffice } from "@beep/law-practice-domain"
  *
@@ -747,7 +765,8 @@ export const getOffice = (country?: string): PatentOffice =>
 /**
  * Parse a raw patent reference into office, publication number, and kind code.
  *
- * @example
+ * **Example** (Parse formatted patent reference)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { parsePatentReference } from "@beep/law-practice-domain"
@@ -791,19 +810,26 @@ const statusFromKindLetter = (letter: string): PatentStatus =>
 /**
  * Derive a patent document status from office and kind code.
  *
- * @example
+ * **Example** (Derive status from kind)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { getStatusFromKindCode } from "@beep/law-practice-domain"
  *
- * console.log(getStatusFromKindCode("US", O.some("B2")))
+ * console.log(getStatusFromKindCode({ country: "US", kindCode: O.some("B2") }))
  * // "granted"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const getStatusFromKindCode = (country?: string, kindCode: O.Option<string> = O.none()): PatentStatus =>
+export const getStatusFromKindCode = ({
+  country,
+  kindCode = O.none(),
+}: {
+  readonly country?: string | undefined;
+  readonly kindCode?: O.Option<string> | undefined;
+} = {}): PatentStatus =>
   pipe(
     O.fromNullishOr(country),
     O.flatMap(toOfficeCodeOption),
@@ -867,19 +893,26 @@ const kindCodeExplanationTable = (country: O.Option<string>): Readonly<Record<st
 /**
  * Explain a WIPO ST.16 kind code in plain language.
  *
- * @example
+ * **Example** (Explain EP kind code)
+ *
  * ```ts
  * import { getKindCodeExplanation } from "@beep/law-practice-domain"
  * import * as O from "effect/Option"
  *
- * const explanation = getKindCodeExplanation("EP", "A1")
+ * const explanation = getKindCodeExplanation({ country: "EP", kindCode: "A1" })
  * console.log(O.getOrElse(explanation, () => "Unknown kind code"))
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const getKindCodeExplanation = (country?: string, kindCode?: string): O.Option<string> =>
+export const getKindCodeExplanation = ({
+  country,
+  kindCode,
+}: {
+  readonly country?: string | undefined;
+  readonly kindCode?: string | undefined;
+} = {}): O.Option<string> =>
   pipe(
     O.fromNullishOr(kindCode),
     O.map(toUpperTrimmed),
@@ -906,7 +939,8 @@ export const getKindCodeExplanation = (country?: string, kindCode?: string): O.O
 /**
  * Human label for a kind-code-derived status.
  *
- * @example
+ * **Example** (Label international status)
+ *
  * ```ts
  * import { getStatusLabel, PatentStatus } from "@beep/law-practice-domain"
  *
@@ -1013,14 +1047,17 @@ const patentDisplayFormatted = (
 /**
  * Build a jurisdiction-aware display identity from API metadata and content.
  *
- * @example
+ * **Example** (Build formatted patent display)
+ *
  * ```ts
  * import { getPatentDisplay } from "@beep/law-practice-domain"
  *
  * const display = getPatentDisplay({
- *   patent_number: "7654321",
- *   country: "US",
- *   kind_code: "B2"
+ *   metadata: {
+ *     patent_number: "7654321",
+ *     country: "US",
+ *     kind_code: "B2"
+ *   }
  * })
  * console.log(display.formatted)
  * // "US 7,654,321 B2"
@@ -1029,7 +1066,13 @@ const patentDisplayFormatted = (
  * @category utilities
  * @since 0.0.0
  */
-export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null, content?: string): PatentDisplay => {
+export const getPatentDisplay = ({
+  metadata,
+  content,
+}: {
+  readonly metadata?: PatentDisplayMetadata.Encoded | null | undefined;
+  readonly content?: string | undefined;
+} = {}): PatentDisplay => {
   const input = makePatentDisplayInput(metadata);
   const rawNumber = patentDisplayRawNumber(input);
   const fromNumber = parsePatentReference(rawNumber);
@@ -1038,7 +1081,7 @@ export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null
   const kindCode = patentDisplayKindCode(input, fromNumber, fromContent);
   const number = patentDisplayNumber(rawNumber, fromNumber, fromContent);
   const formatted = patentDisplayFormatted(country, number, kindCode);
-  const status = getStatusFromKindCode(country, kindCode);
+  const status = getStatusFromKindCode({ country, kindCode });
 
   return PatentDisplay.make({
     country,
@@ -1054,7 +1097,8 @@ export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null
 /**
  * Extract a patent abstract from markdown-like patent content.
  *
- * @example
+ * **Example** (Extract abstract from markdown)
+ *
  * ```ts
  * import { extractPatentAbstract } from "@beep/law-practice-domain"
  *
@@ -1125,7 +1169,8 @@ const parseAssignees = (content: string): ReadonlyArray<PatentAssignee> =>
 /**
  * Extract structured metadata from patent content.
  *
- * @example
+ * **Example** (Parse metadata from content)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { parsePatentMetadata } from "@beep/law-practice-domain"
@@ -1201,7 +1246,8 @@ const pickClassifications = (labelRe: RegExp, content: string): ReadonlyArray<st
 /**
  * Extract IPC and CPC classification symbols from content.
  *
- * @example
+ * **Example** (Extract IPC CPC symbols)
+ *
  * ```ts
  * import { extractClassifications } from "@beep/law-practice-domain"
  *
@@ -1247,12 +1293,15 @@ const figureFromUrl = (url: string, label: O.Option<string>, alt: O.Option<strin
 /**
  * Extract patent figures from API image URL maps and markdown images.
  *
- * @example
+ * **Example** (Extract figures from URL map)
+ *
  * ```ts
  * import { extractPatentFigures } from "@beep/law-practice-domain"
  *
- * const figures = extractPatentFigures(undefined, {
- *   img1: "https://example.com/patents/fig-1.png"
+ * const figures = extractPatentFigures({
+ *   imageUrls: {
+ *     img1: "https://example.com/patents/fig-1.png"
+ *   }
  * })
  * console.log(figures.length)
  * // 1
@@ -1261,10 +1310,13 @@ const figureFromUrl = (url: string, label: O.Option<string>, alt: O.Option<strin
  * @category utilities
  * @since 0.0.0
  */
-export const extractPatentFigures = (
-  content?: string,
-  imageUrls?: Readonly<Record<string, string>> | null
-): ReadonlyArray<PatentFigure> => {
+export const extractPatentFigures = ({
+  content,
+  imageUrls,
+}: {
+  readonly content?: string | undefined;
+  readonly imageUrls?: Readonly<Record<string, string>> | null | undefined;
+} = {}): ReadonlyArray<PatentFigure> => {
   const apiFigures = pipe(
     O.fromNullishOr(imageUrls),
     O.map((urls) =>
@@ -1331,12 +1383,17 @@ const sectionCapture = (pattern: RegExp, content: string, maxChars: number): O.O
 /**
  * Parse selected patent content sections.
  *
- * @example
+ * **Example** (Parse abstract and claims)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { parsePatentSections } from "@beep/law-practice-domain"
  *
- * const sections = parsePatentSections("## Abstract\nA compact tool.\n\n## Claims\n1. A tool.", ["abstract", "claims"], 400)
+ * const sections = parsePatentSections({
+ *   content: "## Abstract\nA compact tool.\n\n## Claims\n1. A tool.",
+ *   requestedSections: ["abstract", "claims"],
+ *   maxCharsPerSection: 400
+ * })
  * console.log(O.isSome(sections.claims))
  * // true
  * ```
@@ -1344,11 +1401,15 @@ const sectionCapture = (pattern: RegExp, content: string, maxChars: number): O.O
  * @category utilities
  * @since 0.0.0
  */
-export const parsePatentSections = (
-  content: string,
-  requestedSections?: ReadonlyArray<PatentSectionKind>,
-  maxCharsPerSection = 8000
-): PatentSections => {
+export const parsePatentSections = ({
+  content,
+  requestedSections,
+  maxCharsPerSection = 8000,
+}: {
+  readonly content: string;
+  readonly requestedSections?: ReadonlyArray<PatentSectionKind> | undefined;
+  readonly maxCharsPerSection?: number | undefined;
+}): PatentSections => {
   const requested = pipe(O.fromNullishOr(requestedSections), O.filter(A.isReadonlyArrayNonEmpty));
   const section = (kind: PatentSectionKind, value: O.Option<string>): O.Option<string> =>
     wantsSection(requested, kind) ? value : O.none();
@@ -1400,18 +1461,25 @@ const formatReference = (reference: PatentReference): O.Option<string> =>
 /**
  * Extract a canonical patent number from content and optional title fallback.
  *
- * @example
+ * **Example** (Extract canonical patent number)
+ *
  * ```ts
  * import { extractPatentNumber } from "@beep/law-practice-domain"
  *
- * console.log(extractPatentNumber("**Patent Number:** US 7,654,321 B2"))
+ * console.log(extractPatentNumber({ content: "**Patent Number:** US 7,654,321 B2" }))
  * // "US 7654321 B2"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const extractPatentNumber = (content: string, fallbackTitle?: string): string =>
+export const extractPatentNumber = ({
+  content,
+  fallbackTitle,
+}: {
+  readonly content: string;
+  readonly fallbackTitle?: string | undefined;
+}): string =>
   pipe(
     A.getSomes([
       firstCapture(/\*\*Patent Number:?\*\*\s*([A-Z]{2}\s*(?:RE|PP|D|H)?[\d,]+\s*[A-Z]?\d?)/iu, content),

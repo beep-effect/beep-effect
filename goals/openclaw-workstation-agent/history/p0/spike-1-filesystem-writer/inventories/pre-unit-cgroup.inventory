@@ -1,0 +1,5 @@
+control_group=absent
+ActiveState=inactive
+SubState=dead
+MainPID=0
+ExecMainPID=0

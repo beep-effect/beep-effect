@@ -62,7 +62,8 @@ const jsonContactResponse = (request: Request): Effect.Effect<Response> =>
 /**
  * Handles OIP contact submissions at the Next.js route boundary.
  *
- * @example
+ * **Example** (Typing the POST handler)
+ *
  * ```ts
  * import { POST } from "@beep/oip-web/app/api/contact/route"
  *

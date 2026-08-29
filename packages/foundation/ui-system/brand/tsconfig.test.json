@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src", "test", "scripts"],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "outDir": "dist-test",
+    "rootDir": ".",
+    "sourceMap": false,
+    "types": ["node", "bun-types"]
+  }
+}

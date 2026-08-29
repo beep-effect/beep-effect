@@ -34,7 +34,7 @@ import {
 } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
@@ -52,12 +52,12 @@ import {
   TurtleCodec,
   TurtleDocumentText,
   WriteOntologyFileRequest,
-} from "./Session.ports.js";
-import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.js";
+} from "./Session.ports.ts";
+import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.ts";
 import type { SessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session";
 import type { Dataset, Quad, Subject } from "@beep/rdf/Rdf";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
+import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.validation");
 
@@ -90,7 +90,8 @@ const dcat = (name: string): NamedNode => makeNamedNode(`${DCAT_NAMESPACE}${name
 /**
  * Verified ontology repair proposal generated from a SHACL violation.
  *
- * @example
+ * **Example** (Make verified repair proposal)
+ *
  * ```ts
  * import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyRepairProposal } from "@beep/ontology-use-cases/aggregates/Session"
@@ -141,7 +142,8 @@ export class OntologyRepairProposal extends S.Class<OntologyRepairProposal>($I`O
 /**
  * Validation request for an ontology session.
  *
- * @example
+ * **Example** (Make validation input with session)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { RunOntologyValidationInput } from "@beep/ontology-use-cases/aggregates/Session"
@@ -180,7 +182,8 @@ export class RunOntologyValidationInput extends S.Class<RunOntologyValidationInp
 /**
  * Validation result with verified repair proposals.
  *
- * @example
+ * **Example** (Make conforming validation result)
+ *
  * ```ts
  * import { RunOntologyValidationResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation"
@@ -215,7 +218,8 @@ export class RunOntologyValidationResult extends S.Class<RunOntologyValidationRe
 /**
  * Provenance and dataset-description export command.
  *
- * @example
+ * **Example** (Make provenance export command)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { ExportOntologyProvenanceCommand, OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
@@ -255,7 +259,8 @@ export class ExportOntologyProvenanceCommand extends S.Class<ExportOntologyProve
 /**
  * Provenance and dataset-description export result.
  *
- * @example
+ * **Example** (Make provenance export result)
+ *
  * ```ts
  * import { ExportOntologyProvenanceResult, OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -290,7 +295,8 @@ export class ExportOntologyProvenanceResult extends S.Class<ExportOntologyProven
 /**
  * Ontology validation failure.
  *
- * @example
+ * **Example** (Make SHACL validation error)
+ *
  * ```ts
  * import { OntologyValidationError } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -305,13 +311,13 @@ export class ExportOntologyProvenanceResult extends S.Class<ExportOntologyProven
  * @category errors
  * @since 0.0.0
  */
-export class OntologyValidationError extends TaggedErrorClass<OntologyValidationError>($I`OntologyValidationError`)(
+export class OntologyValidationError extends S.TaggedError<OntologyValidationError>($I`OntologyValidationError`)(
   "OntologyValidationError",
   {
     reason: LiteralKit(["shaclFailed", "repairVerificationFailed", "actorIdentityMissing"]),
     message: S.String,
   },
-  $I.annote("OntologyValidationError", {
+  $I.annoteError<OntologyValidationError>("OntologyValidationError", {
     description: "Ontology validation failure.",
   })
 ) {}
@@ -319,7 +325,8 @@ export class OntologyValidationError extends TaggedErrorClass<OntologyValidation
 /**
  * Ontology validation runner service shape.
  *
- * @example
+ * **Example** (Stub validation runner shape)
+ *
  * ```ts
  * import type { OntologyValidationRunnerShape } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -549,26 +556,32 @@ const literalWithDatatype = (value: ObjectTerm, datatype: NamedNode): O.Option<O
     NamedNode: O.none<ObjectTerm>,
   });
 
+const namedFocusNode = S.decodeUnknownOption(NamedNode);
+
 const datatypeCandidate = (violation: ShaclValidationViolation, target: ShapeRepairTarget): O.Option<RepairCandidate> =>
   pipe(
-    O.all({ datatype: target.property.datatype, value: violation.value }),
-    O.flatMap(({ datatype, value }) =>
+    O.all({
+      datatype: target.property.datatype,
+      subject: namedFocusNode({ termType: "NamedNode", value: violation.focusNode }),
+      value: violation.value,
+    }),
+    O.flatMap(({ datatype, subject, value }) =>
       pipe(
         literalWithDatatype(value, datatype),
-        O.map((replacement) => {
-          const subject = makeNamedNode(violation.focusNode);
-          return {
-            operations: [
-              ChangeOperation.make({
-                kind: "removeQuad",
-                partition: "asserted",
-                quad: makeQuad(subject, target.property.path, value),
-              }),
-              assertedAdd(subject, target.property.path, replacement),
-            ],
-            safety: "corrective",
-          } satisfies RepairCandidate;
-        })
+        O.map(
+          (replacement) =>
+            ({
+              operations: [
+                ChangeOperation.make({
+                  kind: "removeQuad",
+                  partition: "asserted",
+                  quad: makeQuad(subject, target.property.path, value),
+                }),
+                assertedAdd(subject, target.property.path, replacement),
+              ],
+              safety: "corrective",
+            }) satisfies RepairCandidate
+        )
       )
     )
   );
@@ -843,7 +856,8 @@ const exportOntologyProvenance = Effect.fn("Ontology.Validation.exportProvenance
 /**
  * Ontology validation runner service tag.
  *
- * @example
+ * **Example** (Yield validation runner service)
+ *
  * ```ts
  * import { OntologyValidationRunner } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -867,7 +881,8 @@ export class OntologyValidationRunner extends Context.Service<
 /**
  * Live ontology validation runner.
  *
- * @example
+ * **Example** (Reference live runner layer)
+ *
  * ```ts
  * import { OntologyValidationRunnerLive } from "@beep/ontology-use-cases/aggregates/Session"
  *

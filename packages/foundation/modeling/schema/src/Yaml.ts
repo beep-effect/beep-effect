@@ -8,8 +8,6 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import { Effect, flow, Result, SchemaGetter, SchemaIssue } from "effect";
-import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { getGlobalYamlRuntime, loadYamlModule, makeParseYaml, makeParseYamlForSchema } from "./internal/yaml.ts";
@@ -19,36 +17,28 @@ const yamlRuntime = getGlobalYamlRuntime();
 
 const parseYamlResult = makeParseYamlForSchema(yamlRuntime, loadYamlModule);
 
-const invalidYamlInput: {
-  (content: unknown): (message: string) => SchemaIssue.InvalidValue;
-  (message: string, content: unknown): SchemaIssue.InvalidValue;
-} = dual(
-  2,
-  (message: string, content: unknown): SchemaIssue.InvalidValue =>
-    new SchemaIssue.InvalidValue(O.some(content), {
-      message,
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
+  Effect.fail(
+    new SchemaIssue.InvalidValue({
+      message: "Encoding unknown values to YAML text is not supported by YamlTextToUnknown.",
     })
-);
-
-const encodeUnsupported = (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
-  Effect.fail(invalidYamlInput(value)("Encoding unknown values to YAML text is not supported by YamlTextToUnknown."));
+  );
 
 const renderYamlIssueMessage = (messages: ReadonlyArray<string>): string =>
   `Invalid YAML input (${A.join(messages, "; ")}).`;
 
 const renderYamlCauseMessage = (cause: unknown): string => (P.isError(cause) ? cause.message : "Invalid YAML input.");
 
-const toYamlIssue = (input: string): ((cause: unknown) => SchemaIssue.InvalidValue) =>
-  flow(renderYamlCauseMessage, invalidYamlInput(input));
+const toYamlIssue = flow(renderYamlCauseMessage, (message) => new SchemaIssue.InvalidValue({ message }));
 
 const decodeYamlUnknown = (input: string): Effect.Effect<unknown, SchemaIssue.Issue> =>
   Effect.try({
     try: () => parseYamlResult(input),
-    catch: toYamlIssue(input),
+    catch: toYamlIssue,
   }).pipe(
     Effect.flatMap(
       flow(
-        Result.mapError(flow(renderYamlIssueMessage, invalidYamlInput(input))),
+        Result.mapError(flow(renderYamlIssueMessage, (message) => new SchemaIssue.InvalidValue({ message }))),
         Result.match({
           onSuccess: Effect.succeed,
           onFailure: Effect.fail,
@@ -61,7 +51,8 @@ const decodeYamlUnknown = (input: string): Effect.Effect<unknown, SchemaIssue.Is
  * Parses a YAML string into a JavaScript value. Uses `Bun.YAML` when available
  * and otherwise falls back to the `yaml` package.
  *
- * @example
+ * **Example** (Parse YAML string)
+ *
  * ```ts
  * import { parseYaml } from "@beep/schema/Yaml"
  *
@@ -77,7 +68,8 @@ export const parseYaml = makeParseYaml(yamlRuntime, loadYamlModule);
 /**
  * Schema transformation that decodes YAML text into an unknown parsed value.
  *
- * @example
+ * **Example** (Decode YAML text)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -103,18 +95,6 @@ export const YamlTextToUnknown = S.String.pipe(
 
 /**
  * {@inheritDoc YamlTextToUnknown}
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { YamlTextToUnknown } from "@beep/schema/Yaml"
- *
- * const program = S.decodeUnknownEffect(YamlTextToUnknown)("name: Beep")
- * const parsed: typeof YamlTextToUnknown.Type = await Effect.runPromise(program)
- * console.log(parsed)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +104,8 @@ export type YamlTextToUnknown = typeof YamlTextToUnknown.Type;
  * Builds a decoder that parses YAML text and then decodes the result through a
  * target schema.
  *
- * @example
+ * **Example** (Decode YAML with schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"

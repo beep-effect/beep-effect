@@ -1,0 +1,38 @@
+[spike4] === step 0: baseline on gen-A ===
+ASSERT-PASS: gen-A live on 19011
+ASSERT-PASS: shared db user_version=1
+ASSERT-PASS: per-agent db user_version=1
+ASSERT-PASS: legacy sessions.json present pre-upgrade
+[spike4] === step 1-2: gen-B staged; validate with CANDIDATE binary ===
+ASSERT-PASS: B binary validates gen-B config
+[spike4] === step 3-4: stop; snapshot state incl. WAL sidecars ===
+[spike4] snapshot WAL sidecars: 2
+ASSERT-PASS: snapshot holds shared + per-agent DBs
+[spike4] === step 5-6: switch -> gen-B; start; migrations must stamp ===
+[spike4] pointer -> gen-B
+ASSERT-PASS: gen-B serving on its rendered port 19012
+ASSERT-PASS: shared db migrated 1 -> 5
+ASSERT-PASS: per-agent db migrated 1 -> 14
+[spike4] note: sessions.json consumed by SQLite flip
+[spike4] === step 7: forced acceptance failure (expected port 19011) ===
+ASSERT-PASS: acceptance probe on 19011 failed as forced (http='000')
+[spike4] === step 8 (assertion 2): downgrade WITHOUT restore refused ===
+[spike4] pointer -> gen-A
+ASSERT-PASS: downgrade refused: uses newer schema version 5; this OpenClaw build supports 1
+[spike4] === step 8b (assertion 3): forward recovery on migrated state ===
+[spike4] pointer -> gen-B
+ASSERT-PASS: gen-B healthy against still-migrated state
+ASSERT-PASS: forward recovery shared db remains user_version=5
+ASSERT-PASS: forward recovery per-agent db remains user_version=14
+[spike4] === step 9: restore snapshot + switch back; A starts cleanly ===
+[spike4] pointer -> gen-A
+ASSERT-PASS: gen-A healthy against restored state
+ASSERT-PASS: restored stamps shared=1 agent=1
+ASSERT-PASS: legacy sessions.json restored
+[spike4] === extra A: additive control leg — 2026.6.33 state under 7.1-2, rollback w/o restore ===
+ASSERT-PASS: additive hop: 7.1-2 leaves user_version=1
+ASSERT-PASS: 6.33 starts cleanly on 7.1-2-touched state WITHOUT restore (additive hop is rollback-benign)
+[spike4] === extra B: future-version guard fixture ===
+ASSERT-PASS: future-version guard blocked older binary (exit 1): newer openclaw binary on PATH, or reinstall the intended gateway service from the newer install.
+
+SPIKE4-V3-PASS

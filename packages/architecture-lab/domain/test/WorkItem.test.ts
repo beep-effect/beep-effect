@@ -1,6 +1,7 @@
 import * as WorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import * as Worker from "@beep/architecture-lab-domain/entities/Worker";
 import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -8,7 +9,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkItemId = S.decodeUnknownEffect(WorkItem.WorkItemId);
-const decodeWorkerId = S.decodeUnknownEffect(Worker.WorkerId);
+const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const encodeCreateWorkItemInput = S.encodeUnknownSync(WorkItem.CreateWorkItemInput);
 const encodeWorkItem = S.encodeUnknownSync(WorkItem.WorkItem);
 
@@ -16,7 +17,7 @@ const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown, unknown>>
   schema: Schema,
   numRuns = 10
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeUnknownSync(schema);
   const equivalent = S.toEquivalence(schema);

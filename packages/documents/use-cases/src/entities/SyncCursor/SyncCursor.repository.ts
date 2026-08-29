@@ -9,7 +9,7 @@
 import * as DomainSyncCursor from "@beep/documents-domain/entities/SyncCursor";
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -19,9 +19,10 @@ import type * as O from "effect/Option";
 const $I = $DocumentsUseCasesId.create("entities/SyncCursor/SyncCursor.repository");
 
 /**
- * Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields.
+ * Upsert input for one remote-event stream cursor, excluding ProductEntity audit fields.
  *
- * @example
+ * **Example** (Construct cursor seed)
+ *
  * ```ts
  * import { SyncCursorSeed } from "@beep/documents-use-cases/entities/SyncCursor/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -61,14 +62,15 @@ export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
     }),
   },
   $I.annote("SyncCursorSeed", {
-    description: "Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields.",
+    description: "Upsert input for one remote-event stream cursor, excluding ProductEntity audit fields.",
   })
 ) {}
 
 /**
  * Persistence failure raised when the SyncCursor repository is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { SyncCursorRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncCursor/server"
  *
@@ -79,7 +81,7 @@ export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
  * @category errors
  * @since 0.0.0
  */
-export class SyncCursorRepositoryUnavailable extends TaggedErrorClass<SyncCursorRepositoryUnavailable>(
+export class SyncCursorRepositoryUnavailable extends S.TaggedError<SyncCursorRepositoryUnavailable>(
   $I`SyncCursorRepositoryUnavailable`
 )(
   "SyncCursorRepositoryUnavailable",
@@ -88,7 +90,7 @@ export class SyncCursorRepositoryUnavailable extends TaggedErrorClass<SyncCursor
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncCursorRepositoryUnavailable", {
+  $I.annoteError<SyncCursorRepositoryUnavailable>("SyncCursorRepositoryUnavailable", {
     title: "SyncCursor repository unavailable",
     description: "The SyncCursor repository could not serve the request.",
   })
@@ -99,7 +101,8 @@ export class SyncCursorRepositoryUnavailable extends TaggedErrorClass<SyncCursor
 /**
  * Lookup input addressing the cursor of one workspace mirror.
  *
- * @example
+ * **Example** (Construct find input)
+ *
  * ```ts
  * import { FindSyncCursorInput } from "@beep/documents-use-cases/entities/SyncCursor/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -132,11 +135,13 @@ export class FindSyncCursorInput extends S.Class<FindSyncCursorInput>($I`FindSyn
 /**
  * SyncCursor repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * At most one cursor row exists per `workspaceId` and `provider` pair: `upsert`
  * inserts the row when absent and replaces its seed fields when present.
  *
- * @example
+ * **Example** (Stub repository port)
+ *
  * ```ts
  * import {
  *   FindSyncCursorInput,
@@ -175,7 +180,8 @@ export interface SyncCursorRepositoryShape {
 /**
  * Context tag for the SyncCursor repository port.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import {
  *   SyncCursorRepository,

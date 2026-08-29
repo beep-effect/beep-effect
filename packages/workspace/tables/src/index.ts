@@ -8,11 +8,12 @@
 /**
  * Workspace entity table metadata namespaces.
  *
- * @example
+ * **Example** (Log entity table name)
+ *
  * ```ts
  * import { Entities } from "@beep/workspace-tables"
  *
- * console.log(Entities.CandidateDraft.Table.definition.tableName)
+ * console.log(Entities.CandidateDraft.TABLE_NAME)
  * ```
  *
  * @category tables

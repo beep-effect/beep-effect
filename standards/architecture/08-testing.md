@@ -6,10 +6,24 @@ The test runner is Vitest through the repo/package scripts: use `bun run test`
 from a package/root script, or `bunx --bun vitest run ...` for a targeted local
 lane. Never `bun test` — Bun's runner breaks `@effect/vitest`.
 
+## Documentation runtime tests
+
+`@effect/doctest` runs marked JSDoc TypeScript fences as isolated Vitest modules.
+Use `ts import.meta.vitest name="<Example title>"` on a runnable fence and place
+`// => expected` after an expression statement or one initialized `const`
+identifier. The lane checks runtime behavior and Effect equality only. Docgen's
+TypeScript example gate remains authoritative for imports and types, including
+type-only examples.
+
+Run all marked examples with `bun run doctest`. Run the hosted-lane shape with
+`bun run beep ci lane doctest --mode affected --base origin/main --head HEAD` or
+`--mode full`. The pull-request lane executes only changed source files which
+contain `import.meta.vitest`; pushes execute the full marked corpus.
+
 The executable proof target for the architecture is `packages/architecture-lab/*`
-with `apps/architecture-lab-proof`. It carries focused runtime and type tests
-for boundary subpaths, package shape, and strict port-to-action error
-translation.
+with `apps/architecture-lab-proof`. It carries focused runtime tests for
+boundary subpaths, package shape, and strict port-to-action error translation
+(the tstyche type-test surface was retired 2026-08-03 — see DECISIONS.md).
 
 ## Domain In Isolation
 
@@ -293,6 +307,39 @@ This isolation is what lets a slice be removed, rewritten, or forked without
 breaking the rest of the repo. It is the test-time enforcement of the
 optionality promise made by `01-hexagonal-vertical-slices.md` and
 `05-layer-composition.md`.
+
+## Opt-In Real-Postgres Race Lanes
+
+PGlite proves behavior; it cannot prove concurrency. It is effectively
+single-connection, so lock contention, `SELECT ... FOR UPDATE` loser paths, and
+constraint-check ordering under real parallel transactions never occur there.
+A repository whose contract includes concurrent-writer behavior (supersession,
+head-close races, unique-head backstops) needs an **opt-in real-Postgres race
+lane** alongside its PGlite suite:
+
+- **Dedicated env var, not shared config.** The lane keys on its own
+  `BEEP_<SLICE>_PG_URL` (e.g. `BEEP_EPISTEMIC_PG_URL`) and the whole suite
+  no-ops with a logged skip when it is unset. CI runs it only where a real
+  server is provisioned; local runs stay green without one.
+- **Config boot snapshot.** Read the URL once through a `Config` snapshot at
+  layer boot — never `process.env` inside test bodies (see Anti-Patterns).
+- **Two repository instances.** Build two independent client/repository stacks
+  over the same database so the race is between real connections, not two
+  fibers sharing one pool slot.
+- **`pg_sleep` choreography, not `Effect.sleep`.** Inside `layer()` testers the
+  `TestClock` swallows `Effect.sleep`, so fiber interleaving never happens on
+  wall time. Hold locks across a window with `SELECT pg_sleep(...)` inside the
+  transaction you want to lose the race.
+- **Expect mapped conflicts, not raw driver errors.** The race lane exists to
+  prove constraint-to-typed-error mapping under contention — including
+  constraints that only fire on real Postgres because its check ordering
+  differs from PGlite (a btree unique can fire before a partial or exclusion
+  index that PGlite reports first).
+
+The reference implementation is
+`packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts` (races
+4/4 across repeated runs; found a real constraint-ordering gap PGlite could
+not see).
 
 ## Anti-Patterns
 

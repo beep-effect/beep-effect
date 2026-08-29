@@ -10,18 +10,21 @@ import { HashMap } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { SegmentMap } from "../SegmentMap/index.js";
+import { SegmentMap } from "../SegmentMap/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/Span/Span.model");
 
 /**
  * Represents a text span with positions tracked through transformations.
  *
+ * **Details**
+ *
  * During text cleaning (HTML removal, whitespace normalization), positions
  * shift. Span tracks BOTH cleaned positions (for parsing) and original
  * positions (for user-facing results).
  *
- * @example
+ * **Example** (Creating a basic Span)
+ *
  * ```ts
  * import { Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -61,12 +64,8 @@ export class Span extends S.Class<Span>($I`Span`)(
   /**
    * Build a Span for a regex capture group using match.indices (ES2022 `d` flag).
    *
-   * @param tokenCleanStart - The token's cleanStart position in the document
-   * @param indices - match.indices[n] for the capture group
-   * @param map - TransformationMap for clean-to-original resolution
-   * @returns Span with both clean and original coordinates
+   * **Example** (Building Span from group index)
    *
-   * @example
    * ```ts
    * import { SegmentMap, Span, TransformationMap } from "@beep/law-practice-domain"
    * import { NonNegativeInt } from "@beep/schema"
@@ -84,6 +83,10 @@ export class Span extends S.Class<Span>($I`Span`)(
    * console.log(span.cleanStart)
    * ```
    *
+   * @param tokenCleanStart - The token's cleanStart position in the document
+   * @param indices - match.indices[n] for the capture group
+   * @param map - TransformationMap for clean-to-original resolution
+   * @returns Span with both clean and original coordinates
    * @category constructors
    * @since 0.0.0
    */
@@ -102,7 +105,8 @@ export class Span extends S.Class<Span>($I`Span`)(
   /**
    * Resolve cleaned-text span positions against the original input text.
    *
-   * @example
+   * **Example** (Resolving original span positions)
+   *
    * ```ts
    * import { SegmentMap, Span, TransformationMap } from "@beep/law-practice-domain"
    * import { NonNegativeInt } from "@beep/schema"
@@ -159,10 +163,13 @@ export class Span extends S.Class<Span>($I`Span`)(
 /**
  * Maps positions between cleaned and original text.
  *
+ * **Details**
+ *
  * Built during text transformation to track how character positions shift
  * when HTML entities are removed, whitespace is normalized, etc.
  *
- * @example
+ * **Example** (Creating empty TransformationMap)
+ *
  * ```ts
  * import { TransformationMap } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"

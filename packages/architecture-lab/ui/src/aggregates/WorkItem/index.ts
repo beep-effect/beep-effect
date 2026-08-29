@@ -1,7 +1,8 @@
 /**
  * WorkItem UI read-model exports.
  *
- * @example
+ * **Example** (WorkItem summary view model)
+ *
  * ```ts
  * import { defaultWorkItemPublicConfig } from "@beep/architecture-lab-config/public"
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
@@ -24,4 +25,4 @@
  * @category read-models
  * @since 0.0.0
  */
-export * from "./WorkItem.view-model.js";
+export * from "./WorkItem.view-model.ts";

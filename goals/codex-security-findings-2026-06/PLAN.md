@@ -26,7 +26,7 @@ Status: `active` — branch `@slop/june-8-2026`. Current phase: `P1 extract`.
   under the global `.beep/yeet/quality-lock`. Only triage (P2) and remediation
   (P5) fan out, capped at 6 concurrent agents.
 - Preserve unrelated worktree changes; stage only reviewed intent.
-- Raw captures stay in `/tmp/codex-security-findings-2026-06`; commit only
+- Raw captures stay in a machine-local scratch directory outside the repo; commit only
   sanitized markdown + patches.
 
 ## Verification Commands

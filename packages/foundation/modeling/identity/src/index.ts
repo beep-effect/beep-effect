@@ -1,13 +1,14 @@
 /**
  * Barrel re-exports for `@beep/identity`.
  *
- * @example
- * ```ts
+ * **Example** (Make package identity ID)
+ *
+ * ```ts import.meta.vitest name="Make package identity ID"
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
  * const id = $MyPkgId.make("Service")
- * console.log(id)// "@beep/my-pkg/Service"
+ * id // => "@beep/my-pkg/Service"
  * ```
  *
  * @packageDocumentation
@@ -17,7 +18,8 @@
 /**
  * CURIE expansion, contraction, and schema codecs for identity vocabularies.
  *
- * @example
+ * **Example** (Expand CURIE to IRI)
+ *
  * ```ts
  * import { expand } from "@beep/identity"
  *
@@ -29,9 +31,35 @@
  */
 export * from "./Curie.ts";
 /**
+ * Discrete fiber families with schema-validated section metadata.
+ *
+ * **Example** (Build a single-point family)
+ *
+ * ```ts import.meta.vitest name="Build a single-point family"
+ * import { Fibered } from "@beep/identity"
+ * import * as S from "effect/Schema"
+ *
+ * const family = Fibered.make({
+ *   base: S.Literals(["text"]),
+ *   fibers: { text: S.String },
+ *   section: {
+ *     schema: S.Struct({ label: S.String }),
+ *     values: { text: { label: "Text" } }
+ *   }
+ * })
+ *
+ * family.points // => ["text"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Fibered.ts";
+/**
  * Identity system core -- composers, annotations, and branded types.
  *
- * @example
+ * **Example** (Compose branded package ID)
+ *
  * ```ts
  * import { make } from "@beep/identity"
  *
@@ -44,9 +72,25 @@ export * from "./Curie.ts";
  */
 export * from "./Id.ts";
 /**
+ * Exact identity, IRI, and CURIE dereferencing contracts and local layer.
+ *
+ * **Example** (Create an empty local registry)
+ *
+ * ```ts
+ * import { IdentityRegistry } from "@beep/identity"
+ *
+ * console.log(IdentityRegistry.layerLocal([]))
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./IdentityRegistry.ts";
+/**
  * Turtle PN_LOCAL parser-side helpers and safe emission fallback.
  *
- * @example
+ * **Example** (Emit prefixed name or IRI)
+ *
  * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *
@@ -63,7 +107,8 @@ export * from "./PnLocal.ts";
 /**
  * Pre-built identity composers for every `@beep/*` workspace package.
  *
- * @example
+ * **Example** (Use prebuilt package composer)
+ *
  * ```ts
  * import { $DataId } from "@beep/identity"
  *
@@ -77,7 +122,8 @@ export * from "./packages.ts";
 /**
  * Static borrowed vocabulary registry and literal CURIE type helpers.
  *
- * @example
+ * **Example** (Read core vocab IRI)
+ *
  * ```ts
  * import { CoreVocab } from "@beep/identity"
  *

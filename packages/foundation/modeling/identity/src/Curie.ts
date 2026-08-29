@@ -18,18 +18,19 @@ import { CoreVocab } from "./Vocab.ts";
 import type { Curie, Expand, Predicate, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Curie");
-
 // Internal invariant guard for the literal-preserving `expand`/`contract`
 // overloads: the CURIE/IRI is asserted registered by its literal type, so the
-// unresolved branch is type-level unreachable. Modeled as a TaggedErrorClass
+// unresolved branch is type-level unreachable. Modeled as a S.TaggedError
 // (not a native Error) to satisfy the native-runtime law without an allowlist
 // entry; intentionally not exported (never a caught public failure).
-class CurieCodecInvariantError extends S.TaggedErrorClass<CurieCodecInvariantError>(
+class CurieCodecInvariantError extends S.TaggedError<CurieCodecInvariantError>(
   "@beep/identity/errors/CurieCodecInvariantError"
 )(
   "CurieCodecInvariantError",
-  { value: S.String },
-  $I.annote("@beep/identity/errors/CurieCodecInvariantError", {
+  {
+    value: S.String,
+  },
+  $I.annoteError<CurieCodecInvariantError>("@beep/identity/errors/CurieCodecInvariantError", {
     description:
       "A CURIE/IRI asserted registered by its literal type failed to resolve (type-level-unreachable invariant).",
   })
@@ -40,6 +41,8 @@ type CoreIri = Expand<CoreCurie, typeof CoreVocab>;
 type Contract<I extends string, V extends VocabShape> = {
   readonly [C in Curie<V>]: Expand<C, V> extends I ? C : never;
 }[Curie<V>];
+
+type ExpandedPredicateValue = { readonly iri: string; readonly inverse: boolean } | undefined;
 
 type ExpandedPredicate<P extends string, V extends VocabShape> = P extends `^${infer C}`
   ? { readonly iri: Expand<C, V>; readonly inverse: true }
@@ -82,20 +85,23 @@ const expandOptionImpl = <const V extends VocabShape>(curie: string, vocab: V): 
 /**
  * Expand a possibly-unknown CURIE into its IRI.
  *
+ * **Details**
+ *
  * Returns `O.none()` when the CURIE's prefix is unregistered or its term
  * isn't declared for that prefix, instead of a null/undefined-typed return.
  * Use {@link expand} instead when the CURIE is statically known to be
  * registered (it preserves the exact IRI literal type).
  *
- * @example
- * ```ts
+ * **Example** (Optional CURIE expansion results)
+ *
+ * ```ts import.meta.vitest name="Optional CURIE expansion results"
  * import { pipe } from "effect"
  * import * as O from "effect/Option"
  * import { CoreVocab, expandOption } from "@beep/identity"
  *
- * console.log(O.isSome(expandOption("skos:prefLabel", CoreVocab))) // true
- * console.log(O.isNone(expandOption("bogus:term", CoreVocab))) // true
- * console.log(O.isSome(pipe("skos:prefLabel", expandOption(CoreVocab)))) // true
+ * O.isSome(expandOption("skos:prefLabel", CoreVocab)) // => true
+ * O.isNone(expandOption("bogus:term", CoreVocab)) // => true
+ * O.isSome(pipe("skos:prefLabel", expandOption(CoreVocab))) // => true
  * ```
  *
  * @category codecs
@@ -131,21 +137,24 @@ const contractOptionImpl = <const V extends VocabShape>(iri: string, vocab: V): 
 /**
  * Contract a possibly-unknown IRI back to its registered CURIE.
  *
+ * **Details**
+ *
  * Returns `O.none()` when the IRI isn't registered under any vocabulary
  * entry, instead of a null/undefined-typed return. Use {@link contract}
  * instead when the IRI is statically known to be registered (it preserves
  * the exact CURIE literal type).
  *
- * @example
- * ```ts
+ * **Example** (Optional IRI contraction results)
+ *
+ * ```ts import.meta.vitest name="Optional IRI contraction results"
  * import { pipe } from "effect"
  * import * as O from "effect/Option"
  * import { CoreVocab, contractOption } from "@beep/identity"
  *
  * const iri = "http://www.w3.org/2004/02/skos/core#prefLabel"
- * console.log(O.isSome(contractOption(iri, CoreVocab))) // true
- * console.log(O.isNone(contractOption("http://example.com/nope", CoreVocab))) // true
- * console.log(O.isSome(pipe(iri, contractOption(CoreVocab)))) // true
+ * O.isSome(contractOption(iri, CoreVocab)) // => true
+ * O.isNone(contractOption("http://example.com/nope", CoreVocab)) // => true
+ * O.isSome(pipe(iri, contractOption(CoreVocab))) // => true
  * ```
  *
  * @category codecs
@@ -156,7 +165,7 @@ export const contractOption: {
   <const V extends VocabShape>(iri: string, vocab: V): ReturnType<typeof contractOptionImpl<V>>;
 } = dual(2, contractOptionImpl);
 
-const schemaIssue = (value: string, message: string) => new SchemaIssue.InvalidValue(O.some(value), { message });
+const schemaIssue = (message: string) => new SchemaIssue.InvalidValue({ message });
 
 const isCoreCurie = (value: unknown): value is CoreCurie =>
   P.isString(value) && O.isSome(expandOption(value, CoreVocab));
@@ -183,7 +192,7 @@ const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
       pipe(
         expandOption(curie, vocab),
         O.match({
-          onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
+          onNone: () => Effect.fail(schemaIssue(`Unknown CURIE: ${curie}`)),
           onSome: Effect.succeed,
         })
       ),
@@ -191,7 +200,7 @@ const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
       pipe(
         contractOption(iri, vocab),
         O.match({
-          onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
+          onNone: () => Effect.fail(schemaIssue(`Unknown IRI: ${iri}`)),
           onSome: Effect.succeed,
         })
       ),
@@ -203,7 +212,7 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
       expandOption(curie, CoreVocab),
       O.filter(isCoreIri),
       O.match({
-        onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
+        onNone: () => Effect.fail(schemaIssue(`Unknown CURIE: ${curie}`)),
         onSome: Effect.succeed,
       })
     ),
@@ -212,94 +221,102 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
       contractOption(iri, CoreVocab),
       O.filter(isCoreCurie),
       O.match({
-        onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
+        onNone: () => Effect.fail(schemaIssue(`Unknown IRI: ${iri}`)),
         onSome: Effect.succeed,
       })
     ),
 });
 
-/**
- * Expand a known CURIE into its exact IRI literal.
- *
- * @example
- * ```ts
- * import { expand } from "@beep/identity"
- *
- * const iri = expand("skos:prefLabel")
- * console.log(iri) // "http://www.w3.org/2004/02/skos/core#prefLabel"
- * ```
- *
- * @category codecs
- * @since 0.0.0
- */
-export function expand<const C extends Curie<typeof CoreVocab>>(curie: C): Expand<C, typeof CoreVocab>;
-export function expand<const V extends VocabShape, const C extends Curie<V>>(curie: C, vocab: V): Expand<C, V>;
-export function expand(curie: string, vocab: VocabShape = CoreVocab): string {
-  return pipe(
+const expandUnsafe = (curie: string, vocab: VocabShape): string =>
+  pipe(
     expandOption(curie, vocab),
     O.getOrElse(() => {
       throw CurieCodecInvariantError.make({ value: curie });
     })
   );
+
+type ExpandDataLast = <const V extends VocabShape>(vocab: V) => <const C extends Curie<V>>(curie: C) => Expand<C, V>;
+
+type ExpandDataFirst = {
+  <const C extends Curie<typeof CoreVocab>>(curie: C): Expand<C, typeof CoreVocab>;
+  <const V extends VocabShape, const C extends Curie<V>>(curie: C, vocab: V): Expand<C, V>;
+};
+
+function expandImpl<const C extends Curie<typeof CoreVocab>>(curie: C): Expand<C, typeof CoreVocab>;
+function expandImpl<const V extends VocabShape, const C extends Curie<V>>(curie: C, vocab: V): Expand<C, V>;
+function expandImpl(curie: string, vocab: VocabShape = CoreVocab): unknown {
+  return expandUnsafe(curie, vocab);
 }
 
 /**
- * Contract a registered IRI back to its CURIE literal.
+ * Expand a known CURIE into its exact IRI literal.
  *
- * @example
- * ```ts
- * import { contract } from "@beep/identity"
+ * **Example** (Expand known CURIE to IRI)
  *
- * const curie = contract("http://www.w3.org/2004/02/skos/core#prefLabel")
- * console.log(curie) // "skos:prefLabel"
+ * ```ts import.meta.vitest name="Expand known CURIE to IRI"
+ * import { expand } from "@beep/identity"
+ *
+ * const iri = expand("skos:prefLabel")
+ * iri // => "http://www.w3.org/2004/02/skos/core#prefLabel"
  * ```
  *
  * @category codecs
  * @since 0.0.0
  */
-export function contract<const I extends Expand<Curie<typeof CoreVocab>, typeof CoreVocab>>(
-  iri: I
-): Contract<I, typeof CoreVocab>;
-export function contract<const V extends VocabShape, const I extends Expand<Curie<V>, V>>(
-  iri: I,
-  vocab: V
-): Contract<I, V>;
-export function contract(iri: string, vocab: VocabShape = CoreVocab): string {
-  return pipe(
+export const expand: ExpandDataLast & ExpandDataFirst = dual<ExpandDataLast, ExpandDataFirst>(
+  (args) => P.isString(args[0]),
+  expandImpl
+);
+
+const contractUnsafe = (iri: string, vocab: VocabShape): string =>
+  pipe(
     contractOption(iri, vocab),
     O.getOrElse(() => {
       throw CurieCodecInvariantError.make({ value: iri });
     })
   );
+
+type ContractDataLast = <const V extends VocabShape>(
+  vocab: V
+) => <const I extends Expand<Curie<V>, V>>(iri: I) => Contract<I, V>;
+
+type ContractDataFirst = {
+  <const I extends Expand<Curie<typeof CoreVocab>, typeof CoreVocab>>(iri: I): Contract<I, typeof CoreVocab>;
+  <const V extends VocabShape, const I extends Expand<Curie<V>, V>>(iri: I, vocab: V): Contract<I, V>;
+};
+
+function contractImpl<const I extends Expand<Curie<typeof CoreVocab>, typeof CoreVocab>>(
+  iri: I
+): Contract<I, typeof CoreVocab>;
+function contractImpl<const V extends VocabShape, const I extends Expand<Curie<V>, V>>(
+  iri: I,
+  vocab: V
+): Contract<I, V>;
+function contractImpl(iri: string, vocab: VocabShape = CoreVocab): unknown {
+  return contractUnsafe(iri, vocab);
 }
 
 /**
- * Expand a forward or inverse predicate CURIE into IRI plus direction.
+ * Contract a registered IRI back to its CURIE literal.
  *
- * @example
- * ```ts
- * import { expandPredicate } from "@beep/identity"
+ * **Example** (Contract IRI to CURIE literal)
  *
- * const expanded = expandPredicate("^rdfs:subClassOf")
- * console.log(expanded?.inverse) // true
+ * ```ts import.meta.vitest name="Contract IRI to CURIE literal"
+ * import { contract } from "@beep/identity"
+ *
+ * const curie = contract("http://www.w3.org/2004/02/skos/core#prefLabel")
+ * curie // => "skos:prefLabel"
  * ```
  *
  * @category codecs
  * @since 0.0.0
  */
-export function expandPredicate<const P extends Predicate<typeof CoreVocab>>(
-  predicate: P
-): ExpandedPredicate<P, typeof CoreVocab>;
-export function expandPredicate<const V extends VocabShape, const P extends Predicate<V>>(
-  predicate: P,
-  vocab: V
-): ExpandedPredicate<P, V>;
-export function expandPredicate(predicate: string): { readonly iri: string; readonly inverse: boolean } | undefined;
-export function expandPredicate(
-  predicate: string,
-  vocab: VocabShape
-): { readonly iri: string; readonly inverse: boolean } | undefined;
-export function expandPredicate(predicate: string, vocab: VocabShape = CoreVocab) {
+export const contract: ContractDataLast & ContractDataFirst = dual<ContractDataLast, ContractDataFirst>(
+  (args) => P.isString(args[0]),
+  contractImpl
+);
+
+const expandPredicateUnsafe = (predicate: string, vocab: VocabShape): ExpandedPredicateValue => {
   const inverse = Str.startsWith("^")(predicate);
   const curie = inverse ? Str.slice(1)(predicate) : predicate;
 
@@ -308,12 +325,58 @@ export function expandPredicate(predicate: string, vocab: VocabShape = CoreVocab
     O.map((iri) => ({ iri, inverse })),
     O.getOrUndefined
   );
+};
+
+type ExpandPredicateDataLast = {
+  <const V extends VocabShape>(vocab: V): <const P extends Predicate<V>>(predicate: P) => ExpandedPredicate<P, V>;
+  (vocab: VocabShape): (predicate: string) => ExpandedPredicateValue;
+};
+
+type ExpandPredicateDataFirst = {
+  <const P extends Predicate<typeof CoreVocab>>(predicate: P): ExpandedPredicate<P, typeof CoreVocab>;
+  <const V extends VocabShape, const P extends Predicate<V>>(predicate: P, vocab: V): ExpandedPredicate<P, V>;
+  (predicate: string): ExpandedPredicateValue;
+  (predicate: string, vocab: VocabShape): ExpandedPredicateValue;
+};
+
+function expandPredicateImpl<const P extends Predicate<typeof CoreVocab>>(
+  predicate: P
+): ExpandedPredicate<P, typeof CoreVocab>;
+function expandPredicateImpl<const V extends VocabShape, const P extends Predicate<V>>(
+  predicate: P,
+  vocab: V
+): ExpandedPredicate<P, V>;
+function expandPredicateImpl(predicate: string): ExpandedPredicateValue;
+function expandPredicateImpl(predicate: string, vocab: VocabShape): ExpandedPredicateValue;
+function expandPredicateImpl(predicate: string, vocab: VocabShape = CoreVocab): ExpandedPredicateValue {
+  return expandPredicateUnsafe(predicate, vocab);
 }
+
+/**
+ * Expand a forward or inverse predicate CURIE into IRI plus direction.
+ *
+ * **Example** (Expand inverse predicate CURIE)
+ *
+ * ```ts import.meta.vitest name="Expand inverse predicate CURIE"
+ * import { expandPredicate } from "@beep/identity"
+ *
+ * const expanded = expandPredicate("^rdfs:subClassOf")
+ * expanded?.inverse // => true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const expandPredicate: ExpandPredicateDataLast & ExpandPredicateDataFirst = dual<
+  ExpandPredicateDataLast,
+  ExpandPredicateDataFirst
+>((args) => P.isString(args[0]), expandPredicateImpl);
 
 /**
  * Build literal-preserving CURIE encode/decode helpers for a registry.
  *
- * @example
+ * **Example** (Build codec from vocabulary)
+ *
  * ```ts
  * import { CoreVocab, makeCurieCodec } from "@beep/identity"
  *
@@ -332,12 +395,13 @@ export const makeCurieCodec = <const V extends VocabShape>(vocab: V) => ({
 /**
  * Literal-preserving CURIE helper pair for {@link CoreVocab}.
  *
- * @example
- * ```ts
+ * **Example** (Decode CoreVocab CURIE)
+ *
+ * ```ts import.meta.vitest name="Decode CoreVocab CURIE"
  * import { CoreCurieCodec } from "@beep/identity"
  *
  * const iri = CoreCurieCodec.decode("rdfs:label")
- * console.log(iri) // "http://www.w3.org/2000/01/rdf-schema#label"
+ * iri // => "http://www.w3.org/2000/01/rdf-schema#label"
  * ```
  *
  * @category codecs
@@ -348,7 +412,8 @@ export const CoreCurieCodec = makeCurieCodec(CoreVocab);
 /**
  * Build an Effect Schema codec that decodes CURIEs to IRIs and encodes IRIs to CURIEs.
  *
- * @example
+ * **Example** (Build Schema CURIE codec)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CoreVocab, makeCurieFromIri } from "@beep/identity"
@@ -371,7 +436,8 @@ export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
 /**
  * Core vocabulary CURIE-to-IRI Effect Schema codec.
  *
- * @example
+ * **Example** (Decode with CurieFromIri schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CurieFromIri } from "@beep/identity"
@@ -392,15 +458,6 @@ export const CurieFromIri = CoreCurieSchema.pipe(
 
 /**
  * {@inheritDoc CurieFromIri}
- *
- * @example
- * ```ts
- * import type { CurieFromIri } from "@beep/identity"
- *
- * const iri: CurieFromIri = "http://www.w3.org/2004/02/skos/core#prefLabel"
- * console.log(iri)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

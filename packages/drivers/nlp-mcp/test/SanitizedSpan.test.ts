@@ -14,6 +14,7 @@ import { WinkNlpToolkitLive } from "@beep/wink";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as Tracer from "effect/Tracer";
+import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 
 interface RecordedAttribute {
@@ -37,18 +38,40 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
   return { captured, tracer };
 };
 
+// `McpServer.callTool` resolves the calling client from context; in production
+// the transport's own middleware provides it per request. This fixture stands in
+// for that middleware so the call dispatches instead of dying on a missing
+// service.
+const stubClientInfo = { name: "nlp-mcp-sanitized-span-test", version: "0.0.0" };
+
+const stubMcpClient = McpServerClient.of({
+  clientId: 1,
+  protocolVersion: "2025-06-18",
+  clientCapabilities: {},
+  clientInfo: stubClientInfo,
+  getClient: Effect.die("the fixture client is never dereferenced") as never,
+  initializePayload: {
+    capabilities: {},
+    clientInfo: stubClientInfo,
+    protocolVersion: "2025-06-18",
+  } as never,
+});
+
 const registrationLayer = sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNlpToolkitLive));
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
 
 describe("nlp-mcp sanitized dispatch", () => {
   layer(fullLayer)("with NlpToolkit mounted via sanitizedToolkit", (it) => {
-    it.effect("does not leak the raw Tokenize request text onto span attributes", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "does not leak the raw Tokenize request text onto span attributes",
+      Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const server = yield* McpServer.McpServer;
 
         const result = yield* Effect.withTracer(
-          server.callTool({ name: "Tokenize", arguments: { text: "super-secret-document-text" } }),
+          server
+            .callTool({ name: "Tokenize", arguments: { text: "super-secret-document-text" } })
+            .pipe(Effect.provideService(McpServerClient, stubMcpClient)),
           tracer
         );
 

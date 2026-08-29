@@ -14,12 +14,13 @@ import {
   ThreadEntityInput,
   TurnEntityInput,
 } from "./aggregates/Thread/ThreadStore.repo.internal.ts";
-import { WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.js";
+import { WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.ts";
 
 /**
  * In-memory workspace server layer for tests.
  *
- * @example
+ * **Example** (Import test server layer)
+ *
  * ```ts
  * import { WorkspaceServerTest } from "@beep/workspace-server/test"
  *
@@ -34,7 +35,8 @@ export const WorkspaceServerTest = Layer.mergeAll(ThreadStoreInMemoryLayer, Work
 /**
  * ThreadStore repository schemas exposed for package-local parity tests.
  *
- * @example
+ * **Example** (Access test schema nextId)
+ *
  * ```ts
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
  *

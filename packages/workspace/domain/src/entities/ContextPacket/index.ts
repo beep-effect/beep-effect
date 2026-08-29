@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import module exports)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/ContextPacket"
  *
@@ -18,18 +19,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ContextPacket.model.js";
-/**
- * Module exports.
- *
- * @example
- * ```ts
- * import * as Module from "@beep/workspace-domain/entities/ContextPacket"
- *
- * console.log(Module)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ContextPacket.values.js";
+export * from "./ContextPacket.model.ts";

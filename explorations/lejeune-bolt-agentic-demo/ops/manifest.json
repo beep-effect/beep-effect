@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "lejeune-bolt-agentic-demo",
+    "title": "LeJeune Bolt Agentic Demo",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/lejeune-demo-corpus-and-ontology",
+        "goals/lejeune-knowledge-desk-lab"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-25",
+    "updated": "2026-08-26"
+  }
+}

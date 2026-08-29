@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "packet-system-redesign",
+    "title": "Exploration & Goal Packet System Redesign",
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/packet-control-plane-core",
+        "goals/packet-convention-migration"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-10",
+    "updated": "2026-08-26"
+  }
+}

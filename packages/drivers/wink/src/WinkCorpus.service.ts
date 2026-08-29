@@ -8,7 +8,7 @@
 import { $WinkId } from "@beep/identity";
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
-import { NonNegativeInt, PosInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
 import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
@@ -19,6 +19,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { ascendingNumber, ascendingString, descendingNumber } from "./internal/order.ts";
+import { WinkStringArray } from "./Wink.models.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
@@ -219,11 +220,6 @@ const sanitizeLimit = (value: number | undefined, fallback: number): number =>
 
 const toCorpusIdOption = (corpusId: string | undefined): O.Option<string> => O.fromNullishOr(corpusId);
 
-const WinkStringArray = S.Array(S.String).pipe(
-  $I.annoteSchema("WinkStringArray", {
-    description: "Array of strings returned by wink vectorizer accessors.",
-  })
-);
 const WinkNumberArray = S.Array(S.Finite).pipe(
   $I.annoteSchema("WinkNumberArray", {
     description: "Array of finite numeric values returned by wink vectorizer accessors.",
@@ -320,7 +316,8 @@ const removeCorpusSession = (
 /**
  * Typed failure for creating, learning, querying, or inspecting a managed corpus.
  *
- * @example
+ * **Example** (Create error from message)
+ *
  * ```ts
  * import { CorpusManagerError } from "@beep/wink"
  *
@@ -331,14 +328,14 @@ const removeCorpusSession = (
  * @category errors
  * @since 0.0.0
  */
-export class CorpusManagerError extends TaggedErrorClass<CorpusManagerError>($I`CorpusManagerError`)(
+export class CorpusManagerError extends S.TaggedError<CorpusManagerError>($I`CorpusManagerError`)(
   "CorpusManagerError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
     corpusId: S.OptionFromOptionalKey(S.String),
     message: S.String,
   },
-  $I.annote("CorpusManagerError", {
+  $I.annoteError<CorpusManagerError>("CorpusManagerError", {
     description: "Failure raised while managing a stateful wink BM25 corpus.",
   })
 ) {
@@ -801,11 +798,13 @@ const makeWinkCorpusManager = Effect.gen(function* () {
 /**
  * Service for managing stateful BM25 corpora and query sessions.
  *
- * @remarks
+ * **Details**
+ *
  * Each corpus is stored in memory by `corpusId`. Learning documents invalidates
  * the compiled vector index; the next stats or query call recompiles it.
  *
- * @example
+ * **Example** (Create corpus via service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkLayerAllLive } from "@beep/wink"
@@ -831,7 +830,8 @@ export class WinkCorpusManager extends Context.Service<WinkCorpusManager, WinkCo
 /**
  * Live corpus manager layer requiring the wink engine and similarity services.
  *
- * @example
+ * **Example** (Provide with dependency layers)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { WinkEngineLive } from "@beep/wink"

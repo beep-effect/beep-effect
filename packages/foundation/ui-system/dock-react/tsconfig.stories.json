@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../tsconfig.json",
+  "include": ["src", "stories"],
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "outDir": "dist-stories",
+    "rootDir": "../../../..",
+    "sourceMap": false,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.stories.tsbuildinfo",
+    "types": ["node", "vite/client"]
+  }
+}

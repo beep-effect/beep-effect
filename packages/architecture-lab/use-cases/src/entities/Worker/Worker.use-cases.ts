@@ -10,15 +10,16 @@ import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import type { Effect } from "effect";
-import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.js";
-import type { WorkerActionError } from "./Worker.errors.js";
+import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.ts";
+import type { WorkerActionError } from "./Worker.errors.ts";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.use-cases");
 
 /**
  * Public Worker use-case contract exposed to callers.
  *
- * @example
+ * **Example** (Stub offline use-cases shape)
+ *
  * ```ts
  * import {
  *   ListWorkersQuery,
@@ -49,11 +50,13 @@ export interface WorkerUseCasesShape {
 /**
  * Context service tag for Worker use cases.
  *
- * @remarks
+ * **Details**
+ *
  * The public module declares the tag and contract only. Server code supplies an
  * implementation with a repository-backed layer or `Effect.provideService`.
  *
- * @example
+ * **Example** (Provide WorkerUseCases service)
+ *
  * ```ts
  * import {
  *   ListWorkersQuery,

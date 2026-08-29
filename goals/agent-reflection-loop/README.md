@@ -2,11 +2,12 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-P1 (goal-closeout reflection system) in progress.
+P1 (goal-closeout reflection system) is complete. P2 and P3 are intentionally
+descoped until a packet closes without usable reflections.
 
 ## Mission
 
@@ -16,10 +17,12 @@ on the repo's tooling, the implementation they produced, and the goal/prompt the
 were given — persisted as structured `history/reflections/<date>-<agent>.md`
 artifacts that compound into durable, reusable knowledge.
 
-## Next action
+## Closeout
 
-Finish P1: `QualityIssueIndex` routing category, the `/reflect` skill, the
-reflection lint test, the GLOSSARY entry, and this packet's own dogfood reflection.
+The schema, command routing, skill, focused test, glossary term, dogfood
+reflection, and Yeet issue routing are present. No follow-up implementation is
+active: reopen P2 (Yeet self-healing reflection) or P3 (memory consolidation)
+only after a packet closes without usable reflections.
 
 ## Launcher
 
@@ -43,5 +46,5 @@ reflection lint test, the GLOSSARY entry, and this packet's own dogfood reflecti
 
 ## Lifecycle
 
-`active`. P1 lands the goal-closeout system; P2 (Yeet self-healing reflection) and
-P3 (memory consolidation) are designed in `SPEC.md` and built in follow-up slices.
+`completed-retained`. P1 is retained as the working closeout system. P2 and P3
+are won't-do until a packet closes without usable reflections.

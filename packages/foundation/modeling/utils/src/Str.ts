@@ -5,20 +5,25 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { cast, dual, flow } from "effect/Function";
 import * as Str from "effect/String";
 import * as A from "./Array.ts";
-import type * as Order from "effect/Order";
+import type { LazyArg } from "effect/Function";
+import type * as Ordering from "effect/Ordering";
 import type * as TF from "type-fest";
 
 /**
  * Compare two strings for equality with data-first and data-last call forms.
  *
+ * **Details**
+ *
  * This is the canonical string-specific equivalence helper for reusable code.
  * Use `SchemaUtils.toEquivalence(schema)` when comparing values whose equality
  * should be derived from a named schema.
  *
- * @example
+ * **Example** (Call `equivalence`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -41,25 +46,56 @@ export const equivalence: {
 /**
  * Ascending lexicographic order for strings.
  *
- * @example
+ * **Details**
+ *
+ * The data-first signature is `Order.Order<string>`, so `orderAsc` stays usable
+ * wherever an `effect/Order` comparator is expected. The data-last signature
+ * partially applies `that` for pipeable comparisons.
+ *
+ * **Example** (Call `orderAsc`)
+ *
  * ```ts
+ * import { pipe } from "effect"
  * import { A, Str } from "@beep/utils"
  *
  * const sorted = A.sort(["b", "a"], Str.orderAsc)
+ * const compared = pipe("a", Str.orderAsc("b"))
+ *
  * console.log(sorted)
+ * console.log(compared)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const orderAsc: Order.Order<string> = Str.Order;
+export const orderAsc: {
+  (that: string): (self: string) => Ordering.Ordering;
+  (self: string, that: string): Ordering.Ordering;
+} = dual(2, Str.Order);
+
+/**
+ * Selects the template-literal result of {@link prefix}.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link prefix} share a single named return type. Every concrete
+ * instantiation resolves back to the corresponding concatenated template-literal type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Prefixed<Pre extends string, S extends string> = Pre extends string ? `${Pre}${S}` : never;
 
 /**
  * Prepends `prefix` to a string, preserving template-literal types.
  *
+ * **Details**
+ *
  * Supports both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `prefix`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -80,20 +116,24 @@ export const orderAsc: Order.Order<string> = Str.Order;
  * @since 0.0.0
  */
 export const prefix: {
-  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => `${Pre}${S}`;
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): `${Pre}${S}`;
+  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => Prefixed<Pre, S>;
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): Prefixed<Pre, S>;
 } = dual(
   2,
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): `${Pre}${S}` => `${prefix}${str}` as const
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): Prefixed<Pre, S> =>
+    cast(`${prefix}${str}` as const)
 );
 
 /**
  * Prepends `prefix` to a string and returns a thunk of the result.
  *
+ * **Details**
+ *
  * Useful for deferred evaluation when building lazy configuration values.
  * Supports both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `prefixThunk`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -116,21 +156,38 @@ export const prefix: {
  * @since 0.0.0
  */
 export const prefixThunk: {
-  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => () => `${Pre}${S}`;
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): () => `${Pre}${S}`;
+  <const Pre extends string>(prefix: Pre): <S extends string>(str: S) => LazyArg<`${Pre}${S}`>;
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): LazyArg<`${Pre}${S}`>;
 } = dual(
   2,
-  <const Pre extends string, const S extends string>(str: S, prefix: Pre): (() => `${Pre}${S}`) =>
+  <const Pre extends string, const S extends string>(str: S, prefix: Pre): LazyArg<`${Pre}${S}`> =>
     () =>
       `${prefix}${str}` as const
 );
 
 /**
+ * Selects the template-literal result of {@link postfix}.
+ *
+ * **Details**
+ *
+ * Spelled as a deferred conditional alias so the data-first and data-last
+ * signatures of {@link postfix} share a single named return type. Every
+ * concrete instantiation resolves back to the corresponding concatenated template-literal type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Postfixed<S extends string, Post extends string> = Post extends string ? `${S}${Post}` : never;
+
+/**
  * Appends `postfix` to a string, preserving template-literal types.
+ *
+ * **Details**
  *
  * Supports both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `postfix`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -151,21 +208,24 @@ export const prefixThunk: {
  * @since 0.0.0
  */
 export const postfix: {
-  <const Post extends string>(postfix: Post): <S extends string>(str: S) => `${S}${Post}`;
-  <const Post extends string, const S extends string>(str: S, postfix: Post): `${S}${Post}`;
+  <const Post extends string>(postfix: Post): <S extends string>(str: S) => Postfixed<S, Post>;
+  <const Post extends string, const S extends string>(str: S, postfix: Post): Postfixed<S, Post>;
 } = dual(
   2,
-  <const Post extends string, const S extends string>(str: S, postfix: Post): `${S}${Post}` =>
-    `${str}${postfix}` as const
+  <const Post extends string, const S extends string>(str: S, postfix: Post): Postfixed<S, Post> =>
+    cast(`${str}${postfix}` as const)
 );
 
 /**
  * Appends `postfix` to a string and returns a thunk of the result.
  *
+ * **Details**
+ *
  * Useful for deferred evaluation when building lazy configuration values.
  * Supports both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `postfixThunk`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -188,11 +248,11 @@ export const postfix: {
  * @since 0.0.0
  */
 export const postfixThunk: {
-  <const Post extends string>(postfix: Post): <S extends string>(str: S) => () => `${S}${Post}`;
-  <const Post extends string, const S extends string>(str: S, postfix: Post): () => `${S}${Post}`;
+  <const Post extends string>(postfix: Post): <S extends string>(str: S) => LazyArg<`${S}${Post}`>;
+  <const Post extends string, const S extends string>(str: S, postfix: Post): LazyArg<`${S}${Post}`>;
 } = dual(
   2,
-  <const Post extends string, const S extends string>(str: S, postfix: Post): (() => `${S}${Post}`) =>
+  <const Post extends string, const S extends string>(str: S, postfix: Post): LazyArg<`${S}${Post}`> =>
     () =>
       `${str}${postfix}` as const
 );
@@ -200,10 +260,13 @@ export const postfixThunk: {
 /**
  * Maps a non-empty string array by prepending each element with `prefix`.
  *
+ * **Details**
+ *
  * Preserves `NonEmptyReadonlyArray` in the return type. Supports both
  * data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `mapPrefix`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -246,10 +309,13 @@ export const mapPrefix: {
 /**
  * Maps a non-empty string array by appending each element with `postfix`.
  *
+ * **Details**
+ *
  * Preserves `NonEmptyReadonlyArray` in the return type. Supports both
  * data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `mapPostfix`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -292,7 +358,8 @@ export const mapPostfix: {
 /**
  * Converts a string to `camelCase` with a type-level `CamelCase` return.
  *
- * @example
+ * **Example** (Call `camelCase`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -309,7 +376,8 @@ export const camelCase = <TStr extends string>(str: TStr): TF.CamelCase<TStr> =>
 /**
  * Converts a string to `snake_case` with a type-level `SnakeCase` return.
  *
- * @example
+ * **Example** (Call `snakeCase`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -326,7 +394,8 @@ export const snakeCase = <const TStr extends string>(str: TStr): TF.SnakeCase<TS
 /**
  * Converts a string to `kebab-case` with a type-level `KebabCase` return.
  *
- * @example
+ * **Example** (Call `kebabCase`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -344,7 +413,8 @@ export const kebabCase = <const TStr extends string>(str: TStr): TF.KebabCase<TS
  * Converts a string to `SCREAMING_SNAKE_CASE` with a type-level
  * `ScreamingSnakeCase` return.
  *
- * @example
+ * **Example** (Call `screamingSnake`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -362,7 +432,8 @@ export const screamingSnake = <const TStr extends string>(str: TStr): TF.Screami
 /**
  * Converts a string to `PascalCase` with a type-level `PascalCase` return.
  *
- * @example
+ * **Example** (Call `pascalCase`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -379,7 +450,8 @@ export const pascalCase = <const TStr extends string>(str: TStr): TF.PascalCase<
 /**
  * Converts a `PascalCase` string to `snake_case` at both type and value level.
  *
- * @example
+ * **Example** (Call `pascalToSnake`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -397,7 +469,8 @@ export const pascalToSnake = <const TStr extends string>(str: TF.PascalCase<TStr
 /**
  * Converts a `snake_case` string to `camelCase` at both type and value level.
  *
- * @example
+ * **Example** (Call `snakeToCamel`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -415,7 +488,8 @@ export const snakeToCamel = <const TStr extends string>(str: TF.SnakeCase<TStr>)
 /**
  * Converts a `snake_case` string to `kebab-case` at both type and value level.
  *
- * @example
+ * **Example** (Call `snakeToKebab`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -433,7 +507,8 @@ export const snakeToKebab = <const TStr extends string>(str: TF.SnakeCase<TStr>)
 /**
  * Converts a `camelCase` string to `snake_case` at both type and value level.
  *
- * @example
+ * **Example** (Call `camelToSnake`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -451,7 +526,8 @@ export const camelToSnake = <const TStr extends string>(str: TF.CamelCase<TStr>)
 /**
  * Converts a `snake_case` string to `PascalCase` at both type and value level.
  *
- * @example
+ * **Example** (Call `snakeToPascal`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -469,7 +545,8 @@ export const snakeToPascal = <const TStr extends TF.SnakeCase<string>>(str: TStr
 /**
  * Converts a `kebab-case` string to `snake_case` at both type and value level.
  *
- * @example
+ * **Example** (Call `kebabToSnake`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -487,10 +564,13 @@ export const kebabToSnake = <const TStr extends string>(str: TF.KebabCase<TStr>)
 /**
  * Type-narrowing predicate that checks whether a string starts with `searchString`.
  *
+ * **Details**
+ *
  * Narrows the type to a string with the requested prefix on success. Supports
  * both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `startsWith`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -524,10 +604,13 @@ export const startsWith: {
 /**
  * Type-narrowing predicate that checks whether a string ends with `searchString`.
  *
+ * **Details**
+ *
  * Narrows the type to a string with the requested suffix on success. Supports
  * both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `endsWith`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -561,10 +644,13 @@ export const endsWith: {
 /**
  * Type-narrowing predicate that checks whether a string contains `searchString`.
  *
+ * **Details**
+ *
  * Narrows the type to a string that contains the searched substring on
  * success. Supports both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `contains`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -603,9 +689,12 @@ export const contains: {
 /**
  * Repeats a string `count` times with a type-level `StringRepeat` return.
  *
+ * **Details**
+ *
  * Supports both data-first and data-last calling conventions.
  *
- * @example
+ * **Example** (Call `repeat`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -639,11 +728,14 @@ export const repeat: {
 /**
  * Replaces the first occurrence of `searchValue` using a callback replacer.
  *
+ * **Details**
+ *
  * Supports both data-first and data-last calling conventions. Use this helper
  * for native `replace` callback sites that cannot be expressed with
  * `Str.replace(searchValue, replacement)`.
  *
- * @example
+ * **Example** (Call `replaceWith`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  * import { pipe } from "effect"
@@ -680,11 +772,14 @@ export const replaceWith: {
 /**
  * Replaces every occurrence of `searchValue` using a callback replacer.
  *
+ * **Details**
+ *
  * Supports both data-first and data-last calling conventions. Use this helper
  * for native `replaceAll` callback sites that cannot be expressed with
  * `Str.replaceAll(searchValue, replacement)`.
  *
- * @example
+ * **Example** (Call `replaceAllWith`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  * import { pipe } from "effect"
@@ -720,7 +815,8 @@ export const replaceAllWith: {
 /**
  * Re-export of all helpers from `effect/String`.
  *
- * @example
+ * **Example** (Call a re-exported helper)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -736,7 +832,8 @@ export * from "effect/String";
 /**
  * Returns a thunk that lazily trims whitespace from both ends of a string.
  *
- * @example
+ * **Example** (Call `trimThunk`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -755,7 +852,8 @@ export const trimThunk = (s: string) => () => Str.trim(s);
 /**
  * Convert a numeric literal into its string-literal representation.
  *
- * @example
+ * **Example** (Call `fromNumber`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -774,7 +872,8 @@ export const fromNumber = <const T extends number>(num: T): `${T}` => `${num}` a
 /**
  * Converts arbitrary text into a lowercase kebab-case slug.
  *
- * @example
+ * **Example** (Call `toSlug`)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -796,10 +895,13 @@ export const toSlug = flow(
 /**
  * Trim text and truncate it to the requested visible character count.
  *
+ * **Details**
+ *
  * When the trimmed text is longer than `maxLength`, the result keeps the first
  * `maxLength` characters and appends `...`.
  *
- * @example
+ * **Example** (Call `truncate`)
+ *
  * ```ts
  * import { pipe } from "effect"
  * import { Str } from "@beep/utils"
@@ -834,7 +936,8 @@ export const truncate: {
 /**
  * Returns an empty string if the provided input is null or undefined
  *
- * @example
+ * **Example** (Call `orEmpty`)
+ *
  * ```ts
  * import { Str } from "@beep/utils";
  *
@@ -846,3 +949,75 @@ export const truncate: {
  * @since 0.0.0
  */
 export const orEmpty = (str: string | null | undefined): string => str ?? "";
+
+/**
+ * Selects the statically reachable result of {@link matchEmpty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MatchEmptyResult<Self extends string, OnEmpty, OnNonEmpty> = string extends Self
+  ? OnEmpty | OnNonEmpty
+  : Self extends ""
+    ? OnEmpty
+    : OnNonEmpty;
+
+/**
+ * Pattern-matches on a string, handling the empty and non-empty cases
+ * separately — the string analogue of `effect/Array`'s `match`.
+ *
+ * **Details**
+ *
+ * `onEmpty` is evaluated lazily and only when the string is `""`; `onNonEmpty`
+ * receives the non-empty string. Supports both data-first and data-last
+ * calling conventions.
+ *
+ * **Example** (Call `matchEmpty`)
+ *
+ * ```ts
+ * import { Str } from "@beep/utils"
+ *
+ * // Data-last (pipeable)
+ * const summarize = Str.matchEmpty({
+ *   onEmpty: () => "<empty>",
+ *   onNonEmpty: (s) => `${s.length} chars`
+ * })
+ * console.log(summarize("")) // "<empty>"
+ * console.log(summarize("beep")) // "4 chars"
+ *
+ * // Data-first
+ * const direct = Str.matchEmpty("beep", {
+ *   onEmpty: () => 0,
+ *   onNonEmpty: (s) => s.length
+ * })
+ * console.log(direct) // 4
+ * ```
+ *
+ * @category folding
+ * @since 0.0.0
+ */
+export const matchEmpty: {
+  <const B, const C = B>(options: {
+    readonly onEmpty: LazyArg<B>;
+    readonly onNonEmpty: (self: string) => C;
+  }): <const Self extends string>(self: Self) => MatchEmptyResult<Self, B, C>;
+  <const Self extends string, const B, const C = B>(
+    self: Self,
+    options: {
+      readonly onEmpty: LazyArg<B>;
+      readonly onNonEmpty: (self: Exclude<Self, "">) => C;
+    }
+  ): MatchEmptyResult<Self, B, C>;
+} = dual(
+  2,
+  <Self extends string, B, C = B>(
+    self: Self,
+    {
+      onEmpty,
+      onNonEmpty,
+    }: {
+      readonly onEmpty: LazyArg<B>;
+      readonly onNonEmpty: (self: Exclude<Self, "">) => C;
+    }
+  ): MatchEmptyResult<Self, B, C> => cast(Str.isEmpty(self) ? onEmpty() : onNonEmpty(cast(self)))
+);

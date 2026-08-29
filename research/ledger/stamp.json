@@ -1,0 +1,7 @@
+{
+  "lastSuccessfulRun": null,
+  "lastAttemptedRun": "2026-08-26T22:22:00-05:00",
+  "lastAttemptedStatus": "partial",
+  "lastAttemptedPacket": "research/2026-08-26",
+  "note": "Supervised first run. Stamp does not advance to successful until a human merges a success|partial packet they accept. Next run blocks if a research/* PR is still open."
+}

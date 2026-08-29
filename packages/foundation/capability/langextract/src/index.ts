@@ -8,7 +8,7 @@
 /**
  * Deterministic source-alignment helpers.
  *
- * @category alignment
+ * @category mapping
  * @since 0.0.0
  */
 export * as Alignment from "./Alignment/index.ts";
@@ -40,3 +40,10 @@ export * as Service from "./Service/index.ts";
  * @since 0.0.0
  */
 export * as Target from "./Target/index.ts";
+/**
+ * Strict normalized-locator to exact-raw-span mapping.
+ *
+ * @category mapping
+ * @since 0.0.0
+ */
+export * as VerifiedSpan from "./VerifiedSpan/index.ts";

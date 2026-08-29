@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { GlobError, layer as GlobLayer, Glob as GlobService } from "@beep/utils/Glob";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Match } from "effect";
@@ -42,6 +41,7 @@ const makeTempDirectory: (prefix: string) => TestEffect<string> = Effect.fn("Glo
 });
 const writeText = (path: string, content: string): TestEffect<void> =>
   withFileSystem((fs) => fs.writeFileString(path, content));
+const chmodPath = (path: string, mode: number): TestEffect<void> => withFileSystem((fs) => fs.chmod(path, mode));
 const removePath = (path: string) => withFileSystem((fs) => fs.remove(path, { recursive: true }));
 const makeSymlink = (target: string, path: string) => withFileSystem((fs) => fs.symlink(target, path));
 
@@ -50,9 +50,13 @@ const acquireFixture: TestEffect<Fixture> = Effect.gen(function* () {
 
   yield* makeDirectory(joinPath(dir, "src", "errors"));
   yield* makeDirectory(joinPath(dir, "src", "nested"));
+  yield* makeDirectory(joinPath(dir, "%2F"));
+  yield* makeDirectory(joinPath(dir, "symbols#%"));
   yield* writeText(joinPath(dir, "src", "index.ts"), "");
   yield* writeText(joinPath(dir, "src", "errors", "problem.ts"), "");
   yield* writeText(joinPath(dir, "src", "nested", "deep.ts"), "");
+  yield* writeText(joinPath(dir, "%2F", "literal.ts"), "");
+  yield* writeText(joinPath(dir, "symbols#%", "literal.ts"), "");
   yield* writeText(joinPath(dir, "README.md"), "");
 
   return {
@@ -83,13 +87,10 @@ const restoreBunGlob = (bunRef: typeof Bun, originalGlob: typeof Bun.Glob) => {
   Reflect.set(bunRef, "Glob", originalGlob);
 };
 
-class BunGlobMutationError extends TaggedErrorClass<BunGlobMutationError>("BunGlobMutationError")(
-  "BunGlobMutationError",
-  {
-    action: S.String,
-    cause: S.Defect({ includeStack: true }),
-  }
-) {}
+class BunGlobMutationError extends S.TaggedError<BunGlobMutationError>()("BunGlobMutationError", {
+  action: S.String,
+  cause: S.Defect({ includeStack: true }),
+}) {}
 
 const toGlobMutationError =
   (action: string) =>
@@ -148,6 +149,26 @@ describe("@beep/utils Glob", () => {
       })
     ));
 
+  it("does not traverse unrelated directories for a statically rooted pattern", () =>
+    runTest(
+      Effect.acquireUseRelease(
+        acquireFixture,
+        (fixture) =>
+          Effect.gen(function* () {
+            const unrelated = joinPath(fixture.dir, "unrelated");
+            yield* makeDirectory(joinPath(unrelated, "nested"));
+            const results = yield* Effect.acquireUseRelease(
+              chmodPath(unrelated, 0),
+              () => runGlob("src/**/*.ts", { cwd: fixture.dir }),
+              () => chmodPath(unrelated, 0o700)
+            );
+
+            expect(results).toEqual(["src/errors/problem.ts", "src/index.ts", "src/nested/deep.ts"]);
+          }),
+        (fixture) => fixture.cleanup
+      )
+    ));
+
   it("supports absolute paths and directory matches when nodir is false", () =>
     runTest(
       Effect.gen(function* () {
@@ -191,6 +212,21 @@ describe("@beep/utils Glob", () => {
       })
     ));
 
+  it("resolves an omitted cwd the same as an explicit current directory", () =>
+    runTest(
+      Effect.gen(function* () {
+        const implicitResults = yield* runGlob("package.json");
+        const explicitResults = yield* runGlob("package.json", { cwd: "." });
+        const implicitNodeResults = yield* withBunGlobDisabled(runGlob("package.json"));
+        const explicitNodeResults = yield* withBunGlobDisabled(runGlob("package.json", { cwd: "." }));
+
+        expect(implicitResults).toEqual(["package.json"]);
+        expect(explicitResults).toEqual(implicitResults);
+        expect(implicitNodeResults).toEqual(implicitResults);
+        expect(explicitNodeResults).toEqual(implicitResults);
+      })
+    ));
+
   it("falls back to Node globbing when Bun.Glob is unavailable", () =>
     runTest(
       Effect.gen(function* () {
@@ -217,6 +253,84 @@ describe("@beep/utils Glob", () => {
           (fixture) => fixture.cleanup
         );
         yield* program;
+      })
+    ));
+
+  it("treats percent-encoded and fragment characters as filesystem text across backends", () =>
+    runTest(
+      Effect.gen(function* () {
+        const program = Effect.acquireUseRelease(
+          acquireFixture,
+          (fixture) =>
+            Effect.gen(function* () {
+              const options = {
+                absolute: true,
+                cwd: fixture.dir,
+                nodir: true,
+              };
+              const pattern = ["%2F/*.ts", "symbols*/*.ts"];
+              const bunResults = yield* runGlob(pattern, options);
+              const nodeResults = yield* withBunGlobDisabled(runGlob(pattern, options));
+              const expected = [
+                joinPath(fixture.dir, "%2F", "literal.ts"),
+                joinPath(fixture.dir, "symbols#%", "literal.ts"),
+              ];
+
+              expect(bunResults).toEqual(expected);
+              expect(nodeResults).toEqual(expected);
+            }),
+          (fixture) => fixture.cleanup
+        );
+
+        yield* program;
+      })
+    ));
+
+  it.each(["src/errors", "src/errors/", "src/errors/**"])(
+    "applies the %s directory ignore consistently across backends",
+    (ignore) =>
+      runTest(
+        Effect.gen(function* () {
+          const program = Effect.acquireUseRelease(
+            acquireFixture,
+            (fixture) =>
+              Effect.forEach(
+                [false, true],
+                Effect.fnUntraced(function* (nodir) {
+                  const options = {
+                    cwd: fixture.dir,
+                    ignore,
+                    nodir,
+                  };
+                  const bunResults = yield* runGlob("src/**", options);
+                  const nodeResults = yield* withBunGlobDisabled(runGlob("src/**", options));
+                  const expected = nodir
+                    ? ["src/index.ts", "src/nested/deep.ts"]
+                    : ["src/index.ts", "src/nested", "src/nested/deep.ts"];
+
+                  expect(bunResults).toEqual(expected);
+                  expect(nodeResults).toEqual(expected);
+                })
+              ),
+            (fixture) => fixture.cleanup
+          );
+
+          yield* program;
+        })
+      )
+  );
+
+  it("surfaces non-missing Node filesystem errors as GlobError", () =>
+    runTest(
+      Effect.gen(function* () {
+        const error = yield* withBunGlobDisabled(
+          runGlob("**/*.ts", {
+            cwd: "invalid\0cwd",
+            nodir: true,
+          })
+        ).pipe(Effect.flip);
+
+        expect(S.is(GlobError)(error)).toBe(true);
       })
     ));
 
@@ -253,10 +367,12 @@ describe("@beep/utils Glob", () => {
             makeSymlink(fixture.dir, joinPath(fixture.dir, "src", "linked-root")).pipe(
               Effect.flatMap(
                 Effect.fnUntraced(function* () {
-                  return yield* runGlob("src/**", {
-                    cwd: fixture.dir,
-                    nodir: true,
-                  });
+                  return yield* withBunGlobDisabled(
+                    runGlob("src/**", {
+                      cwd: fixture.dir,
+                      nodir: true,
+                    })
+                  );
                 })
               )
             ),

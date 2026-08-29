@@ -8,7 +8,7 @@
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
 import { SimilarityScore } from "@beep/nlp/Core/Similarity";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Inspectable, Layer } from "effect";
 import { dual } from "effect/Function";
@@ -88,7 +88,8 @@ const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(t
 /**
  * Typed failure for wink-backed vector, set, or bag-of-words similarity.
  *
- * @example
+ * **Example** (Create from cause)
+ *
  * ```ts
  * import { SimilarityError } from "@beep/wink"
  *
@@ -99,14 +100,14 @@ const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(t
  * @category errors
  * @since 0.0.0
  */
-export class SimilarityError extends TaggedErrorClass<SimilarityError>($I`SimilarityError`)(
+export class SimilarityError extends S.TaggedError<SimilarityError>($I`SimilarityError`)(
   "SimilarityError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
     operation: S.String,
   },
-  $I.annote("SimilarityError", {
+  $I.annoteError<SimilarityError>("SimilarityError", {
     description: "Failure raised while computing wink-backed similarity scores.",
   })
 ) {
@@ -264,7 +265,8 @@ const makeWinkSimilarity = Effect.gen(function* () {
 /**
  * Service for computing cosine and Tversky scores using wink similarity helpers.
  *
- * @example
+ * **Example** (Compute set Tversky score)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
@@ -297,7 +299,8 @@ export class WinkSimilarity extends Context.Service<WinkSimilarity, WinkSimilari
 /**
  * Live layer for wink similarity utilities.
  *
- * @example
+ * **Example** (Provide live layer)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { UnitInterval } from "@beep/schema/UnitInterval"

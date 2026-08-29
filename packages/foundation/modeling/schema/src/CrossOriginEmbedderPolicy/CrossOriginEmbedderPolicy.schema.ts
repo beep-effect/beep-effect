@@ -26,12 +26,13 @@ const CoepValueBase = LiteralKit(["unsafe-none", "require-corp", "credentialless
 /**
  * Schema for allowed `Cross-Origin-Embedder-Policy` values.
  *
- * @example
- * ```ts
+ * **Example** (Validate require-corp value)
+ *
+ * ```ts import.meta.vitest name="Validate require-corp value"
  * import * as S from "effect/Schema"
  * import { CoepValue } from "@beep/schema/CrossOriginEmbedderPolicy"
  *
- * console.log(S.is(CoepValue)("require-corp")) // true
+ * S.is(CoepValue)("require-corp") // => true
  * ```
  *
  * @category schemas
@@ -47,7 +48,8 @@ export const CoepValue = CoepValueBase.pipe(
 /**
  * Type for allowed `Cross-Origin-Embedder-Policy` values.
  *
- * @example
+ * **Example** (Assign require-corp type)
+ *
  * ```ts
  * import type { CoepValue } from "@beep/schema/CrossOriginEmbedderPolicy"
  *
@@ -65,7 +67,8 @@ const CrossOriginEmbedderPolicyOptionBase = LiteralKit([false, ...CoepValueBase.
 /**
  * Schema for enabled or disabled `Cross-Origin-Embedder-Policy` options.
  *
- * @example
+ * **Example** (Decode require-corp option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CrossOriginEmbedderPolicyOption } from "@beep/schema/CrossOriginEmbedderPolicy"
@@ -86,7 +89,8 @@ export const CrossOriginEmbedderPolicyOption = CrossOriginEmbedderPolicyOptionBa
 /**
  * Type for enabled or disabled `Cross-Origin-Embedder-Policy` options.
  *
- * @example
+ * **Example** (Assign disabled option type)
+ *
  * ```ts
  * import type { CrossOriginEmbedderPolicyOption } from "@beep/schema/CrossOriginEmbedderPolicy"
  *
@@ -102,7 +106,8 @@ export type CrossOriginEmbedderPolicyOption = typeof CrossOriginEmbedderPolicyOp
 /**
  * Schema for the Cross-Origin-Embedder-Policy response header output.
  *
- * @example
+ * **Example** (Make COEP response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { COEPResponseHeader } from "@beep/schema/CrossOriginEmbedderPolicy"
@@ -130,11 +135,14 @@ type COEPResponseHeaderEncoded = typeof COEPResponseHeader.Encoded;
  * Schema for the Cross-Origin-Embedder-Policy response header.
  * Transforms a CrossOriginEmbedderPolicyOption input into a ResponseHeader output.
  *
+ * **Details**
+ *
  * - `false` → decodes to `{ name: "Cross-Origin-Embedder-Policy", value: undefined }`
  * - `undefined` → decodes to `{ name: "Cross-Origin-Embedder-Policy", value: undefined }` (no default)
  * - Valid COEP value → decodes to `{ name: "Cross-Origin-Embedder-Policy", value: <value> }`
  *
- * @example
+ * **Example** (Decode COEP header value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CrossOriginEmbedderPolicyHeader } from "@beep/schema/CrossOriginEmbedderPolicy"
@@ -155,11 +163,9 @@ export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolic
           name: headerName,
           value: input === false || input === undefined ? undefined : input,
         }),
-      encode: (
-        header: COEPResponseHeaderEncoded
-      ): Effect.Effect<CrossOriginEmbedderPolicyOption | undefined, SchemaIssue.Issue> =>
+      encode: (): Effect.Effect<CrossOriginEmbedderPolicyOption | undefined, SchemaIssue.Issue> =>
         Effect.fail(
-          new SchemaIssue.Forbidden(O.some(header), {
+          new SchemaIssue.Forbidden({
             message: "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported",
           })
         ),
@@ -222,7 +228,8 @@ export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolic
 /**
  * Type for rendered `Cross-Origin-Embedder-Policy` response headers.
  *
- * @example
+ * **Example** (Construct typed COEP header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { COEPResponseHeader, type CrossOriginEmbedderPolicyHeader } from "@beep/schema/CrossOriginEmbedderPolicy"
@@ -250,7 +257,8 @@ export { COEPResponseHeader as ResponseHeader, CrossOriginEmbedderPolicyOption a
 /**
  * Concise alias for {@link CrossOriginEmbedderPolicyHeader}.
  *
- * @example
+ * **Example** (Decode via Header alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/CrossOriginEmbedderPolicy"
@@ -267,7 +275,8 @@ export const Header = CrossOriginEmbedderPolicyHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Construct Header type value)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { COEPResponseHeader, type Header } from "@beep/schema/CrossOriginEmbedderPolicy"

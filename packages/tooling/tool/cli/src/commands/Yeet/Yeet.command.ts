@@ -6,18 +6,30 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Match } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import {
   runYeetFallowFeedback,
   runYeetFallowFixtureCheck,
   runYeetPlanContractCheck,
-} from "./internal/FallowFeedback.js";
-import { runYeet } from "./internal/Handler.js";
-import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.js";
-import { YeetRunOptions } from "./Yeet.schemas.js";
-import type { YeetRunMode } from "./internal/Planner.js";
+} from "./internal/FallowFeedback.ts";
+import { runYeet } from "./internal/Handler.ts";
+import { YeetInboxSeverity } from "./internal/Inbox.ts";
+import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
+import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
+import {
+  rejectYeetUntilEventPairing,
+  runYeetMerge,
+  runYeetMergeLoop,
+  runYeetReplyPass,
+  runYeetSweep,
+  runYeetWatchLoop,
+} from "./internal/Porcelain.ts";
+import { YeetRunOptions } from "./Yeet.schemas.ts";
+import type { YeetRunMode } from "./internal/Planner.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
 
@@ -26,19 +38,27 @@ const baseFlag = Flag.string("base").pipe(
   Flag.withDefault("origin/main")
 );
 
+const branchFlag = Flag.string("branch").pipe(
+  Flag.withDescription("Sweep this branch instead of the checked-out one, so a second pass can finish a merged branch"),
+  Flag.withDefault("")
+);
+
 const headFlag = Flag.string("head").pipe(
   Flag.withDescription("Head ref for affected feedback planning"),
   Flag.withDefault("HEAD")
 );
 
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render plan output as JSON"));
+const jsonFlag = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Render plan output as JSON"));
 
 const packetDirFlag = Flag.string("packet-dir").pipe(
   Flag.withDescription("Ignored directory for yeet run context, logs, and packets"),
   Flag.withDefault(DEFAULT_YEET_PACKET_DIR)
 );
 
-const planFlag = Flag.boolean("plan").pipe(Flag.withDescription("Print the yeet plan without running commands"));
+const planFlag = Flag.boolean("plan").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the yeet plan without running commands")
+);
 
 const messageFlag = Flag.string("message").pipe(
   Flag.withDescription("Conventional commit message required before publish"),
@@ -46,60 +66,94 @@ const messageFlag = Flag.string("message").pipe(
 );
 
 const fastFlag = Flag.boolean("fast").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip local full pre-push proof only when paired with --monitor on a PR branch")
 );
 
 const startPrEarlyFlag = Flag.boolean("start-pr-early").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Push with hooks skipped before full local proof, then run proof and monitor hosted checks")
 );
 
 const monitorFlag = Flag.boolean("monitor").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
 );
 
+const untilMergedFlag = Flag.boolean("until-merged").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Keep monitoring across pushes until the PR merges or closes, rerunning known-flake jobs once per job per head SHA and sweeping the clone on merge"
+  )
+);
+
 const summaryFlag = Flag.boolean("summary").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print a compact operator summary after monitor or closeout reads")
 );
 
 const remoteFlag = Flag.boolean("remote").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Include live GitHub PR and check data in yeet status")
 );
 
 const tierFlag = Flag.choiceWithValue("tier", [
   ["full", "full"],
+  ["cheap-gates", "cheap-gates"],
   ["review-fix", "review-fix"],
 ]).pipe(
   Flag.withDescription("Local proof tier for verify; publish always uses full"),
   Flag.withDefault("full" as const)
 );
 
-const amendFlag = Flag.boolean("amend").pipe(Flag.withDescription("Amend the current local commit during publish"));
+const mergedFlag = Flag.boolean("merged").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Prove the merge preview of HEAD with the base ref — the tree hosted CI runs — instead of the branch tree"
+  )
+);
+
+const collectAllFlag = Flag.boolean("collect-all").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
+);
+
+const amendFlag = Flag.boolean("amend").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Amend the current local commit during publish")
+);
 
 const stagedOnlyFlag = Flag.boolean("staged-only").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Publish exactly the staged index: stash unstaged/untracked residue after commit, prove the clean tree, restore after push"
   )
 );
 
 const allowStaleBaseFlag = Flag.boolean("allow-stale-base").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Proceed with publish even when branch files overlap commits landed on the base since merge-base"
   )
 );
 
 const prFlag = Flag.boolean("pr").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Create a ready (non-draft) pull request after the push succeeds, unless one is already open")
 );
 
 const noEditFlag = Flag.boolean("no-edit").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Reuse the current commit message with --amend during publish")
 );
 
 const reuseVerifiedFlag = Flag.boolean("reuse-verified").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip publish proof only when durable Yeet full-proof state exactly matches")
 );
 
 const pushOnlyFlag = Flag.boolean("push-only").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Push an already-verified clean commit without committing or rerunning local proof")
 );
 
@@ -141,6 +195,7 @@ const resolveThreadsFlag = Flag.string("resolve-threads").pipe(
 );
 
 const retriggerGreptileFlag = Flag.boolean("retrigger-greptile").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Post the explicit Greptile retrigger comment after reading current PR state")
 );
 
@@ -155,7 +210,13 @@ const fallowEmitFlag = Flag.string("emit").pipe(
 );
 
 const fallowAdvisoryFlag = Flag.boolean("advisory").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Keep every Fallow-derived Yeet issue nonblocking")
+);
+
+const fallowRunStartedAtFlag = Flag.string("run-started-at").pipe(
+  Flag.withDescription("Reject advisory envelopes generated before this Yeet run timestamp"),
+  Flag.withDefault("")
 );
 
 const fallowAssertFlag = Flag.string("assert").pipe(
@@ -164,6 +225,7 @@ const fallowAssertFlag = Flag.string("assert").pipe(
 );
 
 const fromStdinFlag = Flag.boolean("from-stdin").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Read a Yeet plan JSON document from stdin")
 );
 
@@ -187,13 +249,69 @@ const expectArgsFlag = Flag.string("expect-args").pipe(
   Flag.withDefault("")
 );
 
+const inboxUnackedFlag = Flag.boolean("unacked").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Show only rows without an ack receipt")
+);
+
+const inboxSeverityFlagChoices: ReadonlyArray<readonly ["all" | YeetInboxSeverity, "all" | YeetInboxSeverity]> = [
+  ["all", "all"],
+  ...A.map(YeetInboxSeverity.Options, (tier) => [tier, tier] as const),
+];
+
+const inboxSeverityFlag = Flag.choiceWithValue("severity", inboxSeverityFlagChoices).pipe(
+  Flag.withDescription("Show only rows of this severity tier"),
+  Flag.withDefault("all" as const)
+);
+
+const inboxFixShaFlag = Flag.string("fix-sha").pipe(
+  Flag.withDescription("Acknowledge the row as fixed by this commit"),
+  Flag.withDefault("")
+);
+
+const inboxWontfixFlag = Flag.boolean("wontfix").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Acknowledge the row as deliberately not fixed; requires --reason")
+);
+
+const inboxReasonFlag = Flag.string("reason").pipe(
+  Flag.withDescription("Why the row is not being fixed; only applies with --wontfix"),
+  Flag.withDefault("")
+);
+
+const inboxThreadUrlFlag = Flag.string("thread-url").pipe(
+  Flag.withDescription("Acknowledge the row as continued in this review thread"),
+  Flag.withDefault("")
+);
+
+const inboxRowStdinFlag = Flag.boolean("from-stdin").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Read one inbox row JSON document from stdin")
+);
+
+const inboxAckIdArgument = Argument.string("id").pipe(
+  Argument.withDescription("Inbox row id to acknowledge, as printed by yeet inbox list")
+);
+
+const inboxListFlags = {
+  json: jsonFlag,
+  severity: inboxSeverityFlag,
+  unacked: inboxUnackedFlag,
+} as const;
+
 const sharedFlags = {
   base: baseFlag,
+  collectAll: collectAllFlag,
   head: headFlag,
   json: jsonFlag,
   packetDir: packetDirFlag,
   plan: planFlag,
   tier: tierFlag,
+} as const;
+
+const verifyFlags = {
+  ...sharedFlags,
+  merged: mergedFlag,
 } as const;
 
 const publishFlags = {
@@ -212,9 +330,39 @@ const publishFlags = {
   summary: summaryFlag,
 } as const;
 
+const watchFlag = Flag.boolean("watch").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Stream one NDJSON row per PR state transition until the PR settles, instead of the blocking check watch"
+  )
+);
+
+const untilEventFlag = Flag.boolean("until-event").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "With --watch: exit on the first actionable event batch (a failing check immediately, new PR comments after a short settle window) so a supervising session is woken the moment there is something to act on"
+  )
+);
+
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
+  untilEvent: untilEventFlag,
+  untilMerged: untilMergedFlag,
+  watch: watchFlag,
+} as const;
+
+const porcelainFlags = {
+  base: baseFlag,
+  head: headFlag,
+  packetDir: packetDirFlag,
+} as const;
+
+const sweepFlags = {
+  ...porcelainFlags,
+  branch: branchFlag,
+  json: jsonFlag,
+  plan: planFlag,
 } as const;
 
 const closeoutFlags = {
@@ -241,9 +389,11 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
     amend: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     base: S.String,
     bots: S.String.pipe(SchemaUtils.withKeyDefaults("greptile")),
+    collectAll: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     fast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     head: S.String,
     json: S.Boolean,
+    merged: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     monitor: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     noEdit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     packetDir: S.String,
@@ -279,7 +429,9 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       allowStaleBase: sharedOptions.allowStaleBase,
       amend: sharedOptions.amend,
       bots: sharedOptions.bots,
+      collectAll: sharedOptions.collectAll,
       fast: sharedOptions.fast,
+      merged: sharedOptions.merged,
       message: options.message ?? "",
       mode,
       monitor: sharedOptions.monitor,
@@ -303,7 +455,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
   );
 };
 
-const yeetVerifyCommand = Command.make("verify", sharedFlags, (options) => runYeetMode("verify", options)).pipe(
+const yeetVerifyCommand = Command.make("verify", verifyFlags, (options) => runYeetMode("verify", options)).pipe(
   Command.withDescription("Run the canonical pre-push proof without duplicate affected feedback")
 );
 
@@ -315,8 +467,76 @@ const yeetPublishCommand = Command.make("publish", publishFlags, (options) => ru
   Command.withDescription("Commit reviewed staged changes, prove the commit, then push")
 );
 
-const yeetMonitorCommand = Command.make("monitor", monitorFlags, (options) => runYeetMode("monitor", options)).pipe(
-  Command.withDescription("Monitor hosted PR checks for the current branch")
+const YeetMonitorCommandRoute = LiteralKit(["classic", "invalid-until-event", "merge-loop", "watch"]);
+
+const SelectYeetMonitorCommandRoute = Fn({
+  input: S.Struct({
+    plan: S.Boolean,
+    untilEvent: S.Boolean,
+    untilMerged: S.Boolean,
+    watch: S.Boolean,
+  }),
+  output: YeetMonitorCommandRoute,
+}).pipe(
+  $I.annoteSchema("SelectYeetMonitorCommandRoute", {
+    description: "Selects the monitor runtime from the four parsed mode switches.",
+  })
+);
+
+/**
+ * Select the runtime route for a parsed `yeet monitor` invocation.
+ *
+ * **Details**
+ *
+ * Plan mode always retains the classic planner. Outside plan mode,
+ * `untilEvent` is valid only with watch mode and never with the merge loop.
+ * Keeping the precedence in one pure selector makes the CLI pairing contract
+ * directly testable without executing a monitor.
+ *
+ * **Example** (Select event watch mode)
+ *
+ * ```ts
+ * import { yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet"
+ *
+ * console.log(yeetMonitorCommandRoute({ plan: false, untilEvent: true, untilMerged: false, watch: true })) // "watch"
+ * ```
+ *
+ * @param options - The four monitor mode switches parsed by the CLI.
+ * @returns The monitor implementation the handler should construct.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSync((options) =>
+  Match.value(options).pipe(
+    Match.when({ plan: true }, () => YeetMonitorCommandRoute.Enum.classic),
+    Match.when({ untilEvent: true, untilMerged: true }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
+    Match.when({ untilEvent: true, watch: false }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
+    Match.when({ untilMerged: true }, () => YeetMonitorCommandRoute.Enum["merge-loop"]),
+    Match.when({ watch: true }, () => YeetMonitorCommandRoute.Enum.watch),
+    Match.orElse(() => YeetMonitorCommandRoute.Enum.classic)
+  )
+);
+
+const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilEvent, untilMerged, watch, ...options }) => {
+  const route = yeetMonitorCommandRoute({ plan: options.plan, untilEvent, untilMerged, watch });
+  return {
+    classic: runYeetMode("monitor", options),
+    "invalid-until-event": rejectYeetUntilEventPairing,
+    "merge-loop": runYeetMergeLoop(options),
+    watch: runYeetWatchLoop(options, untilEvent),
+  }[route];
+}).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
+
+const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
+  Command.withDescription("Reset the clone after a merge: prune refs, fast-forward main, delete merged branches")
+);
+
+const yeetMergeCommand = Command.make("merge", porcelainFlags, (options) => runYeetMerge(options)).pipe(
+  Command.withDescription("Squash-merge this branch's pull request, confirm MERGED, then sweep the clone")
+);
+
+const yeetReplyCommand = Command.make("reply", porcelainFlags, (options) => runYeetReplyPass(options)).pipe(
+  Command.withDescription("Post and resolve the drafted review-thread replies for this branch's pull request")
 );
 
 const yeetCloseoutCommand = Command.make("closeout", closeoutFlags, (options) => runYeetMode("closeout", options)).pipe(
@@ -337,8 +557,9 @@ const yeetFallowFeedbackCommand = Command.make(
     advisory: fallowAdvisoryFlag,
     emit: fallowEmitFlag,
     from: fallowFromFlag,
+    runStartedAt: fallowRunStartedAtFlag,
   },
-  ({ advisory, emit, from }) => runYeetFallowFeedback({ advisory, emit, from })
+  ({ advisory, emit, from, runStartedAt }) => runYeetFallowFeedback({ advisory, emit, from, runStartedAt })
 ).pipe(Command.withDescription("Convert Fallow advisory envelopes into a Yeet QualityIssueIndex"));
 
 const yeetFallowFixtureCheckCommand = Command.make(
@@ -352,6 +573,31 @@ const yeetFallowFixtureCheckCommand = Command.make(
   },
   ({ assert, emit, fixturePath }) => runYeetFallowFixtureCheck({ assertions: assert, emit, fixturePath })
 ).pipe(Command.withDescription("Verify Fallow envelope fixtures map into Yeet quality issues"));
+
+const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxList).pipe(
+  Command.withDescription("List the checkout's failure inbox rows joined with ack state and wave liveness")
+);
+
+const yeetInboxAckCommand = Command.make(
+  "ack",
+  {
+    fixSha: inboxFixShaFlag,
+    id: inboxAckIdArgument,
+    reason: inboxReasonFlag,
+    threadUrl: inboxThreadUrlFlag,
+    wontfix: inboxWontfixFlag,
+  },
+  runYeetInboxAck
+).pipe(Command.withDescription("Acknowledge one inbox row with a fix SHA, a reasoned wontfix, or a thread URL"));
+
+const yeetInboxAppendCommand = Command.make("append", { fromStdin: inboxRowStdinFlag }, runYeetInboxAppend).pipe(
+  Command.withDescription("Append one typed failure row from stdin to the checkout's inbox")
+);
+
+const yeetInboxCommand = Command.make("inbox", inboxListFlags, runYeetInboxList).pipe(
+  Command.withDescription("Read and acknowledge the checkout's typed failure inbox"),
+  Command.withSubcommands([yeetInboxListCommand, yeetInboxAckCommand, yeetInboxAppendCommand])
+);
 
 const yeetPlanContractCheckCommand = Command.make(
   "plan-contract-check",
@@ -369,7 +615,8 @@ const yeetPlanContractCheckCommand = Command.make(
 /**
  * Command that repairs, verifies, or publishes repository work through Yeet.
  *
- * @example
+ * **Example** (Wire the yeet command)
+ *
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
  * import { Command } from "effect/unstable/cli"
@@ -378,6 +625,7 @@ const yeetPlanContractCheckCommand = Command.make(
  * const run = Command.run(yeetCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -390,6 +638,10 @@ export const yeetCommand = Command.make("yeet", publishFlags, (options) => runYe
     yeetMonitorCommand,
     yeetCloseoutCommand,
     yeetStatusCommand,
+    yeetSweepCommand,
+    yeetMergeCommand,
+    yeetReplyCommand,
+    yeetInboxCommand,
     yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,

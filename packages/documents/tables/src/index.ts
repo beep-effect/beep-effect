@@ -9,7 +9,8 @@
 /**
  * Documents entity table metadata namespaces.
  *
- * @example
+ * **Example** (Log SyncItem table name)
+ *
  * ```ts
  * import { Entities } from "@beep/documents-tables"
  *
@@ -19,11 +20,11 @@
  * @category tables
  * @since 0.0.0
  */
-export * as Entities from "./entities/index.js";
+export * as Entities from "./entities/index.ts";
 /**
  * Documents Drizzle schema aggregate exports.
  *
  * @category tables
  * @since 0.0.0
  */
-export * from "./tables.js";
+export * from "./tables.ts";

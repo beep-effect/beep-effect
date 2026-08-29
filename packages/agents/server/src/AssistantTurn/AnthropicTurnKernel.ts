@@ -20,17 +20,26 @@
  */
 
 import { AssistantContent } from "@beep/agents-domain/values/AssistantContent";
-import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/public";
+import {
+  AgentTurnKernel,
+  AssistantTurnBlockEvent,
+  AssistantTurnFinalization,
+  ProviderUsageMetadata,
+  TurnGenerationError,
+} from "@beep/agents-use-cases/public";
 import { AnthropicTurnPlan } from "@beep/anthropic";
 import { Effect, Layer, Metric, Order, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LanguageModel, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import { IssueReport, repairInvalidBlocks } from "./BlockRepair.ts";
 import { initialScanState, scanChunk } from "./ScanState.ts";
-import type { IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { BlockRepairFailed } from "@beep/agents-use-cases/server";
+import type { IndexedBlock } from "@beep/agents-use-cases/AssistantTurn.contracts";
+import type { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
+import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import type { Config } from "effect";
 import type { AiError, Response } from "effect/unstable/ai";
 
@@ -112,7 +121,53 @@ const routeBlock =
 
 type RespondStreamPart = Response.StreamPart<Toolkit.Tools<typeof RespondToolkit>>;
 
-const streamTurn = (history: ReadonlyArray<TurnHistoryItem>): Stream.Stream<IndexedBlock, TurnGenerationError> => {
+const captureProviderMetadata = (modelId: Ref.Ref<O.Option<string>>, finish: Ref.Ref<O.Option<Response.FinishPart>>) =>
+  Effect.fnUntraced(function* (part: RespondStreamPart) {
+    if (part.type === "response-metadata" && P.isNotUndefined(part.modelId)) {
+      yield* Ref.set(modelId, O.some(part.modelId));
+    }
+    if (part.type === "finish") {
+      yield* Ref.set(finish, O.some(part));
+    }
+  });
+
+const decodeProviderUsage = S.decodeUnknownEffect(ProviderUsageMetadata);
+
+const makeProviderUsage = Effect.fn("AnthropicTurnKernel.makeProviderUsage")(function* (
+  modelId: O.Option<string>,
+  finish: O.Option<Response.FinishPart>,
+  repairInputTokens: number,
+  repairOutputTokens: number
+) {
+  const required = O.all({
+    finish,
+    inputTokens: O.flatMap(finish, (part) => O.fromUndefinedOr(part.usage.inputTokens.total)),
+    model: modelId,
+    outputTokens: O.flatMap(finish, (part) => O.fromUndefinedOr(part.usage.outputTokens.total)),
+  });
+  if (O.isNone(required)) {
+    return yield* TurnGenerationError.make({
+      message: "Anthropic assistant turn completed without provider model or token usage metadata",
+    });
+  }
+  return yield* decodeProviderUsage({
+    inputTokens: required.value.inputTokens + repairInputTokens,
+    model: required.value.model,
+    outputTokens: required.value.outputTokens + repairOutputTokens,
+    provider: "anthropic",
+    stopReason: required.value.finish.reason,
+  }).pipe(
+    Effect.mapError((error) =>
+      TurnGenerationError.make({
+        message: `Anthropic assistant turn returned invalid usage metadata: ${error.message}`,
+      })
+    )
+  );
+});
+
+const streamTurn = (
+  history: ReadonlyArray<TurnHistoryItem>
+): Stream.Stream<AssistantTurnEvent, TurnGenerationError> => {
   // `AnthropicTurnPlan` is self-contained — it `provide`s the language model and
   // resolves the redacted API key from config — so the only failures crossing
   // the boundary are AiError (provider) and ConfigError (missing key), and the
@@ -121,7 +176,7 @@ const streamTurn = (history: ReadonlyArray<TurnHistoryItem>): Stream.Stream<Inde
   const parts = LanguageModel.streamText({
     prompt: [
       { role: "system", content: SYSTEM_PROMPT },
-      ...history.map((item) => ({ role: item.role, content: item.text })),
+      ...A.map(history, (item) => ({ role: item.role, content: item.text })),
     ],
     toolkit: RespondToolkit,
     toolChoice: { tool: "respond" },
@@ -136,8 +191,12 @@ const streamTurn = (history: ReadonlyArray<TurnHistoryItem>): Stream.Stream<Inde
       const failures = yield* Ref.make<ReadonlyArray<IssueReport>>(A.empty<IssueReport>());
       const buffered = yield* Ref.make<ReadonlyArray<IndexedBlock>>(A.empty<IndexedBlock>());
       const holdingAfterFailure = yield* Ref.make(false);
+      const modelId = yield* Ref.make<O.Option<string>>(O.none());
+      const finish = yield* Ref.make<O.Option<Response.FinishPart>>(O.none());
+      const repairInputTokens = yield* Ref.make(0);
+      const repairOutputTokens = yield* Ref.make(0);
       const validated = parts.pipe(
-        Stream.takeUntil((part) => part.type === "tool-params-end"),
+        Stream.tap(captureProviderMetadata(modelId, finish)),
         Stream.flatMap((part) => (part.type === "tool-params-delta" ? Stream.succeed(part.delta) : Stream.empty)),
         // mapAccum flattens the returned slices array into stream elements
         Stream.mapAccum(() => initialScanState, scanChunk),
@@ -154,15 +213,31 @@ const streamTurn = (history: ReadonlyArray<TurnHistoryItem>): Stream.Stream<Inde
             return Stream.fromIterable(validAfterFirstFailure);
           }
           const repaired = yield* repairInvalidBlocks(failed);
-          return Stream.fromIterable(sortedIndexedBlocks(A.appendAll(repaired, validAfterFirstFailure)));
+          yield* Ref.set(repairInputTokens, repaired.inputTokens);
+          yield* Ref.set(repairOutputTokens, repaired.outputTokens);
+          return Stream.fromIterable(sortedIndexedBlocks(A.appendAll(repaired.blocks, validAfterFirstFailure)));
+        })
+      );
+
+      const finalization = Stream.unwrap(
+        Effect.gen(function* () {
+          const usage = yield* makeProviderUsage(
+            yield* Ref.get(modelId),
+            yield* Ref.get(finish),
+            yield* Ref.get(repairInputTokens),
+            yield* Ref.get(repairOutputTokens)
+          );
+          return Stream.succeed(AssistantTurnFinalization.make({ usage }));
         })
       );
 
       return validated.pipe(
         Stream.concat(repairTail),
+        Stream.map((block) => AssistantTurnBlockEvent.make({ block })),
         Stream.mapError((error: AiError.AiError | Config.ConfigError | BlockRepairFailed) =>
           TurnGenerationError.make({ message: `Anthropic assistant turn failed: ${error.message}` })
         ),
+        Stream.concat(finalization),
         Stream.withSpan("agents.assistant_turn.stream")
       );
     })
@@ -175,14 +250,16 @@ const streamTurn = (history: ReadonlyArray<TurnHistoryItem>): Stream.Stream<Inde
  * requirement is the redacted `AI_ANTHROPIC_API_KEY` config resolved by the
  * plan's provided client layer.
  *
- * @remarks
+ * **Details**
+ *
  * The kernel streams valid blocks as soon as they decode. After the first
  * invalid slice, later valid blocks are buffered until the repair tail can emit
  * repaired and already-valid blocks in original envelope order. Repair-call
  * failures are converted to `TurnGenerationError`; blocks that remain invalid
  * after repair are logged and dropped.
  *
- * @example
+ * **Example** (Use AnthropicTurnKernel)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel"

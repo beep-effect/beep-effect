@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
-import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
 import { Effect, HashMap, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.js";
-import { todayYmd } from "../../../internal/cli/Timing.js";
-import { diffMembership } from "../../../internal/ratchet/index.js";
+import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+import { todayYmd } from "../../../internal/cli/Timing.ts";
+import { diffMembership } from "../../../internal/ratchet/index.ts";
 import {
   isActiveSchemaFirstRuleAdvisory,
   LiteralKitConstAssertionViolation,
@@ -22,29 +22,30 @@ import {
   SchemaFirstInventoryEntry,
   schemaFirstEntryOrder,
   sortSchemaFirstEntries,
-} from "../Lint.schemas.js";
-import { SchemaFirstRender } from "../SchemaFirst.render.js";
-import { SchemaFirstArbitraryCoverage } from "./SchemaFirstArbitraryCoverage.js";
-import { SchemaFirstDetectors } from "./SchemaFirstDetectors.js";
-import { isSchemaCrispeningPolicyExempt } from "./SchemaFirstPolicy.js";
+} from "../Lint.schemas.ts";
+import { SchemaFirstRender } from "../SchemaFirst.render.ts";
+import { SchemaFirstArbitraryCoverage } from "./SchemaFirstArbitraryCoverage.ts";
+import { SchemaFirstDetectors } from "./SchemaFirstDetectors.ts";
+import { isSchemaCrispeningPolicyExempt } from "./SchemaFirstPolicy.ts";
 import {
   isSchemaFirstExcludedFile,
   makeSchemaFirstOwnerResolver,
   makeSchemaFirstProject,
-} from "./SchemaFirstProject.js";
+} from "./SchemaFirstProject.ts";
 import {
   readCrispeningPolicyDocument,
   readSchemaFirstInventoryDocument,
   writeSchemaFirstInventoryDocument,
-} from "./SchemaFirstStore.js";
+} from "./SchemaFirstStore.ts";
 import type {
   SchemaCrispeningPolicyDocument,
   SchemaFirstEntryKind,
   SchemaFirstEntryStatus,
   SchemaFirstLintOptions,
   SchemaFirstPolicyRuleId,
-} from "../Lint.schemas.js";
-import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.js";
+} from "../Lint.schemas.ts";
+import type { SchemaFirstLintFindings } from "../SchemaFirst.render.ts";
+import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
 
 const isLiteralKitConstAssertionArgument = (argument: Node): boolean =>
   Node.isAsExpression(argument) &&
@@ -94,8 +95,6 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const path = yield* Path.Path;
   const ownerResolver = yield* makeSchemaFirstOwnerResolver();
   const project = yield* makeSchemaFirstProject();
-  const thunkCandidate = () => "candidate" as const;
-  const thunkException = () => "exception" as const;
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
   const pushEntry = (
@@ -134,46 +133,61 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     if (O.isSome(arbitraryTestsEntry)) {
       A.appendInPlace(entries, arbitraryTestsEntry.value);
     }
+
+    if (!isExcludedTypeScriptSourcePath(filePath) && SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) {
+      for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+        const entry = SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(
+          declaration,
+          filePath,
+          owner
+        );
+        if (O.isSome(entry)) {
+          A.appendInPlace(entries, entry.value);
+        }
+      }
+    }
+
     if (isSchemaFirstExcludedFile(filePath)) {
       continue;
     }
 
     for (const declaration of sourceFile.getInterfaces()) {
-      if (!declaration.isExported()) {
+      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+      if (
+        !SchemaFirstDetectors.isEffectivelyExported(declaration, symbol) ||
+        !SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(declaration)
+      ) {
         continue;
       }
-      const reasonOption = SchemaFirstDetectors.detectInterfaceReason(declaration);
       pushEntry(
         filePath,
-        declaration.getName(),
+        symbol,
         "exported-interface",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Exported pure-data interface should be modeled as an annotated schema."),
+        "candidate",
+        "Exported pure-data interface should be modeled as an annotated schema.",
         owner
       );
     }
 
     for (const declaration of sourceFile.getTypeAliases()) {
-      if (!declaration.isExported()) {
+      const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+      if (!SchemaFirstDetectors.isEffectivelyExported(declaration, symbol)) {
         continue;
       }
       const typeNode = declaration.getTypeNode();
-      if (typeNode === undefined || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
+      if (
+        typeNode === undefined ||
+        typeNode.getKind() !== SyntaxKind.TypeLiteral ||
+        !SchemaFirstDetectors.isTypeAliasSchemaFirstCandidate(declaration)
+      ) {
         continue;
       }
-      const reasonOption = SchemaFirstDetectors.detectTypeAliasReason(declaration);
       pushEntry(
         filePath,
-        declaration.getName(),
+        symbol,
         "exported-type-literal",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Exported pure-data type alias should be modeled as an annotated schema."),
+        "candidate",
+        "Exported pure-data type alias should be modeled as an annotated schema.",
         owner
       );
     }
@@ -212,22 +226,24 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
         }
         continue;
       }
-      const reasonOption = SchemaFirstDetectors.detectStructReason(callExpression);
+      if (!SchemaFirstDetectors.isStructSchemaFirstCandidate(callExpression)) {
+        continue;
+      }
       pushEntry(
         filePath,
         SchemaFirstDetectors.inferStructSymbol(callExpression),
         "object-struct-schema",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Object schema should prefer an annotated S.Class over S.Struct."),
+        "candidate",
+        "Object schema should prefer an annotated S.Class over S.Struct.",
         owner
       );
     }
 
     const functionLikeCandidates: ReadonlyArray<FunctionLikeDeclarationNode> = [
-      ...A.filter(sourceFile.getFunctions(), (declaration) => declaration.isExported()),
+      ...A.filter(sourceFile.getFunctions(), (declaration) => {
+        const symbol = SchemaFirstDetectors.declarationSymbol(declaration, declaration.getName());
+        return SchemaFirstDetectors.isEffectivelyExported(declaration, symbol);
+      }),
       ...SchemaFirstDetectors.sourceExportedArrowFunctions(sourceFile),
     ];
     const hasFnSchemaSignal = SchemaFirstDetectors.sourceHasFnSchemaSignal(sourceFile);
@@ -315,9 +331,8 @@ const mergeInventory = (
     O.getOrElse(HashMap.empty<string, SchemaFirstInventoryEntry>)
   );
 
-  const mergedEntries = pipe(
-    liveDocument.entries,
-    A.map((entry) => O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry))
+  const mergedEntries = A.map(liveDocument.entries, (entry) =>
+    O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry)
   );
 
   return SchemaFirstInventoryDocument.make({
@@ -326,25 +341,6 @@ const mergeInventory = (
     scope: liveDocument.scope,
     entries: sortSchemaFirstEntries(mergedEntries),
   });
-};
-
-type SchemaFirstLintFindings = {
-  readonly missingEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly staleEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly enforcedCandidates: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly boundaryCodecAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly defaultsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly staticApiAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly equivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly precisionAuditAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly fnSchemaAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly normalizationAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly nullReturnAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly getsomesStructAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly activeAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly policyExemptCount: number;
 };
 
 const collectSchemaFirstLintFindings = (
@@ -375,6 +371,10 @@ const collectSchemaFirstLintFindings = (
   const defaultsAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-defaults"));
   const staticApiAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-static-api"));
   const equivalenceAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-equivalence"));
+  const taggedErrorEquivalenceAdvisories = A.filter(
+    policyFilteredEntries,
+    isActiveSchemaFirstRuleAdvisory("SFV4-tagged-error-equivalence")
+  );
   const precisionAuditAdvisories = A.filter(
     policyFilteredEntries,
     isActiveSchemaFirstRuleAdvisory("SFV4-precision-audit")
@@ -406,6 +406,7 @@ const collectSchemaFirstLintFindings = (
     defaultsAdvisories,
     staticApiAdvisories,
     equivalenceAdvisories,
+    taggedErrorEquivalenceAdvisories,
     precisionAuditAdvisories,
     arbitraryTestsAdvisories,
     numericDomainAdvisories,
@@ -418,6 +419,7 @@ const collectSchemaFirstLintFindings = (
       ...defaultsAdvisories,
       ...staticApiAdvisories,
       ...equivalenceAdvisories,
+      ...taggedErrorEquivalenceAdvisories,
       ...precisionAuditAdvisories,
       ...arbitraryTestsAdvisories,
       ...numericDomainAdvisories,
@@ -448,10 +450,12 @@ const schemaFirstLintHasFailures = (
 /**
  * Run schema-first inventory verification against the committed baseline.
  *
- * @example
+ * **Example** (Log schema-first lint name)
+ *
  * ```ts
  * console.log("runSchemaFirstLint")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -18,6 +18,7 @@ import {
   renderProgressBar,
   resolveRunMode,
   runModeFlagsConflict,
+  shouldRenderFailureCause,
   unknownRecordKeys,
   unknownRecordProperty,
   validateDirectory,
@@ -31,9 +32,36 @@ import { describe, expect, it } from "vitest";
 
 const toError = (cause: unknown) => new Error(String(cause));
 
+describe("internal/cli/FailureRendering", () => {
+  it("stays quiet by default so causes do not leak transcript paths", () => {
+    expect(shouldRenderFailureCause([])).toBe(false);
+    expect(shouldRenderFailureCause(["ai-metrics", "forwarder", "run"])).toBe(false);
+  });
+
+  it("opts in on --verbose anywhere in argv", () => {
+    expect(shouldRenderFailureCause(["--verbose"])).toBe(true);
+    expect(shouldRenderFailureCause(["ai-metrics", "--verbose", "run"])).toBe(true);
+  });
+
+  it("opts in on a verbose --log-level in either spelling", () => {
+    expect(shouldRenderFailureCause(["--log-level", "debug"])).toBe(true);
+    expect(shouldRenderFailureCause(["--log-level", "trace"])).toBe(true);
+    expect(shouldRenderFailureCause(["--log-level=debug"])).toBe(true);
+    expect(shouldRenderFailureCause(["--log-level=trace"])).toBe(true);
+  });
+
+  it("stays quiet for non-verbose levels and malformed flags", () => {
+    expect(shouldRenderFailureCause(["--log-level", "info"])).toBe(false);
+    expect(shouldRenderFailureCause(["--log-level=warn"])).toBe(false);
+    // Trailing `--log-level` with no value must not read past the end of argv.
+    expect(shouldRenderFailureCause(["run", "--log-level"])).toBe(false);
+    expect(shouldRenderFailureCause(["--log-levels=debug"])).toBe(false);
+  });
+});
+
 describe("internal/cli/RunMode", () => {
   it("decodes the shared run-mode literals", () => {
-    expect(S.decodeUnknownSync(RunMode)("dry-run")).toBe("dry-run");
+    expect(S.decodeSync(RunMode)("dry-run")).toBe("dry-run");
     expect(RunModeIs.write("write")).toBe(true);
     expect(RunModeIs.write("check")).toBe(false);
   });
@@ -144,6 +172,9 @@ describe("internal/cli/FsGuards", () => {
 
     const dataLast = allocateUniqueName(".webp", HashSet.make("photo.webp"))("photo");
     expect(dataLast.targetName).toBe("photo_01.webp");
+
+    const caseCollided = allocateUniqueName("PHOTO", ".WEBP", HashSet.make("photo.webp", "Photo_01.webp"));
+    expect(caseCollided.targetName).toBe("PHOTO_02.WEBP");
   });
 
   it("validatePathSegment works data-first and data-last", () => {

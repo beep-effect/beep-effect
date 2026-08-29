@@ -2,11 +2,12 @@
  * Desktop sidecar transport probe schema.
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
@@ -14,7 +15,8 @@ const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
 /**
  * Transport probe result returned by the desktop sidecar.
  *
- * @example
+ * **Example** (Create transport instance)
+ *
  * ```ts
  * import { SidecarTransport } from "@/transport/SidecarTransport"
  *
@@ -22,13 +24,13 @@ const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
  * console.log(transport.ipc) // false
  * ```
  *
- * @category transport
+ * @category models
  * @since 0.0.0
  */
 export class SidecarTransport extends S.Class<SidecarTransport>($I`SidecarTransport`)(
   {
     ipc: S.Boolean,
-    rpcSessionToken: S.optionalKey(S.NonEmptyString),
+    rpcSessionToken: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SidecarTransport", {
     description: "The transport used to communicate with the sidecar.",

@@ -1,7 +1,8 @@
 /**
  * Organization pure behavior helpers.
  *
- * @example
+ * **Example** (Check absent parent organization)
+ *
  * ```ts
  * import { hasParentOrganization } from "@beep/shared-domain/entities/Organization"
  * import * as O from "effect/Option"
@@ -9,35 +10,37 @@
  * console.log(hasParentOrganization({ parentOrgId: O.none() }))
  * ```
  *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
-export * from "./Organization.behavior.js";
+export * from "./Organization.behavior.ts";
 /**
  * Organization model schema namespace.
  *
- * @example
+ * **Example** (Read model table name)
+ *
  * ```ts
  * import { Model } from "@beep/shared-domain/entities/Organization"
  *
- * console.log(Model.definition.entityId.tableName)
+ * console.log(Model.sql.tableName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export * from "./Organization.model.js";
+export * from "./Organization.model.ts";
 /**
  * Organization value schemas.
  *
- * @example
+ * **Example** (Check team license tier)
+ *
  * ```ts
  * import { LicenseTier } from "@beep/shared-domain/entities/Organization"
  *
  * console.log(LicenseTier.is.team("team"))
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
-export * from "./Organization.values.js";
+export * from "./Organization.values.ts";

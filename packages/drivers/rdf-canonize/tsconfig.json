@@ -22,9 +22,6 @@
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/identity/tsconfig.json"
     }
   ]
 }

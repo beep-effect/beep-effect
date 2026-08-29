@@ -11,25 +11,25 @@
  * @category diagnostics
  * @since 0.0.0
  */
-export * from "./Cosmos.backend.js";
+export * from "./Cosmos.backend.ts";
 /**
  * Typed cosmos driver errors.
  *
  * @category errors
  * @since 0.0.0
  */
-export * from "./Cosmos.errors.js";
+export * from "./Cosmos.errors.ts";
 /**
  * Typed-array graph projections and synthetic graph fixtures.
  *
  * @category projections
  * @since 0.0.0
  */
-export * from "./Cosmos.projection.js";
+export * from "./Cosmos.projection.ts";
 /**
  * Lazy cosmos.gl and sigma.js render adapters.
  *
  * @category adapters
  * @since 0.0.0
  */
-export * from "./Cosmos.renderer.js";
+export * from "./Cosmos.renderer.ts";

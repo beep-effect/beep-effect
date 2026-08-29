@@ -10,7 +10,7 @@ import { FastCheck as fc } from "effect/testing";
 describe("MutableHashSetFromSelf", () => {
   it("preserves schema metadata and validates existing mutable hash sets", () => {
     const schema = MutableHashSetFromSelf(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)(MutableHashSet_.make("1", "2", "1"));
+    const decoded = S.decodeSync(schema)(MutableHashSet_.make("1", "2", "1"));
 
     expect(schema.value).toBe(S.FiniteFromString);
     expect(schema.annotate({}).value).toBe(S.FiniteFromString);
@@ -22,14 +22,14 @@ describe("MutableHashSetFromSelf", () => {
     const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
     expect(() => S.decodeUnknownSync(schema)(null)).toThrow(
-      "Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf, got null"
+      "Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf"
     );
   });
 
   it("reports member decode failures at the values path", () => {
     const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected string, got null
+    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected string
   at ["values"][1]`);
   });
 
@@ -44,7 +44,7 @@ describe("MutableHashSetFromSelf", () => {
 
   it("round-trips arbitrary sets derived from the source schema under the derived equivalence", () => {
     const schema = MutableHashSetFromSelf(S.String);
-    const arbitrary = S.toArbitrary(schema);
+    const arbitrary = S.toArbitrary(schema)(fc);
     const equivalence = S.toEquivalence(schema);
     const decode = S.decodeSync(schema);
     const encode = S.encodeSync(schema);
@@ -63,7 +63,7 @@ describe("MutableHashSetFromSelf", () => {
 describe("MutableHashSet", () => {
   it("decodes arrays into mutable hash sets and removes duplicates", () => {
     const schema = MutableHashSet(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)(["1", "2", "1"]);
+    const decoded = S.decodeSync(schema)(["1", "2", "1"]);
 
     expect(schema.value).toBe(S.FiniteFromString);
     expect(schema.annotate({}).value).toBe(S.FiniteFromString);
@@ -80,9 +80,7 @@ describe("MutableHashSet", () => {
   it("expects the encoded array form at the boundary", () => {
     const schema = MutableHashSet(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(
-      `Expected array, got MutableHashSet(["1",null])`
-    );
+    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected array`);
   });
 
   it("supports decoded mutable hash set defaults for missing struct keys", () => {
@@ -91,7 +89,7 @@ describe("MutableHashSet", () => {
     });
 
     const constructed = schema.make({});
-    const decoded = S.decodeUnknownSync(schema)({});
+    const decoded = S.decodeSync(schema)({});
 
     expect(isMutableHashSet(constructed.values)).toBe(true);
     expect(isMutableHashSet(decoded.values)).toBe(true);

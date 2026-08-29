@@ -15,32 +15,35 @@ import {
   WorkerActionFailed,
   WorkerConflict,
   WorkerNotFound,
-} from "./Worker.errors.js";
-import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.js";
-import type { WorkerActionError } from "./Worker.errors.js";
-import type { WorkerRepositoryError, WorkerRepositoryShape } from "./Worker.repository.js";
-import type { WorkerUseCasesShape } from "./Worker.use-cases.js";
+} from "./Worker.errors.ts";
+import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.ts";
+import type { WorkerActionError } from "./Worker.errors.ts";
+import type { WorkerRepositoryError, WorkerRepositoryShape } from "./Worker.repository.ts";
+import type { WorkerUseCasesShape } from "./Worker.use-cases.ts";
 
 /**
  * Translate repository failures to public Worker action failures.
  *
- * @remarks
+ * **Details**
+ *
  * Repository availability details are intentionally redacted to
  * {@link WORKER_ACTION_UNAVAILABLE_REASON}; not-found and conflict failures
  * keep the Worker id and conflict reason needed by callers.
  *
- * @example
+ * **Example** (Translate not-found failure)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import {
  *   WorkerRepositoryNotFound,
  *   toWorkerActionError
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const publicError = toWorkerActionError(
  *   WorkerRepositoryNotFound.make({
- *     workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *     workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  *   })
  * )
  *
@@ -62,12 +65,14 @@ export const toWorkerActionError: (error: WorkerRepositoryError) => WorkerAction
 /**
  * Build Worker use cases from the server repository port.
  *
- * @remarks
+ * **Details**
+ *
  * `create` constructs the domain entity before delegating to the repository.
  * `list` loads the repository result first and applies the optional status
  * filter in the use-case layer.
  *
- * @example
+ * **Example** (List with status filter)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import {
@@ -75,11 +80,12 @@ export const toWorkerActionError: (error: WorkerRepositoryError) => WorkerAction
  *   makeWorkerUseCases,
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const id = S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ * const id = S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * const worker = DomainWorker.create(
  *   DomainWorker.CreateWorkerInput.make({
  *     id,
@@ -103,7 +109,6 @@ export const toWorkerActionError: (error: WorkerRepositoryError) => WorkerAction
  *   `repository.create`.
  * - `get` reads through `repository.get`; `list` reads `repository.list` and
  *   filters the loaded array in memory.
- *
  * @category use-cases
  * @since 0.0.0
  */

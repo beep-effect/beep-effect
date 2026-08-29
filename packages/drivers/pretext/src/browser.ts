@@ -24,11 +24,11 @@ import {
   PretextMeasurementError,
   PretextMeasurementUnavailableError,
   PretextUnsupportedFontError,
-} from "./Pretext.errors.js";
-import { EngineProfile, FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.js";
-import { PretextCapture } from "./PretextCapture.service.js";
-import type { PretextMeasurementUnavailableReason } from "./Pretext.errors.js";
-import type { PretextCaptureRequest } from "./PretextCapture.service.js";
+} from "./Pretext.errors.ts";
+import { EngineProfile, FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.ts";
+import { PretextCapture } from "./PretextCapture.service.ts";
+import type { PretextMeasurementUnavailableReason } from "./Pretext.errors.ts";
+import type { PretextCaptureRequest } from "./PretextCapture.service.ts";
 
 /**
  * Browser-safe pure surface re-exported for client code, which imports
@@ -37,7 +37,7 @@ import type { PretextCaptureRequest } from "./PretextCapture.service.js";
  * @category interop
  * @since 0.0.0
  */
-export * from "./index.js";
+export * from "./index.ts";
 
 const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
   A.some(flags, (flag) => pipe(ua, Str.includes(flag)));
@@ -50,7 +50,8 @@ const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
  * the built-in fixture (revisit trigger recorded in the
  * computable-workspace-geometry DECISIONS log).
  *
- * @example
+ * **Example** (Log lineFitEpsilon value)
+ *
  * ```ts
  * import { detectEngineProfile } from "@beep/pretext/browser"
  *
@@ -173,15 +174,16 @@ const captureFontMetrics = Effect.fn("Pretext.captureFontMetrics")(function* (re
  * in the current runtime. Capability gaps and rejected fonts surface as
  * typed failures on each capture call.
  *
- * @example
+ * **Example** (Stringify PretextCaptureLive layer)
+ *
  * ```ts
  * import { PretextCaptureLive } from "@beep/pretext/browser"
  *
  * console.log(String(PretextCaptureLive))
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const PretextCaptureLive: Layer.Layer<PretextCapture> = Layer.succeed(
   PretextCapture,

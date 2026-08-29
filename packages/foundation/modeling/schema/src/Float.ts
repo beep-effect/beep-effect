@@ -38,20 +38,22 @@ const ProtobufNumber = S.declare<number>(P.isNumber, {
 /**
  * Branded schema for protobuf `float` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes `float` as IEEE-754 binary32 and exposes the JavaScript
  * value as a `number`. This schema accepts finite numbers in the finite
  * binary32 range plus the IEEE-754 special values `NaN`, `Infinity`, and
  * `-Infinity`, all of which can appear in protobuf float payloads.
  *
- * @example
- * ```ts
+ * **Example** (Decode protobuf float value)
+ *
+ * ```ts import.meta.vitest name="Decode protobuf float value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Float } from "@beep/schema/Float"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Float)(0.5))
- * console.log(value) // 0.5
+ * value // => 0.5
  * ```
  *
  * @invariant Values are finite numbers in the IEEE-754 binary32 range or protobuf-valid IEEE-754 special values.
@@ -78,8 +80,9 @@ export const Float = ProtobufNumber.annotate({
 /**
  * Type-level value inferred from {@link Float}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow Float with is)
+ *
+ * ```ts import.meta.vitest name="Narrow Float with is"
  * import * as S from "effect/Schema"
  * import { Float } from "@beep/schema/Float"
  * import type { Float as FloatValue } from "@beep/schema/Float"
@@ -87,7 +90,7 @@ export const Float = ProtobufNumber.annotate({
  * const input: unknown = 1.25
  * if (S.is(Float)(input)) {
  *   const value: FloatValue = input
- *   console.log(value) // 1.25
+ *   value // => 1.25
  * }
  * ```
  *

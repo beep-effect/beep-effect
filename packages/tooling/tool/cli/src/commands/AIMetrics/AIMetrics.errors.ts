@@ -18,7 +18,7 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
-import { CauseTaggedError, TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
@@ -28,7 +28,8 @@ const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
 /**
  * Error raised by the AI metrics CLI.
  *
- * @example
+ * **Example** (Create metrics command error)
+ *
  * ```ts
  * import { AiMetricsCommandError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
  *
@@ -38,13 +39,17 @@ const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
  * })
  * console.log(error._tag === "AiMetricsCommandError") // true
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsCommandError extends CauseTaggedError<AiMetricsCommandError>($I`AiMetricsCommandError`)(
+export class AiMetricsCommandError extends S.TaggedError<AiMetricsCommandError>($I`AiMetricsCommandError`)(
   "AiMetricsCommandError",
-  {},
-  $I.annote("AiMetricsCommandError", {
+  {
+    message: S.String,
+    cause: Defect({ includeStack: true }),
+  },
+  $I.annoteError<AiMetricsCommandError>("AiMetricsCommandError", {
     description: "User-facing failure raised by the AI metrics CLI command suite.",
   })
 ) {}
@@ -52,22 +57,24 @@ export class AiMetricsCommandError extends CauseTaggedError<AiMetricsCommandErro
 /**
  * Silent non-zero status used after the status command has already rendered output.
  *
- * @example
+ * **Example** (Create status exit error)
+ *
  * ```ts
  * import { AiMetricsStatusExit } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
  *
  * const error = AiMetricsStatusExit.new("AI metrics status failed.")
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsStatusExit extends TaggedErrorClass<AiMetricsStatusExit>($I`AiMetricsStatusExit`)(
+export class AiMetricsStatusExit extends S.TaggedError<AiMetricsStatusExit>($I`AiMetricsStatusExit`)(
   "AiMetricsStatusExit",
   {
     message: S.String,
   },
-  $I.annote("AiMetricsStatusExit", {
+  $I.annoteError<AiMetricsStatusExit>("AiMetricsStatusExit", {
     description: "Silent non-zero process exit requested after a command has already rendered its result.",
   })
 ) {
@@ -85,7 +92,8 @@ export class AiMetricsStatusExit extends TaggedErrorClass<AiMetricsStatusExit>($
 /**
  * Unified typed failure channel for AI metrics command programs.
  *
- * @example
+ * **Example** (Validate program error schema)
+ *
  * ```ts
  * import { AiMetricsProgramError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
  * import * as S from "effect/Schema"
@@ -93,6 +101,7 @@ export class AiMetricsStatusExit extends TaggedErrorClass<AiMetricsStatusExit>($
  * const isProgramError = S.is(AiMetricsProgramError)
  * console.log(isProgramError({ _tag: "not-an-ai-metrics-error" })) // false
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -120,13 +129,15 @@ export const AiMetricsProgramError = S.Union([
 /**
  * Unified typed failure channel for AI metrics command programs.
  *
- * @example
+ * **Example** (Type program error variable)
+ *
  * ```ts
  * import type { AiMetricsProgramError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
  *
  * const error: AiMetricsProgramError | undefined = undefined
  * console.log(error === undefined) // true
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -135,9 +146,8 @@ export type AiMetricsProgramError = typeof AiMetricsProgramError.Type;
 /**
  * Adapt an AI metrics command program to the CLI command runtime shape.
  *
- * @param effect - AI metrics command effect after the command handler has built its typed program.
- * @returns A command-runtime effect that preserves the original error and requirement channels while discarding success data.
- * @example
+ * **Example** (Adapt program for CLI)
+ *
  * ```ts
  * import { runAiMetricsProgram } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
  * import { Effect } from "effect"
@@ -145,6 +155,9 @@ export type AiMetricsProgramError = typeof AiMetricsProgramError.Type;
  * const program = runAiMetricsProgram(Effect.succeed("rendered"))
  * console.log(program.pipe !== undefined) // true
  * ```
+ *
+ * @param effect - AI metrics command effect after the command handler has built its typed program.
+ * @returns A command-runtime effect that preserves the original error and requirement channels while discarding success data.
  * @category errors
  * @since 0.0.0
  */

@@ -11,14 +11,15 @@ import { Context, Layer } from "effect";
 import * as O from "effect/Option";
 import { Atom, AtomRpc } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
-import { chatProtocolLayerAtom } from "./Chat.atoms.js";
+import { chatProtocolLayerAtom } from "./Chat.atoms.ts";
 
 const $I = $AgentsClientId.create("ProviderInstance.service");
 
 /**
  * Injectable flattened ProviderInstance RPC transport used by the atom client.
  *
- * @example
+ * **Example** (Log transport key)
+ *
  * ```ts
  * import { ProviderInstanceTransport } from "@beep/agents-client/ProviderInstance.service"
  *
@@ -43,10 +44,13 @@ const ProviderInstanceTransportLive = (get: Atom.AtomContext): Layer.Layer<Provi
 /**
  * Writable ProviderInstance transport layer selector.
  *
+ * **Details**
+ *
  * Apps normally retain the HTTP-backed default. Tests and alternate hosts may
  * replace it before mounting provider-instance atoms.
  *
- * @example
+ * **Example** (Get atom from registry)
+ *
  * ```ts
  * import { providerInstanceTransportLayerAtom } from "@beep/agents-client/ProviderInstance.service"
  * import { AtomRegistry } from "effect/unstable/reactivity"
@@ -63,7 +67,8 @@ export const providerInstanceTransportLayerAtom = Atom.make<O.Option<Layer.Layer
 /**
  * Flattened client for the client-safe {@link ProviderInstanceRpcs} group.
  *
- * @example
+ * **Example** (Create list query atom)
+ *
  * ```ts
  * import { ProviderInstanceClient } from "@beep/agents-client/ProviderInstance.service"
  *

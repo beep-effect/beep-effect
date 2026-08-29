@@ -8,7 +8,8 @@
 /**
  * Box driver configuration exports.
  *
- * @example
+ * **Example** (Import developer token config)
+ *
  * ```ts
  * import { BoxDeveloperTokenConfig } from "@beep/box"
  *
@@ -22,7 +23,8 @@ export * from "./Box.config.ts";
 /**
  * Box technical error exports.
  *
- * @example
+ * **Example** (Import BoxError export)
+ *
  * ```ts
  * import { BoxError } from "@beep/box"
  *
@@ -36,7 +38,8 @@ export * from "./Box.errors.ts";
 /**
  * Box payload and success model exports.
  *
- * @example
+ * **Example** (Import file payload model)
+ *
  * ```ts
  * import { FilesGetFileByIdPayload } from "@beep/box"
  *
@@ -50,7 +53,8 @@ export * from "./Box.models.ts";
 /**
  * Box service and Layer exports.
  *
- * @example
+ * **Example** (Import Box service)
+ *
  * ```ts
  * import { Box } from "@beep/box"
  *
@@ -64,7 +68,8 @@ export * from "./Box.service.ts";
 /**
  * Box byte and event streaming exports.
  *
- * @example
+ * **Example** (Use BoxByteStream type)
+ *
  * ```ts
  * import type { BoxByteStream } from "@beep/box"
  *
@@ -79,7 +84,8 @@ export * from "./Box.streaming.ts";
 /**
  * Package version for `@beep/box`.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/box"
  *

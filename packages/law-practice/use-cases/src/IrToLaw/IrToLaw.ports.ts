@@ -16,11 +16,12 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
-import { EffectSchema, Fn } from "@beep/schema";
 import { Context } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type { GroundedExtraction } from "@beep/langextract/Extraction";
+import type { Effect } from "effect";
 import type { IrToLawExtractionError } from "./IrToLaw.errors.ts";
 
 const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
@@ -28,7 +29,8 @@ const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
 /**
  * Structural field contract for {@link LawEntities}.
  *
- * @example
+ * **Example** (Pick LawEntities key)
+ *
  * ```ts
  * import type { LawEntities } from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -46,6 +48,14 @@ export interface LawEntities {
   readonly priorArtReference: PriorArtReference;
   readonly rejection: Rejection;
 }
+
+type IrToLawHandler = (input: ReadonlyArray<GroundedExtraction>) => Effect.Effect<LawEntities, IrToLawExtractionError>;
+
+const isIrToLawHandler = (input: unknown): input is IrToLawHandler => P.isFunction(input);
+
+const IrToLawToLaw = S.declare<IrToLawHandler>(isIrToLawHandler).annotateKey({
+  description: "Map grounded office-action extractions into law-practice entities.",
+});
 
 type AnnotatedField<Schema extends S.Top> = S.Schema<Schema["Type"]>;
 
@@ -88,7 +98,8 @@ const LawEntitiesBase: S.Class<LawEntities, S.Struct<LawEntitiesFields>, {}> = S
  * action's grounded extractions. Each field is the concrete entity the generic
  * extraction output resolves into.
  *
- * @example
+ * **Example** (List LawEntities keys)
+ *
  * ```ts
  * import type { LawEntities } from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -114,7 +125,8 @@ export class LawEntities extends LawEntitiesBase {}
  * {@link LawEntities} they encode. The `span`/`matchedText` an extraction
  * carries is what grounds the distinction's `TextAnchor`.
  *
- * @example
+ * **Example** (Fail shape toLaw call)
+ *
  * ```ts
  * import { IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
  * import { Effect, Exit } from "effect"
@@ -139,12 +151,7 @@ export class LawEntities extends LawEntitiesBase {}
  */
 export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)(
   {
-    toLaw: Fn({
-      input: S.Array(GroundedExtraction),
-      output: EffectSchema<LawEntities, IrToLawExtractionError, never>(),
-    }).annotateKey({
-      description: "Map grounded office-action extractions into law-practice entities.",
-    }),
+    toLaw: IrToLawToLaw,
   },
   $I.annote("IrToLawShape", {
     description: "Service shape for mapping grounded extraction output into law-practice entities.",
@@ -154,7 +161,8 @@ export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)(
 /**
  * IR-to-law mapping service tag.
  *
- * @example
+ * **Example** (Provide fake IrToLaw service)
+ *
  * ```ts
  * import { IrToLaw, IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
  * import { Effect, Exit } from "effect"

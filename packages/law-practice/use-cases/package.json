@@ -14,8 +14,8 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
@@ -32,7 +32,11 @@
     ".": "./src/index.ts",
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
+    "./CandorPolicy": "./src/CandorPolicy/index.ts",
+    "./CandorRecord": "./src/CandorRecord/index.ts",
     "./IrToLaw": "./src/IrToLaw/index.ts",
+    "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
+    "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./test": "./src/test.ts",
     "./internal/*": null,
@@ -53,8 +57,10 @@
     "@beep/identity": "workspace:^",
     "@beep/langextract": "workspace:^",
     "@beep/law-practice-domain": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/nlp": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -8,7 +8,8 @@
 /**
  * ProviderInstance login-guidance behavior exports.
  *
- * @example
+ * **Example** (Decode snapshot and guide login)
+ *
  * ```ts
  * import { loginGuidance, UnauthenticatedSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  * import * as S from "effect/Schema"
@@ -23,25 +24,27 @@
  * @category mapping
  * @since 0.0.0
  */
-export * from "./ProviderInstance.behavior.js";
+export * from "./ProviderInstance.behavior.ts";
 /**
  * ProviderInstance entity schema exports.
  *
- * @example
+ * **Example** (Log ProviderInstance entity type)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance"
  *
- * console.log(ProviderInstance.definition.entityId.entityType)
+ * console.log(ProviderInstance.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * from "./ProviderInstance.model.js";
+export * from "./ProviderInstance.model.ts";
 /**
  * ProviderInstance value-schema exports.
  *
- * @example
+ * **Example** (Check ProviderKind is claude)
+ *
  * ```ts
  * import { ProviderKind } from "@beep/agents-domain/entities/ProviderInstance"
  *
@@ -51,4 +54,4 @@ export * from "./ProviderInstance.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ProviderInstance.values.js";
+export * from "./ProviderInstance.values.ts";

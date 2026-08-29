@@ -19,8 +19,8 @@ import { dual, thunkTrue } from "@beep/utils";
 
 const { metadata: siteMetadata } = oipSiteContent;
 const twitterHandle = oipTwitterHandle(oipSiteContent);
-const REACT_GRAB_VERSION = "0.1.37";
-const REACT_GRAB_INTEGRITY = "sha384-bu1FPBrtnXa6EIFQzS/zbLFeLLKPK06RmfHZYCTbWTXxXVjiIGvjdMjo/jDi+fVu";
+const REACT_GRAB_VERSION = "0.1.48";
+const REACT_GRAB_INTEGRITY = "sha384-6fIsuvxec6hC2tuREOwkhknBAwJIbXCIAdezU6+IIb/Iy/Ups0sKMh2Vh4O6AcBp";
 const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync: {
   (name: string, expected: string): boolean;
@@ -136,11 +136,14 @@ function VercelInsights() {
 /**
  * Allows the nonce-bearing root layout to block on request state.
  *
+ * **Details**
+ *
  * Next.js framework config export: opts the route out of blocking-prerender
  * errors (`blocking-prerender-dynamic`). Consumed by the framework, not by
  * application imports.
  *
- * @example
+ * **Example** (Logging the instant export)
+ *
  * ```ts
  * import { instant } from "@beep/oip-web/app/layout"
  *
@@ -156,7 +159,8 @@ export const instant = false;
 /**
  * Static metadata for the oip web app shell.
  *
- * @example
+ * **Example** (Logging application name)
+ *
  * ```ts
  * import { metadata } from "@beep/oip-web/app/layout"
  *
@@ -229,7 +233,8 @@ export const metadata: Metadata = {
 /**
  * Root HTML layout for the oip web app.
  *
- * @example
+ * **Example** (Rendering the root layout)
+ *
  * ```tsx
  * import RootLayout from "@beep/oip-web/app/layout"
  *

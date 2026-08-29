@@ -5,17 +5,19 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { Organization } from "@beep/shared-domain/entities";
 
 /**
  * Postgres Drizzle table metadata for tenant organizations.
  *
- * @remarks
+ * **Details**
+ *
  * The table is projected from `Organization.Model`, including the unique slug
  * index and license-tier lookup metadata defined in the shared domain entity.
  *
- * @example
+ * **Example** (Inspect organization table name)
+ *
  * ```ts
  * import { getTableConfig } from "drizzle-orm/pg-core"
  * import { Organization } from "@beep/shared-tables/entities"
@@ -28,4 +30,4 @@ import { Organization } from "@beep/shared-domain/entities";
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(Organization.Model);
+export const Table = toPgTable(Organization.Model);

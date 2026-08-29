@@ -19,8 +19,9 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
+import { dual, P } from "@beep/utils";
 import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
@@ -36,11 +37,12 @@ const decodeMimeType = S.decodeUnknownResult(MimeType);
  * Derived from `@beep/schema`'s {@link ImageMimeType} so the literal subset stays
  * in lockstep with the canonical MIME vocabulary.
  *
- * @example
- * ```ts
- * import { IMAGE_MIME_TYPES } from "@beep/editor/chat"
+ * **Example** (Checking PNG MIME eligibility)
  *
- * console.log(IMAGE_MIME_TYPES.includes("image/png")) // true
+ * ```ts import.meta.vitest name="Checking PNG MIME eligibility"
+ * import { IMAGE_MIME_TYPES } from "@beep/editor/chat/attachment-model"
+ *
+ * IMAGE_MIME_TYPES.includes("image/png") // => true
  * ```
  *
  * @category configuration
@@ -52,11 +54,12 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pickOptions(["image/png", "image/j
  * Schema for the vision-eligible image MIME subset, used to guard whether a
  * captured attachment is an image via {@link isImageAttachment}.
  *
- * @example
- * ```ts
- * import { ImageAttachmentMimeType } from "@beep/editor/chat"
+ * **Example** (Validating image MIME type)
  *
- * console.log(ImageAttachmentMimeType.is("image/png")) // true
+ * ```ts import.meta.vitest name="Validating image MIME type"
+ * import { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
+ *
+ * ImageAttachmentMimeType.is("image/png") // => true
  * ```
  *
  * @category schemas
@@ -72,12 +75,13 @@ export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
 /**
  * Companion type for {@link ImageAttachmentMimeType}.
  *
- * @example
- * ```ts
- * import type { ImageAttachmentMimeType } from "@beep/editor/chat"
+ * **Example** (Assigning image MIME type)
+ *
+ * ```ts import.meta.vitest name="Assigning image MIME type"
+ * import type { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
  *
  * const mimeType: ImageAttachmentMimeType = "image/png"
- * console.log(mimeType) // "image/png"
+ * mimeType // => "image/png"
  * ```
  *
  * @category models
@@ -88,12 +92,13 @@ export type ImageAttachmentMimeType = typeof ImageAttachmentMimeType.Type;
 /**
  * Default maximum captured attachment size (10 MB).
  *
- * @example
- * ```ts
- * import { DEFAULT_MAX_ATTACHMENT_BYTES } from "@beep/editor/chat"
+ * **Example** (Converting default max to MB)
+ *
+ * ```ts import.meta.vitest name="Converting default max to MB"
+ * import { DEFAULT_MAX_ATTACHMENT_BYTES } from "@beep/editor/chat/attachment-model"
  *
  * const defaultMegabytes = DEFAULT_MAX_ATTACHMENT_BYTES / 1024 / 1024
- * console.log(defaultMegabytes) // 10
+ * defaultMegabytes // => 10
  * ```
  *
  * @category configuration
@@ -145,14 +150,15 @@ const AttachmentCaptureLimitBytes = S.Finite.pipe(
 );
 
 const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
-  Result.getOrElse(S.decodeUnknownResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
+  Result.getOrElse(S.decodeResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
 
 /**
  * A captured file rejected because it exceeds the (clamped) byte budget.
  *
- * @example
- * ```ts
- * import { AttachmentTooLarge } from "@beep/editor/chat"
+ * **Example** (Creating oversized file rejection)
+ *
+ * ```ts import.meta.vitest name="Creating oversized file rejection"
+ * import { AttachmentTooLarge } from "@beep/editor/chat/attachment-model"
  *
  * const rejection = new AttachmentTooLarge({
  *   filename: "recording.mov",
@@ -160,20 +166,20 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
  *   maxBytes: 10_485_760,
  * })
  *
- * console.log(rejection._tag) // "AttachmentTooLarge"
+ * rejection._tag // => "AttachmentTooLarge"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class AttachmentTooLarge extends TaggedErrorClass<AttachmentTooLarge>($I`AttachmentTooLarge`)(
+export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`AttachmentTooLarge`)(
   "AttachmentTooLarge",
   {
     filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
     size: AttachmentByteCount.annotateKey({ description: "Rejected file size in bytes." }),
     maxBytes: AttachmentByteCount.annotateKey({ description: "Effective byte limit used during capture." }),
   },
-  $I.annote("AttachmentTooLarge", {
+  $I.annoteError<AttachmentTooLarge>("AttachmentTooLarge", {
     description: "A captured file rejected because it exceeds the (clamped) byte budget.",
   })
 ) {}
@@ -182,59 +188,62 @@ export class AttachmentTooLarge extends TaggedErrorClass<AttachmentTooLarge>($I`
  * A captured file rejected because its `file.type` is empty or not a recognized
  * {@link MimeType}.
  *
- * @example
- * ```ts
- * import { AttachmentInvalidMimeType } from "@beep/editor/chat"
+ * **Example** (Creating invalid MIME rejection)
+ *
+ * ```ts import.meta.vitest name="Creating invalid MIME rejection"
+ * import { AttachmentInvalidMimeType } from "@beep/editor/chat/attachment-model"
  *
  * const rejection = new AttachmentInvalidMimeType({
  *   filename: "payload.bin",
  *   mimeType: "",
  * })
  *
- * console.log(rejection._tag) // "AttachmentInvalidMimeType"
+ * rejection._tag // => "AttachmentInvalidMimeType"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class AttachmentInvalidMimeType extends TaggedErrorClass<AttachmentInvalidMimeType>(
-  $I`AttachmentInvalidMimeType`
-)(
+export class AttachmentInvalidMimeType extends S.TaggedError<AttachmentInvalidMimeType>($I`AttachmentInvalidMimeType`)(
   "AttachmentInvalidMimeType",
   {
     filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
     mimeType: S.String.annotateKey({ description: "Raw browser File.type string that failed MIME decoding." }),
   },
-  $I.annote("AttachmentInvalidMimeType", {
+  $I.annoteError<AttachmentInvalidMimeType>("AttachmentInvalidMimeType", {
     description: "A captured file rejected because its `file.type` is empty or not a recognized MIME type.",
   })
 ) {}
 
 /**
- * The consumer's `onAttach` upload port threw while being notified of accepted
- * attachments. The files stay captured (and revocable) — this records that the
- * app-side handoff failed, rather than letting the throw escape the capture
- * pipeline and abandon the object URLs it had just minted.
+ * The consumer's `onAttach` upload port rejected while being notified of
+ * accepted attachments. The current batch is rolled back and its object URLs
+ * are revoked; this typed failure is safe to surface without rendering the raw
+ * cause.
  *
- * @example
- * ```ts
- * import { AttachmentPortFailed } from "@beep/editor/chat"
+ * **Example** (Creating port failure error)
  *
- * const failure = new AttachmentPortFailed({ message: "upload port unavailable" })
+ * ```ts import.meta.vitest name="Creating port failure error"
+ * import { AttachmentPortFailed } from "@beep/editor/chat/attachment-model"
  *
- * console.log(failure._tag) // "AttachmentPortFailed"
+ * const failure = new AttachmentPortFailed({ message: "Files could not be attached." })
+ *
+ * failure._tag // => "AttachmentPortFailed"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class AttachmentPortFailed extends TaggedErrorClass<AttachmentPortFailed>($I`AttachmentPortFailed`)(
+export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I`AttachmentPortFailed`)(
   "AttachmentPortFailed",
   {
-    message: S.String.annotateKey({ description: "Rendered cause of the upload-port failure." }),
+    message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
+    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+      description: "Optional underlying defect retained for structured logs, never rendered directly.",
+    }),
   },
-  $I.annote("AttachmentPortFailed", {
-    description: "The consumer's `onAttach` upload port threw while being notified of accepted attachments.",
+  $I.annoteError<AttachmentPortFailed>("AttachmentPortFailed", {
+    description: "The consumer's `onAttach` upload port rejected the current attachment batch.",
   })
 ) {}
 
@@ -244,16 +253,17 @@ export class AttachmentPortFailed extends TaggedErrorClass<AttachmentPortFailed>
  * file from one with an unrecognized MIME type, rather than collapsing both into
  * an opaque `O.none()`.
  *
- * @example
- * ```ts
- * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat"
+ * **Example** (Typing a capture rejection)
+ *
+ * ```ts import.meta.vitest name="Typing a capture rejection"
+ * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat/attachment-model"
  *
  * const rejection: AttachmentRejection = new AttachmentInvalidMimeType({
  *   filename: "payload.bin",
  *   mimeType: "",
  * })
  *
- * console.log(rejection._tag) // "AttachmentInvalidMimeType"
+ * rejection._tag // => "AttachmentInvalidMimeType"
  * ```
  *
  * @category errors
@@ -271,22 +281,68 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
 /**
  * Companion type for {@link AttachmentRejection}.
  *
- * @example
- * ```ts
- * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat"
+ * **Example** (Assigning rejection union type)
+ *
+ * ```ts import.meta.vitest name="Assigning rejection union type"
+ * import { AttachmentInvalidMimeType, type AttachmentRejection } from "@beep/editor/chat/attachment-model"
  *
  * const rejection: AttachmentRejection = new AttachmentInvalidMimeType({
  *   filename: "payload.bin",
  *   mimeType: "",
  * })
  *
- * console.log(rejection._tag) // "AttachmentInvalidMimeType"
+ * rejection._tag // => "AttachmentInvalidMimeType"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
 export type AttachmentRejection = typeof AttachmentRejection.Type;
+
+/**
+ * Any typed failure the attachment surface can show inline: capture validation
+ * or a rejected consumer port.
+ *
+ * **Example** (Typing an attachment failure)
+ *
+ * ```ts import.meta.vitest name="Typing an attachment failure"
+ * import { AttachmentPortFailed, type AttachmentFailure } from "@beep/editor/chat/attachment-model"
+ *
+ * const failure: AttachmentFailure = new AttachmentPortFailed({
+ *   message: "Files could not be attached.",
+ * })
+ * failure._tag // => "AttachmentPortFailed"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const AttachmentFailure = S.Union([AttachmentTooLarge, AttachmentInvalidMimeType, AttachmentPortFailed]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AttachmentFailure", {
+    description: "A capture-validation failure or rejected consumer attachment port.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Companion type for {@link AttachmentFailure}.
+ *
+ * **Example** (Making attachment failure value)
+ *
+ * ```ts import.meta.vitest name="Making attachment failure value"
+ * import { AttachmentPortFailed, type AttachmentFailure } from "@beep/editor/chat/attachment-model"
+ *
+ * const failure: AttachmentFailure = AttachmentPortFailed.make({
+ *   message: "Files could not be attached.",
+ * })
+ * failure._tag // => "AttachmentPortFailed"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type AttachmentFailure = typeof AttachmentFailure.Type;
 
 // Monotonic id source for captured attachments — ephemeral UI identity only, so
 // a simple counter suffices (no persistence, no cross-session stability needed).
@@ -298,13 +354,16 @@ let attachmentSequence = 0;
  * `objectUrl` must be released with {@link revokeAttachment} once the chip is
  * removed.
  *
+ * **Details**
+ *
  * Validation lives on the schema: `mimeType` is a {@link MimeType}, `size` is
  * bounded by {@link DEFAULT_MAX_ATTACHMENT_BYTES}, and capture-time size policy
  * is configurable via the {@link ComposerAttachment.fromFile} static.
  *
- * @example
+ * **Example** (Making a composer attachment)
+ *
  * ```ts
- * import { ComposerAttachment } from "@beep/editor/chat"
+ * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
  *
  * const a = ComposerAttachment.make({
  *   id: "1",
@@ -345,9 +404,10 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    * policy lives here rather than on the field check so the per-composer
    * `maxAttachmentBytes` prop can tighten the bound.
    *
-   * @example
+   * **Example** (Checking file size budget)
+   *
    * ```ts
-   * import { ComposerAttachment } from "@beep/editor/chat"
+   * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
    *
    * console.log(ComposerAttachment.isWithinSize(new File([], "x"), 10)) // true
    * ```
@@ -370,9 +430,10 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    * Release the `objectUrl` of a {@link Success} with {@link revokeAttachment}
    * once removed.
    *
-   * @example
+   * **Example** (Capturing file as attachment)
+   *
    * ```ts
-   * import { ComposerAttachment } from "@beep/editor/chat"
+   * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
    * import { Result } from "effect"
    *
    * const result = ComposerAttachment.fromFile(
@@ -384,7 +445,6 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    *
    * @effects Creates an object URL for successfully captured files; release it
    * with {@link revokeAttachment} once the attachment is removed.
-   *
    * @category utilities
    * @since 0.0.0
    */
@@ -421,9 +481,10 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
  * Whether an attachment is a vision-eligible image, guarded by the
  * {@link ImageAttachmentMimeType} schema.
  *
- * @example
+ * **Example** (Detecting vision-eligible image)
+ *
  * ```ts
- * import { ComposerAttachment, isImageAttachment } from "@beep/editor/chat"
+ * import { ComposerAttachment, isImageAttachment } from "@beep/editor/chat/attachment-model"
  *
  * const a = ComposerAttachment.make({
  *   id: "1",
@@ -449,9 +510,10 @@ export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
  * release the `objectUrl` of a {@link Success} with {@link revokeAttachment} once
  * it is removed.
  *
- * @example
+ * **Example** (Converting file to attachment)
+ *
  * ```ts
- * import { fileToAttachment } from "@beep/editor/chat"
+ * import { fileToAttachment } from "@beep/editor/chat/attachment-model"
  * import { Result } from "effect"
  *
  * const result = fileToAttachment(new File(["hi"], "note.txt", { type: "text/plain" }))
@@ -461,21 +523,27 @@ export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
  *
  * @effects Creates an object URL for successfully captured files; release it
  * with {@link revokeAttachment} once the attachment is removed.
- *
  * @category utilities
  * @since 0.0.0
  */
-export const fileToAttachment = (
-  file: File,
-  maxBytes: number = DEFAULT_MAX_ATTACHMENT_BYTES
-): Result.Result<ComposerAttachment, AttachmentRejection> => ComposerAttachment.fromFile(file, maxBytes);
+export const fileToAttachment: {
+  (maxBytes?: number): (file: File) => Result.Result<ComposerAttachment, AttachmentRejection>;
+  (file: File, maxBytes?: number): Result.Result<ComposerAttachment, AttachmentRejection>;
+} = dual(
+  (args) => P.isNotUndefined(args[0]) && !P.isNumber(args[0]),
+  (
+    file: File,
+    maxBytes: number = DEFAULT_MAX_ATTACHMENT_BYTES
+  ): Result.Result<ComposerAttachment, AttachmentRejection> => ComposerAttachment.fromFile(file, maxBytes)
+);
 
 /**
  * Release the object URL backing an attachment thumbnail.
  *
- * @example
+ * **Example** (Revoking attachment object URL)
+ *
  * ```ts
- * import { ComposerAttachment, revokeAttachment } from "@beep/editor/chat"
+ * import { ComposerAttachment, revokeAttachment } from "@beep/editor/chat/attachment-model"
  *
  * const attachment = ComposerAttachment.make({
  *   id: "1",
@@ -495,7 +563,6 @@ export const fileToAttachment = (
  * ```
  *
  * @effects Calls `URL.revokeObjectURL` for the attachment thumbnail URL.
- *
  * @category utilities
  * @since 0.0.0
  */

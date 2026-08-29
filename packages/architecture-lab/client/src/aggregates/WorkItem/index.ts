@@ -1,7 +1,8 @@
 /**
  * WorkItem client aggregate facade exports.
  *
- * @remarks
+ * **Details**
+ *
  * This subpath is the narrow import surface for WorkItem transport contracts,
  * the Effect service tag, and the facade constructor.
  *
@@ -9,4 +10,4 @@
  * @category clients
  * @since 0.0.0
  */
-export * from "./WorkItem.client.js";
+export * from "./WorkItem.client.ts";

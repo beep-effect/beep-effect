@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "codex-security-findings-2026-08-13",
+    "title": "Codex Security Findings (2026-08-13)",
+    "status": "completed-retained",
+    "created": "2026-08-13",
+    "updated": "2026-08-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/codex-security-findings-2026-08-13",
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed-retained after repository-local findings landed through PRs #650, #655, #673, #681, #688, #696, #697, and #712; PR #712 merged on 2026-08-14 with CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019. CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain an explicit handoff to the runner-admission/workload-identity arc for external GitHub runner-group and AWS deployment proof; this packet does not claim dashboard closure for those findings.",
+  "mission": "Remediate and close the 19 Codex Cloud security findings captured on 2026-08-13.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the remaining work ships through Yeet-driven mergeable PRs, those PRs are merged, and the exact 19 Codex findings are resolved with zero packet-applicable open findings.",
+    "grandfathered": false
+  },
+  "branch": "codex/security-findings-2026-08-13",
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/codex-security-findings-2026-08-13/README.md",
+    "goals/codex-security-findings-2026-08-13/SPEC.md",
+    "goals/codex-security-findings-2026-08-13/PLAN.md",
+    "goals/codex-security-findings-2026-08-13/GOAL.md",
+    "goals/codex-security-findings-2026-08-13/research/SOURCES.md",
+    "goals/codex-security-findings-2026-08-13/research/QUALITY_REVIEW.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/QUALITY_REVIEW.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-08-13/GOAL.md"
+    }
+  ],
+  "source": {
+    "provider": "Codex Cloud Security UI",
+    "repository": "kriegcloud/beep-effect",
+    "url": "https://chatgpt.com/codex/cloud/security/findings/",
+    "capturedAt": "2026-08-13",
+    "captureMethodPolicy": "signed-in-csv-export",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-08-13/raw",
+    "rawCaptureTracked": false
+  },
+  "catalog": {
+    "expectedCount": 19,
+    "capturedCount": 19,
+    "severityCountsKnown": true,
+    "severityCounts": {
+      "High": 7,
+      "Medium": 6,
+      "Low": 2,
+      "Informational": 4
+    },
+    "dispositionCounts": {
+      "remediate": 18,
+      "already-fixed": 1,
+      "false-positive": 0,
+      "out-of-scope": 0,
+      "untriaged": 0
+    },
+    "note": "All repository-local findings are merged, including CSF-012 and CSF-015 through CSF-019 in PR #712. Six CI trust-boundary findings remain assigned to the runner-admission/workload-identity arc for external organization and deployment proof."
+  },
+  "closeoutPolicy": {
+    "fixed": "Already fixed",
+    "alreadyFixed": "Already fixed",
+    "dismissedInvalid": "False positive",
+    "outOfScope": "False positive",
+    "acceptedRisk": "not allowed"
+  },
+  "dispositionPolicy": {
+    "default": "remediate",
+    "acceptedRiskAllowed": false,
+    "falsePositiveThreshold": "strict current-HEAD proof that affected code is absent, unreachable, non-shipped, already fixed, or materially misunderstood",
+    "fixPhilosophy": "minimal shared-root fixes with focused regression proof; reuse canonical repo helpers after live source and barrel discovery"
+  },
+  "sanitation": {
+    "trackedRawFindingContent": false,
+    "rawCaptureLocation": "goals/codex-security-findings-2026-08-13/raw",
+    "commitsOnlySanitizedMarkdown": true,
+    "codexPatchTextTracked": false,
+    "publicFindingPolicy": "Tracked records contain title, severity, Codex ID, source commit, public summary, decisions, changed files, and verification only."
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Bootstrap",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Capture",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Validate",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Lane partition",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Remediate",
+      "status": "complete",
+      "statusNote": "Repository-local remediations merged; six runner findings transferred to the named architecture arc."
+    },
+    {
+      "id": "P5",
+      "name": "Repo proof",
+      "status": "complete"
+    },
+    {
+      "id": "P6",
+      "name": "Publish",
+      "status": "complete"
+    },
+    {
+      "id": "P7",
+      "name": "Monitor",
+      "status": "complete"
+    },
+    {
+      "id": "P8",
+      "name": "Merge and close findings",
+      "status": "complete",
+      "statusNote": "PR #712 merged on 2026-08-14. Runner findings remain with the receiving arc; no dashboard closure is claimed here."
+    },
+    {
+      "id": "P9",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/codex-security-findings-2026-08-13/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-08-13/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-08-13/ops/triage.json",
+    "bun -e 'import { decodeCodexTriageLedger } from \"./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts\"; import { Effect } from \"effect\"; const input = await Bun.file(\"goals/codex-security-findings-2026-08-13/ops/triage.json\").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'",
+    "test \"$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 19",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep yeet repair",
+    "bun run changeset:status:since-main",
+    "bun -e 'import { scanSensitiveText } from \"./packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts\"; const root = \"goals/codex-security-findings-2026-08-13\"; const glob = new Bun.Glob(\"**/*\"); const hits = []; for await (const path of glob.scan({ cwd: root, onlyFiles: true })) { if (path.startsWith(\"raw/\")) continue; hits.push(...scanSensitiveText(path, await Bun.file(`${root}/${path}`).text())); } if (hits.length > 0) process.exit(1)'",
+    "git diff --check -- goals/codex-security-findings-2026-08-13 goals/INDEX.md",
+    "jq -r '.findings[].commit' goals/codex-security-findings-2026-08-13/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The signed-in CSV export cannot be produced from the findings page.",
+    "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
+    "A remediation requires an architecture or product decision outside packet scope.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

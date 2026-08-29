@@ -5,48 +5,39 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.errors");
-
-const causeMessage = (cause: unknown): string => {
-  if (P.isError(cause)) {
-    return cause.message;
-  }
-  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
-    return cause.message;
-  }
-  return Inspectable.toStringUnknown(cause, 0);
-};
 
 /**
  * Operational error during source fetch, parsing, projection, or file writes.
  *
- * @example
+ * **Example** (Make sync data error)
+ *
  * ```ts
  * import { SyncDataToTsError } from "@beep/repo-cli/commands/SyncDataToTs"
  *
  * const error = SyncDataToTsError.make({ message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`SyncDataToTsError`)(
+export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncDataToTsError`)(
   "SyncDataToTsError",
   {
     message: S.String,
     targetId: S.optionalKey(S.String),
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("SyncDataToTsError", {
+  $I.annoteError<SyncDataToTsError>("SyncDataToTsError", {
     title: "Sync Data To TypeScript Error",
     description: "Failed to fetch, decode, normalize, render, or write synced data.",
   })
@@ -73,7 +64,7 @@ export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`Sy
   static readonly mapError = Err.mapCauseError<SyncDataToTsError, [message: string, targetId?: string, file?: string]>(
     (cause, message, targetId, file) =>
       SyncDataToTsError.make({
-        message: `${message}: ${causeMessage(cause)}`,
+        message: messageWithCause(message, cause),
         cause,
         ...O.getSomesStruct({
           targetId: O.fromUndefinedOr(targetId),
@@ -86,23 +77,25 @@ export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`Sy
 /**
  * Drift detected in check mode.
  *
- * @example
+ * **Example** (Make sync drift error)
+ *
  * ```ts
  * import { SyncDataToTsDriftError } from "@beep/repo-cli/commands/SyncDataToTs"
  *
  * const error = SyncDataToTsDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class SyncDataToTsDriftError extends TaggedErrorClass<SyncDataToTsDriftError>($I`SyncDataToTsDriftError`)(
+export class SyncDataToTsDriftError extends S.TaggedError<SyncDataToTsDriftError>($I`SyncDataToTsDriftError`)(
   "SyncDataToTsDriftError",
   {
     message: S.String,
     driftCount: S.Finite,
   },
-  $I.annote("SyncDataToTsDriftError", {
+  $I.annoteError<SyncDataToTsDriftError>("SyncDataToTsDriftError", {
     title: "Sync Data To TypeScript Drift Error",
     description: "Generated data drift was detected while running in check mode.",
   })

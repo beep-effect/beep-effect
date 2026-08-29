@@ -170,20 +170,20 @@ describe("TSMorph model taxonomy", () => {
 
   describe("pure transformations", () => {
     it("refines generic file paths into stricter TypeScript path schemas", () => {
-      expect(S.decodeUnknownSync(FilePathToTsConfigFilePath)("packages/tooling/library/repo-utils/tsconfig.json")).toBe(
+      expect(S.decodeSync(FilePathToTsConfigFilePath)("packages/tooling/library/repo-utils/tsconfig.json")).toBe(
         "packages/tooling/library/repo-utils/tsconfig.json"
       );
-      expect(S.decodeUnknownSync(FilePathToTypeScriptImplementationFilePath)("src/main.ts")).toBe("src/main.ts");
-      expect(S.decodeUnknownSync(FilePathToTypeScriptDeclarationFilePath)("src/types.d.ts")).toBe("src/types.d.ts");
-      expect(S.decodeUnknownSync(FilePathToTypeScriptFilePath)("src/types.d.ts")).toBe("src/types.d.ts");
-      expect(S.decodeUnknownSync(TypeScriptImplementationFilePathToSymbolFilePath)("src/main.ts")).toBe("src/main.ts");
+      expect(S.decodeSync(FilePathToTypeScriptImplementationFilePath)("src/main.ts")).toBe("src/main.ts");
+      expect(S.decodeSync(FilePathToTypeScriptDeclarationFilePath)("src/types.d.ts")).toBe("src/types.d.ts");
+      expect(S.decodeSync(FilePathToTypeScriptFilePath)("src/types.d.ts")).toBe("src/types.d.ts");
+      expect(S.decodeSync(TypeScriptImplementationFilePathToSymbolFilePath)("src/main.ts")).toBe("src/main.ts");
     });
 
     it("maps exact symbol kinds to coarse categories", () => {
       expect(symbolCategoryFromKind("FunctionDeclaration")).toBe(SymbolCategory.Enum.function);
       expect(symbolCategoryFromKind("Constructor")).toBe(SymbolCategory.Enum.member);
       expect(symbolCategoryFromKind("EnumDeclaration")).toBe(SymbolCategory.Enum.type);
-      expect(S.decodeUnknownSync(SymbolKindToCategory)("MethodDeclaration")).toBe("member");
+      expect(S.decodeSync(SymbolKindToCategory)("MethodDeclaration")).toBe("member");
       expect(decodeSymbolCategory("member")).toBe("member");
     });
 
@@ -223,9 +223,9 @@ describe("TSMorph model taxonomy", () => {
 
     it("round-trips schema-derived project identity parts through the encoded wire shape", () => {
       fc.assert(
-        fc.property(S.toArbitrary(ProjectIdentityParts), (value) => {
+        fc.property(S.toArbitrary(ProjectIdentityParts)(fc), (value) => {
           const encoded = S.encodeSync(ProjectIdentityParts)(value);
-          const decoded = S.decodeUnknownSync(ProjectIdentityParts)(encoded);
+          const decoded = S.decodeSync(ProjectIdentityParts)(encoded);
 
           expect(decoded).toEqual(value);
           expect(decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
@@ -236,9 +236,9 @@ describe("TSMorph model taxonomy", () => {
 
     it("round-trips schema-derived symbol identity parts through the encoded wire shape", () => {
       fc.assert(
-        fc.property(S.toArbitrary(SymbolIdentityParts), (value) => {
+        fc.property(S.toArbitrary(SymbolIdentityParts)(fc), (value) => {
           const encoded = S.encodeSync(SymbolIdentityParts)(value);
-          const decoded = S.decodeUnknownSync(SymbolIdentityParts)(encoded);
+          const decoded = S.decodeSync(SymbolIdentityParts)(encoded);
 
           expect(decoded).toEqual(value);
           expect(decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
@@ -249,11 +249,12 @@ describe("TSMorph model taxonomy", () => {
   });
 
   describe("effectful transformations", () => {
-    it("derives content hashes from source text", () =>
+    it.effect("derives content hashes from source text", () =>
       Effect.gen(function* () {
-        const hash = yield* S.decodeUnknownEffect(ContentHashFromSourceText)("export const a = 1;\n");
+        const hash = yield* S.decodeEffect(ContentHashFromSourceText)("export const a = 1;\n");
         expect(hash).toMatch(/^[0-9a-f]{64}$/);
-      }).pipe(provideScopedLayer(platformLayer)));
+      }).pipe(provideScopedLayer(platformLayer))
+    );
   });
 
   describe("runtime instance schemas", () => {
@@ -288,7 +289,7 @@ describe("TSMorph model taxonomy", () => {
     });
 
     it("decodes every schema-derived SymbolId and round-trips it identically", () => {
-      const arbitrary = S.toArbitrary(SymbolId);
+      const arbitrary = S.toArbitrary(SymbolId)(fc);
       fc.assert(
         fc.property(arbitrary, (symbolId) => {
           const decoded = decodeSymbolId(symbolId);

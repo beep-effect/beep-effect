@@ -27,20 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/ontology": [
-        "../../../../packages/foundation/modeling/ontology/src/index.ts"
-      ],
-      "@beep/ontology/*": [
-        "../../../../packages/foundation/modeling/ontology/src/*.ts"
-      ],
-      "@beep/test-utils": [
-        "../../../../packages/tooling/test-kit/test-utils/src/index.ts"
-      ],
-      "@beep/test-utils/*": [
-        "../../../../packages/tooling/test-kit/test-utils/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

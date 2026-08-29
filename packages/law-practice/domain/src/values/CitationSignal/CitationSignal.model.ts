@@ -13,13 +13,14 @@ const $I = $LawPracticeDomainId.create("values/CitationSignal/CitationSignal.mod
 /**
  * Introductory signal word classification for citation support level.
  *
+ * **Details**
+ *
  * Based on Bluebook signal categories (Rule 1.2). The `, e.g.` combined forms
  * (Rule 1.3) carry distinct meaning ("one of many illustrative authorities")
  * and are tracked separately from the bare signals.
  *
- * **Example**
+ * **Example** (Decode and check signal)
  *
- * @example
  * ```ts
  * import { CitationSignal } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -58,9 +59,8 @@ export const CitationSignal = LiteralKit([
  * The decoded literal type for {@link CitationSignal} — a union of every
  * supported Bluebook signal (`"see" | "see also" | "cf" | ...`).
  *
- * **Example**
+ * **Example** (Assign typed signal literal)
  *
- * @example
  * ```ts
  * import type { CitationSignal } from "@beep/law-practice-domain"
  *

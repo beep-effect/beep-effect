@@ -1,0 +1,5 @@
+name: beep-openclaw
+runtime:
+  name: nodejs
+description: Content-addressed OpenClaw generation applicator for the beep workstation agent.
+main: ../src/internal/openclaw-entry.ts

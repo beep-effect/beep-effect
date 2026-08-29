@@ -7,6 +7,9 @@ left **open** for the user to resolve via `/grill-with-docs
 multi-provider-llm-dispatch-fallback`. Do not treat recommendations as decided.
 -->
 
+The dated 2026-07-14 **LOCKED** entries below supersede the open pre-draft
+recommendations and the 2026-07-11 partial-graduation resume state.
+
 ## Q1: Does this packet own only the declarative dispatch/registry surface ABOVE `ExecutionPlan`, or also the shared retry/`Schedule` policy library plus round-robin + circuit-breaker?
 
 **Recommended:** Own only the thin dispatch surface — the provider registry,
@@ -205,4 +208,184 @@ re-implement CLI probing or instance management. Q5 itself (resolver shape,
 advisory prefix detect, advance-vs-fail-fast, broker ApiKeyResolver) remains
 open here.
 
-**Status:** recorded (partial graduation; packet stays `active`)
+**Status:** recorded on 2026-07-11; superseded by the 2026-07-14 closure entries
+
+## 2026-07-14 — LOCKED: Runtime dispatch is the only honest remainder
+
+**Question:** What work, if any, remains after the subscription-auth leg shipped?
+
+**Answer:** The only honest remainder is runtime ordered dispatch/fallback over
+configured, **ELIGIBLE** provider targets: construct and select
+`ExecutionPlan`s for a consuming runtime. This packet does not own driver retry
+predicates, shared schedules, build-time provider selection, circuit breaking,
+round-robin, or a general resilience bundle. Those boundaries follow the
+2026-07-14 decisions in
+[`effect-orchestration-patterns`](../effect-orchestration-patterns/DECISIONS.md).
+
+**Rationale:** Eligibility and runtime advancement are consumer policy. Retry
+predicates remain provider- and operation-specific; shared resilience
+abstractions remain demand-gated until congruent consumers exist.
+
+**Rejected options:** A shared retry/schedule library; build-time selection;
+round-robin; circuit breaking; absorbing the sibling orchestration packet; a
+generic resilience package.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: Reuse ExecutionPlan and the four live drivers
+
+**Question:** Should the runtime fallback engine be built, wrapped, or ported?
+
+**Answer:** Reuse vendored `ExecutionPlan` and the four existing drivers through
+their live public barrels: `packages/drivers/anthropic/src/index.ts`,
+`packages/drivers/openai-compat/src/index.ts`,
+`packages/drivers/xai/src/index.ts`, and
+`packages/drivers/venice-ai/src/index.ts`. Build only the app-local composition
+needed by the consuming runtime. Do not create a bespoke or wrapped fallback
+engine, and do not port a BAML/LiteLLM-style runtime.
+
+**Rationale:**
+`.repos/effect-v4/packages/effect/src/ExecutionPlan.ts` already supplies ordered
+fallback over `LanguageModel` layers. The driver barrels already expose the
+provider-specific constructors needed to compose that surface.
+
+**Rejected options:** A home-grown engine; an `ExecutionPlan` wrapper; adopting
+or porting BAML, LiteLLM, or another proxy/runtime; new provider drivers for
+this candidate.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: First implementation slice is demand-gated
+
+**Question:** When may implementation begin, and what must it prove first?
+
+**Answer:** Implementation begins only when **a real consumer requires two
+compatible, credential-resolvable runtime targets**. When triggered, first
+prove one non-streaming, provider-neutral call across two targets. The spike
+must cover forced tools, structured output, streaming, and model-identity
+compatibility before integration into the owning consumer. The current
+consumer candidate is successor work to `AnthropicTurnKernel`.
+
+A shipped `ProviderInstance` is CLI delegation, not a dispatchable endpoint.
+It records a vendor CLI binary/HOME and token-free auth probe state; CLI tokens
+are never beep-resolvable credentials.
+
+**Rationale:** A real two-target consumer proves compatibility and credential
+resolution instead of manufacturing demand. Non-streaming isolates dispatch
+semantics before tool, schema, stream, and model-identity differences widen the
+test surface.
+
+**Rejected options:** Starting from the existing `ProviderInstance` rows;
+treating CLI authentication as endpoint eligibility; implementing for one
+target; wiring streaming first; speculative integration into
+`AnthropicTurnKernel`.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: Registry promotion follows demonstrated demand
+
+**Question:** What registry shape should the first runtime use?
+
+**Answer:** Use an app-local match over the first two concrete targets. Promote
+a static adapter table over live public package barrels only after a second
+consumer proves registry demand. Do not mandate a uniform driver interface and
+do not create a dynamic plugin registry. Any promoted adapter design requires a
+compile/dtslint proof that every adapter builds the common
+`LanguageModel.LanguageModel` surface using public barrels only.
+
+**Rationale:** The provider packages expose related but independently shaped
+constructors. App-local matching preserves those public contracts until two
+consumers demonstrate a stable common registry contract.
+
+**Rejected options:** A uniform `driver.model()` mandate; deep imports; a
+dynamic plugin registry; a shared table for the first consumer; promotion
+without compile/dtslint evidence.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: Credential precedence is deleted from this packet
+
+**Question:** Does dispatch own key precedence, prefix detection, or secret
+resolution?
+
+**Answer:** No. Secret governance owns resolution, including the ordered user
+vault -> `op://` reference -> environment chain; CLI subscription tokens are
+outside it. Dispatch consumes a credential-resolution port and owns only
+eligible-vs-unavailable advancement policy. It must explicitly distinguish
+missing/unavailable credentials from authentication, integrity, and transport
+failures; those failures are never silently treated as absence. Prefix
+detection may appear as app-local onboarding advice only, never as proof of
+validity or authorization. See the 2026-07-14 resolution decisions in
+[`ingestion-security-secret-governance`](../ingestion-security-secret-governance/DECISIONS.md).
+
+**Rationale:** Credential sourcing, secrecy, and failure classification are a
+governance boundary. Dispatch needs only a redacted availability result and
+enough typed failure information to apply explicit advancement policy.
+
+**Rejected options:** A dispatch-owned resolver; `ConfigProvider.orElse` as a
+catch-all resolver; CLI tokens in the chain; prefix-based authorization;
+advancing after auth, integrity, or transport failure as though a credential
+were missing.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: Incubate at the agents composition boundary
+
+**Question:** Where does runtime dispatch policy live before promotion?
+
+**Answer:** Client-safe dispatch-policy contracts belong in agents
+use-cases/domain and import no drivers. Runtime assembly incubates in
+`packages/agents/server` at the composition boundary. Do not create an
+`@beep/llm-dispatch` driver package or a foundation package until a second
+congruent consumer proves both demand and a stable contract.
+
+**Rationale:** Policy vocabulary is client-safe application meaning; concrete
+driver assembly is server runtime composition. This placement keeps driver
+imports out of client-safe contracts while avoiding a supply-led shared
+package.
+
+**Rejected options:** A new driver-tier dispatch package; a foundation package;
+driver imports in agents domain/use-cases; app runtime assembly outside the
+server composition boundary.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: V1 is ordered fallback only
+
+**Question:** Which resilience and response modes belong in the first runtime
+dispatch implementation?
+
+**Answer:** V1 owns ordered fallback only, using vendored `ExecutionPlan`.
+Round-robin and circuit breaking remain behind the demand gates in
+`effect-orchestration-patterns`. Reuse the existing
+`LanguageModel.generateObject` structured-output path instead of rebuilding a
+response-model layer.
+
+**Rationale:** Ordered fallback is the sole remaining consumer behavior.
+Structured output already exists on the common language-model surface, while
+load balancing and circuit state have different triggers and ownership.
+
+**Rejected options:** Round-robin in V1; circuit breaking in V1; a resilience
+bundle; a new structured-output abstraction.
+
+**Status:** LOCKED
+
+## 2026-07-14 — LOCKED: Graduate on the shipped auth leg
+
+**Question:** How does this exploration close without losing the runtime
+dispatch remainder?
+
+**Answer:** Graduate the packet on its shipped auth leg,
+[`goals/llm-provider-subscription-auth`](../../goals/llm-provider-subscription-auth/README.md).
+Record `llm-runtime-dispatch` in `MAP.md` as a demand-gated candidate with its
+exact trigger; do not scaffold a new goal now.
+
+**Rationale:** The exploration produced a shipped goal and a settled boundary
+for the only honest remainder. Graduation records that outcome; demand-gating
+preserves the remainder without pretending implementation is ready.
+
+**Rejected options:** Keep the packet artificially active; discard the
+dispatch remainder; scaffold an untriggered goal; claim the auth goal delivered
+runtime dispatch.
+
+**Status:** LOCKED — packet graduates; remainder retained as demand-gated

@@ -10,7 +10,7 @@ import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as R from "effect/Record";
-import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.js";
+import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.ts";
 
 const packageExportEntrypointFor = (
   role: ArchitecturePackageRole,
@@ -57,8 +57,8 @@ const packageExportMapFor = (
 /**
  * Render a structured package manifest operation.
  *
- * @internal
- * @example
+ * **Example** (Render a domain package manifest)
+ *
  * ```ts
  * import { renderPackageJsonOperation, WritePackageJsonOperation } from "@beep/repo-cli/commands/Architecture"
  * import { Effect } from "effect"
@@ -79,6 +79,8 @@ const packageExportMapFor = (
  * const manifestText = Effect.runSync(renderPackageJsonOperation(operation))
  * console.log(manifestText.includes("@beep/research-lab-domain"))
  * ```
+ *
+ * @internal
  * @category utilities
  * @since 0.0.0
  */
@@ -101,8 +103,8 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
       "beep:audit":
         "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-      "beep:build": "tsc -b tsconfig.json && bun run babel",
-      "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+      "beep:build": "tsc -p tsconfig.json && bun run babel",
+      "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
       "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
       "beep:lint": "biome check .",
       "beep:lint:fix": "biome check . --write",
@@ -116,6 +118,7 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       "lint:fix": "bun run beep:lint:fix",
       test: "bun run beep:test",
       "test:integration": "bun run beep:test:integration",
+      "test:integration:parallel": "bun run beep:test:integration",
     },
     exports: packageExportMapFor(operation.role, operation.exports, false),
     files: ["src/**/*.ts", "dist/**/*.js", "dist/**/*.js.map", "dist/**/*.d.ts", "dist/**/*.d.ts.map"],

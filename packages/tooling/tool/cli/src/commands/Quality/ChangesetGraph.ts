@@ -6,16 +6,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effect";
+import { Console, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
-import { ChangesetGraphError } from "./Quality.errors.js";
+import { runCaptured } from "../../internal/process/index.ts";
+import { ChangesetGraphError } from "./Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 /**
@@ -24,7 +25,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
  * @category errors
  * @since 0.0.0
  */
-export { ChangesetGraphError } from "./Quality.errors.js";
+export { ChangesetGraphError } from "./Quality.errors.ts";
 
 const $I = $RepoCliId.create("commands/Quality/ChangesetGraph");
 
@@ -76,7 +77,8 @@ class RetiredChangesetPackages extends S.Class<RetiredChangesetPackages>($I`Reti
 /**
  * A package name referenced by a changeset file.
  *
- * @example
+ * **Example** (Make package reference)
+ *
  * ```ts
  * import { ChangesetGraphPackageReference } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -86,6 +88,7 @@ class RetiredChangesetPackages extends S.Class<RetiredChangesetPackages>($I`Reti
  * })
  * console.log(reference.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -104,7 +107,8 @@ export class ChangesetGraphPackageReference extends S.Class<ChangesetGraphPackag
 /**
  * Summary emitted by the changeset package graph guard.
  *
- * @example
+ * **Example** (Make graph summary)
+ *
  * ```ts
  * import { ChangesetGraphSummary } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -116,6 +120,7 @@ export class ChangesetGraphPackageReference extends S.Class<ChangesetGraphPackag
  * })
  * console.log(summary.workspacePackages)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,8 +136,10 @@ export class ChangesetGraphSummary extends S.Class<ChangesetGraphSummary>($I`Cha
   })
 ) {}
 
+const ChangesetBumpKind = LiteralKit(["major", "minor", "patch"]);
+
 const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(ChangesetGraphPackageJson));
-const decodeChangesetFrontmatter = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
+const decodeChangesetFrontmatter = S.decodeUnknownEffect(S.Record(S.String, ChangesetBumpKind));
 const decodeRetiredChangesetPackages = S.decodeUnknownEffect(S.fromJsonString(RetiredChangesetPackages));
 
 const byReferenceKeyAscending: Order.Order<ChangesetGraphPackageReference> = Order.mapInput(
@@ -180,33 +187,18 @@ const collectGitOutput = Effect.fn("ChangesetGraph.collectGitOutput")(function* 
   repoRoot: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<string, ChangesetGraphError, ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", [...args], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "ignore",
-      });
-      const text = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      const exitCode = yield* handle.exitCode;
-
-      if (exitCode !== 0) {
-        return yield* ChangesetGraphError.make({
-          message: `git ${A.join(args, " ")} failed with exit code ${exitCode}.`,
-        });
-      }
-
-      return text;
-    })
-  ).pipe(ChangesetGraphError.mapError(`Failed to run git ${A.join(args, " ")}.`));
-
-  return output;
+  const result = yield* runCaptured({
+    command: "git",
+    args,
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(ChangesetGraphError.mapError(`Failed to run git ${A.join(args, " ")}.`));
+  if (result.exitCode !== 0) {
+    return yield* ChangesetGraphError.make({
+      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return result.output;
 });
 
 const readPackageJson = Effect.fn("ChangesetGraph.readPackageJson")(function* (
@@ -256,7 +248,33 @@ const readRetiredChangesetPackageNames = Effect.fn("ChangesetGraph.readRetiredCh
   );
 });
 
-const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collectWorkspacePackageJsonFiles")(function* (
+/**
+ * Collect the repo-relative workspace `package.json` paths declared by the
+ * root workspace globs.
+ *
+ * **Details**
+ *
+ * The catalog is derived from the root `package.json` workspaces patterns via
+ * `git ls-files` glob pathspecs, so it names exactly the tracked workspace
+ * manifests — the same derivation the changeset graph guard uses. The
+ * path-aware changeset status wrapper reuses it so both lanes agree on
+ * workspace membership.
+ *
+ * **Example** (Collect workspace manifests)
+ *
+ * ```ts
+ * import { collectWorkspacePackageJsonFiles } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
+ *
+ * const program = collectWorkspacePackageJsonFiles(process.cwd())
+ * console.log(program) // example value
+ * ```
+ *
+ * @param repoRoot - Repository root used as the git working directory.
+ * @returns Sorted repo-relative workspace `package.json` paths (root excluded).
+ * @category utilities
+ * @since 0.0.0
+ */
+export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collectWorkspacePackageJsonFiles")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   ReadonlyArray<string>,
@@ -347,7 +365,8 @@ const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(
 /**
  * Parse package references from one changeset Markdown document.
  *
- * @example
+ * **Example** (Parse references from Markdown)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { changesetPackageReferencesFromText } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
@@ -358,6 +377,7 @@ const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(
  * )
  * Effect.runPromise(program)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -399,7 +419,10 @@ export const changesetPackageReferencesFromText = Effect.fn("ChangesetGraph.chan
     }
 
     const decoded = yield* decodeChangesetFrontmatter(value).pipe(
-      ChangesetGraphError.mapError(`Changeset frontmatter in ${file} must be a package bump mapping.`, file)
+      ChangesetGraphError.mapError(
+        `Changeset frontmatter in ${file} must map package names to major | minor | patch bumps.`,
+        file
+      )
     );
 
     return pipe(
@@ -438,10 +461,8 @@ const collectChangesetPackageReferences = Effect.fn("ChangesetGraph.collectChang
 /**
  * Find changeset package references that are not in the workspace graph.
  *
- * @param workspacePackageNames - Current workspace package names.
- * @param references - Package references parsed from changeset files.
- * @returns References that do not resolve to a workspace package.
- * @example
+ * **Example** (Find missing package references)
+ *
  * ```ts
  * import { ChangesetGraphPackageReference, findMissingChangesetPackageReferences } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
@@ -451,6 +472,10 @@ const collectChangesetPackageReferences = Effect.fn("ChangesetGraph.collectChang
  * )
  * console.log(missing.length)
  * ```
+ *
+ * @param workspacePackageNames - Current workspace package names.
+ * @param references - Package references parsed from changeset files.
+ * @returns References that do not resolve to a workspace package.
  * @category utilities
  * @since 0.0.0
  */
@@ -513,28 +538,42 @@ const makeSummary = (
 /**
  * Build a changeset graph summary from already-collected inputs.
  *
- * @example
+ * **Example** (Build summary from inputs)
+ *
  * ```ts
  * import { makeChangesetGraphSummary } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
  * const summary = makeChangesetGraphSummary(["@beep/schema"], [".changeset/demo.md"], [])
  * console.log(summary.changesetFiles)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export const makeChangesetGraphSummary = makeSummary;
+export const makeChangesetGraphSummary: {
+  (
+    changesetFiles: ReadonlyArray<string>,
+    references: ReadonlyArray<ChangesetGraphPackageReference>
+  ): (workspacePackageNames: ReadonlyArray<string>) => ChangesetGraphSummary;
+  (
+    workspacePackageNames: ReadonlyArray<string>,
+    changesetFiles: ReadonlyArray<string>,
+    references: ReadonlyArray<ChangesetGraphPackageReference>
+  ): ChangesetGraphSummary;
+} = dual(3, makeSummary);
 
 /**
  * Run the non-mutating changeset package graph guard.
  *
- * @example
+ * **Example** (Run changeset graph check)
+ *
  * ```ts
  * import { runChangesetGraphCheck } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
  * const program = runChangesetGraphCheck(process.cwd())
  * console.log(program) // example value
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

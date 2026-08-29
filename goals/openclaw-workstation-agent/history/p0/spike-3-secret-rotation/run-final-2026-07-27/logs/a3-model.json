@@ -1,0 +1,274 @@
+{
+  "runId": "15a60d83-cfba-45fe-841b-cb9f2dd3a3ae",
+  "status": "ok",
+  "summary": "completed",
+  "result": {
+    "payloads": [
+      {
+        "text": "SPIKE3_MODEL_OK",
+        "mediaUrl": null
+      }
+    ],
+    "meta": {
+      "durationMs": 18325,
+      "agentMeta": {
+        "sessionId": "affb9990-49a6-447f-95af-abf07502506c",
+        "sessionFile": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/state/agents/spike3/sessions/affb9990-49a6-447f-95af-abf07502506c.jsonl",
+        "provider": "ollama",
+        "model": "gemma3:4b",
+        "contextTokens": 32768,
+        "agentHarnessId": "openclaw",
+        "usage": {
+          "input": 9238,
+          "output": 9,
+          "total": 9247
+        },
+        "lastCallUsage": {
+          "input": 9238,
+          "output": 9,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 9247
+        },
+        "promptTokens": 9238,
+        "contextBudgetStatus": {
+          "schemaVersion": 1,
+          "source": "pre-prompt-estimate",
+          "updatedAt": 1785139748652,
+          "provider": "ollama",
+          "model": "gemma3:4b",
+          "route": "fits",
+          "shouldCompact": false,
+          "estimatedPromptTokens": 9821,
+          "contextTokenBudget": 32768,
+          "promptBudgetBeforeReserve": 12768,
+          "reserveTokens": 20000,
+          "effectiveReserveTokens": 20000,
+          "remainingPromptBudgetTokens": 2947,
+          "overflowTokens": 0,
+          "toolResultReducibleChars": 0,
+          "messageCount": 0,
+          "unwindowedMessageCount": 0,
+          "sessionId": "affb9990-49a6-447f-95af-abf07502506c"
+        }
+      },
+      "aborted": false,
+      "systemPromptReport": {
+        "source": "run",
+        "generatedAt": 1785139748621,
+        "sessionId": "affb9990-49a6-447f-95af-abf07502506c",
+        "sessionKey": "agent:spike3:rotation-6c9c6b13",
+        "provider": "ollama",
+        "model": "gemma3:4b",
+        "workspaceDir": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace",
+        "bootstrapMaxChars": 20000,
+        "bootstrapTotalMaxChars": 60000,
+        "bootstrapTruncation": {
+          "warningMode": "always",
+          "warningShown": false,
+          "truncatedFiles": 0,
+          "nearLimitFiles": 0,
+          "totalNearLimit": false
+        },
+        "sandbox": {
+          "mode": "off",
+          "sandboxed": false
+        },
+        "systemPrompt": {
+          "chars": 32573,
+          "hash": "36781414865aed2b26425d8f58c5bce206eaa3195ee6d75f8584650d74e235d8",
+          "projectContextChars": 13666,
+          "nonProjectContextChars": 18907
+        },
+        "injectedWorkspaceFiles": [
+          {
+            "name": "AGENTS.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/AGENTS.md",
+            "missing": false,
+            "rawChars": 7195,
+            "injectedChars": 7195,
+            "truncated": false
+          },
+          {
+            "name": "SOUL.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/SOUL.md",
+            "missing": false,
+            "rawChars": 1509,
+            "injectedChars": 1509,
+            "truncated": false
+          },
+          {
+            "name": "TOOLS.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/TOOLS.md",
+            "missing": false,
+            "rawChars": 866,
+            "injectedChars": 866,
+            "truncated": false
+          },
+          {
+            "name": "IDENTITY.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/IDENTITY.md",
+            "missing": false,
+            "rawChars": 1275,
+            "injectedChars": 1275,
+            "truncated": false
+          },
+          {
+            "name": "USER.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/USER.md",
+            "missing": false,
+            "rawChars": 534,
+            "injectedChars": 534,
+            "truncated": false
+          },
+          {
+            "name": "HEARTBEAT.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/HEARTBEAT.md",
+            "missing": false,
+            "rawChars": 243,
+            "injectedChars": 243,
+            "truncated": false
+          },
+          {
+            "name": "BOOTSTRAP.md",
+            "path": "/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/workspace/BOOTSTRAP.md",
+            "missing": false,
+            "rawChars": 1668,
+            "injectedChars": 1668,
+            "truncated": false
+          }
+        ],
+        "skills": {
+          "promptChars": 8447,
+          "hash": "b3c3925ba41225544e2e62ed710d21f4645a9160fe58303c8d5e08866c2036b1",
+          "entries": [
+            {
+              "name": "1password",
+              "blockChars": 352
+            },
+            {
+              "name": "browser-automation",
+              "blockChars": 419
+            },
+            {
+              "name": "canvas",
+              "blockChars": 337
+            },
+            {
+              "name": "clawhub",
+              "blockChars": 381
+            },
+            {
+              "name": "diagram-maker",
+              "blockChars": 354
+            },
+            {
+              "name": "gh-issues",
+              "blockChars": 377
+            },
+            {
+              "name": "github",
+              "blockChars": 348
+            },
+            {
+              "name": "healthcheck",
+              "blockChars": 366
+            },
+            {
+              "name": "meme-maker",
+              "blockChars": 339
+            },
+            {
+              "name": "node-connect",
+              "blockChars": 369
+            },
+            {
+              "name": "node-inspect-debugger",
+              "blockChars": 365
+            },
+            {
+              "name": "notion",
+              "blockChars": 360
+            },
+            {
+              "name": "obsidian",
+              "blockChars": 378
+            },
+            {
+              "name": "python-debugpy",
+              "blockChars": 353
+            },
+            {
+              "name": "session-logs",
+              "blockChars": 341
+            },
+            {
+              "name": "skill-creator",
+              "blockChars": 347
+            },
+            {
+              "name": "spike",
+              "blockChars": 339
+            },
+            {
+              "name": "taskflow",
+              "blockChars": 369
+            },
+            {
+              "name": "taskflow-inbox-triage",
+              "blockChars": 379
+            },
+            {
+              "name": "tmux",
+              "blockChars": 357
+            },
+            {
+              "name": "video-frames",
+              "blockChars": 317
+            },
+            {
+              "name": "weather",
+              "blockChars": 377
+            }
+          ]
+        },
+        "tools": {
+          "listChars": 0,
+          "schemaChars": 0,
+          "entries": []
+        },
+        "currentTurn": {
+          "promptChars": 35,
+          "runtimeContextChars": 0
+        }
+      },
+      "finalPromptText": "Reply with exactly: SPIKE3_MODEL_OK",
+      "finalAssistantVisibleText": "SPIKE3_MODEL_OK",
+      "finalAssistantRawText": "SPIKE3_MODEL_OK",
+      "replayInvalid": false,
+      "livenessState": "working",
+      "stopReason": "stop",
+      "executionTrace": {
+        "winnerProvider": "ollama",
+        "winnerModel": "gemma3:4b",
+        "attempts": [
+          {
+            "provider": "ollama",
+            "model": "gemma3:4b",
+            "result": "success",
+            "stage": "assistant"
+          }
+        ],
+        "fallbackUsed": false,
+        "runner": "embedded"
+      },
+      "requestShaping": {
+        "thinking": "off"
+      },
+      "completion": {
+        "stopReason": "stop",
+        "finishReason": "stop"
+      }
+    }
+  }
+}

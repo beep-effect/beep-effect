@@ -9,7 +9,8 @@
 /**
  * Anthropic provider-adaptation codecs for the assistant-turn output.
  *
- * @example
+ * **Example** (Decode assistant block output)
+ *
  * ```ts
  * import { assistantBlockOutput } from "@beep/agents-server/AssistantTurn"
  * import * as S from "effect/Schema"
@@ -22,11 +23,12 @@
  * @category codecs
  * @since 0.0.0
  */
-export * from "./AnthropicTurnCodec.js";
+export * from "./AnthropicTurnCodec.ts";
 /**
  * Anthropic streaming kernel Layer satisfying the `AgentTurnKernel` port.
  *
- * @example
+ * **Example** (Provide Anthropic turn kernel)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { AnthropicTurnKernel } from "@beep/agents-server/AssistantTurn"
@@ -46,19 +48,23 @@ export * from "./AnthropicTurnCodec.js";
  * @category layers
  * @since 0.0.0
  */
-export * from "./AnthropicTurnKernel.js";
+export * from "./AnthropicTurnKernel.ts";
 /**
  * Assistant-turn invalid-block repair adapter.
  *
- * @example
+ * **Example** (Repair invalid assistant blocks)
+ *
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
+ * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
+ * import { Response } from "effect/unstable/ai"
  *
  * const repair = makeRepairInvalidBlocks(() =>
- *   Effect.succeed(
- *     '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}'
- *   )
+ *   Effect.succeed(AnthropicToolJsonResponse.make({
+ *     paramsJson: '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}',
+ *     usage: Response.Usage.make({ inputTokens: { total: 4 }, outputTokens: { total: 2 } }),
+ *   }))
  * )
  * const issue = IssueReport.make({
  *   index: 0,
@@ -66,17 +72,18 @@ export * from "./AnthropicTurnKernel.js";
  *   report: "/children/0/text Expected string",
  * })
  *
- * Effect.runPromise(repair([issue])).then((blocks) => console.log(blocks.length)) // 1
+ * Effect.runPromise(repair([issue])).then((result) => console.log(result.blocks.length)) // 1
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export * from "./BlockRepair.js";
+export * from "./BlockRepair.ts";
 /**
  * Incremental completed-block extractor and its carry state.
  *
- * @example
+ * **Example** (Scan chunk for completed blocks)
+ *
  * ```ts
  * import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn"
  *
@@ -87,4 +94,4 @@ export * from "./BlockRepair.js";
  * @category parsing
  * @since 0.0.0
  */
-export * from "./ScanState.js";
+export * from "./ScanState.ts";

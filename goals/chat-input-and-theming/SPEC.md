@@ -153,10 +153,12 @@ unchanged). Exact field names are a P1 detail; the contract is:
   picker + thumbnail/chip rendering and a typed **upload-port callback prop**
   (e.g. `onAttach(files: ReadonlyArray<File>) => …`). The editor never performs
   transport or persistence itself.
-- **Attachment value shape (app-local TS type for v1):** `{ id; filename;
-  mimeType; size; data }` where `data` is an in-memory blob/data-URL ref. MIME
-  allowlist: images for vision (`image/png`, `image/jpeg`, `image/webp`,
-  `image/gif`) + generic files; enforce a max-size cap (P1 default, e.g. 10 MB).
+- **Attachment value shape (foundation-owned runtime schema):**
+  `ComposerAttachment` carries `{ id; filename; mimeType; size; objectUrl; file }`.
+  `objectUrl` is a revocable preview-only blob URL and is never transported;
+  `AttachmentPort` receives the validated `ReadonlyArray<File>`. MIME allowlist:
+  images for vision (`image/png`, `image/jpeg`, `image/webp`, `image/gif`) +
+  generic files; enforce a max-size cap (P1 default, e.g. 10 MB).
 - **Send transport (cross-slice, GATED):** sending attachments to the model
   requires extending `SendTurnRequest` (currently `content: Document` only) with an
   `attachments` field and mapping images → Anthropic image content blocks. This is
@@ -179,38 +181,44 @@ unchanged). Exact field names are a P1 detail; the contract is:
 
 ## Acceptance Criteria
 
-- [ ] App launches following the OS theme (`system` default) with a persisted
+- [x] App launches following the OS theme (`system` default) with a persisted
       toggle switching green-dark ↔ green/parchment-light; both modes apply across
       sidebar, thread, message views, and composer.
-- [ ] Green radial-glow background rendered via the existing `@beep/ui`
+- [x] Green radial-glow background rendered via the existing `@beep/ui`
       `OrbBackground tone="green"`.
-- [ ] `@beep/editor` exposes a typed (TypeScript, not `effect/Schema`)
-      feature-flag config toggling toolbar, slash, mentions, attachments, and
-      send-key behavior; the bare `EditorComposer` and existing stories/consumers
-      are unchanged (additive only).
-- [ ] Chat composer shows a fixed formatting toolbar (bold/italic/lists/quote/
+- [x] `@beep/editor` exposes a typed feature-flag config toggling toolbar,
+      slash, mentions, attachments, and send-key behavior; the bare
+      `EditorComposer` and existing stories/consumers are unchanged (additive
+      only). *(Shipped schema-first — `ComposerFeatures` is an `S.Class` in
+      `src/chat/config.ts`; the original "TypeScript, not `effect/Schema`"
+      carve-out was superseded during implementation, as recorded in
+      Constraints.)*
+- [x] Chat composer shows a fixed formatting toolbar (bold/italic/lists/quote/
       link/code), a working `/` menu (formatting/insert items), `@` mention
       typeahead (ephemeral, app-injected source), attachment capture (drag-drop +
       picker + thumbnail), a live exact **character count**, and send/stop states.
-- [ ] Slash and mention menus meet the combobox a11y contract: the editor input
+- [x] Slash and mention menus meet the combobox a11y contract: the editor input
       exposes `role=combobox` + `aria-controls`, the popup is `role=listbox` with
       `role=option` items, the active option is tracked via `aria-activedescendant`
       on the input (DOM focus stays in the editor), and Down/Up move the active
       option, Enter selects, Escape closes + returns focus.
-- [ ] Plain Enter sends (configurable); a modifier (Shift/Cmd/Ctrl+Enter) inserts
+- [x] Plain Enter sends (configurable); a modifier (Shift/Cmd/Ctrl+Enter) inserts
       a newline; Enter-to-send is **suppressed during IME composition**
       (`event.isComposing`); existing draft autosave + edit-as-branch preserved.
-- [ ] Placeholder shows only on the empty state and the cursor aligns with the
+- [x] Placeholder shows only on the empty state and the cursor aligns with the
       placeholder text (bug fixed); a Storybook regression story covers it.
-- [ ] Attachments: capture UI (drag-drop + picker + thumbnail) + a typed
+- [x] Attachments: capture UI (drag-drop + picker + thumbnail) + a typed
       upload-port callback are wired per the Attachment contract. Send-on-payload
       (`SendTurnRequest` + Anthropic vision) is implemented ONLY if confirmed; else
       the stubbed-send degrade is applied and recorded in the Exception Ledger.
-- [ ] Storybook stories cover the configurable composer; the app runs and passes
+      (Shipped via the degrade path: send transport remains stubbed — the ledger
+      entry stands; the agents slice carries no attachment payload as of
+      2026-07-31.)
+- [x] Storybook stories cover the configurable composer; the app runs and passes
       claude-in-chrome visual QA in both modes.
-- [ ] No `@lobehub/editor` dependency added; `@beep/ui` defaults and
+- [x] No `@lobehub/editor` dependency added; `@beep/ui` defaults and
       `@beep/lexical-schema` node vocabulary unchanged.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

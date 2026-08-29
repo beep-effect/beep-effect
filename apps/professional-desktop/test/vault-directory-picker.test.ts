@@ -33,21 +33,36 @@ const spawnNotFound = PlatformError.systemError({
 });
 
 const mockSpawnerLayer = (
-  handler: (command: string) => { stdout?: string; code?: number } | "missing"
+  handler: (command: ChildProcess.StandardCommand) => { stdout?: string; code?: number } | "missing"
 ): Layer.Layer<ChildProcessSpawner.ChildProcessSpawner> =>
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("Expected a standard picker command");
-      const result = handler(command.command);
+      const result = handler(command);
       return result === "missing" ? Effect.fail(spawnNotFound) : Effect.succeed(mockHandle(result));
     })
   );
 
 describe("pickVaultDirectoryOnHost", () => {
-  layer(mockSpawnerLayer(() => ({ stdout: "/home/user/vault1\n" })))("with a kdialog selection", (it) => {
-    it.effect("returns the picked path from kdialog stdout", () =>
-      Effect.gen(function* () {
+  layer(
+    mockSpawnerLayer((command) => {
+      assert.strictEqual(command.command, "kdialog");
+      assert.deepStrictEqual(command.args, [
+        "--title",
+        "Select workspace vault",
+        "--getexistingdirectory",
+        "/home/user",
+      ]);
+      assert.strictEqual(command.options.stdin, "ignore");
+      assert.strictEqual(command.options.stdout, "pipe");
+      assert.strictEqual(command.options.stderr, "ignore");
+      return { stdout: "/home/user/vault1\n" };
+    })
+  )("with a kdialog selection", (it) => {
+    it.effect(
+      "returns the picked path from kdialog stdout",
+      Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
         assert.deepStrictEqual(selected, O.some("/home/user/vault1"));
       })
@@ -55,8 +70,9 @@ describe("pickVaultDirectoryOnHost", () => {
   });
 
   layer(mockSpawnerLayer(() => ({ code: 1 })))("with a cancelled dialog", (it) => {
-    it.effect("returns None", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns None",
+      Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
         assert.isTrue(O.isNone(selected));
       })
@@ -64,19 +80,21 @@ describe("pickVaultDirectoryOnHost", () => {
   });
 
   layer(mockSpawnerLayer(() => ({ stdout: "  \n" })))("with a clean exit but no selection", (it) => {
-    it.effect("returns None", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns None",
+      Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
         assert.isTrue(O.isNone(selected));
       })
     );
   });
 
-  layer(mockSpawnerLayer((command) => (command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })))(
+  layer(mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })))(
     "with kdialog missing and zenity available",
     (it) => {
-      it.effect("falls back to zenity", () =>
-        Effect.gen(function* () {
+      it.effect(
+        "falls back to zenity",
+        Effect.fnUntraced(function* () {
           const selected = yield* pickVaultDirectoryOnHost("/home/user");
           assert.deepStrictEqual(selected, O.some("/home/user/vault2"));
         })
@@ -85,8 +103,9 @@ describe("pickVaultDirectoryOnHost", () => {
   );
 
   layer(mockSpawnerLayer(() => "missing"))("with no picker command available", (it) => {
-    it.effect("fails with a client-safe error", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "fails with a client-safe error",
+      Effect.fnUntraced(function* () {
         const error = yield* pickVaultDirectoryOnHost("/home/user").pipe(Effect.flip);
         assert.strictEqual(error._tag, "VaultDirectoryPickError");
         assert.strictEqual(error.message, "Native folder dialog unavailable on this host.");

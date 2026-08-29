@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 12): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -64,7 +64,7 @@ describe("schema parity", () => {
   });
 
   it("applies docgen.json constant defaults at the schema boundary", () => {
-    expect(Result.getOrThrow(S.decodeUnknownResult(Configuration.ConfigurationSchema)({}))).toMatchObject({
+    expect(Result.getOrThrow(S.decodeResult(Configuration.ConfigurationSchema)({}))).toMatchObject({
       enableSearch: true,
       enforceDescriptions: false,
       enforceExamples: false,
@@ -72,7 +72,6 @@ describe("schema parity", () => {
       exclude: [],
       include: [],
       outDir: "docs",
-      runExamples: false,
       srcDir: "src",
       theme: Configuration.DEFAULT_THEME,
       tscExecutable: "tsc",

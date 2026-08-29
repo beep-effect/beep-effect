@@ -9,7 +9,7 @@ import {
   UnauthenticatedSnapshot,
 } from "@beep/agents-domain";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -29,17 +29,32 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 const probedAtIso = "2026-07-11T00:00:00.000Z";
 const probedAt = DateTime.makeUnsafe(probedAtIso);
-const rejectsEnvVarName = (name: string): boolean => Result.isFailure(S.decodeUnknownResult(EnvVarName)(name));
+const rejectsEnvVarName = (name: string): boolean => Result.isFailure(S.decodeResult(EnvVarName)(name));
 
 describe("@beep/agents-domain ProviderInstance", () => {
-  it("wires ProviderInstance to the agents BaseEntity identity", () => {
-    expect(ProviderInstance.definition.entityId).toBe(Agents.ProviderInstanceId);
-    expect(ProviderInstance.definition.entityId.tableName).toBe("agents_provider_instance");
-    expect(ProviderInstance.definition.entityId.entityType).toBe("AgentsProviderInstance");
-    expect(ProviderInstance.definition.persisted.kind.storageKind).toBe("literal");
-    expect(ProviderInstance.definition.persisted.envVars.storageKind).toBe("jsonb");
-    expect(ProviderInstance.definition.persisted.lastProbe.storageKind).toBe("jsonb");
-    expect(ProviderInstance.definition.persisted.homePath.storageKind).toBe("text");
+  it("wires ProviderInstance to the agents product-entity identity", () => {
+    expect(ProviderInstance.sql.tableName).toBe(Agents.ProviderInstanceId.tableName);
+    expect(Agents.ProviderInstanceId.entityType).toBe("AgentsProviderInstance");
+    expect(Object.keys(ProviderInstance.insert.fields)).not.toContain("id");
+    expect(Object.keys(ProviderInstance.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(ProviderInstance.update.fields)).toContain("id");
+    expect(Object.keys(ProviderInstance.update.fields)).toContain("rowVersion");
+    expect(Object.keys(ProviderInstance.jsonCreate.fields)).toEqual([
+      "binaryPath",
+      "envVars",
+      "homePath",
+      "kind",
+      "label",
+      "lastProbe",
+    ]);
+    expect(Object.keys(ProviderInstance.jsonUpdate.fields)).toEqual([
+      "binaryPath",
+      "envVars",
+      "homePath",
+      "kind",
+      "label",
+      "lastProbe",
+    ]);
   });
 
   it("rejects token-bearing env-var names and accepts benign ones", () => {
@@ -62,18 +77,18 @@ describe("@beep/agents-domain ProviderInstance", () => {
   });
 
   it("round-trips every AuthSnapshot variant through the tagged union", () => {
-    const authenticated = S.decodeUnknownSync(AuthSnapshot)({
+    const authenticated = S.decodeSync(AuthSnapshot)({
       status: "authenticated",
       email: "dev@example.com",
       subscriptionLabel: "max",
       tokenSource: "claude.ai",
       probedAt: probedAtIso,
     });
-    const unauthenticated = S.decodeUnknownSync(AuthSnapshot)({
+    const unauthenticated = S.decodeSync(AuthSnapshot)({
       status: "unauthenticated",
       probedAt: probedAtIso,
     });
-    const probeFailed = S.decodeUnknownSync(AuthSnapshot)({
+    const probeFailed = S.decodeSync(AuthSnapshot)({
       status: "probe-failed",
       probedAt: probedAtIso,
     });
@@ -97,7 +112,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
   it("decodes, constructs, and round-trips a ProviderInstance row", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsProviderInstance", 7),
+      ...productEntityFixtureInput("AgentsProviderInstance", 7),
       binaryPath: "/usr/local/bin/claude",
       envVars: { NO_PROXY: "localhost" },
       homePath: "/home/beep/.beep/providers/personal-max",
@@ -125,7 +140,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
   it("applies schema defaults for envVars, homePath, and lastProbe at construction", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsProviderInstance", 8),
+      ...productEntityFixtureInput("AgentsProviderInstance", 8),
       binaryPath: "/usr/local/bin/codex",
       envVars: {},
       homePath: null,
@@ -144,7 +159,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
   it("never stores token-bearing env-var names on a decoded instance", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsProviderInstance", 9),
+      ...productEntityFixtureInput("AgentsProviderInstance", 9),
       binaryPath: "/usr/local/bin/claude",
       envVars: { ANTHROPIC_AUTH_TOKEN: "sk-please-no" },
       homePath: null,
@@ -189,7 +204,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
 
     for (const schema of schemas) {
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
         fcRuns(10)
       );
     }

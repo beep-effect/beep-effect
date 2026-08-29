@@ -14,17 +14,15 @@ import { $createCodeNode } from "@lexical/code";
 import { INSERT_CHECK_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND } from "@lexical/list";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
-import {
-  CodeBlockIcon,
-  ListBulletsIcon,
-  ListChecksIcon,
-  ListNumbersIcon,
-  ParagraphIcon,
-  QuotesIcon,
-  TextHOneIcon,
-  TextHThreeIcon,
-  TextHTwoIcon,
-} from "@phosphor-icons/react";
+import { CodeBlockIcon } from "@phosphor-icons/react/CodeBlock";
+import { ListBulletsIcon } from "@phosphor-icons/react/ListBullets";
+import { ListChecksIcon } from "@phosphor-icons/react/ListChecks";
+import { ListNumbersIcon } from "@phosphor-icons/react/ListNumbers";
+import { ParagraphIcon } from "@phosphor-icons/react/Paragraph";
+import { QuotesIcon } from "@phosphor-icons/react/Quotes";
+import { TextHOneIcon } from "@phosphor-icons/react/TextHOne";
+import { TextHThreeIcon } from "@phosphor-icons/react/TextHThree";
+import { TextHTwoIcon } from "@phosphor-icons/react/TextHTwo";
 import { $createParagraphNode, $getSelection, $isRangeSelection } from "lexical";
 import { SlashItem } from "./config.ts";
 import type { HeadingTagType } from "@lexical/rich-text";
@@ -45,11 +43,12 @@ const heading = (editor: LexicalEditor, tag: HeadingTagType): void => setBlock(e
 /**
  * Formatting / insert `/` items over the schema-safe block vocabulary.
  *
- * @example
- * ```ts
- * import { defaultChatSlashItems } from "@beep/editor/chat"
+ * **Example** (Log default slash items)
  *
- * console.log(defaultChatSlashItems.length > 0) // true
+ * ```ts import.meta.vitest name="Log default slash items"
+ * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
+ *
+ * defaultChatSlashItems.length > 0 // => true
  * ```
  *
  * @category configuration

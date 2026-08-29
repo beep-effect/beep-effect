@@ -1,10 +1,11 @@
 {
   // Lint-only oxlint lane (P3). Biome stays the formatter + primary linter; oxlint runs ONLY
   // the @beep/lint-rules custom plugin for the stateful/path-aware rules that GritQL cannot
-  // express. No native oxlint rule categories are enabled, to avoid overlap with Biome.
-  // Severity is per-rule: the one zero-violation rule is mandatory (error); the other four ship
+  // express or cannot fix precisely. No native oxlint rule categories are enabled, to avoid
+  // overlap with Biome. Severity is per-rule: the two zero-violation rules are mandatory
+  // (error); the other four ship
   // advisory (warn). `lint:oxlint` now runs in the blocking Lint Policy CI lane (via
-  // `beep lint policy`), so the mandatory rule is enforced on every PR; promoting the four
+  // `beep lint policy`), so the mandatory rules are enforced on every PR; promoting the four
   // advisory rules to error is tracked in the SPEC exception ledger (re-assess 2026-09-20).
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "plugins": [],
@@ -28,12 +29,15 @@
     "**/generated/**",
     "**/*.gen.*",
     ".repos/**",
+    ".codex/**",
+    ".claude/**",
     "docs/generated/**",
     "**/scripts/**",
     "goals/**",
     "explorations/**"
   ],
   "rules": {
+    "beep/no-js-extension-imports": "error",
     "beep/no-opaque-instance-fields": "error",
     "beep/no-manual-effect-runtime-in-tests": "warn",
     "beep/namespace-node-imports": "warn",

@@ -7,7 +7,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { LawPracticeText } from "../LawPracticeEntity.fields.js";
+import { LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.values");
 
@@ -23,7 +23,8 @@ const DistinctionKind = LiteralKit(["missing_limitation"]).annotate(
  * to disclose; the tagged union leaves room for further distinction kinds without
  * disturbing existing payloads.
  *
- * @example
+ * **Example** (Decode missing limitation detail)
+ *
  * ```ts
  * import { DistinctionDetail } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -54,7 +55,8 @@ export const DistinctionDetail = DistinctionKind.toTaggedUnion("kind")({
 /**
  * Type-level tagged union produced by {@link DistinctionDetail}.
  *
- * @example
+ * **Example** (Satisfy missing limitation type)
+ *
  * ```ts
  * import type { DistinctionDetail } from "@beep/law-practice-domain"
  *

@@ -12,14 +12,14 @@ invariants, or transitions span multiple child entities or values.
 ## Artifact Family
 
 The top-level architecture class for a non-slice artifact. The canonical
-non-slice families are `foundation`, `drivers`, and `tooling`.
+non-slice families are `foundation`, `drivers`, `tooling`, and `ecosystem`.
 
 ## Artifact Kind
 
 The canonical role inside an artifact family. Every non-slice artifact belongs
 to exactly one family. Kinds remain required for families that intentionally
-declare a kind segment, such as `foundation` and `tooling`; `drivers` is the
-flat-family exception.
+declare a kind segment, such as `foundation` and `tooling`; `drivers` and
+`ecosystem` are the flat-family exceptions.
 
 ## Adapter
 
@@ -53,6 +53,17 @@ An app-local Layer composition module, usually
 one application. It is not a monorepo package family and must not own product
 policy, handlers, repositories, schedules, workflows, or cross-slice
 orchestration.
+
+## Brand Package
+
+A `foundation/ui-system` package that owns repo brand identity as schema-decoded
+data: color scales per appearance, typography stacks, and mark geometry, with the
+theme stylesheet and SVG assets generated from that data. Brand identity is a
+design-system role, not product-domain language, so it is neither a slice concern
+nor shared-kernel vocabulary. `@beep/brand` is the canonical instance; `@beep/ui`
+may depend on it, never the reverse, so a brand-neutral component library stays
+consumable by apps carrying another identity. Doctrine:
+[07-non-slice-families.md](./07-non-slice-families.md).
 
 ## Client Package
 
@@ -148,6 +159,17 @@ The non-slice family for flat repo-level external boundary wrappers. Drivers may
 depend on `foundation` and other drivers when acyclic, but they do not depend on
 product slices or the shared kernel.
 
+## Ecosystem Package
+
+A member of the flat `ecosystem` family
+(`packages/ecosystem/<name>` = `@beep/<name>` = the npm name): a repo-authored
+library built for external consumption and consumed in-repo like any
+third-party dependency. Member `src/` and runtime manifest edges
+(`dependencies`/`peerDependencies`) are `@beep/*`-free; tests and
+`devDependencies` are unrestricted. Published-package standards supersede repo
+effect-first style laws inside members. Charter:
+[14-ecosystem-packages.md](./14-ecosystem-packages.md).
+
 ## Foundation Family
 
 The non-slice family for domain-agnostic reusable substrate. Canonical kinds
@@ -178,6 +200,15 @@ A central runtime Layer that merges many unrelated slices and drivers into one
 global dependency graph. God Layers hide ownership, create cross-slice coupling,
 and make experiments expensive to remove.
 
+## Headless UI Kernel
+
+A repo-owned, product-agnostic UI substrate whose core is pure schema plus
+geometry/state arithmetic, rendered by a separate DOM/React adapter package.
+Both the kernel and its adapter anchor in `foundation/ui-system`; the purity
+boundary is a package boundary — the kernel package carries no react
+dependency, the adapter package owns every DOM concern. Example: `@beep/dock`
+(kernel) with `@beep/dock-react` (its adapter, landing separately).
+
 ## Generated Default
 
 An enforcement lane for architecture rules that future generators or scaffolds
@@ -203,6 +234,16 @@ technical boundaries.
 A technical failure that should be logged, traced, retried, or translated at a
 boundary, but should not directly drive product behavior in domain/use-case
 code.
+
+## Lab App
+
+A private, law-abiding experimental application under `apps/labs/*`. A lab app
+is production-shaped and durable while useful, but path-scoped out of package
+ceremony so create and delete do not accumulate per-app shared configuration.
+It is not a doctrine-11 feature-flag experiment inside a product runtime, and it
+is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
+package surfaces must not import a lab app; promotion moves earned work into its
+lawful durable home. Doctrine: [15-lab-apps.md](./15-lab-apps.md).
 
 ## Modeling Package
 
@@ -313,6 +354,15 @@ belong in `tables`.
 A persistence shape optimized for queries, UI, reporting, or projections. Read
 model tables use `.read-model-table.ts` and are composed by `ReadModels.ts`.
 
+## Reflection / Reflection Artifact
+
+A reflection is a structured, evidence-grounded retrospective written at goal
+closeout or on demand. A reflection artifact is its schema-validated,
+append-only record at
+`goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md`; it captures tooling
+experience, implementation improvements, goal or prompt critique, codification
+TODOs, and confidence-tiered lessons for later consolidation.
+
 ## Rich Domain Model
 
 A domain model that owns shape, validation, and pure behavior. Rich behavior may
@@ -380,7 +430,8 @@ tables, and UI. Drivers stay repo-level instead of being slice package kinds.
 A temporary experiment home under `scratchpad/` or explicitly temporary
 `packages/_internal/*` packages. Scratchpad code may prove an idea, but product
 slices and public package exports must not import it. Promotion re-enters
-through the smallest legal slice shape.
+through the smallest legal slice shape. The lawful next step for an experiment
+that outgrows the lane is a [Lab App](#lab-app).
 
 ## Tables Package
 
@@ -417,3 +468,26 @@ them local to the concept that uses them.
 A durable application process. Workflow declarations belong in `use-cases` when
 they are product/application concepts. Runtime workflow handlers belong in
 `server`; engines and storage belong in `drivers`.
+
+## Verdict family (epistemic vocabulary law)
+
+Ratified 2026-08-17 at the `epistemic-belief-view-revision` graduation. The
+canonical stems for evaluation outcomes, and the ownership law binding them:
+
+| Concern | Canonical stem | Owner |
+| --- | --- | --- |
+| Shape validity | `ShapeValidationResult` | the schema-owning domain |
+| Anchor fidelity | `AnchorVerificationResult` | `@beep/provenance` |
+| Semantic stance | `SemanticStance` | epistemic domain |
+| Source authority | `SourceAuthorityAssessment` | the consuming legal/domain slice |
+| Human decision | `HumanDisposition` stem; domain-qualified concretes (e.g. `ClaimDisposition`) | the domain owning the reviewed subject |
+| Action authorization | `ExecutionVerdict` | governed-execution boundary |
+| Release | `ReleaseDisposition` | the release-owning boundary |
+
+**Law:** names may be shared; vocabularies stay decentralized. Structural
+verification lives with the structure it verifies; human dispositions with
+the reviewed subject; authorization at the enforcement boundary. A consumer
+(e.g. a belief-view policy) may read typed values from several families and
+owns none of their truth or disposition semantics. Uniform `...Verdict`
+naming is rejected: it erases the distinction between validation,
+classification, assessment, recorded disposition, authorization, and release.

@@ -46,9 +46,9 @@ const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
   PosInt.make(A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1);
 
 /**
- * Build the encoded BaseEntity audit prefix shared by every workspace row.
+ * Build the encoded ProductEntity audit prefix shared by every workspace row.
  *
- * Persisted BaseEntity columns are all NOT NULL with no database defaults, so
+ * Persisted ProductEntity columns are all NOT NULL with no database defaults, so
  * every audit field is supplied here. The conversation-persistence increment
  * does not yet wire a request principal, so a system principal stands in.
  */
@@ -87,7 +87,7 @@ const makeThreadEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.ThreadId>,
   timestamps: EntityTimestamps
 ): Thread =>
-  S.decodeUnknownSync(Thread)({
+  Thread.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceThread", input.id, publicId, timestamps),
     title: input.title,
     workspaceId: input.workspaceId,
@@ -98,7 +98,7 @@ const makeTurnEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.TurnId>,
   timestamps: EntityTimestamps
 ): Turn =>
-  S.decodeUnknownSync(Turn)({
+  Turn.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceTurn", input.id, publicId, timestamps),
     items: [{ itemType: "message", messageId: input.messageId }],
     parentTurnId: input.parentTurnId,
@@ -111,7 +111,7 @@ const makeMessageEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.MessageId>,
   timestamps: EntityTimestamps
 ): Message =>
-  S.decodeUnknownSync(Message)({
+  Message.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceMessage", input.id, publicId, timestamps),
     content: encodeDocument(input.content),
     role: input.role,
@@ -193,7 +193,6 @@ const projectTimeline = (
                   tool_call: (item) =>
                     O.some(
                       ThreadStoreServer.Thread.TimelineToolCallItem.make({
-                        kind: "tool_call",
                         name: item.name,
                       })
                     ),
@@ -213,7 +212,8 @@ const projectTimeline = (
 /**
  * Build the in-memory ThreadStore used by the fast workspace proof.
  *
- * @example
+ * **Example** (Create thread in memory)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { CuidState } from "@beep/schema/Cuid"
@@ -394,7 +394,8 @@ const messageTable = DbSchema.message;
 /**
  * Build a Drizzle-backed ThreadStore used by live persistence tests.
  *
- * @example
+ * **Example** (Build Drizzle ThreadStore effect)
+ *
  * ```ts
  * import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread"
  * import { Effect } from "effect"
@@ -629,7 +630,8 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
 /**
  * Build the default ThreadStore for normal slice tests.
  *
- * @example
+ * **Example** (Build default ThreadStore)
+ *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { CuidState } from "@beep/schema/Cuid"

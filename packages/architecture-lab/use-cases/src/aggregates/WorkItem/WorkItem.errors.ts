@@ -8,7 +8,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.errors");
@@ -16,7 +16,8 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.error
 /**
  * Generic public reason used when internal WorkItem repository details are redacted.
  *
- * @example
+ * **Example** (Create error with constant)
+ *
  * ```ts
  * import {
  *   WORK_ITEM_ACTION_UNAVAILABLE_REASON,
@@ -36,7 +37,8 @@ export const WORK_ITEM_ACTION_UNAVAILABLE_REASON = "WorkItem service is unavaila
 /**
  * Public failure raised when a requested WorkItem is absent.
  *
- * @example
+ * **Example** (Make WorkItemNotFound error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemNotFound } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -52,12 +54,12 @@ export const WORK_ITEM_ACTION_UNAVAILABLE_REASON = "WorkItem service is unavaila
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`WorkItemNotFound`)(
+export class WorkItemNotFound extends S.TaggedError<WorkItemNotFound>($I`WorkItemNotFound`)(
   "WorkItemNotFound",
   {
     workItemId: DomainWorkItem.WorkItemId,
   },
-  $I.annote("WorkItemNotFound", {
+  $I.annoteError<WorkItemNotFound>("WorkItemNotFound", {
     title: "WorkItem not found",
     description: "The requested architecture lab WorkItem does not exist.",
   })
@@ -66,7 +68,8 @@ export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`Work
 /**
  * Public failure raised when a command conflicts with persisted state.
  *
- * @example
+ * **Example** (Make WorkItemConflict error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemConflict } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -83,7 +86,7 @@ export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`Work
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`WorkItemConflict`)(
+export class WorkItemConflict extends S.TaggedError<WorkItemConflict>($I`WorkItemConflict`)(
   "WorkItemConflict",
   {
     workItemId: DomainWorkItem.WorkItemId.annotateKey({
@@ -93,7 +96,7 @@ export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`Work
       description: "Non-empty public conflict reason.",
     }),
   },
-  $I.annote("WorkItemConflict", {
+  $I.annoteError<WorkItemConflict>("WorkItemConflict", {
     title: "WorkItem conflict",
     description: "The requested WorkItem command conflicts with persisted state.",
   })
@@ -102,7 +105,8 @@ export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`Work
 /**
  * Public failure raised when the domain rejects a WorkItem action.
  *
- * @example
+ * **Example** (Make action rejected error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemActionRejected } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -119,7 +123,7 @@ export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`Work
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejected>($I`WorkItemActionRejected`)(
+export class WorkItemActionRejected extends S.TaggedError<WorkItemActionRejected>($I`WorkItemActionRejected`)(
   "WorkItemActionRejected",
   {
     workItemId: DomainWorkItem.WorkItemId.annotateKey({
@@ -129,7 +133,7 @@ export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejec
       description: "Non-empty public rejection reason.",
     }),
   },
-  $I.annote("WorkItemActionRejected", {
+  $I.annoteError<WorkItemActionRejected>("WorkItemActionRejected", {
     title: "WorkItem action rejected",
     description: "The WorkItem aggregate rejected the requested action.",
   })
@@ -138,7 +142,8 @@ export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejec
 /**
  * Public failure raised when an action cannot be completed.
  *
- * @example
+ * **Example** (Make action failed error)
+ *
  * ```ts
  * import { WorkItemActionFailed } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  *
@@ -150,14 +155,14 @@ export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejec
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>($I`WorkItemActionFailed`)(
+export class WorkItemActionFailed extends S.TaggedError<WorkItemActionFailed>($I`WorkItemActionFailed`)(
   "WorkItemActionFailed",
   {
     reason: S.NonEmptyString.annotateKey({
       description: "Non-empty public failure reason with internal repository details redacted.",
     }),
   },
-  $I.annote("WorkItemActionFailed", {
+  $I.annoteError<WorkItemActionFailed>("WorkItemActionFailed", {
     title: "WorkItem action failed",
     description: "The WorkItem use-case action could not be completed.",
   })
@@ -166,7 +171,8 @@ export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>
 /**
  * Public WorkItem use-case failure schema.
  *
- * @example
+ * **Example** (Guard with ActionError.is)
+ *
  * ```ts
  * import {
  *   WorkItemActionError,
@@ -198,7 +204,8 @@ export const WorkItemActionError = S.Union([
 /**
  * Runtime type for {@link WorkItemActionError}.
  *
- * @example
+ * **Example** (Type WorkItemActionError value)
+ *
  * ```ts
  * import {
  *   WorkItemActionFailed,

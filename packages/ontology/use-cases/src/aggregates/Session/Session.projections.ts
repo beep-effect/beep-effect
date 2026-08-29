@@ -16,17 +16,18 @@ import { A, O, Str } from "@beep/utils";
 import { Effect, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { inferredSessionGraphPartitions } from "./Session.reasoner.js";
+import { inferredSessionGraphPartitions } from "./Session.reasoner.ts";
 import type { Session, SessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session";
 import type { Quad } from "@beep/rdf/Rdf";
-import type { OntologyInferenceResult } from "./Session.reasoner.js";
+import type { OntologyInferenceResult } from "./Session.reasoner.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.projections");
 
 /**
  * Explorer/editor ontology view mode.
  *
- * @example
+ * **Example** (Resource visibility by view mode)
+ *
  * ```ts
  * import { resourceVisibleInViewMode, OntologyResourceSummary } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -46,8 +47,8 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.projections");
  * console.log(visible)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const OntologyViewMode = LiteralKit(["all", "tbox", "abox"]).pipe(
   $I.annoteSchema("OntologyViewMode", {
@@ -58,7 +59,8 @@ export const OntologyViewMode = LiteralKit(["all", "tbox", "abox"]).pipe(
 /**
  * Type for {@link OntologyViewMode}.
  *
- * @example
+ * **Example** (Assign abox view mode)
+ *
  * ```ts
  * import { OntologyViewMode } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -67,15 +69,16 @@ export const OntologyViewMode = LiteralKit(["all", "tbox", "abox"]).pipe(
  * console.log(mode)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export type OntologyViewMode = typeof OntologyViewMode.Type;
 
 /**
  * Shared ABox/TBox resource classification.
  *
- * @example
+ * **Example** (Classify individual resource)
+ *
  * ```ts
  * import { classifyOntologyResource } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -84,8 +87,8 @@ export type OntologyViewMode = typeof OntologyViewMode.Type;
  * console.log(classification)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const OntologyResourceClassification = LiteralKit(["tbox", "abox"]).pipe(
   $I.annoteSchema("OntologyResourceClassification", {
@@ -96,7 +99,8 @@ export const OntologyResourceClassification = LiteralKit(["tbox", "abox"]).pipe(
 /**
  * Type for {@link OntologyResourceClassification}.
  *
- * @example
+ * **Example** (Assign tbox classification)
+ *
  * ```ts
  * import { OntologyResourceClassification } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -105,15 +109,16 @@ export const OntologyResourceClassification = LiteralKit(["tbox", "abox"]).pipe(
  * console.log(classification)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export type OntologyResourceClassification = typeof OntologyResourceClassification.Type;
 
 /**
  * Ontology resource kind used by inspector and hierarchy projections.
  *
- * @example
+ * **Example** (Classify class resource kind)
+ *
  * ```ts
  * import { classifyOntologyResource } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -122,8 +127,8 @@ export type OntologyResourceClassification = typeof OntologyResourceClassificati
  * console.log(classification)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const OntologyResourceKind = LiteralKit([
   "class",
@@ -141,7 +146,8 @@ export const OntologyResourceKind = LiteralKit([
 /**
  * Type for {@link OntologyResourceKind}.
  *
- * @example
+ * **Example** (Assign objectProperty kind)
+ *
  * ```ts
  * import { OntologyResourceKind } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -150,15 +156,16 @@ export const OntologyResourceKind = LiteralKit([
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export type OntologyResourceKind = typeof OntologyResourceKind.Type;
 
 /**
  * Ontology workbench metrics computed from the authoring graph.
  *
- * @example
+ * **Example** (Construct ontology metrics)
+ *
  * ```ts
  * import { OntologyMetrics } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -175,8 +182,8 @@ export type OntologyResourceKind = typeof OntologyResourceKind.Type;
  * console.log(metrics.classCount)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export class OntologyMetrics extends S.Class<OntologyMetrics>($I`OntologyMetrics`)(
   {
@@ -200,7 +207,8 @@ export class OntologyMetrics extends S.Class<OntologyMetrics>($I`OntologyMetrics
 /**
  * Resource summary shared by hierarchy explorer, inspector, and search.
  *
- * @example
+ * **Example** (Construct resource summary)
+ *
  * ```ts
  * import { OntologyResourceSummary } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -217,8 +225,8 @@ export class OntologyMetrics extends S.Class<OntologyMetrics>($I`OntologyMetrics
  * console.log(resource.label)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export class OntologyResourceSummary extends S.Class<OntologyResourceSummary>($I`OntologyResourceSummary`)(
   {
@@ -238,7 +246,8 @@ export class OntologyResourceSummary extends S.Class<OntologyResourceSummary>($I
 /**
  * Flat hierarchy row used to build MUI Tree View items.
  *
- * @example
+ * **Example** (Construct hierarchy entry)
+ *
  * ```ts
  * import { OntologyHierarchyEntry } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -251,8 +260,8 @@ export class OntologyResourceSummary extends S.Class<OntologyResourceSummary>($I
  * console.log(entry.childIris.length)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export class OntologyHierarchyEntry extends S.Class<OntologyHierarchyEntry>($I`OntologyHierarchyEntry`)(
   {
@@ -268,7 +277,8 @@ export class OntologyHierarchyEntry extends S.Class<OntologyHierarchyEntry>($I`O
 /**
  * Predicate relationship row used by graph and search projections.
  *
- * @example
+ * **Example** (Construct relationship summary)
+ *
  * ```ts
  * import { OntologyRelationshipSummary } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -283,8 +293,8 @@ export class OntologyHierarchyEntry extends S.Class<OntologyHierarchyEntry>($I`O
  * console.log(relationship.label)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export class OntologyRelationshipSummary extends S.Class<OntologyRelationshipSummary>($I`OntologyRelationshipSummary`)(
   {
@@ -309,7 +319,8 @@ const RelationshipSummariesWithEmptyDefault = S.Array(OntologyRelationshipSummar
 /**
  * Complete ontology read model for explorer/editor surfaces.
  *
- * @example
+ * **Example** (Construct empty ontology snapshot)
+ *
  * ```ts
  * import { OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -331,8 +342,8 @@ const RelationshipSummariesWithEmptyDefault = S.Array(OntologyRelationshipSummar
  * console.log(snapshot.resources.length)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export class OntologySnapshot extends S.Class<OntologySnapshot>($I`OntologySnapshot`)(
   {
@@ -524,7 +535,8 @@ const resourceKindFor = (
 /**
  * Shared ABox/TBox classification rule.
  *
- * @example
+ * **Example** (Classify dataProperty resource)
+ *
  * ```ts
  * import { classifyOntologyResource } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -533,8 +545,8 @@ const resourceKindFor = (
  * console.log(classification)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const classifyOntologyResource = (kind: OntologyResourceKind): OntologyResourceClassification =>
   OntologyResourceKind.$match(kind, {
@@ -801,7 +813,8 @@ const buildOntologySnapshotFromPartitions = (
 /**
  * Build an ontology snapshot from the current authoring graph.
  *
- * @example
+ * **Example** (Build snapshot from session)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { buildOntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
@@ -819,8 +832,8 @@ const buildOntologySnapshotFromPartitions = (
  * console.log(snapshot.metrics.quadCount)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const buildOntologySnapshot = (session: Session): OntologySnapshot =>
   buildOntologySnapshotFromPartitions(session, deriveSessionGraphPartitions(session), defaultSnapshotOptions());
@@ -828,7 +841,8 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot =>
 /**
  * Build an ontology snapshot that includes derived inferred graph quads.
  *
- * @example
+ * **Example** (Build snapshot with inference)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { buildOntologySnapshotWithInference, OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
@@ -856,8 +870,8 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot =>
  * console.log(buildOntologySnapshotWithInference(session, inference).metrics.disjointnessViolationCount)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const buildOntologySnapshotWithInference: {
   (inference: OntologyInferenceResult): (session: Session) => OntologySnapshot;
@@ -874,7 +888,8 @@ export const buildOntologySnapshotWithInference: {
 /**
  * Shared explorer/search view-mode predicate.
  *
- * @example
+ * **Example** (Check abox resource visibility)
+ *
  * ```ts
  * import { OntologyResourceSummary, resourceVisibleInViewMode } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -891,8 +906,8 @@ export const buildOntologySnapshotWithInference: {
  * console.log(resourceVisibleInViewMode(resource, "abox"))
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const resourceVisibleInViewMode: {
   (mode: OntologyViewMode): (resource: OntologyResourceSummary) => boolean;
@@ -913,7 +928,8 @@ type SearchOntologyResourcesOptions = {
 /**
  * Search ontology resources using the same ABox/TBox rule as the explorer.
  *
- * @example
+ * **Example** (Search resources by query)
+ *
  * ```ts
  * import { OntologyMetrics, OntologyResourceSummary, OntologySnapshot, searchOntologyResources } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -946,8 +962,8 @@ type SearchOntologyResourcesOptions = {
  * console.log(matches.length)
  * ```
  *
- * @since 0.0.0
  * @category read-models
+ * @since 0.0.0
  */
 export const searchOntologyResources: {
   (options: SearchOntologyResourcesOptions): (snapshot: OntologySnapshot) => ReadonlyArray<OntologyResourceSummary>;

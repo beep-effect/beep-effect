@@ -2,19 +2,20 @@
 
 ## Status
 
-Status: `planned`. Dependency `goals/desktop-chat-surface` is closed
-(`completed-retained`), so this packet is unblocked and ready for a `/goal`
-session.
+Status: `complete` — all phases shipped and merged to `main` via PR #248
+(2026-06-15). This status line lagged the closeout; reconciled 2026-07-31
+(the real-Anthropic E2E was re-run green that day — see
+`history/2026-07-31-real-anthropic-e2e-revalidation.md`).
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-validate the parity audit against current `main` + the POC (it may have drifted); confirm file paths/API surfaces; settle the two P0 gates (repair call-shape, title path). | Audit confirmed; both P0 gates decided; drift recorded in `history/`. |
-| P1 Observability & UX gaps | pending | Land the low-risk dropped affordances (DevTools, RegistryProvider, toasts, turn metrics, title derivation, Grafana dashboard). Title derivation excepted (P0 gate 2). | Acceptance criteria for the obs/UX bucket met; gates green. |
-| P2 Block repair loop | pending | Repair invalid streamed blocks (Haiku) across driver→server→handler instead of dropping them. | Repair contract test + driver test green; repair metric/span emit. |
-| P3 Rich blocks | pending | Add mermaid (reuse `Pre`), table, and youtube blocks end-to-end (schema→lift→validate→render). | New nodes round-trip; render in streaming + viewer; no other-consumer regression. |
-| P4 Verify & close | pending | Full verification (real CI lanes + real-LLM E2E), changesets, regenerated artifacts, reflection. | `yeet verify` green before PR; closeout reflection exists. |
+| P0 Research | complete | Re-validate the parity audit against current `main` + the POC (it may have drifted); confirm file paths/API surfaces; settle the two P0 gates (repair call-shape, title path). | Audit confirmed; both P0 gates decided; drift recorded in `history/`. |
+| P1 Observability & UX gaps | complete | Land the low-risk dropped affordances (DevTools, RegistryProvider, toasts, turn metrics, title derivation, Grafana dashboard). Title derivation excepted (P0 gate 2). | Acceptance criteria for the obs/UX bucket met; gates green. |
+| P2 Block repair loop | complete | Repair invalid streamed blocks (Haiku) across driver→server→handler instead of dropping them. | Repair contract test + driver test green; repair metric/span emit. |
+| P3 Rich blocks | complete | Add mermaid (reuse `Pre`), table, and youtube blocks end-to-end (schema→lift→validate→render). | New nodes round-trip; render in streaming + viewer; no other-consumer regression. |
+| P4 Verify & close | complete | Full verification (real CI lanes + real-LLM E2E), changesets, regenerated artifacts, reflection. | `yeet verify` green before PR; closeout reflection exists. |
 
 ## P0 — Research carry-over / re-validation
 

@@ -35,7 +35,7 @@ official-data-sync-foundation and lands in/alongside the courtlistener driver.
 - route: `new-exploration` → primaryTarget `court-vocabulary-resolver` (targetExists=false)
 - wave: `P2` (waveHistogram P1:1, P2:8, P3:5) — depends on the official-data-sync-foundation pipeline and is downstream of the IP-graph schema
 - themeSpan: `data-ingestion`, `desktop-portal`, `ip-domain-models`, `kg-ontology-reasoning`, `legal-nlp`, `provenance-evidence`
-- secondaryTargets: `goals/official-data-sync-foundation`, `packages/drivers/courtlistener`, `goals/ip-law-knowledge-graph`
+- secondaryTargets: `goals/official-data-sync-foundation`, `@beep/courtlistener`, `goals/ip-law-knowledge-graph`
 
 ### Nuggets (14)
 

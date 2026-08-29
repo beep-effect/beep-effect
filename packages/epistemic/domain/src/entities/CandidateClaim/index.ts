@@ -8,14 +8,15 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import CandidateClaim entity)
+ *
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim"
  *
- * console.log(CandidateClaim.definition.entityId.resource)
+ * console.log(CandidateClaim.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * from "./CandidateClaim.model.js";
+export * from "./CandidateClaim.model.ts";

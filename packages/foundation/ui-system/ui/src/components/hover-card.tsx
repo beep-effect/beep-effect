@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Hover card component.
  *
- * @example
+ * **Example** (Import HoverCard component)
+ *
  * ```tsx
  * import { HoverCard } from "@beep/ui/components/hover-card"
  *
@@ -29,7 +30,8 @@ function HoverCard({ ...props }: PreviewCardPrimitive.Root.Props) {
 /**
  * Hover card trigger component.
  *
- * @example
+ * **Example** (Import HoverCardTrigger component)
+ *
  * ```tsx
  * import { HoverCardTrigger } from "@beep/ui/components/hover-card"
  *
@@ -46,7 +48,8 @@ function HoverCardTrigger({ ...props }: PreviewCardPrimitive.Trigger.Props) {
 /**
  * Hover card content component.
  *
- * @example
+ * **Example** (Import HoverCardContent component)
+ *
  * ```tsx
  * import { HoverCardContent } from "@beep/ui/components/hover-card"
  *

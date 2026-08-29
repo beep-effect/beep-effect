@@ -64,11 +64,13 @@ const passesIdentityComposerSmokeTest = (value: IdentityComposerCandidate, ident
 /**
  * Guard for runtime identity composer values.
  *
- * @remarks
+ * **Details**
+ *
  * Identity composers are callable functions decorated with composer methods,
  * so validation uses a runtime declaration rather than an object struct.
  *
- * @example
+ * **Example** (Check composer versus object)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  * import { isIdentityComposer } from "@beep/shared-domain/identity"
@@ -100,7 +102,8 @@ export const isIdentityComposer = (value: unknown): value is IdentityComposerTyp
 /**
  * Effect Schema for validating any runtime {@link IdentityComposerType} value.
  *
- * @example
+ * **Example** (Schema-check identity composers)
+ *
  * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  * import { AnyIdentityComposer } from "@beep/shared-domain/identity"
@@ -124,7 +127,8 @@ export const AnyIdentityComposer = S.declare<IdentityComposerType<string>>(isIde
 /**
  * Runtime type for {@link AnyIdentityComposer}.
  *
- * @example
+ * **Example** (Read composer identifier)
+ *
  * ```ts
  * import type { AnyIdentityComposer } from "@beep/shared-domain/identity"
  *
@@ -140,7 +144,8 @@ export type AnyIdentityComposer = typeof AnyIdentityComposer.Type;
 /**
  * Agents entity-id registry namespace.
  *
- * @example
+ * **Example** (Log AgentId table name)
+ *
  * ```ts
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  *
@@ -150,11 +155,42 @@ export type AnyIdentityComposer = typeof AnyIdentityComposer.Type;
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Agents from "./Agents.ts";
+export * as Agents from "./Agents/index.ts";
+/**
+ * Architecture Lab entity-id registry namespace.
+ *
+ * **Example** (Log WorkerId table name)
+ *
+ * ```ts
+ * import * as ArchitectureLab from "@beep/shared-domain/identity/ArchitectureLab"
+ *
+ * console.log(ArchitectureLab.WorkerId.tableName)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export * as ArchitectureLab from "./ArchitectureLab/index.ts";
+/**
+ * Documents entity-id registry namespace.
+ *
+ * **Example** (Log SyncItemId table name)
+ *
+ * ```ts
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
+ *
+ * console.log(Documents.SyncItemId.tableName)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export * as Documents from "./Documents/index.ts";
 /**
  * Epistemic entity-id registry namespace.
  *
- * @example
+ * **Example** (Log CandidateClaimId table name)
+ *
  * ```ts
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  *
@@ -164,11 +200,12 @@ export * as Agents from "./Agents.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Epistemic from "./Epistemic.ts";
+export * as Epistemic from "./Epistemic/index.ts";
 /**
  * Law-practice entity-id registry namespace.
  *
- * @example
+ * **Example** (Log LegalClientId table name)
+ *
  * ```ts
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
@@ -178,11 +215,12 @@ export * as Epistemic from "./Epistemic.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as LawPractice from "./LawPractice.ts";
+export * as LawPractice from "./LawPractice/index.ts";
 /**
  * Shared entity-id registry namespace.
  *
- * @example
+ * **Example** (Log OrganizationId table name)
+ *
  * ```ts
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  *
@@ -192,11 +230,12 @@ export * as LawPractice from "./LawPractice.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Shared from "./Shared.ts";
+export * as Shared from "./Shared/index.ts";
 /**
  * Workspace entity-id registry namespace.
  *
- * @example
+ * **Example** (Log WorkspaceId table name)
+ *
  * ```ts
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  *
@@ -206,4 +245,4 @@ export * as Shared from "./Shared.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Workspace from "./Workspace.ts";
+export * as Workspace from "./Workspace/index.ts";

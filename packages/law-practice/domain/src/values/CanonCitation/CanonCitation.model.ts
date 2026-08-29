@@ -8,21 +8,22 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/CanonCitation/CanonCitation.model");
 
 /**
  * Judicial-conduct canon citation (#310).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and tags itself with the
  * `canon` discriminant, then adds the canon number and its optional subsection
  * chain and explicitly stated rule set (e.g.
  * `Code of Judicial Conduct Canon 7(B)(1)`).
  *
- * **Example**
+ * **Example** (Make CanonCitation instance)
  *
- * @example
  * ```ts
  * import { CanonCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -78,7 +79,8 @@ export class CanonCitation extends S.Class<CanonCitation>($I`CanonCitation`)(
 /**
  * Companion namespace for `CanonCitation`.
  *
- * @example
+ * **Example** (Encoded canon field type)
+ *
  * ```ts
  * import type { CanonCitation } from "@beep/law-practice-domain"
  *
@@ -93,9 +95,8 @@ export declare namespace CanonCitation {
   /**
    * Wire-encoded representation of a decoded {@link CanonCitation}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { CanonCitation } from "@beep/law-practice-domain"
    *

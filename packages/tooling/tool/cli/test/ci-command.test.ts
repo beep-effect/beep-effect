@@ -1,9 +1,9 @@
-import { appendTurboSummary } from "@beep/repo-cli/commands/Ci";
+import { appendTurboSummary, runCiLocal } from "@beep/repo-cli/commands/Ci";
+import { Unknown } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +13,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const TestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const isString = (value: unknown): value is string => typeof value === "string";
 
 const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
@@ -44,6 +44,23 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   ).pipe(provideScopedLayer(TestLayer));
 
 describe("CI commands", () => {
+  it("fails local planning when Git cannot resolve the current branch", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const error = yield* runCiLocal({
+            affected: false,
+            base: "origin/main",
+            fast: false,
+            lanes: O.some("lint"),
+          }).pipe(Effect.flip);
+
+          expect(error._tag).toBe("CiCommandError");
+          expect(error.message).toBe("git branch --show-current failed with exit code 128.");
+        })
+      )
+    ));
+
   it("renders current Turbo summary files whose tasks are arrays", () =>
     Effect.runPromise(
       withTempRepo(
@@ -89,6 +106,46 @@ describe("CI commands", () => {
           expect(output).toContain("## Turbo Summary");
           expect(output).toContain("Attempted tasks: 1");
           expect(output).toContain("`@beep/repo-cli#test`");
+        })
+      )
+    ));
+
+  it("renders every Turbo summary when aggregation is requested", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const runDirectory = path.join(process.cwd(), ".turbo", "runs");
+
+          yield* fs.makeDirectory(runDirectory, { recursive: true });
+          yield* Effect.forEach(["build", "coverage"], (task, index) =>
+            fs.writeFileString(
+              path.join(runDirectory, `${task}.json`),
+              encodeJson({
+                execution: {
+                  attempted: 1,
+                  command: `turbo run ${task}`,
+                  endTime: 2_000 + index,
+                  startTime: index,
+                  success: 1,
+                },
+                tasks: [
+                  {
+                    execution: { endTime: 1_500, startTime: 500 },
+                    taskId: `@beep/repo-cli#${task}`,
+                  },
+                ],
+              })
+            )
+          );
+
+          yield* appendTurboSummary(O.none(), true);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output.match(/## Turbo Summary/gu) ?? []).toHaveLength(2);
+          expect(output).toContain("`@beep/repo-cli#build`");
+          expect(output).toContain("`@beep/repo-cli#coverage`");
         })
       )
     ));

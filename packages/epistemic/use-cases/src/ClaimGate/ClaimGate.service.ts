@@ -12,18 +12,18 @@
  * @since 0.0.0
  */
 
-import { ClaimGateResult, isEvidenceSpanInternallyConsistent } from "@beep/epistemic-domain/values";
-import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/semantic-web/rdf";
+import { ClaimGateResult } from "@beep/epistemic-domain/values";
+import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationRequest } from "@beep/semantic-web/services/shacl-validation";
-import { RDF_TYPE } from "@beep/semantic-web/vocab/rdf";
-import { XSD_STRING } from "@beep/semantic-web/vocab/xsd";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import type * as DomainEvidence from "@beep/epistemic-domain/entities/Evidence";
 import type { ShaclValidationResult, ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation";
-import type { ClaimGateShape } from "./ClaimGate.ports.js";
+import type { ClaimGateShape } from "./ClaimGate.ports.ts";
 
 const CLAIM_CLASS_IRI = "https://beep.dev/epistemic/Claim";
 const EVIDENCE_QUOTE_IRI = "https://beep.dev/epistemic/hasEvidenceQuote";
@@ -41,7 +41,6 @@ const toDataset = (
   const typeQuad = makeQuad(subject, RDF_TYPE, makeNamedNode(CLAIM_CLASS_IRI));
   const quoteQuads = pipe(
     evidence,
-    A.filter((ev) => isEvidenceSpanInternallyConsistent(ev.span)),
     A.map((ev) => makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.quote, XSD_STRING.value)))
   );
   return makeDataset([typeQuad, ...quoteQuads]);
@@ -87,7 +86,8 @@ const toVerdict = (result: ShaclValidationResult): ClaimGateResult =>
  * value ({@link ClaimGateResult}), never an error; the bounded engine is total,
  * so an (impossible) engine failure is treated as a defect.
  *
- * @example
+ * **Example** (Admit claim with conforming SHACL)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { CandidateClaim } from "@beep/epistemic-domain"

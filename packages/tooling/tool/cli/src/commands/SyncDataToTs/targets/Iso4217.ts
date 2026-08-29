@@ -18,12 +18,13 @@ import {
   formatJson,
   formatTsDocCommentValue,
   formatTsLiteral,
+  normalizeJson,
   outputFile,
   parseXmlSource,
   sourceMetadata,
-} from "../internal/Source.js";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
-import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
+} from "../internal/Source.ts";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
+import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso4217");
 const targetId = "iso4217" as const;
@@ -177,8 +178,9 @@ const renderIso4217Module = (
 /**
  * Stable source metadata for the official ISO 4217 List One feed.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the ISO 4217 feed metadata)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataMetadata } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataMetadata.published === ${formatTsLiteral(published)})
@@ -196,8 +198,9 @@ export const CurrencyCodeDataMetadata = ${formatTsLiteral({
 /**
  * Published date reported by the official ISO 4217 List One feed.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the ISO 4217 published date)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataPublished } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataPublished === ${formatTsLiteral(published)})
@@ -211,8 +214,9 @@ export const CurrencyCodeDataPublished = ${formatTsLiteral(published)} as const;
 /**
  * Official source URL for the ISO 4217 List One feed.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the ISO 4217 source URL)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataSourceUrl } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataSourceUrl.includes("list-one.xml"))
@@ -226,8 +230,9 @@ export const CurrencyCodeDataSourceUrl = ${formatTsLiteral(ISO4217_SOURCE_URL)} 
 /**
  * SHA-256 digest of the official source payload used for this generated module.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the ISO 4217 source digest)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataSourceSha256 } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataSourceSha256.length === 64)
@@ -241,8 +246,9 @@ export const CurrencyCodeDataSourceSha256 = ${formatTsLiteral(sha256)} as const;
 /**
  * Normalized ISO 4217 currency entries emitted from the official feed.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a currency entry by code)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataValues } from "@beep/data/generated/iso4217"
  *
  * const sample = CurrencyCodeDataValues.find((entry) => entry.code === ${formatTsLiteral(sample.code)})
@@ -257,8 +263,9 @@ export const CurrencyCodeDataValues = ${formatTsLiteral(values)} as const;
 /**
  * ISO 4217 currency entries keyed by alphabetic code.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a currency entry by code)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataByCode } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataByCode.${sample.code}.digits === ${formatTsLiteral(sample.digits)})
@@ -272,8 +279,9 @@ export const CurrencyCodeDataByCode = ${formatTsLiteral(byCode(values))} as cons
 /**
  * ISO 4217 alphabetic code literals.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Check an ISO 4217 code literal)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataCodeValues } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataCodeValues.includes(${formatTsLiteral(sample.code)}))
@@ -287,8 +295,9 @@ export const CurrencyCodeDataCodeValues = ${formatTsLiteral(A.map(values, (entry
 /**
  * ISO 4217 currency names keyed by alphabetic code.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a currency name by code)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataNameByCode } from "@beep/data/generated/iso4217"
  *
  * console.assert(CurrencyCodeDataNameByCode.${sample.code} === ${formatTsLiteral(sample.currency)})
@@ -302,8 +311,9 @@ export const CurrencyCodeDataNameByCode = ${formatTsLiteral(nameByCode(values))}
 /**
  * ISO 4217 alphabetic code to currency-name literal pairs.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a code and name pair)
+ *
+ * \`\`\`ts
  * import { CurrencyCodeDataCodeNamePairs } from "@beep/data/generated/iso4217"
  *
  * const sample = CurrencyCodeDataCodeNamePairs.find(([code]) => code === ${formatTsLiteral(sample.code)})
@@ -403,11 +413,11 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
   const document = yield* parseXmlSource(targetId, source);
   const { published, values } = yield* normalizeIso4217Document(document);
   const metadata = sourceMetadata(source, { published });
-  const canonical = {
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iso4217/v1",
     metadata,
     currenciesByCode: byCode(values),
-  } as const;
+  });
 
   return SyncDataTargetProjection.make({
     files: [
@@ -425,12 +435,14 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
 /**
  * Checked-in sync target for the official SIX ISO 4217 List One XML feed.
  *
- * @example
+ * **Example** (Inspect the ISO 4217 sync target)
+ *
  * ```ts
  * import { iso4217Target } from "@beep/repo-cli/commands/SyncDataToTs"
  *
  * console.log(iso4217Target.access) // "public"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

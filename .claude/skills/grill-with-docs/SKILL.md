@@ -5,9 +5,7 @@ description: Repo-native grilling session for beep-effect2 architecture work. Us
 
 <what-to-do>
 
-Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
-
-Ask the questions one at a time, waiting for feedback on each question before continuing.
+Run a `/grilling` session (frontier rounds, recommended answers, sub-agent fact-finding) over the plan, using the repo doctrine surfaces below as this repo's domain model — challenge terms, cross-reference code, and update the owning doc as each decision crystallizes.
 
 If a question can be answered by exploring the codebase or architecture docs, explore first instead of asking.
 
@@ -60,7 +58,7 @@ Start by classifying the proposal:
 - Browser/client product behavior -> slice `client` or `ui`.
 - App runtime wiring -> app entrypoint or app-local `src/runtime/Layer.ts`.
 
-Then ask one branch-closing question at a time. Every question should materially change the plan, lock an assumption, or choose between meaningful tradeoffs. Provide your recommended answer.
+Then work the frontier in rounds per `/grilling`. Every question should materially change the plan, lock an assumption, or choose between meaningful tradeoffs. Provide your recommended answer.
 
 Good first questions usually decide:
 

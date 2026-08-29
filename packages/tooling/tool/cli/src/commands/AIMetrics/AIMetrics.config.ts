@@ -17,10 +17,11 @@ export {
   requireHashSaltForTarget,
   requireHashSaltSecretRefForTarget,
   requireRawArchiveKeySecretRefForTarget,
+  resolveDataRoot,
   resolveHashSalt,
   resolveHashSaltSecretRef,
   resolveHomeDir,
   resolveRawArchiveKey,
   resolveRawArchiveKeySecretRef,
   resolveRepoRoot,
-} from "./internal/Programs.js";
+} from "./internal/Programs.ts";

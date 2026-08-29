@@ -13,8 +13,8 @@ import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../../internal/cli/Json.js";
-import type { DocgenQualityReport, DocgenQualityReview, DocgenQualitySubject } from "./Quality.schemas.js";
+} from "../../../../internal/cli/Json.ts";
+import type { DocgenQualityReport, DocgenQualityReview, DocgenQualitySubject } from "./Quality.schemas.ts";
 
 const renderJson = Effect.fn("DocgenQuality.renderJson")(function* (value: unknown) {
   const encoded = yield* encodeCommandJson(value).pipe(
@@ -26,10 +26,8 @@ const renderJson = Effect.fn("DocgenQuality.renderJson")(function* (value: unkno
 /**
  * Renders a quality report as JSON text.
  *
- * @param report - Consolidated quality report to encode.
- * @returns Effect yielding formatted JSON with the quality-report size guard.
- * @effects Encodes the report as formatted JSON and fails with a typed domain error if encoding fails.
- * @example
+ * **Example** (Generate quality report JSON)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { generateQualityJson } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.render"
@@ -47,6 +45,10 @@ const renderJson = Effect.fn("DocgenQuality.renderJson")(function* (value: unkno
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @param report - Consolidated quality report to encode.
+ * @returns Effect yielding formatted JSON with the quality-report size guard.
+ * @effects Encodes the report as formatted JSON and fails with a typed domain error if encoding fails.
  * @category formatting
  * @since 0.0.0
  */
@@ -80,9 +82,8 @@ const markdownSubject = (subject: DocgenQualitySubject, review: DocgenQualityRev
 /**
  * Renders a quality report as human-readable Markdown.
  *
- * @param report - Consolidated quality report to render.
- * @returns Human-readable Markdown report content.
- * @example
+ * **Example** (Generate quality Markdown report)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { generateQualityReport } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.render"
@@ -100,6 +101,9 @@ const markdownSubject = (subject: DocgenQualitySubject, review: DocgenQualityRev
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @param report - Consolidated quality report to render.
+ * @returns Human-readable Markdown report content.
  * @category formatting
  * @since 0.0.0
  */

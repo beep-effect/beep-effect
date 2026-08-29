@@ -2,52 +2,44 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-beep already documents the conceptual laws for Effect orchestration (EF-25/26
-retry-Schedule, EF-27 bounded fan-out, EF-31 failure-vs-defect) and implements
-them inline per-driver, but has never factored them into shared machinery. This
-explores consolidating a single retry-policy/`Schedule` library plus
-`Layer.unwrapEffect`-based provider selection that every LLM and gov-data driver
-can reuse.
+Prove the repo's vendored Effect v4 workflow subsystem can provide durable,
+restart-safe orchestration for the first malpractice-grade docketing consumer
+without duplicating it, while extending official-source HTTP resilience through
+the already-promoted `@beep/api-transport`.
 
-## Sources & provenance
+## Sources & Provenance
 
-Full source ledger — the 8 gold nuggets (upstream repo + `file:line`), upstream
-licenses, external citations, and the in-repo `@beep/*` bricks this packet
-composes — lives in [`research/SOURCES.md`](./research/SOURCES.md). Mined from the
-gold-intake cluster "Effect orchestration patterns (Schedule, Layer provider,
-bounded fan-out)" ([ROUTING.md](../_gold-intake/ROUTING.md),
-[GOLD_SYNTHESIS.md](../_gold-intake/GOLD_SYNTHESIS.md)).
+The dated current capability inventory is in [`RESEARCH.md`](./RESEARCH.md).
+The original gold corpus, licenses, external citations, and June research trail
+remain in [`research/SOURCES.md`](./research/SOURCES.md) as provenance.
 
 ## Next Open Question
 
-**Q1: Scope boundary** — does this packet ship only the pure-`Schedule` layer
-(retry-policy module + `Layer.unwrap` selector + `decode→die` helper + degraded-batch
-combinator) now, or also the heavier stateful resilience stack (circuit breaker,
-retry-budget, bulkhead, served-while-open cache, per-key rate limiter)? This fork
-gates package placement, appetite, and review surface for every other decision.
-
-DECISIONS.md is pre-drafted with 7 open forks, each carrying a RECOMMENDED answer.
-Resolve them via `/grill-with-docs effect-orchestration-patterns`.
+None while graduated. The four demand-gated MAP candidates remain re-entry
+points; when one of their triggers fires, reopen this packet at `decompose`.
 
 ## Read This First
 
-1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
-3. [`RESEARCH.md`](./RESEARCH.md) - prior art + capability inventory (stage 1, if present).
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2, if present).
-5. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, if present).
-6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
+1. [`ops/manifest.json`](./ops/manifest.json) — machine state and open question.
+2. [`DECISIONS.md`](./DECISIONS.md) — 2026-07-14 locked reframe and gated deferrals.
+3. [`RESEARCH.md`](./RESEARCH.md) — refreshed workflow and transport inventories.
+4. [`BRIEF.md`](./BRIEF.md) — ratified shaped pitch.
+5. [`MAP.md`](./MAP.md) — first goal, demand gates, and consumer cross-links.
+6. [`CAPTURE.md`](./CAPTURE.md) — append-only original dump.
 
 ## Trail
 
-<Dated one-liners, newest first: what each session did and where it stopped.>
-
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. Its four demand-gated MAP candidates remain re-entry points, and
+  a fired gate reopens this packet at `decompose`.
+- 2026-07-14: BRIEF ratified as drafted; graduated only [`effect-v4-workflow-engine-spike`](../../goals/effect-v4-workflow-engine-spike/README.md); four candidates remain demand-gated and status stays active.
+- 2026-07-14: research refreshed against v4 workflow + api-transport; reframe ratified; 4 decisions + 4 gated deferrals.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Effect orchestration patterns (Schedule, Layer provider, bounded fan-out)' (8 nuggets).

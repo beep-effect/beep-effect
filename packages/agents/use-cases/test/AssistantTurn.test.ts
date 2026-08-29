@@ -1,16 +1,25 @@
 import { CodeBlock, HeadingBlock, ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import {
   AgentTurnKernel,
+  AssistantTurnEvent,
   AssistantTurnHistoryItem,
   IndexedBlock,
+  ProviderUsageMetadata,
   TurnHistoryItem,
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
-import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/test";
+import {
+  FixtureTurnKernel,
+  fixtureBlocksFor,
+  fixtureEventsFor,
+  fixtureProviderUsage,
+} from "@beep/agents-use-cases/test";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result, Stream } from "effect";
+import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -25,7 +34,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 describe("@beep/agents-use-cases AssistantTurn", () => {
   it("models history as a role-tagged union of user and assistant items", () => {
-    const decoded = S.decodeUnknownSync(TurnHistoryItem)({ role: "user", text: "hello" });
+    const decoded = S.decodeSync(TurnHistoryItem)({ role: "user", text: "hello" });
     const user = userItem("hello");
     const assistant = assistantItem("hi");
 
@@ -55,18 +64,52 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
       },
       index: 0,
     });
+    expect(Result.getOrThrow(S.encodeResult(ProviderUsageMetadata)(fixtureProviderUsage))).toStrictEqual({
+      inputTokens: 12,
+      model: "fixture",
+      outputTokens: 8,
+      provider: "fixture",
+      stopReason: "stop",
+    });
   });
 
   it("round-trips touched schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [TurnHistoryItem, IndexedBlock];
+    const schemas: ReadonlyArray<S.Codec<unknown>> = [
+      TurnHistoryItem,
+      IndexedBlock,
+      ProviderUsageMetadata,
+      AssistantTurnEvent,
+    ];
 
     for (const schema of schemas) {
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
         fcRuns(10)
       );
     }
   });
+
+  it.effect(
+    "round-trips provider usage through its JSON-safe encoded boundary",
+    Effect.fnUntraced(function* () {
+      const usage = ProviderUsageMetadata.make({ ...fixtureProviderUsage, stopReason: O.none() });
+      const encoded = yield* S.encodeEffect(ProviderUsageMetadata)(usage);
+      expect(encoded).toStrictEqual({
+        inputTokens: 12,
+        model: "fixture",
+        outputTokens: 8,
+        provider: "fixture",
+        stopReason: null,
+      });
+
+      const JsonProviderUsage = S.fromJsonString(ProviderUsageMetadata);
+      const json = yield* S.encodeEffect(JsonProviderUsage)(usage);
+      const decoded = yield* S.decodeEffect(JsonProviderUsage)(json);
+
+      expect(decoded).toStrictEqual(usage);
+      expect(O.isNone(decoded.stopReason)).toBe(true);
+    })
+  );
 
   it("derives the deterministic scripted block sequence from the last user prompt", () => {
     const blocks = fixtureBlocksFor([assistantItem("ignored"), userItem("hello world")]);
@@ -103,8 +146,15 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
         const emitted = yield* Stream.runCollect(kernel.streamTurn(history));
         const expected = fixtureBlocksFor(history);
 
-        expect(emitted.map((indexed) => indexed.index)).toEqual([0, 1, 2, 3]);
-        expect(emitted.map((indexed) => indexed.block)).toStrictEqual([...expected]);
+        expect(emitted.map((event) => event.type)).toEqual(["block", "block", "block", "block", "finalization"]);
+        expect([...emitted]).toStrictEqual([...fixtureEventsFor(history)]);
+        const events = A.fromIterable(emitted);
+        const blocks = A.map(A.filter(events, AssistantTurnEvent.guards.block), (event) => event.block);
+        expect(A.map(blocks, (indexed) => indexed.index)).toEqual([0, 1, 2, 3]);
+        expect(A.map(blocks, (indexed) => indexed.block)).toStrictEqual([...expected]);
+        expect(
+          O.map(A.findFirst(events, AssistantTurnEvent.guards.finalization), (event) => event.usage)
+        ).toStrictEqual(O.some(fixtureProviderUsage));
       })
     );
   });

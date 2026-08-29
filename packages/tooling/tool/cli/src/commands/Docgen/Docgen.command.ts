@@ -8,18 +8,19 @@
  * @since 0.0.0
  */
 
-import { DomainError, findRepoRoot } from "@beep/repo-utils";
+import { DomainError, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { Runpod, RunpodConfigInput } from "@beep/runpod";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Console, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { jsonFlag } from "../../internal/cli/Flags.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { reportDocgenCommandError } from "./Docgen.errors.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { jsonFlag } from "../../internal/cli/Flags.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { reportDocgenCommandError } from "./Docgen.errors.ts";
 import {
   defaultAnalysisPath,
   defaultQualityPath,
@@ -29,8 +30,11 @@ import {
   logGenerationResults,
   printDocgenIndex,
   renderDocgenJson,
-} from "./Docgen.render.js";
-import { runDocgenLocal } from "./internal/Local.js";
+} from "./Docgen.render.ts";
+import { DoctestCliConfig, DoctestReport } from "./Doctest.schemas.ts";
+import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "./Doctest.service.ts";
+import { DoctestFenceAnalyzerLive, DoctestFenceRewriterLive } from "./internal/Doctest.ts";
+import { runDocgenLocal } from "./internal/Local.ts";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
@@ -39,19 +43,19 @@ import {
   loadDocgenConfigDocument,
   resolveDocgenWorkspacePackage,
   runDocgenForPackage,
-} from "./internal/Operations.js";
+} from "./internal/Operations.ts";
 import {
   analyzeDocgenQuality,
   generateQualityJson,
   generateQualityReport,
   resolveDocgenQualityTargets,
-} from "./internal/Quality.js";
+} from "./internal/Quality.ts";
 import {
   analyzeDocgenQualityWorkerEval,
   defaultQualityWorkerEvalPacketLimit,
   defaultQualityWorkerEvalReasoningEffort,
   generateQualityWorkerEvalJson,
-} from "./internal/QualityWorkerEval.js";
+} from "./internal/QualityWorkerEval.ts";
 import {
   defaultQualityWorkerRunpodEvalOtlpBaseUrl,
   defaultQualityWorkerRunpodEvalOtlpProject,
@@ -60,7 +64,7 @@ import {
   generateQualityWorkerRunpodEvalJson,
   requiredQualityWorkerRunpodEvalModel,
   runDocgenQualityWorkerRunpodEval,
-} from "./internal/QualityWorkerRunpodEval.js";
+} from "./internal/QualityWorkerRunpodEval.ts";
 import {
   includePatternsFromFlag,
   qualityReportHasBlockingFindings,
@@ -70,7 +74,8 @@ import {
   resolveQualityWorkerEvalSource,
   targetHasCurrentDocgenProofManifest,
   verifyDocgenCheckProofManifests,
-} from "./internal/Targets.js";
+} from "./internal/Targets.ts";
+import type { MarkPlan } from "./Doctest.schemas.ts";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),
@@ -106,14 +111,36 @@ const includeFlag = Flag.string("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
 );
-const planFlag = Flag.boolean("plan").pipe(Flag.withDescription("Print the local docgen plan without executing it"));
-const fullFlag = Flag.boolean("full").pipe(Flag.withDescription("Run the canonical full docgen proof"));
-const allFlag = Flag.boolean("all").pipe(Flag.withDescription("Run against every configured docgen package"));
-const checkFlag = Flag.boolean("check").pipe(Flag.withDescription("Fail when the command reports failure findings"));
+const doctestWriteFlag = Flag.boolean("write").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Apply the verified marker and assertion rewrite plan")
+);
+const planFlag = Flag.boolean("plan").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the local docgen plan without executing it")
+);
+const fullFlag = Flag.boolean("full").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Run the canonical full docgen proof")
+);
+const allowFullFlag = Flag.boolean("allow-full").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Execute the canonical full docgen proof automatically when the bounded plan requires it")
+);
+const allFlag = Flag.boolean("all").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Run against every configured docgen package")
+);
+const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Fail when the command reports failure findings")
+);
 const reuseProofManifestFlag = Flag.boolean("reuse-proof-manifest").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Skip docgen metadata analysis for packages with current package-local proof manifests")
 );
 const changedFilesFlag = Flag.boolean("changed-files").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Run against packages touched by working-tree TypeScript changes only")
 );
 const qualityScoreFlag = Flag.choiceWithValue("score", [
@@ -163,12 +190,15 @@ const qualityWorkerEvalReasoningEffortFlag = Flag.choiceWithValue("reasoning-eff
   Flag.optional
 );
 const confirmRunpodEvalFlag = Flag.boolean("confirm-runpod-eval").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Acknowledge that quality-worker-eval-runpod creates a billable remote GPU pod")
 );
 const keepRunpodPodFlag = Flag.boolean("keep-pod").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Debug mode: leave the Runpod pod running instead of deleting it after the eval")
 );
 const allow24GbFallbackFlag = Flag.boolean("allow-24gb-fallback").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Allow explicitly verified 24 GiB GPU fallbacks when preferred 48 GiB GPUs are unavailable")
 );
 const runpodGpuTypeIdsFlag = Flag.string("gpu-type").pipe(
@@ -182,9 +212,11 @@ const runpodTemplateIdFlag = Flag.string("template-id").pipe(
   Flag.optional
 );
 const skipRunpodTemplateSearchFlag = Flag.boolean("skip-template-search").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Use the repo fallback image instead of searching public Runpod templates")
 );
 const allowPublicRunpodTemplateSearchFlag = Flag.boolean("allow-public-template-search").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Opt into searching public Runpod templates instead of using the repo fallback image")
 );
 const runpodReadinessTimeoutMsFlag = Flag.integer("readiness-timeout-ms").pipe(
@@ -192,6 +224,7 @@ const runpodReadinessTimeoutMsFlag = Flag.integer("readiness-timeout-ms").pipe(
   Flag.withDescription("Milliseconds to wait for remote Ollama readiness after pod creation")
 );
 const qualityWorkerRunpodEvalOtlpFlag = Flag.boolean("otlp").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Emit sanitized summary and hashed packet spans to the configured Phoenix OTLP endpoint")
 );
 const qualityWorkerRunpodEvalOtlpBaseUrlFlag = Flag.string("otlp-base-url").pipe(
@@ -203,16 +236,28 @@ const qualityWorkerRunpodEvalOtlpProjectFlag = Flag.string("otlp-project").pipe(
   Flag.withDescription("Phoenix project name carried as openinference.project.name")
 );
 const verboseFlag = Flag.boolean("verbose").pipe(
+  Flag.withDefault(false),
   Flag.withAlias("v"),
   Flag.withDescription("Include extra package detail")
 );
-const cleanFlag = Flag.boolean("clean").pipe(Flag.withDescription("Remove docs/generated before aggregating"));
-const forceFlag = Flag.boolean("force").pipe(Flag.withDescription("Overwrite an existing docgen.json file"));
-const dryRunFlag = Flag.boolean("dry-run").pipe(Flag.withDescription("Preview output without writing files"));
+const cleanFlag = Flag.boolean("clean").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Remove docs/generated before aggregating")
+);
+const forceFlag = Flag.boolean("force").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Overwrite an existing docgen.json file")
+);
+const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Preview output without writing files")
+);
 const fixModeFlag = Flag.boolean("fix-mode").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Render the markdown analysis as a checklist rather than a findings report")
 );
 const validateExamplesFlag = Flag.boolean("validate-examples").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Compatibility flag; the repo-local docgen implementation always validates extracted examples")
 );
 const parallelFlag = Flag.integer("parallel").pipe(
@@ -220,9 +265,10 @@ const parallelFlag = Flag.integer("parallel").pipe(
   Flag.withDefault(4),
   Flag.withDescription("Maximum number of packages to process concurrently")
 );
+const docgenConcurrencyConfig = Config.int("BEEP_DOCGEN_CONCURRENCY").pipe(Config.withDefault(3));
 const localParallelFlag = Flag.integer("parallel").pipe(
   Flag.withAlias("j"),
-  Flag.withDefault(1),
+  Flag.optional,
   Flag.withDescription("Maximum number of local docgen packages to process concurrently")
 );
 
@@ -478,17 +524,20 @@ const docgenLocalCommand = Command.make(
     parallel: localParallelFlag,
     plan: planFlag,
     full: fullFlag,
+    allowFull: allowFullFlag,
     json: jsonFlag,
   },
   Effect.fn(
-    function* ({ package: packageSelector, base, head, parallel, plan, full, json }) {
+    function* ({ package: packageSelector, allowFull, base, head, parallel, plan, full, json }) {
+      const configuredParallel = yield* docgenConcurrencyConfig;
       yield* runDocgenLocal({
+        allowFull,
         base,
         full,
         head,
         json,
         packageSelector,
-        parallel,
+        parallel: O.getOrElse(parallel, () => configuredParallel),
         plan,
       });
     },
@@ -993,13 +1042,114 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
   )
 ).pipe(Command.withDescription("Run read-only JSDoc worker evaluation on an ephemeral Runpod Ollama GPU pod"));
 
+const doctestRuntimeLayer = Layer.merge(DoctestFenceAnalyzerLive, DoctestFenceRewriterLive);
+const encodeDoctestReport = S.encodeUnknownEffect(DoctestReport);
+
+const doctestPlans = (report: DoctestReport): ReadonlyArray<MarkPlan> =>
+  pipe(
+    report.findings,
+    A.flatMap((finding) => O.match(O.fromUndefinedOr(finding.plan), { onNone: A.empty<MarkPlan>, onSome: A.of })),
+    A.dedupeWith(
+      (left, right) =>
+        left.location.file === right.location.file && left.location.startLine === right.location.startLine
+    )
+  );
+
+const renderDoctestReport = Effect.fn("Docgen.renderDoctestReport")(function* (report: DoctestReport, json: boolean) {
+  if (json) {
+    const encoded = yield* encodeDoctestReport(report);
+    yield* Console.log(yield* jsonStringifyPretty(encoded));
+    return;
+  }
+  yield* Console.log(
+    `doctest: ${report.counts.files} file(s), ${report.counts.fences} fence(s), ` +
+      `${report.counts.pure} pure, ${report.counts.impure} impure, ${report.counts.typeOnly} type-only`
+  );
+  yield* Console.log(
+    `doctest: ${report.counts.plannedMarkers} marker(s) and ` +
+      `${report.counts.plannedConsoleRewrites} console rewrite(s) planned`
+  );
+  for (const finding of report.findings) {
+    yield* Console.log(`${finding.location.file}:${finding.location.startLine} ${finding.kind}: ${finding.message}`);
+  }
+});
+
+const reportDoctestError = (error: { readonly message: string }) =>
+  Console.error(`docgen doctest: ${error.message}`).pipe(
+    Effect.andThen(failWithReportedExit(`docgen doctest: ${error.message}`))
+  );
+
+const doctestConfig = (
+  write: boolean,
+  filter: O.Option<string>,
+  include: O.Option<string>,
+  json: boolean
+): DoctestCliConfig =>
+  DoctestCliConfig.make({
+    write,
+    include: includePatternsFromFlag(include),
+    json,
+    ...O.getSomesStruct({ filter }),
+  });
+
+const docgenDoctestMarkCommand = Command.make(
+  "mark",
+  {
+    write: doctestWriteFlag,
+    filter: filterFlag,
+    include: includeFlag,
+    json: jsonFlag,
+  },
+  Effect.fn(
+    function* ({ write, filter, include, json }) {
+      const analyzer = yield* DoctestFenceAnalyzer;
+      const rewriter = yield* DoctestFenceRewriter;
+      const config = doctestConfig(write, filter, include, json);
+      const report = yield* analyzer.analyze(config);
+      const changedFiles = yield* write ? rewriter.write(doctestPlans(report)) : rewriter.preview(doctestPlans(report));
+      yield* renderDoctestReport(DoctestReport.make({ ...report, changedFiles }), json);
+    },
+    Effect.catchTags({
+      DoctestAnalysisError: reportDoctestError,
+      DoctestRewriteError: reportDoctestError,
+    })
+  )
+).pipe(Command.withDescription("Plan or apply canonical runtime markers and safe console assertion rewrites"));
+
+const docgenDoctestVerifyCommand = Command.make(
+  "verify",
+  {
+    filter: filterFlag,
+    include: includeFlag,
+    json: jsonFlag,
+  },
+  Effect.fn(
+    function* ({ filter, include, json }) {
+      const analyzer = yield* DoctestFenceAnalyzer;
+      const report = yield* analyzer.analyze(doctestConfig(false, filter, include, json));
+      yield* renderDoctestReport(report, json);
+      yield* analyzer.validateMarkedAssertions(report);
+    },
+    Effect.catchTag("DoctestAnalysisError", reportDoctestError)
+  )
+).pipe(Command.withDescription("Verify runtime marker metadata, purity, and upstream assertion transforms"));
+
+const docgenDoctestCommand = Command.make("doctest", {}).pipe(
+  Command.withDescription("Analyze and maintain runnable JSDoc TypeScript fences"),
+  Command.withSubcommands([docgenDoctestMarkCommand, docgenDoctestVerifyCommand]),
+  Command.provide(doctestRuntimeLayer)
+);
+
 /**
  * Human-first docgen command suite.
  *
- * @remarks
+ * **Details**
+ *
  * The `quality` subcommand is advisory/report-only unless `--check` is used;
  * `local` plans from changed files before choosing a scoped or full docgen run.
- * @example
+ *
+ * **Example** (Run the docgen command)
+ *
  * ```ts
  * import { docgenCommand } from "@beep/repo-cli/commands/Docgen"
  * import { Command } from "effect/unstable/cli"
@@ -1009,6 +1159,7 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
  * console.log(qualityArgs.join(" "))
  * console.log(program) // example value
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -1026,5 +1177,6 @@ export const docgenCommand = Command.make("docgen", {}, () => printDocgenIndex).
     docgenQualityCommand,
     docgenQualityWorkerEvalCommand,
     docgenQualityWorkerRunpodEvalCommand,
+    docgenDoctestCommand,
   ])
 );

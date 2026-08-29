@@ -1,37 +1,54 @@
+import { createHash } from "node:crypto";
 import {
   FallowReportFinding,
   FallowReportOk,
   FallowReportPayload,
   FindingAttributionSummary,
+  GITHUB_CHECK_RUN_REPORT_PREFIX,
 } from "@beep/repo-cli/test/Quality";
 import {
+  acquireFullProofLock,
+  appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
+  attemptJournalPath,
+  BuildYeetVerdictInput,
   buildQualityIssueIndex,
   buildYeetRunPlanForTesting,
   buildYeetVerdictForTesting,
   closeoutGateStatesForTesting,
   closeoutWritePlanForTesting,
   collectDiffFingerprintForTesting,
+  collectPublishIntent,
   commandTextForStep,
   decodeTurboPlanTasksFromQueryJsonForTesting,
+  decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
+  executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
+  GhActor,
+  GhRestIssueComment,
+  GhRestReviewComment,
   GreptileSummary,
   gitPathListFromNulOutputForTesting,
   greptileIssueLimitExceededForTesting,
   greptileRetriggerCommentForTesting,
   inferGreptileIssueCountForTesting,
+  isYeetMonitorCommentAfter,
   jsonObjectTextFromMixedOutputForTesting,
   knownSubLaneRemediationFromOutput,
   latestGreptileSummaryForTesting,
   loadVerifiedStateForTesting,
+  normalizeYeetMonitorIssueCommentForTesting,
+  normalizeYeetMonitorReviewCommentForTesting,
   overlappingBasePathsForTesting,
   PrCloseoutOptions,
   PrCloseoutReport,
   partiallyStagedPathsForTesting,
   prePushLocalShasFromStdinForTesting,
   prePushShaMismatchesForTesting,
+  proofCoordinatorLockPath,
   proofLockDispositionForTesting,
+  proofLockPathForContext,
   publishPathsOutsideIntentForTesting,
   publishRestagePathsForTesting,
   publishUpstreamMismatchWarningForTesting,
@@ -40,35 +57,56 @@ import {
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
+  releaseProofLock,
   renderPackageQualityPacketMarkdown,
+  renderYeetMonitorComment,
   renderYeetStatusSummary,
   repoProofStepDefinition,
+  restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
+  stageReviewedPublishIntent,
   stashUnstagedWorktreeForTesting,
   summarizePublishPathsForTesting,
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
+  tryReclaimStaleProofLockForTesting,
+  tryRecoverObservedProofLockReapClaimForTesting,
+  validateMonitorGuards,
+  validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
+  validatePublishCommitMessageForTesting,
+  YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
+  YeetExistingCommitPublishIntent,
+  YeetMonitorCommentCursor,
+  YeetMonitorIssueComment,
+  YeetMonitorReviewComment,
   YeetProofLockStateForTesting,
+  YeetPublishIntent,
+  YeetStagedPublishIntent,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
   YeetStatusWorktree,
   YeetVerdict,
+  yeetRerunDecisionText,
+  yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { NonNegativeInt } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -76,12 +114,27 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
-import { describe, expect, it } from "vitest";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const attemptUuid = S.decodeUnknownSync(UUID);
+const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
+  `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
+const proofLockReapClaimTombstonePath = (claimPath: string, observedText: string): string =>
+  `${claimPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
+
+const encodeProofLockReapClaim = Effect.fn("test.encodeProofLockReapClaim")(function* (
+  pid: number,
+  startedAt = "2026-08-26T00:00:00.000Z"
+) {
+  return yield* encodeJson({
+    schemaVersion: "yeet-proof-lock-reap-claim/v1",
+    pid,
+    startedAt,
+  });
+});
 
 const spawnGit = (cwd: string, args: ReadonlyArray<string>) =>
   Effect.sync(() => {
@@ -153,6 +206,42 @@ const withTrackedFileRepo = <Result, Error, Requirements>(
       const repo = yield* initTrackedFileRepo(tmpDir);
       return yield* use({ ...repo, tmpDir });
     })
+  );
+
+type TempProofCoordinatorRepo = TempTrackedFileRepo & {
+  readonly lockPath: string;
+};
+
+const withProofCoordinatorRepo = <Result, Error, Requirements>(
+  use: (repo: TempProofCoordinatorRepo) => Effect.Effect<Result, Error, Requirements>
+) =>
+  withTrackedFileRepo((repo) =>
+    Effect.acquireUseRelease(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;
+        yield* runGit(repo.tmpDir, ["remote", "add", "origin", repositoryIdentity]);
+        const lockPath = yield* proofLockPathForContext(repo.tempContext);
+        yield* fs.remove(lockPath, { force: true });
+        return { ...repo, lockPath } as const;
+      }),
+      use,
+      ({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const coordinatorDirectory = path.dirname(lockPath);
+          const reapPrefix = `${path.basename(lockPath)}.reap-`;
+          yield* fs.remove(lockPath, { force: true });
+          const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
+          yield* Effect.forEach(
+            A.filter(entries, Str.startsWith(reapPrefix)),
+            (entry) => fs.remove(path.join(coordinatorDirectory, entry), { force: true }).pipe(Effect.ignore),
+            { discard: true }
+          );
+        })
+    )
   );
 
 const turboTask = (
@@ -344,7 +433,14 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["fallow-advisory-feedback", "commit:git:commit", "full:pre-push", "publish:git:push"]);
+    ).toEqual([
+      "fallow-advisory-feedback",
+      "commit:git:commit",
+      "full:cheap-gates",
+      "full:pre-push",
+      "publish:head-install-preflight",
+      "publish:git:push",
+    ]);
     expect(
       pipe(
         plan.steps,
@@ -378,14 +474,49 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["fallow-advisory-feedback", "full:pre-push"]);
+    ).toEqual(["publish:head-install-preflight", "fallow-advisory-feedback", "full:cheap-gates", "full:pre-push"]);
     expect(
       pipe(
         plan.steps,
         A.map((step) => step.mutability),
         A.dedupe
       )
-    ).toEqual(["write", "readonly"]);
+    ).toEqual(["readonly", "write"]);
+    expect(findStep(plan.steps, "full:pre-push").waves).toEqual([
+      expect.objectContaining({ id: "preflight" }),
+      expect.objectContaining({
+        id: "heavy",
+        laneIds: [
+          "quality:build",
+          "quality:lint",
+          "quality:lint-policy",
+          "quality:check",
+          "quality:check:tsgo-tests",
+          "quality:check:tsgo-smoke",
+        ],
+      }),
+      expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
+      expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
+    ]);
+    expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
+      expect.objectContaining({
+        id: "preflight",
+        laneIds: expect.arrayContaining(["cheap-gates:config-sync", "cheap-gates:effect-imports"]),
+      }),
+    ]);
+  });
+
+  it("plans collect-all as an explicit override of fail-fast wave scheduling", () => {
+    const plan = buildYeetRunPlanForTesting({ collectAll: true, context, message: O.none(), mode: "verify" });
+
+    expect(findStep(plan.steps, "full:pre-push").args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "github-checks",
+      "pre-push",
+      "--collect-all",
+    ]);
   });
 
   it("builds review-fix verify as the targeted review proof", () => {
@@ -408,6 +539,21 @@ describe("yeet planner", () => {
       "--head",
       "feature/head",
     ]);
+  });
+
+  it("builds cheap-gates verify without any heavyweight proof lane", () => {
+    const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "verify", tier: "cheap-gates" });
+
+    expect(A.map(plan.steps, (step) => step.label)).toEqual(["fallow-advisory-feedback", "full:cheap-gates"]);
+    expect(findStep(plan.steps, "full:cheap-gates").args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "github-checks",
+      "cheap-gates",
+      "--collect-all",
+    ]);
+    expect(A.some(plan.steps, (step) => step.label === "full:pre-push")).toBe(false);
   });
 
   it("builds closeout as PR context plus review gates", () => {
@@ -480,7 +626,7 @@ describe("yeet planner", () => {
       "--json",
       "number,headRefName,state",
     ]);
-    expect(findStep(plan.steps, "monitor:pr-checks:watch").args).toEqual(["pr", "checks", "--watch"]);
+    expect(findStep(plan.steps, "monitor:pr-checks:watch").args).toEqual(["pr", "checks", "--watch", "--fail-fast"]);
   });
 
   it("builds status as local-only by default and adds remote PR reads on request", () => {
@@ -529,6 +675,7 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "publish:head-install-preflight",
       "publish:git:push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -541,7 +688,7 @@ describe("yeet planner", () => {
     ).not.toContain("full:pre-push");
   });
 
-  it("builds start-pr-early publish as commit, early push, full proof, then monitor", () => {
+  it("builds start-pr-early publish as commit, preflight, early push, full proof, then monitor", () => {
     const plan = buildYeetRunPlanForTesting({
       context,
       message: O.some("feat(repo-cli): add yeet"),
@@ -557,7 +704,9 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "publish:head-install-preflight",
       "early-publish:git:push",
+      "full:cheap-gates",
       "full:pre-push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -596,9 +745,28 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["publish:git:push", "monitor:pr-context", "monitor:pr-checks:watch"]);
+    ).toEqual(["publish:head-install-preflight", "publish:git:push", "monitor:pr-context", "monitor:pr-checks:watch"]);
     expect(findStep(plan.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
   });
+
+  it("requires a publish message unless the run is an amend that keeps the existing subject", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext }) =>
+        Effect.gen(function* () {
+          yield* validatePublishCommitMessageForTesting(
+            tempContext,
+            O.none(),
+            defaultYeetRunOptions({ amend: true, noEdit: true })
+          );
+
+          const error = yield* Effect.flip(
+            validatePublishCommitMessageForTesting(tempContext, O.none(), defaultYeetRunOptions())
+          );
+
+          expect(error.message).toContain("yeet publish requires --message with a conventional commit message");
+        })
+      )
+    ));
 
   it("rejects push-only reuse when staged changes are present", () =>
     Effect.runPromise(
@@ -687,7 +855,9 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "full:cheap-gates",
       "full:pre-push",
+      "publish:head-install-preflight",
       "publish:git:push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -702,6 +872,14 @@ describe("yeet planner", () => {
     });
   });
 
+  it("exposes the collected cheap-gates repo proof surface", () => {
+    expect(repoProofStepDefinition("cheap-gates")).toMatchObject({
+      args: ["quality", "github-checks", "cheap-gates", "--collect-all"],
+      label: "full:cheap-gates",
+      surface: "cheap-gates",
+    });
+  });
+
   it("builds repair as deterministic generators plus affected feedback", () => {
     const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "repair" });
 
@@ -712,10 +890,11 @@ describe("yeet planner", () => {
       )
     ).toEqual([
       "prepare:laws:effect-imports",
-      "prepare:laws:dual-arity",
+      "prepare:laws:terse-effect",
       "prepare:config-sync",
-      "prepare:lint:fix",
-      "prepare:docgen",
+      "feedback:cheap-gates",
+      "feedback:lint:fix",
+      "feedback:docgen",
       "feedback:build",
       "feedback:check",
       "feedback:lint",
@@ -728,7 +907,15 @@ describe("yeet planner", () => {
       "effect-imports",
       "--write",
     ]);
-    expect(findStep(plan.steps, "prepare:docgen").args).toEqual(["run", "docgen"]);
+    expect(findStep(plan.steps, "feedback:cheap-gates").args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "github-checks",
+      "cheap-gates",
+      "--collect-all",
+    ]);
+    expect(findStep(plan.steps, "feedback:docgen").args).toEqual(["run", "docgen"]);
   });
 
   it("uses the shared pre-push proof definition for Yeet parity", () => {
@@ -770,7 +957,6 @@ describe("yeet planner", () => {
       "test",
       "--",
       "--unit",
-      "--types",
       "--filter=@beep/repo-cli",
       "--concurrency=3",
       "--continue=dependencies-successful",
@@ -781,7 +967,7 @@ describe("yeet planner", () => {
 
   it("uses changed-file lint fix for write-mode repair", () => {
     const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "repair" });
-    const step = findStep(plan.steps, "prepare:lint:fix");
+    const step = findStep(plan.steps, "feedback:lint:fix");
 
     expect(step.args).toEqual(["run", "lint:fix"]);
     expect(step.env).toBeUndefined();
@@ -800,7 +986,7 @@ describe("yeet planner", () => {
         A.filter((step) => step.phase === "feedback"),
         A.map((step) => step.label)
       )
-    ).toEqual(["feedback:build", "feedback:lint"]);
+    ).toEqual(["feedback:cheap-gates", "feedback:lint:fix", "feedback:docgen", "feedback:build", "feedback:lint"]);
   });
 
   it("keeps repair feedback as a no-op instead of falling back to all packages", () => {
@@ -815,7 +1001,11 @@ describe("yeet planner", () => {
         plan.steps,
         A.filter((step) => step.phase === "feedback")
       )
-    ).toEqual([]);
+    ).toEqual([
+      expect.objectContaining({ label: "feedback:cheap-gates" }),
+      expect.objectContaining({ label: "feedback:lint:fix" }),
+      expect.objectContaining({ label: "feedback:docgen" }),
+    ]);
     expect(
       pipe(
         plan.steps,
@@ -823,10 +1013,11 @@ describe("yeet planner", () => {
       )
     ).toEqual([
       "prepare:laws:effect-imports",
-      "prepare:laws:dual-arity",
+      "prepare:laws:terse-effect",
       "prepare:config-sync",
-      "prepare:lint:fix",
-      "prepare:docgen",
+      "feedback:cheap-gates",
+      "feedback:lint:fix",
+      "feedback:docgen",
     ]);
   });
 
@@ -845,6 +1036,34 @@ describe("yeet planner", () => {
       )
     ).toEqual(["src/changed.ts", "src/new.ts"]);
   });
+
+  it("forces only reviewed ignored paths when restaging the index", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const regularPath = path.join(tmpDir, "regular.txt");
+
+          yield* fs.writeFileString(regularPath, "original\n");
+          yield* fs.writeFileString(path.join(tmpDir, ".gitignore"), "tracked.txt\n");
+          yield* runGit(tmpDir, ["add", ".gitignore", "regular.txt"]);
+          yield* runGit(tmpDir, ["commit", "-m", "ignore tracked file"]);
+          yield* fs.writeFileString(filePath, "updated\n");
+          yield* fs.writeFileString(regularPath, "updated\n");
+          yield* runGit(tmpDir, ["add", "--force", "tracked.txt"]);
+          yield* runGit(tmpDir, ["add", "regular.txt"]);
+
+          yield* stageReviewedPublishIntent(
+            tempContext,
+            YeetStagedPublishIntent.make({ paths: ["regular.txt", "tracked.txt"] }),
+            false
+          );
+
+          expect(yield* runGitStatus(tmpDir)).toBe("M  regular.txt\nM  tracked.txt");
+        })
+      )
+    ));
 
   it("decodes Turbo affected query JSON into plan task metadata", () => {
     const tasks = Effect.runSync(
@@ -1141,8 +1360,8 @@ describe("yeet quality issue index", () => {
           );
 
           yield* fs.makeDirectory(fromDir, { recursive: true });
-          yield* fs.writeFileString(path.join(fromDir, "audit.json"), `${auditText}\n`);
-          yield* fs.writeFileString(path.join(fromDir, "health.json"), `${healthText}\n`);
+          yield* fs.writeFileString(path.join(fromDir, "audit.check.json"), `${auditText}\n`);
+          yield* fs.writeFileString(path.join(fromDir, "health.advisory.json"), `${healthText}\n`);
           // CSF-011: the Fallow feedback reader/writer is constrained to its
           // configured allowed root. Point the guard at this temp dir so the
           // mixed-output directory is exercised under the symlink/traversal
@@ -1152,7 +1371,7 @@ describe("yeet quality issue index", () => {
           );
 
           const emittedText = yield* fs.readFileString(emitPath);
-          const index = yield* S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          const index = yield* S.decodeEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
 
           expect(index.issues).toHaveLength(1);
           expect(index.issues[0]).toMatchObject({
@@ -1168,6 +1387,44 @@ describe("yeet quality issue index", () => {
               packageName: "@beep/root",
             }),
           ]);
+        })
+      )
+    ));
+
+  // Ledger #55 / decision 25: advisory Fallow envelopes older than the Yeet run
+  // start are gitignored leftovers, so the phase purges them and skips instead of
+  // failing the publish. Behavioral detail lives in yeet-fallow-self-heal.test.ts.
+  it("purges advisory Fallow envelopes older than the Yeet run start", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fromDir = path.join(tmpDir, ".beep", "fallow");
+          const emitPath = path.join(tmpDir, ".beep", "yeet", "fallow-quality-issues.json");
+          const envelopePath = path.join(fromDir, "health.advisory.json");
+          const healthText = yield* encodeJson(
+            fallowOkEnvelope({
+              advisory: true,
+              blocking: false,
+              feature: "health",
+              findingId: "health-stale",
+            })
+          );
+          yield* fs.makeDirectory(fromDir, { recursive: true });
+          yield* fs.writeFileString(envelopePath, `${healthText}\n`);
+          yield* runYeetFallowFeedbackForTesting({
+            advisory: true,
+            emit: emitPath,
+            from: fromDir,
+            runStartedAt: "2026-06-16T00:00:00.000Z",
+          }).pipe(Effect.provideService(FallowFeedbackAllowedRoot, O.some(tmpDir)));
+
+          expect(yield* fs.exists(envelopePath)).toBe(false);
+
+          const emittedText = yield* fs.readFileString(emitPath);
+          const index = yield* S.decodeEffect(S.fromJsonString(QualityIssueIndex))(emittedText);
+          expect(index.issues).toEqual([]);
         })
       )
     ));
@@ -1356,15 +1613,23 @@ describe("yeet quality issue index", () => {
   });
 
   it("extracts known sub-lane hints from broad proof failures", () => {
-    const issues = prePushFailureIssues(context, "[beep-cli] lint:cspell: cspell .\nUnknown word found");
+    const issues = prePushFailureIssues(context, "[beep-cli] lint:typos: typos\nerror: misspelling found");
 
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({
       category: "lint-tool",
-      message: "full:pre-push failed in cspell with exit code 1.",
-      remediation: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
-      subCategory: "cspell",
+      message: "full:pre-push failed in typos with exit code 1.",
+      remediation:
+        "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.",
+      subCategory: "typos",
     });
+  });
+
+  it("routes cheap-gate failures to the focused repair command", () => {
+    const remediation = knownSubLaneRemediationFromOutput("[beep-cli] cheap-gates:effect-imports: failed in 1200ms");
+
+    expect(O.getOrThrow(remediation)).toContain("bun run beep laws effect-imports --write");
+    expect(O.getOrThrow(remediation)).toContain("cheap-gates tier");
   });
 
   it("prefers the failing tail when broad proof output mentions earlier successful lanes", () => {
@@ -1444,7 +1709,7 @@ describe("yeet quality issue index", () => {
 
   it("extracts a sub-lane hint from the failure prefix before unrelated success tail", () => {
     const remediation = knownSubLaneRemediationFromOutput(
-      "Unknown word found: operator\n" +
+      "lint:typos failed: operator\n" +
         pipe(
           A.makeBy(16, (index) => `context line ${index}`),
           A.join("\n")
@@ -1453,10 +1718,10 @@ describe("yeet quality issue index", () => {
     );
 
     expect(O.isSome(remediation)).toBe(true);
-    expect(O.getOrUndefined(remediation)).toContain("cspell");
+    expect(O.getOrUndefined(remediation)).toContain("typos");
   });
 
-  it("extracts the changeset sub-lane hint with the empty-changeset remedy", () => {
+  it("extracts the changeset sub-lane hint with the package patch remedy", () => {
     const issues = prePushFailureIssues(
       context,
       "[beep-cli] quality:changeset-status: bun run changeset:status:since-main\nSome packages have been changed but no changesets were found."
@@ -1467,7 +1732,7 @@ describe("yeet quality issue index", () => {
       category: "changeset-policy",
       subCategory: "changeset-status",
     });
-    expect(issues[0]?.remediation).toContain("changeset add --empty");
+    expect(issues[0]?.remediation).toContain("each changed package with `patch`");
   });
 
   it("extracts the typos sub-lane hint from hook-style failures", () => {
@@ -1502,7 +1767,134 @@ describe("yeet quality issue index", () => {
   });
 });
 
+describe("yeet monitor comments", () => {
+  it("normalizes nullable GitHub payload fields before rendering", () => {
+    const review = normalizeYeetMonitorReviewCommentForTesting(
+      GhRestReviewComment.make({
+        body: null,
+        created_at: "2026-08-04T12:00:01.000Z",
+        html_url: "https://github.com/o/r/pull/1#discussion_r43",
+        id: 43,
+        line: null,
+        original_line: null,
+        path: "src/Monitor.ts",
+        user: null,
+      })
+    );
+    const issue = normalizeYeetMonitorIssueCommentForTesting(
+      GhRestIssueComment.make({
+        body: "Ready for review.",
+        created_at: "2026-08-04T12:00:02.000Z",
+        html_url: "https://github.com/o/r/pull/1#issuecomment-44",
+        id: 44,
+        user: GhActor.make({ login: "octocat" }),
+      })
+    );
+
+    expect(renderYeetMonitorComment(review)).toContain("unknown @ src/Monitor.ts:?");
+    expect(renderYeetMonitorComment(issue)).toContain("new PR issue comment: octocat");
+    expect(issue.body).toBe("Ready for review.");
+  });
+
+  it("uses timestamp and id as the in-memory comment watermark", () => {
+    const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-04T12:00:01.000Z", id: 44 });
+    const seen = YeetMonitorIssueComment.make({
+      author: "octocat",
+      body: "Already seen.",
+      createdAt: "2026-08-04T12:00:01.000Z",
+      id: 44,
+      url: "https://github.com/o/r/pull/1#issuecomment-44",
+    });
+    const next = YeetMonitorIssueComment.make({
+      author: "greptile-apps[bot]",
+      body: "New comment.",
+      createdAt: "2026-08-04T12:00:01.000Z",
+      id: 45,
+      url: "https://github.com/o/r/pull/1#issuecomment-45",
+    });
+
+    expect(isYeetMonitorCommentAfter(cursor, seen)).toBe(false);
+    expect(isYeetMonitorCommentAfter(cursor, next)).toBe(true);
+  });
+
+  it("renders review location, compact body, author, and URL", () => {
+    const output = renderYeetMonitorComment(
+      YeetMonitorReviewComment.make({
+        author: "greptile-apps[bot]",
+        body: "Please preserve\n  the existing polling interval.",
+        createdAt: "2026-08-04T12:00:01.000Z",
+        id: 43,
+        line: O.some(88),
+        path: "src/Monitor.ts",
+        url: "https://github.com/o/r/pull/1#discussion_r43",
+      })
+    );
+
+    expect(output).toContain("[yeet] new PR review comment: greptile-apps[bot] @ src/Monitor.ts:88");
+    expect(output).toContain("Please preserve the existing polling interval.");
+    expect(output).toContain("https://github.com/o/r/pull/1#discussion_r43");
+  });
+
+  it("strips terminal control sequences from every remote comment field", () => {
+    const output = renderYeetMonitorComment(
+      YeetMonitorReviewComment.make({
+        author: "greptile\u001b[31m-apps",
+        body: "keep \u001b[32mvisible\u001b[0m \u001b]52;c;clipboard-canary\u0007 text\u009b31m",
+        createdAt: "2026-08-04T12:00:01.000Z",
+        id: 43,
+        line: O.some(88),
+        path: "src/Monitor\u001b]8;;https://malicious.example\u0007.ts",
+        url: "https://github.com/o/r/pull/1\u0007#discussion_r43",
+      })
+    );
+
+    expect(output).toContain("greptile-apps @ src/Monitor.ts:88");
+    expect(output).toContain("keep visible text31m");
+    expect(output).toContain("https://github.com/o/r/pull/1#discussion_r43");
+    expect(output).not.toContain("clipboard-canary");
+    expect(output).not.toContain("malicious.example");
+    expect(output).not.toMatch(/[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/u);
+  });
+
+  it("strips terminal control sequences from issue comments", () => {
+    const output = renderYeetMonitorComment(
+      YeetMonitorIssueComment.make({
+        author: "reviewer\u001b[31m",
+        body: "safe\u001b]52;c;clipboard-canary\u0007 body",
+        createdAt: "2026-08-04T12:00:02.000Z",
+        id: 44,
+        url: "https://github.com/o/r/pull/1\u0007#issuecomment-44",
+      })
+    );
+
+    expect(output).toContain("[yeet] new PR issue comment: reviewer");
+    expect(output).toContain("safe body");
+    expect(output).toContain("https://github.com/o/r/pull/1#issuecomment-44");
+    expect(output).not.toContain("clipboard-canary");
+  });
+});
+
 describe("yeet status helpers", () => {
+  it("schema-decodes remote review-thread and rerun guidance", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const remote = YeetStatusRemote.make({
+          available: true,
+          checked: true,
+          detail: "PR #42 OPEN",
+          rerunFailedCommand: yeetRerunJobListingCommand(123),
+          rerunFailedDecision: "same-SHA red candidate",
+          unresolvedReviewThreadCount: 1,
+          unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
+        });
+        const encoded = yield* S.encodeEffect(YeetStatusRemote)(remote);
+        const decoded = yield* S.decodeEffect(YeetStatusRemote)(encoded);
+
+        expect(decoded.unresolvedReviewThreadCount).toBe(1);
+        expect(decoded.rerunFailedCommand).toBe(yeetRerunJobListingCommand(123));
+      })
+    ));
+
   it("renders compact local status and suggests repair commands from verdict artifacts", () => {
     const verdict = YeetStatusArtifact.make({
       detail: "publish failure: proof failed",
@@ -1510,7 +1902,7 @@ describe("yeet status helpers", () => {
       outcome: "failure",
       path: ".beep/yeet/runs/feature/verdict.json",
       repairCommand: "Run `bun run docgen:local`.",
-      schemaVersion: "yeet-verdict/v1",
+      schemaVersion: "yeet-verdict/v2",
       state: "present",
     });
     const closeout = YeetStatusArtifact.make({
@@ -1555,10 +1947,129 @@ describe("yeet status helpers", () => {
 
     expect(command).toContain("publish --staged-only --pr --monitor");
   });
+
+  it("names unresolved threads and records the same-SHA rerun-failed decision", () => {
+    const remote = YeetStatusRemote.make({
+      available: true,
+      checked: true,
+      detail: "PR #42 OPEN",
+      rerunFailedCommand: yeetRerunJobListingCommand(123),
+      rerunFailedDecision: yeetRerunDecisionText("check"),
+      unresolvedReviewThreadCount: 1,
+      unresolvedReviewThreads: ["PRRT_1 (src/example.ts)"],
+    });
+    const command = yeetStatusNextCommandForTesting(
+      YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+      YeetStatusArtifact.make({ detail: "success", outcome: "success", path: "verdict.json", state: "present" }),
+      YeetStatusArtifact.make({ detail: "closed", issueCount: 0, path: "pr-closeout.json", state: "present" }),
+      remote
+    );
+
+    expect(command).toContain(yeetRerunJobListingCommand(123));
+    expect(command).not.toContain("merge the PR");
+  });
+
+  it("teaches only the job-scoped rerun form, never --failed", () => {
+    const listing = yeetRerunJobListingCommand(123);
+    expect(listing).toContain("gh run view 123 --json jobs");
+    expect(listing).not.toContain("--failed");
+    const decision = yeetRerunDecisionText("check");
+    expect(decision).toContain("gh run rerun --job <databaseId>");
+    expect(decision).toContain("never");
+  });
+});
+
+describe("yeet attempt journal", () => {
+  it("schema-decodes repository step timing fields", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const result = yield* S.decodeEffect(RepoStepRunResult)({
+          stepId: "feedback:check",
+          commandText: "bun run check",
+          exitCode: 0,
+          startedAt: "2026-08-04T00:00:00.000Z",
+          endedAt: "2026-08-04T00:00:01.000Z",
+          elapsedMs: 1000,
+        });
+
+        expect(result.elapsedMs).toBe(1000);
+      })
+    ));
+
+  it("schema-decodes events and retains the newest 50 attempts", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          yield* Effect.forEach(
+            A.makeBy(51, (index) => index),
+            (index) =>
+              appendYeetAttemptJournalEvent(
+                tempContext,
+                YeetAttemptStarted.make({
+                  schemaVersion: "yeet-attempt-journal/v1",
+                  _tag: "attempt-started",
+                  attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+                  runId: "repo-cli-yeet",
+                  branch: "repo-cli-yeet",
+                  base: "origin/main",
+                  head: "HEAD",
+                  mode: "verify",
+                  startedAt: "2026-08-04T00:00:00.000Z",
+                })
+              ),
+            { discard: true, concurrency: 1 }
+          );
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+
+          expect(events).toHaveLength(50);
+          expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
+          expect(events[49]?.attemptId).toBe("00000000-0000-4000-8000-000000000050");
+        })
+      )
+    ));
+
+  it("recovers from a torn trailing record instead of bricking later attempts", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const attemptStarted = (index: number) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+              runId: "repo-cli-yeet",
+              branch: "repo-cli-yeet",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "verify",
+              startedAt: "2026-08-04T00:00:00.000Z",
+            });
+
+          yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted(1));
+          const intact = yield* fs.readFileString(journalPath);
+          yield* fs.writeFileString(journalPath, `${intact}{"schemaVersion":"yeet-attempt-jour`);
+
+          yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted(2));
+
+          const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+
+          expect(events).toHaveLength(1);
+          expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
+        })
+      )
+    ));
 });
 
 describe("yeet publish scope helpers", () => {
-  it("refuses publish on main before any publish plan can push", () =>
+  it.effect("refuses publish on main before any publish plan can push", () =>
     Effect.gen(function* () {
       const mainContext = RepoRunContext.make({ ...context, branch: "main" });
       const error = yield* validatePublishBranchForTesting(
@@ -1568,7 +2079,8 @@ describe("yeet publish scope helpers", () => {
 
       expect(error.message).toContain('yeet publish is PR-branch-only; refusing to publish directly from "main"');
       expect(error.command).toBe("git switch -c <feature-branch> origin/main");
-    }));
+    })
+  );
 
   it("summarizes refused paths with counts, top-level entries, and capped examples", () => {
     const paths = pipe(
@@ -1597,6 +2109,65 @@ describe("yeet publish scope helpers", () => {
     expect(partiallyStagedPathsForTesting([], ["a.ts"])).toEqual([]);
   });
 
+  it("decodes both publish intent states", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const staged = yield* S.decodeEffect(YeetPublishIntent)({ kind: "staged", paths: ["src/a.ts"] });
+        const existing = yield* S.decodeEffect(YeetPublishIntent)({
+          commitSha: "abc123",
+          kind: "existing-commit",
+          paths: ["src/a.ts"],
+        });
+
+        expect(staged).toBeInstanceOf(YeetStagedPublishIntent);
+        expect(existing).toBeInstanceOf(YeetExistingCommitPublishIntent);
+      })
+    ));
+
+  it("accepts a clean local commit ahead of the publish remote/base", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* runGit(tmpDir, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+          yield* fs.writeFileString(filePath, "committed ahead\n");
+          yield* runGit(tmpDir, ["add", "tracked.txt"]);
+          yield* runGit(tmpDir, ["commit", "-m", "test: committed ahead"]);
+
+          const intent = yield* collectPublishIntent(tempContext, false);
+
+          expect(intent).toBeInstanceOf(YeetExistingCommitPublishIntent);
+          if (intent.kind === "existing-commit") {
+            expect(intent.paths).toEqual(["tracked.txt"]);
+            expect(intent.commitSha).toBe(Str.trim(yield* runGitCapture(tmpDir, ["rev-parse", "HEAD"])));
+          }
+        })
+      )
+    ));
+
+  it("rejects dirty, contained, and no-ahead clean trees as existing-commit intent", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* runGit(tmpDir, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+
+          const noAhead = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
+          expect(noAhead.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+
+          yield* fs.writeFileString(filePath, "dirty\n");
+          const dirty = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
+          expect(dirty.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+
+          yield* runGit(tmpDir, ["add", "tracked.txt"]);
+          yield* runGit(tmpDir, ["commit", "-m", "test: committed ahead"]);
+          yield* runGit(tmpDir, ["update-ref", "refs/remotes/origin/repo-cli-yeet", "HEAD"]);
+          const contained = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
+          expect(contained.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+        })
+      )
+    ));
+
   it("returns branch paths that were also changed on the base since merge-base", () => {
     expect(overlappingBasePathsForTesting(["src/a.ts", "src/b.ts"], ["src/b.ts", "src/c.ts"])).toEqual(["src/b.ts"]);
     expect(overlappingBasePathsForTesting(["src/a.ts"], ["src/c.ts"])).toEqual([]);
@@ -1612,7 +2183,9 @@ describe("yeet publish scope helpers", () => {
     expect(labels).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "full:cheap-gates",
       "full:pre-push",
+      "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
     ]);
@@ -1634,13 +2207,73 @@ describe("yeet publish scope helpers", () => {
     expect(labels).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "publish:head-install-preflight",
       "early-publish:git:push",
       "publish:pr-create",
+      "full:cheap-gates",
       "full:pre-push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
     ]);
   });
+
+  it.effect("requires explicit --pr before start-pr-early can reach commit or push", () =>
+    Effect.gen(function* () {
+      const error = yield* validateMonitorGuards(
+        context,
+        defaultYeetRunOptions({
+          message: "test(repo-cli): probe early publish",
+          monitor: true,
+          startPrEarly: true,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error.message).toContain("requires --pr");
+      expect(error.message).toContain("Add `--pr` and retry");
+
+      yield* validateMonitorGuards(
+        context,
+        defaultYeetRunOptions({
+          message: "test(repo-cli): probe early publish",
+          monitor: true,
+          pr: true,
+          startPrEarly: true,
+        })
+      );
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("surfaces the clean-HEAD frozen-install repair hint and removes its temp worktree", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
+        yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+        yield* fs.writeFileString(path.join(tmpDir, "package.json"), '{"name":"head-install-probe","private":true}\n');
+        yield* fs.writeFileString(path.join(tmpDir, "bun.lock"), "not a bun lockfile\n");
+        yield* runGit(tmpDir, ["add", "package.json", "bun.lock"]);
+        yield* runGit(tmpDir, ["commit", "-m", "test: invalid committed lockfile"]);
+
+        const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+        const plan = buildYeetRunPlanForTesting({ context: tempContext, message: O.none(), mode: "verify" });
+        const step = findStep(plan.steps, "publish:head-install-preflight");
+        const result = yield* executeStepWithArtifacts(tempContext, step);
+
+        expect(result.exitCode).not.toBe(0);
+        expect(result.output).toContain("Frozen-lockfile clean-HEAD install preflight failed");
+        expect(knownSubLaneRemediationFromOutput(result.output)).toEqual(
+          O.some(
+            "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`."
+          )
+        );
+        expect(yield* runGitCapture(tmpDir, ["worktree", "list", "--porcelain"])).not.toContain(
+          "beep-yeet-head-install-"
+        );
+      })
+    )
+  );
 
   it("builds a verdict with hint-derived repair commands and not-run lanes", () => {
     const proofStep = RepoPlanStep.make({
@@ -1665,40 +2298,56 @@ describe("yeet publish scope helpers", () => {
       mutability: "publish",
       resume: "never",
     });
-    const verdict = buildYeetVerdictForTesting({
-      base: "origin/main",
-      branch: "feature",
-      createdAt: "2026-06-11T00:00:00.000Z",
-      executed: [
-        YeetExecutedStep.make({
-          result: RepoStepRunResult.make({
-            stepId: proofStep.id,
-            commandText: "bun run beep quality github-checks pre-push",
-            exitCode: 1,
-            output: "[beep-cli] lint:cspell: cspell .\nUnknown word found",
+    const verdict = buildYeetVerdictForTesting(
+      BuildYeetVerdictInput.make({
+        attemptId: O.some(attemptUuid("550e8400-e29b-41d4-a716-446655440000")),
+        base: "origin/main",
+        branch: "feature",
+        createdAt: "2026-06-11T00:00:00.000Z",
+        startedAt: O.some("2026-06-11T00:00:00.000Z"),
+        endedAt: O.some("2026-06-11T00:00:00.012Z"),
+        elapsedMs: O.some(12),
+        executed: [
+          YeetExecutedStep.make({
+            durationMs: 12,
+            result: RepoStepRunResult.make({
+              stepId: proofStep.id,
+              commandText: "bun run beep quality github-checks pre-push",
+              exitCode: 1,
+              output: `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"pre-push:secrets","stage":"diff-security","status":"passed","wave":"preflight"}]}\n[beep-cli] lint:typos: typos\nerror: misspelling found\n${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"quality:lint","stage":"repo-quality","status":"failed","wave":"heavy"},{"id":"quality:docgen","stage":"repo-quality","status":"not-run-early-stop","wave":"documentation"}]}`,
+            }),
+            step: proofStep,
           }),
-          step: proofStep,
-        }),
-      ],
-      head: "HEAD",
-      message: "yeet publish proof failed after creating the local commit.",
-      mode: "publish",
-      outcome: "failure",
-      packetPaths: [],
-      planned: [proofStep, pushStep],
-      runId: "feature",
-    });
+        ],
+        head: "HEAD",
+        message: "yeet publish proof failed after creating the local commit.",
+        mode: "publish",
+        outcome: "failure",
+        failedStepId: proofStep.id,
+        failureKind: "step-exit",
+        packetPaths: [],
+        planned: [proofStep, pushStep],
+        runId: "feature",
+      })
+    );
 
     expect(verdict.outcome).toBe("failure");
     expect(verdict.committed).toBe(false);
     expect(verdict.pushed).toBe(false);
-    expect(verdict.lanes).toHaveLength(2);
+    expect(verdict.failurePolicy).toBe("fail-fast");
+    expect(verdict.failedStepId).toBe(proofStep.id);
+    expect(verdict.failureKind).toBe("step-exit");
+    expect(verdict.lanes).toHaveLength(4);
     expect(verdict.lanes[0]).toMatchObject({
       id: "full:pre-push",
-      repairCommand: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
+      durationMs: 12,
+      repairCommand:
+        "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.",
       status: "failed",
     });
-    expect(verdict.lanes[1]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
+    expect(verdict.lanes[1]).toMatchObject({ id: "quality:lint", status: "failed" });
+    expect(verdict.lanes[2]).toMatchObject({ id: "quality:docgen", status: "not-run-early-stop" });
+    expect(verdict.lanes[3]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
   });
 
   it("round-trips the verdict schema and marks executed push lanes", () =>
@@ -1715,45 +2364,93 @@ describe("yeet publish scope helpers", () => {
           mutability: "publish",
           resume: "never",
         });
-        const verdict = buildYeetVerdictForTesting({
-          base: "origin/main",
-          branch: "feature",
-          createdAt: "2026-06-11T00:00:00.000Z",
-          executed: [
-            YeetExecutedStep.make({
-              result: RepoStepRunResult.make({
-                stepId: pushStep.id,
-                commandText: "git push -u origin HEAD",
-                exitCode: 0,
-                output: "",
+        const verdict = buildYeetVerdictForTesting(
+          BuildYeetVerdictInput.make({
+            attemptId: O.some(attemptUuid("550e8400-e29b-41d4-a716-446655440001")),
+            base: "origin/main",
+            branch: "feature",
+            createdAt: "2026-06-11T00:00:00.000Z",
+            startedAt: O.some("2026-06-11T00:00:00.000Z"),
+            endedAt: O.some("2026-06-11T00:00:00.010Z"),
+            elapsedMs: O.some(10),
+            executed: [
+              YeetExecutedStep.make({
+                result: RepoStepRunResult.make({
+                  stepId: pushStep.id,
+                  commandText: "git push -u origin HEAD",
+                  exitCode: 0,
+                  output: "",
+                }),
+                step: pushStep,
               }),
-              step: pushStep,
-            }),
-          ],
-          head: "HEAD",
-          message: "yeet publish succeeded.",
-          mode: "publish",
-          outcome: "success",
-          packetPaths: [],
-          planned: [pushStep],
-          runId: "feature",
-        });
+            ],
+            head: "HEAD",
+            message: "yeet publish succeeded.",
+            mode: "publish",
+            outcome: "success",
+            packetPaths: [],
+            planned: [pushStep],
+            runId: "feature",
+          })
+        );
 
         expect(verdict.pushed).toBe(true);
         const encoded = yield* S.encodeEffect(YeetVerdict)(verdict);
-        const decoded = yield* S.decodeUnknownEffect(YeetVerdict)(encoded);
+        const decoded = yield* S.decodeEffect(YeetVerdict)(encoded);
         expect(decoded.lanes[0]?.status).toBe("passed");
-        expect(decoded.schemaVersion).toBe("yeet-verdict/v1");
+        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
       })
     ));
 
+  it("keeps pushed false when only the publish-phase install preflight succeeded", () => {
+    const preflightStep = RepoPlanStep.make({
+      id: "publish:00-head-install-preflight",
+      label: "publish:head-install-preflight",
+      phase: "publish",
+      command: "bun",
+      args: ["install", "--frozen-lockfile"],
+      cwd: "/repo",
+      scope: "repo",
+      mutability: "readonly",
+      resume: "never",
+    });
+    const verdict = buildYeetVerdictForTesting(
+      BuildYeetVerdictInput.make({
+        base: "origin/main",
+        branch: "feature",
+        createdAt: "2026-06-11T00:00:00.000Z",
+        executed: [
+          YeetExecutedStep.make({
+            result: RepoStepRunResult.make({
+              stepId: preflightStep.id,
+              commandText: "bun install --frozen-lockfile",
+              exitCode: 0,
+              output: "",
+            }),
+            step: preflightStep,
+          }),
+        ],
+        head: "HEAD",
+        message: "yeet publish proof failed.",
+        mode: "publish",
+        outcome: "failure",
+        packetPaths: [],
+        planned: [preflightStep],
+        runId: "feature",
+      })
+    );
+
+    expect(verdict.pushed).toBe(false);
+    expect(O.isNone(verdict.attemptId)).toBe(true);
+  });
+
   it("property: verdict schema round-trips arbitrary verdicts", () => {
-    const VerdictArbitrary = S.toArbitrary(YeetVerdict);
+    const VerdictArbitrary = S.toArbitrary(YeetVerdict)(fc);
     fc.assert(
       fc.property(VerdictArbitrary, (verdict) => {
         const encoded = S.encodeSync(YeetVerdict)(verdict);
-        const decoded = S.decodeUnknownSync(YeetVerdict)(encoded);
-        expect(decoded.schemaVersion).toBe("yeet-verdict/v1");
+        const decoded = S.decodeSync(YeetVerdict)(encoded);
+        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
         expect(decoded.lanes.length).toBe(verdict.lanes.length);
         expect(decoded.outcome).toBe(verdict.outcome);
       }),
@@ -1814,6 +2511,65 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
+  it("restores parked residue when a step in the pre-commit window fails", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+
+          yield* fs.writeFileString(filePath, "residue\n");
+          const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
+          expect(O.isSome(stash)).toBe(true);
+          const parkedStatus = yield* runGitStatus(tmpDir);
+          expect(parkedStatus).toBe("");
+
+          const refusal = yield* Effect.fail(
+            YeetCommandError.make({ exitCode: 1, message: "publish refused the staged index" })
+          ).pipe(restorePublishStashOnFailure({ context: tempContext, stash }), Effect.flip);
+
+          expect(refusal.message).toContain("publish refused the staged index");
+          const restored = yield* fs.readFileString(filePath);
+          expect(restored).toBe("residue\n");
+        })
+      )
+    ));
+
+  it("leaves the stash parked when the guarded pre-commit window succeeds", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+
+          yield* fs.writeFileString(filePath, "residue\n");
+          const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
+          expect(O.isSome(stash)).toBe(true);
+
+          const committed = yield* Effect.succeed("committed").pipe(
+            restorePublishStashOnFailure({ context: tempContext, stash })
+          );
+
+          expect(committed).toBe("committed");
+          const stillParked = yield* runGitStatus(tmpDir);
+          expect(stillParked).toBe("");
+          const stashList = yield* runGitOutputLines(tmpDir, ["stash", "list"]);
+          expect(stashList.join("\n")).toContain("yeet-staged-only/");
+        })
+      )
+    ));
+
+  it("passes a publish that parked nothing straight through", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext }) =>
+        Effect.gen(function* () {
+          const refusal = yield* Effect.fail(
+            YeetCommandError.make({ exitCode: 1, message: "publish refused the staged index" })
+          ).pipe(restorePublishStashOnFailure({ context: tempContext, stash: O.none() }), Effect.flip);
+
+          expect(refusal.message).toContain("publish refused the staged index");
+        })
+      )
+    ));
+
   it("forces dependency-sensitive lanes when forceTurbo is set", () => {
     const forced = buildYeetRunPlanForTesting({
       context,
@@ -1832,19 +2588,604 @@ describe("yeet publish scope helpers", () => {
   it("classifies proof lock disposition by readability and owner liveness", () => {
     const state = O.some(
       YeetProofLockStateForTesting.make({
-        schemaVersion: "yeet-proof-lock/v1",
+        schemaVersion: "yeet-proof-lock/v3",
         branch: "feature",
+        checkoutRoot: "/repo/checkout-a",
         command: "bun run beep quality github-checks pre-push",
         pid: 12345,
         proofTier: "full",
         startedAt: "2026-06-11T00:00:00.000Z",
       })
     );
-    expect(proofLockDispositionForTesting(O.none(), false)).toBe("refuse-unreadable");
-    expect(proofLockDispositionForTesting(O.none(), true)).toBe("refuse-unreadable");
-    expect(proofLockDispositionForTesting(state, true)).toBe("refuse-active");
-    expect(proofLockDispositionForTesting(state, false)).toBe("replace-stale");
+    expect(proofLockDispositionForTesting(O.none(), false, false)).toBe("refuse-unreadable");
+    expect(proofLockDispositionForTesting(O.none(), true, false)).toBe("refuse-unreadable");
+    expect(proofLockDispositionForTesting(state, true, false)).toBe("refuse-active");
+    expect(proofLockDispositionForTesting(state, false, false)).toBe("replace-stale");
+    expect(proofLockDispositionForTesting(O.none(), false, true)).toBe("refuse-legacy");
   });
+
+  it("derives one opaque machine-local proof coordinator per repository identity", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const first = yield* proofCoordinatorLockPath("git@github.com:acme/repo.git");
+        const sibling = yield* proofCoordinatorLockPath("git@github.com:acme/repo.git");
+        const other = yield* proofCoordinatorLockPath("git@github.com:acme/other.git");
+
+        expect(first).toBe(sibling);
+        expect(other).not.toBe(first);
+        expect(first).not.toContain("github.com");
+        expect(first).toMatch(/beep-yeet-proof-locks-[a-f0-9]{12}-uid-[0-9]+\/[a-f0-9]{12}\.lock$/u);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("resolves the coordinator root from XDG_RUNTIME_DIR and falls back to the system temp directory", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const configuredRoot = "/beep-yeet-xdg-runtime-root";
+        const withRuntimeConfig = (env: Record<string, string>) =>
+          pipe(
+            proofCoordinatorLockPath("git@github.com:acme/repo.git"),
+            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
+          );
+
+        const configured = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: configuredRoot });
+        const relative = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: "relative/runtime-root" });
+        const empty = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: "" });
+        const absent = yield* withRuntimeConfig({});
+
+        expect(path.dirname(path.dirname(configured))).toBe(configuredRoot);
+        expect(configured).toMatch(/beep-yeet-proof-locks-[a-f0-9]{12}-uid-[0-9]+\/[a-f0-9]{12}\.lock$/u);
+        expect(relative).toBe(absent);
+        expect(empty).toBe(absent);
+        expect(absent).not.toBe(configured);
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("accepts symlinked ancestors and rejects unsafe proof coordinator directories", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const target = path.join(tmpDir, "target");
+          const symlink = path.join(tmpDir, "symlink");
+          const nestedCoordinator = path.join(symlink, "coordinator");
+          const overPermissive = path.join(tmpDir, "over-permissive");
+
+          yield* fs.makeDirectory(target, { mode: 0o700 });
+          yield* fs.symlink(target, symlink);
+          const symlinkRefusal = yield* validateProofCoordinatorDirectoryForTesting(symlink).pipe(Effect.flip);
+          expect(symlinkRefusal.message).toContain("is a symbolic link");
+
+          yield* fs.makeDirectory(nestedCoordinator, { mode: 0o700 });
+          yield* validateProofCoordinatorDirectoryForTesting(nestedCoordinator);
+
+          const targetInfo = yield* fs.stat(target);
+          const ownerRefusal = yield* validateProofCoordinatorDirectoryForTesting(
+            target,
+            O.some(O.getOrThrow(targetInfo.uid) + 1)
+          ).pipe(Effect.flip);
+          expect(ownerRefusal.message).toContain("expected effective uid");
+
+          yield* fs.makeDirectory(overPermissive, { mode: 0o700 });
+          yield* fs.chmod(overPermissive, 0o755);
+          const modeRefusal = yield* validateProofCoordinatorDirectoryForTesting(overPermissive, O.none()).pipe(
+            Effect.flip
+          );
+          expect(modeRefusal.message).toContain("has mode 755; expected 0700");
+        })
+      )
+    ));
+
+  it("acquires an absent proof coordinator and releases present and missing locks", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+
+          expect(yield* fs.exists(lockPath)).toBe(false);
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+          expect(lease.lockPath).toBe(lockPath);
+          expect(yield* fs.exists(lockPath)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
+          expect((yield* fs.stat(path.dirname(lockPath))).mode & 0o777).toBe(0o700);
+
+          yield* releaseProofLock(lease);
+          expect(yield* fs.exists(lockPath)).toBe(false);
+          yield* releaseProofLock(lease);
+          expect(yield* fs.exists(lockPath)).toBe(false);
+        })
+      )
+    ));
+
+  it("refuses an active proof coordinator and preserves its owner metadata", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const activeText = yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/active-owner",
+              checkoutRoot: "/repo/active-owner",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:00.000Z",
+            })
+          );
+          yield* fs.writeFileString(lockPath, `${activeText}\n`);
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("Another Yeet full proof for this repository is active.");
+          expect(refusal.message).toContain("Owner checkout /repo/active-owner on feature/active-owner");
+          expect(yield* fs.readFileString(lockPath)).toBe(`${activeText}\n`);
+        })
+      )
+    ));
+
+  it("replaces a stale proof coordinator and records the new owner", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          );
+          yield* fs.writeFileString(lockPath, `${staleText}\n`);
+
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+          expect(lease.lockPath).toBe(lockPath);
+          const replacementText = yield* fs.readFileString(lockPath);
+          expect(replacementText).not.toBe(`${staleText}\n`);
+          expect(replacementText).toContain('"schemaVersion":"yeet-proof-lock/v3"');
+          expect(replacementText).toContain(`"pid":${process.pid}`);
+          expect(replacementText).toContain(`"branch":"${tempContext.branch}"`);
+        })
+      )
+    ));
+
+  it("recovers a dead-owner observation claim and reclaims the stale v3 lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const replacementText = "replacement-from-dead-claim-recovery\n";
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, deadClaimText);
+
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, replacementText)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe(replacementText);
+          expect(yield* fs.exists(claimPath)).toBe(false);
+        })
+      )
+    ));
+
+  it("does not let a stale dead-claim observation delete a fresh claim or enter the lock move", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const delayedClaimText = `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.002Z")}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstoneCleaned = yield* Deferred.make<void>();
+          const releaseWinner = yield* Deferred.make<void>();
+          let pauseFirstTombstoneCleanup = true;
+          const racingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            remove: Effect.fn("YeetTest.pauseRecoveredClaimOwner")(function* (target, options) {
+              yield* fs.remove(target, options);
+              if (pauseFirstTombstoneCleanup && Str.Equivalence(target, tombstonePath)) {
+                pauseFirstTombstoneCleanup = false;
+                yield* Deferred.succeed(tombstoneCleaned, undefined);
+                yield* Deferred.await(releaseWinner);
+              }
+            }),
+          });
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, deadClaimText);
+
+          const winner = yield* Effect.forkChild(
+            tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-a\n").pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          );
+          yield* Deferred.await(tombstoneCleaned);
+          const freshClaimText = yield* fs.readFileString(claimPath);
+          expect(freshClaimText).not.toBe(deadClaimText);
+          expect(yield* fs.exists(tombstonePath)).toBe(false);
+
+          expect(
+            yield* tryRecoverObservedProofLockReapClaimForTesting(claimPath, delayedClaimText, deadClaimText).pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          ).toBe(false);
+          expect(yield* fs.readFileString(claimPath)).toBe(freshClaimText);
+          expect(yield* fs.exists(tombstonePath)).toBe(false);
+
+          expect(
+            yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "delayed-winner\n").pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          ).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
+          expect(yield* fs.readFileString(claimPath)).toBe(freshClaimText);
+
+          yield* Deferred.succeed(releaseWinner, undefined);
+          expect(yield* Fiber.join(winner)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe("winner-a\n");
+          expect(yield* fs.exists(claimPath)).toBe(false);
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "winner-b\n")).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe("winner-a\n");
+        })
+      )
+    ));
+
+  it("refuses a live-owner dead-claim tombstone without changing either marker", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const liveTombstoneText = `${yield* encodeProofLockReapClaim(process.pid)}\n`;
+          yield* fs.writeFileString(claimPath, deadClaimText);
+          yield* fs.writeFileString(tombstonePath, liveTombstoneText);
+
+          expect(
+            yield* tryRecoverObservedProofLockReapClaimForTesting(
+              claimPath,
+              `${yield* encodeProofLockReapClaim(process.pid)}\n`,
+              deadClaimText
+            )
+          ).toBe(false);
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(liveTombstoneText);
+        })
+      )
+    ));
+
+  it("fails closed on a dead-owner dead-claim tombstone and names its exact path", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const deadTombstoneText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          yield* fs.writeFileString(claimPath, deadClaimText);
+          yield* fs.writeFileString(tombstonePath, deadTombstoneText);
+
+          const refusal = yield* tryRecoverObservedProofLockReapClaimForTesting(
+            claimPath,
+            `${yield* encodeProofLockReapClaim(process.pid)}\n`,
+            deadClaimText
+          ).pipe(Effect.flip);
+          expect(refusal.message).toContain("dead-owner proof-lock reclamation tombstone");
+          expect(refusal.message).toContain(tombstonePath);
+          expect(refusal.message).toContain("depth-2 tombstones are never auto-reclaimed");
+          expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(deadTombstoneText);
+        })
+      )
+    ));
+
+  it("fails closed on an unreadable dead-claim tombstone and names its exact path", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const unreadableTombstoneText = "not-json\n";
+          yield* fs.writeFileString(claimPath, deadClaimText);
+          yield* fs.writeFileString(tombstonePath, unreadableTombstoneText);
+
+          const refusal = yield* tryRecoverObservedProofLockReapClaimForTesting(
+            claimPath,
+            `${yield* encodeProofLockReapClaim(process.pid)}\n`,
+            deadClaimText
+          ).pipe(Effect.flip);
+          expect(refusal.message).toContain("unreadable proof-lock reclamation tombstone");
+          expect(refusal.message).toContain(tombstonePath);
+          expect(refusal.message).toContain("depth-2 tombstones are never auto-reclaimed");
+          expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(unreadableTombstoneText);
+        })
+      )
+    ));
+
+  it("refuses a live-owner observation claim and leaves the stale v3 lock untouched", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const liveClaimText = `${yield* encodeProofLockReapClaim(process.pid)}\n`;
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, liveClaimText);
+
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "replacement\n")).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
+          expect(yield* fs.readFileString(claimPath)).toBe(liveClaimText);
+        })
+      )
+    ));
+
+  it("fails closed with the manual-remediation path for an unreadable observation claim", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, "not-json\n");
+
+          const refusal = yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, "replacement\n").pipe(
+            Effect.flip
+          );
+          expect(refusal.message).toContain("unreadable proof-lock reclamation claim");
+          expect(refusal.message).toContain(claimPath);
+          expect(refusal.message).toContain("Remove");
+          expect(yield* fs.readFileString(lockPath)).toBe(staleText);
+          expect(yield* fs.readFileString(claimPath)).toBe("not-json\n");
+        })
+      )
+    ));
+
+  it("allows exactly one interleaved dead-claim recoverer to win the tombstone and lease", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
+          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const winnerText = "winner-a\n";
+          const loserText = "winner-b\n";
+          yield* fs.writeFileString(lockPath, staleText);
+          yield* fs.writeFileString(claimPath, deadClaimText);
+
+          const tombstoneCreated = yield* Deferred.make<void>();
+          const releaseWinner = yield* Deferred.make<void>();
+          const racingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            writeFileString: Effect.fn("YeetTest.pauseTombstoneWinner")(function* (target, contents, options) {
+              if (!Str.Equivalence(target, tombstonePath) || options?.flag !== "wx") {
+                return yield* fs.writeFileString(target, contents, options);
+              }
+              yield* fs.writeFileString(target, contents, options);
+              yield* Deferred.succeed(tombstoneCreated, undefined);
+              yield* Deferred.await(releaseWinner);
+            }),
+          });
+
+          const winner = yield* Effect.forkChild(
+            tryReclaimStaleProofLockForTesting(lockPath, staleText, winnerText).pipe(
+              Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+            )
+          );
+          yield* Deferred.await(tombstoneCreated);
+          const tombstoneText = yield* fs.readFileString(tombstonePath);
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+
+          expect(
+            yield* tryRecoverObservedProofLockReapClaimForTesting(
+              claimPath,
+              `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.003Z")}\n`,
+              deadClaimText
+            ).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem))
+          ).toBe(false);
+          expect(yield* fs.readFileString(claimPath)).toBe(deadClaimText);
+          expect(yield* fs.readFileString(tombstonePath)).toBe(tombstoneText);
+
+          yield* Deferred.succeed(releaseWinner, undefined);
+          expect(yield* Fiber.join(winner)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
+          expect(yield* fs.exists(claimPath)).toBe(false);
+          expect(yield* fs.exists(tombstonePath)).toBe(false);
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, loserText)).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
+        })
+      )
+    ));
+
+  it("refuses a dead-owner v2 legacy lock without changing its bytes", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const legacyText = `${yield* encodeJson({
+            schemaVersion: "yeet-proof-lock/v2",
+            branch: "feature/legacy-owner",
+            checkoutRoot: "/repo/legacy-owner",
+            command: "bun run beep yeet verify",
+            pid: 2_147_483_647,
+            proofTier: "full",
+            startedAt: "2026-08-25T00:00:00.000Z",
+          })}\n`;
+          yield* fs.writeFileString(lockPath, legacyText);
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("legacy v2 full-proof coordinator");
+          expect(refusal.message).toContain(lockPath);
+          expect(refusal.message).toContain("will not reclaim it automatically");
+          expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(lockPath)).toBe(legacyText);
+        })
+      )
+    ));
+
+  it("does not let a delayed stale contender reap the winner's fresh lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const winnerText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/winner",
+              checkoutRoot: "/repo/winner",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:00.000Z",
+            })
+          )}\n`;
+          const loserText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/loser",
+              checkoutRoot: "/repo/loser",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:01.000Z",
+            })
+          )}\n`;
+          yield* fs.writeFileString(lockPath, staleText);
+
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, winnerText)).toBe(true);
+          expect(yield* tryReclaimStaleProofLockForTesting(lockPath, staleText, loserText)).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toBe(winnerText);
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+          expect(refusal.message).toContain("Owner checkout /repo/winner on feature/winner");
+          const coordinatorEntries = yield* fs.readDirectory(path.dirname(lockPath));
+          expect(A.filter(coordinatorEntries, Str.includes(".reap-"))).toEqual([]);
+        })
+      )
+    ));
+
+  it("does not release a foreign lock generation", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+          const foreignText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/foreign-owner",
+              checkoutRoot: "/repo/foreign-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-26T00:00:02.000Z",
+            })
+          )}\n`;
+          yield* fs.writeFileString(lockPath, foreignText);
+
+          yield* releaseProofLock(lease);
+
+          expect(yield* fs.readFileString(lockPath)).toBe(foreignText);
+        })
+      )
+    ));
+
+  it("refuses a corrupt proof coordinator without deleting it", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString(lockPath, "not-json\n");
+
+          const refusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("Another Yeet full proof for this repository is active.");
+          expect(refusal.message).not.toContain("Owner checkout");
+          expect(yield* fs.readFileString(lockPath)).toBe("not-json\n");
+        })
+      )
+    ));
 
   it("plans closeout write actions only for known thread ids with a paired body", () => {
     const known = ["PRRT_a", "PRRT_b"];
@@ -1900,7 +3241,7 @@ describe("yeet publish scope helpers", () => {
   it("decodes closeout reports without writeActions for backwards compatibility", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const decoded = yield* S.decodeUnknownEffect(PrCloseoutReport)({
+        const decoded = yield* S.decodeEffect(PrCloseoutReport)({
           actionableReviewThreadCount: 0,
           botCommentCount: 0,
           greptile: {},

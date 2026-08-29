@@ -9,6 +9,7 @@ import { $M365McpId } from "@beep/identity/packages";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { M365ToolkitHandlersLive } from "./M365Handlers.ts";
 import { M365Toolkit } from "./M365Tools.ts";
@@ -20,7 +21,8 @@ const $I = $M365McpId.create("Server");
 /**
  * Configuration for the Microsoft 365 MCP server.
  *
- * @example
+ * **Example** (Creating server configuration)
+ *
  * ```ts
  * import { M365McpServerConfig } from "@beep/m365-mcp"
  *
@@ -49,7 +51,8 @@ export class M365McpServerConfig extends S.Class<M365McpServerConfig>($I`M365Mcp
 /**
  * Builds the stdio MCP server layer.
  *
- * @example
+ * **Example** (Building stdio server layer)
+ *
  * ```ts
  * import { M365McpServerConfig, makeServerLayer } from "@beep/m365-mcp"
  * import { Layer } from "effect"
@@ -69,6 +72,7 @@ export const makeServerLayer = (config: M365McpServerConfig): Layer.Layer<never,
       McpServer.layerStdio({
         name: config.name,
         version: config.version,
+        protocols: [McpProtocol.v2025_06_18],
       })
     ),
     Layer.orDie

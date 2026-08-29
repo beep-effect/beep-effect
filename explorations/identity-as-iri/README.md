@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,13 +19,10 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-`identity-iri-core` is COMPLETE (merged
-[PR #289](https://github.com/beep-effect/beep-effect/pull/289); authority
-resolved `https://ns.beep.sh/`). Next: graduate
-[`identity-iri-fold`](./MAP.md) (its dependency is satisfied) — repopulate
-`@beep/ontology` with the fold + projections and run the §8 FOLIO
-migrations. Then `identity-iri-fibered`. Packet stays `active` until all
-three graduate.
+None. [`identity-iri-fibered`](../../goals/identity-iri-fibered/README.md)
+now carries the full ratified MAP row and records the semantic-web PR2+PR3
+cleanup blockers as text because they have no goal packets. A future candidate
+reopens this exploration at `decompose`.
 
 ## Read This First
 
@@ -40,6 +37,24 @@ three graduate.
 
 ## Trail
 
+- 2026-08-13 (ceremony): scaffolded `identity-iri-fibered` with the full MAP
+  scope, discrete-case/post-move/test-dev constraints, and textual PR2+PR3
+  blockedBy notes; cross-linked manifests and graduated the exploration.
+
+- 2026-08-13: recorded that the fold merged via PR #536 and the fibered
+  trigger fired; fibered ratified as one goal blockedBy the semantic-web
+  PR2+PR3 cleanups; scaffold queued for the ceremony PR.
+- 2026-07-31: pre-execution grill closed three branches ahead of the fold
+  build — fold packaging superseded to a split surface (`$I.key`/`$I.class`
+  composer methods in `@beep/identity`; `Ontology.fold` + projections in
+  `@beep/ontology`), SKOS collapsed into the fact channel (classification
+  marker + integrity gate), inline `is:` sugar closed as not-planned; all in
+  [`DECISIONS.md`](./DECISIONS.md). Donor provenance pinned: the effect-only
+  fold prototype lives at commit `61160e1baf` only (absent from working
+  trees). Duplicated trailing rationale block removed from `DECISIONS.md`.
+- 2026-07-14: sibling-closure review graduated `identity-iri-fold`; recorded
+  `identity-iri-core` as a satisfied completed-retained dependency and kept
+  `identity-iri-fibered` on HOLD behind the fold.
 - 2026-07-02 (merged): `goals/identity-iri-core` COMPLETE — implementation
   landed via [PR #289](https://github.com/beep-effect/beep-effect/pull/289)
   (shape-stable harness, vocab/CURIE/PN_LOCAL modules, bound composer with

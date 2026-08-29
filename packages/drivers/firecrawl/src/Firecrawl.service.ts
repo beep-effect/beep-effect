@@ -30,7 +30,8 @@ type FirecrawlSdkWatcherListener = (payload: unknown) => void;
 /**
  * Minimal watcher contract consumed by {@link Firecrawl.makeLayerFromClient}.
  *
- * @example
+ * **Example** (Stub watcher implementation)
+ *
  * ```ts
  * import type { FirecrawlSdkWatcher } from "@beep/firecrawl"
  *
@@ -57,7 +58,8 @@ export type FirecrawlSdkWatcher = {
 /**
  * Minimal Firecrawl SDK client contract used by the driver service.
  *
- * @example
+ * **Example** (Keyof client method names)
+ *
  * ```ts
  * import type { FirecrawlSdkClient } from "@beep/firecrawl"
  *
@@ -142,7 +144,8 @@ export type FirecrawlSdkClient = {
 /**
  * Public Firecrawl service shape.
  *
- * @example
+ * **Example** (Keyof service method names)
+ *
  * ```ts
  * import type { FirecrawlShape } from "@beep/firecrawl"
  *
@@ -312,7 +315,7 @@ const runSdkCall = <Payload, Success>(
   payload: Payload,
   invoke: (payload: Payload) => Promise<unknown>
 ): Effect.Effect<Success, FirecrawlError> =>
-  decodeWith(method, payloadSchema, payload, FirecrawlCodecErrorReason.Enum["request encoding"]).pipe(
+  decodeWith(method, S.toType(payloadSchema), payload, FirecrawlCodecErrorReason.Enum["request encoding"]).pipe(
     Effect.flatMap((decoded) =>
       Effect.tryPromise({
         catch: (cause) => FirecrawlError.fromUnknown(method, cause),
@@ -712,7 +715,7 @@ const makeService = (client: FirecrawlSdkClient): FirecrawlShape => ({
     ),
   watcher: (payload) =>
     Stream.unwrap(
-      decodeWith("watcher", M.FirecrawlWatcherPayload, payload, "request encoding").pipe(
+      decodeWith("watcher", S.toType(M.FirecrawlWatcherPayload), payload, "request encoding").pipe(
         Effect.flatMap((decoded) =>
           Effect.try({
             catch: (cause) => FirecrawlError.fromUnknown("watcher", cause),
@@ -733,7 +736,8 @@ const makeService = (client: FirecrawlSdkClient): FirecrawlShape => ({
 /**
  * Effect service for the Firecrawl v2 SDK.
  *
- * @example
+ * **Example** (Make layer from config)
+ *
  * ```ts
  * import { Firecrawl, FirecrawlConfigInput } from "@beep/firecrawl"
  * import { Redacted } from "effect"
@@ -754,7 +758,8 @@ export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()($I`F
   /**
    * Build a Firecrawl layer from explicit runtime configuration.
    *
-   * @example
+   * **Example** (Build layer from config)
+   *
    * ```ts
    * import { Firecrawl, FirecrawlConfigInput } from "@beep/firecrawl"
    * import { Redacted } from "effect"
@@ -783,7 +788,8 @@ export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()($I`F
   /**
    * Build a Firecrawl layer from a test or alternate SDK client.
    *
-   * @example
+   * **Example** (Layer from custom client)
+   *
    * ```ts
    * import { Firecrawl } from "@beep/firecrawl"
    * import type { FirecrawlSdkClient } from "@beep/firecrawl"
@@ -801,7 +807,8 @@ export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()($I`F
   /**
    * Live Firecrawl layer backed by Effect Config values.
    *
-   * @example
+   * **Example** (Reference live config layer)
+   *
    * ```ts
    * import { Firecrawl } from "@beep/firecrawl"
    *

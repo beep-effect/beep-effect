@@ -1,10 +1,10 @@
-# GOAL: Execute Unified AI Toolchain V2
+# GOAL: Unified AI Toolchain retained outcome
 
 Repo: `beep-effect` (`kriegcloud/beep-effect` on GitHub).
 
-Outcome: make the V1-complete AI-sync schema package production-operable by
-shipping V2 root CLI commands, broad dogfooding, schema-first reports, and
-scheduled drift refresh PR automation.
+Outcome: retain the shipped V1 AI-sync schema truth layer. V2/V3 are recorded
+won't-do-until a real agent-config drift incident; this launcher does not
+authorize their implementation.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -26,28 +26,16 @@ Scope:
   additional-agent expansion, secret resolution, plugin installation, runtime
   agent control, and undocumented native-shape invention.
 
-Workflow:
-
-1. Inspect packet docs, current `@beep/ai-sync` APIs, repo CLI command patterns,
-   and workflow precedents.
-2. Implement V2 phases from `PLAN.md` in order.
-3. Preserve unrelated worktree changes.
-4. Keep `@beep/ai-sync` as the library and `beep ai-sync` as the operator UX.
-5. Keep normal checks offline; reserve network access for strict drift and
-   scheduled/manual refresh.
-6. Update packet evidence/status when implementation changes readiness.
+Workflow: preserve the V1 evidence and the known recorded drift for
+`claude-code-settings`, `rulesync-config`, and `rulesync-mcp`. Reopen V2 only
+after a real incident and an explicit status change.
 
 Acceptance:
 
-- [ ] `beep ai-sync audit`, `check`, `drift`, and `refresh-pr` exist.
-- [ ] Normal checks validate `.codex/config.toml`, `.mcp.json`,
-      `.claude/settings.json`, `AGENTS.md`, and `CLAUDE.md`.
-- [ ] JSON reports decode through `@beep/ai-sync` schemas.
-- [ ] Rulesync config/MCP audit/import evidence is tested; ruler stays
-      research-only.
-- [ ] Weekly/manual drift refresh workflow opens or updates an automation PR
-      only when generated artifacts change.
-- [ ] V2 closeout evidence is archived under `history/outputs/`.
+- [x] V1 native schemas, source pins, transforms, drift checks, and
+      `.codex/config.toml` dogfood remain linked as the retained outcome.
+- [x] All ten remaining V2/V3 phases carry the real-incident reopening trigger.
+- [x] Known recorded drift remains documented without being resolved or removed.
 
 Verification:
 

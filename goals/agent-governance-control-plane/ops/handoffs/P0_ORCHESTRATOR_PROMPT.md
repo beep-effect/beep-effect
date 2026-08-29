@@ -1,1 +1,0 @@
-Read `handoffs/HANDOFF_P0.md` and the repo-law sources named there. Formalize the governance foundation for this package and write or refine `outputs/p0-foundation-and-law-canon.md`. Produce a source-of-truth order, law taxonomy, exception policy, and law coverage matrix. Reject soft wording and express laws as hard requirements.

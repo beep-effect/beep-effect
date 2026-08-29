@@ -4,6 +4,7 @@ import {
   fcRuns,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  makePgliteTestcontainerResource,
   makeSqlTestLayer,
   NodeSqliteTestDriver,
   PgExternalConnectionUri,
@@ -18,7 +19,7 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Config, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
+import { Cause, Config, ConfigProvider, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -44,7 +45,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
     readonly numRuns?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownEffect(schema);
   const encode = S.encodeUnknownEffect(schema);
   const equivalent = S.toEquivalence(schema);
@@ -98,6 +99,41 @@ const doesTableExist = Effect.fn("SqlTest.doesTableExist")(function* (tableName:
 });
 
 describe("SqlTest", () => {
+  it.effect(
+    "constructs runtime driver layers and rejects invalid resource configuration before Docker access",
+    Effect.fnUntraced(function* () {
+      expect(Layer.isLayer(BunSqliteTestDriver.makeLayer(undefined))).toBe(true);
+      expect(Layer.isLayer(NodeSqliteTestDriver.makeLayer(undefined))).toBe(true);
+
+      const exit = yield* Effect.exit(Effect.scoped(makePgliteTestcontainerResource({ internalPort: 0 })));
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        const failure = Cause.squash(exit.cause);
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+      }
+    })
+  );
+
+  nodeRuntimeEffectIt(
+    "keeps explicit in-process mode authoritative over an external database environment value",
+    Effect.fnUntraced(function* () {
+      const layer = makePgliteSqlTestLayer({ mode: "in-process" }).pipe(
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({
+              BEEP_TEST_DATABASE_URL: "postgres://user:pass@127.0.0.1:1/ignored",
+            })
+          )
+        )
+      );
+      const info = yield* Effect.scoped(
+        Layer.build(layer).pipe(Effect.map((services) => Context.get(services, TestDatabaseInfo)))
+      );
+
+      expect(info.driver).toBe("pglite-inprocess");
+    })
+  );
+
   localSqliteIt(
     "creates a fresh SQLite database for each locally provided layer",
     Effect.fnUntraced(function* () {
@@ -413,7 +449,7 @@ describe("SqlTest", () => {
     const encode = S.encodeUnknownEffect(SqlTestHarnessError);
 
     fc.assert(
-      fc.property(S.toArbitrary(SqlTestHarnessErrorEncoded), (encoded) => {
+      fc.property(S.toArbitrary(SqlTestHarnessErrorEncoded)(fc), (encoded) => {
         const decoded = Effect.runSync(decode(encoded));
 
         expect(SqlTestHarnessError.is(decoded)).toBe(true);
@@ -430,6 +466,8 @@ describe("SqlTest", () => {
     expect(emptyGate.shouldUseTestcontainers).toBe(false);
     expect(emptyGate.makePgliteLayer()).toBeDefined();
     expect(emptyGate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
+    expect(emptyGate.makePgliteLayer(undefined, { extensions: {} })).toBeDefined();
+    expect(emptyGate.makePgliteLayer({ migrate: Effect.void }, { extensions: {} })).toBeDefined();
 
     const externalGate = makePgliteIntegrationGate({
       databaseDriver: undefined,

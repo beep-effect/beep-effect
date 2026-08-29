@@ -7,21 +7,22 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { StatutesAtLargeComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { StatutesAtLargeComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/StatutesAtLargeCitation/StatutesAtLargeCitation.model");
 
 /**
  * Citation to the Statutes at Large (session law compilation).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `statutesAtLarge`
  * discriminant tag plus the volume/page locators, pincite range metadata, and
  * optional component spans specific to Statutes at Large references.
  *
- * **Example**
+ * **Example** (Make Statutes at Large citation)
  *
- * @example
  * ```ts
  * import { StatutesAtLargeCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -73,9 +74,7 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
         description: "End page for range pincites (3755-58 -> 3758) (#639).",
       })
     ),
-    pinciteIsRange: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteIsRange: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: "True when the pincite is a range (3755-58) (#639).",
       })
@@ -103,7 +102,8 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
 /**
  * Companion namespace for `StatutesAtLargeCitation`.
  *
- * @example
+ * **Example** (Encoded type alias)
+ *
  * ```ts
  * import type { StatutesAtLargeCitation } from "@beep/law-practice-domain"
  *
@@ -117,9 +117,8 @@ export declare namespace StatutesAtLargeCitation {
   /**
    * Wire-encoded representation of a decoded {@link StatutesAtLargeCitation}.
    *
-   * **Example**
+   * **Example** (Wire Encoded type alias)
    *
-   * @example
    * ```ts
    * import type { StatutesAtLargeCitation } from "@beep/law-practice-domain"
    *

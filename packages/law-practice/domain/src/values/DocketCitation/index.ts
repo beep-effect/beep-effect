@@ -9,9 +9,8 @@
 /**
  * DocketCitation model exports.
  *
- * **Example**
+ * **Example** (Import DocketCitation)
  *
- * @example
  * ```ts
  * import { DocketCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./DocketCitation.model.js";
+export * from "./DocketCitation.model.ts";

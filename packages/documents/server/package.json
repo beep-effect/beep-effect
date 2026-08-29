@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -29,7 +29,8 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "test:integration:parallel": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -80,6 +81,7 @@
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"
   }

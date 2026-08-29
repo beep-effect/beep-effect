@@ -1,177 +1,199 @@
 # Secure Document Download Proxy — Decisions
 
-<!--
-ALIGN seed (stage 2, pre-draft). Each entry is a load-bearing branch-closing
-fork posed with a RECOMMENDED answer and grounded rationale, but left OPEN.
-The user resolves these via `/grill-with-docs secure-document-download-proxy`,
-one at a time, recommended-answer-first; resolutions then rewrite each entry to
-the resolved-log form (Question / Answer / Rationale) and clear the matching
-manifest `openQuestions` entry. Do NOT self-resolve here.
-Grounding: RESEARCH.md (external landscape + in-repo inventory, Codex gate-1
-folded 2026-06-29) and CAPTURE.md (gold-intake seed, 2 convergent nuggets).
--->
+All eight alignment questions and the candidate fan-out were ratified in one
+round on 2026-07-14. `LOCKED` entries bind the graduated goal. `DEFERRED`
+entries are explicit implementation gates, not open alignment questions.
 
-## Q1: Scope boundary — stand-alone capability packet vs fold into an existing driver/goal
+## 2026-07-14 — Q1 Scope boundary — LOCKED
 
-**Recommended:** Stand alone. Ship this as its own thin, provider-agnostic
-secure-download capability; do **not** bury it inside `@beep/uspto`, attach it to
-`goals/m365-driver`, or graft it onto `goals/file-processing-capability`.
+**Question:** Is this a stand-alone capability or part of a driver/product goal?
 
-**Rationale:** RESEARCH "Routing decision (provisional)" makes the case directly:
-`goals/m365-driver/SPEC.md` is a read-only Graph driver that explicitly defers
-delivery to the `m365-document-ingest` follow-on; `goals/file-processing-capability/SPEC.md`
-is an extraction substrate with zero download/serve scope; folding the gate into
-`@beep/uspto` would couple a cross-cutting delivery concern to one origin and
-violate the driver-boundary rule (a driver wraps an external API, it does not own
-a desktop serve route). The two convergent porting sources (edge-gated route +
-`SecureLinkCache`) describe one self-contained capability, and `apps/professional-desktop`
-is the wiring host, not the home for the reusable mint+gate logic. This is the
-most structurally consequential fork — it frames every question below.
+**Answer:** Build a stand-alone, narrow secure-document-delivery capability with
+attached consumer integrations. It owns the provider-neutral document-link
+lifecycle, encrypted locator mapping, serving-key custody, and secure serve
+contract. USPTO, Box, docketing, documents, and time-tracking consumers retain
+authorization, provenance, and product workflow ownership.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** Delivery security is shared, while the authority to expose a
+document is product-specific. A narrow capability preserves that line without
+turning delivery into a generic crypto or proxy platform.
 
-## Q2: Package placement — where the reusable mint+gate+seal logic lives
+**Rejected options:** Burying delivery in `@beep/uspto`; folding it into a
+documents or docketing product slice; a generic crypto, signed-URL, or proxy
+platform.
 
-**Recommended:** A new dedicated package (working name `@beep/secure-links` /
-`@beep/document-proxy`) holding the provider-agnostic mint/lookup/revoke +
-seal/unseal + branded route-param schema, with only the serve route and the
-PGlite store binding composed in `apps/professional-desktop`. Recommend the
-`packages/foundation/capability` tier (sibling to `@beep/observability`) because
-this is a cross-cutting delivery capability, not an external-API driver. Confirm
-the exact tier (capability vs a drivers/delivery tier) in grill.
+## 2026-07-14 — Q2 Placement and promotion — LOCKED
 
-**Rationale:** RESEARCH inventory shows the idiomatic HTTP shapes
-(`HttpApiEndpoint`, `HttpServerResponse`) and server precedents already live under
-`packages/foundation/capability/observability`, and the gating pattern is
-explicitly "provider-agnostic." The Constraints section states
-`apps/professional-desktop` is the wiring host but "not the home for the reusable
-mint+gate logic." Repo-native modeling bricks exist for the package body:
-`EntityTable.models.ts`, `EntityId.ts`, the `$I` identity composer, and the branded
-`String.UUID` / `Model.UuidV4*` helpers. Open sub-fork: drivers tier vs
-foundation/capability tier vs a new delivery tier.
+**Question:** Which package and app boundaries own the reusable and runtime
+pieces?
 
-**Status:** open (for /grill-with-docs)
+**Answer:** `packages/foundation/capability/secure-document-delivery` owns the
+document-specific schemas, typed errors, mint/resolve/revoke contracts,
+versioned encrypted-mapping envelope, and persistence/custody ports. It is
+**INCUBATED** until two real importers exist; that two-importer test is the
+promotion gate. `apps/professional-desktop/server` owns HTTP routing, session
+authorization, PGlite binding, and OS-custody binding. `law-practice/server` and
+`documents/server` adapt authorized product references. Provider fetch remains
+in drivers such as `@beep/uspto` and `@beep/box`.
 
-## Q3: First slice — which origin to gate first
+**Rationale:** The split keeps portable document-delivery semantics independent
+from the desktop runtime while refusing to promote an abstraction on one
+consumer's speculation.
 
-**Recommended:** USPTO File-Wrapper PDFs, gated over the existing
-`@beep/uspto` `downloadDocument` verb (`Uspto.service.ts:47/281`), preserving its
-fail-closed `assertAllowedRemoteUrl` SSRF guard; persist provider document
-*references* or provider-owned fetch closures, never raw origin URLs.
+**Rejected options:** `@beep/secure-links` (rejected as overbroad),
+`@beep/document-proxy`, a driver-tier home, an app-only implementation, or
+promotion before two real importers.
 
-**Rationale:** RESEARCH "Origin-fetch verb already exists": `downloadDocument`
-returns `Effect<Uint8Array, UsptoError>` with the API key already held server-side
-as `O.Option<Redacted.Redacted<string>>` and injected via header, and the document
-ref already carries an optional `downloadUrl`. The capture wave is P2, explicitly
-"depends on the uspto driver depth + desktop sidecar." The SSRF guard
-(`Uspto.service.ts:285` → `SafeRemoteHost.ts:366-415`, also reused by `@beep/box`)
-is fail-closed and same-host; a generic proxy that stored raw URLs would let a
-later fetch path dereference them unguarded, regressing the credential-leak
-boundary. Gating one concrete origin first keeps the wedge small while the
-gate stays provider-agnostic for the next origin.
+## 2026-07-14 — Q3 First slice — LOCKED
 
-**Status:** open (for /grill-with-docs)
+**Question:** Which origin and user workflow prove the first vertical slice?
 
-## Q4: Token model — opaque reference vs stateless sealed token
+**Answer:** Serve one USPTO/ODP File-Wrapper office-action PDF from the
+approval spine in `goals/law-docketing-patent-spine`. Start with a deterministic
+fixture. Live driver proof is allowed only after the ingestion-security
+guarded-fetch DNS-rebinding harness passes. The capability receives an
+authorized provider reference; it never persists or generically dereferences a
+raw origin URL.
 
-**Recommended:** Hybrid opaque-reference. Put a v4 UUID basename in the URL
-(`…/<uuid>.pdf`) backed by an encrypted store row holding the real ids +
-`expires_at` + `revoked_at`. Enforce expiry at *both* the store query
-(`expires_at > now AND revoked_at IS NULL`) and the edge 404.
+**Rationale:** The docketing approval spine supplies a real authorization edge,
+and `@beep/uspto` already owns provider fetch and same-origin credential rules.
+Fixture-first proof avoids making network access or credentials part of routine
+acceptance.
 
-**Rationale:** RESEARCH "Opaque-id vs sealed-token, the core tradeoff": an opaque
-reference token is compact and non-revealing and supports *immediate* revocation,
-at the cost of a stateful lookup per request; a stateless sealed token is
-self-contained but "cannot be revoked before expiry without reintroducing state."
-The locked threat model needs both a 7-day default TTL and revocation, so the
-hybrid both porting sources already use is the fit. W3C TAG capability-URL hygiene
-reinforces: unguessable RNG id, no business/PII in the URL, existence opacity via
-404-on-expired.
+**Rejected options:** Box first; a free-standing URL proxy; accepting or storing
+raw origin URLs; live-fetch acceptance before the rebinding harness.
 
-**Status:** open (for /grill-with-docs)
+## 2026-07-14 — Q4 Token model and TTL — LOCKED
 
-## Q5: Token cryptography (build-vs-buy) — reuse the in-repo AES-256-GCM seal vs vendor a token library
+**Question:** What does the URL carry, and where are expiry and revocation
+decided?
 
-**Recommended:** Build in-repo. Reuse the WebCrypto `AES-256-GCM` + `Redacted`
-seal/unseal precedent in `packages/tooling/library/ai-metrics/src/archive.ts`
-(`importKey` raw:160, `encrypt`:287, `decrypt`:380, 12-byte random nonce,
-`AiMetricsRawArchiveKey` as `S.RedactedFromValue`:103-118). Encrypt the
-id-mapping payload, not the PDF bytes. Add **no** new crypto dependency.
+**Answer:** Mint a stateful opaque CSPRNG reference, preferably a dedicated
+128–256-bit token. UUIDv4 is acceptable only with a strict-v4 route shape. The
+URL contains no provider, matter, document, user, or expiry data. An encrypted,
+revocable mapping row is authoritative; store predicates enforce expiry and
+revocation. TTL is consumer-supplied and purpose-bound under a packet-owned
+maximum.
 
-**Rationale:** RESEARCH "Token format landscape": there is no maintained Effect/TS
-Fernet; the canonical Branca (`branca@0.5.0`, 2022) and PASETO (`paseto@3.1.4`,
-2023) libs are stale; `iron-webcrypto`, `@noble/ciphers`, and `jose` are all MIT
-but all net-new deps (none currently present). `archive.ts` is the exact in-repo
-"encrypt-a-small-payload-with-a-server-held-`Redacted`-key" pattern, and the
-synthesis says outright "the Fernet analog should follow this, not a new
-dependency." If grill surfaces an AEAD/algorithm-agility requirement that the
-AES-GCM precedent cannot meet, the fallback ranking is `@noble/ciphers`
-(`xchacha20poly1305`, 0-dep, audited) over the stale token packages.
+**Rationale:** A stateful reference gives immediate revocation, existence
+opacity, and non-revealing URLs. Purpose-bound TTL avoids silently importing an
+upstream policy.
 
-**Status:** open (for /grill-with-docs)
+**Rejected options:** Stateless sealed tokens; business identifiers or expiry
+in the URL; UUID format as authorization; client-enforced expiry; inheriting the
+upstream seven-day default. **The seven-day default is not inherited.**
 
-## Q6: Serve boundary — existing sidecar HTTP route vs Tauri custom protocol vs IPC blob
+## 2026-07-14 — Q5 Document-link cryptography — LOCKED
 
-**Recommended:** Extend the existing Bun sidecar `HttpRouter` with a
-`GET /resources/:file` handler on the live loopback `:3939` listener
-(`server/main.ts:51-68`), which already honors standard RFC 9111 `Cache-Control`
-and is CSP-/dev-proxy-wired — but FIRST tighten the sidecar's
-`allowedOrigins: ["*"]` CORS (`main.ts:55-60`) before bearer-PDF capability URLs
-ride that listener. Reject `asset-protocol` + `convertFileSrc` (no TTL/opaque
-indirection, no per-response headers) and `tauri-plugin-localhost` (Tauri's own
-docs warn of "considerable security risks"). Defer the Tauri custom URI-scheme
-protocol unless the per-platform webview spike forces it.
+**Question:** How is the mapping sealed without creating a shared crypto
+platform?
 
-**Rationale:** RESEARCH "Tauri serve-boundary options" (Codex gate-1 correction):
-the desktop already has an HTTP edge — what is missing is the document route, not
-a listener. The HTTP path honors `private, no-store` natively, whereas whether each
-platform webview (WKWebView / WebView2 / WebKitGTK) honors `no-store`/BFCache
-suppression for *custom-scheme* responses is flagged UNVERIFIED against a primary
-per-platform source — an open spike that argues against custom-protocol as the
-first cut. This is the highest-leverage open fork: it sets the security-semantic
-backbone (header honoring + existence opacity) and carries the only unresolved
-spike. The CORS tightening is a hard prerequisite, not optional.
+**Answer:** Use a document-link-specific, versioned AES-256-GCM envelope through
+WebCrypto, reusing technique from
+`packages/tooling/library/ai-metrics/src/archive.ts` without sharing its codec.
+Use a fresh 96-bit nonce, algorithm and envelope version, key id, and AAD binding
+the token id or hash, workspace, origin-adapter kind, expiry, and version.
+Version, AAD, or authentication mismatch is an explicit decode failure. Encrypt
+mapping payloads only, never PDF bytes.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** The local precedent avoids a new dependency; an explicit envelope
+and AAD prevent substitution across tokens, workspaces, adapters, expiries, and
+versions. Document-link crypto remains fenced from the credential vault owned by
+the ingestion-security lane.
 
-## Q7: Key custody / at-rest wrapping (vendor/auth) — reuse M365 msal-node-extensions vs adopt tauri-plugin-keyring
+**Rejected options:** Fernet, Branca, PASETO, JWE, or a new crypto dependency;
+sharing a codec with the credential vault; encrypting PDF bytes in the envelope;
+unversioned ciphertext or unauthenticated context.
 
-**Recommended:** Reuse the M365 `@azure/msal-node-extensions` OS-backed
-persistence precedent (`M365.auth.ts:124-146` `buildCachePlugin`,
-`DataProtectionScope.CurrentUser`, `usePlaintextFileOnLinux: false`; installed
-`5.3.0`, MIT) on the Bun-sidecar side for at-rest master-key wrapping, and hold
-the active key in-process as Effect `Redacted`. Do **not** adopt deprecated Tauri
-Stronghold; defer `tauri-plugin-keyring` unless a Rust-side requirement emerges.
+## 2026-07-14 — Q6 Serve boundary — LOCKED
 
-**Rationale:** RESEARCH "OS-backed secret-persistence precedent" (Codex gate-1):
-`@beep/m365` has *executable* DPAPI/Keychain/libsecret persistence already
-installed (MIT) — lower friction than `tauri-plugin-keyring`, which is absent
-(confirmed via `rg`) and would add a new Rust/Tauri dependency plus per-platform
-and transitive `keyring`-crate surface to vet. Tauri Stronghold is deprecated and
-slated for removal in v3. `Redacted` is the established repo-wide in-process guard
-(`@beep/uspto`, `@beep/sanity`, ai-metrics) so the key never lands in logs, traces,
-or the URL. Caveat to confirm in grill: the Tauri-vs-Electron/Next runtime
-assumption behind the OS-keyring framing is itself flagged UNVERIFIED.
+**Question:** Which desktop boundary serves the authorized PDF?
 
-**Status:** open (for /grill-with-docs)
+**Answer:** Extend the existing authenticated Bun sidecar HTTP edge under
+`apps/professional-desktop/server`. Keep the document route separate from the
+permissive RPC CORS surface. Require loopback binding, Host validation, and
+session/audience authorization in addition to the opaque token. Return an
+identical 404 for missing, expired, revoked, unauthorized, and malformed
+requests. Set `Cache-Control: private, no-store`, `Referrer-Policy: no-referrer`,
+and `X-Content-Type-Options: nosniff`; declare PDF content type and implement
+bounded streaming, cancellation, and an explicit Range/HEAD policy.
 
-## Q8: Backing store — extend the desktop PGlite/Drizzle runtime vs bespoke store
+**Rationale:** The live sidecar already provides loopback HTTP and per-launch
+bearer authentication. A distinct route can preserve standard HTTP security
+semantics without granting document URLs the RPC route's broad CORS behavior.
+The contract must be clean-room because the `patents-mcp-server` route source
+has an unverified license.
 
-**Recommended:** Add a Drizzle link-store table (`id → enc_payload, expires_at,
-revoked_at`) to the desktop sidecar's existing `makeBundledPgliteLayer` +
-`PgliteDrizzleLive` runtime (`Pglite.ts:252-279`) and its bundled boot-time
-migration set (`Migrations.ts`), using the `EntityTable` / `EntityId` / `$I`
-precedents. Do **not** create a bespoke SQLite file, and do **not** target the
-root catalog's `@electric-sql/pglite` `0.5.3`.
+**Rejected options:** Tauri asset protocol; `tauri-plugin-localhost`; IPC blobs;
+reusing permissive RPC CORS; token-only authorization. A custom protocol is a
+fallback only if packaged-webview proof invalidates the HTTP route.
 
-**Rationale:** RESEARCH "Backing link store" (Codex gate-1 correction): the
-professional-desktop sidecar pins `@electric-sql/pglite` `0.4.6` (aliasing
-`0.5.3` as legacy) and already owns a file-backed runtime over the `@beep/pglite`
-driver with migrations applied on boot. The link store should ride that existing
-runtime, or a separate store chosen with an explicit migration/storage-compat
-rationale — not a bespoke SQLite file and not a fresh store against root `0.5.3`,
-either of which would fork the desktop's persistence story. Keeping the store in
-the sidecar process (not renderer IDB/Dexie) is also required by the
-"key/server-side, local-first" boundary.
+## 2026-07-14 — Q7 Serving-key custody — LOCKED
 
-**Status:** open (for /grill-with-docs)
+**Question:** Who owns serving-key custody and what is the first adapter?
+
+**Answer:** Define a narrow `ServingKeyCustody` port. The first adapter uses
+`@azure/msal-node-extensions` generic `IPersistence` (MIT, already installed,
+with `keytar` transitive) only if packaged Windows/macOS/Linux proof passes,
+including locked or unavailable keyring, rotation, delete, and recovery-failure
+paths. Persist a versioned wrapped keyset; hold active keys only as `Redacted`;
+persist key ids beside ciphertext rows. This packet owns serving-key rotation,
+revocation, recovery, and deletion.
+
+**Rationale:** The installed library is a lower-friction cross-platform custody
+candidate, but the capability must depend on its own port rather than M365 or a
+particular credential product.
+
+**Rejected options:** Importing `@beep/m365`; Tauri Stronghold; a new keyring
+dependency before the packaged proof; plaintext fallback; credential resolver
+or 1Password recovery without a future explicit recovery policy.
+
+## 2026-07-14 — Q8 Backing store — LOCKED
+
+**Question:** Where does the encrypted mapping persist?
+
+**Answer:** Extend the professional-desktop PGlite/Drizzle runtime and its boot
+migrations. The live catalog/runtime is `@electric-sql/pglite` **0.5.4**; the
+earlier packet statement that desktop pins 0.4.6 is stale. Do not create a
+bespoke store.
+
+**Rationale:** The sidecar already owns file-backed PGlite, Drizzle composition,
+and migration-on-boot. Reusing it gives one lifecycle and recovery surface.
+
+**Rejected options:** Bespoke SQLite or filesystem storage; a second PGlite
+database; targeting the stale 0.4.6 assumption.
+
+## Deferred implementation gates
+
+### 2026-07-14 — Threat model, tamper, rotation, and known-answer spike — DEFERRED
+
+Before the envelope contract is committed, record the threat model and prove
+known-answer decode, AAD/version/auth mismatch failures, tamper behavior, and
+key rotation. This deferral blocks P1 envelope commitment, not graduation.
+
+### 2026-07-14 — Packaged keyring portability spike — DEFERRED
+
+Before selecting the first custody adapter, prove packaged Windows, macOS, and
+Linux behavior for available, locked, and unavailable keyrings plus rotation,
+delete, and recovery failure. This deferral blocks adapter commitment, not the
+`ServingKeyCustody` port.
+
+### 2026-07-14 — Live origin fetch behind rebinding harness — DEFERRED
+
+Keep acceptance fixture-backed. Live USPTO fetch proof remains blocked until
+the guarded-fetch DNS-rebinding/redirect harness from
+`explorations/ingestion-security-secret-governance` proves pinned connect-time
+address enforcement.
+
+## 2026-08-13 — Holding-pen convention — RATIFIED
+
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
+**Answer:** Graduate the packet now that `secure-document-delivery` exists.
+Keep the Box-origin, viewer-integration, and additional-origins candidates in
+`MAP.md` as re-entry points. A fired gate reopens this packet at `decompose`;
+it does not spawn a goal directly.
+
+**Rationale:** The three gated integrations preserve future routing without
+holding the completed delivery exploration open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).

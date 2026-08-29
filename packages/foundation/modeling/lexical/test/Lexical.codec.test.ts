@@ -5,26 +5,56 @@ import {
   documentToEditorState,
   editorStateToDocument,
   nodeToBlocks,
+  RootNode,
   SerializedEditorState,
+  TableCellNode,
+  TableNode,
+  TableRowNode,
 } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
+import { refineSafeDocument } from "@beep/md/Md.safe";
+import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { TableCellHeaderState } from "@beep/lexical-schema";
 
-const StateArbitrary = S.toArbitrary(SerializedEditorState);
-const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri);
-const DocumentArbitrary = S.toArbitrary(MdModel.Document);
+const StateArbitrary = S.toArbitrary(SerializedEditorState)(fc);
+const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri)(fc);
+const DocumentArbitrary = S.toArbitrary(MdModel.Document)(fc);
 
 const mdText = (value: string) => MdModel.Text.make({ value });
 
 const roundTrip = (document: MdModel.Document): MdModel.Document =>
   documentToEditorState(document).pipe(Effect.runSync, editorStateToDocument);
 
-describe("Lexical.codec", () => {
+const tableState = (headerState: TableCellHeaderState): SerializedEditorState =>
+  SerializedEditorState.make({
+    root: RootNode.make({
+      children: [
+        TableNode.make({
+          children: [TableRowNode.make({ children: [TableCellNode.make({ children: [], headerState })] })],
+        }),
+      ],
+    }),
+  });
+
+describe("Lexical.codec", { concurrent: false }, () => {
+  it("canonicalizes an empty Md document to one runtime-editable paragraph", () => {
+    const empty = MdModel.Document.make({ children: [] });
+    const state = Effect.runSync(documentToEditorState(empty));
+
+    expect(state.root.children).toEqual([expect.objectContaining({ type: "paragraph", children: [] })]);
+
+    const projected = editorStateToDocument(state);
+    expect(projected).toEqual(MdModel.Document.make({ children: [MdModel.P.make({ children: [] })] }));
+    expect(roundTrip(projected)).toEqual(projected);
+  });
+
   it("round-trips an md-core assistant turn (Md → Lexical → Md identity)", () => {
     const document = MdModel.Document.make({
       children: [
@@ -32,7 +62,11 @@ describe("Lexical.codec", () => {
         MdModel.P.make({
           children: [
             mdText("Read "),
-            MdModel.A.make({ href: "https://example.com", children: [mdText("the docs")] }),
+            MdModel.A.make({
+              href: "https://example.com",
+              children: [mdText("the docs")],
+              title: O.some("Documentation"),
+            }),
             MdModel.Br.make({}),
             MdModel.Strong.make({ children: [MdModel.Em.make({ children: [mdText("carefully")] })] }),
             MdModel.Del.make({ children: [mdText("or not")] }),
@@ -59,7 +93,7 @@ describe("Lexical.codec", () => {
             }),
           ],
         }),
-        MdModel.YouTube.make({ videoId: "dQw4w9WgXcQ" }),
+        MdModel.YouTube.make({ videoId: "M7lc1UVf-VE" }),
         MdModel.Ul.make({ children: [MdModel.Li.make({ children: [mdText("alpha")] })] }),
         MdModel.Ol.make({ children: [MdModel.Li.make({ children: [mdText("first")] })] }),
         MdModel.TaskList.make({
@@ -72,6 +106,139 @@ describe("Lexical.codec", () => {
     });
 
     expect(roundTrip(document)).toEqual(document);
+  });
+
+  it("preserves the complete user-content link domain through the editor codec", () => {
+    const hrefs = ["#section", "/docs", "https://example.com", "mailto:user@example.com", "tel:+15551234567"];
+
+    for (const href of hrefs) {
+      const document = MdModel.Document.make({
+        children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [mdText(href)] })] })],
+      });
+
+      expect(roundTrip(document)).toEqual(document);
+    }
+  });
+
+  it("converges control-separated protocol-relative links to a harmless fragment", () => {
+    const hostile = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [MdModel.A.make({ href: "/\n/evil.example/path", children: [mdText("External")] })],
+        }),
+      ],
+    });
+    const converged = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [MdModel.A.make({ href: "#", children: [mdText("External")] })],
+        }),
+      ],
+    });
+
+    expect(roundTrip(hostile)).toEqual(converged);
+    expect(roundTrip(converged)).toEqual(converged);
+  });
+
+  it("keeps safe nested-link content inside the strict Lexical grammar", () => {
+    const document = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [
+            MdModel.A.make({
+              href: "https://outer.example",
+              children: [
+                MdModel.Strong.make({
+                  children: [
+                    MdModel.A.make({
+                      href: "https://inner.example",
+                      children: [MdModel.Em.make({ children: [mdText("inner ")] })],
+                    }),
+                  ],
+                }),
+                MdModel.Img.make({ src: "https://example.com/diagram.png", alt: "diagram" }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    const converged = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [
+            MdModel.A.make({
+              href: "https://outer.example",
+              children: [
+                MdModel.Strong.make({ children: [MdModel.Em.make({ children: [mdText("inner ")] })] }),
+                mdText("diagram"),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    expect(Result.isSuccess(refineSafeDocument(document))).toBe(true);
+    expect(roundTrip(document)).toEqual(converged);
+    expect(roundTrip(converged)).toEqual(converged);
+  });
+
+  it("converges Markdown table alignment to the structural Lexical table profile", () => {
+    const row = MdModel.TableRow.make({
+      children: [
+        MdModel.TableCell.make({ children: [mdText("Left")] }),
+        MdModel.TableCell.make({ children: [mdText("Right")] }),
+      ],
+    });
+    const aligned = MdModel.Document.make({
+      children: [MdModel.Table.make({ align: ["center", "right"], children: [row], headerRow: true })],
+    });
+    const structural = MdModel.Document.make({
+      children: [MdModel.Table.make({ children: [row], headerRow: true })],
+    });
+
+    expect(roundTrip(aligned)).toEqual(structural);
+    expect(roundTrip(structural)).toEqual(structural);
+  });
+
+  it("normalizes an unrepresentable empty Markdown header row", () => {
+    const emptyHeaderTable = MdModel.Document.make({
+      children: [MdModel.Table.make({ headerRow: true, children: [] })],
+    });
+    const emptyHeaderRow = MdModel.Document.make({
+      children: [
+        MdModel.Table.make({
+          headerRow: true,
+          children: [MdModel.TableRow.make({ children: [] })],
+        }),
+      ],
+    });
+
+    for (const document of [emptyHeaderTable, emptyHeaderRow]) {
+      const converged = roundTrip(document);
+      expect(converged.children[0]).toMatchObject({ _tag: "table", headerRow: false });
+      expect(roundTrip(converged)).toEqual(converged);
+    }
+  });
+
+  it.each([
+    [0, false],
+    [1, true],
+    [2, false],
+    [3, true],
+  ] as const)("projects table header state %i to headerRow=%s", (headerState, headerRow) => {
+    expect(editorStateToDocument(tableState(headerState)).children).toEqual([expect.objectContaining({ headerRow })]);
+  });
+
+  it("leaves document frontmatter to the owning persistence adapter", () => {
+    const children = [MdModel.P.make({ children: [mdText("Body")] })];
+    const withFrontmatter = MdModel.Document.make({
+      children,
+      frontmatter: O.some({ title: "Retain me" }),
+    });
+
+    expect(roundTrip(withFrontmatter)).toEqual(MdModel.Document.make({ children }));
   });
 
   it("round-trips artifact-ref blocks through the artifact:// link form", () => {
@@ -100,11 +267,31 @@ describe("Lexical.codec", () => {
     expect(roundTrip(document)).toEqual(document);
   });
 
+  it("keeps non-canonical artifact links reversible as ordinary links", () => {
+    const href = `${ARTIFACT_URI_PREFIX}artifact-123`;
+    const links = [
+      MdModel.A.make({ href, children: [MdModel.Strong.make({ children: [mdText("Quarterly report")] })] }),
+      MdModel.A.make({ href, children: [mdText("Quarterly "), mdText("report")] }),
+      MdModel.A.make({ href, children: [mdText("Quarterly report")], title: O.some("Artifact title") }),
+      MdModel.A.make({ href, children: [mdText("")] }),
+    ];
+
+    for (const link of links) {
+      const paragraph = MdModel.P.make({ children: [link] });
+      const node = Effect.runSync(blockToLexical(paragraph));
+      expect(node.type).toBe("paragraph");
+      if (node.type === "paragraph") expect(node.children[0]?.type).toBe("link");
+
+      const document = MdModel.Document.make({ children: [paragraph] });
+      expect(roundTrip(document)).toEqual(document);
+    }
+  });
+
   it("round-trips schema-derived artifact URIs without grammar drift", () => {
     fc.assert(
       fc.property(ArtifactUriArbitrary, (uri) => {
         expect(ArtifactUri.is(uri)).toBe(true);
-        expect(S.decodeUnknownSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
+        expect(S.decodeSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
       }),
       fcRuns(50)
     );
@@ -130,7 +317,7 @@ describe("Lexical.codec", () => {
     // Invalid info-strings are unconstructable via `Pre.make` now (the schema
     // validates the branded `CodeFenceLanguage` at construction); they can only
     // arrive on the wire, where Md decode folds them to None at the boundary.
-    const invalidLanguage = S.decodeUnknownSync(MdModel.Pre)({
+    const invalidLanguage = S.decodeSync(MdModel.Pre)({
       _tag: "pre",
       value: "console.log('beep')",
       language: "ts bad",
@@ -158,7 +345,7 @@ describe("Lexical.codec", () => {
   });
 
   it("drops Lexical-only text format bits (underline) per the lossiness profile", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)({
+    const state = S.decodeSync(SerializedEditorState)({
       root: {
         type: "root",
         version: 1,
@@ -206,8 +393,8 @@ describe("Lexical.codec", () => {
     );
   });
 
-  it("flattens nested Lexical lists into one Md list level per the lossiness profile", () => {
-    const state = S.decodeUnknownSync(SerializedEditorState)({
+  it("preserves nested lists through Lexical and Md projections", () => {
+    const state = S.decodeSync(SerializedEditorState)({
       root: {
         type: "root",
         version: 1,
@@ -267,9 +454,37 @@ describe("Lexical.codec", () => {
 
     expect(editorStateToDocument(state).children).toEqual([
       MdModel.Ul.make({
-        children: [MdModel.Li.make({ children: [mdText("parent")] }), MdModel.Li.make({ children: [mdText("child")] })],
+        children: [
+          MdModel.Li.make({
+            children: [
+              mdText("parent"),
+              MdModel.Ul.make({
+                children: [MdModel.Li.make({ children: [mdText("child")] })],
+              }),
+            ],
+          }),
+        ],
       }),
     ]);
+
+    const nestedDocument = MdModel.Document.make({
+      children: [
+        MdModel.Ol.make({
+          start: PosInt.make(3),
+          children: [
+            MdModel.Li.make({
+              children: [
+                mdText("parent"),
+                MdModel.Ul.make({
+                  children: [MdModel.Li.make({ children: [mdText("child")] })],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(roundTrip(nestedDocument)).toEqual(nestedDocument);
   });
 
   it("degrades out-of-profile Md nodes deterministically", () => {
@@ -278,10 +493,24 @@ describe("Lexical.codec", () => {
     expect(nodeToBlocks(hr)).toEqual([MdModel.P.make({ children: [mdText("---")] })]);
 
     const image = Effect.runSync(
-      blockToLexical(MdModel.P.make({ children: [MdModel.Img.make({ src: "https://example.com/x.png", alt: "x" })] }))
+      blockToLexical(
+        MdModel.P.make({
+          children: [
+            MdModel.Img.make({
+              src: "https://example.com/x.png",
+              alt: "x",
+              title: O.some("Image title"),
+            }),
+          ],
+        })
+      )
     );
     if (image.type === "paragraph") {
-      expect(image.children[0]?.type).toBe("link");
+      const link = image.children[0];
+      expect(link?.type).toBe("link");
+      if (link?.type === "link") {
+        expect(link.title).toEqual(O.some("Image title"));
+      }
     }
 
     const raw = Effect.runSync(
@@ -292,6 +521,51 @@ describe("Lexical.codec", () => {
     }
   });
 
+  it("preserves plain-text content when a list item block is not representable in Lexical", () => {
+    const document = MdModel.Document.make({
+      children: [
+        MdModel.Ul.make({
+          children: [
+            MdModel.Li.make({
+              children: [
+                MdModel.P.make({
+                  children: [
+                    mdText("text"),
+                    MdModel.RawMarkdown.make({ value: "**raw**" }),
+                    MdModel.RawHtml.make({ value: "<b>raw</b>" }),
+                    MdModel.Strong.make({ children: [mdText("strong")] }),
+                    MdModel.Em.make({ children: [mdText("em")] }),
+                    MdModel.Del.make({ children: [mdText("del")] }),
+                    MdModel.Code.make({ value: "code" }),
+                    MdModel.A.make({ href: "https://example.com", children: [mdText("link")] }),
+                    MdModel.Img.make({ src: "https://example.com/image.png", alt: "image" }),
+                    MdModel.Br.make({}),
+                    MdModel.InlineMath.make({ value: "x+y" }),
+                    MdModel.FootnoteReference.make({ identifier: "note" }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    expect(roundTrip(document)).toEqual(
+      MdModel.Document.make({
+        children: [
+          MdModel.Ul.make({
+            children: [
+              MdModel.Li.make({
+                children: [mdText("text**raw**<b>raw</b>strongemdelcodelinkimage\nx+ynote")],
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+  });
+
   it("projects schema-derived arbitrary editor states onto valid Md documents (totality)", () => {
     fc.assert(
       fc.property(StateArbitrary, (state) => {
@@ -300,9 +574,12 @@ describe("Lexical.codec", () => {
         // field (OptionFromNullOr), so the projected instance differs from its
         // encoded form. Decoding the instance directly would reject its real
         // Option; decoding the encoded form confirms the projection is valid.
-        expect(S.decodeUnknownSync(MdModel.Document)(S.encodeSync(MdModel.Document)(document))).toEqual(document);
+        expect(S.decodeSync(MdModel.Document)(S.encodeSync(MdModel.Document)(document))).toEqual(document);
       }),
-      fcRuns(50)
+      // Pinned at the original 50. Nightly `BEEP_FC_NUM_RUNS=1000` times out at
+      // 300s on unbounded SerializedEditorState trees (#663). Hard `numRuns`
+      // is the one-round-loop seed-exclude form: the env floor cannot raise it.
+      { numRuns: 50 }
     );
   });
 

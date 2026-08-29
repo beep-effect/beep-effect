@@ -22,12 +22,13 @@ const getRangeEnd = (options: { readonly end: number } | number): number =>
 /**
  * Zero-based position of a sentence within a document.
  *
- * @example
- * ```ts
+ * **Example** (Type-safe index increment)
+ *
+ * ```ts import.meta.vitest name="Type-safe index increment"
  * import type { SentenceIndex } from "@beep/nlp/Core/Sentence"
  *
  * const next = (index: SentenceIndex): number => index + 1
- * console.log(typeof next) // "function"
+ * typeof next // => "function"
  * ```
  *
  * @category models
@@ -38,12 +39,13 @@ export type SentenceIndex = Brand.Branded<NonNegativeInt, "SentenceIndex">;
 /**
  * Construct a branded sentence index after validating it is non-negative.
  *
- * @example
- * ```ts
+ * **Example** (Construct zero sentence index)
+ *
+ * ```ts import.meta.vitest name="Construct zero sentence index"
  * import { sentenceIndex } from "@beep/nlp/Core/Sentence"
  *
  * const first = sentenceIndex(0)
- * console.log(first) // 0
+ * first // => 0
  * ```
  *
  * @category validation
@@ -56,12 +58,13 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
 /**
  * Schema that decodes non-negative numbers into {@link SentenceIndex} values.
  *
- * @example
- * ```ts
+ * **Example** (Decode non-negative index)
+ *
+ * ```ts import.meta.vitest name="Decode non-negative index"
  * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
  *
  * const index = SentenceIndex.make(1)
- * console.log(index) // 1
+ * index // => 1
  * ```
  *
  * @category validation
@@ -78,13 +81,15 @@ export const SentenceIndex = NonNegativeInt.pipe(
 /**
  * Immutable sentence with its document token range and optional scoring data.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `start` and `end` are token indices in the surrounding document, not
  * character offsets. Use the contained token models when character spans are
  * needed.
  *
- * @example
- * ```ts
+ * **Example** (Construct empty sentence model)
+ *
+ * ```ts import.meta.vitest name="Construct empty sentence model"
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"
  * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
@@ -101,7 +106,7 @@ export const SentenceIndex = NonNegativeInt.pipe(
  *   negationFlag: O.none(),
  *   markedUpText: O.none()
  * })
- * console.log(sentence.tokenCount) // 0
+ * sentence.tokenCount // => 0
  * ```
  *
  * @category models

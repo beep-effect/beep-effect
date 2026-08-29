@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./PriorArtReference.model.js";
+export * from "./PriorArtReference.model.ts";

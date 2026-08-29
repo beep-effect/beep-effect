@@ -4,6 +4,8 @@ import * as IdentityPackages from "@beep/identity/packages";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import type {
+  DeclarationAnnotationExtras,
+  // biome-ignore lint/suspicious/noDeprecatedImports: Shape-stability coverage for the retained public alias.
   HttpApiEncoding,
   IdentityAnyAnnotationExtras,
   IdentityComposer,
@@ -16,6 +18,8 @@ import type {
 } from "@beep/identity";
 
 type ShapeStableTypeOnlyImportSentinel = {
+  readonly DeclarationAnnotationExtras: DeclarationAnnotationExtras<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- shape-stability coverage for the retained public alias
   readonly HttpApiEncoding: HttpApiEncoding;
   readonly IdentityAnyAnnotationExtras: IdentityAnyAnnotationExtras<unknown>;
   readonly IdentityComposer: IdentityComposer<string>;
@@ -28,6 +32,7 @@ type ShapeStableTypeOnlyImportSentinel = {
 };
 
 const currentRootTypeOnlyNamedImports = [
+  "DeclarationAnnotationExtras",
   "HttpApiEncoding",
   "IdentityAnyAnnotationExtras",
   "IdentityComposer",
@@ -55,7 +60,6 @@ const currentRootRuntimeNamedImports = [
   "$EditorId",
   "$EpistemicDomainId",
   "$FileProcessingId",
-  "$FormId",
   "$GovinfoId",
   "$HtmlId",
   "$HubspotId",
@@ -224,15 +228,11 @@ const expectedPackageComposerIdentities = {
   $ScratchpadId: "@beep/scratchpad",
   $HtmlId: "@beep/html",
   $PandocAstId: "@beep/pandoc-ast",
-  $FormId: "@beep/form",
   $PgliteId: "@beep/pglite",
   $M365Id: "@beep/m365",
   $M365McpId: "@beep/m365-mcp",
   $GovinfoId: "@beep/govinfo",
-  $FederalRegisterId: "@beep/federal-register",
   $EcfrId: "@beep/ecfr",
-  $DolId: "@beep/dol",
-  $CourtlistenerId: "@beep/courtlistener",
   $ApiTransportId: "@beep/api-transport",
   $McpKitId: "@beep/mcp-kit",
   $UsptoMcpId: "@beep/uspto-mcp",
@@ -240,11 +240,14 @@ const expectedPackageComposerIdentities = {
 
 const composerFunctionProperties = [
   "annote",
+  "annoteClass",
   "annoteHttp",
   "annoteKey",
   "annoteSchema",
+  "class",
   "compose",
   "create",
+  "key",
   "make",
   "string",
   "symbol",
@@ -337,6 +340,7 @@ const assertComposerExport = (
 describe("@beep/identity shape-stable harness", () => {
   it("keeps the current root type-only named import inventory documented", () => {
     expect(currentRootTypeOnlyNamedImports).toEqual([
+      "DeclarationAnnotationExtras",
       "HttpApiEncoding",
       "IdentityAnyAnnotationExtras",
       "IdentityComposer",

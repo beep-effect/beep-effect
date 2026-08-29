@@ -29,18 +29,18 @@ const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
 /**
  * File extensions recognised as TypeScript source modules during barrel generation.
  *
- * @example
+ * **Example** (Log TS extensions label)
+ *
  * ```ts
  * console.log("TS_EXTENSIONS")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-const TS_EXTENSIONS = [".ts", ".tsx"] as const;
-
 const TYPE_SCRIPT_SOURCE_FILE_PATTERN = /^.+\.(ts|tsx)$/;
 const TYPE_SCRIPT_TEST_FILE_PATTERN = /^.+\.(test|spec)\.(ts|tsx)$/;
-const JS_IMPORT_PATH_PATTERN = /^\.\/.+\.js$/;
+const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(
   S.brand("TypeScriptSourceFileName"),
@@ -57,31 +57,23 @@ const TypeScriptTestFileName = S.String.check(S.isPattern(TYPE_SCRIPT_TEST_FILE_
   })
 );
 
-const JSImportPath = S.String.check(S.isPattern(JS_IMPORT_PATH_PATTERN)).pipe(
-  $I.annoteSchema("JSImportPath", {
-    description: "Relative ESM import path with .js extension.",
+const TypeScriptImportPath = S.String.check(S.isPattern(TYPESCRIPT_IMPORT_PATH_PATTERN)).pipe(
+  $I.annoteSchema("TypeScriptImportPath", {
+    description: "Relative TypeScript import path using the repository's uniform .ts source specifier.",
   })
 );
 
-const TypeScriptSourceToJSImportPath = TypeScriptSourceFileName.pipe(
+const TypeScriptSourceToImportPath = TypeScriptSourceFileName.pipe(
   S.decodeTo(
-    JSImportPath,
+    TypeScriptImportPath,
     SchemaTransformation.transform({
-      decode: (fileName) =>
-        pipe(
-          TS_EXTENSIONS,
-          A.findFirst((ext) => Str.endsWith(ext)(fileName)),
-          O.map((ext) => `./${Str.slice(0, -ext.length)(fileName)}.js`),
-          O.getOrElse(() => `./${fileName}`)
-        ),
+      decode: (fileName) => `./${pipe(fileName, Str.replace(/\.tsx?$/, ".ts"))}`,
       encode: (importPath) =>
-        Result.getOrThrow(
-          decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)\.js$/, "$1.ts")))
-        ),
+        Result.getOrThrow(decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)$/, "$1")))),
     })
   ),
-  $I.annoteSchema("TypeScriptSourceToJSImportPath", {
-    description: "Schema transformation from a TypeScript module filename to its .js import path.",
+  $I.annoteSchema("TypeScriptSourceToImportPath", {
+    description: "Schema transformation from a TypeScript module filename to its matching source import path.",
   })
 );
 
@@ -101,20 +93,24 @@ const isTypeScriptSourceFileName = S.is(TypeScriptSourceFileName);
 const isTypeScriptTestFileName = S.is(TypeScriptTestFileName);
 const isInternalDirectoryName = S.is(InternalDirectoryName);
 const isRootIndexFileName = S.is(RootIndexFileName);
-const decodeJSImportPathResult = S.decodeUnknownResult(TypeScriptSourceToJSImportPath);
+const decodeImportPathResult = S.decodeUnknownResult(TypeScriptSourceToImportPath);
 
 /**
- * Convert a TypeScript filename to its corresponding `.js` import specifier.
+ * Convert a TypeScript filename to its corresponding source import specifier.
  *
- * Strips the `.ts` or `.tsx` extension and prepends `./` so the result is a
- * valid ESM relative import path (e.g. `"FsUtils.ts"` becomes `"./FsUtils.js"`).
+ * **Details**
  *
- * @param name - The TypeScript filename (may include a sub-path prefix).
- * @returns A relative import specifier with a `.js` extension.
- * @example
+ * Uses the repository's uniform `.ts` source specifier and prepends `./` so the
+ * result is a valid relative import path (e.g. `"View.tsx"` becomes `"./View.ts"`).
+ *
+ * **Example** (Log toImportPath label)
+ *
  * ```ts
  * console.log("toImportPath")
  * ```
+ *
+ * @param name - The TypeScript filename (may include a sub-path prefix).
+ * @returns A relative import specifier with the uniform `.ts` source extension.
  * @category utilities
  * @since 0.0.0
  */
@@ -122,17 +118,19 @@ const toImportPath = (name: string): string => {
   if (!isTypeScriptSourceFileName(name)) {
     return `./${name}`;
   }
-  return Result.getOrThrow(decodeJSImportPathResult(name));
+  return Result.getOrThrow(decodeImportPathResult(name));
 };
 
 /**
  * Alphabetical `Order` instance used to sort discovered module paths deterministically
  * before emitting barrel re-exports.
  *
- * @example
+ * **Example** (Log alphabetical order label)
+ *
  * ```ts
  * console.log("alphabetical")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -145,16 +143,20 @@ const alphabetical: Order.Order<string> = Str.orderAsc;
 /**
  * Recursively discover exportable TypeScript modules under `srcDir`.
  *
+ * **Details**
+ *
  * Returns relative paths from `srcDir` (e.g. `"FsUtils.ts"`, `"errors/index.ts"`).
  * Skips `index.ts` at the root level, `internal/` directories, and test files.
+ *
+ * **Example** (Log discoverModules label)
+ *
+ * ```ts
+ * console.log("discoverModules")
+ * ```
  *
  * @param srcDir - Absolute path to the `src/` directory to scan.
  * @returns An unsorted array of relative file paths suitable for barrel re-export.
  * @depends FileSystem, Path
- * @example
- * ```ts
- * console.log("discoverModules")
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -205,16 +207,20 @@ const discoverModules = Effect.fn(function* (srcDir: string) {
 /**
  * Build the barrel file content from a sorted list of module relative paths.
  *
+ * **Details**
+ *
  * Produces a string containing a JSDoc header and one `export * from ...` statement
  * per module, each annotated with `@since 0.0.0` as required by `@beep/repo-docgen`.
+ *
+ * **Example** (Log buildBarrelContent label)
+ *
+ * ```ts
+ * console.log("buildBarrelContent")
+ * ```
  *
  * @param packageName - Used in the module description header comment.
  * @param modules - Sorted list of relative file paths (e.g. `"FsUtils.ts"`).
  * @returns The full content of the generated `index.ts` barrel file.
- * @example
- * ```ts
- * console.log("buildBarrelContent")
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -240,10 +246,12 @@ const buildBarrelContent = (packageName: string, modules: ReadonlyArray<string>)
  * CLI command that scans a package's `src/` directory and generates (or previews)
  * an `index.ts` barrel file with `export *` re-exports for every discovered module.
  *
- * @example
+ * **Example** (Log codegenCommand label)
+ *
  * ```ts
  * console.log("codegenCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -255,7 +263,10 @@ export const codegenCommand = Command.make(
       Flag.withDescription("Package directory to generate barrel exports for"),
       Flag.withDefault(".")
     ),
-    dryRun: Flag.boolean("dry-run").pipe(Flag.withDescription("Preview changes without writing files")),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Preview changes without writing files")
+    ),
   },
   Effect.fn(function* (config) {
     const fs = yield* FileSystem.FileSystem;

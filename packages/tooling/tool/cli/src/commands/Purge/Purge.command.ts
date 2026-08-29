@@ -18,12 +18,16 @@ const $I = $RepoCliId.create("purge");
 /**
  * Workspace-local artifact names to purge.
  *
+ * **Details**
+ *
  * Matches legacy purge intent from `@beep/repo-scripts`.
  *
- * @example
+ * **Example** (Log docgen metadata)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -43,10 +47,12 @@ const WORKSPACE_ARTIFACTS = [
 /**
  * Root-level artifacts always purged.
  *
- * @example
+ * **Example** (Log docgen metadata)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -55,10 +61,12 @@ const ROOT_ARTIFACTS = ["node_modules", ".turbo", "dist", "docs/generated"] as c
 /**
  * Optional root lock artifact purged with `--lock` / `-l`.
  *
- * @example
+ * **Example** (Log docgen metadata)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -117,10 +125,12 @@ const ensureContainedPurgeTarget = Effect.fn(function* (rootDir: string, target:
 /**
  * Summary statistics returned after a purge run.
  *
- * @example
+ * **Example** (Log PurgeSummary value)
+ *
  * ```ts
  * console.log("PurgeSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,14 +148,16 @@ export class PurgeSummary extends S.Class<PurgeSummary>($I`PurgeSummary`)(
 /**
  * Build absolute purge targets from root + workspace artifact rules.
  *
+ * **Example** (Log docgen metadata)
+ *
+ * ```ts
+ * console.log("docgen metadata")
+ * ```
+ *
  * @internal
  * @param rootDir - Absolute repo root directory.
  * @param removeLock - Whether to include root `bun.lock`.
  * @returns Deduplicated absolute paths to purge and workspace count.
- * @example
- * ```ts
- * console.log("docgen metadata")
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -179,13 +191,15 @@ const buildPurgeTargets = Effect.fn(function* (rootDir: string, removeLock: bool
 /**
  * Purge root/workspace artifacts under a specific root directory.
  *
- * @param rootDir - Absolute repo root directory.
- * @param removeLock - Whether to include root `bun.lock`.
- * @returns Purge summary with targeted and existing-removed counts.
- * @example
+ * **Example** (Log purgeAtRoot result)
+ *
  * ```ts
  * console.log("purgeAtRoot")
  * ```
+ *
+ * @param rootDir - Absolute repo root directory.
+ * @param removeLock - Whether to include root `bun.lock`.
+ * @returns Purge summary with targeted and existing-removed counts.
  * @category utilities
  * @since 0.0.0
  */
@@ -239,17 +253,23 @@ export const purgeAtRoot: {
 /**
  * CLI command to purge workspace/root build artifacts.
  *
- * @example
+ * **Example** (Log purgeCommand value)
+ *
  * ```ts
  * console.log("purgeCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 export const purgeCommand = Command.make(
   "purge",
   {
-    lock: Flag.boolean("lock").pipe(Flag.withAlias("l"), Flag.withDescription("Also remove root bun.lock")),
+    lock: Flag.boolean("lock").pipe(
+      Flag.withDefault(false),
+      Flag.withAlias("l"),
+      Flag.withDescription("Also remove root bun.lock")
+    ),
   },
   Effect.fn(function* ({ lock }) {
     const rootDir = yield* findRepoRoot();

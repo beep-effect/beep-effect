@@ -14,25 +14,27 @@ const $I = $SchemaId.create("SchemaUtils/withEncodeDefault");
 /**
  * Apply a decoding default to an optional encoded key.
  *
+ * **Details**
+ *
  * This helper makes the encoded key optional and fills in a decoded value when
  * the key is missing. Encoding remains strict and still requires the decoded
  * value to be present.
  *
- * @example
- * ```ts
+ * This is the decoded-value counterpart to Effect's
+ * `Schema.withDecodingDefaultKey`: the default thunk returns the schema's
+ * decoded `Type`, not its encoded representation.
+ *
+ * **Example** (Default for missing encoded key)
+ *
+ * ```ts import.meta.vitest name="Default for missing encoded key"
  * import * as S from "effect/Schema"
  * import { withEncodeDefault } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Status = withEncodeDefault(S.String, () => "draft")
  * const Settings = S.Struct({ status: Status })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).status) // "draft"
+ * S.decodeUnknownSync(Settings)({}).status // => "draft"
  * ```
- *
- * @remarks
- * This is the decoded-value counterpart to Effect's
- * `Schema.withDecodingDefaultKey`: the default thunk returns the schema's
- * decoded `Type`, not its encoded representation.
  *
  * @typeParam TSchema - Schema receiving the decoding default.
  * @param self - Schema receiving the decoding default.
@@ -69,15 +71,16 @@ export const withEncodeDefault: {
 /**
  * Create a boolean schema field with a lazy decoding default.
  *
- * @example
- * ```ts
+ * **Example** (Boolean field with default)
+ *
+ * ```ts import.meta.vitest name="Boolean field with default"
  * import * as S from "effect/Schema"
  * import { boolWithDefault } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Enabled = boolWithDefault(true)
  * const Settings = S.Struct({ enabled: Enabled })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @param defaultValue - Boolean value returned when the encoded key is missing.
@@ -90,14 +93,15 @@ export const boolWithDefault = (defaultValue: boolean) => withEncodeDefault(S.Bo
 /**
  * Boolean schema field that decodes missing keys as `false`.
  *
- * @example
- * ```ts
+ * **Example** (Missing key decodes false)
+ *
+ * ```ts import.meta.vitest name="Missing key decodes false"
  * import * as S from "effect/Schema"
  * import { BoolDefaultFalse } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Settings = S.Struct({ visible: BoolDefaultFalse })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).visible) // false
+ * S.decodeUnknownSync(Settings)({}).visible // => false
  * ```
  *
  * @category constructors
@@ -111,15 +115,6 @@ export const BoolDefaultFalse = boolWithDefault(false).pipe(
 
 /**
  * {@inheritDoc BoolDefaultFalse}
- *
- * @example
- * ```ts
- * import type { BoolDefaultFalse } from "@beep/schema/SchemaUtils/withEncodeDefault"
- *
- * const visible: BoolDefaultFalse = false
- * console.log(visible)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -128,14 +123,15 @@ export type BoolDefaultFalse = typeof BoolDefaultFalse.Type;
 /**
  * Boolean schema field that decodes missing keys as `true`.
  *
- * @example
- * ```ts
+ * **Example** (Missing key decodes true)
+ *
+ * ```ts import.meta.vitest name="Missing key decodes true"
  * import * as S from "effect/Schema"
  * import { BoolDefaultTrue } from "@beep/schema/SchemaUtils/withEncodeDefault"
  *
  * const Settings = S.Struct({ enabled: BoolDefaultTrue })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @category constructors
@@ -149,15 +145,6 @@ export const BoolDefaultTrue = boolWithDefault(true).pipe(
 
 /**
  * {@inheritDoc BoolDefaultTrue}
- *
- * @example
- * ```ts
- * import type { BoolDefaultTrue } from "@beep/schema/SchemaUtils/withEncodeDefault"
- *
- * const enabled: BoolDefaultTrue = true
- * console.log(enabled)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

@@ -7,21 +7,22 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { Citation, FullCaseCitation } from "../Citation/index.js";
+import { Citation, FullCaseCitation } from "../Citation/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/CaseGroup/CaseGroup.model");
 
 /**
  * A group of citations all referring to the same underlying case.
  *
+ * **Details**
+ *
  * Produced by `groupByCase()` from resolved extraction results. Groups are
  * ordered by first mention in the document: the `primaryCitation` is the first
  * full citation encountered, `mentions` collects every reference in document
  * order, and `parallelCitations` lists the distinct reporter strings.
  *
- * **Example**
+ * **Example** (Constructing CaseGroup with make)
  *
- * @example
  * ```ts
  * import { CaseGroup, FullCaseCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -73,7 +74,8 @@ export class CaseGroup extends S.Class<CaseGroup>($I`CaseGroup`)(
 /**
  * Companion namespace for `CaseGroup`.
  *
- * @example
+ * **Example** (Using Encoded parallelCitations)
+ *
  * ```ts
  * import type { CaseGroup } from "@beep/law-practice-domain"
  *
@@ -88,9 +90,8 @@ export declare namespace CaseGroup {
   /**
    * Wire-encoded representation of a decoded {@link CaseGroup}.
    *
-   * **Example**
+   * **Example** (Aliasing CaseGroup Encoded type)
    *
-   * @example
    * ```ts
    * import type { CaseGroup } from "@beep/law-practice-domain"
    *

@@ -6,7 +6,7 @@
  */
 
 import { $OxigraphId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $OxigraphId.create("Oxigraph.errors");
@@ -14,7 +14,8 @@ const $I = $OxigraphId.create("Oxigraph.errors");
 /**
  * Oxigraph SPARQL driver failure reason.
  *
- * @example
+ * **Example** (Assign queryFailed reason)
+ *
  * ```ts
  * import { OxigraphSparqlErrorReason } from "@beep/oxigraph"
  *
@@ -41,7 +42,8 @@ export const OxigraphSparqlErrorReason = LiteralKit([
 /**
  * Type for {@link OxigraphSparqlErrorReason}.
  *
- * @example
+ * **Example** (Assign importFailed reason)
+ *
  * ```ts
  * import { OxigraphSparqlErrorReason } from "@beep/oxigraph"
  *
@@ -58,7 +60,8 @@ export type OxigraphSparqlErrorReason = typeof OxigraphSparqlErrorReason.Type;
 /**
  * Typed Oxigraph SPARQL driver error.
  *
- * @example
+ * **Example** (Make SPARQL error)
+ *
  * ```ts
  * import { OxigraphSparqlError } from "@beep/oxigraph"
  *
@@ -73,13 +76,13 @@ export type OxigraphSparqlErrorReason = typeof OxigraphSparqlErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class OxigraphSparqlError extends TaggedErrorClass<OxigraphSparqlError>($I`OxigraphSparqlError`)(
+export class OxigraphSparqlError extends S.TaggedError<OxigraphSparqlError>($I`OxigraphSparqlError`)(
   "OxigraphSparqlError",
   {
     reason: OxigraphSparqlErrorReason,
     message: S.String,
   },
-  $I.annote("OxigraphSparqlError", {
+  $I.annoteError<OxigraphSparqlError>("OxigraphSparqlError", {
     description: "Typed Oxigraph SPARQL driver error.",
   })
 ) {}

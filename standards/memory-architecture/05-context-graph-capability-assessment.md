@@ -89,8 +89,8 @@ Sources: [llms.txt](https://trustgraph.ai/llms.txt),
   regulated legal/financial audit trails.
 - Context Cores are a useful packaging model for portable, isolated knowledge
   bases.
-- OntologyRAG directly matches the `ip-law-knowledge-graph` need for
-  OWL/schema-guided extraction.
+- OntologyRAG directly matches the ontology-survey scope now absorbed by
+  `semantic-foundation`; see [`explorations/legal-ontology-landscape`](../../explorations/legal-ontology-landscape/README.md).
 - The architecture separates graph, vector, object, and structured stores in a
   way that maps cleanly to repo-owned authority plus projections.
 
@@ -111,7 +111,7 @@ not win package topology, runtime authority, or source-of-truth status.
 
 ### Local TrustGraph TypeScript Port
 
-Source: `~/YeeBois/dev/trustgraph/ts` inspected read-only. Relevant anchors:
+Source: the machine-local TrustGraph TypeScript port (upstream: https://github.com/trustgraph-ai/trustgraph), inspected read-only. Relevant anchors:
 `package.json`, `packages/base/src/processor/flow-processor.ts`,
 `packages/flow/src/retrieval/graph-rag.ts`,
 `packages/flow/src/storage/triples/falkordb.ts`,
@@ -196,6 +196,11 @@ not own accepted claims, professional approvals, or durable legal facts.
 > donor** for Role A: DataPoint metadata, pipeline provenance stamping with a
 > relational rollback ledger, and the all-Postgres deployment shape. See
 > `docs/agent-memory-infra/cognee-clone.md`.
+
+> **Superseded (2026-08-06) by [`07-shared-memory-adoption.md`](./07-shared-memory-adoption.md):**
+> the Role B dev-tooling memory incumbency passes to basic-memory +
+> codegraph; Cognee is retired to document-KG experiments. Its donor and
+> authority-boundary notes above are unchanged.
 
 ### Graphiti / Zep
 
@@ -581,17 +586,22 @@ provenance as the chosen direction.
 
 ## Initiative Mapping
 
-### `ip-law-knowledge-graph`
+### `semantic-foundation` (absorbed ontology-survey scope)
 
 Use TrustGraph OntologyRAG and Cognee ontology UX as references for OWL import,
 ontology-scoped extraction, and validation, but make Effect Schema the typed
 authority. Every node and edge type still needs source ontology traceability.
+The grounding survey is retained at
+[`explorations/legal-ontology-landscape`](../../explorations/legal-ontology-landscape/README.md).
 
 LLM extraction may propose `Patent`, `Trademark`, `LegalProvision`, `Claim`, or
 edge candidates, but accepted legal graph facts require evidence spans and
 repo-owned lifecycle state.
 
-### `knowledge-workspace`
+### Knowledge workspace vision (packet removed 2026-07-14)
+
+The vision was re-captured at
+[`explorations/knowledge-workspace`](../../explorations/knowledge-workspace/README.md).
 
 Keep Effect `EventLog` and `SqlEventJournal` as the source of graph mutation
 history. Use TrustGraph's separation between knowledge graph, source

@@ -450,7 +450,7 @@ files under this checkout's `.claude/skills/`. The capture's path claim is stale
 for this branch. (repository path audited: `.claude/skills/`)
 
 Similarly named user-level skills are available outside the repository under
-`~/.agents/skills/ontology-*/SKILL.md`. They are context evidence only, not
+the machine-local agent-skills directory as `ontology-*/SKILL.md`. They are context evidence only, not
 in-repo bricks and are intentionally excluded from `research/SOURCES.md`'s
 in-repo table. Their CLI assumptions and the closest current native surface are:
 

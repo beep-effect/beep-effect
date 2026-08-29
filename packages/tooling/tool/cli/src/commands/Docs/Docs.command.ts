@@ -12,8 +12,8 @@ import { Console, Effect, pipe, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command } from "effect/unstable/cli";
-import { printLines } from "../../internal/cli/Printer.js";
-import { docsAggregateCommand } from "./Docs.aggregate.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { docsAggregateCommand } from "./Docs.aggregate.ts";
 
 const $I = $RepoCliId.create("docs");
 
@@ -67,11 +67,13 @@ class DocsSectionPolicies extends S.Class<DocsSectionPolicies>($I`DocsSectionPol
 /**
  * Documentation section model.
  *
- * @returns Tagged union schema keyed by `name`.
- * @example
+ * **Example** (Log DocsSection model)
+ *
  * ```ts
  * console.log("DocsSection")
  * ```
+ *
+ * @returns Tagged union schema keyed by `name`.
  * @category models
  * @since 0.0.0
  */
@@ -86,10 +88,12 @@ export const DocsSection = DocsSectionName.mapMembers(
 /**
  * Documentation section model.
  *
- * @example
+ * **Example** (Log DocsSection type)
+ *
  * ```ts
  * console.log("DocsSection")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -234,10 +238,12 @@ const docsFindCommand = Command.make(
 /**
  * Command-first docs discovery entrypoint used by agent config surfaces.
  *
- * @example
+ * **Example** (Log docs command name)
+ *
  * ```ts
  * console.log("docsCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -21,6 +21,9 @@
       "TURBO_TEAM",
       "NODE_TLS_REJECT_UNAUTHORIZED",
       "CHAT_TRANSPORT",
+      "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST",
+      "EPISTEMIC_POLICY_REVISION",
+      "ONTOLOGY_MCP_MUTATIONS_ENABLED",
       "ONTOLOGY_WORKSPACE_ROOT",
       "PORTLESS_*",
       "AWS_*",
@@ -40,9 +43,7 @@
         "DATABASE_URL_UNPOOLED",
         "EMAIL_*",
         "AUTH_*",
-        "BETTER_AUTH_*",
         "OPENAI_*",
-        "GRAPHITI_*",
         "SECURITY_*",
         "OAUTH_*",
         "NEXT_PUBLIC_*",
@@ -58,6 +59,7 @@
         "_next/**",
         ".output/**",
         ".vercel/output/**",
+        "storybook-static/**",
         "**/node_modules/.tmp/*.tsbuildinfo",
         "!**/.turbo/**",
         "!.next/cache/**"
@@ -87,17 +89,13 @@
       ]
     },
     "check": {
-      "dependsOn": ["^check"],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
         "!.beep/**"
       ],
-      "outputs": [
-        "dist/**",
-        "**/node_modules/.tmp/*.tsbuildinfo",
-        "!**/.turbo/**"
-      ]
+      "outputs": []
     },
     "test": {
       "passThroughEnv": [
@@ -125,6 +123,7 @@
       "env": [
         "AI_VENICE_API_KEY",
         "BEEP_TEST_*",
+        "BEEP_TIKA_*",
         "CLOUD_BOX_TOKEN",
         "FIRECRAWL_API_KEY"
       ],
@@ -134,15 +133,41 @@
         "!.beep/**"
       ]
     },
-    "type-test": {
-      "cache": true,
-      "dependsOn": ["^type-test"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tstyche.json", "!.beep/**"]
+    "test:integration:parallel": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "env": [
+        "AI_VENICE_API_KEY",
+        "BEEP_TEST_*",
+        "BEEP_TIKA_*",
+        "CLOUD_BOX_TOKEN",
+        "FIRECRAWL_API_KEY"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "!.beep/**"
+      ]
+    },
+    "test:integration:serial": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "env": ["BEEP_TEST_*"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "!.beep/**"
+      ]
     },
     "coverage": {
       "cache": false,
       "dependsOn": ["^build"],
-      "env": ["VITEST_COVERAGE_REPORT_ONLY", "VITEST_COVERAGE_RATCHET"],
+      "env": [
+        "BEEP_FC_SEED",
+        "NODE_OPTIONS",
+        "VITEST_COVERAGE_REPORT_ONLY",
+        "VITEST_COVERAGE_RATCHET"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
@@ -161,7 +186,6 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
-        "$TURBO_ROOT$/tstyche.json",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/.env*",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
@@ -174,15 +198,14 @@
         "DATABASE_URL_UNPOOLED",
         "EMAIL_*",
         "AUTH_*",
-        "BETTER_AUTH_*",
         "OPENAI_*",
-        "GRAPHITI_*",
         "SECURITY_*",
         "OAUTH_*",
         "NEXT_PUBLIC_*",
         "LIVEBLOCKS_*",
         "RESEND_*",
         "BEEP_TEST_*",
+        "BEEP_TIKA_*",
         "CI"
       ],
       "outputs": [
@@ -195,18 +218,20 @@
         ".output/**",
         ".vercel/output/**",
         "docs/**",
-        "dtslint/**",
         "**/node_modules/.tmp/*.tsbuildinfo",
         "!**/.turbo/**",
         "!.next/cache/**"
       ],
       "outputLogs": "new-only"
     },
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "docgen": {
       "cache": true,
-      "dependsOn": ["^docgen"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
-      "outputs": ["docs/**", "dtslint/**", ".beep/docgen/**"]
+      "outputs": ["docs/**", ".beep/docgen/**"]
     },
     "dev": {
       "persistent": true,
@@ -225,7 +250,11 @@
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
       ],
       "outputs": ["storybook-static/**"]
     },
@@ -243,7 +272,9 @@
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
       ]
     }
   }

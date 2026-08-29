@@ -8,30 +8,33 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
+import { LiteralKit } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Console, Context, Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Console, Context, DateTime, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { csvValues } from "../../../internal/cli/Flags.js";
-import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.js";
+import { csvValues } from "../../../internal/cli/Flags.ts";
+import { readStdinDocument } from "../../../internal/cli/Stdin.ts";
+import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import {
   FallowFeatureFamily,
   FallowReportEnvelope,
   FindingAttributionKind,
-} from "../../Quality/internal/FallowEnvelope.schema.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { buildQualityIssueIndex, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "./QualityIssueIndex.js";
+  fallowEnvelopeFileName,
+} from "../../Quality/internal/FallowEnvelope.schema.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { buildQualityIssueIndex, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "./QualityIssueIndex.ts";
 import type {
   FallowFailureEnvelope,
   FallowReportFinding,
   FallowReportOk,
-} from "../../Quality/internal/FallowEnvelope.schema.js";
+} from "../../Quality/internal/FallowEnvelope.schema.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FallowFeedback");
 
-const fallowEnvelopeFileNames = A.map(FallowFeatureFamily.Options, (feature) => `${feature}.json`);
+const fallowEnvelopeFileNames = A.map(FallowFeatureFamily.Options, (feature) => fallowEnvelopeFileName(feature, true));
 
 // Local aliases keep this module's prior names while sourcing the single
 // shared Fallow report-envelope codec, eliminating producer/consumer drift.
@@ -68,6 +71,49 @@ class FallowFixtureDocument extends S.Class<FallowFixtureDocument>($I`FallowFixt
   })
 ) {}
 
+// `.beep/fallow` is gitignored, regenerable state. An advisory phase must never
+// fail a publish over it, so the two envelope defects that are pure leftovers —
+// envelopes written before this Yeet run started, and advisory-named envelopes
+// produced in check mode — are purged and the phase skips (decision 25 / ledger
+// #55). Leftover classification therefore runs BEFORE every hard-failing check,
+// and those checks only ever see the envelopes that survive the purge: a stale
+// or check-mode envelope that also disagrees with its feature family is still
+// just leftover state. Everything else (a surviving fresh envelope whose
+// findings disagree with its feature family, unreadable or undecodable
+// envelopes) is a producer bug in current-run output rather than stale state:
+// those still surface, each carrying this one-command remedy.
+const FALLOW_ENVELOPE_PURGE_REMEDY = "rm -rf .beep/fallow";
+
+const withPurgeRemedy = (message: string): string => `${message}\nRemedy: ${FALLOW_ENVELOPE_PURGE_REMEDY}`;
+
+const FallowEnvelopeDefectKind = LiteralKit(["mode-mismatch", "stale"]).pipe(
+  $I.annoteSchema("FallowEnvelopeDefectKind", {
+    description: "Self-healable Fallow advisory envelope defect kind: regenerable leftovers, never a run failure.",
+  })
+);
+
+class FallowEnvelopeEntry extends S.Class<FallowEnvelopeEntry>($I`FallowEnvelopeEntry`)(
+  {
+    envelope: FallowEnvelope,
+    filePath: S.String,
+  },
+  $I.annote("FallowEnvelopeEntry", {
+    description: "One decoded Fallow envelope paired with the file it was read from.",
+  })
+) {}
+
+class FallowEnvelopeDefect extends S.Class<FallowEnvelopeDefect>($I`FallowEnvelopeDefect`)(
+  {
+    detail: S.String,
+    filePath: S.String,
+    kind: FallowEnvelopeDefectKind,
+    subcommand: FallowFeatureFamily,
+  },
+  $I.annote("FallowEnvelopeDefect", {
+    description: "One purgeable Fallow advisory envelope file plus why it is unusable for the current Yeet run.",
+  })
+) {}
+
 const decodeFallowEnvelopeJson = S.decodeUnknownEffect(S.fromJsonString(FallowEnvelope));
 const decodeFallowFixtureDocumentJsonc = decodeJsoncTextAs(FallowFixtureDocument);
 const decodeRepoRunPlanJson = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
@@ -101,11 +147,13 @@ const readFileText = Effect.fn("YeetFallowFeedback.readFileText")(function* (
  * output directory — for example a temp directory in tests, or a non-repo Fallow
  * output dir — while keeping the symlink/traversal protection intact.
  *
- * @example
+ * **Example** (Read a fallow feedback allowed root entry)
+ *
  * ```ts
  * import { FallowFeedbackAllowedRoot } from "@beep/repo-cli/commands/Yeet/internal/FallowFeedback"
  * console.log(FallowFeedbackAllowedRoot.key)
  * ```
+ *
  * @category guards
  * @since 0.0.0
  */
@@ -125,14 +173,16 @@ export const FallowFeedbackAllowedRoot: Context.Reference<O.Option<string>> = Co
  * The symlink/traversal protection of {@link resolvePathWithinRoot} is preserved
  * — any candidate that escapes the supplied root is still rejected.
  *
- * @param root - Absolute directory the advisory feedback reader/writer may resolve paths within.
- * @returns A layer that sets {@link FallowFeedbackAllowedRoot} to the supplied root.
- * @example
+ * **Example** (Restrict feedback output to a root)
+ *
  * ```ts
  * import { layerFallowFeedbackAllowedRoot } from "@beep/repo-cli/commands/Yeet/internal/FallowFeedback"
  * const OutputRoot = layerFallowFeedbackAllowedRoot("/tmp/fallow-output")
  * console.log(OutputRoot) // example value
  * ```
+ *
+ * @param root - Absolute directory the advisory feedback reader/writer may resolve paths within.
+ * @returns A layer that sets {@link FallowFeedbackAllowedRoot} to the supplied root.
  * @category guards
  * @since 0.0.0
  */
@@ -276,22 +326,23 @@ const issueIndexFromEnvelopes = (envelopes: ReadonlyArray<FallowEnvelope>, advis
     )
   );
 
+// Reject self-contradictory payloads: a successful envelope's findings must share
+// its subcommand feature family, otherwise the issue id (derived from the
+// subcommand) and category/message (derived from the finding) would disagree.
+const familyMismatchRefs: (envelopes: ReadonlyArray<FallowEnvelope>) => ReadonlyArray<string> = flow(
+  A.filter(
+    (envelope: FallowEnvelope) =>
+      envelope.status === "ok" &&
+      !envelope.report.findings.every((finding) => finding.featureFamily === envelope.subcommand)
+  ),
+  A.map((envelope) => envelope.reportPath)
+);
+
 const assertAdvisoryEnvelopes = Effect.fn("YeetFallowFeedback.assertAdvisoryEnvelopes")(function* (
   envelopes: ReadonlyArray<FallowEnvelope>,
   advisory: boolean
 ): Effect.fn.Return<void, YeetCommandError> {
-  // Reject self-contradictory payloads up front: a successful envelope's findings
-  // must share its subcommand feature family, otherwise the issue id (derived from
-  // the subcommand) and category/message (derived from the finding) would disagree.
-  const inconsistentRefs = pipe(
-    envelopes,
-    A.filter(
-      (envelope) =>
-        envelope.status === "ok" &&
-        !envelope.report.findings.every((finding) => finding.featureFamily === envelope.subcommand)
-    ),
-    A.map((envelope) => envelope.reportPath)
-  );
+  const inconsistentRefs = familyMismatchRefs(envelopes);
   if (!A.isReadonlyArrayEmpty(inconsistentRefs)) {
     return yield* YeetCommandError.make({
       message: `Fallow advisory feedback received envelope(s) whose findings disagree with the subcommand feature family: ${A.join(inconsistentRefs, ", ")}`,
@@ -314,12 +365,117 @@ const assertAdvisoryEnvelopes = Effect.fn("YeetFallowFeedback.assertAdvisoryEnve
   }
 });
 
+// The on-disk advisory phase keeps the same contract check, but teaches the
+// remedy: a mismatched envelope on disk is regenerable, so the operator (or
+// agent) never has to rediscover `rm -rf .beep/fallow` from a 2026-06 memory.
+const assertEnvelopeFamilyConsistency = Effect.fn("YeetFallowFeedback.assertEnvelopeFamilyConsistency")(function* (
+  envelopes: ReadonlyArray<FallowEnvelope>
+): Effect.fn.Return<void, YeetCommandError> {
+  const inconsistentRefs = familyMismatchRefs(envelopes);
+  if (A.isReadonlyArrayEmpty(inconsistentRefs)) {
+    return;
+  }
+  return yield* YeetCommandError.make({
+    command: FALLOW_ENVELOPE_PURGE_REMEDY,
+    message: withPurgeRemedy(
+      `Fallow advisory feedback received envelope(s) whose findings disagree with the subcommand feature family: ${A.join(inconsistentRefs, ", ")}`
+    ),
+    exitCode: 1,
+  });
+});
+
+const runStartMillis = (runStartedAt: string | undefined): O.Option<number> =>
+  pipe(O.fromUndefinedOr(runStartedAt), O.flatMap(DateTime.make), O.map(DateTime.toEpochMillis));
+
+// An envelope with an unparseable `generatedAt` cannot be proven fresh, so it is
+// treated as stale rather than trusted.
+const envelopeIsStale = (envelope: FallowEnvelope, startedAtMillis: number): boolean =>
+  pipe(
+    DateTime.make(envelope.generatedAt),
+    O.match({
+      onNone: () => true,
+      onSome: (generatedAt) => DateTime.toEpochMillis(generatedAt) < startedAtMillis,
+    })
+  );
+
+const envelopeDefect = (
+  entry: FallowEnvelopeEntry,
+  startedAtMillis: O.Option<number>
+): O.Option<FallowEnvelopeDefect> =>
+  entry.envelope.advisory
+    ? pipe(
+        startedAtMillis,
+        O.filter((startedAt) => envelopeIsStale(entry.envelope, startedAt)),
+        O.as(
+          FallowEnvelopeDefect.make({
+            detail: `generated ${entry.envelope.generatedAt}, older than the Yeet run start`,
+            filePath: entry.filePath,
+            kind: "stale",
+            subcommand: entry.envelope.subcommand,
+          })
+        )
+      )
+    : O.some(
+        FallowEnvelopeDefect.make({
+          detail: `advisory-named envelope was produced in check mode (${entry.envelope.reportPath})`,
+          filePath: entry.filePath,
+          kind: "mode-mismatch",
+          subcommand: entry.envelope.subcommand,
+        })
+      );
+
+const selfHealableDefects = (
+  entries: ReadonlyArray<FallowEnvelopeEntry>,
+  startedAtMillis: O.Option<number>
+): ReadonlyArray<FallowEnvelopeDefect> => A.getSomes(A.map(entries, (entry) => envelopeDefect(entry, startedAtMillis)));
+
+// The complement of `selfHealableDefects`: the envelopes that are not purgeable
+// leftovers, so they are the only ones a hard-failing consistency check may read.
+const survivingEnvelopes = (
+  entries: ReadonlyArray<FallowEnvelopeEntry>,
+  startedAtMillis: O.Option<number>
+): ReadonlyArray<FallowEnvelope> =>
+  pipe(
+    entries,
+    A.filter((entry) => O.isNone(envelopeDefect(entry, startedAtMillis))),
+    A.map((entry) => entry.envelope)
+  );
+
+const purgeEnvelopeFile = Effect.fn("YeetFallowFeedback.purgeEnvelopeFile")(function* (
+  defect: FallowEnvelopeDefect
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  // A delete that fails is reported in the skip note, never raised: the phase is
+  // advisory and the next run re-attempts the purge.
+  return yield* fs.remove(defect.filePath, { force: true }).pipe(
+    Effect.as(O.none<string>()),
+    Effect.orElseSucceed(() => O.some(defect.filePath))
+  );
+});
+
+const purgeNoteLines = (
+  defects: ReadonlyArray<FallowEnvelopeDefect>,
+  unpurged: ReadonlyArray<string>
+): ReadonlyArray<string> => [
+  `[yeet] advisory feedback skipped: stale envelopes purged (${A.length(defects)})`,
+  ...A.map(defects, (defect) => `[yeet]   - ${defect.subcommand} (${defect.kind}): ${defect.detail}`),
+  ...(A.isReadonlyArrayEmpty(unpurged)
+    ? []
+    : [`[yeet]   ! could not delete: ${A.join(unpurged, ", ")}`, `[yeet]   Remedy: ${FALLOW_ENVELOPE_PURGE_REMEDY}`]),
+  "[yeet] .beep/fallow is gitignored, regenerable state; the next fallow run rewrites these envelopes.",
+];
+
 const readEnvelopeFile = Effect.fn("YeetFallowFeedback.readEnvelopeFile")(function* (
   filePath: string
 ): Effect.fn.Return<FallowEnvelope, YeetCommandError, FileSystem.FileSystem> {
   const text = yield* readFileText(filePath);
   return yield* decodeFallowEnvelopeJson(text).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to decode Fallow envelope "${filePath}".`, { file: filePath }))
+    Effect.mapError(
+      YeetCommandError.new(withPurgeRemedy(`Failed to decode Fallow envelope "${filePath}".`), {
+        command: FALLOW_ENVELOPE_PURGE_REMEDY,
+        file: filePath,
+      })
+    )
   );
 });
 
@@ -338,7 +494,8 @@ const envelopePaths = Effect.fn("YeetFallowFeedback.envelopePaths")(function* (
         ? Effect.succeed(A.empty<string>())
         : Effect.fail(
             YeetCommandError.make({
-              message: `Failed to read Fallow envelope directory "${absoluteFromPath}".`,
+              command: FALLOW_ENVELOPE_PURGE_REMEDY,
+              message: withPurgeRemedy(`Failed to read Fallow envelope directory "${absoluteFromPath}".`),
               file: absoluteFromPath,
               cause: error,
             })
@@ -356,26 +513,41 @@ const envelopePaths = Effect.fn("YeetFallowFeedback.envelopePaths")(function* (
 const spaceValues = (value: string): ReadonlyArray<string> =>
   pipe(Str.split(value, " "), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
-const readEnvelopesFromDirectory = Effect.fn("YeetFallowFeedback.readEnvelopesFromDirectory")(function* (
+const readEnvelopeEntries = Effect.fn("YeetFallowFeedback.readEnvelopeEntries")(function* (
   fromPath: string
-): Effect.fn.Return<ReadonlyArray<FallowEnvelope>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReadonlyArray<FallowEnvelopeEntry>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const paths = yield* envelopePaths(fromPath);
-  return yield* Effect.forEach(paths, readEnvelopeFile, { concurrency: 1 });
+  return yield* Effect.forEach(
+    paths,
+    (filePath) =>
+      readEnvelopeFile(filePath).pipe(Effect.map((envelope) => FallowEnvelopeEntry.make({ envelope, filePath }))),
+    { concurrency: 1 }
+  );
 });
-
-const feedbackEnvelopes = (
-  envelopes: ReadonlyArray<FallowEnvelope>,
-  advisory: boolean
-): ReadonlyArray<FallowEnvelope> =>
-  advisory
-    ? pipe(
-        envelopes,
-        A.filter((envelope) => envelope.advisory)
-      )
-    : envelopes;
 
 /**
  * Convert Fallow advisory envelopes from a directory into a Yeet issue index.
+ *
+ * **Details**
+ *
+ * In advisory mode the phase self-heals rather than failing the run: envelopes
+ * left over from an earlier Yeet run (stale) and advisory-named envelopes that
+ * were produced in check mode (mode-mismatched) are deleted, an empty issue
+ * index is emitted so downstream consumers see the same state as an absent
+ * `.beep/fallow`, and the run continues with a skip note on stdout — which the
+ * step recorder captures into the run verdict.
+ *
+ * **Gotchas**
+ *
+ * Self-heal covers regenerable leftovers only. Envelope contract violations and
+ * unreadable/undecodable envelopes still fail, each printing the exact
+ * `rm -rf .beep/fallow` remedy.
+ *
+ * Order matters: leftovers are classified and purged first, and the feature
+ * family consistency check reads only the envelopes that survive that purge. A
+ * stale or check-mode envelope that also disagrees with its feature family is
+ * regenerable state and self-heals; the same disagreement on a surviving fresh
+ * envelope is current-run producer output and still fails with exit code 1.
  *
  * @category commands
  * @since 0.0.0
@@ -384,12 +556,34 @@ export const runYeetFallowFeedback = Effect.fn("YeetFallowFeedback.runYeetFallow
   readonly advisory: boolean;
   readonly emit: string;
   readonly from: string;
+  readonly runStartedAt?: string;
 }): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const envelopes = yield* readEnvelopesFromDirectory(options.from);
-  const selectedEnvelopes = feedbackEnvelopes(envelopes, options.advisory);
-  yield* assertAdvisoryEnvelopes(selectedEnvelopes, options.advisory);
-  const index = issueIndexFromEnvelopes(selectedEnvelopes, options.advisory);
-  yield* writeQualityIssueIndex(options.emit, index);
+  const entries = yield* readEnvelopeEntries(options.from);
+  if (!options.advisory) {
+    const envelopes = A.map(entries, (entry) => entry.envelope);
+    yield* assertAdvisoryEnvelopes(envelopes, false);
+    yield* writeQualityIssueIndex(options.emit, issueIndexFromEnvelopes(envelopes, false));
+    yield* Console.log(`[yeet] Fallow advisory issue index written to ${options.emit}`);
+    return;
+  }
+  // Classify and purge regenerable leftovers before any hard-failing check, then
+  // check only the survivors (decision 25 / ledger #55): a stale or check-mode
+  // envelope is never allowed to fail the publish, whatever else it carries.
+  const startedAtMillis = runStartMillis(options.runStartedAt);
+  const defects = selfHealableDefects(entries, startedAtMillis);
+  const surviving = survivingEnvelopes(entries, startedAtMillis);
+  if (!A.isReadonlyArrayEmpty(defects)) {
+    const unpurged = A.getSomes(yield* Effect.forEach(defects, purgeEnvelopeFile, { concurrency: 1 }));
+    // Emit the same index an absent `.beep/fallow` produces so a downstream
+    // consumer never reads a half-truth built from a partially stale directory.
+    yield* writeQualityIssueIndex(options.emit, issueIndexFromEnvelopes(A.empty<FallowEnvelope>(), true));
+    yield* Console.log(A.join(purgeNoteLines(defects, unpurged), "\n"));
+    // Leftovers are healed; a family mismatch left on an envelope that survived
+    // the purge is a producer bug in current-run output, so it still fails.
+    return yield* assertEnvelopeFamilyConsistency(surviving);
+  }
+  yield* assertEnvelopeFamilyConsistency(surviving);
+  yield* writeQualityIssueIndex(options.emit, issueIndexFromEnvelopes(surviving, true));
   yield* Console.log(`[yeet] Fallow advisory issue index written to ${options.emit}`);
 });
 
@@ -458,30 +652,12 @@ export const runYeetFallowFixtureCheck = Effect.fn("YeetFallowFeedback.runYeetFa
   yield* Console.log(`[yeet] Fallow fixture check ok: ${options.fixturePath}`);
 });
 
-const readStdinText = Effect.fn("YeetFallowFeedback.readStdinText")(function* (
-  fromStdin: boolean
-): Effect.fn.Return<string, YeetCommandError> {
-  if (!fromStdin) {
-    return yield* YeetCommandError.make({
-      message: "yeet plan-contract-check requires --from-stdin.",
-      exitCode: 1,
-    });
-  }
-  if (process.stdin.isTTY) {
-    return yield* YeetCommandError.make({
-      message: "yeet plan-contract-check --from-stdin received no stdin.",
-      exitCode: 1,
-    });
-  }
-  return yield* Effect.tryPromise(() => Bun.stdin.text()).pipe(
-    Effect.mapError((cause) =>
-      YeetCommandError.make({
-        message: `Failed to read yeet plan stdin: ${cause instanceof Error ? cause.message : String(cause)}`,
-        exitCode: 1,
-      })
-    )
-  );
-});
+const readStdinText = (fromStdin: boolean): Effect.Effect<string, YeetCommandError> =>
+  readStdinDocument(fromStdin, {
+    missingFlag: "yeet plan-contract-check requires --from-stdin.",
+    noStdin: "yeet plan-contract-check --from-stdin received no stdin.",
+    readFailurePrefix: "Failed to read yeet plan stdin",
+  }).pipe(Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 })));
 
 const decodePlanText = Effect.fn("YeetFallowFeedback.decodePlanText")(function* (
   text: string

@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -61,7 +61,8 @@
   },
   "dependencies": {
     "@beep/architecture-lab-domain": "workspace:^",
-    "@beep/drizzle": "workspace:^",
+    "@beep/effect-drizzle": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

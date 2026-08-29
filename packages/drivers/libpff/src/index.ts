@@ -6,12 +6,33 @@
  */
 
 /**
+ * Deterministic EML assembly for pffexport-exported items.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./Libpff.eml.ts";
+/**
+ * Translation from technical libpff failures to operation errors.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./Libpff.error-translation.ts";
+/**
  * Typed libpff driver errors.
  *
  * @category errors
  * @since 0.0.0
  */
 export * from "./Libpff.errors.ts";
+/**
+ * JSONL metadata records for pffexport-exported items.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Libpff.messages.ts";
 /**
  * Real pffexport-backed PST archive export engine.
  *
@@ -30,7 +51,8 @@ export * from "./Libpff.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/libpff"
  *

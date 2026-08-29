@@ -16,8 +16,8 @@ import { profilePhase } from "@beep/observability";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Context, Effect, FileSystem, HashSet, Layer, Order, Path, pipe, Result } from "effect";
-import { printLines } from "../../internal/cli/Printer.js";
-import { FilesCommandError, failOnExtensionlessFile, formatPlatformError } from "./Files.errors.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { FilesCommandError, failOnExtensionlessFile, formatPlatformError } from "./Files.errors.ts";
 import {
   assessImageCandidate,
   byNameAscending,
@@ -31,9 +31,9 @@ import {
   normalizeBareExtension,
   normalizeOutputDimensions,
   targetNameForEntry,
-} from "./Files.media.js";
-import { uniqueArchiveTargetName, uniqueNormalizeTargetName } from "./Files.plan.js";
-import { FilesConcurrency, runFilesProgressForEach } from "./Files.progress.js";
+} from "./Files.media.ts";
+import { uniqueArchiveTargetName, uniqueNormalizeTargetName } from "./Files.plan.ts";
+import { FilesConcurrency, runFilesProgressForEach } from "./Files.progress.ts";
 import {
   archivedEntries,
   countMovedSidecars,
@@ -48,7 +48,7 @@ import {
   renderDetectBordersReportJson,
   renderDetectFacesReportJson,
   writeDetectFacesManifest,
-} from "./Files.render.js";
+} from "./Files.render.ts";
 import {
   ArchivedSidecarEntry,
   ArchivePoorCandidatesEntry,
@@ -84,8 +84,8 @@ import {
   StripMetadataPlan,
   StripMetadataPlanEntry,
   StripMetadataSummary,
-} from "./Files.schemas.js";
-import { analyzeDetectBordersFile, analyzeDetectFacesFile } from "./internal/Analysis.js";
+} from "./Files.schemas.ts";
+import { analyzeDetectBordersFile, analyzeDetectFacesFile } from "./internal/Analysis.ts";
 import {
   applyArchivePoorCandidatesPlan,
   applyCreateCaptionFilesPlan,
@@ -97,9 +97,11 @@ import {
   preflightArchivePoorCandidatesOutputs,
   preflightNormalizeOutputs,
   preflightTargetCollisions,
-} from "./internal/Apply.js";
-import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.js";
-import { processFilesImpl } from "./internal/Process.js";
+} from "./internal/Apply.ts";
+import { runFlattenMediaFiles } from "./internal/FlattenMedia.ts";
+import { auditImagesImpl, curateImagesImpl } from "./internal/ImageCuration.ts";
+import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
+import { processFilesImpl } from "./internal/Process.ts";
 import {
   parseSidecarExtensions,
   validateArchiveDirectories,
@@ -113,9 +115,10 @@ import {
   validateNormalizeDirectories,
   validateNormalizeMaxLongEdge,
   validatePrefix,
-} from "./internal/Validation.js";
+} from "./internal/Validation.ts";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   ArchivePoorCandidatesOptions,
@@ -129,6 +132,12 @@ import type {
   DetectFacesEntry,
   DetectFacesOptions,
   DetectFacesSkippedReason,
+  FlattenMediaOptions,
+  FlattenMediaSummary,
+  ImageAuditManifest,
+  ImageAuditOptions,
+  ImageCurationOptions,
+  ImageCurationSummary,
   MediaDimensions,
   MediaKind,
   NormalizeImageFormat,
@@ -137,7 +146,7 @@ import type {
   ProcessFilesOptions,
   ProcessFilesSummary,
   SafeFilePrefix,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/Files.service");
 
@@ -146,7 +155,8 @@ type FilesCommandServiceRequirements =
   | Path.Path
   | Terminal.Terminal
   | ChildProcessSpawner.ChildProcessSpawner
-  | Crypto.Crypto;
+  | Crypto.Crypto
+  | HttpClient.HttpClient;
 
 interface DetectBordersCollectedEntries {
   readonly files: ReadonlyArray<SortableFile>;
@@ -171,13 +181,15 @@ interface ArchiveCandidateCollectedEntries {
 /**
  * Service contract for dataset file curation operations.
  *
- * @example
+ * **Example** (Service method key type)
+ *
  * ```ts
  * import type { FilesCommandServiceShape } from "@beep/repo-cli/commands/Files"
  *
  * type ServiceMethod = keyof FilesCommandServiceShape
  * const method: ServiceMethod = "normalizeFiles"
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -190,6 +202,12 @@ export interface FilesCommandServiceShape {
   readonly archivePoorCandidates: (
     options: ArchivePoorCandidatesOptions
   ) => Effect.Effect<ArchivePoorCandidatesSummary, FilesCommandError>;
+  /**
+   * Audit direct images without mutating source bytes.
+   *
+   * @since 0.0.0
+   */
+  readonly auditImages: (options: ImageAuditOptions) => Effect.Effect<ImageAuditManifest, FilesCommandError>;
 
   /**
    * Create same-stem caption sidecar files for direct image files.
@@ -208,6 +226,13 @@ export interface FilesCommandServiceShape {
   readonly cropBordersFiles: (options: CropBordersOptions) => Effect.Effect<CropBordersSummary, FilesCommandError>;
 
   /**
+   * Validate a complete decision ledger and materialize canonical PNG derivatives.
+   *
+   * @since 0.0.0
+   */
+  readonly curateImages: (options: ImageCurationOptions) => Effect.Effect<ImageCurationSummary, FilesCommandError>;
+
+  /**
    * Detect solid or near-solid borders in direct image files.
    *
    * @since 0.0.0
@@ -220,6 +245,13 @@ export interface FilesCommandServiceShape {
    * @since 0.0.0
    */
   readonly detectFacesFiles: (options: DetectFacesOptions) => Effect.Effect<DetectFacesReport, FilesCommandError>;
+
+  /**
+   * Recursively move image and video files into one flat destination directory.
+   *
+   * @since 0.0.0
+   */
+  readonly flattenMediaFiles: (options: FlattenMediaOptions) => Effect.Effect<FlattenMediaSummary, FilesCommandError>;
 
   /**
    * Normalize direct image files into a reversible output directory.
@@ -258,12 +290,14 @@ export interface FilesCommandServiceShape {
 /**
  * Service tag for dataset file curation operations.
  *
- * @example
+ * **Example** (Service tag identity)
+ *
  * ```ts
  * import { FilesCommandService } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof FilesCommandService = FilesCommandService
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -1329,14 +1363,14 @@ const buildNormalizePlan = Effect.fn("Files.buildNormalizePlan")(function* (
 
   for (const file of collection.files) {
     const sourceStem = path.basename(file.name, file.extension);
-    const uniqueTarget = uniqueNormalizeTargetName(sourceStem, options.format, usedTargetNames);
-    usedTargetNames = uniqueTarget.usedTargetNames;
-    const outputPath = path.join(outputDirectory, uniqueTarget.targetName);
+    const targetName = uniqueNormalizeTargetName(sourceStem, options.format, usedTargetNames);
+    usedTargetNames = HashSet.add(usedTargetNames, targetName);
+    const outputPath = path.join(outputDirectory, targetName);
 
     planInputs = A.append(planInputs, {
       file,
       outputPath,
-      targetName: uniqueTarget.targetName,
+      targetName,
     });
   }
   const entries = yield* runFilesProgressForEach(
@@ -1523,10 +1557,10 @@ const buildArchivePoorCandidatesPlan = Effect.fn("Files.buildArchivePoorCandidat
       continue;
     }
 
-    const uniqueTarget = uniqueArchiveTargetName(sourceStem, file.extension, usedTargetNames);
-    usedTargetNames = uniqueTarget.usedTargetNames;
-    const archivePath = path.join(archiveDirectory, uniqueTarget.targetName);
-    const targetStem = path.basename(uniqueTarget.targetName, file.extension);
+    const archiveTargetName = uniqueArchiveTargetName(sourceStem, file.extension, usedTargetNames);
+    usedTargetNames = HashSet.add(usedTargetNames, archiveTargetName);
+    const archivePath = path.join(archiveDirectory, archiveTargetName);
+    const targetStem = path.basename(archiveTargetName, file.extension);
     const sidecarPlan = yield* collectArchiveSidecars(
       sourceStem,
       targetStem,
@@ -1540,7 +1574,7 @@ const buildArchivePoorCandidatesPlan = Effect.fn("Files.buildArchivePoorCandidat
     entries = A.append(
       entries,
       ArchivePoorCandidatesEntry.make({
-        archiveName: uniqueTarget.targetName,
+        archiveName: archiveTargetName,
         archivePath,
         archiveRelativePath: path.relative(archiveDirectory, archivePath),
         decision: "archive",
@@ -1681,19 +1715,24 @@ const buildStripMetadataPlan = Effect.fn("Files.buildStripMetadataPlan")(functio
 /**
  * Print the files command index.
  *
- * @example
+ * **Example** (Print files index)
+ *
  * ```ts
  * import { printFilesIndex } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof printFilesIndex = printFilesIndex
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
 export const printFilesIndex = printLines([
   "Files commands:",
+  "- bun run files audit-images --dir ./raw --model ./face_detection_yunet.onnx --manifest ./audit.json",
+  "- bun run files curate-images --dir ./raw --decisions ./decisions.json --out-dir ./prepared",
   "- bun run files sort-and-rename --prefix image --dir ./tmp",
   "- bun run files sort-and-rename --prefix image --dir ./tmp --with-dimensions",
+  "- bun run files flatten-media --dir ./raw --out-dir ./flat --dry-run",
   "- bun run files strip-metadata --dir ./tmp",
   "- bun run files normalize --dir ./raw --out-dir ./dataset/images --format png",
   "- bun run files normalize --dir ./raw --out-dir ./dataset/images --format png --dedupe",
@@ -2353,6 +2392,17 @@ const sortAndRenameFilesImpl = Effect.fn("FilesCommandService.sortAndRenameFiles
   });
 });
 
+const flattenMediaFilesImpl = Effect.fn("FilesCommandService.flattenMediaFiles")(function* (
+  options: FlattenMediaOptions
+): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  return yield* profilePhase(runFlattenMediaFiles(options), {
+    phase: "files.flatten-media",
+    attributes: {
+      dryRun: `${options.dryRun}`,
+    },
+  });
+});
+
 const stripMetadataFilesImpl = Effect.fn("FilesCommandService.stripMetadataFiles")(function* (
   dir: string,
   dryRun: boolean
@@ -2416,6 +2466,9 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
   const runtimeContext = yield* Effect.context<FilesCommandServiceRequirements>();
 
   return FilesCommandService.of({
+    auditImages: Effect.fn("FilesCommandService.auditImages")((options) =>
+      auditImagesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     archivePoorCandidates: Effect.fn("FilesCommandService.archivePoorCandidates")((options) =>
       archivePoorCandidatesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -2425,11 +2478,17 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
     cropBordersFiles: Effect.fn("FilesCommandService.cropBordersFiles")((options) =>
       cropBordersFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
+    curateImages: Effect.fn("FilesCommandService.curateImages")((options) =>
+      curateImagesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     detectBordersFiles: Effect.fn("FilesCommandService.detectBordersFiles")((options) =>
       detectBordersFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     detectFacesFiles: Effect.fn("FilesCommandService.detectFacesFiles")((options) =>
       detectFacesFilesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    flattenMediaFiles: Effect.fn("FilesCommandService.flattenMediaFiles")((options) =>
+      flattenMediaFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     normalizeFiles: Effect.fn("FilesCommandService.normalizeFiles")((options) =>
       normalizeFilesImpl(options).pipe(Effect.provide(runtimeContext))
@@ -2450,12 +2509,14 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
 /**
  * Live service layer for dataset file curation operations.
  *
- * @example
+ * **Example** (Live layer identity)
+ *
  * ```ts
  * import { FilesCommandServiceLive } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof FilesCommandServiceLive = FilesCommandServiceLive
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -2463,16 +2524,41 @@ export const FilesCommandServiceLive: Layer.Layer<FilesCommandService, never, Fi
   Layer.effect(FilesCommandService, makeFilesCommandService());
 
 /**
+ * Audit direct images and write deterministic review evidence without changing source files.
+ *
+ * **Example** (Audit images function)
+ *
+ * ```ts
+ * import { auditImages } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof auditImages = auditImages
+ * ```
+ *
+ * @param options - Image audit directory, model, manifest, and overwrite options.
+ * @returns The completed image audit manifest.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const auditImages = Effect.fn("Files.auditImages")(function* (
+  options: ImageAuditOptions
+): Effect.fn.Return<ImageAuditManifest, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.auditImages(options);
+});
+
+/**
  * Archive obvious poor image candidates out of a dataset directory.
  *
- * @param options - Candidate archival options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Archive poor candidates)
+ *
  * ```ts
  * import { archivePoorCandidates } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof archivePoorCandidates = archivePoorCandidates
  * ```
+ *
+ * @param options - Candidate archival options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2486,14 +2572,16 @@ export const archivePoorCandidates = Effect.fn("Files.archivePoorCandidates")(fu
 /**
  * Create same-stem caption sidecar files for direct image files.
  *
- * @param options - Caption sidecar creation options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Create caption sidecars)
+ *
  * ```ts
  * import { createCaptionFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof createCaptionFiles = createCaptionFiles
  * ```
+ *
+ * @param options - Caption sidecar creation options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2507,14 +2595,16 @@ export const createCaptionFiles = Effect.fn("Files.createCaptionFiles")(function
 /**
  * Crop solid or near-solid borders from direct image files.
  *
- * @param options - Border crop options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Crop image borders)
+ *
  * ```ts
  * import { cropBordersFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof cropBordersFiles = cropBordersFiles
  * ```
+ *
+ * @param options - Border crop options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2526,16 +2616,41 @@ export const cropBordersFiles = Effect.fn("Files.cropBordersFiles")(function* (
 });
 
 /**
+ * Validate a complete decision ledger and materialize canonical PNG derivatives.
+ *
+ * **Example** (Curate image derivatives)
+ *
+ * ```ts
+ * import { curateImages } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof curateImages = curateImages
+ * ```
+ *
+ * @param options - Source, ledger, output, dry-run, and overwrite options.
+ * @returns Summary counts for the curation run.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const curateImages = Effect.fn("Files.curateImages")(function* (
+  options: ImageCurationOptions
+): Effect.fn.Return<ImageCurationSummary, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.curateImages(options);
+});
+
+/**
  * Detect solid or near-solid borders in direct image files.
  *
- * @param options - Border detection options.
- * @returns JSON-safe detection report.
- * @example
+ * **Example** (Detect image borders)
+ *
  * ```ts
  * import { detectBordersFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof detectBordersFiles = detectBordersFiles
  * ```
+ *
+ * @param options - Border detection options.
+ * @returns JSON-safe detection report.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2549,14 +2664,16 @@ export const detectBordersFiles = Effect.fn("Files.detectBordersFiles")(function
 /**
  * Detect human faces in direct image files.
  *
- * @param options - Face detection options.
- * @returns JSON-safe face detection report.
- * @example
+ * **Example** (Detect faces in images)
+ *
  * ```ts
  * import { detectFacesFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof detectFacesFiles = detectFacesFiles
  * ```
+ *
+ * @param options - Face detection options.
+ * @returns JSON-safe face detection report.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2568,16 +2685,46 @@ export const detectFacesFiles = Effect.fn("Files.detectFacesFiles")(function* (
 });
 
 /**
+ * Recursively move image and video files into one flat destination directory.
+ *
+ * **Example** (Flatten media dry-run)
+ *
+ * ```ts
+ * import { FlattenMediaOptions, flattenMediaFiles } from "@beep/repo-cli/commands/Files"
+ * import { Effect } from "effect"
+ *
+ * const program = flattenMediaFiles(FlattenMediaOptions.make({
+ *   dir: "./raw",
+ *   dryRun: true,
+ *   outDir: "./flat"
+ * }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @effects Recursively reads source directories and moves selected files unless dry-run is enabled.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const flattenMediaFiles = Effect.fn("Files.flattenMediaFiles")(function* (
+  options: FlattenMediaOptions
+): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.flattenMediaFiles(options);
+});
+
+/**
  * Normalize direct image files into an output directory and write a transform manifest.
  *
- * @param options - Normalization options.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Normalize files function)
+ *
  * ```ts
  * import { normalizeFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof normalizeFiles = normalizeFiles
  * ```
+ *
+ * @param options - Normalization options.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2591,15 +2738,17 @@ export const normalizeFiles = Effect.fn("Files.normalizeFiles")(function* (
 /**
  * Process a file or directory into the V1 file-processing proof manifest tree.
  *
- * @param options - File-processing proof options.
- * @returns Summary counts for the operation.
- * @effects Requires {@link FilesCommandService}; reads source files, writes the proof manifest tree, and reports failures through {@link FilesCommandError}.
- * @example
+ * **Example** (Process files function)
+ *
  * ```ts
  * import { processFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof processFiles = processFiles
  * ```
+ *
+ * @param options - File-processing proof options.
+ * @returns Summary counts for the operation.
+ * @effects Requires {@link FilesCommandService}; reads source files, writes the proof manifest tree, and reports failures through {@link FilesCommandError}.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2613,17 +2762,19 @@ export const processFiles = Effect.fn("Files.processFiles")(function* (
 /**
  * Sort direct regular files in a directory by size and rename them with a generated prefix.
  *
- * @param dir - Directory whose direct regular files should be sorted and renamed.
- * @param prefix - Safe generated filename prefix.
- * @param dryRun - Whether to print the plan without applying it.
- * @param withDimensions - Whether to include probed media dimensions in generated names.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Sort and rename files)
+ *
  * ```ts
  * import { sortAndRenameFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof sortAndRenameFiles = sortAndRenameFiles
  * ```
+ *
+ * @param dir - Directory whose direct regular files should be sorted and renamed.
+ * @param prefix - Safe generated filename prefix.
+ * @param dryRun - Whether to print the plan without applying it.
+ * @param withDimensions - Whether to include probed media dimensions in generated names.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */
@@ -2641,16 +2792,18 @@ export const sortAndRenameFiles = Effect.fn("Files.sortAndRenameFiles")(function
  * Strip user-authored metadata from direct image and video files in a directory.
  * Unless `dryRun` is true, selected files are rewritten in place.
  *
- * @param dir - Directory whose direct media files should be stripped.
- * @param dryRun - Whether to print the plan without applying it.
- * @returns Summary counts for the operation.
- * @example
+ * **Example** (Strip metadata dry-run)
+ *
  * ```ts
  * import { stripMetadataFiles } from "@beep/repo-cli/commands/Files/index"
  *
  * const program = stripMetadataFiles("./tmp", true)
  * console.log(program) // example value
  * ```
+ *
+ * @param dir - Directory whose direct media files should be stripped.
+ * @param dryRun - Whether to print the plan without applying it.
+ * @returns Summary counts for the operation.
  * @category use-cases
  * @since 0.0.0
  */

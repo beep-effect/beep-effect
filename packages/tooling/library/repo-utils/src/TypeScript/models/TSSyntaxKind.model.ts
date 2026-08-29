@@ -429,12 +429,14 @@ const TSSyntaxKindNames = toNameOptions(TSSyntaxKindEntries);
 /**
  * Lookup table from canonical SyntaxKind names to their numeric codes.
  *
- * @example
+ * **Example** (Lookup SourceFile kind code)
+ *
  * ```ts
  * import { TSSyntaxKindCode } from "@beep/repo-utils/TypeScript/models/TSSyntaxKind.model"
  * const sourceFileCode = TSSyntaxKindCode.SourceFile
  * console.log(sourceFileCode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -447,15 +449,19 @@ const TSSyntaxKindBase = LiteralKit(TSSyntaxKindNames);
 /**
  * Literal schema kit for canonical TypeScript SyntaxKind names.
  *
+ * **Details**
+ *
  * `From` is kept as a compatibility alias for callers that previously reached
  * for the literal-name side of the old mapped model.
  *
- * @example
+ * **Example** (Access SyntaxKind code map)
+ *
  * ```ts
  * import { TSSyntaxKind } from "@beep/repo-utils/TypeScript/models/TSSyntaxKind.model"
  * const syntaxKind = TSSyntaxKind
  * console.log(syntaxKind.Code.SourceFile)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -469,12 +475,14 @@ export const TSSyntaxKind = TSSyntaxKindBase.pipe(
 /**
  * Companion namespace for {@link TSSyntaxKind}.
  *
- * @example
+ * **Example** (Annotate SyntaxKind type value)
+ *
  * ```ts
  * import type { TSSyntaxKind } from "@beep/repo-utils/TypeScript/models/TSSyntaxKind.model"
  * const kind: TSSyntaxKind.Type = "SourceFile"
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -498,12 +506,14 @@ export declare namespace TSSyntaxKind {
 /**
  * Literal union of all canonical TypeScript SyntaxKind string names.
  *
- * @example
+ * **Example** (Inspect SyntaxKind literal union)
+ *
  * ```ts
  * import { TSSyntaxKindLiteral } from "@beep/repo-utils/TypeScript/models/TSSyntaxKind.model"
  * const syntaxKind = TSSyntaxKindLiteral
  * console.log(syntaxKind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -512,12 +522,14 @@ export const TSSyntaxKindLiteral = TSSyntaxKind.From;
 /**
  * Inferred type for {@link TSSyntaxKindLiteral}.
  *
- * @example
+ * **Example** (Annotate SyntaxKind literal type)
+ *
  * ```ts
  * import type { TSSyntaxKindLiteral } from "@beep/repo-utils/TypeScript/models/TSSyntaxKind.model"
  * const kind: TSSyntaxKindLiteral = "SourceFile"
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

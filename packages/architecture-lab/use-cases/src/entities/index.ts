@@ -12,4 +12,4 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * as Worker from "./Worker/index.js";
+export * as Worker from "./Worker/index.ts";

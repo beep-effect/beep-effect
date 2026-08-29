@@ -79,8 +79,8 @@ Exact packages and role-files (role-suffix order:
 | `ClaimProjection` pure fn | `packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts` | post-contract helper | NET-NEW |
 | Slice composition / Layer surface | `packages/epistemic/server/src/...` | server tier | NET-NEW (thin) |
 | Bounded SHACL engine | `@beep/semantic-web/services/shacl-validation` (`ShaclValidationService`, `ShaclValidationResult`, `ShaclValidationViolation`) | engine brick | HAVE |
-| Provenance vocabulary | `@beep/semantic-web/services/provenance` + `@beep/rdf/Vocab/Prov` | PROV-O | HAVE |
-| Evidence selector reference | `@beep/semantic-web/evidence` (`EvidenceAnchor`, `TextPositionSelector`, `TextQuoteSelector`) | offset shape reference | HAVE |
+| Provenance vocabulary | `@beep/rdf/Vocab/Prov` (the `@beep/semantic-web/services/provenance` projection service was retired unconsumed, 2026-08) | PROV-O | HAVE |
+| Evidence selector reference | `@beep/rdf/Evidence` (`EvidenceAnchor`, `TextPositionSelector`, `TextQuoteSelector`) | offset shape reference | HAVE |
 
 The `use-cases` and `server` tiers are **new tiers inside the existing
 epistemic slice**, not new slices and not `knowledge-law/*` packages. Follow the
@@ -106,7 +106,7 @@ slice-tier naming the `architecture-lab` reference slice already demonstrates.
   never a central write.
 - Domain imports only foundation primitives/modeling; live composition stays in
   `server`. No God Layers. No direct slice-to-slice imports.
-- `Evidence` char-offsets reuse the `@beep/semantic-web/evidence`
+- `Evidence` char-offsets reuse the `@beep/rdf/Evidence`
   `TextPositionSelector`/`TextQuoteSelector` shape as the reference; the offsets
   become epistemic A-Box entity fields (not RDF selectors).
 - Tests boot only epistemic Layers + shared test-kit. Acceptance gates on **no
@@ -182,7 +182,7 @@ decisions (2026-06-17):
 - `ClaimLifecycle` extends from candidate-only (`LiteralKit(["candidate"])`,
   verified on disk) to the four-state machine.
 - Port **only** the v3 `EvidenceSpan` `{text,startChar,endChar,confidence}`
-  primitive onto `Evidence`; reuse `@beep/semantic-web/evidence` selectors as
+  primitive onto `Evidence`; reuse `@beep/rdf/Evidence` selectors as
   shape reference, not as the field set.
 - `ClaimGate` is composition over the HAVE bounded `ShaclValidationService`, not
   a new SHACL engine.

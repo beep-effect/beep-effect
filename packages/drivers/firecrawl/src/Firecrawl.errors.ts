@@ -6,7 +6,7 @@
  */
 
 import { $FirecrawlId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { isNonNegative } from "@beep/schema/Number";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, pipe, Result } from "effect";
@@ -74,7 +74,8 @@ const FirecrawlMethodNameBase = LiteralKit([
 /**
  * Firecrawl SDK methods wrapped by this driver.
  *
- * @example
+ * **Example** (Check scrape method name)
+ *
  * ```ts
  * import { FirecrawlMethodName } from "@beep/firecrawl"
  *
@@ -94,7 +95,8 @@ export const FirecrawlMethodName = FirecrawlMethodNameBase.pipe(
 /**
  * Type for {@link FirecrawlMethodName}.
  *
- * @example
+ * **Example** (Assign method name type)
+ *
  * ```ts
  * import type { FirecrawlMethodName } from "@beep/firecrawl"
  *
@@ -123,7 +125,8 @@ const FirecrawlErrorReasonBase = LiteralKit([
 /**
  * Technical error reasons emitted by the Firecrawl driver.
  *
- * @example
+ * **Example** (Check transport error reason)
+ *
  * ```ts
  * import { FirecrawlErrorReason } from "@beep/firecrawl"
  *
@@ -143,7 +146,8 @@ export const FirecrawlErrorReason = FirecrawlErrorReasonBase.pipe(
 /**
  * Type for {@link FirecrawlErrorReason}.
  *
- * @example
+ * **Example** (Assign error reason type)
+ *
  * ```ts
  * import type { FirecrawlErrorReason } from "@beep/firecrawl"
  *
@@ -163,7 +167,8 @@ const FirecrawlCodecErrorReasonBase = LiteralKit(
 /**
  * Codec-boundary error reasons emitted while encoding SDK requests and decoding SDK responses.
  *
- * @example
+ * **Example** (Access request encoding reason)
+ *
  * ```ts
  * import { FirecrawlCodecErrorReason } from "@beep/firecrawl"
  *
@@ -183,7 +188,8 @@ export const FirecrawlCodecErrorReason = FirecrawlCodecErrorReasonBase.pipe(
 /**
  * Type for {@link FirecrawlCodecErrorReason}.
  *
- * @example
+ * **Example** (Assign codec error reason)
+ *
  * ```ts
  * import type { FirecrawlCodecErrorReason } from "@beep/firecrawl"
  *
@@ -199,7 +205,8 @@ export type FirecrawlCodecErrorReason = typeof FirecrawlCodecErrorReason.Type;
 /**
  * Decoded Firecrawl API failure body.
  *
- * @example
+ * **Example** (Make API failure body)
+ *
  * ```ts
  * import { FirecrawlApiFailure } from "@beep/firecrawl"
  * import * as O from "effect/Option"
@@ -234,7 +241,8 @@ export class FirecrawlApiFailure extends S.Class<FirecrawlApiFailure>($I`Firecra
 /**
  * Options used when constructing Firecrawl driver errors.
  *
- * @example
+ * **Example** (Make error options object)
+ *
  * ```ts
  * import { FirecrawlErrorOptions } from "@beep/firecrawl"
  * import * as O from "effect/Option"
@@ -288,7 +296,8 @@ class FirecrawlErrorOptionsInput extends S.Class<FirecrawlErrorOptionsInput>($I`
 /**
  * Technical failure raised by the Firecrawl driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { FirecrawlError } from "@beep/firecrawl"
  *
@@ -299,7 +308,7 @@ class FirecrawlErrorOptionsInput extends S.Class<FirecrawlErrorOptionsInput>($I`
  * @category errors
  * @since 0.0.0
  */
-export class FirecrawlError extends TaggedErrorClass<FirecrawlError>($I`FirecrawlError`)(
+export class FirecrawlError extends S.TaggedError<FirecrawlError>($I`FirecrawlError`)(
   "FirecrawlError",
   {
     cause: optionalString,
@@ -311,14 +320,15 @@ export class FirecrawlError extends TaggedErrorClass<FirecrawlError>($I`Firecraw
     sdkVersion: optionalString,
     status: optionalNonNegativeInt,
   },
-  $I.annote("FirecrawlError", {
+  $I.annoteError<FirecrawlError>("FirecrawlError", {
     description: "Sanitized technical failure raised by the Firecrawl driver boundary.",
   })
 ) {
   /**
    * Create a Firecrawl driver error.
    *
-   * @example
+   * **Example** (Create error from reason)
+   *
    * ```ts
    * import { FirecrawlError } from "@beep/firecrawl"
    *
@@ -350,7 +360,8 @@ export class FirecrawlError extends TaggedErrorClass<FirecrawlError>($I`Firecraw
   /**
    * Convert an unknown SDK throw into a sanitized Firecrawl driver error.
    *
-   * @example
+   * **Example** (Convert unknown SDK throw)
+   *
    * ```ts
    * import { FirecrawlError } from "@beep/firecrawl"
    *
@@ -371,7 +382,8 @@ export class FirecrawlError extends TaggedErrorClass<FirecrawlError>($I`Firecraw
   /**
    * Create a failed Effect containing a Firecrawl driver error.
    *
-   * @example
+   * **Example** (Fail Effect from reason)
+   *
    * ```ts
    * import { FirecrawlError } from "@beep/firecrawl"
    *
@@ -405,12 +417,12 @@ const statusFromUnknown = (cause: unknown): O.Option<number> =>
   O.firstSomeOf([readNumber(cause, "status"), readNumber(cause, "statusCode")]);
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- driver-local cause labeling preserves Firecrawl SDK diagnostics
 const causeLabel = (cause: unknown): string =>
   pipe(
     O.firstSomeOf([readString(cause, "_tag"), readString(cause, "name"), readString(cause, "code")]),
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- Firecrawl fallback labels mirror peer drivers but stay provider-local
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))
   );
 

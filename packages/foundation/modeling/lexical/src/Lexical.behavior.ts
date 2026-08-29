@@ -20,14 +20,16 @@ const childText = (children: ReadonlyArray<LexicalNode.Type>): string => A.join(
  * Plain-text projection over the full node union (prompt construction,
  * previews).
  *
- * @example
- * ```ts
+ * **Example** (Linebreak node to newline)
+ *
+ * ```ts import.meta.vitest name="Linebreak node to newline"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
- * console.log(JSON.stringify(nodeToPlainText(node))) // "\"\\n\""
+ * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
+ * Result.isSuccess(result) && nodeToPlainText(result.success) === "\n" // => true
  * ```
  *
  * @category getters
@@ -55,16 +57,24 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
 /**
  * Plain-text projection of a full editor state.
  *
- * @example
- * ```ts
+ * **Example** (Empty editor state text)
+ *
+ * ```ts import.meta.vitest name="Empty editor state text"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  * import { editorStateToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
- * const state = S.decodeUnknownSync(SerializedEditorState)({
- *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 }
+ * const result = S.decodeUnknownResult(SerializedEditorState)({
+ *   root: {
+ *     type: "root", version: 1, direction: null, format: "", indent: 0,
+ *     children: [{
+ *       type: "paragraph", version: 1, children: [],
+ *       direction: null, format: "", indent: 0
+ *     }]
+ *   }
  * })
- * console.log(editorStateToPlainText(state)) // ""
+ * Result.isSuccess(result) && editorStateToPlainText(result.success) === "" // => true
  * ```
  *
  * @category getters

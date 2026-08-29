@@ -28,15 +28,28 @@ const CODE_FENCE_OPENER = /^[ \t]*`{3,}([\w-]+)?[ \t]?$/;
 /**
  * Whether the caret sits inside a code block.
  *
+ * **Details**
+ *
  * Enter belongs to the code block there: a composer that sent the message on Enter
  * inside one would let you write exactly one line of code.
  *
- * @example
- * ```ts
- * import { $isInsideCodeBlock } from "@beep/editor/chat"
+ * **Example** (Caret inside code block)
  *
- * // Inside a Lexical read/update context:
- * const inCode = $isInsideCodeBlock()
+ * ```ts
+ * import { $isInsideCodeBlock } from "@beep/editor/chat/code-fence"
+ * import { $createCodeNode, CodeNode } from "@lexical/code"
+ * import { createHeadlessEditor } from "@lexical/headless"
+ * import { $createTextNode, $getRoot } from "lexical"
+ *
+ * const editor = createHeadlessEditor({ nodes: [CodeNode] })
+ * editor.update(() => {
+ *   const code = $createCodeNode("ts")
+ *   const text = $createTextNode("const answer = 42")
+ *   code.append(text)
+ *   $getRoot().append(code)
+ *   text.select(text.getTextContentSize(), text.getTextContentSize())
+ *   console.log($isInsideCodeBlock()) // true
+ * }, { discrete: true })
  * ```
  *
  * @category guards
@@ -51,14 +64,27 @@ export const $isInsideCodeBlock = (): boolean => {
 /**
  * Open a code block when the caret ends a paragraph that holds only a fence opener.
  *
+ * **Details**
+ *
  * Returns whether the fence was taken, so the caller knows Enter is spent.
  *
- * @example
- * ```ts
- * import { $openCodeFence } from "@beep/editor/chat"
+ * **Example** (Open fence from triple backticks)
  *
- * // Inside a Lexical update context, on Enter:
- * const opened = $openCodeFence()
+ * ```ts
+ * import { $openCodeFence } from "@beep/editor/chat/code-fence"
+ * import { CodeNode } from "@lexical/code"
+ * import { createHeadlessEditor } from "@lexical/headless"
+ * import { $createParagraphNode, $createTextNode, $getRoot } from "lexical"
+ *
+ * const editor = createHeadlessEditor({ nodes: [CodeNode] })
+ * editor.update(() => {
+ *   const paragraph = $createParagraphNode()
+ *   const text = $createTextNode("\u0060\u0060\u0060ts")
+ *   paragraph.append(text)
+ *   $getRoot().append(paragraph)
+ *   text.select(text.getTextContentSize(), text.getTextContentSize())
+ *   console.log($openCodeFence()) // true
+ * }, { discrete: true })
  * ```
  *
  * @category commands

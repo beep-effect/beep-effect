@@ -33,7 +33,7 @@ import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { OptionInjectionError } from "./errors/OptionInjectionError.js";
+import { OptionInjectionError } from "./errors/OptionInjectionError.ts";
 
 const $I = $RepoUtilsId.create("ProcessArgs");
 
@@ -43,21 +43,25 @@ const $I = $RepoUtilsId.create("ProcessArgs");
  * @category errors
  * @since 0.0.0
  */
-export { OptionInjectionError } from "./errors/OptionInjectionError.js";
+export { OptionInjectionError } from "./errors/OptionInjectionError.ts";
 
 /**
  * The POSIX end-of-options separator.
+ *
+ * **Details**
  *
  * Most well-behaved CLIs treat the first bare `--` token as the end of option
  * parsing: every subsequent token is consumed as a literal positional argument,
  * even when it begins with `-`.
  *
- * @example
+ * **Example** (Bare double-dash separator)
+ *
  * ```ts
  * import { END_OF_OPTIONS } from "@beep/repo-utils/ProcessArgs"
  * const argv = ["rm", END_OF_OPTIONS, "-rf"]
  * console.log(argv.join(" "))
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -66,6 +70,8 @@ export const END_OF_OPTIONS = "--" as const;
 /**
  * Predicate that reports whether a value is shaped like a command-line option.
  *
+ * **Details**
+ *
  * A value is considered option-like when it is non-empty and begins with `-`
  * (covering both short `-x` and long `--flag` forms, as well as the bare `--`
  * separator). Such a value risks being reinterpreted as a flag if forwarded
@@ -73,14 +79,16 @@ export const END_OF_OPTIONS = "--" as const;
  *
  * Pure and total.
  *
- * @param value - Candidate argument value.
- * @returns `true` when the value is shaped like an option/flag.
- * @example
+ * **Example** (Detect option-like values)
+ *
  * ```ts
  * import { isOptionLike } from "@beep/repo-utils/ProcessArgs"
  * console.log(isOptionLike("--privileged"))
  * console.log(isOptionLike("graphiti-mcp-falkordb-1"))
  * ```
+ *
+ * @param value - Candidate argument value.
+ * @returns `true` when the value is shaped like an option/flag.
  * @category predicates
  * @since 0.0.0
  */
@@ -93,6 +101,8 @@ const isNotOptionLike = (value: unknown): boolean => P.isString(value) && !isOpt
  * and data-derived positional arguments, guaranteeing every data argument is
  * consumed literally by the spawned process.
  *
+ * **Details**
+ *
  * The separator is inserted exactly once. If `optionArgs` already ends with a
  * bare `--`, no second separator is appended. When `dataArgs` is empty, the
  * input is returned unchanged (an empty vector never needs a separator).
@@ -101,18 +111,20 @@ const isNotOptionLike = (value: unknown): boolean => P.isString(value) && !isOpt
  * safe by position. Use {@link guardLiteralArgs} instead when option-like data
  * must be rejected.
  *
- * @param optionArgs - Arguments that may legitimately contain options/flags
- *   (e.g. `["compose", "-f", composeFile]`), emitted before the separator.
- * @param dataArgs - Data-derived positional arguments to protect, emitted after
- *   the separator.
- * @returns A single argument vector with `--` inserted before the data args.
- * @example
+ * **Example** (Protect data args with separator)
+ *
  * ```ts
  * import { insertEndOfOptions } from "@beep/repo-utils/ProcessArgs"
  * // docker restart -- <containerA> <containerB>
  * const args = insertEndOfOptions(["restart"], ["graphiti-mcp-falkordb-1", "graphiti-mcp-graphiti-mcp-1"])
  * console.log(args)
  * ```
+ *
+ * @param optionArgs - Arguments that may legitimately contain options/flags
+ *   (e.g. `["compose", "-f", composeFile]`), emitted before the separator.
+ * @param dataArgs - Data-derived positional arguments to protect, emitted after
+ *   the separator.
+ * @returns A single argument vector with `--` inserted before the data args.
  * @category combinators
  * @since 0.0.0
  */
@@ -136,19 +148,23 @@ export const insertEndOfOptions: {
  * Prefix a list of data-derived positional arguments with the end-of-options
  * separator so the spawned process consumes every value literally.
  *
+ * **Details**
+ *
  * This is the convenience form of {@link insertEndOfOptions} for the common
  * case where the entire argument vector is data and no preceding options exist.
  * Pure and total.
  *
- * @param dataArgs - Data-derived positional arguments to protect.
- * @returns The argument vector prefixed with `--`, or an empty vector unchanged.
- * @example
+ * **Example** (Prefix data args with separator)
+ *
  * ```ts
  * import { toLiteralArgs } from "@beep/repo-utils/ProcessArgs"
  * // rm -- <userSuppliedPath>
  * const args = toLiteralArgs(["-rf"])
  * console.log(args)
  * ```
+ *
+ * @param dataArgs - Data-derived positional arguments to protect.
+ * @returns The argument vector prefixed with `--`, or an empty vector unchanged.
  * @category combinators
  * @since 0.0.0
  */
@@ -159,10 +175,20 @@ export const toLiteralArgs = (dataArgs: ReadonlyArray<string>): ReadonlyArray<st
  * Validate a single data-derived argument value, failing closed when it is
  * shaped like a command-line option.
  *
+ * **Details**
+ *
  * Use this when an option-like data value indicates a programming error or an
  * injection attempt that must be surfaced rather than neutralized. For callers
  * that prefer to safely pass option-like values through as literals, use
  * {@link toLiteralArgs} / {@link insertEndOfOptions} instead.
+ *
+ * **Example** (Reject option-like single arg)
+ *
+ * ```ts
+ * import { guardLiteralArg } from "@beep/repo-utils/ProcessArgs"
+ * const program = guardLiteralArg("graphiti-mcp-falkordb-1")
+ * console.log(program)
+ * ```
  *
  * @param value - Candidate argument value.
  * @returns An Effect that succeeds with the value when it is a safe literal, or
@@ -170,12 +196,6 @@ export const toLiteralArgs = (dataArgs: ReadonlyArray<string>): ReadonlyArray<st
  * @effects Performs in-memory argument validation only; no child process is
  * spawned and option-like values fail through the typed `OptionInjectionError`
  * channel.
- * @example
- * ```ts
- * import { guardLiteralArg } from "@beep/repo-utils/ProcessArgs"
- * const program = guardLiteralArg("graphiti-mcp-falkordb-1")
- * console.log(program)
- * ```
  * @category guards
  * @since 0.0.0
  */
@@ -195,19 +215,23 @@ export const guardLiteralArg: (value: string) => Effect.Effect<string, OptionInj
  * Validate a list of data-derived argument values, failing closed on the first
  * value that is shaped like a command-line option.
  *
+ * **Details**
+ *
  * On success the original vector is returned unchanged, ready to be appended to
  * a child-process argument vector. On failure the returned
  * {@link OptionInjectionError} names the offending value.
  *
- * @param values - Candidate argument values.
- * @returns An Effect that succeeds with the validated vector, or fails with
- *   {@link OptionInjectionError} for the first option-like value.
- * @example
+ * **Example** (Reject option-like arg list)
+ *
  * ```ts
  * import { guardLiteralArgs } from "@beep/repo-utils/ProcessArgs"
  * const program = guardLiteralArgs(["src/index.ts", "src/ProcessArgs.ts"])
  * console.log(program)
  * ```
+ *
+ * @param values - Candidate argument values.
+ * @returns An Effect that succeeds with the validated vector, or fails with
+ *   {@link OptionInjectionError} for the first option-like value.
  * @category guards
  * @since 0.0.0
  */
@@ -224,18 +248,22 @@ export const guardLiteralArgs: (
  * Schema for a child-process argument value that is guaranteed not to be shaped
  * like a command-line option.
  *
+ * **Details**
+ *
  * Decoding rejects option-like inputs (non-empty values beginning with `-`),
  * making it suitable for validating data-derived argument values at a boundary
  * before they are forwarded into a spawned argument vector. The decoded value
  * is the input string unchanged.
  *
- * @example
+ * **Example** (Decode safe literal argument)
+ *
  * ```ts
  * import { LiteralArg } from "@beep/repo-utils/ProcessArgs"
  * import * as S from "effect/Schema"
  * const decode = S.decodeUnknownSync(LiteralArg)
  * console.log(decode("graphiti-mcp-falkordb-1"))
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

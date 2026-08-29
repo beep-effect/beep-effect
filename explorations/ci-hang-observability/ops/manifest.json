@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "ci-hang-observability",
+    "title": "CI Hang Root Cause and Observability",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/ci-step-watchdog"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-23",
+    "updated": "2026-08-23"
+  }
+}

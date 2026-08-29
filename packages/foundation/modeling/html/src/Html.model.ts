@@ -12,60 +12,94 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { GlobalAttributes } from "./Html.attributes.ts";
+
+// WHATWG's lowercase global event handler names are normative.
+
+import {
+  AutocompleteAttribute,
+  BooleanAttribute,
+  ButtonCommand,
+  CrossOrigin,
+  ForeignAttributeName,
+  ForeignElementName,
+  FormAutocomplete,
+  GlobalAttributes,
+  HtmlFiniteNumber,
+  HtmlIdReferenceList,
+  HtmlIdValue,
+  HtmlNonNegativeInteger,
+  HtmlNonNegativeNumber,
+  HtmlPositiveInteger,
+  HtmlPositiveNumber,
+  HtmlRelationList,
+  HtmlStep,
+  LinkRelationList,
+  MetadataName,
+  makeAsciiCaseInsensitiveEnumerated,
+  makeSpaceSeparatedTokenList,
+  PopoverTargetAction,
+  ReferrerPolicy,
+  Utf8Charset,
+} from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type * as O from "effect/Option";
 import type { GlobalAttributesEncoded, GlobalAttributesType } from "./Html.attributes.ts";
 
 const $I = $HtmlId.create("Html.model");
 
-/** Union members carrying a literal `_tag` (the shape `toTaggedUnion` requires). */
-type Tagged = S.Top & { readonly Type: { readonly _tag: PropertyKey } };
+type Tagged = { readonly _tag: PropertyKey };
+type TaggedSchema<A extends Tagged, E extends Tagged> = S.Codec<A, E> & {
+  readonly Type: A;
+  readonly Encoded: E;
+};
+type TaggedMembers<A extends Tagged, E extends Tagged> = readonly [
+  TaggedSchema<A, E>,
+  ...ReadonlyArray<TaggedSchema<A, E>>,
+];
 
 /**
- * Build a `_tag`-discriminated union at runtime via `S.toTaggedUnion`, typed
- * explicitly. `toTaggedUnion`'s type-level discriminant map does not scale to the
- * ~150 HTML node kinds (TS2589), so members are erased to a `ReadonlyArray` and
- * the result is cast to its declared codec type — the runtime is the real tagged
- * union.
+ * Build a large `_tag`-discriminated union without erasing member Type or
+ * Encoded information.
  *
  * @category models
  * @since 0.0.0
  */
-const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArray<S.Top>): S.Codec<A, E> =>
-  S.Union(members as ReadonlyArray<Tagged>).pipe(
-    S.toTaggedUnion("_tag"),
-    $I.annoteSchema(id, { description })
-  ) as unknown as S.Codec<A, E>;
+const taggedUnion = <A extends Tagged, E extends Tagged>(
+  id: string,
+  description: string,
+  members: TaggedMembers<A, E>
+) => S.Union(members).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema(id, { description }), S.revealCodec);
 
 /**
- * Recursive list of HTML AST child nodes (any {@link HtmlNode}).
+ * Recursive list of nodes that may occur as element or fragment children.
  *
- * @example
- * ```ts
+ * **Example** (Check an empty HtmlChildren list)
+ *
+ * ```ts import.meta.vitest name="Check an empty HtmlChildren list"
  * import { HtmlChildren } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlChildren)([])) // true
+ * S.is(HtmlChildren)([]) // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlNode.Type, HtmlNode.Encoded> => HtmlNode)).pipe(
+export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlChild.Type, HtmlChild.Encoded> => HtmlChild)).pipe(
   $I.annoteSchema("HtmlChildren", { description: "Recursive list of HTML AST child nodes." })
 );
 /**
  * Decoded type of {@link HtmlChildren}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate an HtmlChildren value)
+ *
+ * ```ts import.meta.vitest name="Annotate an HtmlChildren value"
  * import type { HtmlChildren } from "@beep/html/Html.model"
  *
  * const children: HtmlChildren = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -75,12 +109,13 @@ export type HtmlChildren = typeof HtmlChildren.Type;
 /**
  * Companion namespace for {@link HtmlChildren}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate an HtmlChildren.Type value)
+ *
+ * ```ts import.meta.vitest name="Annotate an HtmlChildren.Type value"
  * import type { HtmlChildren } from "@beep/html/Html.model"
  *
  * const children: HtmlChildren.Type = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -88,20 +123,21 @@ export type HtmlChildren = typeof HtmlChildren.Type;
  */
 export declare namespace HtmlChildren {
   /** @since 0.0.0 */
-  export type Type = ReadonlyArray<HtmlNode.Type>;
+  export type Type = ReadonlyArray<HtmlChild.Type>;
   /** @since 0.0.0 */
-  export type Encoded = ReadonlyArray<HtmlNode.Encoded>;
+  export type Encoded = ReadonlyArray<HtmlChild.Encoded>;
 }
 
 /**
  * A document fragment node (a detached group of children).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Fragment node)
+ *
+ * ```ts import.meta.vitest name="Construct the Fragment node"
  * import { Fragment } from "@beep/html/Html.model"
  *
  * const node = Fragment.make({ children: [] })
- * console.log(node._tag) // "#fragment"
+ * node._tag // => "#fragment"
  * ```
  *
  * @category models
@@ -115,12 +151,13 @@ export class Fragment extends S.TaggedClass<Fragment>($I`Fragment`)(
 /**
  * Companion namespace for {@link Fragment}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Fragment)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Fragment"
  * import { Fragment } from "@beep/html/Html.model"
  *
  * const encoded: Fragment.Encoded = { _tag: "#fragment", children: [] }
- * console.log(encoded._tag) // "#fragment"
+ * encoded._tag // => "#fragment"
  * ```
  *
  * @category models
@@ -134,14 +171,15 @@ export declare namespace Fragment {
 }
 
 /**
- * A document root node.
+ * An HTML document root with an optional doctype and child nodes.
  *
- * @example
- * ```ts
+ * **Example** (Construct a Document)
+ *
+ * ```ts import.meta.vitest name="Construct a Document"
  * import { Document } from "@beep/html/Html.model"
  *
- * const node = Document.make({ children: [] })
- * console.log(node._tag) // "#document"
+ * const document = Document.make({ children: [] })
+ * document._tag // => "#document"
  * ```
  *
  * @category models
@@ -149,18 +187,23 @@ export declare namespace Fragment {
  */
 export class Document extends S.TaggedClass<Document>($I`Document`)(
   "#document",
-  { children: HtmlChildren },
-  $I.annote("Document", { description: "A document root node." })
+  {
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    children: HtmlChildren,
+  },
+  $I.annote("Document", { description: "An HTML document root." })
 ) {}
+
 /**
  * Companion namespace for {@link Document}.
  *
- * @example
- * ```ts
- * import { Document } from "@beep/html/Html.model"
+ * **Example** (Encoded shape of Document)
  *
- * const encoded: Document.Encoded = { _tag: "#document", children: [] }
- * console.log(encoded._tag) // "#document"
+ * ```ts import.meta.vitest name="Encoded shape of Document"
+ * import type { Document } from "@beep/html/Html.model"
+ *
+ * const document: Document.Encoded = { _tag: "#document", children: [] }
+ * document._tag // => "#document"
  * ```
  *
  * @category models
@@ -168,20 +211,134 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
  */
 export declare namespace Document {
   /** @since 0.0.0 */
-  export type Type = { readonly _tag: "#document"; readonly children: HtmlChildren.Type };
+  export type Type = {
+    readonly _tag: "#document";
+    readonly doctype: O.Option<Doctype.Type>;
+    readonly children: HtmlChildren.Type;
+  };
   /** @since 0.0.0 */
-  export type Encoded = { readonly _tag: "#document"; readonly children: HtmlChildren.Encoded };
+  export type Encoded = {
+    readonly _tag: "#document";
+    readonly doctype?: Doctype.Encoded;
+    readonly children: HtmlChildren.Encoded;
+  };
+}
+
+/**
+ * Namespace of a foreign-content element embedded in HTML.
+ *
+ * **Example** (Check a ForeignNamespace value)
+ *
+ * ```ts import.meta.vitest name="Check a ForeignNamespace value"
+ * import { ForeignNamespace } from "@beep/html/Html.model"
+ *
+ * ForeignNamespace.is.svg("svg") // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ForeignNamespace = LiteralKit(["svg", "mathml"]).pipe(
+  $I.annoteSchema("ForeignNamespace", { description: "SVG or MathML foreign-content namespace." })
+);
+
+/**
+ * Decoded type of {@link ForeignNamespace}.
+ *
+ * **Example** (Annotate a ForeignNamespace value)
+ *
+ * ```ts import.meta.vitest name="Annotate a ForeignNamespace value"
+ * import type { ForeignNamespace } from "@beep/html/Html.model"
+ *
+ * const namespace: ForeignNamespace = "svg"
+ * namespace // => "svg"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ForeignNamespace = typeof ForeignNamespace.Type;
+
+/**
+ * An opaque SVG or MathML element carried inside the HTML AST.
+ *
+ * **Gotchas**
+ *
+ * This package validates the foreign node's serializable shape but does not
+ * model the complete SVG or MathML vocabularies.
+ *
+ * **Example** (Construct a ForeignElement)
+ *
+ * ```ts import.meta.vitest name="Construct a ForeignElement"
+ * import { ForeignElement } from "@beep/html/Html.model"
+ *
+ * const svg = ForeignElement.make({ namespace: "svg", name: "svg", children: [] })
+ * svg.name // => "svg"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ForeignElement extends S.TaggedClass<ForeignElement>($I`ForeignElement`)(
+  "#foreign",
+  {
+    namespace: ForeignNamespace,
+    name: ForeignElementName,
+    attributes: S.OptionFromOptionalKey(S.Record(ForeignAttributeName, S.String)).pipe(SchemaUtils.withNoneDefault),
+    children: HtmlChildren,
+  },
+  $I.annote("ForeignElement", { description: "Opaque SVG or MathML element embedded in HTML." })
+) {}
+
+/**
+ * Companion namespace for {@link ForeignElement}.
+ *
+ * **Example** (Encoded shape of ForeignElement)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of ForeignElement"
+ * import type { ForeignElement } from "@beep/html/Html.model"
+ *
+ * const svg: ForeignElement.Encoded = {
+ *   _tag: "#foreign",
+ *   namespace: "svg",
+ *   name: "svg",
+ *   children: []
+ * }
+ * svg.name // => "svg"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace ForeignElement {
+  /** @since 0.0.0 */
+  export type Type = {
+    readonly _tag: "#foreign";
+    readonly namespace: ForeignNamespace;
+    readonly name: string;
+    readonly attributes: O.Option<Readonly<Record<string, string>>>;
+    readonly children: HtmlChildren.Type;
+  };
+  /** @since 0.0.0 */
+  export type Encoded = {
+    readonly _tag: "#foreign";
+    readonly namespace: ForeignNamespace;
+    readonly name: string;
+    readonly attributes?: Readonly<Record<string, string>>;
+    readonly children: HtmlChildren.Encoded;
+  };
 }
 
 /**
  * The <a> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the A node)
+ *
+ * ```ts import.meta.vitest name="Construct the A node"
  * import { A } from "@beep/html/Html.model"
  *
  * const node = A.make({ children: [] })
- * console.log(node._tag) // "a"
+ * node._tag // => "a"
  * ```
  *
  * @category elements
@@ -199,27 +356,8 @@ export class A extends S.TaggedClass<A>($I`A`)(
     methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      S.Literals([
-        "alternate",
-        "author",
-        "bookmark",
-        "external",
-        "help",
-        "license",
-        "nofollow",
-        "noopener",
-        "noreferrer",
-        "opener",
-        "privacy-policy",
-        "search",
-        "tag",
-        "terms-of-service",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
     rev: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     shape: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -232,12 +370,13 @@ export class A extends S.TaggedClass<A>($I`A`)(
 /**
  * Companion namespace for {@link A}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of A)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of A"
  * import { A } from "@beep/html/Html.model"
  *
  * const encoded: A.Encoded = { _tag: "a", children: [] }
- * console.log(encoded._tag) // "a"
+ * encoded._tag // => "a"
  * ```
  *
  * @category elements
@@ -255,25 +394,18 @@ export declare namespace A {
     readonly methods: O.Option<string>;
     readonly name: O.Option<string>;
     readonly ping: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
-    readonly rel: O.Option<
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev"
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
     >;
+    readonly rel: O.Option<string>;
     readonly rev: O.Option<string>;
     readonly shape: O.Option<string>;
     readonly target: O.Option<string>;
@@ -293,23 +425,7 @@ export declare namespace A {
     readonly name?: string;
     readonly ping?: string;
     readonly referrerpolicy?: string;
-    readonly rel?:
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev";
+    readonly rel?: string;
     readonly rev?: string;
     readonly shape?: string;
     readonly target?: string;
@@ -322,12 +438,13 @@ export declare namespace A {
 /**
  * The <abbr> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Abbr node)
+ *
+ * ```ts import.meta.vitest name="Construct the Abbr node"
  * import { Abbr } from "@beep/html/Html.model"
  *
  * const node = Abbr.make({ children: [] })
- * console.log(node._tag) // "abbr"
+ * node._tag // => "abbr"
  * ```
  *
  * @category elements
@@ -344,12 +461,13 @@ export class Abbr extends S.TaggedClass<Abbr>($I`Abbr`)(
 /**
  * Companion namespace for {@link Abbr}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Abbr)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Abbr"
  * import { Abbr } from "@beep/html/Html.model"
  *
  * const encoded: Abbr.Encoded = { _tag: "abbr", children: [] }
- * console.log(encoded._tag) // "abbr"
+ * encoded._tag // => "abbr"
  * ```
  *
  * @category elements
@@ -371,12 +489,13 @@ export declare namespace Abbr {
 /**
  * The <acronym> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Acronym node)
+ *
+ * ```ts import.meta.vitest name="Construct the Acronym node"
  * import { Acronym } from "@beep/html/Html.model"
  *
  * const node = Acronym.make({ children: [] })
- * console.log(node._tag) // "acronym"
+ * node._tag // => "acronym"
  * ```
  *
  * @category elements
@@ -393,12 +512,13 @@ export class Acronym extends S.TaggedClass<Acronym>($I`Acronym`)(
 /**
  * Companion namespace for {@link Acronym}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Acronym)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Acronym"
  * import { Acronym } from "@beep/html/Html.model"
  *
  * const encoded: Acronym.Encoded = { _tag: "acronym", children: [] }
- * console.log(encoded._tag) // "acronym"
+ * encoded._tag // => "acronym"
  * ```
  *
  * @category elements
@@ -420,12 +540,13 @@ export declare namespace Acronym {
 /**
  * The <address> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Address node)
+ *
+ * ```ts import.meta.vitest name="Construct the Address node"
  * import { Address } from "@beep/html/Html.model"
  *
  * const node = Address.make({ children: [] })
- * console.log(node._tag) // "address"
+ * node._tag // => "address"
  * ```
  *
  * @category elements
@@ -442,12 +563,13 @@ export class Address extends S.TaggedClass<Address>($I`Address`)(
 /**
  * Companion namespace for {@link Address}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Address)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Address"
  * import { Address } from "@beep/html/Html.model"
  *
  * const encoded: Address.Encoded = { _tag: "address", children: [] }
- * console.log(encoded._tag) // "address"
+ * encoded._tag // => "address"
  * ```
  *
  * @category elements
@@ -469,12 +591,13 @@ export declare namespace Address {
 /**
  * The <applet> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Applet node)
+ *
+ * ```ts import.meta.vitest name="Construct the Applet node"
  * import { Applet } from "@beep/html/Html.model"
  *
  * const node = Applet.make({ children: [] })
- * console.log(node._tag) // "applet"
+ * node._tag // => "applet"
  * ```
  *
  * @category elements
@@ -491,12 +614,13 @@ export class Applet extends S.TaggedClass<Applet>($I`Applet`)(
 /**
  * Companion namespace for {@link Applet}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Applet)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Applet"
  * import { Applet } from "@beep/html/Html.model"
  *
  * const encoded: Applet.Encoded = { _tag: "applet", children: [] }
- * console.log(encoded._tag) // "applet"
+ * encoded._tag // => "applet"
  * ```
  *
  * @category elements
@@ -518,12 +642,13 @@ export declare namespace Applet {
 /**
  * The <area> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Area node)
+ *
+ * ```ts import.meta.vitest name="Construct the Area node"
  * import { Area } from "@beep/html/Html.model"
  *
  * const node = Area.make({})
- * console.log(node._tag) // "area"
+ * node._tag // => "area"
  * ```
  *
  * @category elements
@@ -540,30 +665,11 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
     hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     nohref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      S.Literals([
-        "alternate",
-        "author",
-        "bookmark",
-        "external",
-        "help",
-        "license",
-        "nofollow",
-        "noopener",
-        "noreferrer",
-        "opener",
-        "privacy-policy",
-        "search",
-        "tag",
-        "terms-of-service",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    shape: S.OptionFromOptionalKey(
-      S.Literals(["circle state", "default state", "polygon state", "rectangle state"])
-    ).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
+    shape: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["circle", "default", "poly", "rect"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
@@ -572,12 +678,13 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
 /**
  * Companion namespace for {@link Area}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Area)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Area"
  * import { Area } from "@beep/html/Html.model"
  *
  * const encoded: Area.Encoded = { _tag: "area" }
- * console.log(encoded._tag) // "area"
+ * encoded._tag // => "area"
  * ```
  *
  * @category elements
@@ -594,26 +701,19 @@ export declare namespace Area {
     readonly hreflang: O.Option<string>;
     readonly nohref: O.Option<string>;
     readonly ping: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
-    readonly rel: O.Option<
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev"
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
     >;
-    readonly shape: O.Option<"circle state" | "default state" | "polygon state" | "rectangle state">;
+    readonly rel: O.Option<string>;
+    readonly shape: O.Option<"circle" | "default" | "poly" | "rect">;
     readonly target: O.Option<string>;
     readonly type: O.Option<string>;
   };
@@ -628,24 +728,8 @@ export declare namespace Area {
     readonly nohref?: string;
     readonly ping?: string;
     readonly referrerpolicy?: string;
-    readonly rel?:
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev";
-    readonly shape?: "circle state" | "default state" | "polygon state" | "rectangle state";
+    readonly rel?: string;
+    readonly shape?: string;
     readonly target?: string;
     readonly type?: string;
   };
@@ -654,12 +738,13 @@ export declare namespace Area {
 /**
  * The <article> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Article node)
+ *
+ * ```ts import.meta.vitest name="Construct the Article node"
  * import { Article } from "@beep/html/Html.model"
  *
  * const node = Article.make({ children: [] })
- * console.log(node._tag) // "article"
+ * node._tag // => "article"
  * ```
  *
  * @category elements
@@ -676,12 +761,13 @@ export class Article extends S.TaggedClass<Article>($I`Article`)(
 /**
  * Companion namespace for {@link Article}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Article)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Article"
  * import { Article } from "@beep/html/Html.model"
  *
  * const encoded: Article.Encoded = { _tag: "article", children: [] }
- * console.log(encoded._tag) // "article"
+ * encoded._tag // => "article"
  * ```
  *
  * @category elements
@@ -703,12 +789,13 @@ export declare namespace Article {
 /**
  * The <aside> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Aside node)
+ *
+ * ```ts import.meta.vitest name="Construct the Aside node"
  * import { Aside } from "@beep/html/Html.model"
  *
  * const node = Aside.make({ children: [] })
- * console.log(node._tag) // "aside"
+ * node._tag // => "aside"
  * ```
  *
  * @category elements
@@ -725,12 +812,13 @@ export class Aside extends S.TaggedClass<Aside>($I`Aside`)(
 /**
  * Companion namespace for {@link Aside}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Aside)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Aside"
  * import { Aside } from "@beep/html/Html.model"
  *
  * const encoded: Aside.Encoded = { _tag: "aside", children: [] }
- * console.log(encoded._tag) // "aside"
+ * encoded._tag // => "aside"
  * ```
  *
  * @category elements
@@ -752,12 +840,13 @@ export declare namespace Aside {
 /**
  * The <audio> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Audio node)
+ *
+ * ```ts import.meta.vitest name="Construct the Audio node"
  * import { Audio } from "@beep/html/Html.model"
  *
  * const node = Audio.make({ children: [] })
- * console.log(node._tag) // "audio"
+ * node._tag // => "audio"
  * ```
  *
  * @category elements
@@ -767,15 +856,17 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
   "audio",
   {
     ...GlobalAttributes,
-    autoplay: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    muted: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    preload: S.OptionFromOptionalKey(S.Literals(["auto", "none", "metadata"])).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    preload: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["auto", "none", "metadata"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -784,12 +875,13 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
 /**
  * Companion namespace for {@link Audio}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Audio)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Audio"
  * import { Audio } from "@beep/html/Html.model"
  *
  * const encoded: Audio.Encoded = { _tag: "audio", children: [] }
- * console.log(encoded._tag) // "audio"
+ * encoded._tag // => "audio"
  * ```
  *
  * @category elements
@@ -799,12 +891,12 @@ export declare namespace Audio {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "audio";
-    readonly autoplay: O.Option<boolean | "">;
-    readonly controls: O.Option<boolean | "">;
+    readonly autoplay: O.Option<true | "">;
+    readonly controls: O.Option<true | "">;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
     readonly loading: O.Option<"lazy" | "eager">;
-    readonly loop: O.Option<boolean | "">;
-    readonly muted: O.Option<boolean | "">;
+    readonly loop: O.Option<true | "">;
+    readonly muted: O.Option<true | "">;
     readonly preload: O.Option<"auto" | "none" | "metadata">;
     readonly src: O.Option<string>;
     readonly children: HtmlChildren.Type;
@@ -812,13 +904,13 @@ export declare namespace Audio {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "audio";
-    readonly autoplay?: boolean | "";
-    readonly controls?: boolean | "";
-    readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly loading?: "lazy" | "eager";
-    readonly loop?: boolean | "";
-    readonly muted?: boolean | "";
-    readonly preload?: "auto" | "none" | "metadata";
+    readonly autoplay?: true | "";
+    readonly controls?: true | "";
+    readonly crossorigin?: string;
+    readonly loading?: string;
+    readonly loop?: true | "";
+    readonly muted?: true | "";
+    readonly preload?: string;
     readonly src?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -827,12 +919,13 @@ export declare namespace Audio {
 /**
  * The <b> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the B node)
+ *
+ * ```ts import.meta.vitest name="Construct the B node"
  * import { B } from "@beep/html/Html.model"
  *
  * const node = B.make({ children: [] })
- * console.log(node._tag) // "b"
+ * node._tag // => "b"
  * ```
  *
  * @category elements
@@ -849,12 +942,13 @@ export class B extends S.TaggedClass<B>($I`B`)(
 /**
  * Companion namespace for {@link B}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of B)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of B"
  * import { B } from "@beep/html/Html.model"
  *
  * const encoded: B.Encoded = { _tag: "b", children: [] }
- * console.log(encoded._tag) // "b"
+ * encoded._tag // => "b"
  * ```
  *
  * @category elements
@@ -876,12 +970,13 @@ export declare namespace B {
 /**
  * The <base> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Base node)
+ *
+ * ```ts import.meta.vitest name="Construct the Base node"
  * import { Base } from "@beep/html/Html.model"
  *
  * const node = Base.make({})
- * console.log(node._tag) // "base"
+ * node._tag // => "base"
  * ```
  *
  * @category elements
@@ -899,12 +994,13 @@ export class Base extends S.TaggedClass<Base>($I`Base`)(
 /**
  * Companion namespace for {@link Base}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Base)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Base"
  * import { Base } from "@beep/html/Html.model"
  *
  * const encoded: Base.Encoded = { _tag: "base" }
- * console.log(encoded._tag) // "base"
+ * encoded._tag // => "base"
  * ```
  *
  * @category elements
@@ -928,12 +1024,13 @@ export declare namespace Base {
 /**
  * The <basefont> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Basefont node)
+ *
+ * ```ts import.meta.vitest name="Construct the Basefont node"
  * import { Basefont } from "@beep/html/Html.model"
  *
  * const node = Basefont.make({})
- * console.log(node._tag) // "basefont"
+ * node._tag // => "basefont"
  * ```
  *
  * @category elements
@@ -949,12 +1046,13 @@ export class Basefont extends S.TaggedClass<Basefont>($I`Basefont`)(
 /**
  * Companion namespace for {@link Basefont}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Basefont)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Basefont"
  * import { Basefont } from "@beep/html/Html.model"
  *
  * const encoded: Basefont.Encoded = { _tag: "basefont" }
- * console.log(encoded._tag) // "basefont"
+ * encoded._tag // => "basefont"
  * ```
  *
  * @category elements
@@ -974,12 +1072,13 @@ export declare namespace Basefont {
 /**
  * The <bdi> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Bdi node)
+ *
+ * ```ts import.meta.vitest name="Construct the Bdi node"
  * import { Bdi } from "@beep/html/Html.model"
  *
  * const node = Bdi.make({ children: [] })
- * console.log(node._tag) // "bdi"
+ * node._tag // => "bdi"
  * ```
  *
  * @category elements
@@ -996,12 +1095,13 @@ export class Bdi extends S.TaggedClass<Bdi>($I`Bdi`)(
 /**
  * Companion namespace for {@link Bdi}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Bdi)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Bdi"
  * import { Bdi } from "@beep/html/Html.model"
  *
  * const encoded: Bdi.Encoded = { _tag: "bdi", children: [] }
- * console.log(encoded._tag) // "bdi"
+ * encoded._tag // => "bdi"
  * ```
  *
  * @category elements
@@ -1023,12 +1123,13 @@ export declare namespace Bdi {
 /**
  * The <bdo> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Bdo node)
+ *
+ * ```ts import.meta.vitest name="Construct the Bdo node"
  * import { Bdo } from "@beep/html/Html.model"
  *
  * const node = Bdo.make({ children: [] })
- * console.log(node._tag) // "bdo"
+ * node._tag // => "bdo"
  * ```
  *
  * @category elements
@@ -1045,12 +1146,13 @@ export class Bdo extends S.TaggedClass<Bdo>($I`Bdo`)(
 /**
  * Companion namespace for {@link Bdo}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Bdo)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Bdo"
  * import { Bdo } from "@beep/html/Html.model"
  *
  * const encoded: Bdo.Encoded = { _tag: "bdo", children: [] }
- * console.log(encoded._tag) // "bdo"
+ * encoded._tag // => "bdo"
  * ```
  *
  * @category elements
@@ -1072,12 +1174,13 @@ export declare namespace Bdo {
 /**
  * The <bgsound> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Bgsound node)
+ *
+ * ```ts import.meta.vitest name="Construct the Bgsound node"
  * import { Bgsound } from "@beep/html/Html.model"
  *
  * const node = Bgsound.make({})
- * console.log(node._tag) // "bgsound"
+ * node._tag // => "bgsound"
  * ```
  *
  * @category elements
@@ -1093,12 +1196,13 @@ export class Bgsound extends S.TaggedClass<Bgsound>($I`Bgsound`)(
 /**
  * Companion namespace for {@link Bgsound}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Bgsound)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Bgsound"
  * import { Bgsound } from "@beep/html/Html.model"
  *
  * const encoded: Bgsound.Encoded = { _tag: "bgsound" }
- * console.log(encoded._tag) // "bgsound"
+ * encoded._tag // => "bgsound"
  * ```
  *
  * @category elements
@@ -1118,12 +1222,13 @@ export declare namespace Bgsound {
 /**
  * The <big> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Big node)
+ *
+ * ```ts import.meta.vitest name="Construct the Big node"
  * import { Big } from "@beep/html/Html.model"
  *
  * const node = Big.make({ children: [] })
- * console.log(node._tag) // "big"
+ * node._tag // => "big"
  * ```
  *
  * @category elements
@@ -1140,12 +1245,13 @@ export class Big extends S.TaggedClass<Big>($I`Big`)(
 /**
  * Companion namespace for {@link Big}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Big)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Big"
  * import { Big } from "@beep/html/Html.model"
  *
  * const encoded: Big.Encoded = { _tag: "big", children: [] }
- * console.log(encoded._tag) // "big"
+ * encoded._tag // => "big"
  * ```
  *
  * @category elements
@@ -1167,12 +1273,13 @@ export declare namespace Big {
 /**
  * The <blink> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Blink node)
+ *
+ * ```ts import.meta.vitest name="Construct the Blink node"
  * import { Blink } from "@beep/html/Html.model"
  *
  * const node = Blink.make({ children: [] })
- * console.log(node._tag) // "blink"
+ * node._tag // => "blink"
  * ```
  *
  * @category elements
@@ -1189,12 +1296,13 @@ export class Blink extends S.TaggedClass<Blink>($I`Blink`)(
 /**
  * Companion namespace for {@link Blink}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Blink)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Blink"
  * import { Blink } from "@beep/html/Html.model"
  *
  * const encoded: Blink.Encoded = { _tag: "blink", children: [] }
- * console.log(encoded._tag) // "blink"
+ * encoded._tag // => "blink"
  * ```
  *
  * @category elements
@@ -1216,12 +1324,13 @@ export declare namespace Blink {
 /**
  * The <blockquote> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Blockquote node)
+ *
+ * ```ts import.meta.vitest name="Construct the Blockquote node"
  * import { Blockquote } from "@beep/html/Html.model"
  *
  * const node = Blockquote.make({ children: [] })
- * console.log(node._tag) // "blockquote"
+ * node._tag // => "blockquote"
  * ```
  *
  * @category elements
@@ -1239,12 +1348,13 @@ export class Blockquote extends S.TaggedClass<Blockquote>($I`Blockquote`)(
 /**
  * Companion namespace for {@link Blockquote}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Blockquote)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Blockquote"
  * import { Blockquote } from "@beep/html/Html.model"
  *
  * const encoded: Blockquote.Encoded = { _tag: "blockquote", children: [] }
- * console.log(encoded._tag) // "blockquote"
+ * encoded._tag // => "blockquote"
  * ```
  *
  * @category elements
@@ -1268,12 +1378,13 @@ export declare namespace Blockquote {
 /**
  * The <body> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Body node)
+ *
+ * ```ts import.meta.vitest name="Construct the Body node"
  * import { Body } from "@beep/html/Html.model"
  *
  * const node = Body.make({ children: [] })
- * console.log(node._tag) // "body"
+ * node._tag // => "body"
  * ```
  *
  * @category elements
@@ -1290,6 +1401,24 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
     link: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginheight: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginwidth: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onafterprint: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onbeforeprint: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onbeforeunload: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onhashchange: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onlanguagechange: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onmessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onmessageerror: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onoffline: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ononline: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpagehide: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpagereveal: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpageshow: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpageswap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onpopstate: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onrejectionhandled: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onstorage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onunhandledrejection: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    onunload: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rightmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     text: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     topmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -1301,12 +1430,13 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
 /**
  * Companion namespace for {@link Body}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Body)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Body"
  * import { Body } from "@beep/html/Html.model"
  *
  * const encoded: Body.Encoded = { _tag: "body", children: [] }
- * console.log(encoded._tag) // "body"
+ * encoded._tag // => "body"
  * ```
  *
  * @category elements
@@ -1323,6 +1453,24 @@ export declare namespace Body {
     readonly link: O.Option<string>;
     readonly marginheight: O.Option<string>;
     readonly marginwidth: O.Option<string>;
+    readonly onafterprint: O.Option<string>;
+    readonly onbeforeprint: O.Option<string>;
+    readonly onbeforeunload: O.Option<string>;
+    readonly onhashchange: O.Option<string>;
+    readonly onlanguagechange: O.Option<string>;
+    readonly onmessage: O.Option<string>;
+    readonly onmessageerror: O.Option<string>;
+    readonly onoffline: O.Option<string>;
+    readonly ononline: O.Option<string>;
+    readonly onpagehide: O.Option<string>;
+    readonly onpagereveal: O.Option<string>;
+    readonly onpageshow: O.Option<string>;
+    readonly onpageswap: O.Option<string>;
+    readonly onpopstate: O.Option<string>;
+    readonly onrejectionhandled: O.Option<string>;
+    readonly onstorage: O.Option<string>;
+    readonly onunhandledrejection: O.Option<string>;
+    readonly onunload: O.Option<string>;
     readonly rightmargin: O.Option<string>;
     readonly text: O.Option<string>;
     readonly topmargin: O.Option<string>;
@@ -1339,6 +1487,24 @@ export declare namespace Body {
     readonly link?: string;
     readonly marginheight?: string;
     readonly marginwidth?: string;
+    readonly onafterprint?: string;
+    readonly onbeforeprint?: string;
+    readonly onbeforeunload?: string;
+    readonly onhashchange?: string;
+    readonly onlanguagechange?: string;
+    readonly onmessage?: string;
+    readonly onmessageerror?: string;
+    readonly onoffline?: string;
+    readonly ononline?: string;
+    readonly onpagehide?: string;
+    readonly onpagereveal?: string;
+    readonly onpageshow?: string;
+    readonly onpageswap?: string;
+    readonly onpopstate?: string;
+    readonly onrejectionhandled?: string;
+    readonly onstorage?: string;
+    readonly onunhandledrejection?: string;
+    readonly onunload?: string;
     readonly rightmargin?: string;
     readonly text?: string;
     readonly topmargin?: string;
@@ -1350,12 +1516,13 @@ export declare namespace Body {
 /**
  * The <br> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Br node)
+ *
+ * ```ts import.meta.vitest name="Construct the Br node"
  * import { Br } from "@beep/html/Html.model"
  *
  * const node = Br.make({})
- * console.log(node._tag) // "br"
+ * node._tag // => "br"
  * ```
  *
  * @category elements
@@ -1372,12 +1539,13 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
 /**
  * Companion namespace for {@link Br}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Br)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Br"
  * import { Br } from "@beep/html/Html.model"
  *
  * const encoded: Br.Encoded = { _tag: "br" }
- * console.log(encoded._tag) // "br"
+ * encoded._tag // => "br"
  * ```
  *
  * @category elements
@@ -1399,12 +1567,13 @@ export declare namespace Br {
 /**
  * The <button> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Button node)
+ *
+ * ```ts import.meta.vitest name="Construct the Button node"
  * import { Button } from "@beep/html/Html.model"
  *
  * const node = Button.make({ children: [] })
- * console.log(node._tag) // "button"
+ * node._tag // => "button"
  * ```
  *
  * @category elements
@@ -1415,91 +1584,32 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
   {
     ...GlobalAttributes,
     action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    commandfor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    command: S.OptionFromOptionalKey(ButtonCommand).pipe(SchemaUtils.withNoneDefault),
+    commandfor: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     enctype: S.OptionFromOptionalKey(
-      S.Literals(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
     ).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formmethod: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
-    formnovalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    formenctype: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+    ).pipe(SchemaUtils.withNoneDefault),
+    formmethod: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     method: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    novalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.Literals(["submit", "reset", "button"])).pipe(SchemaUtils.withNoneDefault),
+    type: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["submit", "reset", "button"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -1508,12 +1618,13 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
 /**
  * Companion namespace for {@link Button}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Button)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Button"
  * import { Button } from "@beep/html/Html.model"
  *
  * const encoded: Button.Encoded = { _tag: "button", children: [] }
- * console.log(encoded._tag) // "button"
+ * encoded._tag // => "button"
  * ```
  *
  * @category elements
@@ -1524,85 +1635,22 @@ export declare namespace Button {
   export type Type = GlobalAttributesType & {
     readonly _tag: "button";
     readonly action: O.Option<string>;
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly command: O.Option<string>;
     readonly commandfor: O.Option<string>;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly enctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly form: O.Option<string>;
     readonly formaction: O.Option<string>;
-    readonly formenctype: O.Option<string>;
+    readonly formenctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly formmethod: O.Option<"get" | "post" | "dialog">;
-    readonly formnovalidate: O.Option<boolean | "">;
+    readonly formnovalidate: O.Option<true | "">;
     readonly formtarget: O.Option<string>;
     readonly method: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly novalidate: O.Option<boolean | "">;
+    readonly novalidate: O.Option<true | "">;
+    readonly popovertarget: O.Option<string>;
+    readonly popovertargetaction: O.Option<"toggle" | "show" | "hide">;
     readonly target: O.Option<string>;
     readonly type: O.Option<"submit" | "reset" | "button">;
     readonly value: O.Option<string>;
@@ -1612,86 +1660,24 @@ export declare namespace Button {
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "button";
     readonly action?: string;
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly command?: string;
     readonly commandfor?: string;
-    readonly disabled?: boolean | "";
-    readonly enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
+    readonly disabled?: true | "";
+    readonly enctype?: string;
     readonly form?: string;
     readonly formaction?: string;
     readonly formenctype?: string;
-    readonly formmethod?: "get" | "post" | "dialog";
-    readonly formnovalidate?: boolean | "";
+    readonly formmethod?: string;
+    readonly formnovalidate?: true | "";
     readonly formtarget?: string;
     readonly method?: string;
     readonly name?: string;
-    readonly novalidate?: boolean | "";
+    readonly novalidate?: true | "";
+    readonly popovertarget?: string;
+    readonly popovertargetaction?: string;
     readonly target?: string;
-    readonly type?: "submit" | "reset" | "button";
+    readonly type?: string;
     readonly value?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -1700,12 +1686,13 @@ export declare namespace Button {
 /**
  * The <canvas> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Canvas node)
+ *
+ * ```ts import.meta.vitest name="Construct the Canvas node"
  * import { Canvas } from "@beep/html/Html.model"
  *
  * const node = Canvas.make({ children: [] })
- * console.log(node._tag) // "canvas"
+ * node._tag // => "canvas"
  * ```
  *
  * @category elements
@@ -1715,8 +1702,8 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
   "canvas",
   {
     ...GlobalAttributes,
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Canvas", { description: "The <canvas> element." })
@@ -1724,12 +1711,13 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
 /**
  * Companion namespace for {@link Canvas}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Canvas)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Canvas"
  * import { Canvas } from "@beep/html/Html.model"
  *
  * const encoded: Canvas.Encoded = { _tag: "canvas", children: [] }
- * console.log(encoded._tag) // "canvas"
+ * encoded._tag // => "canvas"
  * ```
  *
  * @category elements
@@ -1755,12 +1743,13 @@ export declare namespace Canvas {
 /**
  * The <caption> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Caption node)
+ *
+ * ```ts import.meta.vitest name="Construct the Caption node"
  * import { Caption } from "@beep/html/Html.model"
  *
  * const node = Caption.make({ children: [] })
- * console.log(node._tag) // "caption"
+ * node._tag // => "caption"
  * ```
  *
  * @category elements
@@ -1778,12 +1767,13 @@ export class Caption extends S.TaggedClass<Caption>($I`Caption`)(
 /**
  * Companion namespace for {@link Caption}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Caption)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Caption"
  * import { Caption } from "@beep/html/Html.model"
  *
  * const encoded: Caption.Encoded = { _tag: "caption", children: [] }
- * console.log(encoded._tag) // "caption"
+ * encoded._tag // => "caption"
  * ```
  *
  * @category elements
@@ -1807,12 +1797,13 @@ export declare namespace Caption {
 /**
  * The <center> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Center node)
+ *
+ * ```ts import.meta.vitest name="Construct the Center node"
  * import { Center } from "@beep/html/Html.model"
  *
  * const node = Center.make({ children: [] })
- * console.log(node._tag) // "center"
+ * node._tag // => "center"
  * ```
  *
  * @category elements
@@ -1829,12 +1820,13 @@ export class Center extends S.TaggedClass<Center>($I`Center`)(
 /**
  * Companion namespace for {@link Center}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Center)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Center"
  * import { Center } from "@beep/html/Html.model"
  *
  * const encoded: Center.Encoded = { _tag: "center", children: [] }
- * console.log(encoded._tag) // "center"
+ * encoded._tag // => "center"
  * ```
  *
  * @category elements
@@ -1856,12 +1848,13 @@ export declare namespace Center {
 /**
  * The <cite> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Cite node)
+ *
+ * ```ts import.meta.vitest name="Construct the Cite node"
  * import { Cite } from "@beep/html/Html.model"
  *
  * const node = Cite.make({ children: [] })
- * console.log(node._tag) // "cite"
+ * node._tag // => "cite"
  * ```
  *
  * @category elements
@@ -1878,12 +1871,13 @@ export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
 /**
  * Companion namespace for {@link Cite}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Cite)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Cite"
  * import { Cite } from "@beep/html/Html.model"
  *
  * const encoded: Cite.Encoded = { _tag: "cite", children: [] }
- * console.log(encoded._tag) // "cite"
+ * encoded._tag // => "cite"
  * ```
  *
  * @category elements
@@ -1905,12 +1899,13 @@ export declare namespace Cite {
 /**
  * The <code> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Code node)
+ *
+ * ```ts import.meta.vitest name="Construct the Code node"
  * import { Code } from "@beep/html/Html.model"
  *
  * const node = Code.make({ children: [] })
- * console.log(node._tag) // "code"
+ * node._tag // => "code"
  * ```
  *
  * @category elements
@@ -1927,12 +1922,13 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 /**
  * Companion namespace for {@link Code}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Code)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Code"
  * import { Code } from "@beep/html/Html.model"
  *
  * const encoded: Code.Encoded = { _tag: "code", children: [] }
- * console.log(encoded._tag) // "code"
+ * encoded._tag // => "code"
  * ```
  *
  * @category elements
@@ -1954,12 +1950,13 @@ export declare namespace Code {
 /**
  * The <col> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Col node)
+ *
+ * ```ts import.meta.vitest name="Construct the Col node"
  * import { Col } from "@beep/html/Html.model"
  *
  * const node = Col.make({})
- * console.log(node._tag) // "col"
+ * node._tag // => "col"
  * ```
  *
  * @category elements
@@ -1972,21 +1969,22 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    span: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Col", { description: "The <col> element." })
 ) {}
 /**
  * Companion namespace for {@link Col}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Col)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Col"
  * import { Col } from "@beep/html/Html.model"
  *
  * const encoded: Col.Encoded = { _tag: "col" }
- * console.log(encoded._tag) // "col"
+ * encoded._tag // => "col"
  * ```
  *
  * @category elements
@@ -2018,12 +2016,13 @@ export declare namespace Col {
 /**
  * The <colgroup> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Colgroup node)
+ *
+ * ```ts import.meta.vitest name="Construct the Colgroup node"
  * import { Colgroup } from "@beep/html/Html.model"
  *
  * const node = Colgroup.make({ children: [] })
- * console.log(node._tag) // "colgroup"
+ * node._tag // => "colgroup"
  * ```
  *
  * @category elements
@@ -2033,7 +2032,7 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
   "colgroup",
   {
     ...GlobalAttributes,
-    span: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Colgroup", { description: "The <colgroup> element." })
@@ -2041,12 +2040,13 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
 /**
  * Companion namespace for {@link Colgroup}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Colgroup)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Colgroup"
  * import { Colgroup } from "@beep/html/Html.model"
  *
  * const encoded: Colgroup.Encoded = { _tag: "colgroup", children: [] }
- * console.log(encoded._tag) // "colgroup"
+ * encoded._tag // => "colgroup"
  * ```
  *
  * @category elements
@@ -2070,12 +2070,13 @@ export declare namespace Colgroup {
 /**
  * The <data> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Data node)
+ *
+ * ```ts import.meta.vitest name="Construct the Data node"
  * import { Data } from "@beep/html/Html.model"
  *
  * const node = Data.make({ children: [] })
- * console.log(node._tag) // "data"
+ * node._tag // => "data"
  * ```
  *
  * @category elements
@@ -2093,12 +2094,13 @@ export class Data extends S.TaggedClass<Data>($I`Data`)(
 /**
  * Companion namespace for {@link Data}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Data)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Data"
  * import { Data } from "@beep/html/Html.model"
  *
  * const encoded: Data.Encoded = { _tag: "data", children: [] }
- * console.log(encoded._tag) // "data"
+ * encoded._tag // => "data"
  * ```
  *
  * @category elements
@@ -2122,12 +2124,13 @@ export declare namespace Data {
 /**
  * The <datalist> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Datalist node)
+ *
+ * ```ts import.meta.vitest name="Construct the Datalist node"
  * import { Datalist } from "@beep/html/Html.model"
  *
  * const node = Datalist.make({ children: [] })
- * console.log(node._tag) // "datalist"
+ * node._tag // => "datalist"
  * ```
  *
  * @category elements
@@ -2144,12 +2147,13 @@ export class Datalist extends S.TaggedClass<Datalist>($I`Datalist`)(
 /**
  * Companion namespace for {@link Datalist}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Datalist)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Datalist"
  * import { Datalist } from "@beep/html/Html.model"
  *
  * const encoded: Datalist.Encoded = { _tag: "datalist", children: [] }
- * console.log(encoded._tag) // "datalist"
+ * encoded._tag // => "datalist"
  * ```
  *
  * @category elements
@@ -2171,12 +2175,13 @@ export declare namespace Datalist {
 /**
  * The <dd> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Dd node)
+ *
+ * ```ts import.meta.vitest name="Construct the Dd node"
  * import { Dd } from "@beep/html/Html.model"
  *
  * const node = Dd.make({ children: [] })
- * console.log(node._tag) // "dd"
+ * node._tag // => "dd"
  * ```
  *
  * @category elements
@@ -2193,12 +2198,13 @@ export class Dd extends S.TaggedClass<Dd>($I`Dd`)(
 /**
  * Companion namespace for {@link Dd}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Dd)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Dd"
  * import { Dd } from "@beep/html/Html.model"
  *
  * const encoded: Dd.Encoded = { _tag: "dd", children: [] }
- * console.log(encoded._tag) // "dd"
+ * encoded._tag // => "dd"
  * ```
  *
  * @category elements
@@ -2220,12 +2226,13 @@ export declare namespace Dd {
 /**
  * The <del> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Del node)
+ *
+ * ```ts import.meta.vitest name="Construct the Del node"
  * import { Del } from "@beep/html/Html.model"
  *
  * const node = Del.make({ children: [] })
- * console.log(node._tag) // "del"
+ * node._tag // => "del"
  * ```
  *
  * @category elements
@@ -2244,12 +2251,13 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
 /**
  * Companion namespace for {@link Del}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Del)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Del"
  * import { Del } from "@beep/html/Html.model"
  *
  * const encoded: Del.Encoded = { _tag: "del", children: [] }
- * console.log(encoded._tag) // "del"
+ * encoded._tag // => "del"
  * ```
  *
  * @category elements
@@ -2275,12 +2283,13 @@ export declare namespace Del {
 /**
  * The <details> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Details node)
+ *
+ * ```ts import.meta.vitest name="Construct the Details node"
  * import { Details } from "@beep/html/Html.model"
  *
  * const node = Details.make({ children: [] })
- * console.log(node._tag) // "details"
+ * node._tag // => "details"
  * ```
  *
  * @category elements
@@ -2291,7 +2300,7 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
   {
     ...GlobalAttributes,
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    open: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Details", { description: "The <details> element." })
@@ -2299,12 +2308,13 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
 /**
  * Companion namespace for {@link Details}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Details)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Details"
  * import { Details } from "@beep/html/Html.model"
  *
  * const encoded: Details.Encoded = { _tag: "details", children: [] }
- * console.log(encoded._tag) // "details"
+ * encoded._tag // => "details"
  * ```
  *
  * @category elements
@@ -2315,14 +2325,14 @@ export declare namespace Details {
   export type Type = GlobalAttributesType & {
     readonly _tag: "details";
     readonly name: O.Option<string>;
-    readonly open: O.Option<boolean | "">;
+    readonly open: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "details";
     readonly name?: string;
-    readonly open?: boolean | "";
+    readonly open?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -2330,12 +2340,13 @@ export declare namespace Details {
 /**
  * The <dfn> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Dfn node)
+ *
+ * ```ts import.meta.vitest name="Construct the Dfn node"
  * import { Dfn } from "@beep/html/Html.model"
  *
  * const node = Dfn.make({ children: [] })
- * console.log(node._tag) // "dfn"
+ * node._tag // => "dfn"
  * ```
  *
  * @category elements
@@ -2352,12 +2363,13 @@ export class Dfn extends S.TaggedClass<Dfn>($I`Dfn`)(
 /**
  * Companion namespace for {@link Dfn}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Dfn)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Dfn"
  * import { Dfn } from "@beep/html/Html.model"
  *
  * const encoded: Dfn.Encoded = { _tag: "dfn", children: [] }
- * console.log(encoded._tag) // "dfn"
+ * encoded._tag // => "dfn"
  * ```
  *
  * @category elements
@@ -2379,12 +2391,13 @@ export declare namespace Dfn {
 /**
  * The <dialog> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Dialog node)
+ *
+ * ```ts import.meta.vitest name="Construct the Dialog node"
  * import { Dialog } from "@beep/html/Html.model"
  *
  * const node = Dialog.make({ children: [] })
- * console.log(node._tag) // "dialog"
+ * node._tag // => "dialog"
  * ```
  *
  * @category elements
@@ -2394,8 +2407,10 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
   "dialog",
   {
     ...GlobalAttributes,
-    closedby: S.OptionFromOptionalKey(S.Literals(["any", "closerequest", "none"])).pipe(SchemaUtils.withNoneDefault),
-    open: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    closedby: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["any", "closerequest", "none"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Dialog", { description: "The <dialog> element." })
@@ -2403,12 +2418,13 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
 /**
  * Companion namespace for {@link Dialog}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Dialog)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Dialog"
  * import { Dialog } from "@beep/html/Html.model"
  *
  * const encoded: Dialog.Encoded = { _tag: "dialog", children: [] }
- * console.log(encoded._tag) // "dialog"
+ * encoded._tag // => "dialog"
  * ```
  *
  * @category elements
@@ -2419,14 +2435,14 @@ export declare namespace Dialog {
   export type Type = GlobalAttributesType & {
     readonly _tag: "dialog";
     readonly closedby: O.Option<"any" | "closerequest" | "none">;
-    readonly open: O.Option<boolean | "">;
+    readonly open: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "dialog";
-    readonly closedby?: "any" | "closerequest" | "none";
-    readonly open?: boolean | "";
+    readonly closedby?: string;
+    readonly open?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -2434,12 +2450,13 @@ export declare namespace Dialog {
 /**
  * The <dir> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the DirElement node)
+ *
+ * ```ts import.meta.vitest name="Construct the DirElement node"
  * import { DirElement } from "@beep/html/Html.model"
  *
  * const node = DirElement.make({ children: [] })
- * console.log(node._tag) // "dir"
+ * node._tag // => "dir"
  * ```
  *
  * @category elements
@@ -2456,12 +2473,13 @@ export class DirElement extends S.TaggedClass<DirElement>($I`DirElement`)(
 /**
  * Companion namespace for {@link DirElement}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of DirElement)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of DirElement"
  * import { DirElement } from "@beep/html/Html.model"
  *
  * const encoded: DirElement.Encoded = { _tag: "dir", children: [] }
- * console.log(encoded._tag) // "dir"
+ * encoded._tag // => "dir"
  * ```
  *
  * @category elements
@@ -2483,12 +2501,13 @@ export declare namespace DirElement {
 /**
  * The <div> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Div node)
+ *
+ * ```ts import.meta.vitest name="Construct the Div node"
  * import { Div } from "@beep/html/Html.model"
  *
  * const node = Div.make({ children: [] })
- * console.log(node._tag) // "div"
+ * node._tag // => "div"
  * ```
  *
  * @category elements
@@ -2506,12 +2525,13 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
 /**
  * Companion namespace for {@link Div}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Div)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Div"
  * import { Div } from "@beep/html/Html.model"
  *
  * const encoded: Div.Encoded = { _tag: "div", children: [] }
- * console.log(encoded._tag) // "div"
+ * encoded._tag // => "div"
  * ```
  *
  * @category elements
@@ -2535,12 +2555,13 @@ export declare namespace Div {
 /**
  * The <dl> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Dl node)
+ *
+ * ```ts import.meta.vitest name="Construct the Dl node"
  * import { Dl } from "@beep/html/Html.model"
  *
  * const node = Dl.make({ children: [] })
- * console.log(node._tag) // "dl"
+ * node._tag // => "dl"
  * ```
  *
  * @category elements
@@ -2550,7 +2571,7 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
   "dl",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Dl", { description: "The <dl> element." })
@@ -2558,12 +2579,13 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
 /**
  * Companion namespace for {@link Dl}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Dl)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Dl"
  * import { Dl } from "@beep/html/Html.model"
  *
  * const encoded: Dl.Encoded = { _tag: "dl", children: [] }
- * console.log(encoded._tag) // "dl"
+ * encoded._tag // => "dl"
  * ```
  *
  * @category elements
@@ -2573,13 +2595,13 @@ export declare namespace Dl {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "dl";
-    readonly compact: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "dl";
-    readonly compact?: boolean | "";
+    readonly compact?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -2587,12 +2609,13 @@ export declare namespace Dl {
 /**
  * The <dt> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Dt node)
+ *
+ * ```ts import.meta.vitest name="Construct the Dt node"
  * import { Dt } from "@beep/html/Html.model"
  *
  * const node = Dt.make({ children: [] })
- * console.log(node._tag) // "dt"
+ * node._tag // => "dt"
  * ```
  *
  * @category elements
@@ -2609,12 +2632,13 @@ export class Dt extends S.TaggedClass<Dt>($I`Dt`)(
 /**
  * Companion namespace for {@link Dt}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Dt)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Dt"
  * import { Dt } from "@beep/html/Html.model"
  *
  * const encoded: Dt.Encoded = { _tag: "dt", children: [] }
- * console.log(encoded._tag) // "dt"
+ * encoded._tag // => "dt"
  * ```
  *
  * @category elements
@@ -2636,12 +2660,13 @@ export declare namespace Dt {
 /**
  * The <em> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Em node)
+ *
+ * ```ts import.meta.vitest name="Construct the Em node"
  * import { Em } from "@beep/html/Html.model"
  *
  * const node = Em.make({ children: [] })
- * console.log(node._tag) // "em"
+ * node._tag // => "em"
  * ```
  *
  * @category elements
@@ -2658,12 +2683,13 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
 /**
  * Companion namespace for {@link Em}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Em)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Em"
  * import { Em } from "@beep/html/Html.model"
  *
  * const encoded: Em.Encoded = { _tag: "em", children: [] }
- * console.log(encoded._tag) // "em"
+ * encoded._tag // => "em"
  * ```
  *
  * @category elements
@@ -2685,12 +2711,13 @@ export declare namespace Em {
 /**
  * The <embed> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Embed node)
+ *
+ * ```ts import.meta.vitest name="Construct the Embed node"
  * import { Embed } from "@beep/html/Html.model"
  *
  * const node = Embed.make({})
- * console.log(node._tag) // "embed"
+ * node._tag // => "embed"
  * ```
  *
  * @category elements
@@ -2701,25 +2728,26 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
   {
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Embed", { description: "The <embed> element." })
 ) {}
 /**
  * Companion namespace for {@link Embed}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Embed)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Embed"
  * import { Embed } from "@beep/html/Html.model"
  *
  * const encoded: Embed.Encoded = { _tag: "embed" }
- * console.log(encoded._tag) // "embed"
+ * encoded._tag // => "embed"
  * ```
  *
  * @category elements
@@ -2755,12 +2783,13 @@ export declare namespace Embed {
 /**
  * The <fieldset> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Fieldset node)
+ *
+ * ```ts import.meta.vitest name="Construct the Fieldset node"
  * import { Fieldset } from "@beep/html/Html.model"
  *
  * const node = Fieldset.make({ children: [] })
- * console.log(node._tag) // "fieldset"
+ * node._tag // => "fieldset"
  * ```
  *
  * @category elements
@@ -2770,75 +2799,8 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
   "fieldset",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -2848,12 +2810,13 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
 /**
  * Companion namespace for {@link Fieldset}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Fieldset)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Fieldset"
  * import { Fieldset } from "@beep/html/Html.model"
  *
  * const encoded: Fieldset.Encoded = { _tag: "fieldset", children: [] }
- * console.log(encoded._tag) // "fieldset"
+ * encoded._tag // => "fieldset"
  * ```
  *
  * @category elements
@@ -2863,73 +2826,8 @@ export declare namespace Fieldset {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "fieldset";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
-    readonly disabled: O.Option<boolean | "">;
+    readonly autocomplete: O.Option<string>;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly name: O.Option<string>;
     readonly children: HtmlChildren.Type;
@@ -2937,72 +2835,8 @@ export declare namespace Fieldset {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "fieldset";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
-    readonly disabled?: boolean | "";
+    readonly autocomplete?: string;
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly name?: string;
     readonly children: HtmlChildren.Encoded;
@@ -3012,12 +2846,13 @@ export declare namespace Fieldset {
 /**
  * The <figcaption> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Figcaption node)
+ *
+ * ```ts import.meta.vitest name="Construct the Figcaption node"
  * import { Figcaption } from "@beep/html/Html.model"
  *
  * const node = Figcaption.make({ children: [] })
- * console.log(node._tag) // "figcaption"
+ * node._tag // => "figcaption"
  * ```
  *
  * @category elements
@@ -3034,12 +2869,13 @@ export class Figcaption extends S.TaggedClass<Figcaption>($I`Figcaption`)(
 /**
  * Companion namespace for {@link Figcaption}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Figcaption)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Figcaption"
  * import { Figcaption } from "@beep/html/Html.model"
  *
  * const encoded: Figcaption.Encoded = { _tag: "figcaption", children: [] }
- * console.log(encoded._tag) // "figcaption"
+ * encoded._tag // => "figcaption"
  * ```
  *
  * @category elements
@@ -3061,12 +2897,13 @@ export declare namespace Figcaption {
 /**
  * The <figure> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Figure node)
+ *
+ * ```ts import.meta.vitest name="Construct the Figure node"
  * import { Figure } from "@beep/html/Html.model"
  *
  * const node = Figure.make({ children: [] })
- * console.log(node._tag) // "figure"
+ * node._tag // => "figure"
  * ```
  *
  * @category elements
@@ -3083,12 +2920,13 @@ export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
 /**
  * Companion namespace for {@link Figure}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Figure)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Figure"
  * import { Figure } from "@beep/html/Html.model"
  *
  * const encoded: Figure.Encoded = { _tag: "figure", children: [] }
- * console.log(encoded._tag) // "figure"
+ * encoded._tag // => "figure"
  * ```
  *
  * @category elements
@@ -3110,12 +2948,13 @@ export declare namespace Figure {
 /**
  * The <font> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Font node)
+ *
+ * ```ts import.meta.vitest name="Construct the Font node"
  * import { Font } from "@beep/html/Html.model"
  *
  * const node = Font.make({ children: [] })
- * console.log(node._tag) // "font"
+ * node._tag // => "font"
  * ```
  *
  * @category elements
@@ -3132,12 +2971,13 @@ export class Font extends S.TaggedClass<Font>($I`Font`)(
 /**
  * Companion namespace for {@link Font}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Font)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Font"
  * import { Font } from "@beep/html/Html.model"
  *
  * const encoded: Font.Encoded = { _tag: "font", children: [] }
- * console.log(encoded._tag) // "font"
+ * encoded._tag // => "font"
  * ```
  *
  * @category elements
@@ -3159,12 +2999,13 @@ export declare namespace Font {
 /**
  * The <footer> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Footer node)
+ *
+ * ```ts import.meta.vitest name="Construct the Footer node"
  * import { Footer } from "@beep/html/Html.model"
  *
  * const node = Footer.make({ children: [] })
- * console.log(node._tag) // "footer"
+ * node._tag // => "footer"
  * ```
  *
  * @category elements
@@ -3181,12 +3022,13 @@ export class Footer extends S.TaggedClass<Footer>($I`Footer`)(
 /**
  * Companion namespace for {@link Footer}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Footer)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Footer"
  * import { Footer } from "@beep/html/Html.model"
  *
  * const encoded: Footer.Encoded = { _tag: "footer", children: [] }
- * console.log(encoded._tag) // "footer"
+ * encoded._tag // => "footer"
  * ```
  *
  * @category elements
@@ -3208,12 +3050,13 @@ export declare namespace Footer {
 /**
  * The <form> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Form node)
+ *
+ * ```ts import.meta.vitest name="Construct the Form node"
  * import { Form } from "@beep/html/Html.model"
  *
  * const node = Form.make({ children: [] })
- * console.log(node._tag) // "form"
+ * node._tag // => "form"
  * ```
  *
  * @category elements
@@ -3224,34 +3067,23 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
   {
     ...GlobalAttributes,
     accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    "accept-charset": S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    "accept-charset": S.OptionFromOptionalKey(Utf8Charset).pipe(SchemaUtils.withNoneDefault),
     action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(S.Literals(["on", "off"])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(FormAutocomplete).pipe(SchemaUtils.withNoneDefault),
     enctype: S.OptionFromOptionalKey(
-      S.Literals(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
     ).pipe(SchemaUtils.withNoneDefault),
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formmethod: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formnovalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
+    method: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    novalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      S.Literals([
-        "external",
-        "help",
-        "license",
-        "nofollow",
-        "noopener",
-        "noreferrer",
-        "opener",
-        "search",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -3260,12 +3092,13 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
 /**
  * Companion namespace for {@link Form}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Form)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Form"
  * import { Form } from "@beep/html/Html.model"
  *
  * const encoded: Form.Encoded = { _tag: "form", children: [] }
- * console.log(encoded._tag) // "form"
+ * encoded._tag // => "form"
  * ```
  *
  * @category elements
@@ -3276,21 +3109,19 @@ export declare namespace Form {
   export type Type = GlobalAttributesType & {
     readonly _tag: "form";
     readonly accept: O.Option<string>;
-    readonly "accept-charset": O.Option<string>;
+    readonly "accept-charset": O.Option<"utf-8">;
     readonly action: O.Option<string>;
     readonly autocomplete: O.Option<"on" | "off">;
     readonly enctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly formaction: O.Option<string>;
     readonly formenctype: O.Option<string>;
     readonly formmethod: O.Option<string>;
-    readonly formnovalidate: O.Option<boolean | "">;
+    readonly formnovalidate: O.Option<true | "">;
     readonly formtarget: O.Option<string>;
     readonly method: O.Option<"get" | "post" | "dialog">;
     readonly name: O.Option<string>;
-    readonly novalidate: O.Option<boolean | "">;
-    readonly rel: O.Option<
-      "external" | "help" | "license" | "nofollow" | "noopener" | "noreferrer" | "opener" | "search" | "next" | "prev"
-    >;
+    readonly novalidate: O.Option<true | "">;
+    readonly rel: O.Option<string>;
     readonly target: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
@@ -3300,27 +3131,17 @@ export declare namespace Form {
     readonly accept?: string;
     readonly "accept-charset"?: string;
     readonly action?: string;
-    readonly autocomplete?: "on" | "off";
-    readonly enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
+    readonly autocomplete?: string;
+    readonly enctype?: string;
     readonly formaction?: string;
     readonly formenctype?: string;
     readonly formmethod?: string;
-    readonly formnovalidate?: boolean | "";
+    readonly formnovalidate?: true | "";
     readonly formtarget?: string;
-    readonly method?: "get" | "post" | "dialog";
+    readonly method?: string;
     readonly name?: string;
-    readonly novalidate?: boolean | "";
-    readonly rel?:
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "search"
-      | "next"
-      | "prev";
+    readonly novalidate?: true | "";
+    readonly rel?: string;
     readonly target?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -3329,12 +3150,13 @@ export declare namespace Form {
 /**
  * The <frame> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Frame node)
+ *
+ * ```ts import.meta.vitest name="Construct the Frame node"
  * import { Frame } from "@beep/html/Html.model"
  *
  * const node = Frame.make({})
- * console.log(node._tag) // "frame"
+ * node._tag // => "frame"
  * ```
  *
  * @category elements
@@ -3350,12 +3172,13 @@ export class Frame extends S.TaggedClass<Frame>($I`Frame`)(
 /**
  * Companion namespace for {@link Frame}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Frame)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Frame"
  * import { Frame } from "@beep/html/Html.model"
  *
  * const encoded: Frame.Encoded = { _tag: "frame" }
- * console.log(encoded._tag) // "frame"
+ * encoded._tag // => "frame"
  * ```
  *
  * @category elements
@@ -3375,12 +3198,13 @@ export declare namespace Frame {
 /**
  * The <frameset> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Frameset node)
+ *
+ * ```ts import.meta.vitest name="Construct the Frameset node"
  * import { Frameset } from "@beep/html/Html.model"
  *
  * const node = Frameset.make({ children: [] })
- * console.log(node._tag) // "frameset"
+ * node._tag // => "frameset"
  * ```
  *
  * @category elements
@@ -3397,12 +3221,13 @@ export class Frameset extends S.TaggedClass<Frameset>($I`Frameset`)(
 /**
  * Companion namespace for {@link Frameset}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Frameset)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Frameset"
  * import { Frameset } from "@beep/html/Html.model"
  *
  * const encoded: Frameset.Encoded = { _tag: "frameset", children: [] }
- * console.log(encoded._tag) // "frameset"
+ * encoded._tag // => "frameset"
  * ```
  *
  * @category elements
@@ -3424,12 +3249,13 @@ export declare namespace Frameset {
 /**
  * The <h1> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the H1 node)
+ *
+ * ```ts import.meta.vitest name="Construct the H1 node"
  * import { H1 } from "@beep/html/Html.model"
  *
  * const node = H1.make({ children: [] })
- * console.log(node._tag) // "h1"
+ * node._tag // => "h1"
  * ```
  *
  * @category elements
@@ -3447,12 +3273,13 @@ export class H1 extends S.TaggedClass<H1>($I`H1`)(
 /**
  * Companion namespace for {@link H1}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of H1)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of H1"
  * import { H1 } from "@beep/html/Html.model"
  *
  * const encoded: H1.Encoded = { _tag: "h1", children: [] }
- * console.log(encoded._tag) // "h1"
+ * encoded._tag // => "h1"
  * ```
  *
  * @category elements
@@ -3476,12 +3303,13 @@ export declare namespace H1 {
 /**
  * The <h2> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the H2 node)
+ *
+ * ```ts import.meta.vitest name="Construct the H2 node"
  * import { H2 } from "@beep/html/Html.model"
  *
  * const node = H2.make({ children: [] })
- * console.log(node._tag) // "h2"
+ * node._tag // => "h2"
  * ```
  *
  * @category elements
@@ -3499,12 +3327,13 @@ export class H2 extends S.TaggedClass<H2>($I`H2`)(
 /**
  * Companion namespace for {@link H2}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of H2)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of H2"
  * import { H2 } from "@beep/html/Html.model"
  *
  * const encoded: H2.Encoded = { _tag: "h2", children: [] }
- * console.log(encoded._tag) // "h2"
+ * encoded._tag // => "h2"
  * ```
  *
  * @category elements
@@ -3528,12 +3357,13 @@ export declare namespace H2 {
 /**
  * The <h3> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the H3 node)
+ *
+ * ```ts import.meta.vitest name="Construct the H3 node"
  * import { H3 } from "@beep/html/Html.model"
  *
  * const node = H3.make({ children: [] })
- * console.log(node._tag) // "h3"
+ * node._tag // => "h3"
  * ```
  *
  * @category elements
@@ -3551,12 +3381,13 @@ export class H3 extends S.TaggedClass<H3>($I`H3`)(
 /**
  * Companion namespace for {@link H3}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of H3)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of H3"
  * import { H3 } from "@beep/html/Html.model"
  *
  * const encoded: H3.Encoded = { _tag: "h3", children: [] }
- * console.log(encoded._tag) // "h3"
+ * encoded._tag // => "h3"
  * ```
  *
  * @category elements
@@ -3580,12 +3411,13 @@ export declare namespace H3 {
 /**
  * The <h4> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the H4 node)
+ *
+ * ```ts import.meta.vitest name="Construct the H4 node"
  * import { H4 } from "@beep/html/Html.model"
  *
  * const node = H4.make({ children: [] })
- * console.log(node._tag) // "h4"
+ * node._tag // => "h4"
  * ```
  *
  * @category elements
@@ -3603,12 +3435,13 @@ export class H4 extends S.TaggedClass<H4>($I`H4`)(
 /**
  * Companion namespace for {@link H4}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of H4)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of H4"
  * import { H4 } from "@beep/html/Html.model"
  *
  * const encoded: H4.Encoded = { _tag: "h4", children: [] }
- * console.log(encoded._tag) // "h4"
+ * encoded._tag // => "h4"
  * ```
  *
  * @category elements
@@ -3632,12 +3465,13 @@ export declare namespace H4 {
 /**
  * The <h5> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the H5 node)
+ *
+ * ```ts import.meta.vitest name="Construct the H5 node"
  * import { H5 } from "@beep/html/Html.model"
  *
  * const node = H5.make({ children: [] })
- * console.log(node._tag) // "h5"
+ * node._tag // => "h5"
  * ```
  *
  * @category elements
@@ -3655,12 +3489,13 @@ export class H5 extends S.TaggedClass<H5>($I`H5`)(
 /**
  * Companion namespace for {@link H5}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of H5)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of H5"
  * import { H5 } from "@beep/html/Html.model"
  *
  * const encoded: H5.Encoded = { _tag: "h5", children: [] }
- * console.log(encoded._tag) // "h5"
+ * encoded._tag // => "h5"
  * ```
  *
  * @category elements
@@ -3684,12 +3519,13 @@ export declare namespace H5 {
 /**
  * The <h6> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the H6 node)
+ *
+ * ```ts import.meta.vitest name="Construct the H6 node"
  * import { H6 } from "@beep/html/Html.model"
  *
  * const node = H6.make({ children: [] })
- * console.log(node._tag) // "h6"
+ * node._tag // => "h6"
  * ```
  *
  * @category elements
@@ -3707,12 +3543,13 @@ export class H6 extends S.TaggedClass<H6>($I`H6`)(
 /**
  * Companion namespace for {@link H6}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of H6)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of H6"
  * import { H6 } from "@beep/html/Html.model"
  *
  * const encoded: H6.Encoded = { _tag: "h6", children: [] }
- * console.log(encoded._tag) // "h6"
+ * encoded._tag // => "h6"
  * ```
  *
  * @category elements
@@ -3736,12 +3573,13 @@ export declare namespace H6 {
 /**
  * The <head> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Head node)
+ *
+ * ```ts import.meta.vitest name="Construct the Head node"
  * import { Head } from "@beep/html/Html.model"
  *
  * const node = Head.make({ children: [] })
- * console.log(node._tag) // "head"
+ * node._tag // => "head"
  * ```
  *
  * @category elements
@@ -3759,12 +3597,13 @@ export class Head extends S.TaggedClass<Head>($I`Head`)(
 /**
  * Companion namespace for {@link Head}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Head)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Head"
  * import { Head } from "@beep/html/Html.model"
  *
  * const encoded: Head.Encoded = { _tag: "head", children: [] }
- * console.log(encoded._tag) // "head"
+ * encoded._tag // => "head"
  * ```
  *
  * @category elements
@@ -3788,12 +3627,13 @@ export declare namespace Head {
 /**
  * The <header> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Header node)
+ *
+ * ```ts import.meta.vitest name="Construct the Header node"
  * import { Header } from "@beep/html/Html.model"
  *
  * const node = Header.make({ children: [] })
- * console.log(node._tag) // "header"
+ * node._tag // => "header"
  * ```
  *
  * @category elements
@@ -3810,12 +3650,13 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
 /**
  * Companion namespace for {@link Header}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Header)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Header"
  * import { Header } from "@beep/html/Html.model"
  *
  * const encoded: Header.Encoded = { _tag: "header", children: [] }
- * console.log(encoded._tag) // "header"
+ * encoded._tag // => "header"
  * ```
  *
  * @category elements
@@ -3837,12 +3678,13 @@ export declare namespace Header {
 /**
  * The <hgroup> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Hgroup node)
+ *
+ * ```ts import.meta.vitest name="Construct the Hgroup node"
  * import { Hgroup } from "@beep/html/Html.model"
  *
  * const node = Hgroup.make({ children: [] })
- * console.log(node._tag) // "hgroup"
+ * node._tag // => "hgroup"
  * ```
  *
  * @category elements
@@ -3859,12 +3701,13 @@ export class Hgroup extends S.TaggedClass<Hgroup>($I`Hgroup`)(
 /**
  * Companion namespace for {@link Hgroup}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Hgroup)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Hgroup"
  * import { Hgroup } from "@beep/html/Html.model"
  *
  * const encoded: Hgroup.Encoded = { _tag: "hgroup", children: [] }
- * console.log(encoded._tag) // "hgroup"
+ * encoded._tag // => "hgroup"
  * ```
  *
  * @category elements
@@ -3886,12 +3729,13 @@ export declare namespace Hgroup {
 /**
  * The <hr> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Hr node)
+ *
+ * ```ts import.meta.vitest name="Construct the Hr node"
  * import { Hr } from "@beep/html/Html.model"
  *
  * const node = Hr.make({})
- * console.log(node._tag) // "hr"
+ * node._tag // => "hr"
  * ```
  *
  * @category elements
@@ -3903,21 +3747,22 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     color: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    noshade: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    noshade: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Hr", { description: "The <hr> element." })
 ) {}
 /**
  * Companion namespace for {@link Hr}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Hr)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Hr"
  * import { Hr } from "@beep/html/Html.model"
  *
  * const encoded: Hr.Encoded = { _tag: "hr" }
- * console.log(encoded._tag) // "hr"
+ * encoded._tag // => "hr"
  * ```
  *
  * @category elements
@@ -3929,7 +3774,7 @@ export declare namespace Hr {
     readonly _tag: "hr";
     readonly align: O.Option<string>;
     readonly color: O.Option<string>;
-    readonly noshade: O.Option<boolean | "">;
+    readonly noshade: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly width: O.Option<number>;
   };
@@ -3938,7 +3783,7 @@ export declare namespace Hr {
     readonly _tag: "hr";
     readonly align?: string;
     readonly color?: string;
-    readonly noshade?: boolean | "";
+    readonly noshade?: true | "";
     readonly size?: number;
     readonly width?: number;
   };
@@ -3947,12 +3792,13 @@ export declare namespace Hr {
 /**
  * The <html> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Html node)
+ *
+ * ```ts import.meta.vitest name="Construct the Html node"
  * import { Html } from "@beep/html/Html.model"
  *
  * const node = Html.make({ children: [] })
- * console.log(node._tag) // "html"
+ * node._tag // => "html"
  * ```
  *
  * @category elements
@@ -3971,12 +3817,13 @@ export class Html extends S.TaggedClass<Html>($I`Html`)(
 /**
  * Companion namespace for {@link Html}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Html)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Html"
  * import { Html } from "@beep/html/Html.model"
  *
  * const encoded: Html.Encoded = { _tag: "html", children: [] }
- * console.log(encoded._tag) // "html"
+ * encoded._tag // => "html"
  * ```
  *
  * @category elements
@@ -4002,12 +3849,13 @@ export declare namespace Html {
 /**
  * The <i> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the I node)
+ *
+ * ```ts import.meta.vitest name="Construct the I node"
  * import { I } from "@beep/html/Html.model"
  *
  * const node = I.make({ children: [] })
- * console.log(node._tag) // "i"
+ * node._tag // => "i"
  * ```
  *
  * @category elements
@@ -4024,12 +3872,13 @@ export class I extends S.TaggedClass<I>($I`I`)(
 /**
  * Companion namespace for {@link I}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of I)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of I"
  * import { I } from "@beep/html/Html.model"
  *
  * const encoded: I.Encoded = { _tag: "i", children: [] }
- * console.log(encoded._tag) // "i"
+ * encoded._tag // => "i"
  * ```
  *
  * @category elements
@@ -4051,12 +3900,13 @@ export declare namespace I {
 /**
  * The <iframe> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Iframe node)
+ *
+ * ```ts import.meta.vitest name="Construct the Iframe node"
  * import { Iframe } from "@beep/html/Html.model"
  *
- * const node = Iframe.make({ children: [] })
- * console.log(node._tag) // "iframe"
+ * const node = Iframe.make({ content: "" })
+ * node._tag // => "iframe"
  * ```
  *
  * @category elements
@@ -4068,20 +3918,22 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     allow: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    allowfullscreen: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    allowfullscreen: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     allowtransparency: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     frameborder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     framespacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginheight: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     marginwidth: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
     sandbox: S.OptionFromOptionalKey(
-      S.Literals([
+      makeSpaceSeparatedTokenList([
         "allow-popups",
         "allow-top-navigation",
         "allow-top-navigation-by-user-activation",
@@ -4101,20 +3953,21 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srcdoc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    children: HtmlChildren,
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    content: S.String,
   },
   $I.annote("Iframe", { description: "The <iframe> element." })
 ) {}
 /**
  * Companion namespace for {@link Iframe}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Iframe)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Iframe"
  * import { Iframe } from "@beep/html/Html.model"
  *
- * const encoded: Iframe.Encoded = { _tag: "iframe", children: [] }
- * console.log(encoded._tag) // "iframe"
+ * const encoded: Iframe.Encoded = { _tag: "iframe", content: "" }
+ * encoded._tag // => "iframe"
  * ```
  *
  * @category elements
@@ -4126,7 +3979,7 @@ export declare namespace Iframe {
     readonly _tag: "iframe";
     readonly align: O.Option<string>;
     readonly allow: O.Option<string>;
-    readonly allowfullscreen: O.Option<boolean | "">;
+    readonly allowfullscreen: O.Option<true | "">;
     readonly allowtransparency: O.Option<string>;
     readonly frameborder: O.Option<string>;
     readonly framespacing: O.Option<string>;
@@ -4137,78 +3990,62 @@ export declare namespace Iframe {
     readonly marginheight: O.Option<string>;
     readonly marginwidth: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
-    readonly sandbox: O.Option<
-      | "allow-popups"
-      | "allow-top-navigation"
-      | "allow-top-navigation-by-user-activation"
-      | "allow-same-origin"
-      | "allow-forms"
-      | "allow-pointer-lock"
-      | "allow-scripts"
-      | "allow-popups-to-escape-sandbox"
-      | "allow-modals"
-      | "allow-orientation-lock"
-      | "allow-presentation"
-      | "allow-downloads"
-      | "allow-top-navigation-to-custom-protocols"
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
     >;
+    readonly sandbox: O.Option<string>;
     readonly scrolling: O.Option<string>;
     readonly src: O.Option<string>;
     readonly srcdoc: O.Option<string>;
     readonly vspace: O.Option<string>;
     readonly width: O.Option<number>;
-    readonly children: HtmlChildren.Type;
+    readonly content: string;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "iframe";
     readonly align?: string;
     readonly allow?: string;
-    readonly allowfullscreen?: boolean | "";
+    readonly allowfullscreen?: true | "";
     readonly allowtransparency?: string;
     readonly frameborder?: string;
     readonly framespacing?: string;
     readonly height?: number;
     readonly hspace?: string;
-    readonly loading?: "lazy" | "eager";
+    readonly loading?: string;
     readonly longdesc?: string;
     readonly marginheight?: string;
     readonly marginwidth?: string;
     readonly name?: string;
     readonly referrerpolicy?: string;
-    readonly sandbox?:
-      | "allow-popups"
-      | "allow-top-navigation"
-      | "allow-top-navigation-by-user-activation"
-      | "allow-same-origin"
-      | "allow-forms"
-      | "allow-pointer-lock"
-      | "allow-scripts"
-      | "allow-popups-to-escape-sandbox"
-      | "allow-modals"
-      | "allow-orientation-lock"
-      | "allow-presentation"
-      | "allow-downloads"
-      | "allow-top-navigation-to-custom-protocols";
+    readonly sandbox?: string;
     readonly scrolling?: string;
     readonly src?: string;
     readonly srcdoc?: string;
     readonly vspace?: string;
     readonly width?: number;
-    readonly children: HtmlChildren.Encoded;
+    readonly content: string;
   };
 }
 
 /**
  * The <img> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Img node)
+ *
+ * ```ts import.meta.vitest name="Construct the Img node"
  * import { Img } from "@beep/html/Html.model"
  *
  * const node = Img.make({})
- * console.log(node._tag) // "img"
+ * node._tag // => "img"
  * ```
  *
  * @category elements
@@ -4221,38 +4058,43 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    decoding: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["sync", "async", "auto"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    decoding: S.OptionFromOptionalKey(S.Literals(["sync", "async", "auto"])).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ismap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
+    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     lowsrc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
     sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Img", { description: "The <img> element." })
 ) {}
 /**
  * Companion namespace for {@link Img}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Img)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Img"
  * import { Img } from "@beep/html/Html.model"
  *
  * const encoded: Img.Encoded = { _tag: "img" }
- * console.log(encoded._tag) // "img"
+ * encoded._tag // => "img"
  * ```
  *
  * @category elements
@@ -4265,18 +4107,28 @@ export declare namespace Img {
     readonly align: O.Option<string>;
     readonly alt: O.Option<string>;
     readonly border: O.Option<string>;
-    readonly controls: O.Option<boolean | "">;
+    readonly controls: O.Option<true | "">;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
     readonly decoding: O.Option<"sync" | "async" | "auto">;
     readonly fetchpriority: O.Option<"high" | "low" | "auto">;
     readonly height: O.Option<number>;
     readonly hspace: O.Option<string>;
-    readonly ismap: O.Option<boolean | "">;
+    readonly ismap: O.Option<true | "">;
     readonly loading: O.Option<"lazy" | "eager">;
     readonly longdesc: O.Option<string>;
     readonly lowsrc: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly sizes: O.Option<string>;
     readonly src: O.Option<string>;
     readonly srcset: O.Option<string>;
@@ -4290,14 +4142,14 @@ export declare namespace Img {
     readonly align?: string;
     readonly alt?: string;
     readonly border?: string;
-    readonly controls?: boolean | "";
-    readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly decoding?: "sync" | "async" | "auto";
-    readonly fetchpriority?: "high" | "low" | "auto";
+    readonly controls?: true | "";
+    readonly crossorigin?: string;
+    readonly decoding?: string;
+    readonly fetchpriority?: string;
     readonly height?: number;
     readonly hspace?: string;
-    readonly ismap?: boolean | "";
-    readonly loading?: "lazy" | "eager";
+    readonly ismap?: true | "";
+    readonly loading?: string;
     readonly longdesc?: string;
     readonly lowsrc?: string;
     readonly name?: string;
@@ -4314,12 +4166,13 @@ export declare namespace Img {
 /**
  * The <input> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Input node)
+ *
+ * ```ts import.meta.vitest name="Construct the Input node"
  * import { Input } from "@beep/html/Html.model"
  *
  * const node = Input.make({})
- * console.log(node._tag) // "input"
+ * node._tag // => "input"
  * ```
  *
  * @category elements
@@ -4331,100 +4184,47 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     ...GlobalAttributes,
     accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    alpha: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    alpha: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    checked: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    colorspace: S.OptionFromOptionalKey(S.Literals(["limited-srgb", "display-p3"])).pipe(SchemaUtils.withNoneDefault),
+    checked: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    colorspace: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["limited-srgb", "display-p3"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    formenctype: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
+    ).pipe(SchemaUtils.withNoneDefault),
+    formmethod: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ismap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     list: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    maxlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     min: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    minlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     pattern: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    readonly: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
+    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    step: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    step: S.OptionFromOptionalKey(HtmlStep).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(
-      S.Literals([
+      makeAsciiCaseInsensitiveEnumerated([
         "hidden",
         "text",
         "search",
@@ -4452,18 +4252,20 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Input", { description: "The <input> element." })
 ) {}
 /**
  * Companion namespace for {@link Input}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Input)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Input"
  * import { Input } from "@beep/html/Html.model"
  *
  * const encoded: Input.Encoded = { _tag: "input" }
- * console.log(encoded._tag) // "input"
+ * encoded._tag // => "input"
  * ```
  *
  * @category elements
@@ -4475,96 +4277,39 @@ export declare namespace Input {
     readonly _tag: "input";
     readonly accept: O.Option<string>;
     readonly align: O.Option<string>;
-    readonly alpha: O.Option<boolean | "">;
+    readonly alpha: O.Option<true | "">;
     readonly alt: O.Option<string>;
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly border: O.Option<string>;
-    readonly checked: O.Option<boolean | "">;
+    readonly checked: O.Option<true | "">;
     readonly colorspace: O.Option<"limited-srgb" | "display-p3">;
     readonly dirname: O.Option<string>;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
+    readonly formaction: O.Option<string>;
+    readonly formenctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
+    readonly formmethod: O.Option<"get" | "post" | "dialog">;
+    readonly formnovalidate: O.Option<true | "">;
+    readonly formtarget: O.Option<string>;
+    readonly height: O.Option<number>;
     readonly hspace: O.Option<string>;
-    readonly ismap: O.Option<boolean | "">;
+    readonly ismap: O.Option<true | "">;
     readonly list: O.Option<string>;
     readonly max: O.Option<string>;
     readonly maxlength: O.Option<number>;
     readonly min: O.Option<string>;
     readonly minlength: O.Option<number>;
-    readonly multiple: O.Option<boolean | "">;
+    readonly multiple: O.Option<true | "">;
     readonly name: O.Option<string>;
     readonly pattern: O.Option<string>;
     readonly placeholder: O.Option<string>;
-    readonly readonly: O.Option<boolean | "">;
-    readonly required: O.Option<boolean | "">;
+    readonly popovertarget: O.Option<string>;
+    readonly popovertargetaction: O.Option<"toggle" | "show" | "hide">;
+    readonly readonly: O.Option<true | "">;
+    readonly required: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly src: O.Option<string>;
-    readonly step: O.Option<string>;
+    readonly step: O.Option<"any" | number>;
     readonly type: O.Option<
       | "hidden"
       | "text"
@@ -4592,139 +4337,64 @@ export declare namespace Input {
     readonly usemap: O.Option<string>;
     readonly value: O.Option<string>;
     readonly vspace: O.Option<string>;
+    readonly width: O.Option<number>;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "input";
     readonly accept?: string;
     readonly align?: string;
-    readonly alpha?: boolean | "";
+    readonly alpha?: true | "";
     readonly alt?: string;
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly border?: string;
-    readonly checked?: boolean | "";
-    readonly colorspace?: "limited-srgb" | "display-p3";
+    readonly checked?: true | "";
+    readonly colorspace?: string;
     readonly dirname?: string;
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly form?: string;
+    readonly formaction?: string;
+    readonly formenctype?: string;
+    readonly formmethod?: string;
+    readonly formnovalidate?: true | "";
+    readonly formtarget?: string;
+    readonly height?: number;
     readonly hspace?: string;
-    readonly ismap?: boolean | "";
+    readonly ismap?: true | "";
     readonly list?: string;
     readonly max?: string;
     readonly maxlength?: number;
     readonly min?: string;
     readonly minlength?: number;
-    readonly multiple?: boolean | "";
+    readonly multiple?: true | "";
     readonly name?: string;
     readonly pattern?: string;
     readonly placeholder?: string;
-    readonly readonly?: boolean | "";
-    readonly required?: boolean | "";
+    readonly popovertarget?: string;
+    readonly popovertargetaction?: string;
+    readonly readonly?: true | "";
+    readonly required?: true | "";
     readonly size?: number;
     readonly src?: string;
-    readonly step?: string;
-    readonly type?:
-      | "hidden"
-      | "text"
-      | "search"
-      | "tel"
-      | "url"
-      | "email"
-      | "password"
-      | "date"
-      | "month"
-      | "week"
-      | "time"
-      | "datetime-local"
-      | "number"
-      | "range"
-      | "color"
-      | "checkbox"
-      | "radio"
-      | "file"
-      | "submit"
-      | "image"
-      | "reset"
-      | "button";
+    readonly step?: string | number;
+    readonly type?: string;
     readonly usemap?: string;
     readonly value?: string;
     readonly vspace?: string;
+    readonly width?: number;
   };
 }
 
 /**
  * The <ins> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Ins node)
+ *
+ * ```ts import.meta.vitest name="Construct the Ins node"
  * import { Ins } from "@beep/html/Html.model"
  *
  * const node = Ins.make({ children: [] })
- * console.log(node._tag) // "ins"
+ * node._tag // => "ins"
  * ```
  *
  * @category elements
@@ -4743,12 +4413,13 @@ export class Ins extends S.TaggedClass<Ins>($I`Ins`)(
 /**
  * Companion namespace for {@link Ins}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Ins)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Ins"
  * import { Ins } from "@beep/html/Html.model"
  *
  * const encoded: Ins.Encoded = { _tag: "ins", children: [] }
- * console.log(encoded._tag) // "ins"
+ * encoded._tag // => "ins"
  * ```
  *
  * @category elements
@@ -4774,12 +4445,13 @@ export declare namespace Ins {
 /**
  * The <isindex> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Isindex node)
+ *
+ * ```ts import.meta.vitest name="Construct the Isindex node"
  * import { Isindex } from "@beep/html/Html.model"
  *
  * const node = Isindex.make({})
- * console.log(node._tag) // "isindex"
+ * node._tag // => "isindex"
  * ```
  *
  * @category elements
@@ -4795,12 +4467,13 @@ export class Isindex extends S.TaggedClass<Isindex>($I`Isindex`)(
 /**
  * Companion namespace for {@link Isindex}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Isindex)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Isindex"
  * import { Isindex } from "@beep/html/Html.model"
  *
  * const encoded: Isindex.Encoded = { _tag: "isindex" }
- * console.log(encoded._tag) // "isindex"
+ * encoded._tag // => "isindex"
  * ```
  *
  * @category elements
@@ -4820,12 +4493,13 @@ export declare namespace Isindex {
 /**
  * The <kbd> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Kbd node)
+ *
+ * ```ts import.meta.vitest name="Construct the Kbd node"
  * import { Kbd } from "@beep/html/Html.model"
  *
  * const node = Kbd.make({ children: [] })
- * console.log(node._tag) // "kbd"
+ * node._tag // => "kbd"
  * ```
  *
  * @category elements
@@ -4842,12 +4516,13 @@ export class Kbd extends S.TaggedClass<Kbd>($I`Kbd`)(
 /**
  * Companion namespace for {@link Kbd}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Kbd)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Kbd"
  * import { Kbd } from "@beep/html/Html.model"
  *
  * const encoded: Kbd.Encoded = { _tag: "kbd", children: [] }
- * console.log(encoded._tag) // "kbd"
+ * encoded._tag // => "kbd"
  * ```
  *
  * @category elements
@@ -4869,12 +4544,13 @@ export declare namespace Kbd {
 /**
  * The <keygen> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Keygen node)
+ *
+ * ```ts import.meta.vitest name="Construct the Keygen node"
  * import { Keygen } from "@beep/html/Html.model"
  *
  * const node = Keygen.make({})
- * console.log(node._tag) // "keygen"
+ * node._tag // => "keygen"
  * ```
  *
  * @category elements
@@ -4890,12 +4566,13 @@ export class Keygen extends S.TaggedClass<Keygen>($I`Keygen`)(
 /**
  * Companion namespace for {@link Keygen}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Keygen)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Keygen"
  * import { Keygen } from "@beep/html/Html.model"
  *
  * const encoded: Keygen.Encoded = { _tag: "keygen" }
- * console.log(encoded._tag) // "keygen"
+ * encoded._tag // => "keygen"
  * ```
  *
  * @category elements
@@ -4915,12 +4592,13 @@ export declare namespace Keygen {
 /**
  * The <label> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Label node)
+ *
+ * ```ts import.meta.vitest name="Construct the Label node"
  * import { Label } from "@beep/html/Html.model"
  *
  * const node = Label.make({ children: [] })
- * console.log(node._tag) // "label"
+ * node._tag // => "label"
  * ```
  *
  * @category elements
@@ -4938,12 +4616,13 @@ export class Label extends S.TaggedClass<Label>($I`Label`)(
 /**
  * Companion namespace for {@link Label}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Label)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Label"
  * import { Label } from "@beep/html/Html.model"
  *
  * const encoded: Label.Encoded = { _tag: "label", children: [] }
- * console.log(encoded._tag) // "label"
+ * encoded._tag // => "label"
  * ```
  *
  * @category elements
@@ -4967,12 +4646,13 @@ export declare namespace Label {
 /**
  * The <legend> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Legend node)
+ *
+ * ```ts import.meta.vitest name="Construct the Legend node"
  * import { Legend } from "@beep/html/Html.model"
  *
  * const node = Legend.make({ children: [] })
- * console.log(node._tag) // "legend"
+ * node._tag // => "legend"
  * ```
  *
  * @category elements
@@ -4990,12 +4670,13 @@ export class Legend extends S.TaggedClass<Legend>($I`Legend`)(
 /**
  * Companion namespace for {@link Legend}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Legend)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Legend"
  * import { Legend } from "@beep/html/Html.model"
  *
  * const encoded: Legend.Encoded = { _tag: "legend", children: [] }
- * console.log(encoded._tag) // "legend"
+ * encoded._tag // => "legend"
  * ```
  *
  * @category elements
@@ -5019,12 +4700,13 @@ export declare namespace Legend {
 /**
  * The <li> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Li node)
+ *
+ * ```ts import.meta.vitest name="Construct the Li node"
  * import { Li } from "@beep/html/Html.model"
  *
  * const node = Li.make({ children: [] })
- * console.log(node._tag) // "li"
+ * node._tag // => "li"
  * ```
  *
  * @category elements
@@ -5035,7 +4717,7 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
   {
     ...GlobalAttributes,
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Li", { description: "The <li> element." })
@@ -5043,12 +4725,13 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
 /**
  * Companion namespace for {@link Li}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Li)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Li"
  * import { Li } from "@beep/html/Html.model"
  *
  * const encoded: Li.Encoded = { _tag: "li", children: [] }
- * console.log(encoded._tag) // "li"
+ * encoded._tag // => "li"
  * ```
  *
  * @category elements
@@ -5059,14 +4742,14 @@ export declare namespace Li {
   export type Type = GlobalAttributesType & {
     readonly _tag: "li";
     readonly type: O.Option<string>;
-    readonly value: O.Option<string>;
+    readonly value: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "li";
     readonly type?: string;
-    readonly value?: string;
+    readonly value?: number;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -5074,12 +4757,13 @@ export declare namespace Li {
 /**
  * The <link> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Link node)
+ *
+ * ```ts import.meta.vitest name="Construct the Link node"
  * import { Link } from "@beep/html/Html.model"
  *
  * const node = Link.make({})
- * console.log(node._tag) // "link"
+ * node._tag // => "link"
  * ```
  *
  * @category elements
@@ -5089,15 +4773,31 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
   "link",
   {
     ...GlobalAttributes,
-    as: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    as: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated([
+        "audioworklet",
+        "fetch",
+        "font",
+        "image",
+        "json",
+        "paintworklet",
+        "script",
+        "serviceworker",
+        "sharedworker",
+        "style",
+        "text",
+        "track",
+        "worker",
+      ])
+    ).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
     charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     color: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
     href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     imagesizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -5105,31 +4805,8 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
     integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(
-      S.Literals([
-        "alternate",
-        "author",
-        "canonical",
-        "dns-prefetch",
-        "expect",
-        "help",
-        "icon",
-        "license",
-        "manifest",
-        "modulepreload",
-        "pingback",
-        "preconnect",
-        "prefetch",
-        "preload",
-        "privacy-policy",
-        "search",
-        "stylesheet",
-        "terms-of-service",
-        "next",
-        "prev",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    rel: S.OptionFromOptionalKey(LinkRelationList).pipe(SchemaUtils.withNoneDefault),
     rev: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -5141,12 +4818,13 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
 /**
  * Companion namespace for {@link Link}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Link)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Link"
  * import { Link } from "@beep/html/Html.model"
  *
  * const encoded: Link.Encoded = { _tag: "link" }
- * console.log(encoded._tag) // "link"
+ * encoded._tag // => "link"
  * ```
  *
  * @category elements
@@ -5156,12 +4834,26 @@ export declare namespace Link {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "link";
-    readonly as: O.Option<string>;
+    readonly as: O.Option<
+      | "audioworklet"
+      | "fetch"
+      | "font"
+      | "image"
+      | "json"
+      | "paintworklet"
+      | "script"
+      | "serviceworker"
+      | "sharedworker"
+      | "style"
+      | "text"
+      | "track"
+      | "worker"
+    >;
     readonly blocking: O.Option<string>;
     readonly charset: O.Option<string>;
     readonly color: O.Option<string>;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly fetchpriority: O.Option<"high" | "low" | "auto">;
     readonly href: O.Option<string>;
     readonly hreflang: O.Option<string>;
@@ -5170,29 +4862,18 @@ export declare namespace Link {
     readonly integrity: O.Option<string>;
     readonly media: O.Option<string>;
     readonly methods: O.Option<string>;
-    readonly referrerpolicy: O.Option<string>;
-    readonly rel: O.Option<
-      | "alternate"
-      | "author"
-      | "canonical"
-      | "dns-prefetch"
-      | "expect"
-      | "help"
-      | "icon"
-      | "license"
-      | "manifest"
-      | "modulepreload"
-      | "pingback"
-      | "preconnect"
-      | "prefetch"
-      | "preload"
-      | "privacy-policy"
-      | "search"
-      | "stylesheet"
-      | "terms-of-service"
-      | "next"
-      | "prev"
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
     >;
+    readonly rel: O.Option<string>;
     readonly rev: O.Option<string>;
     readonly sizes: O.Option<string>;
     readonly target: O.Option<string>;
@@ -5206,9 +4887,9 @@ export declare namespace Link {
     readonly blocking?: string;
     readonly charset?: string;
     readonly color?: string;
-    readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly disabled?: boolean | "";
-    readonly fetchpriority?: "high" | "low" | "auto";
+    readonly crossorigin?: string;
+    readonly disabled?: true | "";
+    readonly fetchpriority?: string;
     readonly href?: string;
     readonly hreflang?: string;
     readonly imagesizes?: string;
@@ -5217,27 +4898,7 @@ export declare namespace Link {
     readonly media?: string;
     readonly methods?: string;
     readonly referrerpolicy?: string;
-    readonly rel?:
-      | "alternate"
-      | "author"
-      | "canonical"
-      | "dns-prefetch"
-      | "expect"
-      | "help"
-      | "icon"
-      | "license"
-      | "manifest"
-      | "modulepreload"
-      | "pingback"
-      | "preconnect"
-      | "prefetch"
-      | "preload"
-      | "privacy-policy"
-      | "search"
-      | "stylesheet"
-      | "terms-of-service"
-      | "next"
-      | "prev";
+    readonly rel?: string;
     readonly rev?: string;
     readonly sizes?: string;
     readonly target?: string;
@@ -5249,12 +4910,13 @@ export declare namespace Link {
 /**
  * The <listing> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Listing node)
+ *
+ * ```ts import.meta.vitest name="Construct the Listing node"
  * import { Listing } from "@beep/html/Html.model"
  *
- * const node = Listing.make({ content: "" })
- * console.log(node._tag) // "listing"
+ * const node = Listing.make({ children: [] })
+ * node._tag // => "listing"
  * ```
  *
  * @category elements
@@ -5264,19 +4926,20 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
   "listing",
   {
     ...GlobalAttributes,
-    content: S.String,
+    children: HtmlChildren,
   },
   $I.annote("Listing", { description: "The <listing> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
 /**
  * Companion namespace for {@link Listing}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Listing)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Listing"
  * import { Listing } from "@beep/html/Html.model"
  *
- * const encoded: Listing.Encoded = { _tag: "listing", content: "" }
- * console.log(encoded._tag) // "listing"
+ * const encoded: Listing.Encoded = { _tag: "listing", children: [] }
+ * encoded._tag // => "listing"
  * ```
  *
  * @category elements
@@ -5286,24 +4949,25 @@ export declare namespace Listing {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "listing";
-    readonly content: string;
+    readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "listing";
-    readonly content: string;
+    readonly children: HtmlChildren.Encoded;
   };
 }
 
 /**
  * The <main> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Main node)
+ *
+ * ```ts import.meta.vitest name="Construct the Main node"
  * import { Main } from "@beep/html/Html.model"
  *
  * const node = Main.make({ children: [] })
- * console.log(node._tag) // "main"
+ * node._tag // => "main"
  * ```
  *
  * @category elements
@@ -5320,12 +4984,13 @@ export class Main extends S.TaggedClass<Main>($I`Main`)(
 /**
  * Companion namespace for {@link Main}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Main)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Main"
  * import { Main } from "@beep/html/Html.model"
  *
  * const encoded: Main.Encoded = { _tag: "main", children: [] }
- * console.log(encoded._tag) // "main"
+ * encoded._tag // => "main"
  * ```
  *
  * @category elements
@@ -5347,12 +5012,13 @@ export declare namespace Main {
 /**
  * The <map> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the MapElement node)
+ *
+ * ```ts import.meta.vitest name="Construct the MapElement node"
  * import { MapElement } from "@beep/html/Html.model"
  *
  * const node = MapElement.make({ children: [] })
- * console.log(node._tag) // "map"
+ * node._tag // => "map"
  * ```
  *
  * @category elements
@@ -5362,7 +5028,7 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
   "map",
   {
     ...GlobalAttributes,
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("MapElement", { description: "The <map> element." })
@@ -5370,12 +5036,13 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
 /**
  * Companion namespace for {@link MapElement}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of MapElement)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of MapElement"
  * import { MapElement } from "@beep/html/Html.model"
  *
  * const encoded: MapElement.Encoded = { _tag: "map", children: [] }
- * console.log(encoded._tag) // "map"
+ * encoded._tag // => "map"
  * ```
  *
  * @category elements
@@ -5399,12 +5066,13 @@ export declare namespace MapElement {
 /**
  * The <mark> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Mark node)
+ *
+ * ```ts import.meta.vitest name="Construct the Mark node"
  * import { Mark } from "@beep/html/Html.model"
  *
  * const node = Mark.make({ children: [] })
- * console.log(node._tag) // "mark"
+ * node._tag // => "mark"
  * ```
  *
  * @category elements
@@ -5421,12 +5089,13 @@ export class Mark extends S.TaggedClass<Mark>($I`Mark`)(
 /**
  * Companion namespace for {@link Mark}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Mark)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Mark"
  * import { Mark } from "@beep/html/Html.model"
  *
  * const encoded: Mark.Encoded = { _tag: "mark", children: [] }
- * console.log(encoded._tag) // "mark"
+ * encoded._tag // => "mark"
  * ```
  *
  * @category elements
@@ -5448,12 +5117,13 @@ export declare namespace Mark {
 /**
  * The <marquee> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Marquee node)
+ *
+ * ```ts import.meta.vitest name="Construct the Marquee node"
  * import { Marquee } from "@beep/html/Html.model"
  *
  * const node = Marquee.make({ children: [] })
- * console.log(node._tag) // "marquee"
+ * node._tag // => "marquee"
  * ```
  *
  * @category elements
@@ -5465,8 +5135,8 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
     ...GlobalAttributes,
     behavior: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     direction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    truespeed: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    truespeed: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Marquee", { description: "The <marquee> element. Obsolete / non-conforming (WHATWG §16.2)." })
@@ -5474,12 +5144,13 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
 /**
  * Companion namespace for {@link Marquee}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Marquee)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Marquee"
  * import { Marquee } from "@beep/html/Html.model"
  *
  * const encoded: Marquee.Encoded = { _tag: "marquee", children: [] }
- * console.log(encoded._tag) // "marquee"
+ * encoded._tag // => "marquee"
  * ```
  *
  * @category elements
@@ -5491,8 +5162,8 @@ export declare namespace Marquee {
     readonly _tag: "marquee";
     readonly behavior: O.Option<string>;
     readonly direction: O.Option<string>;
-    readonly loop: O.Option<boolean | "">;
-    readonly truespeed: O.Option<boolean | "">;
+    readonly loop: O.Option<true | "">;
+    readonly truespeed: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
@@ -5500,8 +5171,8 @@ export declare namespace Marquee {
     readonly _tag: "marquee";
     readonly behavior?: string;
     readonly direction?: string;
-    readonly loop?: boolean | "";
-    readonly truespeed?: boolean | "";
+    readonly loop?: true | "";
+    readonly truespeed?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -5509,12 +5180,13 @@ export declare namespace Marquee {
 /**
  * The <menu> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Menu node)
+ *
+ * ```ts import.meta.vitest name="Construct the Menu node"
  * import { Menu } from "@beep/html/Html.model"
  *
  * const node = Menu.make({ children: [] })
- * console.log(node._tag) // "menu"
+ * node._tag // => "menu"
  * ```
  *
  * @category elements
@@ -5524,7 +5196,7 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
   "menu",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -5534,12 +5206,13 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
 /**
  * Companion namespace for {@link Menu}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Menu)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Menu"
  * import { Menu } from "@beep/html/Html.model"
  *
  * const encoded: Menu.Encoded = { _tag: "menu", children: [] }
- * console.log(encoded._tag) // "menu"
+ * encoded._tag // => "menu"
  * ```
  *
  * @category elements
@@ -5549,7 +5222,7 @@ export declare namespace Menu {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "menu";
-    readonly compact: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
     readonly label: O.Option<string>;
     readonly type: O.Option<string>;
     readonly children: HtmlChildren.Type;
@@ -5557,7 +5230,7 @@ export declare namespace Menu {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "menu";
-    readonly compact?: boolean | "";
+    readonly compact?: true | "";
     readonly label?: string;
     readonly type?: string;
     readonly children: HtmlChildren.Encoded;
@@ -5567,12 +5240,13 @@ export declare namespace Menu {
 /**
  * The <menuitem> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Menuitem node)
+ *
+ * ```ts import.meta.vitest name="Construct the Menuitem node"
  * import { Menuitem } from "@beep/html/Html.model"
  *
  * const node = Menuitem.make({ children: [] })
- * console.log(node._tag) // "menuitem"
+ * node._tag // => "menuitem"
  * ```
  *
  * @category elements
@@ -5589,12 +5263,13 @@ export class Menuitem extends S.TaggedClass<Menuitem>($I`Menuitem`)(
 /**
  * Companion namespace for {@link Menuitem}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Menuitem)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Menuitem"
  * import { Menuitem } from "@beep/html/Html.model"
  *
  * const encoded: Menuitem.Encoded = { _tag: "menuitem", children: [] }
- * console.log(encoded._tag) // "menuitem"
+ * encoded._tag // => "menuitem"
  * ```
  *
  * @category elements
@@ -5616,12 +5291,13 @@ export declare namespace Menuitem {
 /**
  * The <meta> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Meta node)
+ *
+ * ```ts import.meta.vitest name="Construct the Meta node"
  * import { Meta } from "@beep/html/Html.model"
  *
  * const node = Meta.make({})
- * console.log(node._tag) // "meta"
+ * node._tag // => "meta"
  * ```
  *
  * @category elements
@@ -5631,32 +5307,19 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
   "meta",
   {
     ...GlobalAttributes,
-    charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    charset: S.OptionFromOptionalKey(Utf8Charset).pipe(SchemaUtils.withNoneDefault),
     content: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     "http-equiv": S.OptionFromOptionalKey(
-      S.Literals([
-        "content-language",
+      makeAsciiCaseInsensitiveEnumerated([
         "content-type",
         "default-style",
         "refresh",
-        "set-cookie",
         "x-ua-compatible",
         "content-security-policy",
       ])
     ).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(
-      S.Literals([
-        "application-name",
-        "author",
-        "description",
-        "generator",
-        "keywords",
-        "referrer",
-        "theme-color",
-        "color-scheme",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(MetadataName).pipe(SchemaUtils.withNoneDefault),
     scheme: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Meta", { description: "The <meta> element." })
@@ -5664,12 +5327,13 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
 /**
  * Companion namespace for {@link Meta}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Meta)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Meta"
  * import { Meta } from "@beep/html/Html.model"
  *
  * const encoded: Meta.Encoded = { _tag: "meta" }
- * console.log(encoded._tag) // "meta"
+ * encoded._tag // => "meta"
  * ```
  *
  * @category elements
@@ -5679,28 +5343,13 @@ export declare namespace Meta {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "meta";
-    readonly charset: O.Option<string>;
+    readonly charset: O.Option<"utf-8">;
     readonly content: O.Option<string>;
     readonly "http-equiv": O.Option<
-      | "content-language"
-      | "content-type"
-      | "default-style"
-      | "refresh"
-      | "set-cookie"
-      | "x-ua-compatible"
-      | "content-security-policy"
+      "content-type" | "default-style" | "refresh" | "x-ua-compatible" | "content-security-policy"
     >;
     readonly media: O.Option<string>;
-    readonly name: O.Option<
-      | "application-name"
-      | "author"
-      | "description"
-      | "generator"
-      | "keywords"
-      | "referrer"
-      | "theme-color"
-      | "color-scheme"
-    >;
+    readonly name: O.Option<string>;
     readonly scheme: O.Option<string>;
   };
   /** @since 0.0.0 */
@@ -5708,24 +5357,9 @@ export declare namespace Meta {
     readonly _tag: "meta";
     readonly charset?: string;
     readonly content?: string;
-    readonly "http-equiv"?:
-      | "content-language"
-      | "content-type"
-      | "default-style"
-      | "refresh"
-      | "set-cookie"
-      | "x-ua-compatible"
-      | "content-security-policy";
+    readonly "http-equiv"?: string;
     readonly media?: string;
-    readonly name?:
-      | "application-name"
-      | "author"
-      | "description"
-      | "generator"
-      | "keywords"
-      | "referrer"
-      | "theme-color"
-      | "color-scheme";
+    readonly name?: string;
     readonly scheme?: string;
   };
 }
@@ -5733,12 +5367,13 @@ export declare namespace Meta {
 /**
  * The <meter> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Meter node)
+ *
+ * ```ts import.meta.vitest name="Construct the Meter node"
  * import { Meter } from "@beep/html/Html.model"
  *
  * const node = Meter.make({ children: [] })
- * console.log(node._tag) // "meter"
+ * node._tag // => "meter"
  * ```
  *
  * @category elements
@@ -5748,12 +5383,12 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
   "meter",
   {
     ...GlobalAttributes,
-    high: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    low: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    min: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    optimum: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    high: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    low: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    max: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    min: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    optimum: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Meter", { description: "The <meter> element." })
@@ -5761,12 +5396,13 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
 /**
  * Companion namespace for {@link Meter}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Meter)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Meter"
  * import { Meter } from "@beep/html/Html.model"
  *
  * const encoded: Meter.Encoded = { _tag: "meter", children: [] }
- * console.log(encoded._tag) // "meter"
+ * encoded._tag // => "meter"
  * ```
  *
  * @category elements
@@ -5776,23 +5412,23 @@ export declare namespace Meter {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "meter";
-    readonly high: O.Option<string>;
-    readonly low: O.Option<string>;
-    readonly max: O.Option<string>;
-    readonly min: O.Option<string>;
-    readonly optimum: O.Option<string>;
-    readonly value: O.Option<string>;
+    readonly high: O.Option<number>;
+    readonly low: O.Option<number>;
+    readonly max: O.Option<number>;
+    readonly min: O.Option<number>;
+    readonly optimum: O.Option<number>;
+    readonly value: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "meter";
-    readonly high?: string;
-    readonly low?: string;
-    readonly max?: string;
-    readonly min?: string;
-    readonly optimum?: string;
-    readonly value?: string;
+    readonly high?: number;
+    readonly low?: number;
+    readonly max?: number;
+    readonly min?: number;
+    readonly optimum?: number;
+    readonly value?: number;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -5800,12 +5436,13 @@ export declare namespace Meter {
 /**
  * The <multicol> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Multicol node)
+ *
+ * ```ts import.meta.vitest name="Construct the Multicol node"
  * import { Multicol } from "@beep/html/Html.model"
  *
  * const node = Multicol.make({ children: [] })
- * console.log(node._tag) // "multicol"
+ * node._tag // => "multicol"
  * ```
  *
  * @category elements
@@ -5822,12 +5459,13 @@ export class Multicol extends S.TaggedClass<Multicol>($I`Multicol`)(
 /**
  * Companion namespace for {@link Multicol}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Multicol)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Multicol"
  * import { Multicol } from "@beep/html/Html.model"
  *
  * const encoded: Multicol.Encoded = { _tag: "multicol", children: [] }
- * console.log(encoded._tag) // "multicol"
+ * encoded._tag // => "multicol"
  * ```
  *
  * @category elements
@@ -5849,12 +5487,13 @@ export declare namespace Multicol {
 /**
  * The <nav> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Nav node)
+ *
+ * ```ts import.meta.vitest name="Construct the Nav node"
  * import { Nav } from "@beep/html/Html.model"
  *
  * const node = Nav.make({ children: [] })
- * console.log(node._tag) // "nav"
+ * node._tag // => "nav"
  * ```
  *
  * @category elements
@@ -5871,12 +5510,13 @@ export class Nav extends S.TaggedClass<Nav>($I`Nav`)(
 /**
  * Companion namespace for {@link Nav}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Nav)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Nav"
  * import { Nav } from "@beep/html/Html.model"
  *
  * const encoded: Nav.Encoded = { _tag: "nav", children: [] }
- * console.log(encoded._tag) // "nav"
+ * encoded._tag // => "nav"
  * ```
  *
  * @category elements
@@ -5898,12 +5538,13 @@ export declare namespace Nav {
 /**
  * The <nextid> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Nextid node)
+ *
+ * ```ts import.meta.vitest name="Construct the Nextid node"
  * import { Nextid } from "@beep/html/Html.model"
  *
  * const node = Nextid.make({})
- * console.log(node._tag) // "nextid"
+ * node._tag // => "nextid"
  * ```
  *
  * @category elements
@@ -5919,12 +5560,13 @@ export class Nextid extends S.TaggedClass<Nextid>($I`Nextid`)(
 /**
  * Companion namespace for {@link Nextid}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Nextid)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Nextid"
  * import { Nextid } from "@beep/html/Html.model"
  *
  * const encoded: Nextid.Encoded = { _tag: "nextid" }
- * console.log(encoded._tag) // "nextid"
+ * encoded._tag // => "nextid"
  * ```
  *
  * @category elements
@@ -5944,12 +5586,13 @@ export declare namespace Nextid {
 /**
  * The <nobr> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Nobr node)
+ *
+ * ```ts import.meta.vitest name="Construct the Nobr node"
  * import { Nobr } from "@beep/html/Html.model"
  *
  * const node = Nobr.make({ children: [] })
- * console.log(node._tag) // "nobr"
+ * node._tag // => "nobr"
  * ```
  *
  * @category elements
@@ -5966,12 +5609,13 @@ export class Nobr extends S.TaggedClass<Nobr>($I`Nobr`)(
 /**
  * Companion namespace for {@link Nobr}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Nobr)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Nobr"
  * import { Nobr } from "@beep/html/Html.model"
  *
  * const encoded: Nobr.Encoded = { _tag: "nobr", children: [] }
- * console.log(encoded._tag) // "nobr"
+ * encoded._tag // => "nobr"
  * ```
  *
  * @category elements
@@ -5993,12 +5637,13 @@ export declare namespace Nobr {
 /**
  * The <noembed> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Noembed node)
+ *
+ * ```ts import.meta.vitest name="Construct the Noembed node"
  * import { Noembed } from "@beep/html/Html.model"
  *
- * const node = Noembed.make({ children: [] })
- * console.log(node._tag) // "noembed"
+ * const node = Noembed.make({ content: "" })
+ * node._tag // => "noembed"
  * ```
  *
  * @category elements
@@ -6008,19 +5653,20 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
   "noembed",
   {
     ...GlobalAttributes,
-    children: HtmlChildren,
+    content: S.String,
   },
   $I.annote("Noembed", { description: "The <noembed> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
 /**
  * Companion namespace for {@link Noembed}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Noembed)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Noembed"
  * import { Noembed } from "@beep/html/Html.model"
  *
- * const encoded: Noembed.Encoded = { _tag: "noembed", children: [] }
- * console.log(encoded._tag) // "noembed"
+ * const encoded: Noembed.Encoded = { _tag: "noembed", content: "" }
+ * encoded._tag // => "noembed"
  * ```
  *
  * @category elements
@@ -6030,24 +5676,25 @@ export declare namespace Noembed {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "noembed";
-    readonly children: HtmlChildren.Type;
+    readonly content: string;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "noembed";
-    readonly children: HtmlChildren.Encoded;
+    readonly content: string;
   };
 }
 
 /**
  * The <noframes> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Noframes node)
+ *
+ * ```ts import.meta.vitest name="Construct the Noframes node"
  * import { Noframes } from "@beep/html/Html.model"
  *
- * const node = Noframes.make({ children: [] })
- * console.log(node._tag) // "noframes"
+ * const node = Noframes.make({ content: "" })
+ * node._tag // => "noframes"
  * ```
  *
  * @category elements
@@ -6057,19 +5704,20 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
   "noframes",
   {
     ...GlobalAttributes,
-    children: HtmlChildren,
+    content: S.String,
   },
   $I.annote("Noframes", { description: "The <noframes> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
 /**
  * Companion namespace for {@link Noframes}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Noframes)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Noframes"
  * import { Noframes } from "@beep/html/Html.model"
  *
- * const encoded: Noframes.Encoded = { _tag: "noframes", children: [] }
- * console.log(encoded._tag) // "noframes"
+ * const encoded: Noframes.Encoded = { _tag: "noframes", content: "" }
+ * encoded._tag // => "noframes"
  * ```
  *
  * @category elements
@@ -6079,24 +5727,25 @@ export declare namespace Noframes {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "noframes";
-    readonly children: HtmlChildren.Type;
+    readonly content: string;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "noframes";
-    readonly children: HtmlChildren.Encoded;
+    readonly content: string;
   };
 }
 
 /**
  * The <noscript> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Noscript node)
+ *
+ * ```ts import.meta.vitest name="Construct the Noscript node"
  * import { Noscript } from "@beep/html/Html.model"
  *
  * const node = Noscript.make({ children: [] })
- * console.log(node._tag) // "noscript"
+ * node._tag // => "noscript"
  * ```
  *
  * @category elements
@@ -6113,12 +5762,13 @@ export class Noscript extends S.TaggedClass<Noscript>($I`Noscript`)(
 /**
  * Companion namespace for {@link Noscript}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Noscript)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Noscript"
  * import { Noscript } from "@beep/html/Html.model"
  *
  * const encoded: Noscript.Encoded = { _tag: "noscript", children: [] }
- * console.log(encoded._tag) // "noscript"
+ * encoded._tag // => "noscript"
  * ```
  *
  * @category elements
@@ -6140,12 +5790,13 @@ export declare namespace Noscript {
 /**
  * The <object> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the ObjectElement node)
+ *
+ * ```ts import.meta.vitest name="Construct the ObjectElement node"
  * import { ObjectElement } from "@beep/html/Html.model"
  *
  * const node = ObjectElement.make({ children: [] })
- * console.log(node._tag) // "object"
+ * node._tag // => "object"
  * ```
  *
  * @category elements
@@ -6157,84 +5808,17 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     archive: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     classid: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     codebase: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     codetype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     data: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    declare: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    declare: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     standby: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -6242,7 +5826,7 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
     typemustmatch: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("ObjectElement", { description: "The <object> element." })
@@ -6250,12 +5834,13 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
 /**
  * Companion namespace for {@link ObjectElement}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of ObjectElement)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of ObjectElement"
  * import { ObjectElement } from "@beep/html/Html.model"
  *
  * const encoded: ObjectElement.Encoded = { _tag: "object", children: [] }
- * console.log(encoded._tag) // "object"
+ * encoded._tag // => "object"
  * ```
  *
  * @category elements
@@ -6267,80 +5852,15 @@ export declare namespace ObjectElement {
     readonly _tag: "object";
     readonly align: O.Option<string>;
     readonly archive: O.Option<string>;
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly border: O.Option<string>;
     readonly classid: O.Option<string>;
     readonly code: O.Option<string>;
     readonly codebase: O.Option<string>;
     readonly codetype: O.Option<string>;
     readonly data: O.Option<string>;
-    readonly declare: O.Option<boolean | "">;
-    readonly disabled: O.Option<boolean | "">;
+    readonly declare: O.Option<true | "">;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly height: O.Option<number>;
     readonly hspace: O.Option<string>;
@@ -6358,79 +5878,15 @@ export declare namespace ObjectElement {
     readonly _tag: "object";
     readonly align?: string;
     readonly archive?: string;
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly border?: string;
     readonly classid?: string;
     readonly code?: string;
     readonly codebase?: string;
     readonly codetype?: string;
     readonly data?: string;
-    readonly declare?: boolean | "";
-    readonly disabled?: boolean | "";
+    readonly declare?: true | "";
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly height?: number;
     readonly hspace?: string;
@@ -6448,12 +5904,13 @@ export declare namespace ObjectElement {
 /**
  * The <ol> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Ol node)
+ *
+ * ```ts import.meta.vitest name="Construct the Ol node"
  * import { Ol } from "@beep/html/Html.model"
  *
  * const node = Ol.make({ children: [] })
- * console.log(node._tag) // "ol"
+ * node._tag // => "ol"
  * ```
  *
  * @category elements
@@ -6463,8 +5920,8 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
   "ol",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    reversed: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    reversed: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     start: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.Literals(["1", "a", "A", "i", "I"])).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -6474,12 +5931,13 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
 /**
  * Companion namespace for {@link Ol}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Ol)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Ol"
  * import { Ol } from "@beep/html/Html.model"
  *
  * const encoded: Ol.Encoded = { _tag: "ol", children: [] }
- * console.log(encoded._tag) // "ol"
+ * encoded._tag // => "ol"
  * ```
  *
  * @category elements
@@ -6489,8 +5947,8 @@ export declare namespace Ol {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "ol";
-    readonly compact: O.Option<boolean | "">;
-    readonly reversed: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
+    readonly reversed: O.Option<true | "">;
     readonly start: O.Option<number>;
     readonly type: O.Option<"1" | "a" | "A" | "i" | "I">;
     readonly children: HtmlChildren.Type;
@@ -6498,8 +5956,8 @@ export declare namespace Ol {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "ol";
-    readonly compact?: boolean | "";
-    readonly reversed?: boolean | "";
+    readonly compact?: true | "";
+    readonly reversed?: true | "";
     readonly start?: number;
     readonly type?: "1" | "a" | "A" | "i" | "I";
     readonly children: HtmlChildren.Encoded;
@@ -6509,12 +5967,13 @@ export declare namespace Ol {
 /**
  * The <optgroup> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Optgroup node)
+ *
+ * ```ts import.meta.vitest name="Construct the Optgroup node"
  * import { Optgroup } from "@beep/html/Html.model"
  *
  * const node = Optgroup.make({ children: [] })
- * console.log(node._tag) // "optgroup"
+ * node._tag // => "optgroup"
  * ```
  *
  * @category elements
@@ -6524,7 +5983,7 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
   "optgroup",
   {
     ...GlobalAttributes,
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -6533,12 +5992,13 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
 /**
  * Companion namespace for {@link Optgroup}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Optgroup)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Optgroup"
  * import { Optgroup } from "@beep/html/Html.model"
  *
  * const encoded: Optgroup.Encoded = { _tag: "optgroup", children: [] }
- * console.log(encoded._tag) // "optgroup"
+ * encoded._tag // => "optgroup"
  * ```
  *
  * @category elements
@@ -6548,14 +6008,14 @@ export declare namespace Optgroup {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "optgroup";
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly label: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "optgroup";
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly label?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -6564,12 +6024,13 @@ export declare namespace Optgroup {
 /**
  * The <option> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Option node)
+ *
+ * ```ts import.meta.vitest name="Construct the Option node"
  * import { Option } from "@beep/html/Html.model"
  *
  * const node = Option.make({ children: [] })
- * console.log(node._tag) // "option"
+ * node._tag // => "option"
  * ```
  *
  * @category elements
@@ -6579,10 +6040,10 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
   "option",
   {
     ...GlobalAttributes,
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    selected: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    selected: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -6591,12 +6052,13 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
 /**
  * Companion namespace for {@link Option}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Option)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Option"
  * import { Option } from "@beep/html/Html.model"
  *
  * const encoded: Option.Encoded = { _tag: "option", children: [] }
- * console.log(encoded._tag) // "option"
+ * encoded._tag // => "option"
  * ```
  *
  * @category elements
@@ -6606,20 +6068,20 @@ export declare namespace Option {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "option";
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly label: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly selected: O.Option<boolean | "">;
+    readonly selected: O.Option<true | "">;
     readonly value: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "option";
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly label?: string;
     readonly name?: string;
-    readonly selected?: boolean | "";
+    readonly selected?: true | "";
     readonly value?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -6628,12 +6090,13 @@ export declare namespace Option {
 /**
  * The <output> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Output node)
+ *
+ * ```ts import.meta.vitest name="Construct the Output node"
  * import { Output } from "@beep/html/Html.model"
  *
  * const node = Output.make({ children: [] })
- * console.log(node._tag) // "output"
+ * node._tag // => "output"
  * ```
  *
  * @category elements
@@ -6643,76 +6106,9 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
   "output",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    for: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -6722,12 +6118,13 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
 /**
  * Companion namespace for {@link Output}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Output)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Output"
  * import { Output } from "@beep/html/Html.model"
  *
  * const encoded: Output.Encoded = { _tag: "output", children: [] }
- * console.log(encoded._tag) // "output"
+ * encoded._tag // => "output"
  * ```
  *
  * @category elements
@@ -6737,73 +6134,8 @@ export declare namespace Output {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "output";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
-    readonly disabled: O.Option<boolean | "">;
+    readonly autocomplete: O.Option<string>;
+    readonly disabled: O.Option<true | "">;
     readonly for: O.Option<string>;
     readonly form: O.Option<string>;
     readonly name: O.Option<string>;
@@ -6812,72 +6144,8 @@ export declare namespace Output {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "output";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
-    readonly disabled?: boolean | "";
+    readonly autocomplete?: string;
+    readonly disabled?: true | "";
     readonly for?: string;
     readonly form?: string;
     readonly name?: string;
@@ -6888,12 +6156,13 @@ export declare namespace Output {
 /**
  * The <p> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the P node)
+ *
+ * ```ts import.meta.vitest name="Construct the P node"
  * import { P } from "@beep/html/Html.model"
  *
  * const node = P.make({ children: [] })
- * console.log(node._tag) // "p"
+ * node._tag // => "p"
  * ```
  *
  * @category elements
@@ -6911,12 +6180,13 @@ export class P extends S.TaggedClass<P>($I`P`)(
 /**
  * Companion namespace for {@link P}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of P)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of P"
  * import { P } from "@beep/html/Html.model"
  *
  * const encoded: P.Encoded = { _tag: "p", children: [] }
- * console.log(encoded._tag) // "p"
+ * encoded._tag // => "p"
  * ```
  *
  * @category elements
@@ -6940,12 +6210,13 @@ export declare namespace P {
 /**
  * The <param> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Param node)
+ *
+ * ```ts import.meta.vitest name="Construct the Param node"
  * import { Param } from "@beep/html/Html.model"
  *
  * const node = Param.make({})
- * console.log(node._tag) // "param"
+ * node._tag // => "param"
  * ```
  *
  * @category elements
@@ -6961,12 +6232,13 @@ export class Param extends S.TaggedClass<Param>($I`Param`)(
 /**
  * Companion namespace for {@link Param}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Param)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Param"
  * import { Param } from "@beep/html/Html.model"
  *
  * const encoded: Param.Encoded = { _tag: "param" }
- * console.log(encoded._tag) // "param"
+ * encoded._tag // => "param"
  * ```
  *
  * @category elements
@@ -6986,12 +6258,13 @@ export declare namespace Param {
 /**
  * The <picture> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Picture node)
+ *
+ * ```ts import.meta.vitest name="Construct the Picture node"
  * import { Picture } from "@beep/html/Html.model"
  *
  * const node = Picture.make({ children: [] })
- * console.log(node._tag) // "picture"
+ * node._tag // => "picture"
  * ```
  *
  * @category elements
@@ -7008,12 +6281,13 @@ export class Picture extends S.TaggedClass<Picture>($I`Picture`)(
 /**
  * Companion namespace for {@link Picture}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Picture)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Picture"
  * import { Picture } from "@beep/html/Html.model"
  *
  * const encoded: Picture.Encoded = { _tag: "picture", children: [] }
- * console.log(encoded._tag) // "picture"
+ * encoded._tag // => "picture"
  * ```
  *
  * @category elements
@@ -7035,12 +6309,13 @@ export declare namespace Picture {
 /**
  * The <plaintext> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Plaintext node)
+ *
+ * ```ts import.meta.vitest name="Construct the Plaintext node"
  * import { Plaintext } from "@beep/html/Html.model"
  *
  * const node = Plaintext.make({ content: "" })
- * console.log(node._tag) // "plaintext"
+ * node._tag // => "plaintext"
  * ```
  *
  * @category elements
@@ -7057,12 +6332,13 @@ export class Plaintext extends S.TaggedClass<Plaintext>($I`Plaintext`)(
 /**
  * Companion namespace for {@link Plaintext}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Plaintext)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Plaintext"
  * import { Plaintext } from "@beep/html/Html.model"
  *
  * const encoded: Plaintext.Encoded = { _tag: "plaintext", content: "" }
- * console.log(encoded._tag) // "plaintext"
+ * encoded._tag // => "plaintext"
  * ```
  *
  * @category elements
@@ -7084,12 +6360,13 @@ export declare namespace Plaintext {
 /**
  * The <pre> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Pre node)
+ *
+ * ```ts import.meta.vitest name="Construct the Pre node"
  * import { Pre } from "@beep/html/Html.model"
  *
  * const node = Pre.make({ children: [] })
- * console.log(node._tag) // "pre"
+ * node._tag // => "pre"
  * ```
  *
  * @category elements
@@ -7099,7 +6376,7 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
   "pre",
   {
     ...GlobalAttributes,
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Pre", { description: "The <pre> element." })
@@ -7107,12 +6384,13 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
 /**
  * Companion namespace for {@link Pre}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Pre)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Pre"
  * import { Pre } from "@beep/html/Html.model"
  *
  * const encoded: Pre.Encoded = { _tag: "pre", children: [] }
- * console.log(encoded._tag) // "pre"
+ * encoded._tag // => "pre"
  * ```
  *
  * @category elements
@@ -7136,12 +6414,13 @@ export declare namespace Pre {
 /**
  * The <progress> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Progress node)
+ *
+ * ```ts import.meta.vitest name="Construct the Progress node"
  * import { Progress } from "@beep/html/Html.model"
  *
  * const node = Progress.make({ children: [] })
- * console.log(node._tag) // "progress"
+ * node._tag // => "progress"
  * ```
  *
  * @category elements
@@ -7151,8 +6430,8 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
   "progress",
   {
     ...GlobalAttributes,
-    max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    max: S.OptionFromOptionalKey(HtmlPositiveNumber).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(HtmlNonNegativeNumber).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Progress", { description: "The <progress> element." })
@@ -7160,12 +6439,13 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
 /**
  * Companion namespace for {@link Progress}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Progress)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Progress"
  * import { Progress } from "@beep/html/Html.model"
  *
  * const encoded: Progress.Encoded = { _tag: "progress", children: [] }
- * console.log(encoded._tag) // "progress"
+ * encoded._tag // => "progress"
  * ```
  *
  * @category elements
@@ -7175,15 +6455,15 @@ export declare namespace Progress {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "progress";
-    readonly max: O.Option<string>;
-    readonly value: O.Option<string>;
+    readonly max: O.Option<number>;
+    readonly value: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "progress";
-    readonly max?: string;
-    readonly value?: string;
+    readonly max?: number;
+    readonly value?: number;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -7191,12 +6471,13 @@ export declare namespace Progress {
 /**
  * The <q> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Q node)
+ *
+ * ```ts import.meta.vitest name="Construct the Q node"
  * import { Q } from "@beep/html/Html.model"
  *
  * const node = Q.make({ children: [] })
- * console.log(node._tag) // "q"
+ * node._tag // => "q"
  * ```
  *
  * @category elements
@@ -7214,12 +6495,13 @@ export class Q extends S.TaggedClass<Q>($I`Q`)(
 /**
  * Companion namespace for {@link Q}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Q)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Q"
  * import { Q } from "@beep/html/Html.model"
  *
  * const encoded: Q.Encoded = { _tag: "q", children: [] }
- * console.log(encoded._tag) // "q"
+ * encoded._tag // => "q"
  * ```
  *
  * @category elements
@@ -7243,12 +6525,13 @@ export declare namespace Q {
 /**
  * The <rb> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Rb node)
+ *
+ * ```ts import.meta.vitest name="Construct the Rb node"
  * import { Rb } from "@beep/html/Html.model"
  *
  * const node = Rb.make({ children: [] })
- * console.log(node._tag) // "rb"
+ * node._tag // => "rb"
  * ```
  *
  * @category elements
@@ -7265,12 +6548,13 @@ export class Rb extends S.TaggedClass<Rb>($I`Rb`)(
 /**
  * Companion namespace for {@link Rb}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Rb)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Rb"
  * import { Rb } from "@beep/html/Html.model"
  *
  * const encoded: Rb.Encoded = { _tag: "rb", children: [] }
- * console.log(encoded._tag) // "rb"
+ * encoded._tag // => "rb"
  * ```
  *
  * @category elements
@@ -7292,12 +6576,13 @@ export declare namespace Rb {
 /**
  * The <rp> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Rp node)
+ *
+ * ```ts import.meta.vitest name="Construct the Rp node"
  * import { Rp } from "@beep/html/Html.model"
  *
  * const node = Rp.make({ children: [] })
- * console.log(node._tag) // "rp"
+ * node._tag // => "rp"
  * ```
  *
  * @category elements
@@ -7314,12 +6599,13 @@ export class Rp extends S.TaggedClass<Rp>($I`Rp`)(
 /**
  * Companion namespace for {@link Rp}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Rp)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Rp"
  * import { Rp } from "@beep/html/Html.model"
  *
  * const encoded: Rp.Encoded = { _tag: "rp", children: [] }
- * console.log(encoded._tag) // "rp"
+ * encoded._tag // => "rp"
  * ```
  *
  * @category elements
@@ -7341,12 +6627,13 @@ export declare namespace Rp {
 /**
  * The <rt> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Rt node)
+ *
+ * ```ts import.meta.vitest name="Construct the Rt node"
  * import { Rt } from "@beep/html/Html.model"
  *
  * const node = Rt.make({ children: [] })
- * console.log(node._tag) // "rt"
+ * node._tag // => "rt"
  * ```
  *
  * @category elements
@@ -7363,12 +6650,13 @@ export class Rt extends S.TaggedClass<Rt>($I`Rt`)(
 /**
  * Companion namespace for {@link Rt}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Rt)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Rt"
  * import { Rt } from "@beep/html/Html.model"
  *
  * const encoded: Rt.Encoded = { _tag: "rt", children: [] }
- * console.log(encoded._tag) // "rt"
+ * encoded._tag // => "rt"
  * ```
  *
  * @category elements
@@ -7390,12 +6678,13 @@ export declare namespace Rt {
 /**
  * The <rtc> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Rtc node)
+ *
+ * ```ts import.meta.vitest name="Construct the Rtc node"
  * import { Rtc } from "@beep/html/Html.model"
  *
  * const node = Rtc.make({ children: [] })
- * console.log(node._tag) // "rtc"
+ * node._tag // => "rtc"
  * ```
  *
  * @category elements
@@ -7412,12 +6701,13 @@ export class Rtc extends S.TaggedClass<Rtc>($I`Rtc`)(
 /**
  * Companion namespace for {@link Rtc}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Rtc)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Rtc"
  * import { Rtc } from "@beep/html/Html.model"
  *
  * const encoded: Rtc.Encoded = { _tag: "rtc", children: [] }
- * console.log(encoded._tag) // "rtc"
+ * encoded._tag // => "rtc"
  * ```
  *
  * @category elements
@@ -7439,12 +6729,13 @@ export declare namespace Rtc {
 /**
  * The <ruby> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Ruby node)
+ *
+ * ```ts import.meta.vitest name="Construct the Ruby node"
  * import { Ruby } from "@beep/html/Html.model"
  *
  * const node = Ruby.make({ children: [] })
- * console.log(node._tag) // "ruby"
+ * node._tag // => "ruby"
  * ```
  *
  * @category elements
@@ -7461,12 +6752,13 @@ export class Ruby extends S.TaggedClass<Ruby>($I`Ruby`)(
 /**
  * Companion namespace for {@link Ruby}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Ruby)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Ruby"
  * import { Ruby } from "@beep/html/Html.model"
  *
  * const encoded: Ruby.Encoded = { _tag: "ruby", children: [] }
- * console.log(encoded._tag) // "ruby"
+ * encoded._tag // => "ruby"
  * ```
  *
  * @category elements
@@ -7488,12 +6780,13 @@ export declare namespace Ruby {
 /**
  * The <s> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the SElement node)
+ *
+ * ```ts import.meta.vitest name="Construct the SElement node"
  * import { SElement } from "@beep/html/Html.model"
  *
  * const node = SElement.make({ children: [] })
- * console.log(node._tag) // "s"
+ * node._tag // => "s"
  * ```
  *
  * @category elements
@@ -7510,12 +6803,13 @@ export class SElement extends S.TaggedClass<SElement>($I`SElement`)(
 /**
  * Companion namespace for {@link SElement}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of SElement)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of SElement"
  * import { SElement } from "@beep/html/Html.model"
  *
  * const encoded: SElement.Encoded = { _tag: "s", children: [] }
- * console.log(encoded._tag) // "s"
+ * encoded._tag // => "s"
  * ```
  *
  * @category elements
@@ -7537,12 +6831,13 @@ export declare namespace SElement {
 /**
  * The <samp> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Samp node)
+ *
+ * ```ts import.meta.vitest name="Construct the Samp node"
  * import { Samp } from "@beep/html/Html.model"
  *
  * const node = Samp.make({ children: [] })
- * console.log(node._tag) // "samp"
+ * node._tag // => "samp"
  * ```
  *
  * @category elements
@@ -7559,12 +6854,13 @@ export class Samp extends S.TaggedClass<Samp>($I`Samp`)(
 /**
  * Companion namespace for {@link Samp}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Samp)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Samp"
  * import { Samp } from "@beep/html/Html.model"
  *
  * const encoded: Samp.Encoded = { _tag: "samp", children: [] }
- * console.log(encoded._tag) // "samp"
+ * encoded._tag // => "samp"
  * ```
  *
  * @category elements
@@ -7586,12 +6882,13 @@ export declare namespace Samp {
 /**
  * The <script> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Script node)
+ *
+ * ```ts import.meta.vitest name="Construct the Script node"
  * import { Script } from "@beep/html/Html.model"
  *
  * const node = Script.make({ content: "" })
- * console.log(node._tag) // "script"
+ * node._tag // => "script"
  * ```
  *
  * @category elements
@@ -7601,20 +6898,20 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
   "script",
   {
     ...GlobalAttributes,
-    async: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    async: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
     charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    defer: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    defer: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
     for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     language: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    nomodule: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    nomodule: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     content: S.String,
@@ -7624,12 +6921,13 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
 /**
  * Companion namespace for {@link Script}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Script)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Script"
  * import { Script } from "@beep/html/Html.model"
  *
  * const encoded: Script.Encoded = { _tag: "script", content: "" }
- * console.log(encoded._tag) // "script"
+ * encoded._tag // => "script"
  * ```
  *
  * @category elements
@@ -7639,18 +6937,28 @@ export declare namespace Script {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "script";
-    readonly async: O.Option<boolean | "">;
+    readonly async: O.Option<true | "">;
     readonly blocking: O.Option<string>;
     readonly charset: O.Option<string>;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
-    readonly defer: O.Option<boolean | "">;
+    readonly defer: O.Option<true | "">;
     readonly event: O.Option<string>;
     readonly fetchpriority: O.Option<"high" | "low" | "auto">;
     readonly for: O.Option<string>;
     readonly integrity: O.Option<string>;
     readonly language: O.Option<string>;
-    readonly nomodule: O.Option<boolean | "">;
-    readonly referrerpolicy: O.Option<string>;
+    readonly nomodule: O.Option<true | "">;
+    readonly referrerpolicy: O.Option<
+      | ""
+      | "no-referrer"
+      | "no-referrer-when-downgrade"
+      | "same-origin"
+      | "origin"
+      | "strict-origin"
+      | "origin-when-cross-origin"
+      | "strict-origin-when-cross-origin"
+      | "unsafe-url"
+    >;
     readonly src: O.Option<string>;
     readonly type: O.Option<string>;
     readonly content: string;
@@ -7658,17 +6966,17 @@ export declare namespace Script {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "script";
-    readonly async?: boolean | "";
+    readonly async?: true | "";
     readonly blocking?: string;
     readonly charset?: string;
-    readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly defer?: boolean | "";
+    readonly crossorigin?: string;
+    readonly defer?: true | "";
     readonly event?: string;
-    readonly fetchpriority?: "high" | "low" | "auto";
+    readonly fetchpriority?: string;
     readonly for?: string;
     readonly integrity?: string;
     readonly language?: string;
-    readonly nomodule?: boolean | "";
+    readonly nomodule?: true | "";
     readonly referrerpolicy?: string;
     readonly src?: string;
     readonly type?: string;
@@ -7679,12 +6987,13 @@ export declare namespace Script {
 /**
  * The <search> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Search node)
+ *
+ * ```ts import.meta.vitest name="Construct the Search node"
  * import { Search } from "@beep/html/Html.model"
  *
  * const node = Search.make({ children: [] })
- * console.log(node._tag) // "search"
+ * node._tag // => "search"
  * ```
  *
  * @category elements
@@ -7701,12 +7010,13 @@ export class Search extends S.TaggedClass<Search>($I`Search`)(
 /**
  * Companion namespace for {@link Search}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Search)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Search"
  * import { Search } from "@beep/html/Html.model"
  *
  * const encoded: Search.Encoded = { _tag: "search", children: [] }
- * console.log(encoded._tag) // "search"
+ * encoded._tag // => "search"
  * ```
  *
  * @category elements
@@ -7728,12 +7038,13 @@ export declare namespace Search {
 /**
  * The <section> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Section node)
+ *
+ * ```ts import.meta.vitest name="Construct the Section node"
  * import { Section } from "@beep/html/Html.model"
  *
  * const node = Section.make({ children: [] })
- * console.log(node._tag) // "section"
+ * node._tag // => "section"
  * ```
  *
  * @category elements
@@ -7750,12 +7061,13 @@ export class Section extends S.TaggedClass<Section>($I`Section`)(
 /**
  * Companion namespace for {@link Section}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Section)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Section"
  * import { Section } from "@beep/html/Html.model"
  *
  * const encoded: Section.Encoded = { _tag: "section", children: [] }
- * console.log(encoded._tag) // "section"
+ * encoded._tag // => "section"
  * ```
  *
  * @category elements
@@ -7777,12 +7089,13 @@ export declare namespace Section {
 /**
  * The <select> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Select node)
+ *
+ * ```ts import.meta.vitest name="Construct the Select node"
  * import { Select } from "@beep/html/Html.model"
  *
  * const node = Select.make({ children: [] })
- * console.log(node._tag) // "select"
+ * node._tag // => "select"
  * ```
  *
  * @category elements
@@ -7792,80 +7105,13 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
   "select",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Select", { description: "The <select> element." })
@@ -7873,12 +7119,13 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
 /**
  * Companion namespace for {@link Select}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Select)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Select"
  * import { Select } from "@beep/html/Html.model"
  *
  * const encoded: Select.Encoded = { _tag: "select", children: [] }
- * console.log(encoded._tag) // "select"
+ * encoded._tag // => "select"
  * ```
  *
  * @category elements
@@ -7888,153 +7135,24 @@ export declare namespace Select {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "select";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
-    readonly disabled: O.Option<boolean | "">;
+    readonly autocomplete: O.Option<string>;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
-    readonly multiple: O.Option<boolean | "">;
+    readonly multiple: O.Option<true | "">;
     readonly name: O.Option<string>;
-    readonly required: O.Option<boolean | "">;
+    readonly required: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "select";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
-    readonly disabled?: boolean | "";
+    readonly autocomplete?: string;
+    readonly disabled?: true | "";
     readonly form?: string;
-    readonly multiple?: boolean | "";
+    readonly multiple?: true | "";
     readonly name?: string;
-    readonly required?: boolean | "";
+    readonly required?: true | "";
     readonly size?: number;
     readonly children: HtmlChildren.Encoded;
   };
@@ -8043,12 +7161,13 @@ export declare namespace Select {
 /**
  * The <selectedcontent> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Selectedcontent node)
+ *
+ * ```ts import.meta.vitest name="Construct the Selectedcontent node"
  * import { Selectedcontent } from "@beep/html/Html.model"
  *
  * const node = Selectedcontent.make({ children: [] })
- * console.log(node._tag) // "selectedcontent"
+ * node._tag // => "selectedcontent"
  * ```
  *
  * @category elements
@@ -8065,12 +7184,13 @@ export class Selectedcontent extends S.TaggedClass<Selectedcontent>($I`Selectedc
 /**
  * Companion namespace for {@link Selectedcontent}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Selectedcontent)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Selectedcontent"
  * import { Selectedcontent } from "@beep/html/Html.model"
  *
  * const encoded: Selectedcontent.Encoded = { _tag: "selectedcontent", children: [] }
- * console.log(encoded._tag) // "selectedcontent"
+ * encoded._tag // => "selectedcontent"
  * ```
  *
  * @category elements
@@ -8092,12 +7212,13 @@ export declare namespace Selectedcontent {
 /**
  * The <slot> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Slot node)
+ *
+ * ```ts import.meta.vitest name="Construct the Slot node"
  * import { Slot } from "@beep/html/Html.model"
  *
  * const node = Slot.make({ children: [] })
- * console.log(node._tag) // "slot"
+ * node._tag // => "slot"
  * ```
  *
  * @category elements
@@ -8115,12 +7236,13 @@ export class Slot extends S.TaggedClass<Slot>($I`Slot`)(
 /**
  * Companion namespace for {@link Slot}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Slot)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Slot"
  * import { Slot } from "@beep/html/Html.model"
  *
  * const encoded: Slot.Encoded = { _tag: "slot", children: [] }
- * console.log(encoded._tag) // "slot"
+ * encoded._tag // => "slot"
  * ```
  *
  * @category elements
@@ -8144,12 +7266,13 @@ export declare namespace Slot {
 /**
  * The <small> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Small node)
+ *
+ * ```ts import.meta.vitest name="Construct the Small node"
  * import { Small } from "@beep/html/Html.model"
  *
  * const node = Small.make({ children: [] })
- * console.log(node._tag) // "small"
+ * node._tag // => "small"
  * ```
  *
  * @category elements
@@ -8166,12 +7289,13 @@ export class Small extends S.TaggedClass<Small>($I`Small`)(
 /**
  * Companion namespace for {@link Small}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Small)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Small"
  * import { Small } from "@beep/html/Html.model"
  *
  * const encoded: Small.Encoded = { _tag: "small", children: [] }
- * console.log(encoded._tag) // "small"
+ * encoded._tag // => "small"
  * ```
  *
  * @category elements
@@ -8193,12 +7317,13 @@ export declare namespace Small {
 /**
  * The <source> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Source node)
+ *
+ * ```ts import.meta.vitest name="Construct the Source node"
  * import { Source } from "@beep/html/Html.model"
  *
  * const node = Source.make({})
- * console.log(node._tag) // "source"
+ * node._tag // => "source"
  * ```
  *
  * @category elements
@@ -8208,25 +7333,26 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
   "source",
   {
     ...GlobalAttributes,
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Source", { description: "The <source> element." })
 ) {}
 /**
  * Companion namespace for {@link Source}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Source)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Source"
  * import { Source } from "@beep/html/Html.model"
  *
  * const encoded: Source.Encoded = { _tag: "source" }
- * console.log(encoded._tag) // "source"
+ * encoded._tag // => "source"
  * ```
  *
  * @category elements
@@ -8260,12 +7386,13 @@ export declare namespace Source {
 /**
  * The <spacer> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Spacer node)
+ *
+ * ```ts import.meta.vitest name="Construct the Spacer node"
  * import { Spacer } from "@beep/html/Html.model"
  *
  * const node = Spacer.make({})
- * console.log(node._tag) // "spacer"
+ * node._tag // => "spacer"
  * ```
  *
  * @category elements
@@ -8281,12 +7408,13 @@ export class Spacer extends S.TaggedClass<Spacer>($I`Spacer`)(
 /**
  * Companion namespace for {@link Spacer}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Spacer)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Spacer"
  * import { Spacer } from "@beep/html/Html.model"
  *
  * const encoded: Spacer.Encoded = { _tag: "spacer" }
- * console.log(encoded._tag) // "spacer"
+ * encoded._tag // => "spacer"
  * ```
  *
  * @category elements
@@ -8306,12 +7434,13 @@ export declare namespace Spacer {
 /**
  * The <span> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Span node)
+ *
+ * ```ts import.meta.vitest name="Construct the Span node"
  * import { Span } from "@beep/html/Html.model"
  *
  * const node = Span.make({ children: [] })
- * console.log(node._tag) // "span"
+ * node._tag // => "span"
  * ```
  *
  * @category elements
@@ -8328,12 +7457,13 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
 /**
  * Companion namespace for {@link Span}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Span)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Span"
  * import { Span } from "@beep/html/Html.model"
  *
  * const encoded: Span.Encoded = { _tag: "span", children: [] }
- * console.log(encoded._tag) // "span"
+ * encoded._tag // => "span"
  * ```
  *
  * @category elements
@@ -8355,12 +7485,13 @@ export declare namespace Span {
 /**
  * The <strike> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Strike node)
+ *
+ * ```ts import.meta.vitest name="Construct the Strike node"
  * import { Strike } from "@beep/html/Html.model"
  *
  * const node = Strike.make({ children: [] })
- * console.log(node._tag) // "strike"
+ * node._tag // => "strike"
  * ```
  *
  * @category elements
@@ -8377,12 +7508,13 @@ export class Strike extends S.TaggedClass<Strike>($I`Strike`)(
 /**
  * Companion namespace for {@link Strike}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Strike)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Strike"
  * import { Strike } from "@beep/html/Html.model"
  *
  * const encoded: Strike.Encoded = { _tag: "strike", children: [] }
- * console.log(encoded._tag) // "strike"
+ * encoded._tag // => "strike"
  * ```
  *
  * @category elements
@@ -8404,12 +7536,13 @@ export declare namespace Strike {
 /**
  * The <strong> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Strong node)
+ *
+ * ```ts import.meta.vitest name="Construct the Strong node"
  * import { Strong } from "@beep/html/Html.model"
  *
  * const node = Strong.make({ children: [] })
- * console.log(node._tag) // "strong"
+ * node._tag // => "strong"
  * ```
  *
  * @category elements
@@ -8426,12 +7559,13 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 /**
  * Companion namespace for {@link Strong}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Strong)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Strong"
  * import { Strong } from "@beep/html/Html.model"
  *
  * const encoded: Strong.Encoded = { _tag: "strong", children: [] }
- * console.log(encoded._tag) // "strong"
+ * encoded._tag // => "strong"
  * ```
  *
  * @category elements
@@ -8453,12 +7587,13 @@ export declare namespace Strong {
 /**
  * The <style> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Style node)
+ *
+ * ```ts import.meta.vitest name="Construct the Style node"
  * import { Style } from "@beep/html/Html.model"
  *
  * const node = Style.make({ content: "" })
- * console.log(node._tag) // "style"
+ * node._tag // => "style"
  * ```
  *
  * @category elements
@@ -8468,7 +7603,7 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
   "style",
   {
     ...GlobalAttributes,
-    blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     content: S.String,
@@ -8478,12 +7613,13 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
 /**
  * Companion namespace for {@link Style}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Style)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Style"
  * import { Style } from "@beep/html/Html.model"
  *
  * const encoded: Style.Encoded = { _tag: "style", content: "" }
- * console.log(encoded._tag) // "style"
+ * encoded._tag // => "style"
  * ```
  *
  * @category elements
@@ -8511,12 +7647,13 @@ export declare namespace Style {
 /**
  * The <sub> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Sub node)
+ *
+ * ```ts import.meta.vitest name="Construct the Sub node"
  * import { Sub } from "@beep/html/Html.model"
  *
  * const node = Sub.make({ children: [] })
- * console.log(node._tag) // "sub"
+ * node._tag // => "sub"
  * ```
  *
  * @category elements
@@ -8533,12 +7670,13 @@ export class Sub extends S.TaggedClass<Sub>($I`Sub`)(
 /**
  * Companion namespace for {@link Sub}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Sub)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Sub"
  * import { Sub } from "@beep/html/Html.model"
  *
  * const encoded: Sub.Encoded = { _tag: "sub", children: [] }
- * console.log(encoded._tag) // "sub"
+ * encoded._tag // => "sub"
  * ```
  *
  * @category elements
@@ -8560,12 +7698,13 @@ export declare namespace Sub {
 /**
  * The <summary> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Summary node)
+ *
+ * ```ts import.meta.vitest name="Construct the Summary node"
  * import { Summary } from "@beep/html/Html.model"
  *
  * const node = Summary.make({ children: [] })
- * console.log(node._tag) // "summary"
+ * node._tag // => "summary"
  * ```
  *
  * @category elements
@@ -8582,12 +7721,13 @@ export class Summary extends S.TaggedClass<Summary>($I`Summary`)(
 /**
  * Companion namespace for {@link Summary}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Summary)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Summary"
  * import { Summary } from "@beep/html/Html.model"
  *
  * const encoded: Summary.Encoded = { _tag: "summary", children: [] }
- * console.log(encoded._tag) // "summary"
+ * encoded._tag // => "summary"
  * ```
  *
  * @category elements
@@ -8609,12 +7749,13 @@ export declare namespace Summary {
 /**
  * The <sup> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Sup node)
+ *
+ * ```ts import.meta.vitest name="Construct the Sup node"
  * import { Sup } from "@beep/html/Html.model"
  *
  * const node = Sup.make({ children: [] })
- * console.log(node._tag) // "sup"
+ * node._tag // => "sup"
  * ```
  *
  * @category elements
@@ -8631,12 +7772,13 @@ export class Sup extends S.TaggedClass<Sup>($I`Sup`)(
 /**
  * Companion namespace for {@link Sup}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Sup)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Sup"
  * import { Sup } from "@beep/html/Html.model"
  *
  * const encoded: Sup.Encoded = { _tag: "sup", children: [] }
- * console.log(encoded._tag) // "sup"
+ * encoded._tag // => "sup"
  * ```
  *
  * @category elements
@@ -8658,12 +7800,13 @@ export declare namespace Sup {
 /**
  * The <table> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Table node)
+ *
+ * ```ts import.meta.vitest name="Construct the Table node"
  * import { Table } from "@beep/html/Html.model"
  *
  * const node = Table.make({ children: [] })
- * console.log(node._tag) // "table"
+ * node._tag // => "table"
  * ```
  *
  * @category elements
@@ -8681,10 +7824,10 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
     cellspacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     datapagesize: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     frame: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     rules: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Table", { description: "The <table> element." })
@@ -8692,12 +7835,13 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 /**
  * Companion namespace for {@link Table}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Table)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Table"
  * import { Table } from "@beep/html/Html.model"
  *
  * const encoded: Table.Encoded = { _tag: "table", children: [] }
- * console.log(encoded._tag) // "table"
+ * encoded._tag // => "table"
  * ```
  *
  * @category elements
@@ -8743,12 +7887,13 @@ export declare namespace Table {
 /**
  * The <tbody> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Tbody node)
+ *
+ * ```ts import.meta.vitest name="Construct the Tbody node"
  * import { Tbody } from "@beep/html/Html.model"
  *
  * const node = Tbody.make({ children: [] })
- * console.log(node._tag) // "tbody"
+ * node._tag // => "tbody"
  * ```
  *
  * @category elements
@@ -8761,7 +7906,7 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -8770,12 +7915,13 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
 /**
  * Companion namespace for {@link Tbody}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Tbody)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Tbody"
  * import { Tbody } from "@beep/html/Html.model"
  *
  * const encoded: Tbody.Encoded = { _tag: "tbody", children: [] }
- * console.log(encoded._tag) // "tbody"
+ * encoded._tag // => "tbody"
  * ```
  *
  * @category elements
@@ -8807,12 +7953,13 @@ export declare namespace Tbody {
 /**
  * The <td> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Td node)
+ *
+ * ```ts import.meta.vitest name="Construct the Td node"
  * import { Td } from "@beep/html/Html.model"
  *
  * const node = Td.make({ children: [] })
- * console.log(node._tag) // "td"
+ * node._tag // => "td"
  * ```
  *
  * @category elements
@@ -8828,14 +7975,18 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    colspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    headers: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    nowrap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rowspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     scope: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Td", { description: "The <td> element." })
@@ -8843,12 +7994,13 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
 /**
  * Companion namespace for {@link Td}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Td)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Td"
  * import { Td } from "@beep/html/Html.model"
  *
  * const encoded: Td.Encoded = { _tag: "td", children: [] }
- * console.log(encoded._tag) // "td"
+ * encoded._tag // => "td"
  * ```
  *
  * @category elements
@@ -8867,7 +8019,7 @@ export declare namespace Td {
     readonly colspan: O.Option<number>;
     readonly headers: O.Option<string>;
     readonly height: O.Option<number>;
-    readonly nowrap: O.Option<boolean | "">;
+    readonly nowrap: O.Option<true | "">;
     readonly rowspan: O.Option<number>;
     readonly scope: O.Option<string>;
     readonly valign: O.Option<string>;
@@ -8886,7 +8038,7 @@ export declare namespace Td {
     readonly colspan?: number;
     readonly headers?: string;
     readonly height?: number;
-    readonly nowrap?: boolean | "";
+    readonly nowrap?: true | "";
     readonly rowspan?: number;
     readonly scope?: string;
     readonly valign?: string;
@@ -8898,12 +8050,13 @@ export declare namespace Td {
 /**
  * The <template> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Template node)
+ *
+ * ```ts import.meta.vitest name="Construct the Template node"
  * import { Template } from "@beep/html/Html.model"
  *
  * const node = Template.make({ children: [] })
- * console.log(node._tag) // "template"
+ * node._tag // => "template"
  * ```
  *
  * @category elements
@@ -8913,16 +8066,14 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
   "template",
   {
     ...GlobalAttributes,
-    shadowrootclonable: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    shadowrootcustomelementregistry: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    shadowrootdelegatesfocus: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(
+    shadowrootclonable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    shadowrootcustomelementregistry: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    shadowrootdelegatesfocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    shadowrootmode: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["open", "closed"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    shadowrootmode: S.OptionFromOptionalKey(S.Literals(["open", "closed"])).pipe(SchemaUtils.withNoneDefault),
-    shadowrootserializable: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(
-      SchemaUtils.withNoneDefault
-    ),
-    shadowrootslotassignment: S.OptionFromOptionalKey(S.Literals(["named", "manual"])).pipe(
+    shadowrootserializable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    shadowrootslotassignment: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["named", "manual"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     children: HtmlChildren,
@@ -8932,12 +8083,13 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
 /**
  * Companion namespace for {@link Template}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Template)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Template"
  * import { Template } from "@beep/html/Html.model"
  *
  * const encoded: Template.Encoded = { _tag: "template", children: [] }
- * console.log(encoded._tag) // "template"
+ * encoded._tag // => "template"
  * ```
  *
  * @category elements
@@ -8947,23 +8099,23 @@ export declare namespace Template {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "template";
-    readonly shadowrootclonable: O.Option<boolean | "">;
-    readonly shadowrootcustomelementregistry: O.Option<string>;
-    readonly shadowrootdelegatesfocus: O.Option<boolean | "">;
+    readonly shadowrootclonable: O.Option<true | "">;
+    readonly shadowrootcustomelementregistry: O.Option<true | "">;
+    readonly shadowrootdelegatesfocus: O.Option<true | "">;
     readonly shadowrootmode: O.Option<"open" | "closed">;
-    readonly shadowrootserializable: O.Option<boolean | "">;
+    readonly shadowrootserializable: O.Option<true | "">;
     readonly shadowrootslotassignment: O.Option<"named" | "manual">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "template";
-    readonly shadowrootclonable?: boolean | "";
-    readonly shadowrootcustomelementregistry?: string;
-    readonly shadowrootdelegatesfocus?: boolean | "";
-    readonly shadowrootmode?: "open" | "closed";
-    readonly shadowrootserializable?: boolean | "";
-    readonly shadowrootslotassignment?: "named" | "manual";
+    readonly shadowrootclonable?: true | "";
+    readonly shadowrootcustomelementregistry?: true | "";
+    readonly shadowrootdelegatesfocus?: true | "";
+    readonly shadowrootmode?: string;
+    readonly shadowrootserializable?: true | "";
+    readonly shadowrootslotassignment?: string;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -8971,12 +8123,13 @@ export declare namespace Template {
 /**
  * The <textarea> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Textarea node)
+ *
+ * ```ts import.meta.vitest name="Construct the Textarea node"
  * import { Textarea } from "@beep/html/Html.model"
  *
  * const node = Textarea.make({ content: "" })
- * console.log(node._tag) // "textarea"
+ * node._tag // => "textarea"
  * ```
  *
  * @category elements
@@ -8986,86 +8139,21 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
   "textarea",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    cols: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    cols: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    maxlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    minlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    readonly: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rows: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    wrap: S.OptionFromOptionalKey(S.Literals(["soft", "hard"])).pipe(SchemaUtils.withNoneDefault),
+    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rows: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
+    wrap: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["soft", "hard"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     content: S.String,
   },
   $I.annote("Textarea", { description: "The <textarea> element." })
@@ -9073,12 +8161,13 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
 /**
  * Companion namespace for {@link Textarea}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Textarea)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Textarea"
  * import { Textarea } from "@beep/html/Html.model"
  *
  * const encoded: Textarea.Encoded = { _tag: "textarea", content: "" }
- * console.log(encoded._tag) // "textarea"
+ * encoded._tag // => "textarea"
  * ```
  *
  * @category elements
@@ -9088,82 +8177,17 @@ export declare namespace Textarea {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "textarea";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly cols: O.Option<number>;
     readonly dirname: O.Option<string>;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly maxlength: O.Option<number>;
     readonly minlength: O.Option<number>;
     readonly name: O.Option<string>;
     readonly placeholder: O.Option<string>;
-    readonly readonly: O.Option<boolean | "">;
-    readonly required: O.Option<boolean | "">;
+    readonly readonly: O.Option<true | "">;
+    readonly required: O.Option<true | "">;
     readonly rows: O.Option<number>;
     readonly wrap: O.Option<"soft" | "hard">;
     readonly content: string;
@@ -9171,83 +8195,19 @@ export declare namespace Textarea {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "textarea";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly cols?: number;
     readonly dirname?: string;
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly maxlength?: number;
     readonly minlength?: number;
     readonly name?: string;
     readonly placeholder?: string;
-    readonly readonly?: boolean | "";
-    readonly required?: boolean | "";
+    readonly readonly?: true | "";
+    readonly required?: true | "";
     readonly rows?: number;
-    readonly wrap?: "soft" | "hard";
+    readonly wrap?: string;
     readonly content: string;
   };
 }
@@ -9255,12 +8215,13 @@ export declare namespace Textarea {
 /**
  * The <tfoot> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Tfoot node)
+ *
+ * ```ts import.meta.vitest name="Construct the Tfoot node"
  * import { Tfoot } from "@beep/html/Html.model"
  *
  * const node = Tfoot.make({ children: [] })
- * console.log(node._tag) // "tfoot"
+ * node._tag // => "tfoot"
  * ```
  *
  * @category elements
@@ -9277,12 +8238,13 @@ export class Tfoot extends S.TaggedClass<Tfoot>($I`Tfoot`)(
 /**
  * Companion namespace for {@link Tfoot}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Tfoot)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Tfoot"
  * import { Tfoot } from "@beep/html/Html.model"
  *
  * const encoded: Tfoot.Encoded = { _tag: "tfoot", children: [] }
- * console.log(encoded._tag) // "tfoot"
+ * encoded._tag // => "tfoot"
  * ```
  *
  * @category elements
@@ -9304,12 +8266,13 @@ export declare namespace Tfoot {
 /**
  * The <th> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Th node)
+ *
+ * ```ts import.meta.vitest name="Construct the Th node"
  * import { Th } from "@beep/html/Html.model"
  *
  * const node = Th.make({ children: [] })
- * console.log(node._tag) // "th"
+ * node._tag // => "th"
  * ```
  *
  * @category elements
@@ -9325,16 +8288,20 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    colspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    headers: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    nowrap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rowspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    scope: S.OptionFromOptionalKey(S.Literals(["row", "col", "rowgroup", "colgroup"])).pipe(
+    colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    scope: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["row", "col", "rowgroup", "colgroup"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Th", { description: "The <th> element." })
@@ -9342,12 +8309,13 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
 /**
  * Companion namespace for {@link Th}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Th)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Th"
  * import { Th } from "@beep/html/Html.model"
  *
  * const encoded: Th.Encoded = { _tag: "th", children: [] }
- * console.log(encoded._tag) // "th"
+ * encoded._tag // => "th"
  * ```
  *
  * @category elements
@@ -9366,7 +8334,7 @@ export declare namespace Th {
     readonly colspan: O.Option<number>;
     readonly headers: O.Option<string>;
     readonly height: O.Option<number>;
-    readonly nowrap: O.Option<boolean | "">;
+    readonly nowrap: O.Option<true | "">;
     readonly rowspan: O.Option<number>;
     readonly scope: O.Option<"row" | "col" | "rowgroup" | "colgroup">;
     readonly valign: O.Option<string>;
@@ -9385,9 +8353,9 @@ export declare namespace Th {
     readonly colspan?: number;
     readonly headers?: string;
     readonly height?: number;
-    readonly nowrap?: boolean | "";
+    readonly nowrap?: true | "";
     readonly rowspan?: number;
-    readonly scope?: "row" | "col" | "rowgroup" | "colgroup";
+    readonly scope?: string;
     readonly valign?: string;
     readonly width?: number;
     readonly children: HtmlChildren.Encoded;
@@ -9397,12 +8365,13 @@ export declare namespace Th {
 /**
  * The <thead> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Thead node)
+ *
+ * ```ts import.meta.vitest name="Construct the Thead node"
  * import { Thead } from "@beep/html/Html.model"
  *
  * const node = Thead.make({ children: [] })
- * console.log(node._tag) // "thead"
+ * node._tag // => "thead"
  * ```
  *
  * @category elements
@@ -9419,12 +8388,13 @@ export class Thead extends S.TaggedClass<Thead>($I`Thead`)(
 /**
  * Companion namespace for {@link Thead}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Thead)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Thead"
  * import { Thead } from "@beep/html/Html.model"
  *
  * const encoded: Thead.Encoded = { _tag: "thead", children: [] }
- * console.log(encoded._tag) // "thead"
+ * encoded._tag // => "thead"
  * ```
  *
  * @category elements
@@ -9446,12 +8416,13 @@ export declare namespace Thead {
 /**
  * The <time> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Time node)
+ *
+ * ```ts import.meta.vitest name="Construct the Time node"
  * import { Time } from "@beep/html/Html.model"
  *
  * const node = Time.make({ children: [] })
- * console.log(node._tag) // "time"
+ * node._tag // => "time"
  * ```
  *
  * @category elements
@@ -9469,12 +8440,13 @@ export class Time extends S.TaggedClass<Time>($I`Time`)(
 /**
  * Companion namespace for {@link Time}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Time)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Time"
  * import { Time } from "@beep/html/Html.model"
  *
  * const encoded: Time.Encoded = { _tag: "time", children: [] }
- * console.log(encoded._tag) // "time"
+ * encoded._tag // => "time"
  * ```
  *
  * @category elements
@@ -9498,12 +8470,13 @@ export declare namespace Time {
 /**
  * The <title> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Title node)
+ *
+ * ```ts import.meta.vitest name="Construct the Title node"
  * import { Title } from "@beep/html/Html.model"
  *
  * const node = Title.make({ content: "" })
- * console.log(node._tag) // "title"
+ * node._tag // => "title"
  * ```
  *
  * @category elements
@@ -9520,12 +8493,13 @@ export class Title extends S.TaggedClass<Title>($I`Title`)(
 /**
  * Companion namespace for {@link Title}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Title)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Title"
  * import { Title } from "@beep/html/Html.model"
  *
  * const encoded: Title.Encoded = { _tag: "title", content: "" }
- * console.log(encoded._tag) // "title"
+ * encoded._tag // => "title"
  * ```
  *
  * @category elements
@@ -9547,12 +8521,13 @@ export declare namespace Title {
 /**
  * The <tr> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Tr node)
+ *
+ * ```ts import.meta.vitest name="Construct the Tr node"
  * import { Tr } from "@beep/html/Html.model"
  *
  * const node = Tr.make({ children: [] })
- * console.log(node._tag) // "tr"
+ * node._tag // => "tr"
  * ```
  *
  * @category elements
@@ -9566,7 +8541,7 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -9575,12 +8550,13 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
 /**
  * Companion namespace for {@link Tr}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Tr)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Tr"
  * import { Tr } from "@beep/html/Html.model"
  *
  * const encoded: Tr.Encoded = { _tag: "tr", children: [] }
- * console.log(encoded._tag) // "tr"
+ * encoded._tag // => "tr"
  * ```
  *
  * @category elements
@@ -9614,12 +8590,13 @@ export declare namespace Tr {
 /**
  * The <track> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Track node)
+ *
+ * ```ts import.meta.vitest name="Construct the Track node"
  * import { Track } from "@beep/html/Html.model"
  *
  * const node = Track.make({})
- * console.log(node._tag) // "track"
+ * node._tag // => "track"
  * ```
  *
  * @category elements
@@ -9629,10 +8606,10 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
   "track",
   {
     ...GlobalAttributes,
-    default: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    kind: S.OptionFromOptionalKey(S.Literals(["subtitles", "captions", "descriptions", "chapters", "metadata"])).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    default: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    kind: S.OptionFromOptionalKey(
+      makeAsciiCaseInsensitiveEnumerated(["subtitles", "captions", "descriptions", "chapters", "metadata"])
+    ).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srclang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -9642,12 +8619,13 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
 /**
  * Companion namespace for {@link Track}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Track)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Track"
  * import { Track } from "@beep/html/Html.model"
  *
  * const encoded: Track.Encoded = { _tag: "track" }
- * console.log(encoded._tag) // "track"
+ * encoded._tag // => "track"
  * ```
  *
  * @category elements
@@ -9657,7 +8635,7 @@ export declare namespace Track {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "track";
-    readonly default: O.Option<boolean | "">;
+    readonly default: O.Option<true | "">;
     readonly kind: O.Option<"subtitles" | "captions" | "descriptions" | "chapters" | "metadata">;
     readonly label: O.Option<string>;
     readonly src: O.Option<string>;
@@ -9666,8 +8644,8 @@ export declare namespace Track {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "track";
-    readonly default?: boolean | "";
-    readonly kind?: "subtitles" | "captions" | "descriptions" | "chapters" | "metadata";
+    readonly default?: true | "";
+    readonly kind?: string;
     readonly label?: string;
     readonly src?: string;
     readonly srclang?: string;
@@ -9677,12 +8655,13 @@ export declare namespace Track {
 /**
  * The <tt> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Tt node)
+ *
+ * ```ts import.meta.vitest name="Construct the Tt node"
  * import { Tt } from "@beep/html/Html.model"
  *
  * const node = Tt.make({ children: [] })
- * console.log(node._tag) // "tt"
+ * node._tag // => "tt"
  * ```
  *
  * @category elements
@@ -9699,12 +8678,13 @@ export class Tt extends S.TaggedClass<Tt>($I`Tt`)(
 /**
  * Companion namespace for {@link Tt}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Tt)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Tt"
  * import { Tt } from "@beep/html/Html.model"
  *
  * const encoded: Tt.Encoded = { _tag: "tt", children: [] }
- * console.log(encoded._tag) // "tt"
+ * encoded._tag // => "tt"
  * ```
  *
  * @category elements
@@ -9726,12 +8706,13 @@ export declare namespace Tt {
 /**
  * The <u> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the U node)
+ *
+ * ```ts import.meta.vitest name="Construct the U node"
  * import { U } from "@beep/html/Html.model"
  *
  * const node = U.make({ children: [] })
- * console.log(node._tag) // "u"
+ * node._tag // => "u"
  * ```
  *
  * @category elements
@@ -9748,12 +8729,13 @@ export class U extends S.TaggedClass<U>($I`U`)(
 /**
  * Companion namespace for {@link U}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of U)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of U"
  * import { U } from "@beep/html/Html.model"
  *
  * const encoded: U.Encoded = { _tag: "u", children: [] }
- * console.log(encoded._tag) // "u"
+ * encoded._tag // => "u"
  * ```
  *
  * @category elements
@@ -9775,12 +8757,13 @@ export declare namespace U {
 /**
  * The <ul> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Ul node)
+ *
+ * ```ts import.meta.vitest name="Construct the Ul node"
  * import { Ul } from "@beep/html/Html.model"
  *
  * const node = Ul.make({ children: [] })
- * console.log(node._tag) // "ul"
+ * node._tag // => "ul"
  * ```
  *
  * @category elements
@@ -9790,7 +8773,7 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
   "ul",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -9799,12 +8782,13 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
 /**
  * Companion namespace for {@link Ul}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Ul)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Ul"
  * import { Ul } from "@beep/html/Html.model"
  *
  * const encoded: Ul.Encoded = { _tag: "ul", children: [] }
- * console.log(encoded._tag) // "ul"
+ * encoded._tag // => "ul"
  * ```
  *
  * @category elements
@@ -9814,14 +8798,14 @@ export declare namespace Ul {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "ul";
-    readonly compact: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
     readonly type: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "ul";
-    readonly compact?: boolean | "";
+    readonly compact?: true | "";
     readonly type?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -9830,12 +8814,13 @@ export declare namespace Ul {
 /**
  * The <var> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Var node)
+ *
+ * ```ts import.meta.vitest name="Construct the Var node"
  * import { Var } from "@beep/html/Html.model"
  *
  * const node = Var.make({ children: [] })
- * console.log(node._tag) // "var"
+ * node._tag // => "var"
  * ```
  *
  * @category elements
@@ -9852,12 +8837,13 @@ export class Var extends S.TaggedClass<Var>($I`Var`)(
 /**
  * Companion namespace for {@link Var}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Var)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Var"
  * import { Var } from "@beep/html/Html.model"
  *
  * const encoded: Var.Encoded = { _tag: "var", children: [] }
- * console.log(encoded._tag) // "var"
+ * encoded._tag // => "var"
  * ```
  *
  * @category elements
@@ -9879,12 +8865,13 @@ export declare namespace Var {
 /**
  * The <video> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Video node)
+ *
+ * ```ts import.meta.vitest name="Construct the Video node"
  * import { Video } from "@beep/html/Html.model"
  *
  * const node = Video.make({ children: [] })
- * console.log(node._tag) // "video"
+ * node._tag // => "video"
  * ```
  *
  * @category elements
@@ -9894,20 +8881,22 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
   "video",
   {
     ...GlobalAttributes,
-    autoplay: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
+    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    muted: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    playsinline: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    playsinline: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     poster: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    preload: S.OptionFromOptionalKey(S.Literals(["auto", "none", "metadata"])).pipe(SchemaUtils.withNoneDefault),
+    preload: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["auto", "none", "metadata"])).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Video", { description: "The <video> element." })
@@ -9915,12 +8904,13 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
 /**
  * Companion namespace for {@link Video}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Video)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Video"
  * import { Video } from "@beep/html/Html.model"
  *
  * const encoded: Video.Encoded = { _tag: "video", children: [] }
- * console.log(encoded._tag) // "video"
+ * encoded._tag // => "video"
  * ```
  *
  * @category elements
@@ -9930,14 +8920,14 @@ export declare namespace Video {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "video";
-    readonly autoplay: O.Option<boolean | "">;
-    readonly controls: O.Option<boolean | "">;
+    readonly autoplay: O.Option<true | "">;
+    readonly controls: O.Option<true | "">;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
     readonly height: O.Option<number>;
     readonly loading: O.Option<"lazy" | "eager">;
-    readonly loop: O.Option<boolean | "">;
-    readonly muted: O.Option<boolean | "">;
-    readonly playsinline: O.Option<boolean | "">;
+    readonly loop: O.Option<true | "">;
+    readonly muted: O.Option<true | "">;
+    readonly playsinline: O.Option<true | "">;
     readonly poster: O.Option<string>;
     readonly preload: O.Option<"auto" | "none" | "metadata">;
     readonly src: O.Option<string>;
@@ -9947,16 +8937,16 @@ export declare namespace Video {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "video";
-    readonly autoplay?: boolean | "";
-    readonly controls?: boolean | "";
-    readonly crossorigin?: "anonymous" | "use-credentials";
+    readonly autoplay?: true | "";
+    readonly controls?: true | "";
+    readonly crossorigin?: string;
     readonly height?: number;
-    readonly loading?: "lazy" | "eager";
-    readonly loop?: boolean | "";
-    readonly muted?: boolean | "";
-    readonly playsinline?: boolean | "";
+    readonly loading?: string;
+    readonly loop?: true | "";
+    readonly muted?: true | "";
+    readonly playsinline?: true | "";
     readonly poster?: string;
-    readonly preload?: "auto" | "none" | "metadata";
+    readonly preload?: string;
     readonly src?: string;
     readonly width?: number;
     readonly children: HtmlChildren.Encoded;
@@ -9966,12 +8956,13 @@ export declare namespace Video {
 /**
  * The <wbr> element.
  *
- * @example
- * ```ts
+ * **Example** (Construct the Wbr node)
+ *
+ * ```ts import.meta.vitest name="Construct the Wbr node"
  * import { Wbr } from "@beep/html/Html.model"
  *
  * const node = Wbr.make({})
- * console.log(node._tag) // "wbr"
+ * node._tag // => "wbr"
  * ```
  *
  * @category elements
@@ -9987,12 +8978,13 @@ export class Wbr extends S.TaggedClass<Wbr>($I`Wbr`)(
 /**
  * Companion namespace for {@link Wbr}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Wbr)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Wbr"
  * import { Wbr } from "@beep/html/Html.model"
  *
  * const encoded: Wbr.Encoded = { _tag: "wbr" }
- * console.log(encoded._tag) // "wbr"
+ * encoded._tag // => "wbr"
  * ```
  *
  * @category elements
@@ -10012,12 +9004,13 @@ export declare namespace Wbr {
 /**
  * The <xmp> element. Obsolete / non-conforming (WHATWG §16.2).
  *
- * @example
- * ```ts
+ * **Example** (Construct the Xmp node)
+ *
+ * ```ts import.meta.vitest name="Construct the Xmp node"
  * import { Xmp } from "@beep/html/Html.model"
  *
  * const node = Xmp.make({ content: "" })
- * console.log(node._tag) // "xmp"
+ * node._tag // => "xmp"
  * ```
  *
  * @category elements
@@ -10034,12 +9027,13 @@ export class Xmp extends S.TaggedClass<Xmp>($I`Xmp`)(
 /**
  * Companion namespace for {@link Xmp}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded shape of Xmp)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of Xmp"
  * import { Xmp } from "@beep/html/Html.model"
  *
  * const encoded: Xmp.Encoded = { _tag: "xmp", content: "" }
- * console.log(encoded._tag) // "xmp"
+ * encoded._tag // => "xmp"
  * ```
  *
  * @category elements
@@ -10059,15 +9053,981 @@ export declare namespace Xmp {
 }
 
 /**
- * Discriminated union of every HTML AST node — all 142 elements plus the
- * text, comment, doctype, document, and fragment node kinds — keyed on `_tag`.
+ * Discriminated union of nodes valid as element or fragment children.
  *
- * @example
- * ```ts
+ * **Example** (Match a text node against HtmlChild)
+ *
+ * ```ts import.meta.vitest name="Match a text node against HtmlChild"
+ * import { HtmlChild } from "@beep/html/Html.model"
+ * import { Text } from "@beep/html/Html.nodes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(HtmlChild)(Text.make({ value: "hello" })) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
+  "HtmlChild",
+  "Nodes valid as element or fragment children.",
+  [
+    A,
+    Abbr,
+    Acronym,
+    Address,
+    Applet,
+    Area,
+    Article,
+    Aside,
+    Audio,
+    B,
+    Base,
+    Basefont,
+    Bdi,
+    Bdo,
+    Bgsound,
+    Big,
+    Blink,
+    Blockquote,
+    Body,
+    Br,
+    Button,
+    Canvas,
+    Caption,
+    Center,
+    Cite,
+    Code,
+    Col,
+    Colgroup,
+    Data,
+    Datalist,
+    Dd,
+    Del,
+    Details,
+    Dfn,
+    Dialog,
+    DirElement,
+    Div,
+    Dl,
+    Dt,
+    Em,
+    Embed,
+    Fieldset,
+    Figcaption,
+    Figure,
+    Font,
+    Footer,
+    Form,
+    Frame,
+    Frameset,
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+    Head,
+    Header,
+    Hgroup,
+    Hr,
+    Html,
+    I,
+    Iframe,
+    Img,
+    Input,
+    Ins,
+    Isindex,
+    Kbd,
+    Keygen,
+    Label,
+    Legend,
+    Li,
+    Link,
+    Listing,
+    Main,
+    MapElement,
+    Mark,
+    Marquee,
+    Menu,
+    Menuitem,
+    Meta,
+    Meter,
+    Multicol,
+    Nav,
+    Nextid,
+    Nobr,
+    Noembed,
+    Noframes,
+    Noscript,
+    ObjectElement,
+    Ol,
+    Optgroup,
+    Option,
+    Output,
+    P,
+    Param,
+    Picture,
+    Plaintext,
+    Pre,
+    Progress,
+    Q,
+    Rb,
+    Rp,
+    Rt,
+    Rtc,
+    Ruby,
+    SElement,
+    Samp,
+    Script,
+    Search,
+    Section,
+    Select,
+    Selectedcontent,
+    Slot,
+    Small,
+    Source,
+    Spacer,
+    Span,
+    Strike,
+    Strong,
+    Style,
+    Sub,
+    Summary,
+    Sup,
+    Table,
+    Tbody,
+    Td,
+    Template,
+    Textarea,
+    Tfoot,
+    Th,
+    Thead,
+    Time,
+    Title,
+    Tr,
+    Track,
+    Tt,
+    U,
+    Ul,
+    Var,
+    Video,
+    Wbr,
+    Xmp,
+    ForeignElement,
+    Text,
+    Comment,
+  ]
+);
+
+/**
+ * Companion namespace for {@link HtmlChild}.
+ *
+ * **Example** (Encoded shape of HtmlChild)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of HtmlChild"
+ * import type { HtmlChild } from "@beep/html/Html.model"
+ *
+ * const child: HtmlChild.Encoded = { _tag: "#text", value: "hello" }
+ * child._tag // => "#text"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace HtmlChild {
+  /** @since 0.0.0 */
+  export type Type =
+    | A.Type
+    | Abbr.Type
+    | Acronym.Type
+    | Address.Type
+    | Applet.Type
+    | Area.Type
+    | Article.Type
+    | Aside.Type
+    | Audio.Type
+    | B.Type
+    | Base.Type
+    | Basefont.Type
+    | Bdi.Type
+    | Bdo.Type
+    | Bgsound.Type
+    | Big.Type
+    | Blink.Type
+    | Blockquote.Type
+    | Body.Type
+    | Br.Type
+    | Button.Type
+    | Canvas.Type
+    | Caption.Type
+    | Center.Type
+    | Cite.Type
+    | Code.Type
+    | Col.Type
+    | Colgroup.Type
+    | Data.Type
+    | Datalist.Type
+    | Dd.Type
+    | Del.Type
+    | Details.Type
+    | Dfn.Type
+    | Dialog.Type
+    | DirElement.Type
+    | Div.Type
+    | Dl.Type
+    | Dt.Type
+    | Em.Type
+    | Embed.Type
+    | Fieldset.Type
+    | Figcaption.Type
+    | Figure.Type
+    | Font.Type
+    | Footer.Type
+    | Form.Type
+    | Frame.Type
+    | Frameset.Type
+    | H1.Type
+    | H2.Type
+    | H3.Type
+    | H4.Type
+    | H5.Type
+    | H6.Type
+    | Head.Type
+    | Header.Type
+    | Hgroup.Type
+    | Hr.Type
+    | Html.Type
+    | I.Type
+    | Iframe.Type
+    | Img.Type
+    | Input.Type
+    | Ins.Type
+    | Isindex.Type
+    | Kbd.Type
+    | Keygen.Type
+    | Label.Type
+    | Legend.Type
+    | Li.Type
+    | Link.Type
+    | Listing.Type
+    | Main.Type
+    | MapElement.Type
+    | Mark.Type
+    | Marquee.Type
+    | Menu.Type
+    | Menuitem.Type
+    | Meta.Type
+    | Meter.Type
+    | Multicol.Type
+    | Nav.Type
+    | Nextid.Type
+    | Nobr.Type
+    | Noembed.Type
+    | Noframes.Type
+    | Noscript.Type
+    | ObjectElement.Type
+    | Ol.Type
+    | Optgroup.Type
+    | Option.Type
+    | Output.Type
+    | P.Type
+    | Param.Type
+    | Picture.Type
+    | Plaintext.Type
+    | Pre.Type
+    | Progress.Type
+    | Q.Type
+    | Rb.Type
+    | Rp.Type
+    | Rt.Type
+    | Rtc.Type
+    | Ruby.Type
+    | SElement.Type
+    | Samp.Type
+    | Script.Type
+    | Search.Type
+    | Section.Type
+    | Select.Type
+    | Selectedcontent.Type
+    | Slot.Type
+    | Small.Type
+    | Source.Type
+    | Spacer.Type
+    | Span.Type
+    | Strike.Type
+    | Strong.Type
+    | Style.Type
+    | Sub.Type
+    | Summary.Type
+    | Sup.Type
+    | Table.Type
+    | Tbody.Type
+    | Td.Type
+    | Template.Type
+    | Textarea.Type
+    | Tfoot.Type
+    | Th.Type
+    | Thead.Type
+    | Time.Type
+    | Title.Type
+    | Tr.Type
+    | Track.Type
+    | Tt.Type
+    | U.Type
+    | Ul.Type
+    | Var.Type
+    | Video.Type
+    | Wbr.Type
+    | Xmp.Type
+    | ForeignElement.Type
+    | Text.Type
+    | Comment.Type;
+  /** @since 0.0.0 */
+  export type Encoded =
+    | A.Encoded
+    | Abbr.Encoded
+    | Acronym.Encoded
+    | Address.Encoded
+    | Applet.Encoded
+    | Area.Encoded
+    | Article.Encoded
+    | Aside.Encoded
+    | Audio.Encoded
+    | B.Encoded
+    | Base.Encoded
+    | Basefont.Encoded
+    | Bdi.Encoded
+    | Bdo.Encoded
+    | Bgsound.Encoded
+    | Big.Encoded
+    | Blink.Encoded
+    | Blockquote.Encoded
+    | Body.Encoded
+    | Br.Encoded
+    | Button.Encoded
+    | Canvas.Encoded
+    | Caption.Encoded
+    | Center.Encoded
+    | Cite.Encoded
+    | Code.Encoded
+    | Col.Encoded
+    | Colgroup.Encoded
+    | Data.Encoded
+    | Datalist.Encoded
+    | Dd.Encoded
+    | Del.Encoded
+    | Details.Encoded
+    | Dfn.Encoded
+    | Dialog.Encoded
+    | DirElement.Encoded
+    | Div.Encoded
+    | Dl.Encoded
+    | Dt.Encoded
+    | Em.Encoded
+    | Embed.Encoded
+    | Fieldset.Encoded
+    | Figcaption.Encoded
+    | Figure.Encoded
+    | Font.Encoded
+    | Footer.Encoded
+    | Form.Encoded
+    | Frame.Encoded
+    | Frameset.Encoded
+    | H1.Encoded
+    | H2.Encoded
+    | H3.Encoded
+    | H4.Encoded
+    | H5.Encoded
+    | H6.Encoded
+    | Head.Encoded
+    | Header.Encoded
+    | Hgroup.Encoded
+    | Hr.Encoded
+    | Html.Encoded
+    | I.Encoded
+    | Iframe.Encoded
+    | Img.Encoded
+    | Input.Encoded
+    | Ins.Encoded
+    | Isindex.Encoded
+    | Kbd.Encoded
+    | Keygen.Encoded
+    | Label.Encoded
+    | Legend.Encoded
+    | Li.Encoded
+    | Link.Encoded
+    | Listing.Encoded
+    | Main.Encoded
+    | MapElement.Encoded
+    | Mark.Encoded
+    | Marquee.Encoded
+    | Menu.Encoded
+    | Menuitem.Encoded
+    | Meta.Encoded
+    | Meter.Encoded
+    | Multicol.Encoded
+    | Nav.Encoded
+    | Nextid.Encoded
+    | Nobr.Encoded
+    | Noembed.Encoded
+    | Noframes.Encoded
+    | Noscript.Encoded
+    | ObjectElement.Encoded
+    | Ol.Encoded
+    | Optgroup.Encoded
+    | Option.Encoded
+    | Output.Encoded
+    | P.Encoded
+    | Param.Encoded
+    | Picture.Encoded
+    | Plaintext.Encoded
+    | Pre.Encoded
+    | Progress.Encoded
+    | Q.Encoded
+    | Rb.Encoded
+    | Rp.Encoded
+    | Rt.Encoded
+    | Rtc.Encoded
+    | Ruby.Encoded
+    | SElement.Encoded
+    | Samp.Encoded
+    | Script.Encoded
+    | Search.Encoded
+    | Section.Encoded
+    | Select.Encoded
+    | Selectedcontent.Encoded
+    | Slot.Encoded
+    | Small.Encoded
+    | Source.Encoded
+    | Spacer.Encoded
+    | Span.Encoded
+    | Strike.Encoded
+    | Strong.Encoded
+    | Style.Encoded
+    | Sub.Encoded
+    | Summary.Encoded
+    | Sup.Encoded
+    | Table.Encoded
+    | Tbody.Encoded
+    | Td.Encoded
+    | Template.Encoded
+    | Textarea.Encoded
+    | Tfoot.Encoded
+    | Th.Encoded
+    | Thead.Encoded
+    | Time.Encoded
+    | Title.Encoded
+    | Tr.Encoded
+    | Track.Encoded
+    | Tt.Encoded
+    | U.Encoded
+    | Ul.Encoded
+    | Var.Encoded
+    | Video.Encoded
+    | Wbr.Encoded
+    | Xmp.Encoded
+    | ForeignElement.Encoded
+    | Text.Encoded
+    | Comment.Encoded;
+}
+
+/**
+ * Discriminated union of serializable HTML roots.
+ *
+ * **Example** (Match a fragment against HtmlRoot)
+ *
+ * ```ts import.meta.vitest name="Match a fragment against HtmlRoot"
+ * import { Fragment, HtmlRoot } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(HtmlRoot)(Fragment.make({ children: [] })) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
+  "HtmlRoot",
+  "HTML document, fragment, element, or child-node root.",
+  [
+    A,
+    Abbr,
+    Acronym,
+    Address,
+    Applet,
+    Area,
+    Article,
+    Aside,
+    Audio,
+    B,
+    Base,
+    Basefont,
+    Bdi,
+    Bdo,
+    Bgsound,
+    Big,
+    Blink,
+    Blockquote,
+    Body,
+    Br,
+    Button,
+    Canvas,
+    Caption,
+    Center,
+    Cite,
+    Code,
+    Col,
+    Colgroup,
+    Data,
+    Datalist,
+    Dd,
+    Del,
+    Details,
+    Dfn,
+    Dialog,
+    DirElement,
+    Div,
+    Dl,
+    Dt,
+    Em,
+    Embed,
+    Fieldset,
+    Figcaption,
+    Figure,
+    Font,
+    Footer,
+    Form,
+    Frame,
+    Frameset,
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+    Head,
+    Header,
+    Hgroup,
+    Hr,
+    Html,
+    I,
+    Iframe,
+    Img,
+    Input,
+    Ins,
+    Isindex,
+    Kbd,
+    Keygen,
+    Label,
+    Legend,
+    Li,
+    Link,
+    Listing,
+    Main,
+    MapElement,
+    Mark,
+    Marquee,
+    Menu,
+    Menuitem,
+    Meta,
+    Meter,
+    Multicol,
+    Nav,
+    Nextid,
+    Nobr,
+    Noembed,
+    Noframes,
+    Noscript,
+    ObjectElement,
+    Ol,
+    Optgroup,
+    Option,
+    Output,
+    P,
+    Param,
+    Picture,
+    Plaintext,
+    Pre,
+    Progress,
+    Q,
+    Rb,
+    Rp,
+    Rt,
+    Rtc,
+    Ruby,
+    SElement,
+    Samp,
+    Script,
+    Search,
+    Section,
+    Select,
+    Selectedcontent,
+    Slot,
+    Small,
+    Source,
+    Spacer,
+    Span,
+    Strike,
+    Strong,
+    Style,
+    Sub,
+    Summary,
+    Sup,
+    Table,
+    Tbody,
+    Td,
+    Template,
+    Textarea,
+    Tfoot,
+    Th,
+    Thead,
+    Time,
+    Title,
+    Tr,
+    Track,
+    Tt,
+    U,
+    Ul,
+    Var,
+    Video,
+    Wbr,
+    Xmp,
+    ForeignElement,
+    Text,
+    Comment,
+    Document,
+    Fragment,
+  ]
+);
+
+/**
+ * Companion namespace for {@link HtmlRoot}.
+ *
+ * **Example** (Encoded shape of HtmlRoot)
+ *
+ * ```ts import.meta.vitest name="Encoded shape of HtmlRoot"
+ * import type { HtmlRoot } from "@beep/html/Html.model"
+ *
+ * const root: HtmlRoot.Encoded = { _tag: "#fragment", children: [] }
+ * root._tag // => "#fragment"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace HtmlRoot {
+  /** @since 0.0.0 */
+  export type Type =
+    | A.Type
+    | Abbr.Type
+    | Acronym.Type
+    | Address.Type
+    | Applet.Type
+    | Area.Type
+    | Article.Type
+    | Aside.Type
+    | Audio.Type
+    | B.Type
+    | Base.Type
+    | Basefont.Type
+    | Bdi.Type
+    | Bdo.Type
+    | Bgsound.Type
+    | Big.Type
+    | Blink.Type
+    | Blockquote.Type
+    | Body.Type
+    | Br.Type
+    | Button.Type
+    | Canvas.Type
+    | Caption.Type
+    | Center.Type
+    | Cite.Type
+    | Code.Type
+    | Col.Type
+    | Colgroup.Type
+    | Data.Type
+    | Datalist.Type
+    | Dd.Type
+    | Del.Type
+    | Details.Type
+    | Dfn.Type
+    | Dialog.Type
+    | DirElement.Type
+    | Div.Type
+    | Dl.Type
+    | Dt.Type
+    | Em.Type
+    | Embed.Type
+    | Fieldset.Type
+    | Figcaption.Type
+    | Figure.Type
+    | Font.Type
+    | Footer.Type
+    | Form.Type
+    | Frame.Type
+    | Frameset.Type
+    | H1.Type
+    | H2.Type
+    | H3.Type
+    | H4.Type
+    | H5.Type
+    | H6.Type
+    | Head.Type
+    | Header.Type
+    | Hgroup.Type
+    | Hr.Type
+    | Html.Type
+    | I.Type
+    | Iframe.Type
+    | Img.Type
+    | Input.Type
+    | Ins.Type
+    | Isindex.Type
+    | Kbd.Type
+    | Keygen.Type
+    | Label.Type
+    | Legend.Type
+    | Li.Type
+    | Link.Type
+    | Listing.Type
+    | Main.Type
+    | MapElement.Type
+    | Mark.Type
+    | Marquee.Type
+    | Menu.Type
+    | Menuitem.Type
+    | Meta.Type
+    | Meter.Type
+    | Multicol.Type
+    | Nav.Type
+    | Nextid.Type
+    | Nobr.Type
+    | Noembed.Type
+    | Noframes.Type
+    | Noscript.Type
+    | ObjectElement.Type
+    | Ol.Type
+    | Optgroup.Type
+    | Option.Type
+    | Output.Type
+    | P.Type
+    | Param.Type
+    | Picture.Type
+    | Plaintext.Type
+    | Pre.Type
+    | Progress.Type
+    | Q.Type
+    | Rb.Type
+    | Rp.Type
+    | Rt.Type
+    | Rtc.Type
+    | Ruby.Type
+    | SElement.Type
+    | Samp.Type
+    | Script.Type
+    | Search.Type
+    | Section.Type
+    | Select.Type
+    | Selectedcontent.Type
+    | Slot.Type
+    | Small.Type
+    | Source.Type
+    | Spacer.Type
+    | Span.Type
+    | Strike.Type
+    | Strong.Type
+    | Style.Type
+    | Sub.Type
+    | Summary.Type
+    | Sup.Type
+    | Table.Type
+    | Tbody.Type
+    | Td.Type
+    | Template.Type
+    | Textarea.Type
+    | Tfoot.Type
+    | Th.Type
+    | Thead.Type
+    | Time.Type
+    | Title.Type
+    | Tr.Type
+    | Track.Type
+    | Tt.Type
+    | U.Type
+    | Ul.Type
+    | Var.Type
+    | Video.Type
+    | Wbr.Type
+    | Xmp.Type
+    | ForeignElement.Type
+    | Text.Type
+    | Comment.Type
+    | Document.Type
+    | Fragment.Type;
+  /** @since 0.0.0 */
+  export type Encoded =
+    | A.Encoded
+    | Abbr.Encoded
+    | Acronym.Encoded
+    | Address.Encoded
+    | Applet.Encoded
+    | Area.Encoded
+    | Article.Encoded
+    | Aside.Encoded
+    | Audio.Encoded
+    | B.Encoded
+    | Base.Encoded
+    | Basefont.Encoded
+    | Bdi.Encoded
+    | Bdo.Encoded
+    | Bgsound.Encoded
+    | Big.Encoded
+    | Blink.Encoded
+    | Blockquote.Encoded
+    | Body.Encoded
+    | Br.Encoded
+    | Button.Encoded
+    | Canvas.Encoded
+    | Caption.Encoded
+    | Center.Encoded
+    | Cite.Encoded
+    | Code.Encoded
+    | Col.Encoded
+    | Colgroup.Encoded
+    | Data.Encoded
+    | Datalist.Encoded
+    | Dd.Encoded
+    | Del.Encoded
+    | Details.Encoded
+    | Dfn.Encoded
+    | Dialog.Encoded
+    | DirElement.Encoded
+    | Div.Encoded
+    | Dl.Encoded
+    | Dt.Encoded
+    | Em.Encoded
+    | Embed.Encoded
+    | Fieldset.Encoded
+    | Figcaption.Encoded
+    | Figure.Encoded
+    | Font.Encoded
+    | Footer.Encoded
+    | Form.Encoded
+    | Frame.Encoded
+    | Frameset.Encoded
+    | H1.Encoded
+    | H2.Encoded
+    | H3.Encoded
+    | H4.Encoded
+    | H5.Encoded
+    | H6.Encoded
+    | Head.Encoded
+    | Header.Encoded
+    | Hgroup.Encoded
+    | Hr.Encoded
+    | Html.Encoded
+    | I.Encoded
+    | Iframe.Encoded
+    | Img.Encoded
+    | Input.Encoded
+    | Ins.Encoded
+    | Isindex.Encoded
+    | Kbd.Encoded
+    | Keygen.Encoded
+    | Label.Encoded
+    | Legend.Encoded
+    | Li.Encoded
+    | Link.Encoded
+    | Listing.Encoded
+    | Main.Encoded
+    | MapElement.Encoded
+    | Mark.Encoded
+    | Marquee.Encoded
+    | Menu.Encoded
+    | Menuitem.Encoded
+    | Meta.Encoded
+    | Meter.Encoded
+    | Multicol.Encoded
+    | Nav.Encoded
+    | Nextid.Encoded
+    | Nobr.Encoded
+    | Noembed.Encoded
+    | Noframes.Encoded
+    | Noscript.Encoded
+    | ObjectElement.Encoded
+    | Ol.Encoded
+    | Optgroup.Encoded
+    | Option.Encoded
+    | Output.Encoded
+    | P.Encoded
+    | Param.Encoded
+    | Picture.Encoded
+    | Plaintext.Encoded
+    | Pre.Encoded
+    | Progress.Encoded
+    | Q.Encoded
+    | Rb.Encoded
+    | Rp.Encoded
+    | Rt.Encoded
+    | Rtc.Encoded
+    | Ruby.Encoded
+    | SElement.Encoded
+    | Samp.Encoded
+    | Script.Encoded
+    | Search.Encoded
+    | Section.Encoded
+    | Select.Encoded
+    | Selectedcontent.Encoded
+    | Slot.Encoded
+    | Small.Encoded
+    | Source.Encoded
+    | Spacer.Encoded
+    | Span.Encoded
+    | Strike.Encoded
+    | Strong.Encoded
+    | Style.Encoded
+    | Sub.Encoded
+    | Summary.Encoded
+    | Sup.Encoded
+    | Table.Encoded
+    | Tbody.Encoded
+    | Td.Encoded
+    | Template.Encoded
+    | Textarea.Encoded
+    | Tfoot.Encoded
+    | Th.Encoded
+    | Thead.Encoded
+    | Time.Encoded
+    | Title.Encoded
+    | Tr.Encoded
+    | Track.Encoded
+    | Tt.Encoded
+    | U.Encoded
+    | Ul.Encoded
+    | Var.Encoded
+    | Video.Encoded
+    | Wbr.Encoded
+    | Xmp.Encoded
+    | ForeignElement.Encoded
+    | Text.Encoded
+    | Comment.Encoded
+    | Document.Encoded
+    | Fragment.Encoded;
+}
+
+/**
+ * Discriminated union of every HTML AST node — all 142 elements plus the
+ * text, comment, foreign, doctype, document, and fragment node kinds.
+ *
+ * **Example** (Match an anchor against HtmlNode)
+ *
+ * ```ts import.meta.vitest name="Match an anchor against HtmlNode"
  * import { A, HtmlNode } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HtmlNode)(A.make({ children: [] }))) // true
+ * S.is(HtmlNode)(A.make({ children: [] })) // => true
  * ```
  *
  * @category models
@@ -10219,23 +10179,25 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
     Video,
     Wbr,
     Xmp,
+    ForeignElement,
     Text,
     Comment,
-    Doctype,
     Document,
     Fragment,
+    Doctype,
   ]
 );
 /**
  * Companion namespace for {@link HtmlNode}.
  *
- * @example
- * ```ts
+ * **Example** (Build an HtmlNode.Type value)
+ *
+ * ```ts import.meta.vitest name="Build an HtmlNode.Type value"
  * import { A } from "@beep/html/Html.model"
  * import type { HtmlNode } from "@beep/html/Html.model"
  *
  * const node: HtmlNode.Type = A.make({ children: [] })
- * console.log(node._tag) // "a"
+ * node._tag // => "a"
  * ```
  *
  * @category models
@@ -10386,11 +10348,12 @@ export declare namespace HtmlNode {
     | Video.Type
     | Wbr.Type
     | Xmp.Type
+    | ForeignElement.Type
     | Text.Type
     | Comment.Type
-    | Doctype.Type
     | Document.Type
-    | Fragment.Type;
+    | Fragment.Type
+    | Doctype.Type;
   /** @since 0.0.0 */
   export type Encoded =
     | A.Encoded
@@ -10535,23 +10498,25 @@ export declare namespace HtmlNode {
     | Video.Encoded
     | Wbr.Encoded
     | Xmp.Encoded
+    | ForeignElement.Encoded
     | Text.Encoded
     | Comment.Encoded
-    | Doctype.Encoded
     | Document.Encoded
-    | Fragment.Encoded;
+    | Fragment.Encoded
+    | Doctype.Encoded;
 }
 
 /**
  * Advisory sub-union of elements in the "metadata" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match Base against Metadata)
+ *
+ * ```ts import.meta.vitest name="Match Base against Metadata"
  * import { Base, Metadata } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Metadata)(Base.make({}))) // true
+ * S.is(Metadata)(Base.make({})) // => true
  * ```
  *
  * @category schemas
@@ -10573,12 +10538,13 @@ export const Metadata = taggedUnion<
  * Advisory sub-union of elements in the "flow" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match A against Flow)
+ *
+ * ```ts import.meta.vitest name="Match A against Flow"
  * import { A, Flow } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Flow)(A.make({ children: [] }))) // true
+ * S.is(Flow)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -10847,12 +10813,13 @@ export const Flow = taggedUnion<
  * Advisory sub-union of elements in the "sectioning" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match Article against Sectioning)
+ *
+ * ```ts import.meta.vitest name="Match Article against Sectioning"
  * import { Article, Sectioning } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Sectioning)(Article.make({ children: [] }))) // true
+ * S.is(Sectioning)(Article.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -10867,12 +10834,13 @@ export const Sectioning = taggedUnion<
  * Advisory sub-union of elements in the "heading" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match H1 against Heading)
+ *
+ * ```ts import.meta.vitest name="Match H1 against Heading"
  * import { H1, Heading } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Heading)(H1.make({ children: [] }))) // true
+ * S.is(Heading)(H1.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -10887,12 +10855,13 @@ export const Heading = taggedUnion<
  * Advisory sub-union of elements in the "phrasing" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match A against Phrasing)
+ *
+ * ```ts import.meta.vitest name="Match A against Phrasing"
  * import { A, Phrasing } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Phrasing)(A.make({ children: [] }))) // true
+ * S.is(Phrasing)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11068,12 +11037,13 @@ export const Phrasing = taggedUnion<
  * Advisory sub-union of elements in the "embedded" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match Audio against Embedded)
+ *
+ * ```ts import.meta.vitest name="Match Audio against Embedded"
  * import { Audio, Embedded } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Embedded)(Audio.make({ children: [] }))) // true
+ * S.is(Embedded)(Audio.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11104,12 +11074,13 @@ export const Embedded = taggedUnion<
  * Advisory sub-union of elements in the "interactive" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match A against Interactive)
+ *
+ * ```ts import.meta.vitest name="Match A against Interactive"
  * import { A, Interactive } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Interactive)(A.make({ children: [] }))) // true
+ * S.is(Interactive)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11165,12 +11136,13 @@ export const Interactive = taggedUnion<
  * Advisory sub-union of elements in the "palpable" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match A against Palpable)
+ *
+ * ```ts import.meta.vitest name="Match A against Palpable"
  * import { A, Palpable } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(Palpable)(A.make({ children: [] }))) // true
+ * S.is(Palpable)(A.make({ children: [] })) // => true
  * ```
  *
  * @category schemas
@@ -11403,12 +11375,13 @@ export const Palpable = taggedUnion<
  * Advisory sub-union of elements in the "script-supporting" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
- * @example
- * ```ts
+ * **Example** (Match Script against ScriptSupporting)
+ *
+ * ```ts import.meta.vitest name="Match Script against ScriptSupporting"
  * import { Script, ScriptSupporting } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ScriptSupporting)(Script.make({ content: "" }))) // true
+ * S.is(ScriptSupporting)(Script.make({ content: "" })) // => true
  * ```
  *
  * @category schemas

@@ -5,19 +5,33 @@
  * @since 0.0.0
  */
 /**
+ * Ecosystem dependency-polarity lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./EcosystemPolarity.ts";
+/**
+ * Judge-rubric lens drift lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { diffJudgeRubricLenses, JudgeRubricDrift, lintJudgeRubricCommand } from "./JudgeRubric.ts";
+/**
  * Public lint command export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Lint.command.js";
+export * from "./Lint.command.ts";
 /**
  * Public command module export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Lint.errors.js";
+export * from "./Lint.errors.ts";
 /**
  * Schema-first lint schema-role utilities.
  *
@@ -37,6 +51,23 @@ export {
   schemaFirstEntryOrder,
   sortSchemaFirstEntries,
 } from "./Lint.schemas.ts";
+/**
+ * Package test-typecheck blind-spot lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  collectTestTypecheckBlindSpots,
+  defaultTestTypecheckBaselinePath,
+  lintPackageTestTypecheckCommand,
+  PackageTestTypecheckOptions,
+  runPackageTestTypecheckLint,
+  TestTypecheckBlindSpot,
+  TestTypecheckBlindSpotBaseline,
+  TestTypecheckBlindSpotKind,
+  TestTypecheckBlindSpotSummary,
+} from "./PackageTestTypecheck.ts";
 /**
  * Schema catalog generation utilities.
  *

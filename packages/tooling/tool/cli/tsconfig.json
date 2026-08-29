@@ -12,6 +12,9 @@
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {
+      "path": "../../../drivers/exiftool/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/face-detection/tsconfig.json"
     },
     {
@@ -22,6 +25,9 @@
     },
     {
       "path": "../../../drivers/libpff/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/obs/tsconfig.json"
     },
     {
       "path": "../../../drivers/phoenix/tsconfig.json"
@@ -57,10 +63,16 @@
       "path": "../../../foundation/modeling/schema/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/skill-contract/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/utils/tsconfig.json"
     },
     {
       "path": "../../library/ai-metrics/tsconfig.json"
+    },
+    {
+      "path": "../../library/qa-capture/tsconfig.json"
     },
     {
       "path": "../../library/repo-utils/tsconfig.json"

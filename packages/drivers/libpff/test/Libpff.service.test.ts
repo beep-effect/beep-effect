@@ -12,6 +12,7 @@ import {
   LibpffFileProcessingEngineOptions,
   makeLibpffFileProcessingEngine,
   PffexportEngineConfig,
+  PffexportMessageRecord,
 } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -22,11 +23,12 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
-const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation);
-const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig);
-const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions);
-const LibpffErrorArbitrary = S.toArbitrary(LibpffError);
+const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact)(fc);
+const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation)(fc);
+const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig)(fc);
+const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions)(fc);
+const LibpffErrorArbitrary = S.toArbitrary(LibpffError)(fc);
+const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExportArchiveOperation = S.encodeEffect(ExportArchiveOperation);
@@ -37,16 +39,14 @@ const encodeLibpffFileProcessingEngineOptions = S.encodeEffect(LibpffFileProcess
 const decodeLibpffFileProcessingEngineOptions = S.decodeUnknownEffect(LibpffFileProcessingEngineOptions);
 const encodeLibpffError = S.encodeEffect(LibpffError);
 const decodeLibpffError = S.decodeUnknownEffect(LibpffError);
+const encodePffexportMessageRecord = S.encodeEffect(PffexportMessageRecord);
+const decodePffexportMessageRecord = S.decodeUnknownEffect(PffexportMessageRecord);
 const providePlatform = provideScopedLayer(NodeServices.layer);
 
 const fixtureIds = Effect.all({
-  artifactId: S.decodeUnknownEffect(ArtifactId)(
-    "artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-  digest: S.decodeUnknownEffect(ContentDigest)(
-    "sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-  operationId: S.decodeUnknownEffect(OperationId)(
+  artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+  digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+  operationId: S.decodeEffect(OperationId)(
     "operation:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
   ),
 });
@@ -106,7 +106,8 @@ describe("@beep/libpff", () => {
         PffexportEngineConfigArbitrary,
         LibpffFileProcessingEngineOptionsArbitrary,
         LibpffErrorArbitrary,
-        (config, options, error) => {
+        PffexportMessageRecordArbitrary,
+        (config, options, error, record) => {
           const encodedConfig = Effect.runSync(encodePffexportEngineConfig(config));
           const decodedConfig = Effect.runSync(decodePffexportEngineConfig(encodedConfig));
           expect(Effect.runSync(encodePffexportEngineConfig(decodedConfig))).toEqual(encodedConfig);
@@ -118,6 +119,10 @@ describe("@beep/libpff", () => {
           const encodedError = Effect.runSync(encodeLibpffError(error));
           const decodedError = Effect.runSync(decodeLibpffError(encodedError));
           expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
+
+          const encodedRecord = Effect.runSync(encodePffexportMessageRecord(record));
+          const decodedRecord = Effect.runSync(decodePffexportMessageRecord(encodedRecord));
+          expect(Effect.runSync(encodePffexportMessageRecord(decodedRecord))).toEqual(encodedRecord);
         }
       ),
       fcRuns(25)
@@ -132,6 +137,7 @@ describe("@beep/libpff", () => {
     });
 
     expect(Effect.runSync(encodePffexportEngineConfig(config))).toStrictEqual({
+      existingExportPolicy: "fail",
       exportFormat: "text",
       exportMode: "items",
       exportRoot: "/tmp/pst-out",
@@ -149,8 +155,9 @@ describe("@beep/libpff", () => {
     });
   });
 
-  it.effect("maps unavailable libpff runtime to an operation-level deferral", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "maps unavailable libpff runtime to an operation-level deferral",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
 
@@ -158,11 +165,12 @@ describe("@beep/libpff", () => {
         expect(error._tag).toBe("FileProcessingOperationError");
         expect(error.reason).toBe("engine-unavailable");
       });
-    }).pipe(providePlatform)
+    }, providePlatform)
   );
 
-  it.effect("can emit synthetic child artifacts for proof fixtures", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "can emit synthetic child artifacts for proof fixtures",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* makeLibpffFileProcessingEngine({ syntheticExport: true }).exportArchive(
         yield* operation(ids)
@@ -173,6 +181,6 @@ describe("@beep/libpff", () => {
         expect(result.children[0]?.id).not.toBe(ids.artifactId);
         expect(result.engine).toBe("libpff");
       });
-    }).pipe(providePlatform)
+    }, providePlatform)
   );
 });

@@ -6,17 +6,19 @@
  */
 
 import { dual } from "effect/Function";
-import { printLines } from "../../internal/cli/Printer.js";
+import { printLines } from "../../internal/cli/Printer.ts";
 
 /**
  * Render an Obsidian wikilink for a catalog card path.
  *
- * @example
+ * **Example** (Render catalog card wikilink)
+ *
  * ```ts
  * import { wikilinkFor } from "@beep/repo-cli/commands/Research"
  *
  * console.log(wikilinkFor("Articles/example.md", "Example"))
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -32,13 +34,15 @@ export const wikilinkFor: {
 /**
  * Print the research command index.
  *
- * @effects Writes the research command index to the configured console when the returned Effect is executed.
- * @example
+ * **Example** (Verify Effect pipe support)
+ *
  * ```ts
  * import { printResearchIndex } from "@beep/repo-cli/commands/Research"
  *
  * console.log(printResearchIndex.pipe !== undefined) // true
  * ```
+ *
+ * @effects Writes the research command index to the configured console when the returned Effect is executed.
  * @category cli-commands
  * @since 0.0.0
  */

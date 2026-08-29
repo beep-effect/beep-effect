@@ -8,7 +8,8 @@
 /**
  * Deterministic fixture assistant-turn kernel Layer and its pure block helper.
  *
- * @example
+ * **Example** (Fixture blocks for turns)
+ *
  * ```ts
  * import { fixtureBlocksFor } from "@beep/agents-use-cases/proof"
  *
@@ -19,26 +20,38 @@
  * @category fixtures
  * @since 0.0.0
  */
-export { FixtureTurnKernel, fixtureBlocksFor } from "./processes/AssistantTurn/AssistantTurn.fixture.js";
+export {
+  FixtureTurnKernel,
+  fixtureBlocksFor,
+  fixtureEventsFor,
+  fixtureProviderUsage,
+} from "./processes/AssistantTurn/AssistantTurn.fixture.ts";
 /**
  * In-memory runtime SDK facade backed by deterministic proof fixtures.
  *
- * @example
+ * **Example** (In-memory runtime SDK facade)
+ *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
+ * import { Effect } from "effect"
  *
- * const sdk = makeInMemoryProfessionalRuntimeSdk([])
+ * const sdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * console.log(typeof sdk.getContextPacket) // "function"
  * ```
  *
  * @category fixtures
  * @since 0.0.0
  */
-export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.js";
+export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts";
 /**
  * Runtime fixture schema and deterministic runner used by proof harnesses.
  *
- * @example
+ * **Example** (Run deterministic runtime fixture)
+ *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { Effect } from "effect"
@@ -57,6 +70,7 @@ export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRunt
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",
@@ -75,11 +89,12 @@ export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRunt
 export {
   RuntimeFixtureInput,
   runRuntimeFixture,
-} from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.js";
+} from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts";
 /**
  * Public runtime SDK contracts reused by proof helpers.
  *
- * @example
+ * **Example** (Make runtime scope contract)
+ *
  * ```ts
  * import { RuntimeScope } from "@beep/agents-use-cases/proof"
  *
@@ -94,4 +109,4 @@ export {
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./public.js";
+export * from "./public.ts";

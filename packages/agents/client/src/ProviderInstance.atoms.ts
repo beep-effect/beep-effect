@@ -7,7 +7,7 @@
  */
 import { Effect } from "effect";
 import { Reactivity } from "effect/unstable/reactivity";
-import { ProviderInstanceClient } from "./ProviderInstance.service.js";
+import { ProviderInstanceClient } from "./ProviderInstance.service.ts";
 import type {
   AddProviderInstanceCommand,
   ProbeProviderInstanceCommand,
@@ -21,7 +21,8 @@ const PROVIDER_INSTANCES_KEY = "provider-instances" as const;
 /**
  * All configured provider instances.
  *
- * @example
+ * **Example** (Log provider instances atom)
+ *
  * ```ts
  * import { providerInstancesAtom } from "@beep/agents-client/ProviderInstance.atoms"
  *
@@ -40,7 +41,8 @@ export const providerInstancesAtom = ProviderInstanceClient.query(
 /**
  * Adds a provider instance and refreshes the instance list.
  *
- * @example
+ * **Example** (Log add provider atom)
+ *
  * ```ts
  * import { addProviderInstanceAtom } from "@beep/agents-client/ProviderInstance.atoms"
  *
@@ -60,7 +62,8 @@ export const addProviderInstanceAtom = ProviderInstanceClient.runtime.fn<AddProv
 /**
  * Updates a provider instance and refreshes the instance list.
  *
- * @example
+ * **Example** (Log update provider atom)
+ *
  * ```ts
  * import { updateProviderInstanceAtom } from "@beep/agents-client/ProviderInstance.atoms"
  *
@@ -80,7 +83,8 @@ export const updateProviderInstanceAtom = ProviderInstanceClient.runtime.fn<Upda
 /**
  * Removes a provider instance and refreshes the instance list.
  *
- * @example
+ * **Example** (Log remove provider atom)
+ *
  * ```ts
  * import { removeProviderInstanceAtom } from "@beep/agents-client/ProviderInstance.atoms"
  *
@@ -100,10 +104,13 @@ export const removeProviderInstanceAtom = ProviderInstanceClient.runtime.fn<Remo
 /**
  * Probes a provider instance and refreshes the instance list.
  *
+ * **Details**
+ *
  * Client-safe failures, including unauthenticated login guidance, remain in
  * the atom error channel unchanged.
  *
- * @example
+ * **Example** (Log probe provider atom)
+ *
  * ```ts
  * import { probeProviderInstanceAtom } from "@beep/agents-client/ProviderInstance.atoms"
  *

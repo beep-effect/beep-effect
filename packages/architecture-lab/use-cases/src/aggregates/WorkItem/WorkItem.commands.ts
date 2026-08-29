@@ -7,10 +7,10 @@
  */
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.commands");
@@ -18,7 +18,8 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.comma
 /**
  * Command payload accepted by the WorkItem creation use case.
  *
- * @example
+ * **Example** (Create with optional priority)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { CreateWorkItemCommand } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -58,16 +59,17 @@ export class CreateWorkItemCommand extends S.Class<CreateWorkItemCommand>($I`Cre
 /**
  * Command payload for assigning a WorkItem to a Worker.
  *
- * @example
+ * **Example** (Assign WorkItem to Worker)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { AssignWorkItemCommand } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const command = AssignWorkItemCommand.make({
  *   id: S.decodeUnknownSync(DomainWorkItem.WorkItemId)("work-item-1"),
- *   assignee: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   assignee: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(command.assignee) // 1
@@ -81,7 +83,7 @@ export class AssignWorkItemCommand extends S.Class<AssignWorkItemCommand>($I`Ass
     id: DomainWorkItem.WorkItemId.annotateKey({
       description: "WorkItem identity to assign.",
     }),
-    assignee: DomainWorker.WorkerId.annotateKey({
+    assignee: ArchitectureLabIdentity.WorkerId.annotateKey({
       description: "Worker identity receiving the WorkItem assignment.",
     }),
   },
@@ -94,7 +96,8 @@ export class AssignWorkItemCommand extends S.Class<AssignWorkItemCommand>($I`Ass
 /**
  * Command payload for completing a WorkItem.
  *
- * @example
+ * **Example** (Complete WorkItem by id)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { CompleteWorkItemCommand } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -125,7 +128,8 @@ export class CompleteWorkItemCommand extends S.Class<CompleteWorkItemCommand>($I
 /**
  * Command payload for reopening a completed WorkItem.
  *
- * @example
+ * **Example** (Reopen completed WorkItem)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { ReopenWorkItemCommand } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -156,7 +160,8 @@ export class ReopenWorkItemCommand extends S.Class<ReopenWorkItemCommand>($I`Reo
 /**
  * Command payload for archiving a WorkItem.
  *
- * @example
+ * **Example** (Archive WorkItem by id)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { ArchiveWorkItemCommand } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -187,7 +192,8 @@ export class ArchiveWorkItemCommand extends S.Class<ArchiveWorkItemCommand>($I`A
 /**
  * Query payload for loading a single WorkItem.
  *
- * @example
+ * **Example** (Load WorkItem by id)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { GetWorkItemQuery } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
@@ -218,7 +224,8 @@ export class GetWorkItemQuery extends S.Class<GetWorkItemQuery>($I`GetWorkItemQu
 /**
  * Query payload for listing WorkItems, optionally constrained by lifecycle status.
  *
- * @example
+ * **Example** (List by lifecycle status)
+ *
  * ```ts
  * import { ListWorkItemsQuery } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
  * import * as O from "effect/Option"

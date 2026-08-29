@@ -12,7 +12,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Disclosure root for content that can expand and collapse.
  *
- * @example
+ * **Example** (Default open filters panel)
+ *
  * ```tsx
  * import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@beep/ui/components/collapsible"
  *
@@ -36,7 +37,8 @@ function Collapsible({ className, ...props }: CollapsiblePrimitive.Root.Props) {
 /**
  * Control that toggles a collapsible panel.
  *
- * @example
+ * **Example** (Show filters trigger)
+ *
  * ```tsx
  * import { CollapsibleTrigger } from "@beep/ui/components/collapsible"
  *
@@ -55,7 +57,8 @@ function CollapsibleTrigger({ className, ...props }: CollapsiblePrimitive.Trigge
 /**
  * Animated panel body for collapsible content.
  *
- * @example
+ * **Example** (Overdue filters content)
+ *
  * ```tsx
  * import { CollapsibleContent } from "@beep/ui/components/collapsible"
  *

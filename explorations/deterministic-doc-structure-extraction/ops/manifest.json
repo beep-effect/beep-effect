@@ -2,26 +2,17 @@
   "schemaVersion": "exploration-manifest/v1",
   "exploration": {
     "slug": "deterministic-doc-structure-extraction",
-    "title": "Deterministic Doc-Structure Extraction & Streaming Candidate Gate",
-    "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Scope boundary \u2014 what this packet owns vs routes to neighbor goals",
-      "Q2: First slice \u2014 deterministic provenance wall before the streaming gate",
-      "Q3: Package placement \u2014 sibling capability package, alignment extension, streaming home",
-      "Q4: Citations build-vs-buy \u2014 reuse eyecite-js TS port under the citation-guard lane",
-      "Q5: Court-PDF backend \u2014 defer to file-processing lane; Apache-default, Poppler sidecar-only",
-      "Q6: Confidence type \u2014 canonical branded UnitInterval + shared-kernel cleanup",
-      "Q7: Streaming Complete payload \u2014 carry V1 LangExtractResult verbatim vs projection",
-      "Q8: Cascade escalation trigger + calibration posture"
-    ],
+    "title": "Deterministic Legal Document Structure Extraction",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/law-doc-structure-oa-slice"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-08-13",
     "sources": ["research/SOURCES.md"]
   }
 }

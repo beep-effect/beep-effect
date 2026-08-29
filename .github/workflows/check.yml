@@ -12,17 +12,18 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   pr-size:
     name: PR Size Label
     if: github.event_name == 'pull_request'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      pull-requests: write
     steps:
       - name: Label PR by size
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const files = await github.paginate(github.rest.pulls.listFiles, {
@@ -43,66 +44,73 @@ jobs:
               labels: [label]
             });
             await core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();
+  heavy:
+    name: Heavy
+    permissions:
+      contents: read
+    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    secrets: inherit
+
   verify:
     name: ${{ matrix.name }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         include:
           - id: lint
             name: Lint
-            timeout_minutes: 20
+            runner: ubuntu-24.04
+            timeout_minutes: 60
             uses_turbo: "true"
-            install_typos: "true"
-          - id: lint-policy
-            name: Lint Policy
-            timeout_minutes: 25
-            uses_turbo: "false"
             install_typos: "true"
           - id: repo-sanity
             name: Repo Sanity
-            timeout_minutes: 15
+            runner: ubuntu-24.04
+            timeout_minutes: 30
             uses_turbo: "false"
-            install_typos: "false"
-          - id: check
-            name: Check
-            timeout_minutes: 20
-            uses_turbo: "true"
             install_typos: "false"
           - id: test-unit
             name: Test Unit
+            runner: ubuntu-24.04
+            timeout_minutes: 60
+            uses_turbo: "true"
+            install_typos: "false"
+          - id: ecosystem
+            name: Ecosystem Contracts
+            runner: ubuntu-24.04
             timeout_minutes: 30
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: test-integration
-            name: Test Integration
-            timeout_minutes: 20
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: coverage
-            name: Coverage Regression
-            timeout_minutes: 40
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: docgen
-            name: Docgen
-            timeout_minutes: 20
             uses_turbo: "false"
             install_typos: "false"
           - id: codegen
             name: Codegen Drift
-            timeout_minutes: 15
+            runner: ubuntu-24.04
+            timeout_minutes: 30
             uses_turbo: "false"
             install_typos: "false"
+          # lab-apps-lifecycle P2 (ratified row 10): visible, permanently
+          # NON-required labs proof lane. Never add "Labs" to the required
+          # ruleset (10240248).
+          - id: labs
+            name: Labs
+            runner: ubuntu-24.04
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "true"
     env:
-      # Verification runs PR-controlled code. Keep every secret-backed value on
-      # trusted push events only; PR lanes use local cache and fixture/default
-      # app configuration.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+      # Pull requests stay local-only even when repository secrets are
+      # available. Trusted main pushes receive read-write remote-cache access.
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      # Stream task logs line-by-line so a wedged lane task shows its last
+      # live output instead of buffering everything behind a group header.
+      TURBO_LOG_ORDER: stream
       DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
       DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
       EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -113,9 +121,11 @@ jobs:
       LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'
@@ -129,31 +139,39 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          docgen_mode=none
-
-          if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            docgen_mode=affected
+          if [[ "${{ matrix.id }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
             if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
               git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
             fi
-
             changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            # Root dependency resolution changes the resolved generator or formatter, so these files are drift inputs.
+            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/library/codegen-kit/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$|^(package\.json|bun\.lock)$)' <<< "$changed_files"; then
+              should_run=false
+            fi
+          fi
 
-            if [[ -z "$changed_files" ]]; then
+          # lab-apps-lifecycle P2 (ratified row 10): PR runs of the labs lane
+          # only fire for direct labs-path or shared-toolchain changes; push
+          # events always run the full labs set.
+          if [[ "${{ matrix.id }}" == "labs" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            base_ref="origin/${GITHUB_BASE_REF:-main}"
+            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+              git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+            fi
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            if ! grep -Eq '(^apps/labs/|^\.github/workflows/check\.yml$|^(bun\.lock|package\.json|turbo\.json)$)' <<< "$changed_files"; then
               should_run=false
-            elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)'; then
-              should_run=false
-            elif printf "%s\n" "$changed_files" | grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)'; then
-              docgen_mode=full
             fi
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
 
       - name: Free runner disk for verification lanes
-        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux'
+        # Destructive image cleanup runs on ephemeral hosted images (GitHub-
+        # hosted and lookalikes); owned/workstation runners (beep- prefix)
+        # keep their filesystem.
+        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
         shell: bash
         run: |
           set -euo pipefail
@@ -179,7 +197,7 @@ jobs:
 
       - name: Install typos
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
         with:
           tool: typos-cli@1.44.0
 
@@ -192,6 +210,25 @@ jobs:
           # goals/one-round-loop/history/p0-parity-evidence.md). This case
           # block carries only GitHub-context orchestration: the
           # event-dependent shape flags each lane receives.
+          #
+          # Orphaned lane grandchildren (stuck bun wrappers, daemon sockets)
+          # inherit this step's stdio pipes, and the runner does not end a
+          # step until those pipes close — so a lane can print success, exit,
+          # and still wedge the job for its full timeout (ship-velocity SPEC
+          # A7; proven on Docgen run 31797064763). Run each lane in its own
+          # session and reap the entire process group once the lane process
+          # finishes, success and failure alike.
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
           shape_args=()
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -202,34 +239,33 @@ jobs:
 
           case "${{ matrix.id }}" in
             lint|check|test-unit|test-integration|coverage)
-              bun run beep ci lane "${{ matrix.id }}" "${shape_args[@]}"
+              run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
-            lint-policy|codegen)
-              bun run beep ci lane "${{ matrix.id }}"
+            lint-policy|codegen|ecosystem)
+              run_lane ci lane "${{ matrix.id }}"
               ;;
             repo-sanity)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run beep ci lane repo-sanity --changeset-status
+                run_lane ci lane repo-sanity --changeset-status
               else
-                bun run beep ci lane repo-sanity
+                run_lane ci lane repo-sanity
               fi
               ;;
-            docgen)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run beep ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
-              else
-                bun run beep ci lane docgen --mode full
-              fi
+            labs)
+              # No --affected: the lane's positive labs filter must not union
+              # with an affected selector (lab-apps-lifecycle P2, row 10).
+              run_lane ci lane labs --summarize
               ;;
           esac
 
       - name: Append Turbo summary
         if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: bun run beep ci append-turbo-summary
-
-      - name: Append Turbo summary (docgen affected)
-        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.docgen_mode == 'affected' && always()
-        run: bun run beep ci append-turbo-summary
+        run: |
+          if [[ "${{ matrix.id }}" == "coverage" ]]; then
+            bun run beep ci append-turbo-summary --all
+          else
+            bun run beep ci append-turbo-summary
+          fi
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
@@ -237,15 +273,16 @@ jobs:
 
   professional-desktop-ipc-stdio:
     name: Professional Desktop IPC Stdio
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     permissions:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 100
+          persist-credentials: false
 
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'
@@ -275,7 +312,7 @@ jobs:
 
       - name: Setup Rust toolchain
         if: steps.lane-gate.outputs.should_run == 'true'
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
         with:
           toolchain: stable
           cache: true
@@ -302,21 +339,23 @@ jobs:
     # addition) is a P4 close criterion after a stable green history. The
     # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
     name: Property Laws
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     env:
-      # Same secret posture as the verify matrix: PR-controlled code gets no
-      # repository secrets and uses local Turbo cache only.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'
@@ -350,13 +389,14 @@ jobs:
 
   fallow-advisory:
     name: Fallow Advisory Envelopes
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 100
           persist-credentials: false
@@ -384,7 +424,9 @@ jobs:
           echo "base_fetch_status=$fetch_status" >> "$GITHUB_OUTPUT"
 
       - name: Free runner disk for Fallow
-        if: runner.os == 'Linux'
+        # Same scoping as the verify matrix: destructive cleanup only on
+        # ephemeral hosted images, never owned (beep-) runners.
+        if: runner.os == 'Linux' && !startsWith(runner.name, 'beep-')
         shell: bash
         run: |
           set -euo pipefail
@@ -414,11 +456,10 @@ jobs:
         id: fallow
         shell: bash
         env:
-          # Fallow runs PR-controlled `bun run beep` code; keep repository
-          # secrets on push only and use local cache for pull requests.
-          TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-          TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+          TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+          TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+          TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
         run: |
           # Lane body (blocking audit/dead-code, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope
@@ -432,22 +473,22 @@ jobs:
           set -euo pipefail
 
           for lane in audit dead-code; do
-            test -s ".beep/fallow/${lane}.json"
+            test -s ".beep/fallow/${lane}.check.json"
           done
 
           for lane in health boundaries flags security fix-preview; do
-            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
+            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.advisory.json" \
               --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
               --expect-subcommand "$lane" \
-              --expect-report-path ".beep/fallow/${lane}.json" \
+              --expect-report-path ".beep/fallow/${lane}.advisory.json" \
               --require-raw-output
           done
 
           for lane in audit dead-code; do
-            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
+            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.check.json" \
               --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
               --expect-subcommand "$lane" \
-              --expect-report-path ".beep/fallow/${lane}.json" \
+              --expect-report-path ".beep/fallow/${lane}.check.json" \
               --require-raw-output
           done
 
@@ -463,7 +504,7 @@ jobs:
             echo
             cat .beep/fallow/status.md 2>/dev/null || echo "- lane status: unavailable"
             echo
-            jq -r '"- audit envelope status: `\(.status // "unknown")`\n- audit tool exit status: `\(.exitStatus // "unknown")`\n- audit finding count: `\(.report.findingCount // "unknown")`\n- audit introduced findings: `\(.findingAttributionSummary.introduced // "unknown")`\n- audit inherited-adjacent findings: `\(.findingAttributionSummary.inheritedAdjacent // "unknown")`"' .beep/fallow/audit.json 2>/dev/null || echo "- audit summary: unavailable"
+            jq -r '"- audit envelope status: `\(.status // "unknown")`\n- audit tool exit status: `\(.exitStatus // "unknown")`\n- audit finding count: `\(.report.findingCount // "unknown")`\n- audit introduced findings: `\(.findingAttributionSummary.introduced // "unknown")`\n- audit inherited-adjacent findings: `\(.findingAttributionSummary.inheritedAdjacent // "unknown")`"' .beep/fallow/audit.check.json 2>/dev/null || echo "- audit summary: unavailable"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Fallow envelopes
@@ -476,15 +517,17 @@ jobs:
 
   knip:
     name: Knip
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
@@ -498,15 +541,17 @@ jobs:
 
   jsdoc-ratchet:
     name: JSDoc Ratchet
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
@@ -532,11 +577,16 @@ jobs:
   build:
     name: Build
     if: github.event_name == 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 40
+    environment: turbo-cache-write
+    permissions:
+      contents: read
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
+      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
       EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
@@ -547,9 +597,11 @@ jobs:
       LIVEBLOCKS_SECRET_KEY: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
@@ -566,13 +618,17 @@ jobs:
 
   commitlint:
     name: Commitlint
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Determine commit range
         id: range
@@ -623,13 +679,16 @@ jobs:
 
   secrets:
     name: Secret Scanning
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'
@@ -679,16 +738,21 @@ jobs:
 
   security:
     name: Security
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: OSV vulnerability scan
-        uses: google/osv-scanner-action/osv-scanner-action@v2.3.3
+        uses: google/osv-scanner-action/osv-scanner-action@c5996e0193a3df57d695c1b8a1dec2a4c62e8730 # v2.3.3
         with:
           scan-args: |-
             --lockfile=bun.lock
@@ -754,7 +818,7 @@ jobs:
 
       - name: Dependency review
         if: github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           fail-on-severity: high
           deny-licenses: AGPL-3.0, GPL-3.0
@@ -762,11 +826,15 @@ jobs:
 
   nix:
     name: Nix Shell
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
@@ -775,20 +843,20 @@ jobs:
           cache-write: "false"
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v30
+        uses: cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72 # v30
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Setup Cachix (read-only)
         if: github.event_name != 'push'
-        uses: cachix/cachix-action@v15
+        uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # v15
         with:
           name: beep-effect
         continue-on-error: true
 
       - name: Setup Cachix (trusted push)
         if: github.event_name == 'push'
-        uses: cachix/cachix-action@v15
+        uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # v15
         with:
           name: beep-effect
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
@@ -799,16 +867,18 @@ jobs:
 
   sast:
     name: SAST
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'

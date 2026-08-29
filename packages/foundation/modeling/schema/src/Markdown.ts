@@ -17,6 +17,7 @@ import {
   loadMarkdownModule,
   makeParseMarkdownForSchema,
 } from "./internal/markdown.ts";
+import type { SchemaAST } from "effect";
 import type * as R from "effect/Record";
 import type { MarkdownParseResult } from "./internal/markdown.ts";
 
@@ -25,26 +26,29 @@ const $I = $SchemaId.create("Markdown");
 type MarkdownRenderOptions = R.ReadonlyRecord<string, unknown>;
 type MarkdownHtmlRender = (content: string, options?: undefined | MarkdownRenderOptions) => unknown;
 
+/**
+ * Decoder produced by {@link decodeMarkdownTextAs}: renders Markdown text to
+ * HTML and decodes the rendered HTML through the target schema.
+ *
+ * Named (rather than spelled inline) so the pipeable-signature analysis can
+ * relate the factory's return type.
+ */
+type MarkdownTextDecoder<Schema extends S.Top> = (
+  input: unknown,
+  options?: SchemaAST.ParseOptions | undefined
+) => Effect.Effect<Schema["Type"], S.SchemaError, Schema["DecodingServices"]>;
+
 const MarkdownBrand = S.String.pipe(S.brand("Markdown"));
 const defaultMarkdownRenderOptions = { tagFilter: true } satisfies MarkdownRenderOptions;
 
-const encodeUnsupported = (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding HTML output back into Markdown text is not supported by MarkdownTextToHtml.",
     })
   );
 
-const invalidMarkdownInput: {
-  (content: string, message: string): SchemaIssue.InvalidValue;
-  (message: string): (content: string) => SchemaIssue.InvalidValue;
-} = dual(
-  2,
-  (content: string, message: string): SchemaIssue.InvalidValue =>
-    new SchemaIssue.InvalidValue(O.some(content), {
-      message,
-    })
-);
+const invalidMarkdownInput = (message: string): SchemaIssue.InvalidValue => new SchemaIssue.InvalidValue({ message });
 
 const getMarkdownHtmlRender = (): O.Option<MarkdownHtmlRender> => {
   const bunRuntime = Reflect.get(globalThis, "Bun");
@@ -62,21 +66,19 @@ const makeRenderMarkdownHtml = (options?: undefined | MarkdownRenderOptions) => 
 
   return Effect.fn("Markdown.renderMarkdownHtml")(function* (content: string) {
     const renderMarkdownHtml = yield* O.match(getMarkdownHtmlRender(), {
-      onNone: () =>
-        Effect.fail(invalidMarkdownInput(content, "Bun.markdown.html is unavailable in the current runtime.")),
+      onNone: () => Effect.fail(invalidMarkdownInput("Bun.markdown.html is unavailable in the current runtime.")),
       onSome: Effect.succeed,
     });
     const rendered = yield* Effect.try({
       try: () => renderMarkdownHtml(content, renderOptions),
       catch: (cause) =>
         invalidMarkdownInput(
-          content,
           P.isError(cause) ? `Invalid Markdown input (${cause.message}).` : "Invalid Markdown input."
         ),
     });
 
     return yield* S.decodeUnknownEffect(S.String)(rendered).pipe(
-      Effect.mapError(() => invalidMarkdownInput(content, "Invalid Markdown input (Expected HTML string output)."))
+      Effect.mapError(() => invalidMarkdownInput("Invalid Markdown input (Expected HTML string output)."))
     );
   });
 };
@@ -91,7 +93,7 @@ const decodeMarkdownParseResult = (
 ): ((result: MarkdownParseResult) => Effect.Effect<string, SchemaIssue.InvalidValue>) =>
   Result.match({
     onSuccess: () => Effect.succeed(content),
-    onFailure: (message) => Effect.fail(invalidMarkdownInput(content, message)),
+    onFailure: (message) => Effect.fail(invalidMarkdownInput(message)),
   });
 
 const decodeMarkdownText = Effect.fn("Markdown.decodeMarkdownText")(function* (content: string) {
@@ -103,12 +105,15 @@ const decodeMarkdownText = Effect.fn("Markdown.decodeMarkdownText")(function* (c
 /**
  * Branded schema for Markdown document strings accepted by the active parser.
  *
+ * **Details**
+ *
  * Validation uses `Bun.markdown.html` when Bun is available. In runtimes without
  * Bun, it falls back to the platform-agnostic `micromark` parser with GFM
  * extensions. Markdown is intentionally permissive, so plain text and empty
  * strings are valid when the active parser accepts them.
  *
- * @example
+ * **Example** (Decode Markdown document)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Markdown } from "@beep/schema/Markdown"
@@ -134,7 +139,8 @@ export const Markdown = S.String.pipe(
 /**
  * Branded Markdown document string type extracted from {@link Markdown}.
  *
- * @example
+ * **Example** (Annotate Markdown document)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Markdown } from "@beep/schema/Markdown"
@@ -151,10 +157,13 @@ export type Markdown = typeof Markdown.Type;
 /**
  * Schema factory that renders Markdown text into HTML using `Bun.markdown.html`.
  *
+ * **Details**
+ *
  * Returns a schema transformation from Markdown source text to rendered HTML
  * text. Encoding back to Markdown is not supported.
  *
- * @example
+ * **Example** (Render Markdown to HTML)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -189,7 +198,8 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
  * Builds a decoder that renders Markdown text to HTML and then decodes the
  * result through a target schema.
  *
- * @example
+ * **Example** (Decode Markdown through schema)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -208,12 +218,18 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
  * @category utilities
  * @since 0.0.0
  */
-export const decodeMarkdownTextAs = <Schema extends S.Top>(schema: Schema, options?: MarkdownRenderOptions) => {
-  const decodeMarkdownHtmlText = S.decodeUnknownEffect(MarkdownTextToHtml(options));
-  const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
+export const decodeMarkdownTextAs: {
+  (options?: MarkdownRenderOptions): <Schema extends S.Top>(schema: Schema) => MarkdownTextDecoder<Schema>;
+  <Schema extends S.Top>(schema: Schema, options?: MarkdownRenderOptions): MarkdownTextDecoder<Schema>;
+} = dual(
+  (args) => S.isSchema(args[0]),
+  <Schema extends S.Top>(schema: Schema, options?: MarkdownRenderOptions): MarkdownTextDecoder<Schema> => {
+    const decodeMarkdownHtmlText = S.decodeUnknownEffect(MarkdownTextToHtml(options));
+    const decodeTargetSchema = S.decodeUnknownEffect(schema);
+    const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
+      return yield* decodeTargetSchema(input);
+    });
 
-  return flow(decodeMarkdownHtmlText, Effect.flatMap(decodeTarget));
-};
+    return flow(decodeMarkdownHtmlText, Effect.flatMap(decodeTarget));
+  }
+);

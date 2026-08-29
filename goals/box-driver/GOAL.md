@@ -1,6 +1,6 @@
 # /goal: Box Driver
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect2`.
+Repo: the machine-local `beep-effect2` checkout.
 
 Mission: finish `@beep/box` at `packages/drivers/box` as a full-surface,
 **generated**, schema-first, Effect-first technical driver around

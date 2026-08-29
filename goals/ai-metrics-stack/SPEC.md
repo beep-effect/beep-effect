@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE**
+**COMPLETE — RETAINED**
 
 ## Owner
 
@@ -11,7 +11,7 @@
 ## Created / Updated
 
 - **Created:** 2026-05-05
-- **Updated:** 2026-05-12
+- **Updated:** 2026-08-10
 
 ## Purpose
 
@@ -92,6 +92,9 @@ output.
 - P7 production default: hybrid derived mirror. Raw encrypted archives remain
   workstation-local; only sanitized derived/report/status artifacts may sync to
   dankserver.
+- Production workstation data root:
+  `~/.local/state/beep/ai-metrics`. It is XDG state outside
+  every repository, so collection history is independent of checkout choice.
 - V1 completion posture: the first production-complete milestone may close
   with provider/model/tool/token/cost metrics explicitly reported as
   unavailable and not scored. Provider/gateway enrichment and dashboard
@@ -151,6 +154,11 @@ archive tables, transcript bodies, prompt/output text, local repo or home
 paths, source paths, archive paths, DuckDB file paths, and encryption
 material.
 
+The V1 mirror implementation syncs the bundle manifest, mirror status, and
+allowlisted Parquet tables. It does not copy the workstation's Markdown/JSON
+report files; the corresponding sanitized scorecard rows are included in the
+`ai_metrics_scorecards` Parquet export.
+
 ## Deployment Contract
 
 The local target must support repeatable smoke tests without a remote host.
@@ -165,20 +173,19 @@ enrichment is deferred until after Phoenix is live.
 Manual host commands may appear as debugging aids but must not be the final
 deployment mechanism.
 
-P6a live collection is workstation-owned because Codex and Claude raw sources
-live on the workstation. The credited proof window must use a local scheduled
-runner with a lock, retry/backoff, status artifact, and journal evidence.
-During the credited P6 window, that scheduled runner may execute from a locked,
-pinned sibling worktree as long as the proof data root, timer budgets, privacy
-contract, and source window remain stable and the isolation evidence is
-recorded.
+Live collection is workstation-owned because Codex and Claude raw sources live
+on the workstation. The production user timer uses a lock, retry/backoff,
+status artifact, and journal evidence. Its code currently executes from the
+clean `beep-effect` checkout, while every durable artifact is rooted at the XDG
+state path above. Changing checkouts therefore cannot fragment or hide the
+production data set.
 Server-owned collection is a P7 topology target and requires a separate
 transcript access/sync and privacy design.
 
 The current P7 default remote mirror root is
-`/srv/data/ai-metrics/p7-derived-mirror`. Before the P6 proof is credited,
-infra work for that root is preview-only and any live proof should use the CLI
-mirror workflow without modifying the active proof runner.
+`/srv/data/ai-metrics/p7-derived-mirror`. P7e uses the explicit-confirmation CLI
+workflow to build from the XDG data root, sync that sanitized bundle, and read
+the remote manifest back as status proof.
 
 ## Completion Criteria
 
@@ -201,3 +208,8 @@ The initiative is complete only when:
   credit
 - a sanitized derived mirror is built and confirmed on dankserver after the
   credited proof report, without syncing raw transcript archives
+
+V1 completion evidence is recorded in
+[history/outputs/p7e-production-readiness-closeout.md](./history/outputs/p7e-production-readiness-closeout.md).
+P7c provider/gateway enrichment and P7d dashboard/backend expansion remain
+separate non-blocking follow-up work.

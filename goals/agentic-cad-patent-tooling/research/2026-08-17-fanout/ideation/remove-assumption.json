@@ -1,0 +1,32 @@
+{
+  "ideas": [
+    {
+      "text": "A figure is a stored recipe (blob hash + camera + explode + hidden entity IDs + numeral anchors) that three.js only replays, never authors.",
+      "rationale": "Kill view-time rendering. Continuations, CIP exhibits, and litigation boards become graph queries against the bitemporal layer, not new drawing jobs; the existing render driver is a deterministic player of compiled recipes."
+    },
+    {
+      "text": "Treat AutoCAD layers and blocks in the 837 DWGs as the proto-numeral taxonomy and do not touch STEP until those write Claim/PatentAsset edges.",
+      "rationale": "The 3D model is not the source here (DWG outnumbers STEP 4:1). Inventors already partitioned the invention by layer/block; the first linker is a 2D name-to-claim mapper, not a hidden-line projector."
+    },
+    {
+      "text": "Ship no CAD window. Geometry exists only as MCP citations that surface when a claim element is hovered in the spec editor.",
+      "rationale": "The attorney does not open files. A viewport would become another hostage workspace like ClaimMaster; the existing MCP graph server already has the right shape for get_view(matter, limitation) returning a baked thumbnail plus numeral."
+    },
+    {
+      "text": "One family-level geometry graph; each application is a filter plus a numeral rewrite (110→210), not a new sheet set.",
+      "rationale": "A figure does not belong to one application. Provisionals, utilities, divisionals, and CIPs are projections over the same ingested blobs—drop claims, hide unused parts, remap the 1.84 bijection as a graph transform."
+    },
+    {
+      "text": "Build the missing content-addressed blob store as bitemporal assertions on PatentAsset, so 'what the inventor sent on March 3' remains readable privileged evidence after the illustrator SVG replaces it.",
+      "rationale": "The app cannot read a file back after intake, so no linking is possible. Files-as-files dies: each blob is an epistemic edge with a validity interval, not a path on disk."
+    },
+    {
+      "text": "The first figure the system emits is a 102/103 overlay: same camera, your DWG vs. the cited PriorArtReference STEP, numerals only on the differences.",
+      "rationale": "The knowledge graph already has PriorArtReference nodes. The attorney's real stare-time is claim construction against art, not pretty invention sheets; the figure is a comparison instrument, not a picture of the embodiment."
+    },
+    {
+      "text": "Reverse-bind the 175 .ai and 552 .svg files edited this month onto spec paragraphs AND DWG entity IDs, and treat those illustrator files as source of truth.",
+      "rationale": "Working figures already exist and have text layers. CAD is supporting evidence. This writes the 37 CFR 1.84(p)(4)–(5) bijection as a three-way graph edge that ClaimMaster cannot see because it never touches the CAD corpus."
+    }
+  ]
+}

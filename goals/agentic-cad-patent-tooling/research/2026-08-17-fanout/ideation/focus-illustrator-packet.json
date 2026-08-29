@@ -1,0 +1,23 @@
+{
+  "sketch": "After intake, a Matter-scoped local blob store keeps privileged CAD on disk; the knowledge graph stores only a content-addressed pointer and never puts geometry or invention text into any cloud model. The new product type is an Effect Schema `IllustratorJobPacket`: an ordered FIG list (view type + named camera), a `NumeralBinding` bijection `{numeral → part name → Claim id → spec span}`, and lead-line do-not-cross constraints. A `FigurePlanner` Context.Service walks existing Matter / PatentAsset / Claim nodes via the already-shipped MCP graph, proposes the 37 CFR 1.84(p)(4)–(5) map, and writes the packet as a bitemporal epistemic edge on the Matter so the next revision diffs the map instead of Tom rebuilding it. The existing three.js driver (STEP via occt-import-js) only snapshots named cameras as draft-quality local previews inside the packet — ink, not source of truth. Tom exports a human brief (JSON + printable PDF) the illustrator consumes; the CAD remains a file:// path on this machine. Each illustrator turn, Tom re-runs the bijection against the updated spec and ships a delta packet rather than a new oral walkthrough.",
+  "load_bearing_risk": "The packet is worthless if CAD entities and existing figure art cannot be aligned to claim terms and spec spans — typical DWG/STEP from this corpus is unnamed solids, layer soup, or outline-only PDF with no text layer, so the attorney would still hand-build every numeral binding, which is the work the packet claims to save.",
+  "first_step": "This week: add Effect Schema classes (`IllustratorJobPacket`, `FigPlan`, `NumeralBinding`, `LeadLineConstraint`, `NamedCamera`) with encoded namespaces that reference existing Claim/PatentAsset ids, then a `FigurePlanner` Context.Service whose only method is `plan(matterId)` returning that packet — stubbed on a fixture spec+claims Matter, no CAD I/O, no UI, no LLM.",
+  "children": [
+    {
+      "text": "Seed the numeral map from this month's 552 SVG + 175 .ai (and any DWG text layer) instead of from claims",
+      "why": "Most live work is revision of existing figure art, not a first FIG. list; harvesting numerals that already exist turns the packet into a sync tool rather than a hallucination of part names."
+    },
+    {
+      "text": "Treat each revision of the packet as a bitemporal diff the attorney ships to the illustrator",
+      "why": "Value is preventing re-derivation across unlimited revision rounds; a delta (`34` rebound, FIG. 4 camera moved, claim 3 no longer supports `18`) is the artifact Tom would actually reuse on a privileged matter."
+    },
+    {
+      "text": "Promote named cameras to KG citation targets so a claim chart can point at a view before anyone inks",
+      "why": "The packet already names cameras; hanging an epistemic edge from a claim limitation to a camera/CAD pointer unlocks 'show the view that supports 1c' without generating drawings or leaving the machine."
+    },
+    {
+      "text": "Expose `get_job_packet(matterId)` on the existing local MCP so in-app agents answer numeral questions during spec edits",
+      "why": "ClaimMaster only works with a text layer and lives outside this graph; a local tool over the packet makes the bijection queryable while drafting, which is when Tom currently re-derives it by hand."
+    }
+  ]
+}

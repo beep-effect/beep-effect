@@ -20,8 +20,9 @@ import * as internal from "./generated/iana-timezones.ts";
  * Each member is a full IANA timezone name such as `"America/New_York"`
  * or `"Europe/London"`.
  *
- * @example
- * ```typescript
+ * **Example** (Type a timezone identifier)
+ *
+ * ```ts import.meta.vitest name="Type a timezone identifier"
  * import type { TimezoneName } from "@beep/data/Timezones"
  *
  * const tz: TimezoneName = "America/New_York"
@@ -36,8 +37,9 @@ export type TimezoneName = (typeof internal.TimezoneNameValues)[number];
 /**
  * A single generated IANA timezone entry.
  *
- * @example
- * ```typescript
+ * **Example** (Reference a generated timezone entry)
+ *
+ * ```ts import.meta.vitest name="Reference a generated timezone entry"
  * import { TimezoneDataByName, type TimezoneData } from "@beep/data/Timezones"
  *
  * const utc: TimezoneData = TimezoneDataByName.UTC
@@ -59,8 +61,9 @@ export type TimezoneData = (typeof internal.TimezoneDataValues)[number];
  * Covers Africa, America, Antarctica, Arctic, Asia, Atlantic,
  * Australia, Etc, Europe, Indian, and Pacific regions plus `"UTC"`.
  *
- * @example
- * ```typescript
+ * **Example** (Check a known identifier is present)
+ *
+ * ```ts import.meta.vitest name="Check a known identifier is present"
  * import { TimezoneNameValues } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneNameValues.includes("UTC"))
@@ -74,11 +77,12 @@ export const TimezoneNameValues: typeof internal.TimezoneNameValues = internal.T
 /**
  * Stable source metadata for the generated IANA tzdb dataset.
  *
- * @example
- * ```typescript
+ * **Example** (Read the tzdb metadata)
+ *
+ * ```ts import.meta.vitest name="Read the tzdb metadata"
  * import { TimezoneDataMetadata } from "@beep/data/Timezones"
  *
- * console.assert(TimezoneDataMetadata.version === "2026b")
+ * console.assert(TimezoneDataMetadata.version === "2026c")
  * ```
  *
  * @category constants
@@ -89,11 +93,12 @@ export const TimezoneDataMetadata: typeof internal.TimezoneDataMetadata = intern
 /**
  * IANA tzdb version used for the generated dataset.
  *
- * @example
- * ```typescript
+ * **Example** (Read the tzdb version)
+ *
+ * ```ts import.meta.vitest name="Read the tzdb version"
  * import { TimezoneDataVersion } from "@beep/data/Timezones"
  *
- * console.assert(TimezoneDataVersion === "2026b")
+ * console.assert(TimezoneDataVersion === "2026c")
  * ```
  *
  * @category constants
@@ -104,8 +109,9 @@ export const TimezoneDataVersion: typeof internal.TimezoneDataVersion = internal
 /**
  * IANA tzdb data-only source URL.
  *
- * @example
- * ```typescript
+ * **Example** (Inspect the source URL)
+ *
+ * ```ts import.meta.vitest name="Inspect the source URL"
  * import { TimezoneDataSourceUrl } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataSourceUrl.endsWith("tzdata-latest.tar.gz"))
@@ -119,8 +125,9 @@ export const TimezoneDataSourceUrl: typeof internal.TimezoneDataSourceUrl = inte
 /**
  * SHA-256 digest of the official source payload used for the generated dataset.
  *
- * @example
- * ```typescript
+ * **Example** (Inspect the source digest)
+ *
+ * ```ts import.meta.vitest name="Inspect the source digest"
  * import { TimezoneDataSourceSha256 } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataSourceSha256.length === 64)
@@ -134,8 +141,9 @@ export const TimezoneDataSourceSha256: typeof internal.TimezoneDataSourceSha256 
 /**
  * Generated IANA timezone entries.
  *
- * @example
- * ```typescript
+ * **Example** (Find the UTC entry)
+ *
+ * ```ts import.meta.vitest name="Find the UTC entry"
  * import { TimezoneDataValues } from "@beep/data/Timezones"
  *
  * const utc = TimezoneDataValues.find((entry) => entry.name === "UTC")
@@ -150,8 +158,9 @@ export const TimezoneDataValues: typeof internal.TimezoneDataValues = internal.T
 /**
  * Generated IANA timezone entries keyed by timezone identifier.
  *
- * @example
- * ```typescript
+ * **Example** (Look up a timezone by name)
+ *
+ * ```ts import.meta.vitest name="Look up a timezone by name"
  * import { TimezoneDataByName } from "@beep/data/Timezones"
  *
  * console.assert(TimezoneDataByName["America/New_York"].name === "America/New_York")

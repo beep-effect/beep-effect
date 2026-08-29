@@ -2,6 +2,7 @@ import {
   createFileGenerationPlanService,
   FileGenerationPlanInput,
   GenerationAction,
+  PlannedAsset,
   PlannedFile,
   PlannedSymlink,
 } from "@beep/repo-cli/test/CreatePackage";
@@ -23,8 +24,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
-import { Project, SyntaxKind } from "ts-morph";
-import ts from "typescript";
+import { Project, SyntaxKind, ts } from "ts-morph";
 import { describe, expect, it } from "vitest";
 
 const committedPolicyText = O.getOrElse(
@@ -37,13 +37,16 @@ const committedPolicyText = O.getOrElse(
 
 describe("packages/tooling/tool/cli schema-first models", () => {
   it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
-    const decoded = S.decodeUnknownSync(FileGenerationPlanInput)({
+    const decoded = S.decodeSync(FileGenerationPlanInput)({
       outputDir: "/tmp/demo",
       directories: ["src"],
       files: [{ relativePath: "src/index.ts", content: "export {};\n" }],
     });
 
     expect(decoded.symlinks).toEqual([]);
+    // Assets default the same way, so every scaffold that emits no binary
+    // artifact keeps its plan input unchanged.
+    expect(decoded.assets).toEqual([]);
   });
 
   it("uses tagged-union helpers for GenerationAction", () => {
@@ -55,6 +58,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     const summary = GenerationAction.match(action, {
       mkdir: ({ relativePath }) => `mkdir:${relativePath}`,
       "write-file": ({ relativePath }) => `write:${relativePath}`,
+      "copy-asset": ({ relativePath, sourcePath }) => `copy:${sourcePath}->${relativePath}`,
       symlink: ({ relativePath, target }) => `symlink:${relativePath}->${target}`,
     });
 
@@ -71,6 +75,12 @@ describe("packages/tooling/tool/cli schema-first models", () => {
           PlannedFile.make({ relativePath: "src/index.ts", content: "export {};\n" }),
           PlannedFile.make({ relativePath: "docs/index.md", content: "# docs\n" }),
         ],
+        assets: [
+          PlannedAsset.make({
+            relativePath: "src-tauri/icons/icon.png",
+            sourcePath: "/tmp/templates/assets/tauri-icon.png",
+          }),
+        ],
         symlinks: [PlannedSymlink.make({ relativePath: "CLAUDE.md", target: "AGENTS.md" })],
       })
     );
@@ -79,7 +89,11 @@ describe("packages/tooling/tool/cli schema-first models", () => {
 
     expect(preview).toContain("write docs/index.md");
     expect(preview).toContain("write src/index.ts");
+    expect(preview).toContain("copy src-tauri/icons/icon.png");
     expect(preview).toContain("symlink CLAUDE.md -> AGENTS.md");
+    // An asset's parent directories join the mkdir set like any other entry, so
+    // a nested asset path does not need its directories declared by hand.
+    expect(preview).toContain("mkdir src-tauri/icons");
   });
 
   it("exposes toTaggedUnion helpers for VersionSyncOptions", () => {
@@ -105,6 +119,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     expect(
       isExcludedTypeScriptSourcePath("packages/foundation/modeling/schema/docs/examples/src-Yaml.ts-example.ts")
     ).toBe(true);
+    expect(isExcludedTypeScriptSourcePath("infra/ci-runners/sdks/ghaRunners/module.ts")).toBe(true);
     expect(isExcludedTypeScriptSourcePath("packages/foundation/modeling/schema/src/Yaml.ts")).toBe(false);
   });
 
@@ -128,7 +143,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
           'import * as fc from "fast-check";',
           'import * as S from "effect/Schema";',
           "const Worker = S.Struct({ id: S.String });",
-          "const WorkerArbitrary = S.toArbitraryLazy(Worker);",
+          "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
           "fc.property(WorkerArbitrary, (worker) => typeof worker.id === 'string');",
         ].join("\n")
       )
@@ -139,14 +154,12 @@ describe("packages/tooling/tool/cli schema-first models", () => {
           'import * as fc from "fast-check";',
           'import * as S from "effect/Schema";',
           "const Worker = S.Struct({ id: S.String });",
-          "const WorkerArbitrary = S.toArbitrary(Worker);",
+          "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
           "fc.property(fc.array(WorkerArbitrary), (workers) => workers.every((worker) => typeof worker.id === 'string'));",
         ].join("\n")
       )
     ).toBe(true);
-    expect(sourceTextHasSchemaArbitraryPropertyCoverage("const WorkerArbitrary = S.toArbitraryLazy(Worker);")).toBe(
-      false
-    );
+    expect(sourceTextHasSchemaArbitraryPropertyCoverage("const WorkerArbitrary = S.toArbitrary(Worker);")).toBe(false);
     expect(
       sourceTextHasSchemaArbitraryPropertyCoverage(
         'import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";'
@@ -260,7 +273,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = fnSchemaEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-fn-schema"));
@@ -275,21 +288,32 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       ["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
 });
 
 describe("normalizationEntryFromCallExpression", () => {
-  it("fires for a trim() call inside a function body", () => {
+  it("fires for a trim() call beside a schema decode in the same exported function", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function normalizeName(name: string): string {", "  return name.trim();", "}"].join("\n")
+      [
+        'import * as S from "effect/Schema";',
+        "const Name = S.String;",
+        "export function normalizeName(input: unknown): string {",
+        "  return S.decodeUnknownSync(Name)(input).trim();",
+        "}",
+      ].join("\n")
     );
-    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const callExpression = sourceFile
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .find((candidate) => candidate.getExpression().getText().endsWith(".trim"));
+    if (callExpression === undefined) {
+      throw new Error("Expected trim call expression fixture.");
+    }
+    const entry = normalizationEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-normalization"));
@@ -300,7 +324,7 @@ describe("normalizationEntryFromCallExpression", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile("fixture.ts", 'const trimmed = "  hi  ".trim();');
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = normalizationEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -314,7 +338,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       ["export function findUser(id: string): string | null {", "  return null;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = nullReturnEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-null-return"));
@@ -328,9 +352,33 @@ describe("nullReturnEntryFromFunctionLike", () => {
       ["export function findUser(id: string) {", "  return null;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, {
+      file: "fixture.ts",
+      owner: "@beep/test",
+    });
 
     expect(O.isNone(entry)).toBe(true);
+  });
+
+  it("does not fire when nullish values are carried inside an approved return wrapper", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export function effectful(): Effect.Effect<string | undefined> { return Effect.void; }",
+        "export function optional(): O.Option<string | null> { return O.none(); }",
+        "export function result(): Result.Result<string | undefined> { return Result.succeed(undefined); }",
+        "export function exited(): Exit.Exit<string | null> { return Exit.succeed(null); }",
+      ].join("\n")
+    );
+
+    for (const functionDeclaration of sourceFile.getFunctions()) {
+      const entry = nullReturnEntryFromFunctionLike(functionDeclaration, {
+        file: "fixture.ts",
+        owner: "@beep/test",
+      });
+      expect(O.isNone(entry)).toBe(true);
+    }
   });
 });
 
@@ -342,7 +390,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       ["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = getsomesStructEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-getsomes-struct"));
@@ -356,7 +404,10 @@ describe("getsomesStructEntryFromCallExpression", () => {
       ["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = getsomesStructEntryFromCallExpression(callExpression, {
+      file: "fixture.ts",
+      owner: "@beep/test",
+    });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -380,7 +431,7 @@ describe("G4 foundation family-flip regression fixture", () => {
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, file, "@beep/fixture"));
+    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, { file, owner: "@beep/fixture" }));
   };
 
   const foundationFile = "packages/foundation/modeling/schema/src/Fixture.ts";

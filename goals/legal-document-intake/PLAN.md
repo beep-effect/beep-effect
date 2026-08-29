@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P3 Box sync shipped 2026-07-11 with live-Box lanes deferred
+Status: `active` (P3 Box sync merged in PR #386 with live-Box lanes deferred
 per the SPEC Exception Ledger; P4 Extraction → KG loop is next)
 
 Each phase below ships as its own mergeable PR via `/yeet` (completion gate).
@@ -35,9 +35,10 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
    nomic-embed-text, ...) for legal text against pgvector; latency and recall
    targets for both KG symbolic-entry search and document semantic search;
    pick the driver's default model. → `research/embedding-bakeoff.md`
-4. **Librarian/critic prior art** — mine `goals/trustgraph-port` findings,
-   `~/YeeBois/dev/trustgraph/ts` (librarian patterns), and
-   `~/YeeBois/dev/cognee` (pipeline stages, ontology validation, provenance
+4. **Librarian/critic prior art** — mine the recorded
+   `research/librarian-critic.md` findings and git history (packet removed 2026-07-14),
+   TrustGraph's `ts/` package (https://github.com/trustgraph-ai/trustgraph/tree/main/ts; librarian patterns), and
+   the machine-local `cognee` checkout (pipeline stages, ontology validation, provenance
    anchoring) for prompt and loop design. → `research/librarian-critic.md`
 5. **Sync-state model** — design durable sync tables (content hashes, remote
    ids, cursors/stream positions, conflict records), atomic-materialization
@@ -73,9 +74,9 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
 
 - `goals/box-driver/README.md` — stale "Pending implementation" status
   corrected against actual `@beep/box` source.
-- `goals/ip-law-knowledge-graph/research/kg-storage-resolution.md` — records
-  the FalkorDB-vs-projection P0 resolution (projection, per D6) with pointer
-  back to this packet.
+- Git history (packet removed 2026-07-14) records the shipped cross-packet
+  FalkorDB-vs-projection P0 resolution (projection, per D6); the ontology-survey
+  scope now lives in `goals/semantic-foundation`.
 
 ## P7 Closeout Checklist
 
@@ -91,12 +92,14 @@ Before marking the packet closed (and `status` → `completed-retained` /
 
 ## Execution Notes
 
-- P3 tenant deferral (2026-07-11): the Box test tenant was not arranged, so P3
+- P3 tracked exception (2026-07-11): the Box test tenant was not arranged, so P3
   shipped with every sync behavior verified against the deterministic
   DmsMirror fixture + pglite lanes and the Box adapter unit-verified against a
   fake SDK client; live-Box round-trip evidence and the OAuth connect flow are
-  deferred per the SPEC Exception Ledger (removal condition: provision the
-  tenant, set `CLOUD_BOX_TOKEN`, run the env-gated live lanes).
+  deferred per the SPEC Exception Ledger. Clearing conditions: provision the
+  tenant, set `CLOUD_BOX_TOKEN`, run
+  `packages/drivers/box/test/integration/Box.live.test.ts` plus a live sync
+  round-trip, and replace the env-token desktop setup path with OAuth.
 - Preserve unrelated worktree changes.
 - Every phase PR includes evidence of an agent-run browser smoke: frontend +
   sidecar over HTTP against a temp vault, driving the phase's real user flow

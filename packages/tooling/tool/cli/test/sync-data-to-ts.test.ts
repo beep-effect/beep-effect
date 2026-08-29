@@ -1,5 +1,10 @@
 import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
+import { DEFAULT_JSON_PRETTY_MAX_LENGTH } from "@beep/repo-cli/test/Cli";
 import {
+  assembleCourtsData,
+  assertPinnedArchive,
+  decodeReportersDbSourceData,
+  extractArchiveTextEntries,
   fetchSource,
   formatJson,
   formatTsDocCommentValue,
@@ -8,19 +13,27 @@ import {
   ISO3166_PART2_CSV_URL_ENV,
   ISO3166_SOURCE_URL,
   ISO4217_SOURCE_URL,
+  normalizeJson,
   outputFile,
   parseCsvSource,
+  renderUnknownJsonModule,
+  SyncDataFetchedSource,
+  SyncDataTargetMetadata,
   SyncDataTargetProjection,
+  SyncDataTargetResult,
   sourceMetadata,
   syncDataTargets,
+  syncTargetForTesting,
 } from "@beep/repo-cli/test/SyncDataToTs";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
-import { describe, expect, it } from "vitest";
+import { create as createTar } from "tar";
 import type { SyncDataTarget } from "@beep/repo-cli/test/SyncDataToTs";
 
 const provideScopedLayer =
@@ -38,6 +51,16 @@ const csvCanonicalOutputPath = "packages/foundation/primitive/data/src/generated
 const csvFixtureSourceUrl = "https://example.com/test.csv" as const;
 const iso3166Part1FixtureSourceUrl = "https://private.example.test/iso3166-1.csv" as const;
 const iso3166Part2FixtureSourceUrl = "https://private.example.test/iso3166-2.csv" as const;
+
+const makeFixtureTar = Effect.fn("SyncDataToTsTest.makeFixtureTar")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-sync-data-tar-" });
+  const archivePath = path.join(root, "fixture.tar");
+  yield* fs.writeFileString(path.join(root, "fixture.txt"), "fixture");
+  yield* Effect.sync(() => createTar({ cwd: root, file: archivePath, sync: true }, ["fixture.txt"]));
+  return yield* fs.readFile(archivePath);
+});
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);
@@ -275,10 +298,10 @@ const csvTarget: SyncDataTarget = {
   acquire: Effect.gen(function* () {
     const source = yield* fetchSource("test-csv", "fixture-csv", csvFixtureSourceUrl);
     const rows = yield* parseCsvSource("test-csv", source);
-    const canonical = {
+    const canonical = yield* normalizeJson("test-csv", {
       columns: rows.columns ?? [],
       rows,
-    };
+    });
 
     return SyncDataTargetProjection.make({
       files: [
@@ -289,18 +312,282 @@ const csvTarget: SyncDataTarget = {
       canonical,
       recordCount: rows.length,
       summary: `${rows.length} csv rows`,
-      sources: [sourceMetadata(source)],
+      sources: [sourceMetadata(source, {})],
     });
   }).pipe(Effect.withSpan("SyncDataToTsTest.acquireCsv")),
 };
 
 describe("sync-data-to-ts", { concurrent: false }, () => {
+  it("models flat target metadata and command results with schemas", () => {
+    const metadata = SyncDataTargetMetadata.make(csvTarget);
+    const result = SyncDataTargetResult.make({
+      canonicalPatch: [
+        { op: "add", path: "/first", value: 1 },
+        { op: "remove", path: "/second" },
+        { op: "replace", path: "/third", value: "updated" },
+      ],
+      canonicalPath: csvCanonicalOutputPath,
+      changed: true,
+      changedFiles: [csvCanonicalOutputPath],
+      fileResults: [],
+      outputPaths: [csvGeneratedOutputPath, csvCanonicalOutputPath],
+      recordCount: 2,
+      sources: [],
+      sourceUrls: [csvFixtureSourceUrl],
+      summary: "2 csv rows",
+      targetId: "test-csv",
+    });
+
+    expect(S.is(SyncDataTargetMetadata)(metadata)).toBe(true);
+    expect(metadata.id).toBe(csvTarget.id);
+    expect(S.is(SyncDataTargetResult)(result)).toBe(true);
+  });
+
+  it("round-trips a non-empty result from the real target producer", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const result = yield* syncTargetForTesting(process.cwd(), "dry-run", csvTarget);
+        const encoded = yield* S.encodeEffect(SyncDataTargetResult)(result);
+        const decoded = yield* S.decodeEffect(SyncDataTargetResult)(encoded);
+
+        expect(result.fileResults).toHaveLength(2);
+        expect(result.canonicalPatch.length).toBeGreaterThan(0);
+        expect(S.is(SyncDataTargetResult)(result)).toBe(true);
+        expect(S.is(SyncDataTargetResult)(decoded)).toBe(true);
+        expect(decoded.targetId).toBe(csvTarget.id);
+      }).pipe(provideCsvFixtureClient, withTempRepoCommand)
+    ));
+
+  it.effect(
+    "reports JSON normalization failures through the typed error channel",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(normalizeJson("test-json", { value: 1n }));
+
+      expect(error).toMatchObject({
+        _tag: "SyncDataToTsError",
+        targetId: "test-json",
+      });
+      expect(error.message).toContain("Failed to normalize canonical JSON for test-json");
+    })
+  );
+
   it("escapes generated JSDoc comment metadata", () => {
     const formatted = formatTsDocCommentValue("2026-01-01 */\nexport const injected = true;");
 
     expect(formatted).toBe("2026-01-01 * / export const injected = true;");
     expect(formatted).not.toContain("*/");
     expect(formatted).not.toContain("\n");
+  });
+
+  it("pretty-prints generated data past the terminal pretty-print cap", () => {
+    // The checked-in Free Law Project payloads are megabytes wide; capping them the way
+    // terminal output is capped would rewrite them as one unreviewable line.
+    const rendered = formatJson({ blob: "x".repeat(DEFAULT_JSON_PRETTY_MAX_LENGTH), ok: true });
+
+    expect(rendered.length).toBeGreaterThan(DEFAULT_JSON_PRETTY_MAX_LENGTH);
+    expect(rendered.startsWith(`{\n  "blob": "x`)).toBe(true);
+    expect(rendered.endsWith(`",\n  "ok": true\n}\n`)).toBe(true);
+  });
+
+  it.effect(
+    "rejects Free Law Project archives that do not match the pinned digest",
+    Effect.fnUntraced(function* () {
+      const source = SyncDataFetchedSource.make({
+        bytes: new Uint8Array(),
+        id: "fixture-archive",
+        sha256: "actual",
+        text: "",
+        url: "https://example.test/archive.tar.gz",
+      });
+      const error = yield* Effect.flip(
+        assertPinnedArchive({
+          expectedSha256: "expected",
+          source,
+          targetId: "fixture-target",
+        })
+      );
+
+      expect(error).toMatchObject({
+        _tag: "SyncDataToTsError",
+        targetId: "fixture-target",
+      });
+      expect(error.message).toContain("SHA-256 mismatch");
+    })
+  );
+
+  it.effect(
+    "accepts Free Law Project archives that match the pinned digest",
+    Effect.fnUntraced(function* () {
+      const source = SyncDataFetchedSource.make({
+        bytes: new Uint8Array(),
+        id: "fixture-archive",
+        sha256: "expected",
+        text: "",
+        url: "https://example.test/archive.tar.gz",
+      });
+
+      expect(
+        yield* assertPinnedArchive({
+          expectedSha256: "expected",
+          source,
+          targetId: "fixture-target",
+        })
+      ).toBe(source);
+    })
+  );
+
+  it.effect(
+    "extracts an empty selection from a tar archive",
+    Effect.fnUntraced(function* () {
+      const bytes = yield* makeFixtureTar();
+      const entries = yield* extractArchiveTextEntries({
+        bytes,
+        pathSuffixes: [],
+        targetId: "fixture-target",
+      });
+
+      expect(entries).toEqual({});
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "extracts an archive entry by its root-relative suffix",
+    Effect.fnUntraced(function* () {
+      const bytes = yield* makeFixtureTar();
+      const entries = yield* extractArchiveTextEntries({
+        bytes,
+        pathSuffixes: ["/fixture.txt"],
+        targetId: "fixture-target",
+      });
+
+      expect(entries).toEqual({ "/fixture.txt": "fixture" });
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "reports required entries missing from a tar archive",
+    Effect.fnUntraced(function* () {
+      const bytes = yield* makeFixtureTar();
+      const error = yield* extractArchiveTextEntries({
+        bytes,
+        pathSuffixes: ["/missing.txt"],
+        targetId: "fixture-target",
+      }).pipe(Effect.flip);
+
+      expect(error.message).toContain("Archive is missing required entries: /missing.txt.");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "decodes all six reporters-db datasets through target-local schemas",
+    Effect.fnUntraced(function* () {
+      const data = yield* decodeReportersDbSourceData({
+        "/reporters_db/data/case_name_abbreviations.json": `{"Co.":["Company"]}`,
+        "/reporters_db/data/journals.json": `{"Example J.":[{"cite_type":"journal","end":null,"examples":[],"name":"Example Journal","regexes":[],"start":null,"variations":[]}]}`,
+        "/reporters_db/data/laws.json": `{"Example Code":[{"cite_type":"statute","end":null,"examples":[],"jurisdiction":"Example","name":"Example Code","regexes":[],"start":null,"variations":[]}]}`,
+        "/reporters_db/data/regexes.json": `{"full_cite":{"":"$volume $reporter $page"}}`,
+        "/reporters_db/data/reporters.json": `{"Ex.":[{"cite_type":"state","editions":{"Ex.":{"end":null,"start":"2000-01-01"}},"mlz_jurisdiction":[],"name":"Example Reporter","variations":{}}]}`,
+        "/reporters_db/data/state_abbreviations.json": `{"Ex.":"Example"}`,
+      });
+
+      expect(data.caseNameAbbreviations["Co."]).toEqual(["Company"]);
+      expect(data.journals["Example J."]?.[0]?.name).toBe("Example Journal");
+      expect(data.laws["Example Code"]?.[0]?.jurisdiction).toBe("Example");
+      expect(data.regexes).toMatchObject({ full_cite: { "": "$volume $reporter $page" } });
+      expect(data.reporters["Ex."]?.[0]?.editions["Ex."]?.start).toBe("2000-01-01");
+      expect(data.stateAbbreviations["Ex."]).toBe("Example");
+    })
+  );
+
+  it.effect(
+    "assembles courts-db templates and inherits only missing parent fields",
+    Effect.fnUntraced(function* () {
+      const courts = yield* assembleCourtsData(
+        `[
+          {
+            "citation_string": "Parent",
+            "dates": [{ "end": null, "start": "2000-01-01" }],
+            "examples": [],
+            "id": "parent",
+            "level": "gjc",
+            "location": "Example",
+            "name": "Parent Court",
+            "regex": ["Parent"],
+            "system": "state",
+            "type": "trial"
+          },
+          {
+            "citation_string": "",
+            "examples": [],
+            "id": "child",
+            "level": null,
+            "name": "Child Court",
+            "parent": "parent",
+            "regex": ["\${county} \${places} \${1-2} $$ $county"],
+            "system": "state",
+            "type": null
+          }
+        ]`,
+        `{"county":"County"}`,
+        { places: "North\nSouth\n" },
+        `ordinals = [
+          "first",
+          "second",
+        ]`
+      );
+
+      expect(courts[1]).toMatchObject({
+        dates: [{ end: null, start: "2000-01-01" }],
+        location: "Example",
+        type: null,
+        regex: ["County (North|South) ((first)|(second)) $ County"],
+      });
+    })
+  );
+
+  it.effect(
+    "rejects unresolved courts-db template variables",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(
+        assembleCourtsData(
+          `[
+            {
+              "citation_string": "",
+              "dates": [{ "end": null, "start": null }],
+              "examples": [],
+              "id": "missing-variable",
+              "level": null,
+              "location": "Example",
+              "name": "Missing Variable",
+              "regex": ["\${missing}"],
+              "system": "state",
+              "type": null
+            }
+          ]`,
+          `{}`,
+          {},
+          `ordinals = [
+            "first",
+          ]`
+        )
+      );
+
+      expect(error.message).toContain("Unresolved template variables");
+    })
+  );
+
+  it("renders internal generated data through Effect Schema", () => {
+    const rendered = renderUnknownJsonModule({
+      exportName: "FixtureData",
+      refreshCommand: "bun run fixture",
+      value: { value: "quoted" },
+    });
+
+    expect(rendered).toContain('import { Unknown } from "@beep/schema/Unknown"');
+    expect(rendered).toContain("Unknown.decodeUnknownResultFromJsonString");
+    expect(rendered).toContain("Result.getOrThrow");
+    expect(rendered).toContain("export const FixtureData: unknown");
+    expect(rendered).not.toContain("JSON.parse");
   });
 
   it("writes the generated ISO 4217 module in write mode", () =>

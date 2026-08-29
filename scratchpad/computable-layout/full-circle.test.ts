@@ -17,8 +17,8 @@ import {
   SplitRatio,
   TabsNode,
   TextPanelView,
-} from "../dockview/poc/index.ts";
-import fixture from "./fixture.json";
+} from "@beep/dock";
+import fixture from "./fixture.json" with { type: "json" };
 import { layoutLineCount, naturalWidth } from "./layout.ts";
 
 const metrics = { words: fixture.words, spaceWidth: fixture.spaceWidth };
@@ -55,9 +55,11 @@ describe("full circle: font metrics → content minimum → dock geometry → on
       }),
     });
     const container = DockBox.make({ left: 0, top: 0, width: 900, height: 600 });
-    const geometry = project(workspaceRoot, container, GeometryOptions.make({ gap: 4 }), (groupId) =>
-      GroupId.equals(groupId, proseGroup) ? contentMinimum : 0
-    );
+    const geometry = project(workspaceRoot, {
+      container,
+      minima: (groupId) => (GroupId.equals(groupId, proseGroup) ? contentMinimum : 0),
+      options: GeometryOptions.make({ gap: 4 }),
+    });
     const proseBox = geometry.groups.find((group) => GroupId.equals(group.groupId, proseGroup))?.box;
     expect(proseBox).toBeDefined();
     expect(proseBox!.width).toBeGreaterThanOrEqual(contentMinimum);
@@ -76,7 +78,7 @@ describe("full circle: font metrics → content minimum → dock geometry → on
       }),
     });
     const container = DockBox.make({ left: 0, top: 0, width: 900, height: 600 });
-    const geometry = project(workspaceRoot, container, GeometryOptions.make({ gap: 4 }));
+    const geometry = project(workspaceRoot, { container, options: GeometryOptions.make({ gap: 4 }) });
     const proseBox = geometry.groups.find((group) => GroupId.equals(group.groupId, proseGroup))?.box;
     expect(layoutLineCount(fixture.sentence, metrics, proseBox!.width)).toBeGreaterThan(1);
   });

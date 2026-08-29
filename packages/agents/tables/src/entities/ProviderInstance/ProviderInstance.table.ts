@@ -7,16 +7,20 @@
  */
 
 import * as DomainProviderInstance from "@beep/agents-domain/entities/ProviderInstance";
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
+import { getTableName } from "drizzle-orm";
 
 /**
  * Drizzle table projection for agents ProviderInstance entities.
+ *
+ * **Details**
  *
  * The projected row carries instance metadata (label, kind, binary/HOME
  * paths, token-safe env vars) and the latest auth-probe snapshot — never
  * provider tokens.
  *
- * @example
+ * **Example** (Validate table projection shape)
+ *
  * ```ts
  * import { providerInstanceTable } from "@beep/agents-tables/entities/ProviderInstance"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -33,13 +37,14 @@ import { EntityTable } from "@beep/drizzle";
  * @category tables
  * @since 0.0.0
  */
-export const providerInstanceTable = EntityTable.pgTableFrom(DomainProviderInstance.ProviderInstance);
+export const providerInstanceTable = toPgTable(DomainProviderInstance.ProviderInstance);
 
 /**
  * Physical Postgres table name derived from the ProviderInstance entity
  * definition.
  *
- * @example
+ * **Example** (Validate physical table name)
+ *
  * ```ts
  * import { PROVIDER_INSTANCE_TABLE_NAME } from "@beep/agents-tables/entities/ProviderInstance"
  *
@@ -54,4 +59,4 @@ export const providerInstanceTable = EntityTable.pgTableFrom(DomainProviderInsta
  * @category tables
  * @since 0.0.0
  */
-export const PROVIDER_INSTANCE_TABLE_NAME = providerInstanceTable.definition.tableName;
+export const PROVIDER_INSTANCE_TABLE_NAME = getTableName(providerInstanceTable);

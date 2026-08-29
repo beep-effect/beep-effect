@@ -13,17 +13,19 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
-import { EffectImportRulesPersistenceError } from "./Laws.errors.js";
+import { isEcosystemMemberSourcePath } from "./internal/LawScan.ts";
+import { EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
 /**
  * Runtime options for effect import law migration checks.
  *
- * @example
+ * **Example** (Configure import governance)
  * ```ts
  * console.log("EffectImportRulesOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -41,6 +43,7 @@ export class EffectImportRulesOptions extends S.Class<EffectImportRulesOptions>(
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("EffectImportRulesOptions", {
     description: "Runtime options for effect import law migration checks.",
@@ -50,10 +53,12 @@ export class EffectImportRulesOptions extends S.Class<EffectImportRulesOptions>(
 /**
  * Summary of effect import law migration results.
  *
- * @example
+ * **Example** (Reference the import rules summary)
+ *
  * ```ts
  * console.log("EffectImportRulesSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,10 +105,12 @@ const isRootImportExcludedStableSubmodule = (moduleName: string): boolean =>
 /**
  * Run effect import style migration/check logic.
  *
- * @example
+ * **Example** (Reference the import rules runner)
+ *
  * ```ts
  * console.log("runEffectImportRules")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -117,6 +124,8 @@ export const runEffectImportRules = Effect.fn(function* (options: EffectImportRu
 
   const isExcludedFile = (filePath: string): boolean => {
     const normalized = toPosixPath(filePath);
+    const relative = toPosixPath(path.relative(process.cwd(), filePath));
+    if (isEcosystemMemberSourcePath(relative)) return true;
     if (MutableHashSet.has(excludePaths, normalized)) return true;
     return isExcludedTypeScriptSourcePath(normalized);
   };
@@ -126,7 +135,7 @@ export const runEffectImportRules = Effect.fn(function* (options: EffectImportRu
     skipAddingFilesFromTsConfig: true,
   });
 
-  project.addSourceFilesAtPaths(A.fromIterable(INCLUDED_GLOBS));
+  project.addSourceFilesAtPaths(A.fromIterable(options.includePaths ?? INCLUDED_GLOBS));
 
   const sourceFiles = A.filter(project.getSourceFiles(), (sourceFile) => !isExcludedFile(sourceFile.getFilePath()));
 

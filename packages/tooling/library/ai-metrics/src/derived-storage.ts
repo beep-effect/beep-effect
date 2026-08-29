@@ -8,7 +8,8 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
@@ -20,7 +21,6 @@ import { AiMetricsPrivacyCheckResult, hashPublicTextSha256 } from "./privacy.ts"
 import type { DuckDbClient, DuckDbError } from "@beep/duckdb";
 
 const $I = $RepoAiMetricsId.create("derived-storage");
-
 const DERIVED_TABLES = [
   "ai_metrics_ingest_runs",
   "ai_metrics_source_files",
@@ -39,11 +39,13 @@ const DERIVED_TABLES = [
 /**
  * Parquet export behavior for one derived AI metrics write.
  *
- * @example
+ * **Example** (Read a parquet export mode)
+ *
  * ```ts
  * import { AiMetricsParquetExportMode } from "@beep/repo-ai-metrics"
  * console.log(AiMetricsParquetExportMode.Enum.snapshot)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -56,12 +58,14 @@ export const AiMetricsParquetExportMode = LiteralKit(["none", "latest", "snapsho
 /**
  * Runtime type for {@link AiMetricsParquetExportMode}.
  *
- * @example
+ * **Example** (Type a parquet export mode)
+ *
  * ```ts
  * import type { AiMetricsParquetExportMode } from "@beep/repo-ai-metrics"
  * const mode: AiMetricsParquetExportMode = "latest"
  * console.log(mode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -219,6 +223,16 @@ const createTableStatements = [
 ] as const;
 
 const migrationColumns = [
+  {
+    // Explicit OTLP export state. Previously the exporter inferred this from
+    // `ingest_run_id`, which only worked because every run re-minted its rows. Once
+    // ingestion became idempotent that inference broke: a run that committed turns
+    // and then died before exporting left them attached to a run the exporter would
+    // never look at again, so they could never reach Phoenix.
+    columnDefinition: "otlp_exported_at_epoch_ms DOUBLE",
+    columnName: "otlp_exported_at_epoch_ms",
+    tableName: "ai_metrics_turns",
+  },
   {
     columnDefinition: "source_role VARCHAR DEFAULT 'primary'",
     columnName: "source_role",
@@ -416,6 +430,60 @@ const legacyAgentTaskIdExpression = (tableAlias: string): string =>
 const currentAgentTaskIdExpression = (tableAlias: string): string =>
   `concat('agent-task-', sha256(concat('agent-task', chr(0), ${tableAlias}.config_snapshot_id, chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_role, chr(0), ${tableAlias}.source_path_hash)))`;
 
+// Deliberately two parts, not three. `turn_id` keys on
+// [sourceKind, sourcePathHash, lineNumber, rawEventHash] and turns are INSERT OR IGNORE,
+// so a turn's session pointer freezes at the first run that saw that line. The session key
+// therefore has to be the file-identifying prefix of the turn key and nothing more.
+//
+// `source_role` is excluded for that reason: it is derived from transcript content, not
+// from the file, so a transcript that later reveals subagent metadata flips role. Were role
+// part of the key, that flip would mint a second session row while the already-ingested
+// turns kept pointing at the first -- reintroducing exactly the fragmentation this removes,
+// only rarer and harder to see. Under a two-part key a role flip just rewrites the row's
+// descriptive `source_role` column, which is what it should do.
+const legacyAgentSessionIdExpression = (tableAlias: string): string =>
+  `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.ingest_run_id, chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
+
+const currentAgentSessionIdExpression = (tableAlias: string): string =>
+  `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
+
+// Order is load-bearing. Turns are repointed while the legacy session rows still exist,
+// because the mapping is computed from those rows' columns; only then can the duplicates be
+// dropped. Reversing it would strand every turn behind the exporter's INNER JOIN on
+// `ai_metrics_sessions`, which drops unmatched turns silently and without a watermark.
+const legacyAgentSessionIdMigrationStatements = [
+  `UPDATE ai_metrics_turns AS turns
+   SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
+   FROM ai_metrics_sessions AS sessions
+   WHERE turns.agent_session_id = sessions.agent_session_id
+     AND sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`,
+  // Unlike the agent-task rewrite above, this collapse is many-to-one: the legacy key
+  // embeds `ingest_run_id`, so one transcript owns one row per run and they all map onto a
+  // single content-addressed id. Without dropping the losers first, the rewrite below would
+  // violate the primary key on any store that ingested a transcript twice -- which is every
+  // real store. The tiebreak keeps the greatest legacy digest: deterministic, and it does
+  // not consult `ai_metrics_ingest_runs`, which retention may already have pruned.
+  `DELETE FROM ai_metrics_sessions AS legacy
+   WHERE legacy.agent_session_id = ${legacyAgentSessionIdExpression("legacy")}
+     AND EXISTS (
+       SELECT 1
+       FROM ai_metrics_sessions AS keeper
+       WHERE keeper.agent_session_id <> legacy.agent_session_id
+         AND (
+           keeper.agent_session_id = ${currentAgentSessionIdExpression("legacy")}
+           OR (
+             keeper.agent_session_id = ${legacyAgentSessionIdExpression("keeper")}
+             AND keeper.source_kind = legacy.source_kind
+             AND keeper.source_path_hash = legacy.source_path_hash
+             AND keeper.agent_session_id > legacy.agent_session_id
+           )
+         )
+     )`,
+  `UPDATE ai_metrics_sessions AS sessions
+   SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
+   WHERE sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`,
+] as const;
+
 const legacyAgentTaskIdMigrationStatements = [
   `UPDATE ai_metrics_sessions AS sessions
    SET agent_task_id = ${currentAgentTaskIdExpression("task")}
@@ -461,6 +529,92 @@ type DerivedStorageMigration = {
 
 const derivedStorageMigrations = [
   {
+    // One-time only, and it must stay that way. Existing stores were written under
+    // the old duplicating scheme, so their rows have already been exported, usually
+    // many times over. Left entirely un-backfilled, the first run after the watermark
+    // lands would see millions of NULLs and flush the whole history to Phoenix in one
+    // burst -- the exact backpressure collapse this work exists to prevent.
+    //
+    // The newest ingest run is excluded. Under the old scheme a run that committed turns
+    // and then died before exporting was rescued by the next run, which re-minted those
+    // rows under a fresh id and exported them -- so the content did reach Phoenix even
+    // though the original rows never did. The one case with no such rescue is the final
+    // run before this migration: if it crashed before exporting, nothing came after it.
+    //
+    // This SQL is WRONG -- it should have excluded the newest run that actually committed
+    // turns -- and it is preserved verbatim anyway. It shipped in #578, and the ledger
+    // records a migration id, not its text, so any store that already applied it will
+    // never re-run it no matter what this string says. Editing it in place therefore
+    // fixes nothing on the stores that need fixing while silently changing behaviour on
+    // fresh ones. `ai-metrics-otlp-export-watermark-v2` below carries the correction.
+    // Shipped migrations are immutable; treat this one as a historical record.
+    //
+    // The `ai_metrics_schema_migrations` ledger guarantees this runs once, and it is
+    // applied before the run's inserts, so genuinely new turns are never swept up.
+    migrationId: "ai-metrics-otlp-export-watermark-v1",
+    // Every column the statement touches, including the ingest-run lookup. Very old
+    // stores predate `ingest_run_id` on turns entirely, and the statement must not be
+    // attempted against them -- an unguarded reference fails schema-ensure outright.
+    // A skipped migration is not recorded, so it applies later once the shape catches up.
+    requiredColumns: [
+      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
+      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
+    ],
+    statements: [
+      `UPDATE ai_metrics_turns
+       SET otlp_exported_at_epoch_ms = 0
+       WHERE otlp_exported_at_epoch_ms IS NULL
+         AND ingest_run_id <> COALESCE(
+           (SELECT ingest_run_id FROM ai_metrics_ingest_runs ORDER BY started_at_epoch_ms DESC LIMIT 1),
+           ''
+         )`,
+    ],
+    transactional: true,
+  },
+  {
+    // Corrects v1 above, which excluded the newest ingest run outright. A later zero-turn
+    // run -- a discovery pass that found nothing new -- shadowed the newest run that had
+    // actually committed turns, so exactly the rows most likely to be unexported were the
+    // ones marked. Those turns can never be exported again: the watermark reads as closed
+    // and nothing reopens it.
+    //
+    // The backfill sentinel is what makes this recoverable. v1 writes the literal `0`,
+    // while a real export writes the wall-clock epoch, and rows ingested after v1 ran are
+    // NULL rather than `0`. So `otlp_exported_at_epoch_ms = 0` identifies the backfilled
+    // rows exactly, and among those the newest run by `started_at_epoch_ms` is precisely
+    // the run v1 should have spared -- every run newer than it at v1 time had no turns,
+    // which is the bug condition.
+    //
+    // Runs after v1 on every store, so the two converge: on a store that already applied
+    // the buggy v1 this reopens the buried run, and on a fresh store v1 buries it and
+    // this immediately reopens it. Worst case is one run's worth of re-sent spans, which
+    // carry content-addressed ids the collector deduplicates.
+    migrationId: "ai-metrics-otlp-export-watermark-v2",
+    requiredColumns: [
+      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
+      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
+    ],
+    statements: [
+      `UPDATE ai_metrics_turns
+       SET otlp_exported_at_epoch_ms = NULL
+       WHERE otlp_exported_at_epoch_ms = 0
+         AND ingest_run_id = COALESCE(
+           (SELECT backfilled.ingest_run_id
+            FROM ai_metrics_turns backfilled
+            JOIN ai_metrics_ingest_runs runs ON runs.ingest_run_id = backfilled.ingest_run_id
+            WHERE backfilled.otlp_exported_at_epoch_ms = 0
+            ORDER BY runs.started_at_epoch_ms DESC
+            LIMIT 1),
+           ''
+         )`,
+    ],
+    transactional: true,
+  },
+  {
     migrationId: "ai-metrics-p6a-default-backfill-v1",
     statements: migrationBackfillStatements,
   },
@@ -479,6 +633,21 @@ const derivedStorageMigrations = [
     transactional: true,
   },
   {
+    // Existing turns are INSERT OR IGNORE, so they keep the per-run session id written by
+    // the first run that saw them. Nothing self-heals; without this migration a store stays
+    // fragmented forever no matter how the id is minted going forward.
+    migrationId: "ai-metrics-agent-session-id-v2",
+    requiredColumns: [
+      { columnName: "agent_session_id", tableName: "ai_metrics_sessions" },
+      { columnName: "ingest_run_id", tableName: "ai_metrics_sessions" },
+      { columnName: "source_kind", tableName: "ai_metrics_sessions" },
+      { columnName: "source_path_hash", tableName: "ai_metrics_sessions" },
+      { columnName: "agent_session_id", tableName: "ai_metrics_turns" },
+    ],
+    statements: legacyAgentSessionIdMigrationStatements,
+    transactional: true,
+  },
+  {
     migrationId: "ai-metrics-raw-archive-object-id-v2",
     requiredColumns: [
       { columnName: "archive_run_object_id", tableName: "ai_metrics_raw_archive_objects" },
@@ -492,7 +661,8 @@ const derivedStorageMigrations = [
 /**
  * Error raised by the DuckDB derived storage projection.
  *
- * @example
+ * **Example** (Construct a projection error)
+ *
  * ```ts
  * import { AiMetricsDerivedStorageError } from "@beep/repo-ai-metrics"
  * const error = AiMetricsDerivedStorageError.make({
@@ -501,18 +671,19 @@ const derivedStorageMigrations = [
  * })
  * console.log(error)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDerivedStorageError>(
+export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerivedStorageError>(
   $I`AiMetricsDerivedStorageError`
 )(
   "AiMetricsDerivedStorageError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsDerivedStorageError", {
+  $I.annoteError<AiMetricsDerivedStorageError>("AiMetricsDerivedStorageError", {
     description: "Typed failure raised while projecting AI metrics records into DuckDB derived storage.",
   })
 ) {}
@@ -520,7 +691,8 @@ export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDeri
 /**
  * One sanitized transcript ready for derived storage projection.
  *
- * @example
+ * **Example** (Build a sanitized transcript record)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedTranscriptRecord,
@@ -566,6 +738,7 @@ export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDeri
  * })
  * console.log(record.archiveObject.archiveObjectId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -584,7 +757,8 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
 /**
  * Input for a derived DuckDB storage write.
  *
- * @example
+ * **Example** (Assemble a derived write input)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedStorageWriteInput,
@@ -614,6 +788,7 @@ export class AiMetricsDerivedTranscriptRecord extends S.Class<AiMetricsDerivedTr
  * })
  * console.log(input.parquetExportMode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -641,7 +816,8 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
 /**
  * Result of a derived DuckDB storage write.
  *
- * @example
+ * **Example** (Inspect a derived write result)
+ *
  * ```ts
  * import { AiMetricsDerivedStorageWriteResult } from "@beep/repo-ai-metrics"
  *
@@ -656,6 +832,7 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
  * })
  * console.log(result.parquetTables)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -677,7 +854,7 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
   })
 ) {}
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const derivedFailure = (message: string, cause: unknown): AiMetricsDerivedStorageError =>
   AiMetricsDerivedStorageError.make({ cause, message });
@@ -794,8 +971,8 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
 /**
  * Ensure the AI metrics derived DuckDB schema exists and has P4 columns.
  *
- * @effects Creates or migrates DuckDB tables and schema metadata in the configured derived database.
- * @example
+ * **Example** (Ensure the schema before writing)
+ *
  * ```ts
  * import { ensureAiMetricsDerivedStorage } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
@@ -807,6 +984,8 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Creates or migrates DuckDB tables and schema metadata in the configured derived database.
  * @category services
  * @since 0.0.0
  */
@@ -1115,7 +1294,11 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
 ) {
   const duckdb = yield* DuckDb;
   const sanitized = record.privacy.sanitized;
-  const agentSessionId = yield* rowId("session", [input.ingestRunId, sanitized.sourceKind, sanitized.sourcePathHash]);
+  // Content-addressed, like `turn_id` and for the same reason: an ingest run is lineage,
+  // never identity. With the run id in this key a transcript that grew between runs minted
+  // a fresh session row every run, so one conversation accumulated one row per run and its
+  // turns scattered across all of them.
+  const agentSessionId = yield* rowId("session", [sanitized.sourceKind, sanitized.sourcePathHash]);
   yield* duckdb.run(
     `INSERT OR REPLACE INTO ai_metrics_sessions (
       agent_session_id,
@@ -1172,15 +1355,25 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
   yield* Effect.forEach(
     sanitized.rawEventEnvelopes,
     Effect.fnUntraced(function* (envelope) {
+      // Content-addressed, deliberately excluding input.ingestRunId. With the run id
+      // in the key every run minted a fresh turn_id for identical content, so
+      // INSERT OR REPLACE never collided and the table accumulated one copy per run
+      // (measured: 5.43M rows collapsing to ~516K distinct raw_event_hash across
+      // 1,222 runs). Per the packet's identity rule, ingest runs are lineage, never
+      // identity.
       const turnId = yield* rowId("turn", [
-        input.ingestRunId,
         envelope.sourceKind,
         envelope.sourcePathHash,
         envelope.lineNumber,
         envelope.rawEventHash,
       ]);
+      // OR IGNORE, not OR REPLACE. REPLACE would rewrite ingest_run_id to the
+      // current run, and the OTLP export selects `WHERE ingest_run_id = <this run>`
+      // -- so every previously-seen turn would be re-exported to Phoenix on every
+      // run even though the table itself had stopped growing. Retaining the
+      // first-seen run id is what makes that export incremental.
       yield* duckdb.run(
-        `INSERT OR REPLACE INTO ai_metrics_turns (
+        `INSERT OR IGNORE INTO ai_metrics_turns (
           turn_id,
           ingest_run_id,
           agent_session_id,
@@ -1229,12 +1422,8 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
 /**
  * Project sanitized AI metrics records into DuckDB and export Parquet snapshots.
  *
- * @effects
- * - Creates the derived DuckDB directory when missing.
- * - Runs DuckDB table creation and migrations before writing rows.
- * - Upserts ingest, source-file, archive, session, and turn projections inside a transaction.
- * - Recreates the selected Parquet export directory for `latest` or `snapshot` exports.
- * @example
+ * **Example** (Write one derived ingest run)
+ *
  * ```ts
  * import {
  *   AiMetricsDerivedStorageWriteInput,
@@ -1266,6 +1455,12 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
  * const write = writeAiMetricsDerivedStorage(input)
  * console.log(write)
  * ```
+ *
+ * @effects
+ * - Creates the derived DuckDB directory when missing.
+ * - Runs DuckDB table creation and migrations before writing rows.
+ * - Upserts ingest, source-file, archive, session, and turn projections inside a transaction.
+ * - Recreates the selected Parquet export directory for `latest` or `snapshot` exports.
  * @category services
  * @since 0.0.0
  */

@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -25,26 +25,28 @@ type WorktreeCommandErrorOptions =
 /**
  * Operational failure raised while planning or running a worktree operation.
  *
- * @example
+ * **Example** (Make worktree command error)
+ *
  * ```ts
  * import { WorktreeCommandError } from "@beep/repo-cli/commands/Worktree"
  *
  * const error = WorktreeCommandError.make({ message: "git worktree add failed" })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class WorktreeCommandError extends TaggedErrorClass<WorktreeCommandError>($I`WorktreeCommandError`)(
+export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I`WorktreeCommandError`)(
   "WorktreeCommandError",
   {
     message: S.String,
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("WorktreeCommandError", {
+  $I.annoteError<WorktreeCommandError>("WorktreeCommandError", {
     description: "Failure raised while planning or executing a git worktree operation.",
   })
 ) {
@@ -77,24 +79,26 @@ export class WorktreeCommandError extends TaggedErrorClass<WorktreeCommandError>
 /**
  * Removal refused because the target worktree has uncommitted changes.
  *
- * @example
+ * **Example** (Create dirty worktree error)
+ *
  * ```ts
  * import { WorktreeDirtyError } from "@beep/repo-cli/commands/Worktree"
  *
  * const error = WorktreeDirtyError.new("/tmp/beep-effect-worktrees/feature-x", 3)
  * console.log(error.changeCount)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class WorktreeDirtyError extends TaggedErrorClass<WorktreeDirtyError>($I`WorktreeDirtyError`)(
+export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`WorktreeDirtyError`)(
   "WorktreeDirtyError",
   {
     message: S.String,
     path: S.String,
     changeCount: S.Finite,
   },
-  $I.annote("WorktreeDirtyError", {
+  $I.annoteError<WorktreeDirtyError>("WorktreeDirtyError", {
     description: "Worktree removal was refused because the target has uncommitted changes.",
   })
 ) {
@@ -120,23 +124,25 @@ export class WorktreeDirtyError extends TaggedErrorClass<WorktreeDirtyError>($I`
 /**
  * Creation refused because a worktree directory already exists at the target path.
  *
- * @example
+ * **Example** (Create exists worktree error)
+ *
  * ```ts
  * import { WorktreeExistsError } from "@beep/repo-cli/commands/Worktree"
  *
  * const error = WorktreeExistsError.new("/tmp/beep-effect-worktrees/feature-x")
  * console.log(error.path)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class WorktreeExistsError extends TaggedErrorClass<WorktreeExistsError>($I`WorktreeExistsError`)(
+export class WorktreeExistsError extends S.TaggedError<WorktreeExistsError>($I`WorktreeExistsError`)(
   "WorktreeExistsError",
   {
     message: S.String,
     path: S.String,
   },
-  $I.annote("WorktreeExistsError", {
+  $I.annoteError<WorktreeExistsError>("WorktreeExistsError", {
     description: "Worktree creation was refused because a directory already exists at the target path.",
   })
 ) {

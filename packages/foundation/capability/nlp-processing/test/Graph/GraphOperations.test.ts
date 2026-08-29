@@ -10,6 +10,7 @@
 
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
+import { NonNegativeInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
@@ -24,7 +25,7 @@ const finiteNonNegativeMillis = (duration: Duration.Duration): Duration.Duration
   return Number.isFinite(millis) ? Duration.millis(Math.min(Math.abs(Math.trunc(millis)), 86_400_000)) : Duration.zero;
 };
 
-const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.ExecutionMetrics).map((metrics) =>
+const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.ExecutionMetrics)(fc).map((metrics) =>
   Types.ExecutionMetrics.make({
     ...metrics,
     duration: finiteNonNegativeMillis(metrics.duration),
@@ -33,7 +34,7 @@ const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.Exe
 const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
@@ -161,15 +162,40 @@ describe("Operation constructors", () => {
 });
 
 describe("ResultStore", () => {
-  const mkResult = Effect.gen(function* () {
+  const mkResultFixture = Effect.gen(function* () {
     const node = yield* EG.makeNode<unknown>("payload");
-    return yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
+    const result = yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
       originalGraph: O.none(),
       newNodes: [node],
       errors: [],
       metrics: Types.ExecutionMetrics.empty(),
     });
+    return {
+      key: ResultStore.ResultKey.new("op", node.id),
+      result,
+    };
   });
+
+  const mkResult = Effect.map(mkResultFixture, ({ result }) => result);
+
+  it.effect(
+    "round-trips schema-backed cache entries with type-erased operation results",
+    Effect.fnUntraced(function* () {
+      const { key, result } = yield* mkResultFixture;
+      const stored = ResultStore.StoredResult.make({
+        hits: NonNegativeInt.make(0),
+        key,
+        result,
+        timestamp: result.timestamp,
+      });
+      const encoded = yield* S.encodeEffect(ResultStore.StoredResult)(stored);
+      const decoded = yield* S.decodeEffect(ResultStore.StoredResult)(encoded);
+
+      expect(S.is(ResultStore.StoredResult)(decoded)).toBe(true);
+      expect(S.is(ResultStore.AnyOperationResult)(decoded.result)).toBe(true);
+      expect(decoded.result.executionId).toBe(result.executionId);
+    })
+  );
 
   it.effect(
     "stores and retrieves a result, incrementing hits",
@@ -217,6 +243,22 @@ describe("GraphExecutor", () => {
       expect(result.errors.length).toBe(0);
       expect(result.metrics.nodesProcessed).toBe(1);
       expect(result.metrics.nodesCreated).toBe(1);
+    }, provideScopedLayer(Executor.GraphExecutorTest))
+  );
+
+  it.effect(
+    "clamps an over-large parallel concurrency and still applies the operation",
+    Effect.fnUntraced(function* () {
+      const graph = yield* EG.singleton("hello");
+      const executor = yield* Executor.GraphExecutor;
+      // Far above MAX_PARALLEL_CONCURRENCY, so this exercises the clamp rather
+      // than the sequential default.
+      const result = yield* executor.execute(graph, upper, {
+        strategy: Types.ExecutionStrategy.Parallel(1_000),
+      });
+
+      expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+      expect(result.errors.length).toBe(0);
     }, provideScopedLayer(Executor.GraphExecutorTest))
   );
 

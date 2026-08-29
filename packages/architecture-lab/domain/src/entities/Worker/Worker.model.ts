@@ -7,160 +7,27 @@
  */
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
-import * as Shared from "@beep/shared-domain/identity/Shared";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
 import * as S from "effect/Schema";
-import * as ArchitectureLab from "../../identity/ArchitectureLab.js";
+import { WorkerStatus } from "./Worker.values.ts";
 
 const $I = $ArchitectureLabDomainId.create("entities/Worker/Worker.model");
-
-/**
- * Entity identifier for a persisted architecture lab Worker.
- *
- * @example
- * ```ts
- * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const id: WorkerIdValue = S.decodeUnknownSync(WorkerId)(1)
- *
- * if (id !== 1) {
- *   throw new Error("expected decoded Worker id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const WorkerId = ArchitectureLab.WorkerId;
-
-/**
- * Runtime type for {@link WorkerId}.
- *
- * @example
- * ```ts
- * import { WorkerId, type WorkerId as WorkerIdValue } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const id: WorkerIdValue = S.decodeUnknownSync(WorkerId)(1)
- * const ids: ReadonlyArray<WorkerIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected Worker id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type WorkerId = typeof WorkerId.Type;
-
-/**
- * Organization identity used by the Worker proof entity.
- *
- * @example
- * ```ts
- * import { WorkerOrganizationId, type WorkerOrganizationId as WorkerOrganizationIdValue } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const organizationId: WorkerOrganizationIdValue = S.decodeUnknownSync(WorkerOrganizationId)(1)
- *
- * if (organizationId !== 1) {
- *   throw new Error("expected decoded organization id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const WorkerOrganizationId = Shared.OrganizationId;
-
-/**
- * Runtime type for {@link WorkerOrganizationId}.
- *
- * @example
- * ```ts
- * import {
- *   WorkerOrganizationId,
- *   type WorkerOrganizationId as WorkerOrganizationIdValue
- * } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const organizationId: WorkerOrganizationIdValue = S.decodeUnknownSync(WorkerOrganizationId)(1)
- *
- * if (organizationId !== 1) {
- *   throw new Error("expected organization id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type WorkerOrganizationId = typeof WorkerOrganizationId.Type;
-
-/**
- * Closed lifecycle vocabulary for the Worker proof entity.
- *
- * @example
- * ```ts
- * import { WorkerStatus, type WorkerStatus as WorkerStatusValue } from "@beep/architecture-lab-domain/entities/Worker"
- *
- * const status: WorkerStatusValue = WorkerStatus.Enum.active
- * const isActive = status === "active"
- *
- * console.log(isActive)
- *
- * if (status !== "active") {
- *   throw new Error("expected active Worker status")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export const WorkerStatus = LiteralKit(["active", "inactive"]).pipe(
-  $I.annoteSchema("WorkerStatus", {
-    title: "Worker status",
-    description: "Lifecycle status for a synthetic architecture lab Worker entity.",
-  })
-);
-
-/**
- * Runtime type for {@link WorkerStatus}.
- *
- * @example
- * ```ts
- * import type { WorkerStatus } from "@beep/architecture-lab-domain/entities/Worker"
- *
- * const status: WorkerStatus = "inactive"
- * const isInactive = status === "inactive"
- *
- * console.log(isInactive)
- *
- * if (status !== "inactive") {
- *   throw new Error("expected inactive Worker status")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export type WorkerStatus = typeof WorkerStatus.Type;
+const pg = ProductEntity.pg;
 
 /**
  * Persisted Worker entity used by WorkItem assignment flows.
  *
- * @example
+ * **Example** (Create Worker entity)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
  *   Worker,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import * as S from "effect/Schema"
  *
  * const worker: Worker = create(
@@ -179,25 +46,14 @@ export type WorkerStatus = typeof WorkerStatus.Type;
  * @category entities
  * @since 0.0.0
  */
-export class Worker extends BaseEntity.Class<Worker>($I`Worker`)(
-  WorkerId,
+export class Worker extends ProductEntity.Entity<Worker>()(WorkerId)(
   {
-    fields: {
-      displayName: S.NonEmptyString.annotateKey({
-        description: "Display name shown for the Worker in assignment flows.",
-      }),
-      status: WorkerStatus.annotateKey({
-        description: "Lifecycle status for the Worker.",
-      }),
-    },
-    persisted: {
-      displayName: EntitySchema.persist.text({
-        columnName: "display_name",
-      }),
-      status: EntitySchema.persist.literal({
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-    },
+    displayName: S.NonEmptyString.annotateKey({
+      description: "Display name shown for the Worker in assignment flows.",
+    }).pipe(pg.text(), pg.columnName("display_name")),
+    status: WorkerStatus.annotateKey({
+      description: "Lifecycle status for the Worker.",
+    }).pipe(pg.text(), pg.index({ name: "architecture_lab_worker_status_lookup_idx" })),
   },
   $I.annote("Worker", {
     title: "Worker",
@@ -206,91 +62,3 @@ export class Worker extends BaseEntity.Class<Worker>($I`Worker`)(
 ) {
   static readonly fromUnknown = S.decodeUnknownSync(Worker);
 }
-
-/**
- * Constructor input for an active Worker in an organization.
- *
- * @example
- * ```ts
- * import { CreateWorkerInput, WorkerId, WorkerOrganizationId } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const input = CreateWorkerInput.make({
- *   id: S.decodeUnknownSync(WorkerId)(1),
- *   organizationId: S.decodeUnknownSync(WorkerOrganizationId)(1),
- *   displayName: "Ada Lovelace"
- * })
- *
- * if (input.displayName !== "Ada Lovelace") {
- *   throw new Error("expected Worker input")
- * }
- * ```
- *
- * @category entities
- * @since 0.0.0
- */
-export class CreateWorkerInput extends S.Class<CreateWorkerInput>($I`CreateWorkerInput`)(
-  {
-    id: WorkerId.annotateKey({
-      description: "Worker entity identifier.",
-    }),
-    organizationId: WorkerOrganizationId.annotateKey({
-      description: "Organization that owns the Worker.",
-    }),
-    displayName: S.NonEmptyString.annotateKey({
-      description: "Display name for the Worker.",
-    }),
-  },
-  $I.annote("CreateWorkerInput", {
-    title: "Create Worker input",
-    description: "Input required to create an active architecture lab Worker entity.",
-  })
-) {}
-
-const systemPrincipal = {
-  component: "Runtime",
-  kind: "System",
-} as const;
-
-const publicIdFor = (id: WorkerId): string => `${WorkerId.tableName}_a${id}`;
-
-/**
- * Create a new active Worker entity.
- *
- * @example
- * ```ts
- * import { CreateWorkerInput, WorkerId, WorkerOrganizationId, create } from "@beep/architecture-lab-domain/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const worker = create(
- *   CreateWorkerInput.make({
- *     id: S.decodeUnknownSync(WorkerId)(1),
- *     organizationId: S.decodeUnknownSync(WorkerOrganizationId)(1),
- *     displayName: "Ada Lovelace"
- *   })
- * )
- *
- * if (worker.status !== "active" || worker.displayName !== "Ada Lovelace") {
- *   throw new Error("expected active Worker")
- * }
- * ```
- *
- * @category entities
- * @since 0.0.0
- */
-export const create = (input: CreateWorkerInput): Worker =>
-  Worker.fromUnknown({
-    createdAt: 0,
-    createdByPrincipal: systemPrincipal,
-    displayName: input.displayName,
-    entityType: WorkerId.entityType,
-    id: input.id,
-    orgId: input.organizationId,
-    publicId: publicIdFor(input.id),
-    rowVersion: 1,
-    schemaVersion: "0.1.0",
-    source: "Application",
-    status: "active",
-    updatedAt: 0,
-    updatedByPrincipal: systemPrincipal,
-  });

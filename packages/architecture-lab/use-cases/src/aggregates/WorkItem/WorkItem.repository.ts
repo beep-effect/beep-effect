@@ -8,7 +8,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -18,7 +18,8 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.repos
 /**
  * Persistence failure raised when a WorkItem row is absent.
  *
- * @example
+ * **Example** (Create not-found error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemRepositoryNotFound } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
@@ -34,14 +35,14 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.repos
  * @category repositories
  * @since 0.0.0
  */
-export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemRepositoryNotFound>(
+export class WorkItemRepositoryNotFound extends S.TaggedError<WorkItemRepositoryNotFound>(
   $I`WorkItemRepositoryNotFound`
 )(
   "WorkItemRepositoryNotFound",
   {
     workItemId: DomainWorkItem.WorkItemId,
   },
-  $I.annote("WorkItemRepositoryNotFound", {
+  $I.annoteError<WorkItemRepositoryNotFound>("WorkItemRepositoryNotFound", {
     title: "WorkItem repository not found",
     description: "The WorkItem repository could not find the requested aggregate.",
   })
@@ -52,7 +53,8 @@ export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemReposit
 /**
  * Persistence failure raised when a WorkItem write conflicts.
  *
- * @example
+ * **Example** (Create conflict error)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkItemRepositoryConflict } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
@@ -69,7 +71,7 @@ export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemReposit
  * @category repositories
  * @since 0.0.0
  */
-export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemRepositoryConflict>(
+export class WorkItemRepositoryConflict extends S.TaggedError<WorkItemRepositoryConflict>(
   $I`WorkItemRepositoryConflict`
 )(
   "WorkItemRepositoryConflict",
@@ -79,7 +81,7 @@ export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemReposit
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("WorkItemRepositoryConflict", {
+  $I.annoteError<WorkItemRepositoryConflict>("WorkItemRepositoryConflict", {
     title: "WorkItem repository conflict",
     description: "The WorkItem repository rejected a conflicting write.",
   })
@@ -90,7 +92,8 @@ export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemReposit
 /**
  * Persistence failure raised when the WorkItem repository is unavailable.
  *
- * @example
+ * **Example** (Create unavailable error)
+ *
  * ```ts
  * import { WorkItemRepositoryUnavailable } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
  *
@@ -102,7 +105,7 @@ export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemReposit
  * @category repositories
  * @since 0.0.0
  */
-export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepositoryUnavailable>(
+export class WorkItemRepositoryUnavailable extends S.TaggedError<WorkItemRepositoryUnavailable>(
   $I`WorkItemRepositoryUnavailable`
 )(
   "WorkItemRepositoryUnavailable",
@@ -111,7 +114,7 @@ export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepo
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("WorkItemRepositoryUnavailable", {
+  $I.annoteError<WorkItemRepositoryUnavailable>("WorkItemRepositoryUnavailable", {
     title: "WorkItem repository unavailable",
     description: "The WorkItem repository could not serve the request.",
   })
@@ -122,7 +125,8 @@ export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepo
 /**
  * WorkItem repository failure schema.
  *
- * @example
+ * **Example** (Check repository error type)
+ *
  * ```ts
  * import {
  *   WorkItemRepositoryError,
@@ -153,7 +157,8 @@ export const WorkItemRepositoryError = S.Union([
 /**
  * Runtime type for {@link WorkItemRepositoryError}.
  *
- * @example
+ * **Example** (Annotate repository error type)
+ *
  * ```ts
  * import {
  *   WorkItemRepositoryUnavailable,
@@ -173,11 +178,13 @@ export type WorkItemRepositoryError = typeof WorkItemRepositoryError.Type;
 /**
  * WorkItem repository port consumed by the server-side use-case factory.
  *
- * @remarks
+ * **Details**
+ *
  * `create` fails on duplicate identity, `get` fails when no aggregate exists,
  * `list` returns repository order, and `save` updates an existing aggregate.
  *
- * @example
+ * **Example** (Implement repository shape)
+ *
  * ```ts
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import {
@@ -229,7 +236,8 @@ export interface WorkItemRepositoryShape {
 /**
  * Context tag for the WorkItem repository port.
  *
- * @example
+ * **Example** (Provide repository service)
+ *
  * ```ts
  * import {
  *   WorkItemRepository,

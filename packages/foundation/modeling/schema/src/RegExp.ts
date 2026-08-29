@@ -7,7 +7,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Option, SchemaIssue, SchemaTransformation } from "effect";
+import { Effect, SchemaIssue, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
@@ -35,7 +35,7 @@ const decodeRegExp = (value: string): Effect.Effect<globalThis.RegExp, SchemaIss
   Effect.try({
     try: () => makeRegExp(value),
     catch: (cause) =>
-      new SchemaIssue.InvalidValue(Option.some(value), {
+      new SchemaIssue.InvalidValue({
         message: P.isError(cause) ? cause.message : "Expected a valid regular expression pattern string",
       }),
   });
@@ -43,17 +43,18 @@ const decodeRegExp = (value: string): Effect.Effect<globalThis.RegExp, SchemaIss
 /**
  * Branded schema for strings that can be converted directly to a JavaScript `RegExp`.
  *
- * @example
- * ```ts
+ * **Example** (Decode valid pattern string)
+ *
+ * ```ts import.meta.vitest name="Decode valid pattern string"
  * import * as S from "effect/Schema"
  * import { RegExpStr } from "@beep/schema/RegExp"
  *
  * const pattern = S.decodeUnknownSync(RegExpStr)("^[a-z]+$")
- * console.log(pattern) // "^[a-z]+$"
+ * pattern // => "^[a-z]+$"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
   S.brand("RegExpStr"),
@@ -65,23 +66,24 @@ export const RegExpStr = S.String.check(RegExpStrCheck).pipe(
 /**
  * Type for {@link RegExpStr}.
  *
- * @example
- * ```ts
+ * **Example** (Type and test pattern)
+ *
+ * ```ts import.meta.vitest name="Type and test pattern"
  * import * as S from "effect/Schema"
  * import { RegExpStr } from "@beep/schema/RegExp"
  *
  * const pattern: RegExpStr = S.decodeUnknownSync(RegExpStr)("\\d+")
- * console.log(new RegExp(pattern).test("123")) // true
+ * new RegExp(pattern).test("123") // => true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RegExpStr = typeof RegExpStr.Type;
 
-const encodeRegExpStrForbidden = (value: globalThis.RegExp): Effect.Effect<RegExpStr, SchemaIssue.Issue> =>
+const encodeRegExpStrForbidden = (): Effect.Effect<RegExpStr, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.Forbidden(Option.some(value), {
+    new SchemaIssue.Forbidden({
       message: "Encoding RegExpFromStr back to the original pattern string is not supported",
     })
   );
@@ -89,18 +91,19 @@ const encodeRegExpStrForbidden = (value: globalThis.RegExp): Effect.Effect<RegEx
 /**
  * One-way schema that decodes a valid pattern string into a JavaScript `RegExp` object.
  *
- * @example
- * ```ts
+ * **Example** (Decode string to RegExp)
+ *
+ * ```ts import.meta.vitest name="Decode string to RegExp"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { RegExpFromStr } from "@beep/schema/RegExp"
  *
  * const pattern = Effect.runSync(S.decodeUnknownEffect(RegExpFromStr)("[a-z]+"))
- * console.log(pattern.test("abc")) // true
+ * pattern.test("abc") // => true
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const RegExpFromStr = RegExpStr.pipe(
   S.decodeTo(
@@ -118,17 +121,18 @@ export const RegExpFromStr = RegExpStr.pipe(
 /**
  * Type for {@link RegExpFromStr}.
  *
- * @example
- * ```ts
+ * **Example** (Type decoded RegExp value)
+ *
+ * ```ts import.meta.vitest name="Type decoded RegExp value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { RegExpFromStr } from "@beep/schema/RegExp"
  *
  * const re: RegExpFromStr = Effect.runSync(S.decodeUnknownEffect(RegExpFromStr)("hello"))
- * console.log(re.test("hello world")) // true
+ * re.test("hello world") // => true
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RegExpFromStr = typeof RegExpFromStr.Type;

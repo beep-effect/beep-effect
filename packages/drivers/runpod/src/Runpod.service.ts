@@ -16,7 +16,7 @@ import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as G from "./_generated/Runpod.generated.ts";
+import * as G from "./_generated/Runpod.operations.gen.ts";
 import { RUNPOD_API_URL, RunpodConfigInput, RunpodConfigUrl } from "./Runpod.config.ts";
 import { RunpodError, RunpodHttpStatusCode } from "./Runpod.errors.ts";
 import type { Redacted } from "effect";
@@ -37,7 +37,8 @@ const RunpodRawPath = S.String.pipe(
 /**
  * Scalar query values accepted by Runpod request models and raw requests.
  *
- * @example
+ * **Example** (Inspect query scalar AST)
+ *
  * ```ts
  * import { RunpodQueryScalar } from "@beep/runpod"
  *
@@ -56,7 +57,8 @@ export const RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]).pipe(
 /**
  * Type for {@link RunpodQueryScalar}.
  *
- * @example
+ * **Example** (Assign scalar query value)
+ *
  * ```ts
  * import type { RunpodQueryScalar } from "@beep/runpod"
  *
@@ -74,7 +76,8 @@ const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withC
 /**
  * Query value accepted by the raw Runpod request escape hatch.
  *
- * @example
+ * **Example** (Inspect query value AST)
+ *
  * ```ts
  * import { RunpodQueryValue } from "@beep/runpod"
  *
@@ -94,7 +97,8 @@ export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArr
 /**
  * Type for {@link RunpodQueryValue}.
  *
- * @example
+ * **Example** (Assign array query value)
+ *
  * ```ts
  * import type { RunpodQueryValue } from "@beep/runpod"
  *
@@ -110,7 +114,8 @@ export type RunpodQueryValue = typeof RunpodQueryValue.Type;
 /**
  * Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.
  *
- * @example
+ * **Example** (Make raw GET request)
+ *
  * ```ts
  * import { RunpodRawRequest } from "@beep/runpod"
  *
@@ -141,7 +146,8 @@ export class RunpodRawRequest extends S.Class<RunpodRawRequest>($I`RunpodRawRequ
 /**
  * Raw Runpod HTTP response returned by {@link Runpod.raw}.
  *
- * @example
+ * **Example** (Make raw HTTP response)
+ *
  * ```ts
  * import { RunpodRawResponse } from "@beep/runpod"
  *
@@ -171,7 +177,8 @@ export class RunpodRawResponse extends S.Class<RunpodRawResponse>($I`RunpodRawRe
 /**
  * Public service shape for generated Runpod operations plus the raw request escape hatch.
  *
- * @example
+ * **Example** (Type raw request parameter)
+ *
  * ```ts
  * import type { RunpodShape } from "@beep/runpod"
  * import { RunpodRawRequest } from "@beep/runpod"
@@ -216,9 +223,7 @@ const RunpodUrlParams = S.Record(S.String, RunpodUrlParamValue).pipe(
 
 type RunpodUrlParams = typeof RunpodUrlParams.Type;
 
-interface JsonOperationSpec<Request, Response> {
-  readonly descriptor: G.RunpodOperationDescriptor;
-  readonly request: S.ConstraintDecoder<Request>;
+interface JsonOperationSpec<Request, Response> extends VoidOperationSpec<Request> {
   readonly response: S.ConstraintDecoder<Response>;
 }
 
@@ -469,7 +474,7 @@ const decodeJsonResponse = Effect.fnUntraced(function* <Response>(
   );
 
   return yield* pipe(
-    S.decodeUnknownEffect(responseSchema)(body),
+    S.decodeEffect(responseSchema)(body),
     Effect.mapError((cause) => RunpodError.fromDescriptor(descriptor, "response decoding", { cause }))
   );
 });
@@ -483,15 +488,24 @@ const decodeTextResponse = Effect.fnUntraced(function* (
   );
 });
 
+const executeOperationResponse = Effect.fnUntraced(function* <Request>(
+  client: HttpClient.HttpClient,
+  config: ResolvedRunpodConfig,
+  spec: VoidOperationSpec<Request>,
+  request: Request
+): Effect.fn.Return<HttpClientResponse.HttpClientResponse, RunpodError> {
+  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
+  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
+  return yield* ensureSuccessStatus(spec.descriptor, response);
+});
+
 const executeJsonOperation = Effect.fn("Runpod.executeJsonOperation")(function* <Request, Response>(
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig,
   spec: JsonOperationSpec<Request, Response>,
   request: Request
 ): Effect.fn.Return<Response, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  const successfulResponse = yield* ensureSuccessStatus(spec.descriptor, response);
+  const successfulResponse = yield* executeOperationResponse(client, config, spec, request);
   return yield* decodeJsonResponse(spec.descriptor, spec.response, successfulResponse);
 });
 
@@ -501,9 +515,7 @@ const executeTextOperation = Effect.fn("Runpod.executeTextOperation")(function* 
   spec: JsonOperationSpec<Request, string>,
   request: Request
 ): Effect.fn.Return<string, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  const successfulResponse = yield* ensureSuccessStatus(spec.descriptor, response);
+  const successfulResponse = yield* executeOperationResponse(client, config, spec, request);
   return yield* decodeTextResponse(spec.descriptor, successfulResponse);
 });
 
@@ -513,9 +525,7 @@ const executeVoidOperation = Effect.fn("Runpod.executeVoidOperation")(function* 
   spec: VoidOperationSpec<Request>,
   request: Request
 ): Effect.fn.Return<void, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  yield* ensureSuccessStatus(spec.descriptor, response);
+  yield* executeOperationResponse(client, config, spec, request);
 });
 
 const requiredJsonOperation = <Request, Response>(
@@ -703,7 +713,7 @@ const executeRawRequest = Effect.fn("Runpod.raw")(function* (
   rawRequest: RunpodRawRequest
 ) {
   const decodedRequest = yield* pipe(
-    S.decodeUnknownEffect(RunpodRawRequest)(rawRequest),
+    S.decodeEffect(RunpodRawRequest)(rawRequest),
     Effect.mapError((cause) =>
       RunpodError.raw({
         cause,
@@ -851,7 +861,8 @@ const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(
 /**
  * Effect service for all documented Runpod REST API v1 operations.
  *
- * @example
+ * **Example** (Create Runpod service layer)
+ *
  * ```ts
  * import { Runpod, RunpodConfigInput } from "@beep/runpod"
  *

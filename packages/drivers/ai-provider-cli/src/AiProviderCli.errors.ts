@@ -6,7 +6,7 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { AiProviderCliExitCode, AiProviderCliProvider } from "./AiProviderCli.models.ts";
 
@@ -15,12 +15,14 @@ const $I = $AiProviderCliId.create("AiProviderCli.errors");
 /**
  * Redacted technical failure from a provider CLI status probe.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The error keeps the provider, operation, command, and optional process
  * details needed for diagnostics. Callers should continue treating stdout and
  * stderr as redacted diagnostic text, not as a stable account-status API.
  *
- * @example
+ * **Example** (Constructing AiProviderCliError with make)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AiProviderCliError } from "@beep/ai-provider-cli"
@@ -40,7 +42,7 @@ const $I = $AiProviderCliId.create("AiProviderCli.errors");
  * @category errors
  * @since 0.0.0
  */
-export class AiProviderCliError extends TaggedErrorClass<AiProviderCliError>($I`AiProviderCliError`)(
+export class AiProviderCliError extends S.TaggedError<AiProviderCliError>($I`AiProviderCliError`)(
   "AiProviderCliError",
   {
     command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
@@ -65,7 +67,7 @@ export class AiProviderCliError extends TaggedErrorClass<AiProviderCliError>($I`
       description: "Redacted standard output captured from the provider CLI status command, when available.",
     }),
   },
-  $I.annote("AiProviderCliError", {
+  $I.annoteError<AiProviderCliError>("AiProviderCliError", {
     description: "Redacted technical failure emitted by Claude or Codex CLI status probes.",
   })
 ) {}

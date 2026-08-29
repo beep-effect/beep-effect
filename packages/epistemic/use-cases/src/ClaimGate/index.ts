@@ -8,7 +8,8 @@
 /**
  * Claim gate port exports.
  *
- * @example
+ * **Example** (ClaimGate is a function)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimGate from "@beep/epistemic-use-cases/ClaimGate"
@@ -19,11 +20,12 @@
  * @category services
  * @since 0.0.0
  */
-export * from "./ClaimGate.ports.js";
+export * from "./ClaimGate.ports.ts";
 /**
  * Claim gate implementation exports.
  *
- * @example
+ * **Example** (makeClaimGate is a function)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as ClaimGate from "@beep/epistemic-use-cases/ClaimGate"
@@ -34,4 +36,4 @@ export * from "./ClaimGate.ports.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./ClaimGate.service.js";
+export * from "./ClaimGate.service.ts";

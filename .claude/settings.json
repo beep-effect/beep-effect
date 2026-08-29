@@ -1,11 +1,4 @@
 {
-  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
-  "enabledMcpjsonServers": ["grafana"],
-  "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": false,
-    "serena@claude-plugins-official": false,
-    "compound-engineering@compound-engineering-plugin": true
-  },
   "permissions": {
     "allow": [
       "Bash(rg:*)",
@@ -19,6 +12,7 @@
       "Bash(git show:*)",
       "Bash(git branch:*)",
       "Bash(git worktree list:*)",
+      "Bash(git worktree prune:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr checks:*)",
       "Bash(gh pr list:*)",
@@ -29,10 +23,92 @@
       "Bash(bun run beep quality dev:*)",
       "Bash(bun run docgen:local:*)",
       "Bash(bunx turbo ls:*)",
-      "Bash(bunx --bun vitest run:*)"
-    ]
+      "Bash(bunx --bun vitest run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git stash push:*)",
+      "Bash(git stash show:*)",
+      "Bash(git stash list:*)",
+      "Bash(bun run beep yeet repair:*)",
+      "Bash(bun run beep yeet publish:*)",
+      "Bash(bun run beep yeet monitor:*)",
+      "Bash(bun run beep yeet closeout:*)",
+      "Bash(bun run beep worktree new:*)",
+      "Bash(bun run beep worktree doctor:*)",
+      "Bash(bun run beep worktree remove:*)",
+      "Bash(bun run beep goals:*)",
+      "Bash(bun run beep lint:*)",
+      "Bash(bun run beep laws:*)",
+      "Bash(rm -rf .beep/fallow)",
+      "Bash(bunx commitlint:*)",
+      "Bash(bun install:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --force-with-lease:*)",
+      "Bash(git push --mirror:*)",
+      "Bash(git stash clear:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git worktree remove --force:*)",
+      "Bash(bun run beep worktree remove --force:*)",
+      "Bash(git clean:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout .)",
+      "Bash(git checkout -- .)",
+      "Bash(gh pr merge --admin:*)",
+      "Bash(gh repo delete:*)",
+      "Edit(**/.github/workflows/**)",
+      "Edit(**/docs/_internal/**)",
+      "Edit(**/.claude/settings.json)"
+    ],
+    "defaultMode": "default"
   },
+  "enabledMcpjsonServers": [
+    "basic-memory",
+    "codegraph",
+    "phoenix-docs",
+    "phoenix"
+  ],
+  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -42,8 +118,71 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/law-pulse.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          }
+        ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": false,
+    "serena@claude-plugins-official": false,
+    "compound-engineering@compound-engineering-plugin": false
   },
   "extraKnownMarketplaces": {
     "compound-engineering-plugin": {
@@ -52,5 +191,6 @@
         "repo": "EveryInc/compound-engineering-plugin"
       }
     }
-  }
+  },
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect"
 }

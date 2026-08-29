@@ -19,7 +19,7 @@ const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 
 describe("Sha256Hex", () => {
   const decode = S.decodeUnknownSync(Sha256Hex);
-  const arbitrary = S.toArbitrary(Sha256Hex);
+  const arbitrary = S.toArbitrary(Sha256Hex)(fc);
 
   it("accepts canonical lowercase digests", () => {
     expect(decode(knownDigest)).toBe(knownDigest);
@@ -57,50 +57,56 @@ describe("Sha256HexFromBytes", () => {
   const decode = S.decodeUnknownEffect(Sha256HexFromBytes);
   const encode = S.encodeEffect(Sha256HexFromBytes);
 
-  it("decodes bytes into a canonical lowercase SHA-256 hex digest", () =>
+  it.effect("decodes bytes into a canonical lowercase SHA-256 hex digest", () =>
     Effect.gen(function* () {
       const input = new TextEncoder().encode("beep");
 
       expect(yield* decode(input)).toBe(knownDigest);
-    }).pipe(provideBunCrypto));
+    }).pipe(provideBunCrypto)
+  );
 
-  it("hashes empty bytes to the canonical empty SHA-256 digest", () =>
+  it.effect("hashes empty bytes to the canonical empty SHA-256 digest", () =>
     Effect.promise(() =>
       Promise.resolve(
         expect(Effect.runPromise(decode(new Uint8Array()).pipe(provideBunCrypto))).resolves.toBe(emptyDigest)
       )
-    ));
+    )
+  );
 
-  it("forbids encoding the digest back to source bytes", () =>
+  it.effect("forbids encoding the digest back to source bytes", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeUnknownEffect(Sha256Hex)(knownDigest);
+      const digest = yield* S.decodeEffect(Sha256Hex)(knownDigest);
 
       expect((yield* Effect.exit(encode(digest)))._tag).toBe("Failure");
-    }));
+    })
+  );
 });
 
 describe("Sha256HexFromHexBytes", () => {
   const decode = S.decodeUnknownEffect(Sha256HexFromHexBytes);
   const encode = S.encodeEffect(Sha256HexFromHexBytes);
 
-  it("decodes hex-encoded bytes into a canonical lowercase SHA-256 hex digest", () =>
+  it.effect("decodes hex-encoded bytes into a canonical lowercase SHA-256 hex digest", () =>
     Effect.promise(() =>
       Promise.resolve(expect(Effect.runPromise(decode("62656570").pipe(provideBunCrypto))).resolves.toBe(knownDigest))
-    ));
+    )
+  );
 
-  it("preserves hex transport validation errors", () =>
+  it.effect("preserves hex transport validation errors", () =>
     Effect.promise(() =>
       Promise.resolve(
         expect(Effect.runPromise(decode("0").pipe(provideBunCrypto))).rejects.toThrow(
-          "Length must be a multiple of 2, but is 1"
+          "Expected a valid hexadecimal string"
         )
       )
-    ));
+    )
+  );
 
-  it("forbids encoding the digest back to source hex bytes", () =>
+  it.effect("forbids encoding the digest back to source hex bytes", () =>
     Effect.gen(function* () {
-      const digest = yield* S.decodeUnknownEffect(Sha256Hex)(knownDigest);
+      const digest = yield* S.decodeEffect(Sha256Hex)(knownDigest);
 
       expect((yield* Effect.exit(encode(digest)))._tag).toBe("Failure");
-    }));
+    })
+  );
 });

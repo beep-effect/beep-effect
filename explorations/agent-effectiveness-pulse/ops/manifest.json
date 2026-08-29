@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-effectiveness-pulse",
+    "title": "Agent Effectiveness Pulse",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/harness-otel-adoption",
+        "goals/harness-hygiene-mechanical",
+        "goals/coding-agent-effectiveness-evidence-loop"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-07-31"
+  }
+}

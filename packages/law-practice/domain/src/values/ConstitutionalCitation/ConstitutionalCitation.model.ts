@@ -8,13 +8,15 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { ConstitutionalComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { ConstitutionalComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ConstitutionalCitation/ConstitutionalCitation.model");
 
 /**
  * A constitutional citation (type: `constitutional`).
+ *
+ * **Details**
  *
  * Spreads the shared {@link CitationBase} fields and adds the `constitutional`
  * discriminant tag plus the constitution-specific components: jurisdiction,
@@ -22,9 +24,8 @@ const $I = $LawPracticeDomainId.create("values/ConstitutionalCitation/Constituti
  * post-reform `currentLocation`, and the {@link ConstitutionalComponentSpan}
  * that locates each part in the source text.
  *
- * **Example**
+ * **Example** (Make a constitutional citation)
  *
- * @example
  * ```ts
  * import { ConstitutionalCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -124,7 +125,8 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
 /**
  * Companion namespace for `ConstitutionalCitation`.
  *
- * @example
+ * **Example** (Access Encoded type field)
+ *
  * ```ts
  * import type { ConstitutionalCitation } from "@beep/law-practice-domain"
  *
@@ -139,9 +141,8 @@ export declare namespace ConstitutionalCitation {
   /**
    * Wire-encoded representation of a decoded {@link ConstitutionalCitation}.
    *
-   * **Example**
+   * **Example** (Define Encoded type alias)
    *
-   * @example
    * ```ts
    * import type { ConstitutionalCitation } from "@beep/law-practice-domain"
    *

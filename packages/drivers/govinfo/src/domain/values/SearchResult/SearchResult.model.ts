@@ -12,12 +12,14 @@ const $I = $GovinfoId.create("domain/values/SearchResult/SearchResult.model");
 /**
  * Single GovInfo search hit with package, granule, and download metadata.
  *
- * @remarks
+ * **Details**
+ *
  * Search results may refer to a whole package or a package granule. GovInfo
  * package and granule identifiers are unique and can be used to retrieve
  * summaries, metadata, and content from retrieval endpoints.
  *
- * @example
+ * **Example** (Decode full search hit)
+ *
  * ```ts
  * import { SearchResult } from "@beep/govinfo/domain/values/SearchResult/SearchResult.model";
  * import * as S from "effect/Schema";
@@ -99,7 +101,8 @@ export class SearchResult extends S.Class<SearchResult>($I`SearchResult`)(
 /**
  * Companion namespace for {@link SearchResult} encoded helpers.
  *
- * @example
+ * **Example** (Decode typed SearchResult)
+ *
  * ```ts
  * import { SearchResult } from "@beep/govinfo/domain/values/SearchResult/SearchResult.model";
  * import * as S from "effect/Schema";
@@ -127,7 +130,8 @@ export declare namespace SearchResult {
   /**
    * Encoded JSON shape accepted by {@link SearchResult}.
    *
-   * @example
+   * **Example** (Encode decoded SearchResult)
+   *
    * ```ts
    * import { SearchResult } from "@beep/govinfo/domain/values/SearchResult/SearchResult.model";
    * import * as S from "effect/Schema";

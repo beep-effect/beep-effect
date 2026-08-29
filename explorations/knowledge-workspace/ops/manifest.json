@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "knowledge-workspace",
+    "title": "Knowledge Workspace",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when the workspace product bet re-enters the roadmap."
+    ],
+    "sources": [],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-08-13"
+  }
+}

@@ -55,7 +55,7 @@ One application with four faces, all over the same graph:
 - **Not a cloud SaaS.** Local-first, on device by default; client data does not leave the machine unless a backup backend is explicitly chosen. Embeddings are computed locally. (The competitive landscape is telling: the tools that cite their sources well are cloud-bound; the tools that are truly local don't ground rigorously, and none are IP-specialized — see [the PRD](./product/prose-to-proof.md). The local-*and*-grounded intersection is essentially unoccupied.)
 - **Not a replacement for systems of record.** It does not replace email, calendar, billing, docketing, or the USPTO. It connects to them and keeps *its own* claims, evidence, drafts, approvals, and provenance (`goals/agentic-professional-runtime/SPEC.md`).
 - **Not an autonomous lawyer.** Agents *propose*. The attorney *approves*. Legal advice, filings, and client-facing judgment stay behind a strict human approval gate (`goals/agentic-professional-runtime/docs/approval-and-autonomy-policy.md`).
-- **Not a place for privileged data in the repo.** Real client material lives outside git (`/home/elpresidank/data-home/oppold-corpus/`); the repository carries only synthetic fixtures.
+- **Not a place for privileged data in the repo.** Real client material lives outside git (the machine-local Oppold corpus home); the repository carries only synthetic fixtures.
 
 ## 6. Five principles
 

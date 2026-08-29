@@ -1,5 +1,4 @@
 # `@beep/repo-utils`
-<!-- cspell:ignore tsmorph -->
 
 Effect-based monorepo utilities for repository analysis and workspace management.
 

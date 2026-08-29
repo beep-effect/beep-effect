@@ -17,7 +17,7 @@ standard. Shared code is cross-slice product language, not a convenience bucket.
 - Treat `standards/architecture/02-shared-kernel.md` as the primary rulebook for
   this directory.
 - Check the current leaf package source before assuming a package already owns a
-  runtime surface. `domain/` and `tables/` are active. `config/`, `use-cases/`,
+  runtime surface. `domain/`, `use-cases/`, and `tables/` are active. `config/`,
   `client/`, `server/`, and `ui/` are reserved roles, not package directories
   today.
 
@@ -26,12 +26,11 @@ standard. Shared code is cross-slice product language, not a convenience bucket.
 | Package | Status | Add only when the content is |
 | --- | --- | --- |
 | `@beep/shared-domain` | Active | Driver-neutral shared product concepts, values, schemas, domain events, and pure behavior. |
+| `@beep/shared-use-cases` | Active | Contract-only promoted cross-slice application contracts; product ports remain server-only and require a promotion record. |
 | `@beep/shared-tables` | Active | Shared persistence/read-model metadata tied to shared product language. |
 
-Reserved future packages: `@beep/shared-config`, `@beep/shared-use-cases`,
-`@beep/shared-client`, `@beep/shared-server`, and `@beep/shared-ui`. Do not
-create them for symmetry. `@beep/shared-use-cases` does not exist yet because no
-cross-slice contract has met the promotion bar.
+Reserved future packages: `@beep/shared-config`, `@beep/shared-client`,
+`@beep/shared-server`, and `@beep/shared-ui`. Do not create them for symmetry.
 
 ## Rules
 
@@ -42,11 +41,11 @@ cross-slice contract has met the promotion bar.
   `shared/*`.
 - Do not add global registries, God Layers, catch-all config objects, or
   app-wide aggregation here.
-- Keep any future `shared/use-cases` package contract-only: no workflows,
+- Keep `shared/use-cases` contract-only: no workflows,
   schedulers, handlers, concrete adapters, transports, persistence, driver
   imports, or live Layers.
 - Keep the `shared-tables` Drizzle allowance narrow: metadata-only `pgTable`
-  definitions and indexes may be derived from shared-domain descriptors, but
+  definitions and indexes may be projected from shared-domain models, but
   connections, query execution, migrations, repositories, and live DB access are
   banned.
 - Keep config browser safety explicit: client code may consume only `/public`
@@ -61,8 +60,10 @@ Applies to every `*-tables` package (`@beep/shared-tables`,
 `@beep/epistemic-tables`, `@beep/workspace-tables`, …):
 
 - Keep table meaning tied to the owning domain's product language.
-- Generic projection belongs in `@beep/drizzle`; a tables package only
-  publishes concrete tables for its domain.
+- Generic schema-derived projection lives at `@beep/effect-drizzle` (member
+  root `packages/ecosystem/effect-drizzle/**`). Shared and slice tables call
+  `toPgTable(EntityModel)` and publish only concrete tables for their domain.
+  `@beep/drizzle` keeps execution and transaction capability permanently.
 - The only Drizzle allowance is metadata-only `pgTable` definition and index
   construction from domain descriptors — no connections, query execution,
   repositories, migrations, seeders, or live DB access.

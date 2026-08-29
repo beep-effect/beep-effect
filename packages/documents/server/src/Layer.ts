@@ -8,23 +8,48 @@
 
 import { VaultSyncEngine } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { Layer } from "effect";
-import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.js";
-import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "./aggregates/Sync/index.js";
+import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.ts";
+import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "./aggregates/Sync/index.ts";
 import {
   SyncConflictRepositoryDrizzleLayer,
   SyncConflictRepositoryInMemoryLayer,
-} from "./entities/SyncConflict/index.js";
-import { SyncCursorRepositoryDrizzleLayer, SyncCursorRepositoryInMemoryLayer } from "./entities/SyncCursor/index.js";
-import { SyncItemRepositoryDrizzleLayer, SyncItemRepositoryInMemoryLayer } from "./entities/SyncItem/index.js";
+} from "./entities/SyncConflict/index.ts";
+import { SyncCursorRepositoryDrizzleLayer, SyncCursorRepositoryInMemoryLayer } from "./entities/SyncCursor/index.ts";
+import { SyncItemRepositoryDrizzleLayer, SyncItemRepositoryInMemoryLayer } from "./entities/SyncItem/index.ts";
 import {
   SyncOperationRepositoryDrizzleLayer,
   SyncOperationRepositoryInMemoryLayer,
-} from "./entities/SyncOperation/index.js";
+} from "./entities/SyncOperation/index.ts";
+
+/**
+ * Document filing configuration layers consumed by application composition.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export {
+  FILING_DECISION_DEFAULT_MODEL,
+  FILING_DECISION_MODEL_ENV,
+  FilingDecisionLlmConfigLayer,
+} from "./aggregates/Document/FilingDecisionLlm.config.ts";
+/**
+ * Box-backed mirror configuration and adapter layers consumed by application
+ * composition.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export {
+  BoxMirrorConfigLayer,
+  DmsMirrorAvailabilityBoxLayer,
+  DmsMirrorBoxLive,
+} from "./aggregates/Sync/DmsMirrorBox.ts";
 
 /**
  * Live documents server layer.
  *
- * @example
+ * **Example** (Import DocumentsServerLive layer)
+ *
  * ```ts
  * import { DocumentsServerLive } from "@beep/documents-server/layer"
  *
@@ -39,7 +64,8 @@ export const DocumentsServerLive = DocumentsServerLayer;
 /**
  * Live documents server layer using an app-provided LanguageModel and file-processing service.
  *
- * @example
+ * **Example** (Import DocumentsServerLlmLive layer)
+ *
  * ```ts
  * import { DocumentsServerLlmLive } from "@beep/documents-server/layer"
  *
@@ -56,7 +82,8 @@ export const DocumentsServerLlmLive = DocumentsServerLlmLayer;
  * mirror with its availability probe, the vault sync configuration, and
  * platform filesystem and path services.
  *
- * @example
+ * **Example** (Import DocumentsSyncEngineLayer)
+ *
  * ```ts
  * import { DocumentsSyncEngineLayer } from "@beep/documents-server/layer"
  *
@@ -73,7 +100,8 @@ export const DocumentsSyncEngineLayer = Layer.effect(VaultSyncEngine, makeVaultS
  * configuration; still requires `PostgresDrizzle`, the DMS mirror with its
  * availability probe, and platform filesystem and path services.
  *
- * @example
+ * **Example** (Import DocumentsSyncDrizzleLive layer)
+ *
  * ```ts
  * import { DocumentsSyncDrizzleLive } from "@beep/documents-server/layer"
  *
@@ -101,7 +129,8 @@ export const DocumentsSyncDrizzleLive = DocumentsSyncEngineLayer.pipe(
  * filesystem and path services. The fixture handle stays exposed for tests
  * and smoke runs.
  *
- * @example
+ * **Example** (Import DocumentsSyncFixtureLive layer)
+ *
  * ```ts
  * import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer"
  *

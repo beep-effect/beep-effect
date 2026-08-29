@@ -2,7 +2,8 @@ import { A, P, Str, Struct } from "@beep/utils";
 import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import ts from "typescript";
+import generatedAliasPaths from "./vitest.aliases.generated.json" with { type: "json" };
+import type { Plugin } from "vite";
 import type { ViteUserConfig } from "vitest/config";
 
 type AliasEntry = {
@@ -11,8 +12,26 @@ type AliasEntry = {
 };
 
 const projectRootDirectory = new URL("./", import.meta.url);
-const rootTsconfigPath = new URL("./tsconfig.json", import.meta.url).pathname;
 const coverageProvider = "v8";
+
+// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
+// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
+const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
+  name: "beep:resolve-uniform-typescript-source-specifiers",
+  enforce: "pre",
+  resolveId(source, importer, options) {
+    if (importer === undefined || !source.startsWith(".") || !source.endsWith(".ts")) {
+      return null;
+    }
+
+    return this.resolve(source, importer, { ...options, skipSelf: true }).then((exactSource) =>
+      exactSource === null
+        ? this.resolve(source.replace(/\.ts$/, ".tsx"), importer, { ...options, skipSelf: true })
+        : exactSource
+    );
+  },
+});
+
 const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
@@ -47,29 +66,6 @@ const coverageThresholds = undefined;
 
 const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const readRootTsconfigPaths = (): Readonly<Record<string, readonly string[]>> => {
-  const fileText = ts.sys.readFile(rootTsconfigPath);
-
-  if (P.isUndefined(fileText)) {
-    return {};
-  }
-
-  const parsed = ts.parseConfigFileTextToJson(rootTsconfigPath, fileText);
-
-  if (
-    typeof parsed.config !== "object" ||
-    P.isNull(parsed.config) ||
-    typeof parsed.config.compilerOptions !== "object" ||
-    P.isNull(parsed.config.compilerOptions) ||
-    typeof parsed.config.compilerOptions.paths !== "object" ||
-    P.isNull(parsed.config.compilerOptions.paths)
-  ) {
-    return {};
-  }
-
-  return parsed.config.compilerOptions.paths as Record<string, readonly string[]>;
-};
-
 const toAliasEntry = (find: string, replacement: string): AliasEntry => {
   const absoluteReplacement = new URL(replacement, projectRootDirectory).pathname;
 
@@ -86,7 +82,7 @@ const toAliasEntry = (find: string, replacement: string): AliasEntry => {
   };
 };
 
-const rootTsconfigPathEntries = Struct.entries(readRootTsconfigPaths());
+const rootTsconfigPathEntries = Struct.entries(generatedAliasPaths);
 
 const rootTsconfigAliases = A.flatMap(
   A.sortWith(rootTsconfigPathEntries, ([find]) => find.length, Order.flip(Order.Number)),
@@ -95,8 +91,12 @@ const rootTsconfigAliases = A.flatMap(
 );
 
 const config: ViteUserConfig = {
+  plugins: [resolveUniformTypeScriptSourceSpecifiers()],
   oxc: {
-    target: "es2020",
+    // The repository's Node 24 and Bun runtimes both execute top-level await.
+    // Keeping Vitest's transform at ESNext avoids Oxc lowering/parsing warnings
+    // for the ESM CLI entrypoints exercised by the coverage lane.
+    target: "esnext",
   },
   optimizeDeps: {
     exclude: ["bun:sqlite"],
@@ -149,7 +149,6 @@ const config: ViteUserConfig = {
         "dist/",
         "benchmark/",
         "bundle/",
-        "**/dtslint/**",
         "build/",
         "coverage/",
         "test/utils/",

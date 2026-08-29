@@ -6,7 +6,7 @@
  */
 
 import { $HubspotId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { O, thunkUndefined } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -25,7 +25,8 @@ const HubSpotHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.isLessTha
 /**
  * Technical error reasons emitted by the HubSpot driver.
  *
- * @example
+ * **Example** (Decode transport reason)
+ *
  * ```ts
  * import { HubSpotErrorReason } from "@beep/hubspot"
  * import * as S from "effect/Schema"
@@ -52,7 +53,8 @@ export const HubSpotErrorReason = LiteralKit([
 /**
  * Type for {@link HubSpotErrorReason}.
  *
- * @example
+ * **Example** (Assign response status type)
+ *
  * ```ts
  * import type { HubSpotErrorReason as HubSpotErrorReasonType } from "@beep/hubspot"
  *
@@ -68,7 +70,8 @@ export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
 /**
  * Technical failure raised by the HubSpot driver boundary.
  *
- * @example
+ * **Example** (Create error with form context)
+ *
  * ```ts
  * import { HubSpotError } from "@beep/hubspot"
  *
@@ -83,7 +86,7 @@ export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError`)(
+export class HubSpotError extends S.TaggedError<HubSpotError>($I`HubSpotError`)(
   "HubSpotError",
   {
     cause: S.optionalKey(S.String).annotateKey({
@@ -105,14 +108,15 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
       description: "HubSpot API URL associated with the failed request.",
     }),
   },
-  $I.annote("HubSpotError", {
+  $I.annoteError<HubSpotError>("HubSpotError", {
     description: "Redacted technical failure raised by the HubSpot API driver boundary.",
   })
 ) {
   /**
    * Create a HubSpot driver error.
    *
-   * @example
+   * **Example** (Create error with status)
+   *
    * ```ts
    * import { HubSpotError } from "@beep/hubspot"
    *
@@ -138,7 +142,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
   /**
    * Create a failed Effect containing a HubSpot driver error.
    *
-   * @example
+   * **Example** (Failed Effect from reason)
+   *
    * ```ts
    * import { HubSpotError } from "@beep/hubspot"
    *
@@ -154,7 +159,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
   /**
    * Create a thunk returning a failed Effect containing a HubSpot driver error.
    *
-   * @example
+   * **Example** (Thunk returning failed Effect)
+   *
    * ```ts
    * import { HubSpotError } from "@beep/hubspot"
    *
@@ -171,7 +177,8 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
 /**
  * Options used when constructing HubSpot driver errors.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { HubSpotErrorOptions } from "@beep/hubspot"
  *
@@ -188,7 +195,7 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
  */
 export class HubSpotErrorOptions extends S.Class<HubSpotErrorOptions>($I`HubSpotErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
       description: "Original native or third-party defect when one was available.",
     }),
     email: S.optionalKey(S.String).annotateKey({
@@ -210,7 +217,7 @@ export class HubSpotErrorOptions extends S.Class<HubSpotErrorOptions>($I`HubSpot
 ) {}
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the HubSpot boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();

@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for X-Permitted-Cross-Domain-Policies schemas.
  *
- * @example
+ * **Example** (Import namespace keys check)
+ *
  * ```ts
  * import * as PermittedCrossDomainPolicies from "@beep/schema/PermittedCrossDomainPolicies"
  *

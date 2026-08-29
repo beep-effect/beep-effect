@@ -9,12 +9,15 @@ import { Number as N } from "effect";
 /**
  * Determines if the given input is a number and is positive (greater than or equal to 0).
  *
+ * **Details**
+ *
  * This utility function serves as a type guard ensuring the input is a `number`
  * and meets the condition of being at least 0. Useful when validating or filtering
  * data in both functional and effect contexts.
  *
- * @example
- * ```typescript
+ * **Example** (Filter and type-guard positives)
+ *
+ * ```ts
  * import { isPositive } from "@beep/utils/Number";
  * import * as A from "effect/Array";
  *
@@ -32,9 +35,9 @@ import { Number as N } from "effect";
  * }
  * ```
  *
- * @see N.isGreaterThanOrEqualTo for comparison implementation details.
  * @param u - The value to check.
  * @returns True if the value is a number and is positive, false otherwise.
+ * @see N.isGreaterThanOrEqualTo for comparison implementation details.
  * @category validation
  * @since 0.0.0
  */
@@ -44,7 +47,8 @@ export const isPositive: (u: unknown) => u is number = (u: unknown): u is number
 /**
  * Re-export of all helpers from `effect/Number`.
  *
- * @example
+ * **Example** (Import Number helpers)
+ *
  * ```ts
  * import * as Num from "@beep/utils/Number"
  *
@@ -59,7 +63,8 @@ export * from "effect/Number";
 /**
  * Type guard that checks whether a value is a `number` and an integer.
  *
- * @example
+ * **Example** (Check integer type guard)
+ *
  * ```ts
  * import { N } from "@beep/utils"
  *

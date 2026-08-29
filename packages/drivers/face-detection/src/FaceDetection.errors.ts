@@ -6,7 +6,7 @@
  */
 
 import { $FaceDetectionId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -14,7 +14,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $FaceDetectionId.create("FaceDetection.errors");
-const FaceDetectionDefect = S.Defect({ includeStack: true });
+const FaceDetectionDefect = Defect({ includeStack: true });
 
 type FaceDetectionErrorContextInput = {
   readonly cause?: unknown;
@@ -50,7 +50,8 @@ const messageWithCause = (message: string, cause: unknown): string =>
 /**
  * Driver operation names surfaced in {@link FaceDetectionError} diagnostics.
  *
- * @example
+ * **Example** (Log detect operation enum)
+ *
  * ```ts
  * import { FaceDetectionOperation } from "@beep/face-detection"
  *
@@ -77,7 +78,8 @@ export const FaceDetectionOperation = LiteralKit([
 /**
  * Runtime TypeScript type produced by the {@link FaceDetectionOperation} schema.
  *
- * @example
+ * **Example** (Type a detect operation)
+ *
  * ```ts
  * import type { FaceDetectionOperation } from "@beep/face-detection"
  *
@@ -90,10 +92,25 @@ export const FaceDetectionOperation = LiteralKit([
  */
 export type FaceDetectionOperation = typeof FaceDetectionOperation.Type;
 
+const FaceDetectionErrorLeadingContextFields = {
+  cause: S.OptionFromOptionalKey(FaceDetectionDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Inspectable originating defect, when available.",
+  }),
+  imagePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Image path active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+const FaceDetectionErrorTrailingContextFields = {
+  modelPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Model path active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+
 /**
  * Options used when normalizing unknown face detection boundary failures.
  *
- * @example
+ * **Example** (Make options with model path)
+ *
  * ```ts
  * import { FaceDetectionErrorFromUnknownOptions } from "@beep/face-detection"
  * import * as O from "effect/Option"
@@ -109,15 +126,8 @@ export class FaceDetectionErrorFromUnknownOptions extends S.Class<FaceDetectionE
   $I`FaceDetectionErrorFromUnknownOptions`
 )(
   {
-    cause: S.OptionFromOptionalKey(FaceDetectionDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    imagePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Image path active when the failure occurred.",
-    }),
-    modelPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Model path active when the failure occurred.",
-    }),
+    ...FaceDetectionErrorLeadingContextFields,
+    ...FaceDetectionErrorTrailingContextFields,
   },
   $I.annote("FaceDetectionErrorFromUnknownOptions", {
     description: "Options used when normalizing unknown face detection failures.",
@@ -127,13 +137,15 @@ export class FaceDetectionErrorFromUnknownOptions extends S.Class<FaceDetectionE
 /**
  * Technical failure raised by the `@beep/face-detection` driver boundary.
  *
- * @remarks
+ * **Details**
+ *
  * This error is reserved for driver concerns such as ONNX Runtime loading,
  * model session creation, image preprocessing, request decoding, and
  * post-processing tensor validation. Product-level "no face found" decisions
  * should be modeled outside this driver.
  *
- * @example
+ * **Example** (Create FaceDetectionError instance)
+ *
  * ```ts
  * import { FaceDetectionError } from "@beep/face-detection"
  *
@@ -144,26 +156,19 @@ export class FaceDetectionErrorFromUnknownOptions extends S.Class<FaceDetectionE
  * @category errors
  * @since 0.0.0
  */
-export class FaceDetectionError extends TaggedErrorClass<FaceDetectionError>($I`FaceDetectionError`)(
+export class FaceDetectionError extends S.TaggedError<FaceDetectionError>($I`FaceDetectionError`)(
   "FaceDetectionError",
   {
-    cause: S.OptionFromOptionalKey(FaceDetectionDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    imagePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Image path active when the failure occurred.",
-    }),
+    ...FaceDetectionErrorLeadingContextFields,
     message: S.String.annotateKey({
       description: "Human-readable face-detection failure summary.",
     }),
-    modelPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Model path active when the failure occurred.",
-    }),
+    ...FaceDetectionErrorTrailingContextFields,
     operation: FaceDetectionOperation.annotateKey({
       description: "Face-detection driver operation that failed.",
     }),
   },
-  $I.annote("FaceDetectionError", {
+  $I.annoteError<FaceDetectionError>("FaceDetectionError", {
     description: "Technical ONNX face detection driver failure scoped to a driver operation.",
   })
 ) {
@@ -172,7 +177,8 @@ export class FaceDetectionError extends TaggedErrorClass<FaceDetectionError>($I`
   /**
    * Normalize an unknown model, platform, or image failure into a {@link FaceDetectionError}.
    *
-   * @example
+   * **Example** (Normalize unknown load failure)
+   *
    * ```ts
    * import { FaceDetectionError } from "@beep/face-detection"
    *

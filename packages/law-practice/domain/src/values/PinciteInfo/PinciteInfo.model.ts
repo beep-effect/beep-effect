@@ -9,17 +9,25 @@ import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
+import type { FastCheck } from "effect/testing";
 
 const $I = $LawPracticeDomainId.create("values/PinciteInfo/PinciteInfo.model");
 
+const additionalPincitesToArbitrary: () => (
+  fc: typeof FastCheck
+) => FastCheck.Arbitrary<ReadonlyArray<PinciteInfo.Type>> = () => (fc) => fc.constant([]);
+
 /**
  * Companion namespace for `PinciteInfo`.
+ *
+ * **Details**
  *
  * The decoded and encoded shapes are hand-written so the self-recursive
  * `additionalPincites` suspend can name them without making the class's own
  * base expression circular (see the {@link PinciteInfo} field definition).
  *
- * @example
+ * **Example** (Access Encoded type alias)
+ *
  * ```ts
  * import type { PinciteInfo } from "@beep/law-practice-domain"
  *
@@ -33,9 +41,8 @@ export declare namespace PinciteInfo {
   /**
    * Decoded representation of a {@link PinciteInfo}.
    *
-   * **Example**
+   * **Example** (Alias decoded Type)
    *
-   * @example
    * ```ts
    * import type { PinciteInfo } from "@beep/law-practice-domain"
    *
@@ -46,7 +53,7 @@ export declare namespace PinciteInfo {
    * @since 0.0.0
    */
   export interface Type {
-    readonly additionalPincites: O.Option<ReadonlyArray<PinciteInfo.Type>>;
+    readonly additionalPincites: ReadonlyArray<PinciteInfo.Type>;
     readonly endPage: O.Option<NonNegativeInt>;
     readonly endParagraph: O.Option<NonNegativeInt>;
     readonly footnote: O.Option<NonNegativeInt>;
@@ -55,15 +62,14 @@ export declare namespace PinciteInfo {
     readonly page: O.Option<NonNegativeInt>;
     readonly paragraph: O.Option<NonNegativeInt>;
     readonly raw: string;
-    readonly starPage: O.Option<boolean>;
+    readonly starPage: boolean;
   }
 
   /**
    * Wire-encoded representation of a decoded {@link PinciteInfo}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { PinciteInfo } from "@beep/law-practice-domain"
    *
@@ -74,7 +80,7 @@ export declare namespace PinciteInfo {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly additionalPincites?: ReadonlyArray<PinciteInfo.Encoded>;
+    readonly additionalPincites?: ReadonlyArray<PinciteInfo.Encoded> | undefined;
     readonly endPage?: number;
     readonly endParagraph?: number;
     readonly footnote?: number;
@@ -96,8 +102,10 @@ export declare namespace PinciteInfo {
  * hand-written {@link PinciteInfo} namespace types for the same reason.
  */
 const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, PinciteInfo.Encoded> => PinciteInfo)).pipe(
-  S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  SchemaUtils.withEmptyArrayDefaults<PinciteInfo.Type>(),
+  S.annotate({
+    toArbitrary: additionalPincitesToArbitrary,
+  }),
   S.annotateKey({
     description:
       "Additional discrete pincites following the primary one (#247). Each entry is a full PinciteInfo so ranges/footnotes/star-pages inside the comma chain are preserved.",
@@ -107,16 +115,17 @@ const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, Pinci
 /**
  * Structured pincite information parsed from citation text.
  *
+ * **Details**
+ *
  * `page` and `paragraph` are mutually exclusive — a pincite is either a page
  * reference or a paragraph reference (#204). Every optional numeric component
- * is modeled as `Option<NonNegativeInt>` with a `None` constructor default, and
- * `additionalPincites` is a self-recursive `Option` array so the discrete
- * pincites of a comma chain each preserve their own ranges, footnotes, and
+ * is modeled as `Option<NonNegativeInt>` with a `None` constructor default.
+ * `starPage` defaults to `false`, and `additionalPincites` defaults to an empty
+ * self-recursive array whose entries preserve their own ranges, footnotes, and
  * star-pages (#247).
  *
- * **Example**
+ * **Example** (Build page-range pincite)
  *
- * @example
  * ```ts
  * import { PinciteInfo } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -127,13 +136,13 @@ const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, Pinci
  *   endPage: O.some(NonNegativeInt.make(575)),
  *   isRange: true,
  *   raw: "570-75",
- *   additionalPincites: O.some([
+ *   additionalPincites: [
  *     PinciteInfo.make({
  *       page: O.some(NonNegativeInt.make(580)),
  *       isRange: false,
  *       raw: "580",
  *     }),
- *   ]),
+ *   ],
  * })
  *
  * console.log(O.isSome(pincite.page)) // true
@@ -178,9 +187,7 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
     isRange: S.Boolean.annotateKey({
       description: "True if this is a page or paragraph range",
     }),
-    starPage: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    starPage: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
           'True when the pincite uses star-pagination (e.g., "*2"), denoting a slip-opinion page or unreported-decision page rather than a reporter page.',

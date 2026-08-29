@@ -16,20 +16,22 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("Cuid", () => {
-  it("computes SHA-512 with the platform Crypto service", () =>
+  it.effect("computes SHA-512 with the platform Crypto service", () =>
     Effect.gen(function* () {
       const digest = yield* sha512(new TextEncoder().encode("beep"));
       expect(Encoding.encodeHex(digest)).toBe(beepSha512Digest);
-    }).pipe(provideScopedLayer(BunCrypto.layer)));
+    }).pipe(provideScopedLayer(BunCrypto.layer))
+  );
 
-  it("generates CUID values with explicit platform crypto", () =>
+  it.effect("generates CUID values with explicit platform crypto", () =>
     Effect.gen(function* () {
       const id = yield* cuid;
       expect(S.is(Cuid)(id)).toBe(true);
-    }).pipe(provideScopedLayer(CuidTestLayer)));
+    }).pipe(provideScopedLayer(CuidTestLayer))
+  );
 
   it("derives valid CUIDs from the schema arbitrary", () => {
-    const arbitrary = S.toArbitrary(Cuid);
+    const arbitrary = S.toArbitrary(Cuid)(fc);
 
     fc.assert(
       fc.property(arbitrary, (id) => {

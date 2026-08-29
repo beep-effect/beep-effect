@@ -13,7 +13,7 @@ import {
   HubSpotUpsertContactRequest,
 } from "@beep/hubspot";
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Clock, Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -46,7 +46,26 @@ type ContactSubmissionErrorOptions = {
   readonly status?: number;
 };
 
-class ContactSubmissionError extends TaggedErrorClass<ContactSubmissionError>($I`ContactSubmissionError`)(
+/**
+ * Typed server-side failure raised by the OIP contact submission boundary.
+ *
+ * **Example** (Create a provider submission failure)
+ *
+ * ```ts
+ * import { ContactSubmissionError } from "@/contact/ContactSubmission.service"
+ *
+ * const error = ContactSubmissionError.fromReason("provider", {
+ *   provider: "hubspot",
+ *   providerReason: "unavailable",
+ *   status: 503
+ * })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
   {
     provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -54,7 +73,7 @@ class ContactSubmissionError extends TaggedErrorClass<ContactSubmissionError>($I
     reason: ContactSubmissionErrorReason,
     status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
   },
-  $I.annote("ContactSubmissionError", {
+  $I.annoteError<ContactSubmissionError>("ContactSubmissionError", {
     description: "Typed server-side contact submission boundary failure.",
   })
 ) {
@@ -244,7 +263,8 @@ const contactResponseForError = (_error: ContactSubmissionError): ContactSubmiss
 /**
  * Submits an OIP contact payload to HubSpot when runtime config is present.
  *
- * @example
+ * **Example** (Submit contact via Effect)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
@@ -300,7 +320,8 @@ export const submitContact: (input: unknown) => Effect.Effect<ContactSubmissionR
 /**
  * Builds a JSON-safe contact response object.
  *
- * @example
+ * **Example** (Build contact response body)
+ *
  * ```ts
  * import { ContactSubmissionResponse, contactResponseBody } from "@beep/oip-web/contact"
  *

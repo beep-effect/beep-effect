@@ -9,9 +9,11 @@ import {
 } from "@beep/ai-provider-cli";
 import * as HostPath from "@beep/utils/Path";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Ref, Result } from "effect";
+import { Effect, Layer, Logger, Ref, References, Result } from "effect";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
+import { ChildProcessSpawner } from "effect/unstable/process";
 import type { AiProviderCliProvider, AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 
 const claudeLoggedInStdout = `{
@@ -160,6 +162,61 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
     })
   );
 
+  it.effect(
+    "logs safe process diagnostics before translating native failures",
+    Effect.fnUntraced(function* () {
+      const executable = "/nonexistent/claude-secret-path";
+      const secret = "AI_PROVIDER_SECRET_MARKER";
+      const annotations: Array<Record<string, unknown>> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+      });
+      const failingSpawnerLayer = Layer.succeed(
+        ChildProcessSpawner.ChildProcessSpawner,
+        ChildProcessSpawner.make(() =>
+          Effect.fail(
+            PlatformError.systemError({
+              _tag: "NotFound",
+              cause: new Error(secret),
+              method: "spawn",
+              module: "ChildProcess",
+              pathOrDescriptor: executable,
+            })
+          )
+        )
+      );
+      const nativeLayer = AiProviderCli.makeLayer({ claudePath: executable }).pipe(Layer.provide(failingSpawnerLayer));
+      const testLayer = Layer.mergeAll(
+        nativeLayer,
+        Logger.layer([logger]),
+        Layer.succeed(References.MinimumLogLevel, "Debug")
+      );
+
+      const error = yield* Effect.gen(function* () {
+        const providerCli = yield* AiProviderCli;
+        return yield* providerCli.checkAuth(
+          "claude",
+          AiProviderCliProbeOptions.make({ env: { TEST_AI_PROVIDER_SECRET: secret } })
+        );
+      }).pipe(provideScopedLayer(testLayer), Effect.flip);
+
+      expect(error._tag).toBe("AiProviderCliError");
+      expect(error.command).toEqual(O.none());
+      expect(error.stderr).toEqual(O.some("unknown"));
+      expect(error.message).not.toContain(secret);
+      expect(error.message).not.toContain(executable);
+      expect(annotations).toEqual([
+        {
+          "ai_provider_cli.operation": "checkAuth",
+          "ai_provider_cli.provider": "claude",
+          "process.error_kind": "NotFound",
+          "process.method": "spawn",
+          "process.module": "ChildProcess",
+        },
+      ]);
+    })
+  );
+
   it("keeps the encoded snapshot wire shape byte-identical", () => {
     const fullSnapshot = AiProviderCliAuthSnapshot.make({
       email: O.some("dev@example.com"),
@@ -196,10 +253,12 @@ describe("@beep/ai-provider-cli executable overrides", () => {
     "expands a tilde executable override before it reaches the runner",
     Effect.fnUntraced(function* () {
       const lastRunRequest = yield* Ref.make<O.Option<AiProviderCliRunRequest>>(O.none());
-      const CapturingLayer = AiProviderCli.makeLayerFromRunner((request) =>
-        Ref.set(lastRunRequest, O.some(request)).pipe(
-          Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: claudeLoggedInStdout }))
-        )
+      const CapturingLayer = AiProviderCli.makeLayerFromRunner(
+        (request) =>
+          Ref.set(lastRunRequest, O.some(request)).pipe(
+            Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: claudeLoggedInStdout }))
+          ),
+        { claudePath: "~/bin/claude" }
       );
       yield* Effect.gen(function* () {
         const providerCli = yield* AiProviderCli;
@@ -210,6 +269,28 @@ describe("@beep/ai-provider-cli executable overrides", () => {
       }).pipe(provideScopedLayer(CapturingLayer));
       const request = O.getOrThrow(yield* Ref.get(lastRunRequest));
       expect(request.executable).toBe(HostPath.join(NodeOS.homedir(), "bin/claude"));
+    })
+  );
+
+  it.effect(
+    "rejects an off-allowlist executable before invoking the runner",
+    Effect.fnUntraced(function* () {
+      const runnerInvoked = yield* Ref.make(false);
+      const CapturingLayer = AiProviderCli.makeLayerFromRunner((request) =>
+        Ref.set(runnerInvoked, true).pipe(
+          Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: request.executable }))
+        )
+      );
+      const error = yield* Effect.gen(function* () {
+        const providerCli = yield* AiProviderCli;
+        return yield* providerCli.checkAuthSnapshot(
+          "claude",
+          AiProviderCliProbeOptions.make({ executable: O.some("/tmp/arbitrary-executable") })
+        );
+      }).pipe(provideScopedLayer(CapturingLayer), Effect.flip);
+
+      expect(S.is(AiProviderCliError)(error)).toBe(true);
+      expect(yield* Ref.get(runnerInvoked)).toBe(false);
     })
   );
 });

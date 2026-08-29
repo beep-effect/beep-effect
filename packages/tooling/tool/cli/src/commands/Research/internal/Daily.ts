@@ -10,30 +10,31 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
-import { ResearchCommandError } from "../Research.errors.js";
+import { runToExit } from "../../../internal/process/StepExec.ts";
+import { ResearchCommandError } from "../Research.errors.ts";
 import {
   ResearchCognifyOptions,
   ResearchDailySummary,
   ResearchDigestOptions,
   ResearchHistorySiftOptions,
   ResearchNotionPullOptions,
-} from "../Research.schemas.js";
-import { cognifyImpl } from "./Cognify.js";
-import { digestImpl } from "./Digest.js";
-import { historySiftImpl } from "./HistorySift.js";
-import { notionPullImpl } from "./NotionPullRun.js";
-import { VAULT_DIRS } from "./Vault.js";
+} from "../Research.schemas.ts";
+import { cognifyImpl } from "./Cognify.ts";
+import { digestImpl } from "./Digest.ts";
+import { historySiftImpl } from "./HistorySift.ts";
+import { notionPullImpl } from "./NotionPullRun.ts";
+import { VAULT_DIRS } from "./Vault.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ResearchDailyOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import type { ResearchDailyOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
 
 /**
  * Commit changed vault files when the daily pipeline is configured to commit.
  *
- * @example
+ * **Example** (Commit vault git changes)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { commitVault } from "@beep/repo-cli/commands/Research/internal/Daily"
@@ -42,6 +43,7 @@ const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
  * const program = commitVault("/repo/.research")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category processes
  * @since 0.0.0
  */
@@ -49,12 +51,12 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
   vaultRoot: string
 ): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const run = (args: ReadonlyArray<string>) =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const handle = yield* ChildProcess.make("git", [...args], { cwd: vaultRoot, stderr: "pipe", stdout: "pipe" });
-        return yield* handle.exitCode;
-      })
-    ).pipe(
+    runToExit({
+      command: "git",
+      args,
+      cwd: vaultRoot,
+      stdio: "ignore",
+    }).pipe(
       ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`),
       Effect.filterOrFail(
         (exitCode) => exitCode === 0,
@@ -63,19 +65,20 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
       )
     );
   yield* run(["add", "-A", "--", ".", `:(exclude)${VAULT_DIRS.state}/**`]);
-  const status = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", ["diff", "--cached", "--quiet"], {
-        cwd: vaultRoot,
-        stderr: "pipe",
-        stdout: "pipe",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(ResearchCommandError.mapError("Failed checking vault staging state."));
+  const status = yield* runToExit({
+    command: "git",
+    args: ["diff", "--cached", "--quiet"],
+    cwd: vaultRoot,
+    stdio: "ignore",
+  }).pipe(ResearchCommandError.mapError("Failed checking vault staging state."));
   if (status === 0) {
     yield* Console.log("research daily: vault clean, nothing to commit.");
     return;
+  }
+  if (status !== 1) {
+    return yield* ResearchCommandError.make({
+      message: `git diff --cached --quiet exited with ${status} in the vault.`,
+    });
   }
   const date = Str.slice(0, 10)(DateTime.formatIso(yield* DateTime.now));
   yield* run(["commit", "-q", "-m", `capture ${date}`]);
@@ -85,7 +88,8 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
 /**
  * Run the daily research pipeline steps in order.
  *
- * @example
+ * **Example** (Daily pipeline with options)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { dailyImpl } from "@beep/repo-cli/commands/Research/internal/Daily"
@@ -102,6 +106,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -128,7 +133,7 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
   yield* step(
     "history-sift",
     historySiftImpl(
-      yield* S.decodeUnknownEffect(ResearchHistorySiftOptions)({
+      yield* S.decodeEffect(ResearchHistorySiftOptions)({
         browser: options.browser,
         sinceDays: options.sinceDays,
         vaultRoot: options.vaultRoot,

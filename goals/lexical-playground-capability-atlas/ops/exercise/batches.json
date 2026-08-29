@@ -1,0 +1,659 @@
+{
+  "authoring.autocomplete": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "authoring.find-replace": {
+    "group": "keyboard",
+    "scripted": true
+  },
+  "authoring.redo": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "authoring.undo": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "authoring.visible-non-printing": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "collaboration.realtime": {
+    "group": "programmatic",
+    "scripted": false,
+    "manualReason": "The pinned npm dev command starts only Vite; realtime collaboration additionally requires the separately managed y-websocket endpoint and a second browser peer, so connection/reconciliation must be closed in an interactive two-peer session."
+  },
+  "comments.threads": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "document.clear": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.comments-panel": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.export-dom": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.export-lexical-json": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.html-source": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.import-lexical-json": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.markdown-source": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.read-only": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.share-url": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "document.speech-to-text": {
+    "group": "browser-api",
+    "scripted": false,
+    "manualReason": "Chromium fake-media can exercise permission plumbing, but the pinned Web Speech API still depends on a real browser speech service and audible utterance; transcription quality and permission UX require an interactive microphone session."
+  },
+  "document.time-travel": {
+    "group": "document-action",
+    "scripted": true
+  },
+  "extension.click-after-last-block": {
+    "group": "selection",
+    "scripted": true
+  },
+  "extension.drag-drop-paste": {
+    "group": "paste-drop",
+    "scripted": true
+  },
+  "extension.draggable-block": {
+    "group": "draggable-block",
+    "scripted": true
+  },
+  "extension.floating-toolbar": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "extension.history": {
+    "group": "keyboard",
+    "scripted": true
+  },
+  "extension.shortcut-help": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "extension.slash-picker": {
+    "group": "slash-menu",
+    "scripted": true
+  },
+  "extension.toolbar": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.bold": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.capitalize": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.clear": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.inline-code": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.italic": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.lowercase": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.semantic-highlight": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.strikethrough": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.subscript": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.superscript": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.underline": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "format.uppercase": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "interchange.html": {
+    "group": "importer",
+    "scripted": true
+  },
+  "interchange.markdown": {
+    "group": "importer",
+    "scripted": true
+  },
+  "interchange.pandoc-docx": {
+    "group": "importer",
+    "scripted": false,
+    "manualReason": "The pinned Lexical Playground registers no Pandoc/DOCX importer or exporter UI/programmatic adapter, so there is no honest browser lifecycle to script; a human must exercise the product-owned boundary when it exists."
+  },
+  "interchange.pdf": {
+    "group": "importer",
+    "scripted": false,
+    "manualReason": "The pinned Lexical Playground registers no PDF importer or exporter UI/programmatic adapter, so there is no honest browser lifecycle to script; a human must exercise the product-owned boundary when it exists."
+  },
+  "interchange.raw-lexical-json": {
+    "group": "importer",
+    "scripted": true
+  },
+  "layout.align-center": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.align-end": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.align-justify": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.align-left": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.align-right": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.align-start": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.indent": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "layout.outdent": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "network.remote-embed-resolution": {
+    "group": "selection",
+    "scripted": false,
+    "manualReason": "The pinned Playground has no authorized-provider resolver or consent UI for inert remote references; its embed nodes load provider content directly, so the atlas contract must be exercised manually in the product host that owns authorization policy."
+  },
+  "node.auto-link": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "node.card": {
+    "group": "slash-menu",
+    "scripted": true
+  },
+  "node.code": {
+    "group": "block-menu",
+    "scripted": true
+  },
+  "node.collapsible-container": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.collapsible-content": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.collapsible-title": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.date-time": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.emoji": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "node.equation": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.excalidraw": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.figma": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.hashtag": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "node.heading": {
+    "group": "block-menu",
+    "scripted": true
+  },
+  "node.horizontal-rule": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.image": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.keyword": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "node.layout-container": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.layout-item": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.line-break": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.link": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "node.list": {
+    "group": "block-menu",
+    "scripted": true
+  },
+  "node.list-item": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.mark": {
+    "group": "floating-toolbar",
+    "scripted": true
+  },
+  "node.mention": {
+    "group": "typeahead",
+    "scripted": true
+  },
+  "node.overflow": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "node.page": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "node.page-break": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.paragraph": {
+    "group": "block-menu",
+    "scripted": true
+  },
+  "node.poll": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.pull-quote": {
+    "group": "slash-menu",
+    "scripted": true
+  },
+  "node.quote": {
+    "group": "block-menu",
+    "scripted": true
+  },
+  "node.review": {
+    "group": "slash-menu",
+    "scripted": true
+  },
+  "node.ruby": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "node.special-text": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "node.sticky": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.tab": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.table": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.table-cell": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.table-row": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.text": {
+    "group": "programmatic",
+    "scripted": true
+  },
+  "node.tweet": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "node.youtube": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "page.margins": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "page.mode": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "page.orientation": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "page.pagination": {
+    "group": "automatic",
+    "scripted": true
+  },
+  "page.size": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "setting.autocomplete": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.block-selection": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.bracket-special-text": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.char-limit-utf16": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.char-limit-utf8": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.checklist-focus": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.code-highlighted": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.code-shiki": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.collaboration": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.collaboration-v2": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.empty-editor": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.fit-nested-tables": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.lexical-context-menu": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.link-attributes": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.list-strict-indent": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.max-length": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.measure-typing-perf": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.nested-editor-tree-view": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.nested-tables": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.preserve-markdown-newlines": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.retain-selection": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.rich-text": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.shadow-dom": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.table-cell-background": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.table-cell-merge": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.table-horizontal-scroll": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.table-of-contents": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.tree-view": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "setting.visible-non-printing": {
+    "group": "settings-panel",
+    "scripted": true
+  },
+  "style.background-color": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "style.font-family": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "style.font-size": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "style.text-color": {
+    "group": "toolbar",
+    "scripted": true
+  },
+  "table.cell-background": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.column-reorder": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.freeze": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.headers": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.insert": {
+    "group": "insert-menu",
+    "scripted": true
+  },
+  "table.merge": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.nested": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.resize-scroll": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.row-striping": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.rows-columns": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.sort": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "table.vertical-align": {
+    "group": "context-menu",
+    "scripted": true
+  },
+  "transformer.check-list": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.code-block": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.emoji": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.emphasis": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.equation": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.heading": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.highlight": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.horizontal-rule": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.image": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.inline-code": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.link": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.ordered-list": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.quote": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.strikethrough": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.strong": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.strong-emphasis": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.table": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.tweet": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  },
+  "transformer.unordered-list": {
+    "group": "markdown-shortcut",
+    "scripted": true
+  }
+}

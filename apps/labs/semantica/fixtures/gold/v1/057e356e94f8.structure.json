@@ -1,0 +1,222 @@
+{
+  "version": "gold/v1",
+  "paperId": "057e356e94f8",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 209,
+      "endChar": 333,
+      "quoteSha256": "4f6bebfdf63f6bbd58dc9203976f92fdc92c64d3e169b27a73bed94a5b2ef8a1",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 478,
+      "endChar": 486,
+      "quoteSha256": "d21b4a64a2d8656a0fdf7ab2e89a49164ac504686cfa2a3d442e87c209286330",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1467,
+      "endChar": 1481,
+      "quoteSha256": "c9234967b670c32478644b4236ec8fd2f351225696cacbcd0fad1f1838b95170",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 6102,
+      "endChar": 6129,
+      "quoteSha256": "8ac8c21055e8f06dbf5c79f5eb7106f4bdd2cdbc8cda597154093b193f5e55b6",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 6897,
+      "endChar": 6917,
+      "quoteSha256": "c4193fb42d247a2155cfc573aadfe33a966425a66ea55bf34ecd0dc85a21020d",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 7602,
+      "endChar": 7611,
+      "quoteSha256": "56b38a4d4eb15b958bf6aa4d94b43b5aac6f564a72adec5ba25cc2bcf71e01a5",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 9588,
+      "endChar": 9607,
+      "quoteSha256": "c1929f5fc2c31d2122e1c82d9228f0de8787cd28459dbf43974171ac8eb7d2ec",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 10425,
+      "endChar": 10456,
+      "quoteSha256": "abfdb7c668601caa867bdeac9616f59316db21b8e63d52da35832aa16b0e4a0c",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 13231,
+      "endChar": 13253,
+      "quoteSha256": "28f3a5be170f2d11b2d572d0d54e938f36c3b8d79be0ce36f3ca6d5bec3f43b0",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 13817,
+      "endChar": 13828,
+      "quoteSha256": "7be2ad6ef319352327c21e2b7b9c8c68cfcb8c98c25e5d45775e4bb8fbfea357",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 14545,
+      "endChar": 14554,
+      "quoteSha256": "9f9b4d7a06a8055b40e670dc13e8694853de2d65c43938b5837d5d888c6a147a",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 15078,
+      "endChar": 15098,
+      "quoteSha256": "2e7d6cea08f0020f10b6ca7cffee236276e3a29203d99bdefe8715139a510e25",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 15542,
+      "endChar": 15553,
+      "quoteSha256": "17c347d483d4c401fb6e4a12d83c97ba49333942ec44f1b8fd97b09e2daabdc4",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 15972,
+      "endChar": 16001,
+      "quoteSha256": "49831e4e417c131f7b69bd1d5ebc4d3e9ac13da2aa72e7fcb017176ac394edd5",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 16250,
+      "endChar": 16266,
+      "quoteSha256": "8f1654c64d586cbad37b795a6a9b0ce4ac16f28ddb317cec2e028d89ea7ed2f7",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 3,
+      "startChar": 17656,
+      "endChar": 17693,
+      "quoteSha256": "0f15ed918aa0f51ace511c40e865a75c711961bdf1cfee34a2cddde5de868138",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 18721,
+      "endChar": 18730,
+      "quoteSha256": "d266f1b8d767f72d50a051902bde4d108e843534f33f986c667b541682c5b401",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 21443,
+      "endChar": 21469,
+      "quoteSha256": "84eaf3e5122a02c7584d64d7be9ea7ffc8f4a85ee15aeaf74398170147a530bb",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 23453,
+      "endChar": 23472,
+      "quoteSha256": "fd9f620010785555fdf762b57d087f708cf86971dcfb59eb396cf5e7aaaa9633",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 25034,
+      "endChar": 25046,
+      "quoteSha256": "2a6506945581218449cc497a03e8cfcd007a2708c0fe07433c561542a75e2602",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 25488,
+      "endChar": 25517,
+      "quoteSha256": "481caee0683b2f5cf315b6232877a64bb98a12141be58fd185e2f162e332a7dc",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 28751,
+      "endChar": 28776,
+      "quoteSha256": "ecaae246894482c9fd0447c358207e7ee8abe471e3a87ec4f18c56f136ae35c7",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 30080,
+      "endChar": 30114,
+      "quoteSha256": "73da481d244008d1984d3b2a63bea4db5bfe3ef40e767b7b5d5d84b115d70a66",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 32418,
+      "endChar": 32430,
+      "quoteSha256": "35f7d23fd70cfc85a80573db030804aded85b3a023614232c8cbfd6b5bbda70f",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 34833,
+      "endChar": 34848,
+      "quoteSha256": "4be0f860ee3560910d50596233fe802eeecf0972c7a9de427a76ae9a622e2ea1",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35172,
+      "endChar": 35182,
+      "quoteSha256": "69824d3b0e70ca6aaa0da1613b65fd914c442bf1f7ad1bb22bcdfbdfe1a05e39",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

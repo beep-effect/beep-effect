@@ -6,7 +6,7 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -37,7 +37,8 @@ type XAiErrorOptionsInput = {
 /**
  * Technical error reasons emitted by the xAI driver.
  *
- * @example
+ * **Example** (Assign response status reason)
+ *
  * ```ts
  * import type { XAiErrorReason } from "@beep/xai"
  *
@@ -62,7 +63,8 @@ export const XAiErrorReason = XAiErrorReasonBase.pipe(
 /**
  * Type for {@link XAiErrorReason}.
  *
- * @example
+ * **Example** (Assign transport reason type)
+ *
  * ```ts
  * import type { XAiErrorReason } from "@beep/xai"
  *
@@ -78,7 +80,8 @@ export type XAiErrorReason = typeof XAiErrorReason.Type;
 /**
  * Technical failure raised by the xAI driver boundary.
  *
- * @example
+ * **Example** (Create error from descriptor)
+ *
  * ```ts
  * import { XAiError, XAI_ENDPOINTS } from "@beep/xai"
  *
@@ -89,7 +92,7 @@ export type XAiErrorReason = typeof XAiErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
+export class XAiError extends S.TaggedError<XAiError>($I`XAiError`)(
   "XAiError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -100,14 +103,15 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
     reason: XAiErrorReason,
     status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
-  $I.annote("XAiError", {
+  $I.annoteError<XAiError>("XAiError", {
     description: "Redacted technical failure raised by the xAI driver boundary.",
   })
 ) {
   /**
    * Create a driver error scoped to a documented xAI endpoint.
    *
-   * @example
+   * **Example** (Create endpoint scoped error)
+   *
    * ```ts
    * import { XAiError, XAI_ENDPOINTS } from "@beep/xai"
    *
@@ -138,7 +142,8 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
   /**
    * Create a configuration error before a specific endpoint exists.
    *
-   * @example
+   * **Example** (Create configuration error)
+   *
    * ```ts
    * import { XAiError } from "@beep/xai"
    *
@@ -157,7 +162,7 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
 }
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the xAI boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -186,7 +191,7 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
     : O.none();
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- xAI cause normalization preserves provider-specific HTTP labels
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()
@@ -200,7 +205,8 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
 /**
  * Options used when constructing xAI driver errors.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { XAiErrorOptions } from "@beep/xai"
  * import * as O from "effect/Option"
@@ -214,7 +220,7 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
  */
 export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
     status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("XAiErrorOptions", {

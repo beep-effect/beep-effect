@@ -1,0 +1,3 @@
+Identity-backed vocabulary and canonical semantic IRIs with committed SKOS seed data.
+Schema-first taxonomy models with fail-closed loader; filing segments and vendor slugs
+reject path traversal. Gates at merge: Greptile 5/5, 0 unresolved threads, 24 checks green.

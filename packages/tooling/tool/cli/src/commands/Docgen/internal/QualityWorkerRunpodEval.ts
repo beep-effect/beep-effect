@@ -24,6 +24,7 @@ import {
   StopPodRequest,
 } from "@beep/runpod";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -35,15 +36,15 @@ import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../internal/cli/Json.js";
-import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
-import { DocgenQualityReport } from "./Quality.js";
+} from "../../../internal/cli/Json.ts";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.ts";
+import { DocgenQualityReport } from "./Quality.ts";
 import {
   analyzeDocgenQualityWorkerEval,
   DocgenQualityWorkerEvalProvider,
   DocgenQualityWorkerEvalReport,
   DocgenQualityWorkerEvalScope,
-} from "./QualityWorkerEval.js";
+} from "./QualityWorkerEval.ts";
 import type { Pod, Template } from "@beep/runpod";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerRunpodEval");
@@ -214,7 +215,8 @@ class DocgenQualityWorkerRunpodEvalRuntime extends S.Class<DocgenQualityWorkerRu
 /**
  * JSON wrapper report emitted by `docgen quality-worker-eval-runpod`.
  *
- * @example
+ * **Example** (Access report model fields)
+ *
  * ```ts
  * import type { DocgenQualityWorkerRunpodEvalReport } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
@@ -222,6 +224,7 @@ class DocgenQualityWorkerRunpodEvalRuntime extends S.Class<DocgenQualityWorkerRu
  * const sourceReport: DocgenQualityWorkerRunpodEvalReport["sourceQualityReport"] = "quality.json"
  * console.log(`${model} from ${sourceReport}`)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -253,7 +256,8 @@ export class DocgenQualityWorkerRunpodEvalReport extends S.Class<DocgenQualityWo
 /**
  * Options for a Runpod-backed quality worker eval run.
  *
- * @example
+ * **Example** (Pick eval options subset)
+ *
  * ```ts
  * import type { RunDocgenQualityWorkerRunpodEvalOptions } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
@@ -264,6 +268,7 @@ export class DocgenQualityWorkerRunpodEvalReport extends S.Class<DocgenQualityWo
  * }
  * console.log(options.scope)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -315,7 +320,7 @@ const hashPublicIdentifier = (value: string): Effect.Effect<string, DomainError>
 
 const ollamaBootstrapCommand = (model: string): ReadonlyArray<string> => {
   // TODO(effect-native-migration): model schema
-  const pullPayload = shellQuote(S.encodeUnknownSync(S.UnknownFromJsonString)({ name: model }));
+  const pullPayload = shellQuote(Unknown.encodeUnknownSyncFromJsonString({ name: model }));
 
   // cspell:ignore resolv
   return [
@@ -369,14 +374,16 @@ const templateOrder = Order.mapInput(Order.String, templateSortKey);
 /**
  * Select the first suitable Ollama template from live Runpod templates.
  *
- * @param templates - Templates returned by Runpod.
- * @returns The deterministic Ollama template candidate, when present.
- * @example
+ * **Example** (Select from empty templates)
+ *
  * ```ts
  * import { selectQualityWorkerRunpodTemplate } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
  * console.log(selectQualityWorkerRunpodTemplate([]))
  * ```
+ *
+ * @param templates - Templates returned by Runpod.
+ * @returns The deterministic Ollama template candidate, when present.
  * @category utilities
  * @since 0.0.0
  */
@@ -421,9 +428,8 @@ class QualityWorkerRunpodEvalPodCreateInputOptions extends S.Class<QualityWorker
 /**
  * Build the Runpod create-pod body for an Ollama worker eval host.
  *
- * @param input - Pod image, template, GPU, and model selection.
- * @returns The typed Runpod create-pod input.
- * @example
+ * **Example** (Build pod create input)
+ *
  * ```ts
  * import { makeQualityWorkerRunpodEvalPodCreateInput } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
@@ -435,6 +441,9 @@ class QualityWorkerRunpodEvalPodCreateInputOptions extends S.Class<QualityWorker
  * })
  * console.log(input.computeType)
  * ```
+ *
+ * @param input - Pod image, template, GPU, and model selection.
+ * @returns The typed Runpod create-pod input.
  * @category constructors
  * @since 0.0.0
  */
@@ -631,7 +640,10 @@ const waitForOllamaReady = Effect.fn("DocgenQualityWorkerRunpodEval.waitForOllam
         ? Effect.succeed(true)
         : Effect.fail(DomainError.make({ message: `Ollama model "${model}" is not ready at ${baseUrl}.` }))
     ),
-    Effect.retry(Schedule.max([Schedule.spaced(Duration.seconds(5)), Schedule.recurs(attempts)])),
+    // Schedule.max continues while ANY sub-schedule continues, so the old
+    // `max([spaced, recurs])` form was unbounded and only the outer timeout saved it;
+    // the delay must ride on `recurs` itself for the attempt cap to be real.
+    Effect.retry(Schedule.recurs(attempts).pipe(Schedule.addDelay(() => Effect.succeed(Duration.seconds(5))))),
     Effect.timeoutOrElse({
       duration: timeout,
       orElse: () =>
@@ -965,13 +977,15 @@ const recommendationFor = (
 /**
  * Required v1 model id for Runpod-backed Qwen worker evals.
  *
- * @returns The exact model id accepted by the Runpod command in v1.
- * @example
+ * **Example** (Return required model id)
+ *
  * ```ts
  * import { requiredQualityWorkerRunpodEvalModel } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
  * console.log(requiredQualityWorkerRunpodEvalModel()) // "qwen3-coder:30b"
  * ```
+ *
+ * @returns The exact model id accepted by the Runpod command in v1.
  * @category constants
  * @since 0.0.0
  */
@@ -980,13 +994,15 @@ export const requiredQualityWorkerRunpodEvalModel = (): string => REQUIRED_RUNPO
 /**
  * Default packet cap for Runpod-backed worker eval runs.
  *
- * @returns Default maximum number of packets sent to the remote worker.
- * @example
+ * **Example** (Return default packet limit)
+ *
  * ```ts
  * import { defaultQualityWorkerRunpodEvalPacketLimit } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
  * console.log(defaultQualityWorkerRunpodEvalPacketLimit()) // 10
  * ```
+ *
+ * @returns Default maximum number of packets sent to the remote worker.
  * @category constants
  * @since 0.0.0
  */
@@ -995,13 +1011,15 @@ export const defaultQualityWorkerRunpodEvalPacketLimit = (): number => DEFAULT_R
 /**
  * Default Phoenix-compatible OTLP base URL for remote worker eval traces.
  *
- * @returns Default OTLP collector base URL.
- * @example
+ * **Example** (Return default OTLP URL)
+ *
  * ```ts
  * import { defaultQualityWorkerRunpodEvalOtlpBaseUrl } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
  * console.log(defaultQualityWorkerRunpodEvalOtlpBaseUrl()) // "http://localhost:6006"
  * ```
+ *
+ * @returns Default OTLP collector base URL.
  * @category constants
  * @since 0.0.0
  */
@@ -1010,13 +1028,15 @@ export const defaultQualityWorkerRunpodEvalOtlpBaseUrl = (): string => DEFAULT_R
 /**
  * Default Phoenix project for remote worker eval traces.
  *
- * @returns Default Phoenix project name.
- * @example
+ * **Example** (Return default OTLP project)
+ *
  * ```ts
  * import { defaultQualityWorkerRunpodEvalOtlpProject } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
  * console.log(defaultQualityWorkerRunpodEvalOtlpProject()) // "beep-jsdoc-worker-eval"
  * ```
+ *
+ * @returns Default Phoenix project name.
  * @category constants
  * @since 0.0.0
  */
@@ -1025,13 +1045,15 @@ export const defaultQualityWorkerRunpodEvalOtlpProject = (): string => DEFAULT_R
 /**
  * Default readiness timeout for remote Ollama bootstrap.
  *
- * @returns Default timeout in milliseconds.
- * @example
+ * **Example** (Return readiness timeout ms)
+ *
  * ```ts
  * import { defaultQualityWorkerRunpodEvalReadinessTimeoutMs } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
  * console.log(defaultQualityWorkerRunpodEvalReadinessTimeoutMs()) // 1_800_000
  * ```
+ *
+ * @returns Default timeout in milliseconds.
  * @category constants
  * @since 0.0.0
  */
@@ -1041,12 +1063,8 @@ export const defaultQualityWorkerRunpodEvalReadinessTimeoutMs = (): number =>
 /**
  * Run a read-only JSDoc quality worker eval on an ephemeral Runpod pod.
  *
- * @effects
- * - Creates a billable Runpod GPU pod after explicit confirmation.
- * - Waits for Ollama readiness, runs the existing read-only worker eval, and
- *   stops/deletes the pod unless debug keep mode is enabled.
- * - Optionally emits sanitized summary and hashed packet spans to Phoenix OTLP.
- * @example
+ * **Example** (Compose Runpod eval CLI)
+ *
  * ```ts
  * import { requiredQualityWorkerRunpodEvalModel } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
@@ -1067,6 +1085,12 @@ export const defaultQualityWorkerRunpodEvalReadinessTimeoutMs = (): number =>
  * // "bun run beep docgen quality-worker-eval-runpod --confirm-runpod-eval --provider ollama --model qwen3-coder:30b"
  * console.log(command.join(" "))
  * ```
+ *
+ * @effects
+ * - Creates a billable Runpod GPU pod after explicit confirmation.
+ * - Waits for Ollama readiness, runs the existing read-only worker eval, and
+ *   stops/deletes the pod unless debug keep mode is enabled.
+ * - Optionally emits sanitized summary and hashed packet spans to Phoenix OTLP.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1160,9 +1184,8 @@ export const runDocgenQualityWorkerRunpodEval = Effect.fn(
 /**
  * Render a Runpod worker eval wrapper report as stable JSON.
  *
- * @param report - Runpod worker eval wrapper report.
- * @returns Effect that yields stable pretty JSON.
- * @example
+ * **Example** (Serialize report to JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { DocgenQualityWorkerEvalReport } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
@@ -1260,6 +1283,9 @@ export const runDocgenQualityWorkerRunpodEval = Effect.fn(
  * )
  * console.log(hasRecommendation) // example value
  * ```
+ *
+ * @param report - Runpod worker eval wrapper report.
+ * @returns Effect that yields stable pretty JSON.
  * @category formatting
  * @since 0.0.0
  */

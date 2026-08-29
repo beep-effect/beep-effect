@@ -1,7 +1,7 @@
 import { EffectFnRulesOptions, runEffectFnRules } from "@beep/repo-cli/test/Laws";
 import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
 import { A } from "@beep/utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -10,11 +10,7 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
-);
+const testLayer = Layer.mergeAll(NodeServices.layer, TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const CLI_ENTRYPOINT = new URL("../src/bin.ts", import.meta.url).pathname;
 
 const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>

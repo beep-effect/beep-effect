@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "model-artifact-admission",
+    "title": "Model Artifact Admission",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/model-arrangement-admission-core"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-25",
+    "updated": "2026-08-17"
+  }
+}

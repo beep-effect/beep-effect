@@ -15,25 +15,27 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Order } from "effect";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.js";
-import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
 
 /**
  * Repo-relative path of the generated goals index.
  *
- * @example
+ * **Example** (Read the generated index path)
+ *
  * ```ts
  * import { PORTFOLIO_INDEX_PATH } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
  *
  * console.log(PORTFOLIO_INDEX_PATH) // "goals/INDEX.md"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -50,7 +52,8 @@ const GROUP_TITLES: Readonly<Record<GoalStatus, string>> = {
 /**
  * One rendered row of the goals index.
  *
- * @example
+ * **Example** (Build a row for an active packet)
+ *
  * ```ts
  * import { PortfolioIndexRow } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
  *
@@ -61,8 +64,10 @@ const GROUP_TITLES: Readonly<Record<GoalStatus, string>> = {
  *   phasesComplete: 1,
  *   phasesTotal: 6,
  * })
- * console.log(row.slug)
+ *
+ * console.log(`${row.phasesComplete}/${row.phasesTotal}`) // "1/6"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,29 +96,34 @@ const truncateCell = (text: string): string =>
   Str.length(text) <= MISSION_CELL_MAX ? text : `${pipe(text, Str.slice(0, MISSION_CELL_MAX - 1))}…`;
 
 /**
- * Render the goals index Markdown from prepared rows.
+ * Renders the goals index Markdown from prepared rows.
  *
- * Pure and deterministic: groups follow the canonical status order, rows sort
- * by slug, and no timestamps are embedded, so identical inputs render
- * byte-identical output.
+ * **Details**
  *
- * @param rows - Prepared index rows (one per decodable packet).
- * @param invalid - Slugs whose manifest is missing or does not decode.
- * @returns The full `goals/INDEX.md` content.
- * @example
+ * Pure and deterministic: groups follow the canonical status order, rows sort by slug, and no
+ * timestamps are embedded, so identical inputs render byte-identical output. That byte-stability is
+ * what lets the drift check compare generated and committed content directly.
+ *
+ * **Example** (Render an index with no packets)
+ *
  * ```ts
  * import { renderPortfolioIndex } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
  *
  * const content = renderPortfolioIndex([], [])
+ *
  * console.log(content.startsWith("# Goals Index")) // true
  * ```
+ *
+ * @param rows - Prepared index rows, one per decodable packet.
+ * @param invalid - Slugs whose manifest is missing or does not decode.
+ * @returns The full `goals/INDEX.md` content.
  * @category formatting
  * @since 0.0.0
  */
-export const renderPortfolioIndex = (
-  rows: ReadonlyArray<PortfolioIndexRow>,
-  invalid: ReadonlyArray<string>
-): string => {
+export const renderPortfolioIndex: {
+  (invalid: ReadonlyArray<string>): (rows: ReadonlyArray<PortfolioIndexRow>) => string;
+  (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string;
+} = dual(2, (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string => {
   const sortedRows = A.sort(rows, rowBySlug);
   const counts = GoalStatus.Options.map(
     (status) => `${A.length(A.filter(sortedRows, (row) => row.status === status))} ${status}`
@@ -157,23 +167,31 @@ export const renderPortfolioIndex = (
 
   lines.push("");
   return A.join(lines, "\n");
-};
+});
 
 /**
- * Build the current goals index content from the filesystem.
+ * Builds the current goals index content by reading every packet manifest under a repository root.
  *
- * @example
+ * **Details**
+ *
+ * Packets whose manifest is missing or fails to decode are not dropped: they are collected as
+ * invalid slugs and rendered in their own section, so a broken manifest is visible rather than
+ * silently absent from the index.
+ *
+ * **Example** (Build the index for the current working tree)
+ *
  * ```ts
  * import { buildPortfolioIndexContent } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
  * import { Effect } from "effect"
  *
- * console.log(Effect.isEffect(buildPortfolioIndexContent()))
+ * console.log(Effect.isEffect(buildPortfolioIndexContent())) // true
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */
-export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexContent")(function* () {
-  const records = yield* listGoalPackets();
+export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexContent")(function* (repoRoot = ".") {
+  const records = yield* listGoalPackets(repoRoot);
   let rows = A.empty<PortfolioIndexRow>();
   let invalid = A.empty<string>();
 
@@ -211,15 +229,18 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
 });
 
 /**
- * Write `goals/INDEX.md` from the current manifests.
+ * Writes `goals/INDEX.md` from the current manifests.
  *
- * @example
+ * **Example** (Regenerate the committed index)
+ *
  * ```ts
  * import { writePortfolioIndex } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
  * import { Effect } from "effect"
  *
- * console.log(Effect.isEffect(writePortfolioIndex()))
+ * console.log(Effect.isEffect(writePortfolioIndex())) // true
  * ```
+ *
+ * @effects Overwrites the generated index file at {@link PORTFOLIO_INDEX_PATH}.
  * @category use-cases
  * @since 0.0.0
  */
@@ -230,8 +251,12 @@ export const writePortfolioIndex = Effect.fn("Goals.writePortfolioIndex")(functi
   return content;
 });
 
-const writeFlag = Flag.boolean("write").pipe(Flag.withDescription("Write goals/INDEX.md from the current manifests"));
+const writeFlag = Flag.boolean("write").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Write goals/INDEX.md from the current manifests")
+);
 const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Fail when goals/INDEX.md drifts from the current manifests")
 );
 
@@ -270,14 +295,21 @@ const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
 });
 
 /**
- * `bun run beep goals index` — generate or verify `goals/INDEX.md`.
+ * The `beep goals index` subcommand, which generates or verifies `goals/INDEX.md`.
  *
- * @example
+ * **Details**
+ *
+ * Without `--write` the command is a drift check: it renders the expected index, compares it to the
+ * committed file, and fails when they differ instead of quietly repairing the working tree.
+ *
+ * **Example** (Read the subcommand identity)
+ *
  * ```ts
  * import { goalsIndexCommand } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
  *
- * console.log(goalsIndexCommand.name)
+ * console.log(goalsIndexCommand.name) // "index"
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

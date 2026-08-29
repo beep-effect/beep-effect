@@ -221,6 +221,48 @@ describe("@beep/utils Str.replaceAllWith", () => {
   });
 });
 
+describe("@beep/utils Str.matchEmpty", () => {
+  it("data-first: runs onEmpty for the empty string", () => {
+    expect(Str.matchEmpty("", { onEmpty: () => "<empty>", onNonEmpty: () => 0 })).toBe("<empty>");
+  });
+
+  it("data-first: runs onNonEmpty with the string", () => {
+    expect(Str.matchEmpty("beep", { onEmpty: () => 0, onNonEmpty: (s) => s.length })).toBe(4);
+  });
+
+  it("data-last: dispatches per applied string", () => {
+    const summarize = Str.matchEmpty({
+      onEmpty: () => "<empty>",
+      onNonEmpty: (s) => `head: ${s[0]}`,
+    });
+    expect(summarize("")).toBe("<empty>");
+    expect(summarize("beep")).toBe("head: b");
+  });
+
+  it("data-last: works in pipe", () => {
+    expect(pipe("beep", Str.matchEmpty({ onEmpty: () => 0, onNonEmpty: (s) => s.length }))).toBe(4);
+  });
+
+  it("evaluates onEmpty lazily, only for empty input", () => {
+    let onEmptyCalls = 0;
+    const options = {
+      onEmpty: () => {
+        onEmptyCalls += 1;
+        return "<empty>";
+      },
+      onNonEmpty: (s: string) => s,
+    };
+    expect(Str.matchEmpty("beep", options)).toBe("beep");
+    expect(onEmptyCalls).toBe(0);
+    expect(Str.matchEmpty("", options)).toBe("<empty>");
+    expect(onEmptyCalls).toBe(1);
+  });
+
+  it("treats whitespace-only strings as non-empty", () => {
+    expect(Str.matchEmpty(" ", { onEmpty: () => "empty", onNonEmpty: () => "non-empty" })).toBe("non-empty");
+  });
+});
+
 describe("@beep/utils Str.truncate", () => {
   it("data-first: trims text before returning untruncated text", () => {
     expect(Str.truncate("  hello  ", 10)).toBe("hello");

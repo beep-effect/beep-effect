@@ -8,23 +8,24 @@
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { WorkerId } from "../../entities/Worker/index.js";
-import { defaultWorkPriority, WorkPriority } from "../../values/WorkPriority/index.js";
-import { WorkItemAlreadyArchived, WorkItemAssigneeRequired, WorkItemInvalidTransition } from "./WorkItem.errors.js";
-import { WorkItemId, WorkItemStatus, WorkItemTitle } from "./WorkItem.values.js";
+import { defaultWorkPriority, WorkPriority } from "../../values/WorkPriority/index.ts";
+import { WorkItemAlreadyArchived, WorkItemAssigneeRequired, WorkItemInvalidTransition } from "./WorkItem.errors.ts";
+import { WorkItemId, WorkItemStatus, WorkItemTitle } from "./WorkItem.values.ts";
 
 const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.model");
 
 /**
  * Aggregate state for a WorkItem moving through the architecture lab workflow.
  *
- * @example
+ * **Example** (Construct assigned WorkItem)
+ *
  * ```ts
  * import { WorkItem, WorkItemId, WorkItemTitle, type WorkItemStatus } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { WorkPriority } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -77,7 +78,8 @@ export class WorkItem extends S.Class<WorkItem>($I`WorkItem`)(
 /**
  * Constructor input for creating an open WorkItem with optional priority.
  *
- * @example
+ * **Example** (Create input without priority)
+ *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as O from "effect/Option"
@@ -119,7 +121,8 @@ export class CreateWorkItemInput extends S.Class<CreateWorkItemInput>($I`CreateW
 /**
  * Create a new open WorkItem aggregate and apply the default priority when omitted.
  *
- * @example
+ * **Example** (Create open WorkItem defaults)
+ *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as O from "effect/Option"
@@ -204,10 +207,11 @@ const requireTransition = (
 /**
  * Assign an open or already assigned WorkItem to a concrete Worker identifier.
  *
- * @example
+ * **Example** (Assign open WorkItem)
+ *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, assign, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -251,7 +255,8 @@ export const assign = Effect.fn("WorkItem.assign")(function* (workItem: WorkItem
 /**
  * Complete an open or assigned WorkItem while leaving an already completed item unchanged.
  *
- * @example
+ * **Example** (Complete open WorkItem)
+ *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, complete, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { Effect } from "effect"
@@ -294,7 +299,8 @@ export const complete = Effect.fn("WorkItem.complete")(function* (workItem: Work
 /**
  * Reopen a completed WorkItem and clear any assignee carried by the closed aggregate.
  *
- * @example
+ * **Example** (Reopen completed WorkItem)
+ *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, complete, create, reopen } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { Effect } from "effect"
@@ -337,7 +343,8 @@ export const reopen = Effect.fn("WorkItem.reopen")(function* (workItem: WorkItem
 /**
  * Archive a mutable WorkItem as the terminal lifecycle state.
  *
- * @example
+ * **Example** (Archive open WorkItem)
+ *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, archive, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { Effect } from "effect"

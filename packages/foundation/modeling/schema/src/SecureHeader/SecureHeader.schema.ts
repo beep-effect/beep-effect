@@ -29,7 +29,8 @@ const SecureHeaderBase = LiteralKit([
 /**
  * Secure header literal schema.
  *
- * @example
+ * **Example** (Check Options membership)
+ *
  * ```ts
  * import { SecureHeader } from "@beep/schema/SecureHeader"
  *
@@ -49,7 +50,8 @@ export const SecureHeader = SecureHeaderBase.pipe(
 /**
  * Runtime type for secure header identifiers.
  *
- * @example
+ * **Example** (Type a header identifier)
+ *
  * ```ts
  * import { SecureHeader } from "@beep/schema/SecureHeader"
  *

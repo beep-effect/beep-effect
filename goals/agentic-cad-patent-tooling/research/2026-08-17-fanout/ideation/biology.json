@@ -1,0 +1,32 @@
+{
+  "ideas": [
+    {
+      "text": "Build a missing-self NK layer on the Matter graph: every Claim/spec term is an MHC ligand, every DWG block/STEP product is an antigen, and the agent kills (flags, never files) any numeral that lacks one side of the 37 CFR 1.84(p) bijection.",
+      "rationale": "NK cells destroy cells that fail to present self-MHC. ClaimMaster only works if a text layer exists; this watches the knowledge-graph edge itself—PatentAsset ↔ numeral ↔ CAD entity—so an outline-only illustrator PDF still gets audited because the bijection lives in the graph, not in the sheet."
+    },
+    {
+      "text": "Run thymic negative selection on the numeral repertoire before any sheet leaves the Matter workspace: a numeral that binds two different CAD identities is auto-reactive and is deleted in-development, never exported.",
+      "rationale": "T-cells that recognize two self peptides are killed in the thymus so they never reach the periphery. The periphery here is a filed figure set; the thymus is a local Effect service that treats numeral reuse across views as autoimmunity and retires the numeral instead of letting it infect every projection of the same .dwg."
+    },
+    {
+      "text": "Treat the 552 SVG + 175 live .ai files as commensal gut flora on the 837-DWG host, and inoculate a plasmid-like text-layer numeral genome into them so ClaimMaster can digest the drawing.",
+      "rationale": "Commensals metabolize what the host cannot. The CAD is the host; the illustrator artwork is flora already being edited this month. Horizontal gene transfer copies DWG ATTRIB/block names into SVG/AI text so the delivery is no longer a sterile outline-only PDF, and pathogenic flora (no-text sheets) get flagged as dysbiosis rather than accepted intake."
+    },
+    {
+      "text": "Build a phylogenetic tree over the DWG corpus and inherit numerals like conserved genes: same part down a revision clade keeps the number; a deleted part becomes vestigial and its numeral is never reused.",
+      "rationale": "Hox genes stay numbered across lineages; lost organs stay lost. Tom’s 837 AutoCAD files are a fossil record through 2026-05. The agent does not invent figures—it traces block/layer identity along file lineage, writes conserved numeral alleles onto the PatentAsset, and treats a vanished fastener as a vestigial organ so 1.84(p)(5) cannot recycle its number onto a new part."
+    },
+    {
+      "text": "Emit a morphogen gradient from the disclosure (claim independence, embodiment mention density, novel-element peaks) and let figure views differentiate along it into a PLAN + numeral map, not a drawing.",
+      "rationale": "Cells become bone or gut by position in a concentration field, not by being drawn as bone. Nobody sells disclosure→figure plan. The gradient is computed locally from Claim/embodiment nodes; high plateaus become isometric hosts, steep interfaces become exploded views, local maxima become details. The tissue that differentiates is the missing 80% thinking artifact, with draft-quality HLR from the Python sidecar only where the gradient demands a view."
+    },
+    {
+      "text": "Package every draft sheet as an apoptotic bleb: a figure meant to die, carrying the CAD identity and numeral antigens so the human illustrator macrophage can phagocytose a linked handoff instead of re-thinking the invention.",
+      "rationale": "Apoptotic bodies are incomplete on purpose and display ‘eat-me’ signals. Draft quality is the spec. The build is the bleb format—three.js snapshot + lead-line graph + bijection + pointer into the privileged CAD file—so the $170–240 6-sheet job arrives pre-opsonized. Value is not replacing the illustrator; it is preventing the attorney from re-deriving the numeral map during unlimited revisions."
+    },
+    {
+      "text": "Add a molecular-mimicry screen: local 2B–8B embeddings compare client DWG/STEP solids to PriorArtReference-linked CAD so a lookalike competitor part cannot receive a ‘self’ numeral.",
+      "rationale": "Pathogens display host-like peptides to evade immunity. The graph already has PriorArtReference nodes; the corpus has 201 STEP + 54 SolidWorks + 30 Rhino sitting next to client .dwg. The agent presents both geometries to a local encoder on the R9700 box, tags mimic edges as non-self, and refuses to let the numeral bijection colonize prior-art geometry as if it were the claimed embodiment."
+    }
+  ]
+}

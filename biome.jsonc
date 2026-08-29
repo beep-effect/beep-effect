@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -21,6 +21,12 @@
       "!**/.beep",
       "!.agents",
       "!.repos",
+      "!.codex",
+      "!.claude/worktrees",
+      // Impeccable is vendored agent tooling mirrored for Claude Code and
+      // GitHub Copilot; keep upstream bundles outside authored repo formatting.
+      "!.claude/skills/impeccable",
+      "!.github/skills/impeccable",
       "!specs",
       "!**/.tsup",
       "!**/.turbo",
@@ -31,6 +37,7 @@
       "!**/__snapshots__",
       "!./package.json",
       "!**/vendor",
+      "!infra/ci-runners/sdks",
       "!**/certificates",
       "!**/generated",
       "!**/node_modules",
@@ -43,6 +50,7 @@
       "!standards/fallow.dead-code.regression-baseline.jsonc",
       "!standards/jsdoc-documentation.inventory.jsonc",
       "!standards/repo-exports.catalog.jsonc",
+      "!**/fixtures/f1/documents",
       "!scratchpad",
       "!**/modeling/html/data"
     ]
@@ -214,6 +222,12 @@
     }
   },
   "overrides": [
+    {
+      "includes": [
+        "goals/lexical-playground-capability-atlas/research/capability-atlas.json"
+      ],
+      "files": { "maxSize": 2097152 }
+    },
     {
       // @beep/lint-rules no-native-error: replaces `beep lint tooling-tagged-errors`,
       // scoped to tooling source roots only (advisory "warn"; flips to error in P2).

@@ -1,11 +1,26 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 import { layerMinimumLogLevel, PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Layer, Logger } from "effect";
+import { Context, Effect, Equal, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+
+class CapturedLevels extends Context.Service<CapturedLevels, Array<string>>()(
+  "@beep/observability/test/Logging.test/CapturedLevels"
+) {}
+
+const capturedLevelsLayer = (minimumLevel: "Info" | "None"): Layer.Layer<CapturedLevels> => {
+  const levels: Array<string> = [];
+  const logger = Logger.make<unknown, void>((options) => {
+    levels.push(options.logLevel);
+  });
+  return Layer.mergeAll(
+    Layer.succeed(CapturedLevels, levels),
+    Logger.layer([logger]),
+    layerMinimumLogLevel(minimumLevel)
+  );
+};
 
 describe("Logging", () => {
   it("keeps pretty logger constructor defaults on the schema", () => {
@@ -23,7 +38,7 @@ describe("Logging", () => {
 
   it("round-trips schema-derived pretty logger configs", () => {
     fc.assert(
-      fc.property(S.toArbitrary(PrettyLoggerConfig), (pretty) => {
+      fc.property(S.toArbitrary(PrettyLoggerConfig)(fc), (pretty) => {
         const decoded = O.flatMap(
           S.encodeOption(PrettyLoggerConfig)(pretty),
           S.decodeUnknownOption(PrettyLoggerConfig)
@@ -36,7 +51,7 @@ describe("Logging", () => {
 
   it("round-trips schema-derived banner options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RenderLogBannerOptions), (options) => {
+      fc.property(S.toArbitrary(RenderLogBannerOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(RenderLogBannerOptions)(options),
           S.decodeUnknownOption(RenderLogBannerOptions)
@@ -51,25 +66,29 @@ describe("Logging", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");
   });
 
-  it.effect("filters logs through the independently composable minimum-level layer", () =>
-    Effect.gen(function* () {
-      const levels: Array<string> = [];
-      const logger = Logger.make<unknown, void>((options) => {
-        levels.push(options.logLevel);
-      });
+  it.layer(capturedLevelsLayer("Info"))("filters logs through the independently composable minimum-level layer", (it) =>
+    it.effect(
+      "keeps Info and above",
+      Effect.fnUntraced(function* () {
+        const levels = yield* CapturedLevels;
+        yield* Effect.all(
+          [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
+          { discard: true }
+        );
 
-      yield* Effect.all(
-        [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
-        { discard: true }
-      ).pipe(Effect.provide(Layer.mergeAll(Logger.layer([logger]), layerMinimumLogLevel("Info"))));
+        expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
+      })
+    )
+  );
 
-      expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
-
-      levels.length = 0;
-      yield* Effect.logError("hidden").pipe(
-        Effect.provide(Layer.mergeAll(Logger.layer([logger]), layerMinimumLogLevel("None")))
-      );
-      expect(levels).toStrictEqual([]);
-    })
+  it.layer(capturedLevelsLayer("None"))("filters every log at the None level", (it) =>
+    it.effect(
+      "captures no records",
+      Effect.fnUntraced(function* () {
+        const levels = yield* CapturedLevels;
+        yield* Effect.logError("hidden");
+        expect(levels).toStrictEqual([]);
+      })
+    )
   );
 });

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "academia-corpus-mining",
+    "title": "Academia Corpus Mining",
+    "status": "parked",
+    "stage": "align",
+    "openQuestions": [
+      "Parked revival trigger: a new paper corpus wave lands in the machine-local academia-2026-07 research corpus (or a successor library)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-25",
+    "updated": "2026-08-17"
+  }
+}

@@ -7,14 +7,16 @@
  */
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
+import { getTableName } from "drizzle-orm";
 import { Result } from "effect";
 import * as S from "effect/Schema";
 
 /**
  * Drizzle table projection for architecture lab Worker entities.
  *
- * @example
+ * **Example** (Inspect table columns)
+ *
  * ```ts
  * import { workerTable } from "@beep/architecture-lab-tables/entities/Worker"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -31,12 +33,13 @@ import * as S from "effect/Schema";
  * @category tables
  * @since 0.0.0
  */
-export const workerTable = EntityTable.pgTableFrom(DomainWorker.Worker);
+export const workerTable = toPgTable(DomainWorker.Worker);
 
 /**
  * Physical Postgres table name derived from the Worker entity definition.
  *
- * @example
+ * **Example** (Read physical table name)
+ *
  * ```ts
  * import { WORKER_TABLE_NAME } from "@beep/architecture-lab-tables/entities/Worker"
  *
@@ -51,19 +54,20 @@ export const workerTable = EntityTable.pgTableFrom(DomainWorker.Worker);
  * @category tables
  * @since 0.0.0
  */
-export const WORKER_TABLE_NAME = workerTable.definition.tableName;
+export const WORKER_TABLE_NAME = getTableName(workerTable);
 
 /**
  * Selected row shape returned by queries against {@link workerTable}.
  *
- * @example
+ * **Example** (Satisfy selected row shape)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -89,14 +93,15 @@ export type WorkerRow = typeof workerTable.$inferSelect;
 /**
  * Insert row shape accepted by writes to {@link workerTable}.
  *
- * @example
+ * **Example** (Type insert row shape)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -124,14 +129,15 @@ const decodeWorker = S.decodeUnknownResult(DomainWorker.Worker);
 /**
  * Encode a Worker entity into the insert row accepted by {@link workerTable}.
  *
- * @example
+ * **Example** (Encode entity to insert)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -159,14 +165,15 @@ export const toWorkerInsert = (worker: DomainWorker.Worker): WorkerInsert => Res
 /**
  * Decode a selected Worker row back into the domain entity.
  *
- * @example
+ * **Example** (Decode row to entity)
+ *
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { fromWorkerRow, toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *

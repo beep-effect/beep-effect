@@ -6,11 +6,12 @@
  * @since 0.0.0
  */
 
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { Context } from "effect";
 import * as S from "effect/Schema";
+import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import type { Effect } from "effect";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository");
@@ -18,14 +19,16 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
 /**
  * Persistence failure raised when a Worker row is absent.
  *
- * @example
+ * **Example** (Make not-found error)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryNotFound } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerRepositoryNotFound.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(error._tag) // "WorkerRepositoryNotFound"
@@ -34,12 +37,12 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
  * @category repositories
  * @since 0.0.0
  */
-export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryNotFound>($I`WorkerRepositoryNotFound`)(
+export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotFound>($I`WorkerRepositoryNotFound`)(
   "WorkerRepositoryNotFound",
   {
-    workerId: DomainWorker.WorkerId,
+    workerId: ArchitectureLabIdentity.WorkerId,
   },
-  $I.annote("WorkerRepositoryNotFound", {
+  $I.annoteError<WorkerRepositoryNotFound>("WorkerRepositoryNotFound", {
     title: "Worker repository not found",
     description: "The Worker repository could not find the requested entity.",
   })
@@ -50,14 +53,16 @@ export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryN
 /**
  * Persistence failure raised when a Worker write conflicts.
  *
- * @example
+ * **Example** (Make conflict with reason)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryConflict } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerRepositoryConflict.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1),
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
  *   reason: "duplicate id"
  * })
  *
@@ -67,15 +72,15 @@ export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryN
  * @category repositories
  * @since 0.0.0
  */
-export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryConflict>($I`WorkerRepositoryConflict`)(
+export class WorkerRepositoryConflict extends S.TaggedError<WorkerRepositoryConflict>($I`WorkerRepositoryConflict`)(
   "WorkerRepositoryConflict",
   {
-    workerId: DomainWorker.WorkerId,
+    workerId: ArchitectureLabIdentity.WorkerId,
     reason: S.NonEmptyString.annotateKey({
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("WorkerRepositoryConflict", {
+  $I.annoteError<WorkerRepositoryConflict>("WorkerRepositoryConflict", {
     title: "Worker repository conflict",
     description: "The Worker repository rejected a conflicting write.",
   })
@@ -86,7 +91,8 @@ export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryC
 /**
  * Persistence failure raised when the Worker repository is unavailable.
  *
- * @example
+ * **Example** (Make unavailable error)
+ *
  * ```ts
  * import { WorkerRepositoryUnavailable } from "@beep/architecture-lab-use-cases/entities/Worker/server"
  *
@@ -98,7 +104,7 @@ export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryC
  * @category repositories
  * @since 0.0.0
  */
-export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerRepositoryUnavailable>(
+export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryUnavailable>(
   $I`WorkerRepositoryUnavailable`
 )(
   "WorkerRepositoryUnavailable",
@@ -107,7 +113,7 @@ export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerReposito
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("WorkerRepositoryUnavailable", {
+  $I.annoteError<WorkerRepositoryUnavailable>("WorkerRepositoryUnavailable", {
     title: "Worker repository unavailable",
     description: "The Worker repository could not serve the request.",
   })
@@ -118,12 +124,14 @@ export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerReposito
 /**
  * Worker repository failure schema.
  *
- * @example
+ * **Example** (Check repository error membership)
+ *
  * ```ts
  * import {
  *   WorkerRepositoryError,
  *   WorkerRepositoryUnavailable,
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  *
  * const isRepositoryError = WorkerRepositoryError.is
  *
@@ -149,7 +157,8 @@ export const WorkerRepositoryError = S.Union([
 /**
  * Runtime type for {@link WorkerRepositoryError}.
  *
- * @example
+ * **Example** (Type a repository error)
+ *
  * ```ts
  * import {
  *   WorkerRepositoryUnavailable,
@@ -169,21 +178,24 @@ export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
 /**
  * Worker repository port consumed by the server-side use-case factory.
  *
- * @remarks
+ * **Details**
+ *
  * `create` fails on duplicate identity, `get` fails when no entity exists, and
  * `list` returns repository order for the use-case layer to filter.
  *
- * @example
+ * **Example** (Implement repository shape)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import {
  *   WorkerRepositoryNotFound,
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
- * const id = S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ * const id = S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * const worker = DomainWorker.create(
  *   DomainWorker.CreateWorkerInput.make({
  *     id,
@@ -210,7 +222,7 @@ export interface WorkerRepositoryShape {
     worker: DomainWorker.Worker
   ) => Effect.Effect<DomainWorker.Worker, WorkerRepositoryConflict | WorkerRepositoryUnavailable>;
   readonly get: (
-    id: DomainWorker.WorkerId
+    id: ArchitectureLabIdentity.WorkerId
   ) => Effect.Effect<DomainWorker.Worker, WorkerRepositoryNotFound | WorkerRepositoryUnavailable>;
   readonly list: Effect.Effect<ReadonlyArray<DomainWorker.Worker>, WorkerRepositoryUnavailable>;
 }
@@ -218,7 +230,8 @@ export interface WorkerRepositoryShape {
 /**
  * Context tag for the Worker repository port.
  *
- * @example
+ * **Example** (Provide WorkerRepository service)
+ *
  * ```ts
  * import {
  *   WorkerRepository,

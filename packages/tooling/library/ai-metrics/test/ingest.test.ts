@@ -1,5 +1,6 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
+  AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
   AgentEffectivenessAnnotationValue,
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
@@ -15,7 +16,12 @@ import {
   AiMetricsLabelQueueInput,
   AiMetricsMirrorBundleInput,
   AiMetricsOtlpAttributeValue,
+  AiMetricsOtlpEndpointSpec,
+  AiMetricsOtlpExportError,
   AiMetricsOtlpExportInput,
+  AiMetricsOtlpSpanProjection,
+  AiMetricsOtlpSpanProjectionBatch,
+  AiMetricsOtlpSpanSender,
   AiMetricsOutcomeLabelInput,
   AiMetricsParquetExportMode,
   AiMetricsPrivacyMode,
@@ -58,6 +64,7 @@ import {
   makeAiMetricsInstallSpec,
   makeAiMetricsPrivacyCheckResult,
   makeAiMetricsSourceAttribution,
+  markAiMetricsOtlpTurnsExported,
   OpenClawTranscriptLine,
   otlpExportResultToJson,
   privacyCheckToJson,
@@ -80,16 +87,32 @@ import {
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
 import { NonEmptyTrimmedStr } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, Encoding, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Redacted } from "effect";
+import { Effect, Encoding, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as SchemaIssue from "effect/SchemaIssue";
+import { FastCheck as fc, TestClock } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
+
+const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
+  const formatIssue = SchemaIssue.makeFormatterDefault();
+  try {
+    run();
+  } catch (error) {
+    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
+      expect(formatIssue(error.cause)).toContain(messagePart);
+      return;
+    }
+    throw error;
+  }
+  expect.unreachable("expected schema construction to throw");
+};
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -117,6 +140,16 @@ const writeText = Effect.fn("AiMetricsTest.writeText")(function* (filePath: stri
   yield* fs.writeFileString(filePath, content);
 });
 
+const makeGitRoot = Effect.fn("AiMetricsTest.makeGitRoot")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
+  yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
+  yield* writeText(
+    path.join(repoRoot, ".git/config"),
+    '[remote "origin"]\n\turl = git@github.com:beep-effect/beep-effect.git\n'
+  );
+});
+
 const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>): ReadonlyArray<string> =>
   pipe(
     files,
@@ -127,11 +160,82 @@ const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: str
 const sqlString = (value: string): string => `'${pipe(value, Str.replace(/'/gu, "''"))}'`;
 const AI_METRICS_LONG_TEST_TIMEOUT = 90_000;
 
+// Delivery is injected so the export path can be driven without a live collector, and
+// so a rejected delivery can be reproduced deterministically. Pointing the real proto
+// exporter at a dead port would work but costs ~3s of retry backoff per assertion.
+const recordingSpanSender = (
+  delivered: Ref.Ref<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>
+): Layer.Layer<AiMetricsOtlpSpanSender> =>
+  Layer.succeed(AiMetricsOtlpSpanSender)(
+    AiMetricsOtlpSpanSender.of({
+      send: Effect.fn("AiMetricsOtlpSpanSender.send")(
+        (_input: AiMetricsOtlpExportInput, projections: ReadonlyArray<AiMetricsOtlpSpanProjection>) =>
+          Ref.update(delivered, A.append(projections))
+      ),
+    })
+  );
+
+const rejectingSpanSender: Layer.Layer<AiMetricsOtlpSpanSender> = Layer.succeed(AiMetricsOtlpSpanSender)(
+  AiMetricsOtlpSpanSender.of({
+    send: Effect.fn("AiMetricsOtlpSpanSender.send")(() =>
+      Effect.fail(
+        AiMetricsOtlpExportError.make({
+          cause: { exportResultCode: 1 },
+          message: "The AI metrics OTLP collector did not accept the exported spans.",
+        })
+      )
+    ),
+  })
+);
+
+const succeedingThenRejectingSpanSender = (calls: Ref.Ref<number>): Layer.Layer<AiMetricsOtlpSpanSender> =>
+  Layer.succeed(
+    AiMetricsOtlpSpanSender,
+    AiMetricsOtlpSpanSender.of({
+      send: Effect.fn("AiMetricsOtlpSpanSender.send")(function* () {
+        const call = yield* Ref.getAndUpdate(calls, (value) => value + 1);
+        if (call === 0) {
+          return;
+        }
+        return yield* AiMetricsOtlpExportError.make({
+          cause: { exportResultCode: 1 },
+          message: "The AI metrics OTLP collector did not accept the exported spans.",
+        });
+      }),
+    })
+  );
+
+const retryableThenSucceedingSpanSender = (calls: Ref.Ref<number>): Layer.Layer<AiMetricsOtlpSpanSender> =>
+  Layer.succeed(
+    AiMetricsOtlpSpanSender,
+    AiMetricsOtlpSpanSender.of({
+      send: Effect.fn("test.retryableThenSucceedingSpanSender.send")(function* () {
+        const call = yield* Ref.updateAndGet(calls, (count) => count + 1);
+        if (call === 1) {
+          return yield* AiMetricsOtlpExportError.make({
+            cause: new Error("Export failed with retryable status"),
+            message: "The AI metrics OTLP collector did not accept the exported spans.",
+          });
+        }
+      }),
+    })
+  );
+
+const spanIdsByName = (
+  projections: ReadonlyArray<AiMetricsOtlpSpanProjection>,
+  spanName: string
+): ReadonlyArray<string> =>
+  pipe(
+    projections,
+    A.filter((projection) => projection.spanName === spanName),
+    A.map((projection) => projection.spanId)
+  );
+
 const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeUnknownSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -252,6 +356,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
@@ -438,6 +543,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const path = yield* Path.Path;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
@@ -511,7 +617,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const dataRoot = path.join(tmpDir, "metrics");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
           const sourcePath = path.join(tmpDir, "home/.codex/sessions/codex.jsonl");
-          const content = '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}';
+          const content = [
+            '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}',
+            '{"type":"event_msg","timestamp":"2026-05-05T10:02:00Z"}',
+          ].join("\n");
 
           yield* writeText(path.join(tmpDir, "repo", "AGENTS.md"), "# Test agent guide\n");
 
@@ -600,6 +709,9 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             );
             const sessionRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_sessions");
             const turnRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_turns");
+            const turnLineage = yield* duckdb.query(
+              "SELECT DISTINCT ingest_run_id AS ingestRunId FROM ai_metrics_turns"
+            );
 
             expect(runRows).toEqual([{ count: "3" }]);
             expect(runArchiveCounts).toEqual([
@@ -610,12 +722,169 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             expect(sourceRows).toEqual([{ count: "3" }]);
             expect(archiveRows).toEqual([{ count: "3" }]);
             expect(agentTaskRows).toEqual([{ configSnapshotCount: 2, count: "2" }]);
-            expect(sessionRows).toEqual([{ count: "3" }]);
-            expect(turnRows).toEqual([{ count: "3" }]);
+            // Sessions collapse for the same reason turns do: `agent_session_id` is
+            // content-addressed now, so three runs over one transcript own one row, not
+            // three. Note sourceRows/archiveRows below stay at 3 -- those ids still embed
+            // the run id by design, and if they moved this change hit more than intended.
+            expect(sessionRows).toEqual([{ count: "1" }]);
+            // Three runs over two byte-identical turns must yield TWO rows. The old
+            // per-run identity duplicated each turn and grew the store to 5.43M rows
+            // over ~516K distinct raw_event_hash across 1,222 runs.
+            expect(turnRows).toEqual([{ count: "2" }]);
+            // ...and it must retain the FIRST run's id. The OTLP export selects
+            // `WHERE ingest_run_id = <this run>`, so if a re-ingest rewrote this to the
+            // current run, every previously-seen turn would be re-exported to Phoenix
+            // on every run even though the table had stopped growing. Retaining
+            // first-seen lineage is what makes the export incremental.
+            expect(turnLineage).toEqual([{ ingestRunId: "forwarder-1" }]);
+
+            // A run can commit turns and then die before its OTLP export. Because
+            // ingestion is idempotent, the retry no longer re-mints those rows under a
+            // new run id -- so if the exporter scoped itself to "this run", the
+            // committed turns would be stranded and never reach Phoenix. Export state
+            // is tracked on its own watermark for exactly that reason.
+            const phoenix = phoenixService(installSpec);
+            expect(O.isSome(phoenix)).toBe(true);
+            if (O.isNone(phoenix)) {
+              return;
+            }
+            const exportInput = AiMetricsOtlpExportInput.make({
+              duckDbPath,
+              endpoint: phoenix.value.otlp,
+              target: AiMetricsDeployTarget.Enum.local,
+            });
+
+            // Un-exported turns are visible even though they belong to forwarder-1 and
+            // the latest run is forwarder-3.
+            const pending = yield* readAiMetricsOtlpSpanProjections;
+            expect(pending.turnIds.length).toBe(2);
+
+            // Span identity is content-addressed, so re-reading identical content yields
+            // byte-identical ids. That is what lets Phoenix's uq_spans_span_id collapse a
+            // redelivery instead of storing a second copy -- and it is why correctness no
+            // longer depends on the watermark being perfectly accurate.
+            const rereadPending = yield* readAiMetricsOtlpSpanProjections;
+            expect(spanIdsByName(rereadPending.projections, "ai_metrics.agent.turn")).toEqual(
+              spanIdsByName(pending.projections, "ai_metrics.agent.turn")
+            );
+            expect(spanIdsByName(rereadPending.projections, "ai_metrics.agent.session")).toEqual(
+              spanIdsByName(pending.projections, "ai_metrics.agent.session")
+            );
+
+            // Ids are hex of the right width, never the all-zero id the OTLP wire format
+            // reads as "absent" -- a span carrying one is dropped rather than stored.
+            const turnProjections = pipe(
+              pending.projections,
+              A.filter((projection) => projection.spanName === "ai_metrics.agent.turn")
+            );
+            const sessionProjections = pipe(
+              pending.projections,
+              A.filter((projection) => projection.spanName === "ai_metrics.agent.session")
+            );
+            expect(turnProjections.length).toBe(2);
+            expect(sessionProjections.length, "session projection count").toBe(1);
+            const turnSpan = pipe(turnProjections, A.head, O.getOrThrow);
+            const sessionSpan = pipe(sessionProjections, A.head, O.getOrThrow);
+            expect(turnSpan.traceId).toMatch(/^[0-9a-f]{32}$/u);
+            expect(turnSpan.spanId).toMatch(/^[0-9a-f]{16}$/u);
+            expect(turnSpan.traceId).not.toBe(Str.repeat(32)("0"));
+            expect(turnSpan.spanId).not.toBe(Str.repeat(16)("0"));
+            // Turns hang off their session span and share its trace, so one agent session
+            // reads as one trace in Phoenix rather than as unrelated roots.
+            expect(turnSpan.traceId).toBe(sessionSpan.traceId);
+            expect(turnSpan.parentSpanId).toBe(sessionSpan.spanId);
+            expect(sessionSpan.parentSpanId).toBeUndefined();
+
+            // A rejected delivery must leave the watermark open. Without the failure
+            // short-circuiting the mark, these turns would be recorded as exported after
+            // never reaching the collector -- silently lost, which is the failure mode a
+            // watermark is supposed to prevent.
+            const rejectedExit = yield* runAiMetricsOtlpExport(exportInput).pipe(
+              provideScopedLayer(rejectingSpanSender),
+              Effect.exit
+            );
+            expect(Exit.isFailure(rejectedExit)).toBe(true);
+            const afterRejectedExport = yield* readAiMetricsOtlpSpanProjections;
+            expect(afterRejectedExport.turnIds).toEqual(pending.turnIds);
+
+            // Reproduce the review-found boundary exactly: more than 512 distinct
+            // sessions used to put an entire session-only prefix on the wire. An
+            // accepted first request then marked zero turns, so the next retry rebuilt
+            // and resent the identical prefix forever.
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_sessions
+                 (agent_session_id, agent_task_id, ingest_run_id, source_kind,
+                  source_path_hash, source_role, session_id_hash,
+                  parent_session_id_hash, parent_thread_id_hash, forked_from_id_hash,
+                  thread_spawn, agent_role_hash, agent_nickname_hash, started_at,
+                  config_snapshot_id)
+               SELECT 'review-session-' || range::VARCHAR, agent_task_id, ingest_run_id,
+                      source_kind, 'review-source-' || range::VARCHAR, source_role,
+                      session_id_hash, parent_session_id_hash, parent_thread_id_hash,
+                      forked_from_id_hash, thread_spawn, agent_role_hash,
+                      agent_nickname_hash, started_at, config_snapshot_id
+               FROM (SELECT * FROM ai_metrics_sessions LIMIT 1), range(512)`
+            );
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_turns
+                 (turn_id, ingest_run_id, agent_session_id, source_kind,
+                  source_path_hash, source_role, line_number, event_name,
+                  raw_event_hash, timestamp, otlp_exported_at_epoch_ms)
+               SELECT 'review-turn-' || range::VARCHAR, ingest_run_id,
+                      'review-session-' || range::VARCHAR, source_kind,
+                      'review-source-' || range::VARCHAR, source_role, 1, event_name,
+                      'review-raw-' || range::VARCHAR, timestamp, NULL
+               FROM (SELECT * FROM ai_metrics_turns LIMIT 1), range(512)`
+            );
+            const beforePartialExport = yield* readAiMetricsOtlpSpanProjections;
+            expect(beforePartialExport.turnIds.length, "production-shaped pending turn count").toBe(514);
+
+            // A later chunk can fail after Phoenix has acknowledged an earlier one. The
+            // acknowledged prefix must stay closed or every retry refills the collector
+            // queue with that prefix and permanently starves the remaining turns.
+            const senderCalls = yield* Ref.make(0);
+            const partialExit = yield* runAiMetricsOtlpExport(exportInput).pipe(
+              provideScopedLayer(succeedingThenRejectingSpanSender(senderCalls)),
+              Effect.exit
+            );
+            expect(Exit.isFailure(partialExit)).toBe(true);
+            const afterPartialExport = yield* readAiMetricsOtlpSpanProjections;
+            expect(afterPartialExport.turnIds.length, "partial checkpoint turn count").toBe(258);
+            const remainingTurnSpanIds = spanIdsByName(afterPartialExport.projections, "ai_metrics.agent.turn");
+
+            // The forwarder exports through runAiMetricsOtlpExport, which reads and
+            // delivers as one unit, so that entry point must close the watermark itself.
+            // With marking only in the standalone export command, nothing would ever be
+            // marked and every forwarder run would re-emit the whole store.
+            const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
+            const exported = yield* runAiMetricsOtlpExport(exportInput).pipe(
+              provideScopedLayer(recordingSpanSender(delivered))
+            );
+            expect(exported.turnSpanCount, "remaining export turn count").toBe(258);
+
+            const afterSuccessfulExport = yield* readAiMetricsOtlpSpanProjections;
+            expect(afterSuccessfulExport.turnIds).toEqual([]);
+            expect(afterSuccessfulExport.projections).toEqual([]);
+
+            // A second forwarder run over unchanged content therefore delivers nothing.
+            const secondExport = yield* runAiMetricsOtlpExport(exportInput).pipe(
+              provideScopedLayer(recordingSpanSender(delivered))
+            );
+            expect(secondExport.turnSpanCount).toBe(0);
+            expect(secondExport.spanCount).toBe(0);
+
+            // Exactly one delivery carried spans, and it carried the ids read before it.
+            const deliveries = yield* Ref.get(delivered);
+            expect(A.map(deliveries, (batch) => batch.length)).toEqual([512, 3]);
+            expect(spanIdsByName(A.flatten(deliveries), "ai_metrics.agent.turn")).toEqual(remainingTurnSpanIds);
+
+            // Marking is safe to call with an empty batch.
+            yield* markAiMetricsOtlpTurnsExported([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
-    })
+    }),
+    AI_METRICS_LONG_TEST_TIMEOUT
   );
 
   it.effect(
@@ -627,6 +896,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const reportDir = path.join(dataRoot, "reports");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -767,7 +1037,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           A.some(
             P.every([
               Str.includes("ai-metrics otlp export --target dankserver"),
-              Str.includes("--data-root .beep/ai-metrics"),
+              Str.includes("--data-root /srv/data/ai-metrics"),
               Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
               Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
               Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
@@ -777,10 +1047,19 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       ).toBe(true);
       expect(spec.plannedCommands).toEqual(
         expect.arrayContaining([
-          expect.stringContaining("ai-metrics label queue --target dankserver --data-root .beep/ai-metrics"),
-          expect.stringContaining("ai-metrics report weekly --target dankserver --data-root .beep/ai-metrics"),
+          expect.stringContaining("ai-metrics label queue --target dankserver --data-root /srv/data/ai-metrics"),
+          expect.stringContaining("ai-metrics report weekly --target dankserver --data-root /srv/data/ai-metrics"),
         ])
       );
+      // Every planned command an operator copy-pastes must survive the CLI's
+      // absolute-path gate; `forwarder timer` rejects a relative root outright.
+      expect(
+        pipe(
+          spec.plannedCommands,
+          A.filter(Str.includes("--data-root")),
+          A.filter(P.not(Str.includes("--data-root /")))
+        )
+      ).toEqual([]);
     })
   );
 
@@ -926,21 +1205,23 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   it.effect(
     "rejects relative timer executable paths",
     Effect.fn(function* () {
-      expect(() =>
-        AiMetricsForwarderTimerInput.make({
-          command: ["bun", "run", "beep"],
-          lockPath: "%t/beep-ai-metrics-forwarder.lock",
-          statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
-          workingDirectory: "/repo/beep-effect",
-        })
-      ).toThrow("absolute executable path");
+      expectSchemaMakeToFail(
+        () =>
+          AiMetricsForwarderTimerInput.make({
+            command: ["bun", "run", "beep"],
+            lockPath: "%t/beep-ai-metrics-forwarder.lock",
+            statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
+            workingDirectory: "/repo/beep-effect",
+          }),
+        "absolute executable path"
+      );
     })
   );
 
   it.effect(
     "adds Phoenix OTLP contracts and renders a dedicated local compose file",
     Effect.fn(function* () {
-      const spec = yield* makeAiMetricsInstallSpec();
+      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: "/srv/data/ai-metrics" }));
       const phoenix = phoenixService(spec);
       expect(O.isSome(phoenix)).toBe(true);
       if (O.isNone(phoenix)) {
@@ -974,6 +1255,7 @@ volumes:
     Effect.fn(function* () {
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
+          dataRoot: "/srv/data/ai-metrics",
           phoenixImage: "arizephoenix/phoenix:latest-p5b",
         })
       );
@@ -1066,15 +1348,20 @@ volumes:
             const input = AiMetricsOtlpExportInput.make({
               duckDbPath,
               endpoint: phoenix.value.otlp,
-              ingestRunId: "latest",
               target: AiMetricsDeployTarget.Enum.local,
             });
-            const batch = yield* readAiMetricsOtlpSpanProjections(input);
-            const result = yield* runAiMetricsOtlpExport(input);
-            const pipeableResult = yield* pipe(input, runAiMetricsOtlpProjectionBatchExport(batch));
+            const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
+            const batch = yield* readAiMetricsOtlpSpanProjections;
+            const result = yield* runAiMetricsOtlpExport(input).pipe(
+              provideScopedLayer(recordingSpanSender(delivered))
+            );
+            const pipeableResult = yield* pipe(
+              input,
+              runAiMetricsOtlpProjectionBatchExport(batch),
+              provideScopedLayer(recordingSpanSender(delivered))
+            );
             const json = yield* otlpExportResultToJson(result);
 
-            expect(batch.ingestRunId).toBe("forwarder-otlp");
             expect(batch.sessionSpanCount).toBe(1);
             expect(batch.turnSpanCount).toBe(3);
             expect(batch.projections).toEqual(
@@ -1106,7 +1393,11 @@ volumes:
             );
             expect(result.spanCount).toBe(4);
             expect(pipeableResult).toEqual(result);
-            expect(json).toContain("forwarder-otlp");
+            // The result no longer carries an ingest run id -- the export drains every
+            // pending turn regardless of which run committed it, so a run id would have
+            // described the request rather than the batch. Counts are what it reports now.
+            expect(json).toContain('"spanCount":4');
+            expect(json).not.toContain("forwarder-otlp");
             expect(json).not.toContain("private-input");
             expect(json).not.toContain("private-model-output");
             expect(json).not.toContain("private-output");
@@ -1138,7 +1429,7 @@ volumes:
       const error = yield* Effect.flip(
         runAiMetricsForwarder(
           AiMetricsForwarderInput.make({
-            dataRoot: ".beep/ai-metrics",
+            dataRoot: "/srv/data/ai-metrics",
             hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
             homeDir: "/tmp/home",
             rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(1))),
@@ -1551,6 +1842,757 @@ volumes:
   );
 
   it.effect(
+    "backfills the OTLP export watermark without burying the last turn-bearing run",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            // A store written under the old duplicating scheme: turns carry no watermark
+            // column at all, so the column migration adds it as NULL and the backfill runs.
+            yield* duckdb.run(
+              `CREATE TABLE ai_metrics_turns (
+                turn_id VARCHAR PRIMARY KEY,
+                ingest_run_id VARCHAR NOT NULL,
+                agent_session_id VARCHAR NOT NULL,
+                source_kind VARCHAR NOT NULL,
+                source_path_hash VARCHAR NOT NULL,
+                source_role VARCHAR NOT NULL,
+                line_number INTEGER NOT NULL,
+                event_name VARCHAR NOT NULL,
+                raw_event_hash VARCHAR NOT NULL,
+                timestamp VARCHAR
+              )`
+            );
+            yield* duckdb.run(
+              `CREATE TABLE ai_metrics_ingest_runs (
+                ingest_run_id VARCHAR PRIMARY KEY,
+                target VARCHAR NOT NULL,
+                config_snapshot_id VARCHAR NOT NULL,
+                config_hash VARCHAR NOT NULL,
+                started_at_epoch_ms DOUBLE NOT NULL,
+                completed_at_epoch_ms DOUBLE NOT NULL,
+                source_file_count INTEGER NOT NULL,
+                archive_object_count INTEGER NOT NULL,
+                turn_count INTEGER NOT NULL
+              )`
+            );
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-old", startedAt: 1 },
+                { ingestRunId: "run-last-with-turns", startedAt: 2 },
+                // A discovery pass that found nothing new. It is the newest run, but it
+                // committed no turns, so it must not shadow run-last-with-turns.
+                { ingestRunId: "run-empty-latest", startedAt: 3 },
+              ],
+              Effect.fnUntraced(function* (run) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_ingest_runs VALUES (
+                     $ingestRunId, 'local', 'snapshot', 'hash', $startedAt, $startedAt, 0, 0, 0
+                   )`,
+                  run
+                );
+              }),
+              { discard: true }
+            );
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-old", turnId: "turn-old" },
+                { ingestRunId: "run-last-with-turns", turnId: "turn-at-risk" },
+              ],
+              Effect.fnUntraced(function* (turn) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns VALUES (
+                     $turnId, $ingestRunId, 'session-1', 'codex', 'source-hash', 'primary', 1, 'event', 'raw-hash', NULL
+                   )`,
+                  turn
+                );
+              }),
+              { discard: true }
+            );
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const watermarks = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", otlp_exported_at_epoch_ms AS "exportedAt"
+               FROM ai_metrics_turns
+               ORDER BY turn_id`
+            );
+
+            // run-old was rescued under the old scheme by the runs that followed it, so
+            // marking it costs nothing. run-last-with-turns had no such rescue -- if it
+            // died before exporting, nothing came after it -- so its turns stay pending.
+            // v1 buries it, because run-empty-latest shadows it; v2 reopens it. The net
+            // effect on a fresh store is the corrected behaviour.
+            expect(watermarks).toEqual([
+              { exportedAt: null, turnId: "turn-at-risk" },
+              { exportedAt: 0, turnId: "turn-old" },
+            ]);
+
+            const migrationRows = yield* duckdb.query(
+              `SELECT migration_id AS "migrationId"
+               FROM ai_metrics_schema_migrations
+               WHERE migration_id LIKE 'ai-metrics-otlp-export-watermark-%'
+               ORDER BY migration_id`
+            );
+            expect(migrationRows).toEqual([
+              { migrationId: "ai-metrics-otlp-export-watermark-v1" },
+              { migrationId: "ai-metrics-otlp-export-watermark-v2" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "delivers projections to a real OTLP endpoint as chunked protobuf",
+    Effect.fn(function* () {
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          const requests: Array<{ readonly body: string; readonly contentType: string }> = [];
+          const server = Bun.serve({
+            // Continuation-passing rather than `async`/`await`: this repo represents async
+            // control flow with Effect, and a bare `async function` here trips the
+            // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
+            // either way. Body is captured as latin1 so protobuf's length-delimited string
+            // fields stay byte-addressable for the resource assertion below.
+            fetch: (request) =>
+              request.arrayBuffer().then((buffer) => {
+                A.appendInPlace(requests, {
+                  body: Buffer.from(buffer).toString("latin1"),
+                  contentType: request.headers.get("content-type") ?? "",
+                });
+                const rejecting = Str.includes("reject")(new URL(request.url).pathname);
+                return new Response(null, { status: rejecting ? 415 : 200 });
+              }),
+            hostname: "127.0.0.1",
+            port: 0,
+          });
+          return { requests, server };
+        }),
+        Effect.fnUntraced(function* ({ requests, server }) {
+          const endpointFor = (path: string) =>
+            AiMetricsOtlpEndpointSpec.make({
+              baseUrl: `http://127.0.0.1:${server.port}`,
+              protocol: "http/protobuf",
+              resourceAttributes: { "beep.test": "otlp-wire" },
+              signalScope: "traces_only",
+              traceUrl: `http://127.0.0.1:${server.port}${path}`,
+            });
+          const inputFor = (path: string) =>
+            AiMetricsOtlpExportInput.make({
+              duckDbPath: "unused.duckdb",
+              endpoint: endpointFor(path),
+              target: AiMetricsDeployTarget.Enum.local,
+            });
+          // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
+          // thousands of turns, and one request that large is the backpressure collapse this
+          // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
+          const projections = A.makeBy(1200, (index) =>
+            AiMetricsOtlpSpanProjection.make({
+              attributes: { "ai_metrics.line_number": index + 1, "openinference.span.kind": "CHAIN" },
+              parentSpanId: "aabbccddeeff0011",
+              spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
+              spanName: "ai_metrics.agent.turn",
+              traceId: "0123456789abcdef0123456789abcdef",
+            })
+          );
+          const batch = AiMetricsOtlpSpanProjectionBatch.make({
+            projections,
+            sessionSpanCount: 0,
+            turnIds: [],
+            turnSpanCount: projections.length,
+          });
+
+          // The live sender, not a stub: real ReadableSpan construction through the real
+          // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
+          // with HTTP 415, which is also what the rejection path below asserts.
+          const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
+            provideScopedLayer(AiMetricsOtlpSpanSender.layer)
+          );
+
+          expect(exported.spanCount).toBe(1200);
+          expect(requests.length).toBe(3);
+          expect(A.every(requests, (request) => request.contentType === "application/x-protobuf")).toBe(true);
+
+          // Phoenix routes spans into a project by this resource attribute. Without it every
+          // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
+          // named a project that never existed. Asserted on the wire, and pinned to the constant
+          // the reader queries for, so the two cannot drift apart silently.
+          expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
+          expect(
+            A.every(
+              requests,
+              (request) =>
+                Str.includes("openinference.project.name")(request.body) &&
+                Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
+            )
+          ).toBe(true);
+
+          const retryCalls = yield* Ref.make(0);
+          const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
+            inputFor("/v1/traces"),
+            AiMetricsOtlpSpanProjectionBatch.make({
+              projections: A.take(projections, 1),
+              sessionSpanCount: 0,
+              turnIds: [],
+              turnSpanCount: 1,
+            })
+          ).pipe(provideScopedLayer(retryableThenSucceedingSpanSender(retryCalls)), Effect.forkChild);
+          yield* TestClock.adjust("2 seconds");
+          const retried = yield* Fiber.join(retryFiber);
+
+          expect(retried.spanCount).toBe(1);
+          expect(yield* Ref.get(retryCalls)).toBe(2);
+
+          // A collector that rejects the batch must surface as a typed failure, never a
+          // silent success. That confirmation is the whole reason delivery moved off
+          // fire-and-forget span emission.
+          const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
+            provideScopedLayer(AiMetricsOtlpSpanSender.layer),
+            Effect.flip
+          );
+
+          expect(rejected.message).toContain("did not accept the exported spans");
+        }),
+        ({ server }) => Effect.promise(() => server.stop(true))
+      );
+    }),
+    AI_METRICS_LONG_TEST_TIMEOUT
+  );
+
+  it.effect(
+    "keeps a session row whose turns outlive the run that last touched it",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const fs = yield* FileSystem.FileSystem;
+          const dataRoot = path.join(tmpDir, "metrics");
+          const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
+          yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            // A content-addressed session row carries the run that LAST wrote it, which is
+            // not necessarily the newest run: an out-of-order ingest (a backfill, or clock
+            // skew between hosts) can leave an early-completing run as the last writer.
+            // Once that happens, "this session belongs to that run" stops being true, and
+            // pruning by run id alone would delete the row while its other turns live on.
+            yield* Effect.forEach(
+              [
+                { completedAt: 100, ingestRunId: "run-late" },
+                { completedAt: 1, ingestRunId: "run-early" },
+              ],
+              Effect.fnUntraced(function* (run) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_ingest_runs VALUES (
+                     $ingestRunId, 'local', 'snapshot', 'hash', $completedAt, $completedAt, 0, 0, 1
+                   )`,
+                  run
+                );
+              }),
+              { discard: true }
+            );
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_sessions (
+                 agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+               ) VALUES ('session-shared', 'run-early', 'codex', 'shared-transcript', 'primary', 'snapshot')`
+            );
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-early", lineNumber: 1, turnId: "turn-early" },
+                { ingestRunId: "run-late", lineNumber: 2, turnId: "turn-late" },
+              ],
+              Effect.fnUntraced(function* (turn) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp
+                   ) VALUES (
+                     $turnId, $ingestRunId, 'session-shared', 'codex', 'shared-transcript',
+                     'primary', $lineNumber, 'event', $turnId, NULL
+                   )`,
+                  turn
+                );
+              }),
+              { discard: true }
+            );
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+
+          // Prune only run-early.
+          yield* runAiMetricsRetentionDelete(
+            AiMetricsRetentionSelector.make({ beforeEpochMillis: 50, dataRoot }),
+            false
+          );
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions`
+            );
+            const turns = yield* duckdb.query(`SELECT turn_id AS "turnId" FROM ai_metrics_turns ORDER BY turn_id`);
+
+            // turn-late survives the prune, so its session must survive with it. The
+            // exporter joins ai_metrics_sessions INNER: drop the row and turn-late leaves
+            // every future export silently, with its watermark still open forever.
+            expect(turns).toEqual([{ turnId: "turn-late" }]);
+            expect(sessions).toEqual([{ agentSessionId: "session-shared" }]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+
+          // ...and the row must not then leak. It is still tagged with run-early, which is
+          // already gone, so a prune scoped to the current run set would never match it
+          // again once its last turn goes -- an empty session row surviving forever and
+          // pinning its agent task alive through the task GC.
+          yield* runAiMetricsRetentionDelete(
+            AiMetricsRetentionSelector.make({ beforeEpochMillis: 200, dataRoot }),
+            false
+          );
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            const turns = yield* duckdb.query(`SELECT turn_id AS "turnId" FROM ai_metrics_turns`);
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions`
+            );
+
+            expect(turns).toEqual([]);
+            expect(sessions).toEqual([]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "collapses a legacy session row onto one that already carries the content id",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            const contentSessionId = yield* hashPublicTextSha256("session\u0000codex\u0000mixed-transcript").pipe(
+              Effect.map((digest) => `session-${digest}`)
+            );
+            const legacySessionId = yield* hashPublicTextSha256(
+              "session\u0000run-old\u0000codex\u0000mixed-transcript"
+            ).pipe(Effect.map((digest) => `session-${digest}`));
+
+            // A store caught mid-transition: one row already minted under the new content
+            // key by a post-upgrade ingest, and one still holding the old per-run key. The
+            // migration's other collision branch -- legacy sibling versus legacy sibling --
+            // never reaches this shape, and getting it wrong violates the primary key.
+            yield* Effect.forEach(
+              [
+                { agentSessionId: contentSessionId, ingestRunId: "run-new", turnId: "turn-new" },
+                { agentSessionId: legacySessionId, ingestRunId: "run-old", turnId: "turn-old" },
+              ],
+              Effect.fnUntraced(function* (row) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_sessions (
+                     agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+                   ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'mixed-transcript', 'primary', 'snapshot')`,
+                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                );
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp
+                   ) VALUES (
+                     $turnId, $ingestRunId, $agentSessionId, 'codex', 'mixed-transcript',
+                     'primary', 1, 'event', $turnId, NULL
+                   )`,
+                  row
+                );
+              }),
+              { discard: true }
+            );
+            yield* duckdb.run(
+              `DELETE FROM ai_metrics_schema_migrations
+               WHERE migration_id = 'ai-metrics-agent-session-id-v2'`
+            );
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions`
+            );
+            const turns = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", agent_session_id AS "agentSessionId"
+               FROM ai_metrics_turns ORDER BY turn_id`
+            );
+
+            // The legacy row loses to the row that already holds the content id, and its
+            // turn follows -- no primary-key violation, and nothing orphaned behind the
+            // exporter's INNER join.
+            expect(sessions).toEqual([{ agentSessionId: contentSessionId }]);
+            expect(turns).toEqual([
+              { agentSessionId: contentSessionId, turnId: "turn-new" },
+              { agentSessionId: contentSessionId, turnId: "turn-old" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "collapses per-run session rows and repoints their turns",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            // Ids exactly as the previous release minted them: rowId("session", [runId,
+            // kind, pathHash]) => `session-${sha256("session\0<parts joined by \0>")}`.
+            const legacySessionId = (ingestRunId: string) =>
+              hashPublicTextSha256(`session\u0000${ingestRunId}\u0000codex\u0000grown-transcript`).pipe(
+                Effect.map((digest) => `session-${digest}`)
+              );
+            const expectedSessionId = yield* hashPublicTextSha256("session\u0000codex\u0000grown-transcript").pipe(
+              Effect.map((digest) => `session-${digest}`)
+            );
+
+            // One transcript, ingested across three runs as it grew. Turns are INSERT OR
+            // IGNORE, so each turn froze onto whichever run first saw its line.
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-1", lineNumber: 1, turnId: "turn-1" },
+                { ingestRunId: "run-2", lineNumber: 2, turnId: "turn-2" },
+                { ingestRunId: "run-3", lineNumber: 3, turnId: "turn-3" },
+              ],
+              Effect.fnUntraced(function* (row) {
+                const agentSessionId = yield* legacySessionId(row.ingestRunId);
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_sessions (
+                     agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+                   ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'grown-transcript', 'primary', 'snapshot')`,
+                  { agentSessionId, ingestRunId: row.ingestRunId }
+                );
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp
+                   ) VALUES (
+                     $turnId, $ingestRunId, $agentSessionId, 'codex', 'grown-transcript',
+                     'primary', $lineNumber, 'event', $turnId, NULL
+                   )`,
+                  { agentSessionId, ingestRunId: row.ingestRunId, lineNumber: row.lineNumber, turnId: row.turnId }
+                );
+              }),
+              { discard: true }
+            );
+            // A different transcript must be left alone.
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_sessions (
+                 agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+               ) VALUES ('session-untouched', 'run-1', 'claude', 'other-transcript', 'primary', 'snapshot')`
+            );
+            yield* duckdb.run(
+              `DELETE FROM ai_metrics_schema_migrations
+               WHERE migration_id = 'ai-metrics-agent-session-id-v2'`
+            );
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const sessions = yield* duckdb.query(
+              `SELECT agent_session_id AS "agentSessionId" FROM ai_metrics_sessions ORDER BY agent_session_id`
+            );
+            const turns = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", agent_session_id AS "agentSessionId"
+               FROM ai_metrics_turns ORDER BY turn_id`
+            );
+
+            // Three rows collapse to one, and every turn follows it. Repointing the turns
+            // before deleting the losers is what keeps them reachable: the exporter joins
+            // ai_metrics_sessions INNER, so an orphaned turn is dropped silently forever.
+            expect(sessions).toEqual([{ agentSessionId: expectedSessionId }, { agentSessionId: "session-untouched" }]);
+            expect(turns).toEqual([
+              { agentSessionId: expectedSessionId, turnId: "turn-1" },
+              { agentSessionId: expectedSessionId, turnId: "turn-2" },
+              { agentSessionId: expectedSessionId, turnId: "turn-3" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "reopens turns a store already buried under the shipped watermark backfill",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* ensureAiMetricsDerivedStorage;
+
+            // A store that already ran the watermark backfill as it shipped, and was left
+            // holding the bug: the newest turn-bearing run was marked because a zero-turn
+            // discovery pass shadowed it. The ledger records migration ids, not their SQL,
+            // so rewriting v1 in place could never reach this store -- only a new id can.
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-old", startedAt: 1 },
+                { ingestRunId: "run-last-with-turns", startedAt: 2 },
+                { ingestRunId: "run-empty-latest", startedAt: 3 },
+              ],
+              Effect.fnUntraced(function* (run) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_ingest_runs VALUES (
+                     $ingestRunId, 'local', 'snapshot', 'hash', $startedAt, $startedAt, 0, 0, 0
+                   )`,
+                  run
+                );
+              }),
+              { discard: true }
+            );
+            // Both already marked with the backfill sentinel, exactly as the shipped v1
+            // would have left them.
+            yield* Effect.forEach(
+              [
+                { ingestRunId: "run-old", turnId: "turn-old" },
+                { ingestRunId: "run-last-with-turns", turnId: "turn-buried" },
+              ],
+              Effect.fnUntraced(function* (turn) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp,
+                     otlp_exported_at_epoch_ms
+                   ) VALUES (
+                     $turnId, $ingestRunId, 'session-1', 'codex', 'source-hash',
+                     'primary', 1, 'event', $turnId, NULL, 0
+                   )`,
+                  turn
+                );
+              }),
+              { discard: true }
+            );
+            // v1 stays on the ledger and v2 comes off it: a store upgraded from the
+            // release that shipped v1 alone. v1 is skipped by id from here on no matter
+            // what its SQL says, which is the whole reason a second migration is needed.
+            yield* duckdb.run(
+              `DELETE FROM ai_metrics_schema_migrations
+               WHERE migration_id = 'ai-metrics-otlp-export-watermark-v2'`
+            );
+            const beforeUpgrade = yield* duckdb.query(
+              `SELECT migration_id AS "migrationId"
+               FROM ai_metrics_schema_migrations
+               WHERE migration_id LIKE 'ai-metrics-otlp-export-watermark-%'`
+            );
+            expect(beforeUpgrade).toEqual([{ migrationId: "ai-metrics-otlp-export-watermark-v1" }]);
+
+            yield* ensureAiMetricsDerivedStorage;
+
+            const watermarks = yield* duckdb.query(
+              `SELECT turn_id AS "turnId", otlp_exported_at_epoch_ms AS "exportedAt"
+               FROM ai_metrics_turns
+               ORDER BY turn_id`
+            );
+
+            // v2 reopens only the newest backfilled run. run-old stays marked: it was
+            // rescued under the old duplicating scheme, so its content did reach Phoenix.
+            expect(watermarks).toEqual([
+              { exportedAt: null, turnId: "turn-buried" },
+              { exportedAt: 0, turnId: "turn-old" },
+            ]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "exports from a store that predates the watermark column without an intervening ingest",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            // `ai_metrics_turns` as written by the previous release: no
+            // `otlp_exported_at_epoch_ms`. The export query filters on that column, so
+            // the standalone `ai-metrics otlp export` command has to migrate the store
+            // itself -- the forwarder only migrates as a side effect of ingesting.
+            yield* duckdb.run(
+              `CREATE TABLE ai_metrics_turns (
+                turn_id VARCHAR PRIMARY KEY,
+                ingest_run_id VARCHAR NOT NULL,
+                agent_session_id VARCHAR NOT NULL,
+                source_kind VARCHAR NOT NULL,
+                source_path_hash VARCHAR NOT NULL,
+                source_role VARCHAR NOT NULL,
+                line_number INTEGER NOT NULL,
+                event_name VARCHAR NOT NULL,
+                raw_event_hash VARCHAR NOT NULL,
+                timestamp VARCHAR
+              )`
+            );
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_turns VALUES (
+                'turn-pending', 'run-1', 'session-1', 'codex', 'source-hash', 'primary', 1, 'event', 'raw-hash', NULL
+              )`
+            );
+            yield* ensureAiMetricsDerivedStorage;
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_ingest_runs VALUES (
+                'run-1', 'local', 'snapshot', 'hash', 1, 1, 0, 0, 1
+              )`
+            );
+            yield* duckdb.run(
+              `INSERT INTO ai_metrics_sessions (
+                agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+              ) VALUES ('session-1', 'run-1', 'codex', 'source-hash', 'primary', 'snapshot')`
+            );
+            // Re-open on a store whose turns column set is current but whose watermark is
+            // still NULL, then drop the column again to reproduce the true legacy shape.
+            yield* duckdb.run("ALTER TABLE ai_metrics_turns DROP COLUMN otlp_exported_at_epoch_ms");
+            yield* duckdb.run("DELETE FROM ai_metrics_schema_migrations");
+
+            const installSpec = yield* makeAiMetricsInstallSpec(
+              AiMetricsInstallInput.make({
+                dataRoot: path.join(tmpDir, "metrics"),
+                target: AiMetricsDeployTarget.Enum.local,
+              })
+            );
+            const phoenix = phoenixService(installSpec);
+            expect(O.isSome(phoenix)).toBe(true);
+            if (O.isNone(phoenix)) {
+              return;
+            }
+
+            const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
+            const exported = yield* runAiMetricsOtlpExport(
+              AiMetricsOtlpExportInput.make({
+                duckDbPath,
+                endpoint: phoenix.value.otlp,
+                target: AiMetricsDeployTarget.Enum.local,
+              })
+            ).pipe(provideScopedLayer(recordingSpanSender(delivered)));
+
+            expect(exported.turnSpanCount).toBe(1);
+            expect(exported.sessionSpanCount).toBe(1);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
+    "keeps one transcript on one trace across ingest runs",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const duckDbPath = path.join(tmpDir, "ai-metrics.duckdb");
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            // Schema first, so the one-time watermark backfill is already recorded and
+            // the rows inserted below stay pending.
+            yield* ensureAiMetricsDerivedStorage;
+
+            // One transcript, ingested twice as it grew. `agent_session_id` embeds the
+            // ingest run, so the same file owns two session rows -- the exact shape that
+            // fragmented a session into one trace per run when identity was seeded from
+            // that column.
+            yield* Effect.forEach(
+              [
+                { agentSessionId: "session-run-1", ingestRunId: "run-1", lineNumber: 1, turnId: "turn-1" },
+                { agentSessionId: "session-run-2", ingestRunId: "run-2", lineNumber: 2, turnId: "turn-2" },
+              ],
+              Effect.fnUntraced(function* (row) {
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_ingest_runs VALUES (
+                     $ingestRunId, 'local', 'snapshot', 'hash', $lineNumber, $lineNumber, 0, 0, 1
+                   )`,
+                  { ingestRunId: row.ingestRunId, lineNumber: row.lineNumber }
+                );
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_sessions (
+                     agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
+                   ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'same-transcript-hash', 'primary', 'snapshot')`,
+                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                );
+                yield* duckdb.run(
+                  `INSERT INTO ai_metrics_turns (
+                     turn_id, ingest_run_id, agent_session_id, source_kind, source_path_hash,
+                     source_role, line_number, event_name, raw_event_hash, timestamp
+                   ) VALUES (
+                     $turnId, $ingestRunId, $agentSessionId, 'codex', 'same-transcript-hash',
+                     'primary', $lineNumber, 'event', $turnId, NULL
+                   )`,
+                  row
+                );
+              }),
+              { discard: true }
+            );
+
+            const installSpec = yield* makeAiMetricsInstallSpec(
+              AiMetricsInstallInput.make({
+                dataRoot: path.join(tmpDir, "metrics"),
+                target: AiMetricsDeployTarget.Enum.local,
+              })
+            );
+            const phoenix = phoenixService(installSpec);
+            expect(O.isSome(phoenix)).toBe(true);
+            if (O.isNone(phoenix)) {
+              return;
+            }
+
+            const batch = yield* readAiMetricsOtlpSpanProjections;
+
+            // Both turns land on one trace under one session span, even though they were
+            // ingested under different runs and carry different `agent_session_id`s.
+            const traceIds = pipe(
+              batch.projections,
+              A.map((projection) => projection.traceId),
+              A.dedupe
+            );
+            expect(traceIds.length).toBe(1);
+            expect(batch.turnSpanCount).toBe(2);
+
+            // And exactly one session span. Emitting one per session row would put two
+            // spans carrying the same content-addressed span id in a single OTLP request.
+            expect(batch.sessionSpanCount).toBe(1);
+            const sessionSpanIds = spanIdsByName(batch.projections, "ai_metrics.agent.session");
+            expect(sessionSpanIds.length).toBe(1);
+            const turnParents = pipe(
+              batch.projections,
+              A.filter((projection) => projection.spanName === "ai_metrics.agent.turn"),
+              A.map((projection) => projection.parentSpanId),
+              A.dedupe
+            );
+            expect(turnParents).toEqual(sessionSpanIds);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
     "reports derived UI as safe when secret-shaped values are absent",
     Effect.fn(function* () {
       const content = '{"type":"session_meta","timestamp":"2026-05-05T12:00:00Z"}';
@@ -1632,7 +2674,7 @@ volumes:
           yield* writeText(
             path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
             // TODO(effect-native-migration): model schema
-            yield* S.encodeUnknownEffect(S.UnknownFromJsonString)({
+            yield* Unknown.encodeUnknownEffectFromJsonString({
               excludedDirectoryNames: [],
               fileCount: 1,
               files: [{ contentHash: "legacy-hash", relativePath: "AGENTS.md", sizeBytes: 18 }],
@@ -1693,6 +2735,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
 
@@ -1920,9 +2963,7 @@ volumes:
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
           const codexRoot = path.join(homeDir, ".codex/sessions");
-          const decoy = `{"payload":{"message":"not metadata session_meta ${"x".repeat(
-            70_000
-          )}"},"timestamp":"2026-05-05T10:00:00Z","type":"event_msg"}`;
+          const decoy = `{"payload":{"message":"not metadata session_meta ${pipe("x", Str.repeat(70_000))}"},"timestamp":"2026-05-05T10:00:00Z","type":"event_msg"}`;
           const actual =
             '{"payload":{"id":"child-session","source":{"subagent":{"agent_nickname":"worker-one","agent_role":"worker","parent_thread_id":"parent-thread","thread_spawn":true}}},"timestamp":"2026-05-05T10:01:00Z","type":"session_meta"}';
           yield* writeText(path.join(codexRoot, "codex-subagent.jsonl"), `${decoy}\n${actual}\n`);
@@ -1993,6 +3034,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -2082,6 +3124,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -2235,6 +3278,7 @@ volumes:
           const path = yield* Path.Path;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
@@ -2323,6 +3367,7 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
+          yield* makeGitRoot(repoRoot);
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");

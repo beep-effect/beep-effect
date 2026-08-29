@@ -3,8 +3,9 @@
  *
  * A small, self-contained office-action text carrying claim 1, a §102
  * anticipation rejection citing one prior-art reference (Smith), and a
- * distinguishing limitation. The distinguishing phrase appears in Title Case
- * (`"A Hinge Coupling The Lid To The Base"`) while the review loop's distinction
+ * distinguishing limitation. The reference name appears once so the bare
+ * entity surface has a unique source anchor. The distinguishing phrase appears
+ * in Title Case (`"A Hinge Coupling The Lid To The Base"`) while the review loop's distinction
  * candidate is lower case, so deterministic alignment takes the case-insensitive
  * `match_lesser` path and the re-slice recovers the original-case substring.
  *
@@ -29,7 +30,7 @@ export const OFFICE_ACTION_FIXTURE =
   "Office Action\n\n" +
   "Claim 1 stands rejected under 35 U.S.C. 102 as anticipated by Smith.\n" +
   "Claim 1 recites: A widget comprising a lid and a base.\n\n" +
-  "Applicant respectfully traverses. Smith fails to disclose " +
+  "Applicant respectfully traverses. The reference fails to disclose " +
   "A Hinge Coupling The Lid To The Base, a limitation present in claim 1.\n";
 
 /**
@@ -45,7 +46,7 @@ export const EXPECTED_DISTINCTION_QUOTE = "A Hinge Coupling The Lid To The Base"
  */
 export const EXPECTED_DISTINCTION_LIMITATION = "a hinge coupling the lid to the base";
 
-const OFFICE_ACTION_SHA256 = "ec825cf99e6592f2543ce7620e557d33946f0fe62efc12f11df628f41c6c5b6a";
+const OFFICE_ACTION_SHA256 = "f47322b0cd43c1f12eb6a6d97232ef22b1ff2274019687cd30124ee049bb61b7";
 const OFFICE_ACTION_PROCESS_SHA256 = "9351216357999af1a32bb2e5e02a0f4983c32f93ff59dfee4a8979946a22de23";
 
 const decodeArtifactId = S.decodeUnknownEffect(ArtifactId);

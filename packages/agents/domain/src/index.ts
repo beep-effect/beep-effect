@@ -8,35 +8,38 @@
 /**
  * Namespace export for agent-domain entity schemas.
  *
- * @example
+ * **Example** (Log Agent entity type)
+ *
  * ```ts
  * import { Entities } from "@beep/agents-domain"
  *
- * console.log(Entities.Agent.definition.entityId.entityType)
+ * console.log(Entities.Agent.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * as Entities from "./entities/index.js";
+export * as Entities from "./entities/index.ts";
 /**
  * Root export for agent-domain entity schemas.
  *
- * @example
+ * **Example** (Log Agent and Skill)
+ *
  * ```ts
  * import { Agent, Skill } from "@beep/agents-domain"
  *
- * console.log(Agent.definition.entityId.entityType, Skill.definition.entityId.tableName)
+ * console.log(Agent.sql.tableName, Skill.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * from "./entities/index.js";
+export * from "./entities/index.ts";
 /**
  * Namespace export for assistant-content value objects.
  *
- * @example
+ * **Example** (Decode AssistantBlock value)
+ *
  * ```ts
  * import { Values } from "@beep/agents-domain"
  * import * as S from "effect/Schema"
@@ -51,11 +54,12 @@ export * from "./entities/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * as Values from "./values/index.js";
+export * as Values from "./values/index.ts";
 /**
  * Root export for assistant-content value objects.
  *
- * @example
+ * **Example** (Decode empty AssistantContent)
+ *
  * ```ts
  * import { AssistantContent } from "@beep/agents-domain"
  * import * as S from "effect/Schema"
@@ -67,4 +71,4 @@ export * as Values from "./values/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./values/index.js";
+export * from "./values/index.ts";

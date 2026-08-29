@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "bitemporal-goal-roadmap",
+    "title": "Bitemporal Goal Roadmap (--as-of)",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when knowledge-surface-automation Workstream D ships the now-view roadmap projection; decide the git-derived versus append-only event-ledger fork at unpark."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-31",
+    "updated": "2026-08-13"
+  }
+}

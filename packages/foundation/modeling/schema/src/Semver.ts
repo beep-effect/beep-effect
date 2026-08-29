@@ -1,7 +1,8 @@
 /**
  * Schema-backed Semantic Versioning value object and comparison helpers.
  *
- * @example
+ * **Example** (Decode and format version)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -335,7 +336,7 @@ const decodeSemverFromString = (value: string): Effect.Effect<Semver, SchemaIssu
     O.match({
       onNone: () =>
         Effect.fail(
-          new SchemaIssue.InvalidValue(O.some(value), {
+          new SchemaIssue.InvalidValue({
             message: "Expected a valid semantic version string",
           })
         ),
@@ -348,13 +349,15 @@ const encodeSemverToString = (value: Semver): Effect.Effect<string> => Effect.su
 /**
  * Structured semantic version value object.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `prerelease` participates in precedence ordering. `build` is preserved for
  * formatting and round trips, but it is ignored by {@link Semver.compare}
  * according to the SemVer precedence rules.
  *
- * @example
- * ```ts
+ * **Example** (Make and format version)
+ *
+ * ```ts import.meta.vitest name="Make and format version"
  * import { Semver } from "@beep/schema/Semver"
  *
  * const version = Semver.make({
@@ -365,7 +368,7 @@ const encodeSemverToString = (value: Semver): Effect.Effect<string> => Effect.su
  *   build: ["20260629"],
  * })
  *
- * console.log(Semver.format(version)) // "1.2.3-rc.1+20260629"
+ * Semver.format(version) // => "1.2.3-rc.1+20260629"
  * ```
  *
  * @category models
@@ -391,16 +394,18 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Normalizes supported loose boundary strings before strict SemVer parsing.
    *
-   * @remarks
+   * **Details**
+   *
    * This trims whitespace, removes a leading `v`, trims dot-separated
    * identifiers, and expands `MAJOR.MINOR` to `MAJOR.MINOR.0`. It does not make
    * invalid values valid; parsing still rejects malformed segments.
    *
-   * @example
-   * ```ts
+   * **Example** (Normalize loose version string)
+   *
+   * ```ts import.meta.vitest name="Normalize loose version string"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.normalizeStr(" v1.2-rc.1 ")) // "1.2.0-rc.1"
+   * Semver.normalizeStr(" v1.2-rc.1 ") // => "1.2.0-rc.1"
    * ```
    *
    * @category normalization
@@ -418,7 +423,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Parses a supported SemVer boundary string into a structured value.
    *
-   * @example
+   * **Example** (Parse version string)
+   *
    * ```ts
    * import * as O from "effect/Option"
    * import { Semver } from "@beep/schema/Semver"
@@ -436,11 +442,13 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Splits a prerelease string into validated SemVer prerelease identifiers.
    *
-   * @example
-   * ```ts
+   * **Example** (Split prerelease identifiers)
+   *
+   * ```ts import.meta.vitest name="Split prerelease identifiers"
+   * import * as O from "effect/Option"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.preReleaseSegmentsFromStr("alpha.1")) // ["alpha", "1"]
+   * O.getOrThrow(Semver.preReleaseSegmentsFromStr("alpha.1")) // => ["alpha", "1"]
    * ```
    *
    * @category parsing
@@ -452,12 +460,13 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Formats a structured SemVer value back to a canonical string.
    *
-   * @example
-   * ```ts
+   * **Example** (Format structured version)
+   *
+   * ```ts import.meta.vitest name="Format structured version"
    * import { Semver } from "@beep/schema/Semver"
    *
    * const version = Semver.make({ major: 1, minor: 0, patch: 0, prerelease: [], build: ["7"] })
-   * console.log(Semver.format(version)) // "1.0.0+7"
+   * Semver.format(version) // => "1.0.0+7"
    * ```
    *
    * @category formatting
@@ -485,12 +494,13 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Compares two prerelease identifiers using SemVer precedence rules.
    *
-   * @example
-   * ```ts
+   * **Example** (Compare prerelease identifiers)
+   *
+   * ```ts import.meta.vitest name="Compare prerelease identifiers"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.comparePreReleaseIdentifier("2", "11")) // -1
-   * console.log(Semver.comparePreReleaseIdentifier("alpha", "beta")) // -1
+   * Semver.comparePreReleaseIdentifier("2", "11") // => -1
+   * Semver.comparePreReleaseIdentifier("alpha", "beta") // => -1
    * ```
    *
    * @category ordering
@@ -525,17 +535,19 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Compares two versions using SemVer precedence.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * String inputs are normalized with {@link Semver.normalizeStr} and parsed
    * before comparison. If either string cannot be parsed, comparison falls back
    * to lexical ordering of the formatted inputs.
    *
-   * @example
-   * ```ts
+   * **Example** (Compare version precedence)
+   *
+   * ```ts import.meta.vitest name="Compare version precedence"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.compare("1.0.0-alpha", "1.0.0")) // -1
-   * console.log(Semver.compare("1.0.0+1", "1.0.0+2")) // 0
+   * Semver.compare("1.0.0-alpha", "1.0.0") // => -1
+   * Semver.compare("1.0.0+1", "1.0.0+2") // => 0
    * ```
    *
    * @category ordering
@@ -572,17 +584,19 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
   /**
    * Checks whether a version satisfies a small SemVer comparator range.
    *
-   * @remarks
+   * **Details**
+   *
    * Supported syntax is intentionally small: whitespace-separated comparators,
    * `||` range groups, and the `^`, `>=`, `>`, `<=`, `<`, and `=` operators.
    * Build metadata is ignored for precedence comparisons.
    *
-   * @example
-   * ```ts
+   * **Example** (Check version range satisfaction)
+   *
+   * ```ts import.meta.vitest name="Check version range satisfaction"
    * import { Semver } from "@beep/schema/Semver"
    *
-   * console.log(Semver.satisfiesRange("v20.1.0", "^18.0.0 || ^20.0.0")) // true
-   * console.log(Semver.satisfiesRange("2.0.0", "^1.2.3")) // false
+   * Semver.satisfiesRange("v20.1.0", "^18.0.0 || ^20.0.0") // => true
+   * Semver.satisfiesRange("2.0.0", "^1.2.3") // => false
    * ```
    *
    * @category predicates
@@ -615,7 +629,8 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
 /**
  * Codec that decodes supported SemVer strings into {@link Semver} values.
  *
- * @example
+ * **Example** (Decode SemVer string codec)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -646,7 +661,8 @@ export const SemverFromString = S.String.pipe(
 /**
  * Type for {@link SemverFromString}.
  *
- * @example
+ * **Example** (Annotate SemverFromString type)
+ *
  * ```ts
  * import { Semver } from "@beep/schema/Semver"
  * import type { SemverFromString } from "@beep/schema/Semver"

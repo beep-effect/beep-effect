@@ -5,8 +5,11 @@ Ontology modeling package for repo-internal foundation models.
 ## Boundary
 
 `@beep/ontology` is the foundation modeling package under
-`packages/foundation/modeling/ontology`. It owns FOLIO-oriented and
-identity-as-IRI modeling primitives used by repo-internal knowledge surfaces.
+`packages/foundation/modeling/ontology`. It owns domain-agnostic ontology,
+identity-as-IRI, and manifested external-alignment primitives used by
+repo-internal knowledge surfaces. Vendor-specific identities and alignment
+decisions stay in their owning asset packs or product slices; the foundation
+loader admits them through the generic `concept-alignment` protocol.
 
 The professional-desktop ontology workbench is a separate vertical slice under
 `packages/ontology/*`, with its domain entrypoint published as
@@ -46,7 +49,7 @@ bun run test:integration
 bun run lint:fix
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests and dtslint files import package source through `@beep/ontology` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/ontology` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 

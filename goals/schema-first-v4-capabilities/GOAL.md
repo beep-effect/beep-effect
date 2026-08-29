@@ -1,12 +1,10 @@
-# GOAL: Harden schema-first Effect v4 capabilities
+# GOAL: Schema-first Effect v4 capabilities retained outcome
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect3`.
+Repo: this `beep-effect` checkout.
 
-Outcome: turn the repo's schema-first law into enforceable, ergonomic Effect v4
-practice: defaults live in schemas, property tests derive data from schemas,
-schema-derived static APIs replace duplicated branching/guard plumbing, schema
-comparisons use derived equivalence, and underused Schema tooling is documented,
-enforced, and remediated in phases.
+Outcome: retain the shipped P0–P2 doctrine, steering, and enforcement plumbing.
+P3 helper statics and remaining P4 waves are recorded deferrals; the
+`SchemaRepresentation` spike is dropped.
 
 This is a compact `/goal` launcher. Treat these packet files as the detailed
 contract:
@@ -34,30 +32,18 @@ Scope:
 - Out: immediate repo-wide rewrites, Box generator replacement without a spike,
   public API migrations without a packet phase, and unrelated formatting churn.
 
-Workflow:
-
-1. Inspect the packet, scratch files, current worktree, and live schema-first
-   lint behavior.
-2. Preserve unrelated user/worktree changes.
-3. Check local `.repos/effect-v4` docs/source before choosing nontrivial
-   Schema APIs.
-4. Strengthen docs and enforcement before broad remediation.
-5. Route new checks through `beep lint schema-first`; prove structured Yeet
-   `schema-first-policy` output before claiming that issue shape is wired.
-6. Remediate in small phases with false-positive review after each phase.
-7. Use Yeet's current flow for closure: verify locally, use exact proof reuse
-   only when accepted, treat `--start-pr-early --monitor` as opt-in overlap
-   when requested, and run read-first `yeet closeout` on the PR branch.
+Workflow: preserve the P0–P2 evidence and final false-positive/deferral ledger.
+Reopen helper or remediation work only after repeated demand or a schema-heavy
+wave exposes a v4 capability gap.
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance criteria are satisfied for the current phase.
-- [ ] Scratch examples still typecheck/test or any unrelated scratch blocker is
-      recorded with command output.
+- [x] P0–P2 evidence remains linked as the retained outcome.
 - [x] Current enforcement failures are emitted by `beep lint schema-first` as
       structured `[schema-first:issue]` lines and P2 proves their Yeet issue
       shape. Future advisory rules remain phased work.
-- [ ] Remediation commits do not hide unrelated quality failures.
+- [x] Remaining helper/remediation work and five arbitrary cases are recorded
+      deferrals; the representation spike is explicitly dropped.
 
 Verification:
 

@@ -1,6 +1,7 @@
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { Worker } from "@beep/architecture-lab-use-cases/public";
 import * as WorkerServer from "@beep/architecture-lab-use-cases/server";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, HashMap } from "effect";
@@ -8,11 +9,11 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
+const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const decodeOrganizationId = S.decodeUnknownEffect(DomainWorker.WorkerOrganizationId);
 
 const makeRepository = (): WorkerServer.Worker.WorkerRepositoryShape => {
-  let workers = HashMap.empty<DomainWorker.WorkerId, DomainWorker.Worker>();
+  let workers = HashMap.empty<ArchitectureLabIdentity.WorkerId, DomainWorker.Worker>();
   return {
     create: (worker) =>
       O.isSome(HashMap.get(workers, worker.id))

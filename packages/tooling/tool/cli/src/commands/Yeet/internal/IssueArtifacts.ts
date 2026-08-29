@@ -8,16 +8,17 @@
 import { Console, Effect, FileSystem, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { encodeCommandJson } from "../../../internal/cli/Json.js";
-import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { renderPackageQualityPacketMarkdown } from "../Yeet.render.js";
-import { YeetRunResult } from "../Yeet.schemas.js";
-import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.js";
-import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.js";
+import { encodeCommandJson } from "../../../internal/cli/Json.ts";
+import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { renderPackageQualityPacketMarkdown } from "../Yeet.render.ts";
+import { YeetRunResult } from "../Yeet.schemas.ts";
+import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.ts";
+import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.js";
-import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.js";
+import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.ts";
 
 const commandFailure = (result: RepoStepRunResult, message: string): YeetCommandError =>
   YeetCommandError.make({
@@ -29,10 +30,8 @@ const commandFailure = (result: RepoStepRunResult, message: string): YeetCommand
 /**
  * Encode a Yeet payload as formatted JSON for CLI output or artifact files.
  *
- * @param value - JSON-serializable payload to encode with command output
- * formatting.
- * @returns An Effect that yields encoded JSON text or a Yeet command error.
- * @example
+ * **Example** (Encode payload as JSON)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { renderJson } from "@beep/repo-cli/test/Yeet"
@@ -41,6 +40,10 @@ const commandFailure = (result: RepoStepRunResult, message: string): YeetCommand
  *   Effect.map((json) => json.length)
  * )
  * ```
+ *
+ * @param value - JSON-serializable payload to encode with command output
+ * formatting.
+ * @returns An Effect that yields encoded JSON text or a Yeet command error.
  * @category serialization
  * @since 0.0.0
  */
@@ -55,11 +58,8 @@ export const renderJson = Effect.fn("Yeet.renderJson")(function* (
 /**
  * Build the log artifact path for a planned Yeet step.
  *
- * @param context - Repo context that determines the Yeet artifact directory.
- * @param step - Planned step whose id becomes the log file name.
- * @returns An Effect yielding the safe step log path under the run artifact
- * tree.
- * @example
+ * **Example** (Build step log path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { rawOutputPathForStep, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -88,6 +88,11 @@ export const renderJson = Effect.fn("Yeet.renderJson")(function* (
  *
  * const logFile = rawOutputPathForStep(context, step).pipe(Effect.map((path) => path.endsWith(".log")))
  * ```
+ *
+ * @param context - Repo context that determines the Yeet artifact directory.
+ * @param step - Planned step whose id becomes the log file name.
+ * @returns An Effect yielding the safe step log path under the run artifact
+ * tree.
  * @category utilities
  * @since 0.0.0
  */
@@ -103,11 +108,8 @@ export const rawOutputPathForStep = Effect.fn("Yeet.rawOutputPathForStep")(funct
 /**
  * Execute a planned repo step while streaming output into its Yeet log artifact.
  *
- * @param context - Repo context used to choose the run artifact directory.
- * @param step - Planned command to execute and capture.
- * @returns The captured step result with output metadata attached by the
- * repo-run executor.
- * @example
+ * **Example** (Execute step with log)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { executeStepWithArtifacts, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -136,6 +138,11 @@ export const rawOutputPathForStep = Effect.fn("Yeet.rawOutputPathForStep")(funct
  *
  * const exitCode = executeStepWithArtifacts(context, step).pipe(Effect.map((result) => result.exitCode))
  * ```
+ *
+ * @param context - Repo context used to choose the run artifact directory.
+ * @param step - Planned command to execute and capture.
+ * @returns The captured step result with output metadata attached by the
+ * repo-run executor.
  * @category execution
  * @since 0.0.0
  */
@@ -148,19 +155,18 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const rawOutputPath = yield* rawOutputPathForStep(context, step);
-  return yield* executeRepoPlanStepStreaming(step, O.some(rawOutputPath)).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
-  );
+  return yield* step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID
+    ? executeHeadInstallPreflight(context, step, O.some(rawOutputPath))
+    : executeRepoPlanStepStreaming(step, O.some(rawOutputPath)).pipe(
+        Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
+      );
 });
 
 /**
  * Write text to a Yeet artifact path, creating parent directories first.
  *
- * @param filePath - Absolute or repo-relative file path to write.
- * @param content - Complete file contents, including any desired trailing
- * newline.
- * @returns An Effect that completes after the file is written.
- * @example
+ * **Example** (Write artifact text file)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { writeTextFile } from "@beep/repo-cli/test/Yeet"
@@ -169,6 +175,11 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
  *   Effect.as("packet written")
  * )
  * ```
+ *
+ * @param filePath - Absolute or repo-relative file path to write.
+ * @param content - Complete file contents, including any desired trailing
+ * newline.
+ * @returns An Effect that completes after the file is written.
  * @category utilities
  * @since 0.0.0
  */
@@ -189,11 +200,8 @@ export const writeTextFile = Effect.fn("Yeet.writeTextFile")(function* (
 /**
  * Persist a quality issue index and package markdown packets for a Yeet run.
  *
- * @param context - Repo context that determines the artifact directory.
- * @param index - Normalized issue index to serialize and render into packets.
- * @returns Yeet run result pointing at the written issue index and packet
- * paths.
- * @example
+ * **Example** (Persist issue index packets)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { QualityIssueIndex, RepoRunContext, writeIssueArtifacts } from "@beep/repo-cli/test/Yeet"
@@ -217,6 +225,11 @@ export const writeTextFile = Effect.fn("Yeet.writeTextFile")(function* (
  *
  * const packetCount = writeIssueArtifacts(context, index).pipe(Effect.map((result) => result.packetPaths.length))
  * ```
+ *
+ * @param context - Repo context that determines the artifact directory.
+ * @param index - Normalized issue index to serialize and render into packets.
+ * @returns Yeet run result pointing at the written issue index and packet
+ * paths.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -274,11 +287,8 @@ const issuesFromResults = (
 /**
  * Build the successful publish result for a Yeet run.
  *
- * @param context - Repo context whose artifact directory is reported.
- * @param committed - Whether publish created or amended a local commit before
- * pushing.
- * @returns A Yeet run result marked as pushed with no failure packet paths.
- * @example
+ * **Example** (Build successful publish result)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { publishResult, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -296,6 +306,11 @@ const issuesFromResults = (
  *
  * const pushed = publishResult(context, true).pipe(Effect.map((result) => result.pushed))
  * ```
+ *
+ * @param context - Repo context whose artifact directory is reported.
+ * @param committed - Whether publish created or amended a local commit before
+ * pushing.
+ * @returns A Yeet run result marked as pushed with no failure packet paths.
  * @category utilities
  * @since 0.0.0
  */
@@ -315,10 +330,8 @@ export const publishResult = Effect.fn("Yeet.publishResult")(function* (
 /**
  * Build the commit-message artifact path for a Yeet run.
  *
- * @param context - Repo context whose run artifact directory owns the commit
- * message file.
- * @returns An Effect yielding the path used for commitlint's `--edit` input.
- * @example
+ * **Example** (Build commit message path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { commitMessagePathForContext, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -336,6 +349,10 @@ export const publishResult = Effect.fn("Yeet.publishResult")(function* (
  *
  * const messagePath = commitMessagePathForContext(context).pipe(Effect.map((path) => path.endsWith(".txt")))
  * ```
+ *
+ * @param context - Repo context whose run artifact directory owns the commit
+ * message file.
+ * @returns An Effect yielding the path used for commitlint's `--edit` input.
  * @category utilities
  * @since 0.0.0
  */
@@ -350,9 +367,8 @@ export const commitMessagePathForContext = Effect.fn("Yeet.commitMessagePathForC
 /**
  * Build an empty plan-mode result without writing quality packets.
  *
- * @param context - Repo context whose artifact directory is reported.
- * @returns A non-committed, non-pushed Yeet result with no packet paths.
- * @example
+ * **Example** (Build empty plan result)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { emptyPlanResult, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -370,6 +386,9 @@ export const commitMessagePathForContext = Effect.fn("Yeet.commitMessagePathForC
  *
  * const planned = emptyPlanResult(context).pipe(Effect.map((result) => result.committed === false))
  * ```
+ *
+ * @param context - Repo context whose artifact directory is reported.
+ * @returns A non-committed, non-pushed Yeet result with no packet paths.
  * @category utilities
  * @since 0.0.0
  */
@@ -389,14 +408,8 @@ export const emptyPlanResult = Effect.fn("Yeet.emptyPlanResult")(function* (
  * Write failure packets for failed steps, print their paths, and fail the Yeet
  * command.
  *
- * @param context - Repo context that determines artifact paths and issue
- * metadata.
- * @param steps - Planned steps used to classify each step result.
- * @param results - Executed results to normalize into quality issues.
- * @param message - User-facing failure summary printed before packet paths.
- * @returns A failing Effect carrying the first command failure or a synthetic
- * Yeet command error.
- * @example
+ * **Example** (Fail with issue packets)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { failWithIssueArtifacts, RepoPlanStep, RepoRunContext, RepoStepRunResult } from "@beep/repo-cli/test/Yeet"
@@ -426,6 +439,14 @@ export const emptyPlanResult = Effect.fn("Yeet.emptyPlanResult")(function* (
  *
  * const failure = failWithIssueArtifacts(context, [step], [result], "Yeet proof failed").pipe(Effect.either)
  * ```
+ *
+ * @param context - Repo context that determines artifact paths and issue
+ * metadata.
+ * @param steps - Planned steps used to classify each step result.
+ * @param results - Executed results to normalize into quality issues.
+ * @param message - User-facing failure summary printed before packet paths.
+ * @returns A failing Effect carrying the first command failure or a synthetic
+ * Yeet command error.
  * @category error-handling
  * @since 0.0.0
  */

@@ -12,7 +12,7 @@ describe("destructiveTransform", () => {
   it("preserves source decode failures", () => {
     const schema = destructiveTransform(S.String, (value) => value.length);
 
-    expect(() => S.decodeUnknownSync(schema)(1)).toThrow("Expected string, got 1");
+    expect(() => S.decodeSync(schema)(1)).toThrow("Expected string");
   });
 
   it("maps thrown transform errors into parse issues", () => {
@@ -34,7 +34,7 @@ describe("destructiveTransform", () => {
       size: destructiveTransform(S.String, (value) => value.length),
     });
 
-    const decoded = S.decodeUnknownSync(schema)({ size: "beep" });
+    const decoded = S.decodeSync(schema)({ size: "beep" });
     const encoded = S.encodeSync(schema)({ size: 4 });
 
     expect(decoded).toEqual({ size: 4 });

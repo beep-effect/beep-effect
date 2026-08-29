@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ontology-workbench-migration",
+    "title": "Ontology Workbench Migration",
+    "status": "completed-retained",
+    "created": "2026-07-17",
+    "updated": "2026-07-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ontology-workbench-migration",
+  "lifecycle": "completed-retained",
+  "mission": "Migrate the Ontology workbench monolith into nine fine-grained dock panels (workspace-substrate step 4, first surface) and land the four dock capability residuals folded into this packet: per-panel constraints, tab-overflow dropdown, drop-indicator quadrants, StrictMode-safe tree host.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/computable-workspace-geometry",
+    "graduated": "2026-07-17",
+    "note": "Continues docs/product/workspace-substrate.md section 7 sequencing (step 4: surfaces migrate one at a time) directly after goals/dock-substrate-landing closed (PRs #416/#421/#426/#427). Ride-along residuals are drawn from that packet's Residuals section by the 2026-07-17 grill."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until each milestone ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor) and M4 closes the packet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ontology-workbench-migration/README.md",
+    "goals/ontology-workbench-migration/SPEC.md",
+    "goals/ontology-workbench-migration/PLAN.md",
+    "goals/ontology-workbench-migration/GOAL.md",
+    "goals/ontology-workbench-migration/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ontology-workbench-migration/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Packet opened (grill-locked SPEC, research capture, task frame)",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "M1: dock capabilities (per-panel constraints, tab overflow, drop quadrants)",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "M2: ontology-ui workbench decomposition (zero-behavior region extraction)",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "M3: professional-desktop shell integration (9 panels, launcher, v2 snapshot)",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "M4: QA-to-green + QA-loop skill + close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ontology-workbench-migration/GOAL.md)\" -le 4000",
+    "jq . goals/ontology-workbench-migration/ops/manifest.json",
+    "git diff --check -- goals/ontology-workbench-migration",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A required semantic change surfaces during M2 extraction (zero-behavior law; report, don't make it).",
+    "Per-panel maxima prove unsatisfiable against the geometry solver's invariants (report with failing fixture; minima alone may land).",
+    "The StrictMode fix would require weakening StrictMode (forbidden; keep SurfaceRetry for ontology and record the residual).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
+  ]
+}

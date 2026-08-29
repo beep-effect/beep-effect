@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "codex-security-findings-2026-08-24",
+    "title": "Codex Security Findings (2026-08-24)",
+    "status": "completed-retained",
+    "created": "2026-08-24",
+    "updated": "2026-08-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/codex-security-findings-2026-08-24",
+  "lifecycle": "completed-retained",
+  "statusNote": "19 validated; 15 remediated in PR #783; 13 dashboard IDs closed as Already fixed on 2026-08-24; CSF-003 and CSF-009 remain open pending goals/runner-trust-boundary P1 deployment proof; CSF-001, CSF-004, CSF-005, and CSF-006 transferred to goals/runner-trust-boundary.",
+  "mission": "Remediate and close the bounded findings from the 2026-08-24 capture, then transfer the six runner-boundary IDs with explicit proof gates.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the bounded repository remediations ship, exact dashboard actions are recorded, and every remaining open ID has a named receiving packet with an explicit proof gate.",
+    "grandfathered": false
+  },
+  "branch": "codex/security-findings-2026-08-24",
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/codex-security-findings-2026-08-24/README.md",
+    "goals/codex-security-findings-2026-08-24/SPEC.md",
+    "goals/codex-security-findings-2026-08-24/PLAN.md",
+    "goals/codex-security-findings-2026-08-24/GOAL.md",
+    "goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "goals/codex-security-findings-2026-08-24/ops/closures.json",
+    "goals/codex-security-findings-2026-08-24/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-08-24/GOAL.md"
+    }
+  ],
+  "source": {
+    "provider": "Codex Cloud Security UI",
+    "repository": "kriegcloud/beep-effect",
+    "url": "https://chatgpt.com/codex/cloud/security/findings/",
+    "capturedAt": "2026-08-24",
+    "captureMethodPolicy": "signed-in-csv-export",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-08-24/raw",
+    "rawCaptureTracked": false
+  },
+  "catalog": {
+    "expectedCount": 19,
+    "capturedCount": 19,
+    "severityCountsKnown": true,
+    "severityCounts": {
+      "High": 5,
+      "Medium": 4,
+      "Low": 5,
+      "Informational": 5
+    },
+    "dispositionCounts": {
+      "remediate": 19,
+      "already-fixed": 0,
+      "false-positive": 0,
+      "out-of-scope": 0,
+      "untriaged": 0
+    },
+    "note": "All 19 findings are validated. PR #783 contains 15 repo-side remediations; 13 dashboard IDs closed as Already fixed on 2026-08-24. CSF-003 and CSF-009 remain held for goals/runner-trust-boundary P1 deployment proof. CSF-001, CSF-004, CSF-005, and CSF-006 transferred to that packet."
+  },
+  "closeoutPolicy": {
+    "fixed": "Already fixed",
+    "alreadyFixed": "Already fixed",
+    "dismissedInvalid": "False positive",
+    "outOfScope": "False positive",
+    "acceptedRisk": "not allowed"
+  },
+  "dispositionPolicy": {
+    "default": "remediate",
+    "acceptedRiskAllowed": false,
+    "falsePositiveThreshold": "strict current-HEAD proof that affected code is absent, unreachable, non-shipped, already fixed, or materially misunderstood",
+    "fixPhilosophy": "minimal shared-root fixes with focused regression proof; reuse canonical repo helpers after live source and barrel discovery"
+  },
+  "sanitation": {
+    "trackedRawFindingContent": false,
+    "rawCaptureLocation": "goals/codex-security-findings-2026-08-24/raw",
+    "commitsOnlySanitizedMarkdown": true,
+    "codexPatchTextTracked": false,
+    "publicFindingPolicy": "Tracked records contain title, severity, Codex ID, source commit, public summary, decisions, changed files, and verification only."
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Bootstrap",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Capture",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Validate",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Lane partition",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Remediate",
+      "status": "complete",
+      "statusNote": "Fifteen findings are remediated in PR #783 with focused proof; CSF-001, CSF-004, CSF-005, and CSF-006 are transferred to goals/runner-trust-boundary for external proof."
+    },
+    {
+      "id": "P5",
+      "name": "Repo proof",
+      "status": "complete",
+      "statusNote": "Repository proof for the 15 remediations is retained with PR #783."
+    },
+    {
+      "id": "P6",
+      "name": "Publish",
+      "status": "complete"
+    },
+    {
+      "id": "P7",
+      "name": "Monitor",
+      "status": "complete"
+    },
+    {
+      "id": "P8",
+      "name": "Merge and close findings",
+      "status": "complete",
+      "statusNote": "Thirteen dashboard IDs closed as Already fixed on 2026-08-24. CSF-003 and CSF-009 remain held for runner-trust-boundary P1 proof; CSF-001, CSF-004, CSF-005, and CSF-006 transferred to that packet."
+    },
+    {
+      "id": "P9",
+      "name": "Close",
+      "status": "complete",
+      "statusNote": "Packet closed as completed-retained with history/reflections/2026-08-24-codex.md."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/codex-security-findings-2026-08-24/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-08-24/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "jq . goals/codex-security-findings-2026-08-24/ops/closures.json",
+    "test \"$(find goals/codex-security-findings-2026-08-24/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 19",
+    "git diff --check -- goals/codex-security-findings-2026-08-24",
+    "jq -r '.findings[].commit' goals/codex-security-findings-2026-08-24/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The signed-in CSV export cannot be produced from the findings page.",
+    "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
+    "A remediation requires an architecture or product decision outside packet scope.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

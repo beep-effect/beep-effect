@@ -84,9 +84,23 @@ metalness = "metalness"
 
 [files]
 extend-exclude = [
+  # Vendored upstream API documents drivers generate from (OpenAPI / JSON Schema);
+  # kept byte-faithful to upstream, so their spelling is not ours to fix.
+  "packages/drivers/*/openapi.json",
+  "packages/drivers/*/spec/*.json",
+  # Generated Pulumi terraform-module bridge SDK — vendored upstream text.
+  "infra/ci-runners/sdks/**",
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",
+  # Semantica gold labels quote source papers verbatim (anchors verify
+  # byte-exact against the corpus text) — their spelling is not ours to fix.
+  "apps/labs/semantica/fixtures/gold/**",
+  # Dependency patches: unified-diff context lines truncate mid-word by
+  # format design, which reads as a typo to the checker.
+  "patches/*.patch",
+  # Nightly research packets contain sanitized machine-generated source excerpts.
+  "research/**",
   "bun.lock",
   "*.snap",
   ".repos/**",
@@ -105,9 +119,15 @@ extend-exclude = [
   "standards/repo-exports.catalog.jsonc",
   "standards/repo-exports.catalog.md",
   "**/internal/data/**",
+  "packages/law-practice/domain/src/internal/generated/free-law-project/**",
   "**/src-tauri/gen/**",
   "**/src-tauri/target/**",
   "packages/drivers/venice-ai/swagger.yaml",
   # Vendored, version-pinned WHATWG/webref spec data for @beep/html (see data/SOURCES.md).
   "packages/foundation/modeling/html/data/**",
+  # Generated registered BCP 47 subtags are machine-owned identifiers, not prose.
+  "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
+  # Bun patch files truncate identifiers at line-wrap boundaries (`effect_Schem`),
+  # which is not prose and trips the dictionary on context hunk headers.
+  "patches/**",
 ]

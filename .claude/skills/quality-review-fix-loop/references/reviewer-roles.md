@@ -48,7 +48,7 @@ Every reviewer must:
 
 6. Testing Reviewer
    - Checks slice isolation, `@effect/vitest`, port stubs, contract tests,
-     type/dtslint coverage, package-alias imports from tests, targeted coverage,
+     package-alias imports from tests, targeted coverage,
      and no `bun test` usage for repo tests.
 
 7. Observability Reviewer

@@ -13,7 +13,8 @@ import type { SourceFile } from "ts-morph";
 /**
  * Extract leading JSDoc text attached to a declaration node.
  *
- * @example
+ * **Example** (Read a variable's leading JSDoc)
+ *
  * ```ts
  * import { createInMemoryTsMorphProject, leadingJsDocText } from "@beep/repo-cli/internal/tsmorph"
  *
@@ -21,6 +22,7 @@ import type { SourceFile } from "ts-morph";
  * const source = project.createSourceFile("fixture.ts", "/** A value. *\/\nexport const value = 1")
  * console.log(leadingJsDocText(source.getVariableDeclarationOrThrow("value")).includes("A value"))
  * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -34,7 +36,8 @@ export const leadingJsDocText = (node: Node): string =>
 /**
  * Concatenate the structured JSDoc blocks attached to a JSDocable node.
  *
- * @example
+ * **Example** (Read a function's structured JSDoc)
+ *
  * ```ts
  * import { createInMemoryTsMorphProject, jsDocTextForNode } from "@beep/repo-cli/internal/tsmorph"
  *
@@ -42,6 +45,7 @@ export const leadingJsDocText = (node: Node): string =>
  * const source = project.createSourceFile("fixture.ts", "/** @category utilities *\/\nexport function f() {}")
  * console.log(jsDocTextForNode(source.getFunctionOrThrow("f")).includes("@category utilities"))
  * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -58,26 +62,10 @@ export const jsDocTextForNode = (node: Node): string => {
 };
 
 /**
- * Test whether a node's JSDoc declares a specific category.
- *
- * @example
- * ```ts
- * import { createInMemoryTsMorphProject, hasJsDocCategory } from "@beep/repo-cli/internal/tsmorph"
- *
- * const project = createInMemoryTsMorphProject()
- * const source = project.createSourceFile("fixture.ts", "/** @category constructors *\/\nexport function make() {}")
- * console.log(hasJsDocCategory({ node: source.getFunctionOrThrow("make"), category: "constructors" }))
- * ```
- * @category predicates
- * @since 0.0.0
- */
-export const hasJsDocCategory = (input: { readonly node: Node; readonly category: string }): boolean =>
-  Str.includes(`@category ${input.category}`)(jsDocTextForNode(input.node));
-
-/**
  * Return the top-level file overview JSDoc block, when one exists.
  *
- * @example
+ * **Example** (Read the file overview block)
+ *
  * ```ts
  * import { createInMemoryTsMorphProject, topFileoverview } from "@beep/repo-cli/internal/tsmorph"
  * import * as O from "effect/Option"
@@ -86,6 +74,7 @@ export const hasJsDocCategory = (input: { readonly node: Node; readonly category
  * const source = project.createSourceFile("fixture.ts", "/** File docs. *\/\nexport const value = 1")
  * console.log(O.getOrUndefined(topFileoverview(source))?.includes("File docs."))
  * ```
+ *
  * @category parsing
  * @since 0.0.0
  */

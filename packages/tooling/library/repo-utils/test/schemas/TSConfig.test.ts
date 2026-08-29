@@ -18,7 +18,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
-const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions);
+const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions)(fc);
 
 describe("TSConfig schema", () => {
   describe("valid structures", () => {
@@ -35,7 +35,7 @@ describe("TSConfig schema", () => {
       fc.assert(
         fc.property(TSConfigCompilerOptionsArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(TSConfig.fields.compilerOptions)(value);
-          const decoded = S.decodeUnknownSync(TSConfig.fields.compilerOptions)(encoded);
+          const decoded = S.decodeSync(TSConfig.fields.compilerOptions)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -245,10 +245,10 @@ describe("TSConfig schema", () => {
       });
 
       expect(Exit.isFailure(topLevel)).toBe(true);
-      expect(renderSchemaFailure(topLevel)).toContain("Unexpected key");
+      expect(renderSchemaFailure(topLevel)).toContain("Expected no excess property");
       expect(renderSchemaFailure(topLevel)).toContain('["unexpected"]');
       expect(Exit.isFailure(nested)).toBe(true);
-      expect(renderSchemaFailure(nested)).toContain("Unexpected key");
+      expect(renderSchemaFailure(nested)).toContain("Expected no excess property");
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
     });
 

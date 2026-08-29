@@ -9,14 +9,15 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { MediaDimensions, MediaKind } from "./Media.schemas.js";
+import { MediaDimensions, MediaKind } from "./Media.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/SortAndRename.schemas");
 
 /**
  * File discovered for deterministic rename planning.
  *
- * @example
+ * **Example** (Construct SortableFile instance)
+ *
  * ```ts
  * import { SortableFile } from "@beep/repo-cli/commands/Files/index"
  *
@@ -29,6 +30,7 @@ const $I = $RepoCliId.create("commands/Files/internal/SortAndRename.schemas");
  * })
  * console.log(file.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -49,13 +51,15 @@ export class SortableFile extends S.Class<SortableFile>($I`SortableFile`)(
 /**
  * Planned rename from an existing file path to a generated target path.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RenamePlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(RenamePlanEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -81,13 +85,15 @@ export class RenamePlanEntry extends S.Class<RenamePlanEntry>($I`RenamePlanEntry
 /**
  * Summary returned by `sortAndRenameFiles`.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SortAndRenameSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(SortAndRenameSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,13 +114,15 @@ export class SortAndRenameSummary extends S.Class<SortAndRenameSummary>($I`SortA
 /**
  * Files selected for rename planning plus skipped file counts.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SortableFileCollection } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(SortableFileCollection)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,13 +139,15 @@ export class SortableFileCollection extends S.Class<SortableFileCollection>($I`S
 /**
  * Planned rename entries plus skipped file counts.
  *
- * @example
+ * **Example** (Check schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RenamePlan } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(RenamePlan)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

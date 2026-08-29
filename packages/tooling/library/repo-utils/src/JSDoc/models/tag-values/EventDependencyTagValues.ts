@@ -7,14 +7,15 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { nameField, optionalDesc, optionalName } from "./_fields.js";
+import { nameField, optionalDesc, optionalName } from "./_fields.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/tag-values/EventDependencyTagValues");
 
 /**
  * Schema-backed value for a parsed `fires` tag occurrence: documents an event a symbol emits.
  *
- * @example
+ * **Example** (Create FiresValue instance)
+ *
  * ```ts
  * import { FiresValue } from "@beep/repo-utils/JSDoc/models/tag-values/EventDependencyTagValues"
  *
@@ -25,6 +26,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/EventDependencyTagValues
  * const tagName: "fires" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,7 +41,8 @@ export class FiresValue extends S.TaggedClass<FiresValue>($I`FiresValue`)(
 /**
  * Schema-backed value for a parsed `listens` tag occurrence: documents an event a symbol listens for.
  *
- * @example
+ * **Example** (Create ListensValue instance)
+ *
  * ```ts
  * import { ListensValue } from "@beep/repo-utils/JSDoc/models/tag-values/EventDependencyTagValues"
  *
@@ -50,6 +53,7 @@ export class FiresValue extends S.TaggedClass<FiresValue>($I`FiresValue`)(
  * const tagName: "listens" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -64,7 +68,8 @@ export class ListensValue extends S.TaggedClass<ListensValue>($I`ListensValue`)(
 /**
  * Schema-backed value for a parsed `event` tag occurrence: documents an event.
  *
- * @example
+ * **Example** (Create EventValue instance)
+ *
  * ```ts
  * import { EventValue } from "@beep/repo-utils/JSDoc/models/tag-values/EventDependencyTagValues"
  *
@@ -75,6 +80,7 @@ export class ListensValue extends S.TaggedClass<ListensValue>($I`ListensValue`)(
  * const tagName: "event" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -89,7 +95,8 @@ export class EventValue extends S.TaggedClass<EventValue>($I`EventValue`)(
 /**
  * Schema-backed value for a parsed `requires` tag occurrence: documents a dependency.
  *
- * @example
+ * **Example** (Create RequiresValue instance)
+ *
  * ```ts
  * import { RequiresValue } from "@beep/repo-utils/JSDoc/models/tag-values/EventDependencyTagValues"
  *
@@ -97,6 +104,7 @@ export class EventValue extends S.TaggedClass<EventValue>($I`EventValue`)(
  * const tagName: "requires" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

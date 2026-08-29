@@ -21,8 +21,9 @@ const maxSpanEvents = 200;
 /**
  * Summary of the in-memory relay state.
  *
- * @example
- * ```typescript
+ * **Example** (Make zero-count snapshot)
+ *
+ * ```ts import.meta.vitest name="Make zero-count snapshot"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DevToolsSnapshot } from "@beep/observability/experimental/server"
@@ -34,11 +35,11 @@ const maxSpanEvents = 200;
  *   spanCount: count,
  *   spanEventCount: count
  * })
- * console.log(snapshot.spanCount) // 0
+ * snapshot.spanCount // => 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class DevToolsSnapshot extends S.Class<DevToolsSnapshot>($I`DevToolsSnapshot`)(
   {
@@ -55,7 +56,8 @@ export class DevToolsSnapshot extends S.Class<DevToolsSnapshot>($I`DevToolsSnaps
 /**
  * Service for ingesting and snapshotting devtools traffic.
  *
- * @example
+ * **Example** (Yield relay snapshot)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { DevToolsRelayService } from "@beep/observability/experimental/server"
@@ -68,8 +70,8 @@ export class DevToolsSnapshot extends S.Class<DevToolsSnapshot>($I`DevToolsSnaps
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class DevToolsRelayService extends Context.Service<
   DevToolsRelayService,
@@ -102,7 +104,8 @@ const toSpanKey = (span: Pick<DevToolsSchema.Span, "traceId" | "spanId">): strin
 /**
  * Create the in-memory relay service without starting a socket server.
  *
- * @example
+ * **Example** (Layer effect constructor)
+ *
  * ```typescript
  * import { Layer } from "effect"
  * import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server"
@@ -114,9 +117,8 @@ const toSpanKey = (span: Pick<DevToolsSchema.Span, "traceId" | "spanId">): strin
  * ```
  *
  * @effects Requires `SocketServer.SocketServer`, reads the clock, and returns an in-memory relay service.
- *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeDevToolsRelayService: Effect.Effect<
   DevToolsRelayService["Service"],
@@ -210,7 +212,8 @@ const pipeAppendLimited = <A>(values: ReadonlyArray<A>, value: A): ReadonlyArray
 /**
  * Start a websocket relay using `DevToolsServer.run`.
  *
- * @example
+ * **Example** (Provide relay server layer)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { DevToolsRelayService, layerDevToolsRelayServer } from "@beep/observability/experimental/server"
@@ -223,8 +226,8 @@ const pipeAppendLimited = <A>(values: ReadonlyArray<A>, value: A): ReadonlyArray
  * console.log(snapshot)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerDevToolsRelayServer: Layer.Layer<
   DevToolsRelayService,

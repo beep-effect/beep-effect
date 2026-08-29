@@ -1,222 +1,267 @@
 # Agent Memory Tiers & Bitemporal Edges — Decisions
 
-<!--
-Stage 2 (align) SEED. Each "## Q<n>" is a branch-closing fork with a RECOMMENDED
-answer and grounded rationale, left **open** on purpose: the user resolves them
-via `/grill-with-docs agent-memory-tiers-bitemporal-edges`, one branch at a time,
-logging each resolution here and syncing manifest `openQuestions`. Recommendations
-are grounded in RESEARCH.md (cited inline) — starting positions to grill, not
-settled decisions. Do not over-specify; these forks shape the goal, not the code.
--->
+All entries below were closed on 2026-07-14. `LOCKED` means the answer is
+binding input to shape and decomposition. `DEFERRED` means the question moves
+to the named goal's P0 rather than remaining an exploration fork.
 
-## Research input (2026-07-08 run, recorded 2026-07-11) — forks remain open
+## Scope determination — product memory, with the bitemporal port as its core
 
-The 13-lane memory-stack research
-([`docs/agent-memory-infra/00-recommendation.md`](../../docs/agent-memory-infra/00-recommendation.md))
-bears directly on four forks below; its findings strengthen the recommended
-answers but do NOT close them — resolve via `/grill-with-docs` as designed:
+**Date / Status:** 2026-07-14 — **LOCKED**
 
-- **Q1 (sourcing/licensing):** borrow shapes from Apache-2.0 Graphiti only
-  (file-level citations in `graphiti-clone.md`: `edges.py:263-285`,
-  `nodes.py:318-351`, `edge_operations.py:538-847`); no SSPL code paths —
-  FalkorDB is SSPLv1, and Graphiti-with-FalkorDB bundles inherit the flag.
-- **Q2 (own vs consume/defer):** unchanged; FalkorDB/GraphRAG stay deferred to
-  `goals/trustgraph-port`; NEW consume-idea — Cognee's relational rollback
-  ledger for projection rebuild/undo.
-- **Q4 (durable truth):** reaffirmed by all thirteen lanes — Postgres
-  repo-native via `@beep/epistemic-tables` + `@beep/drizzle`; no external
-  graph vendor in the authority path.
-- **Q6 (CONTRADICTS edge):** adopt Graphiti's invalidate-don't-delete
-  semantics as the reference shape; add the Oracle's review-state enum
-  (`candidate`/`machine-extracted`/`human-reviewed`/`authoritative`) to the
-  edge lifecycle schema.
+**Question:** Is this packet about Claude/Codex developer memory, the named
+`@beep/epistemic-tables` port, or the professional product runtime's broader
+memory program?
 
-Also note: this packet's port is now load-bearing for dev tooling — Graphiti's
-deployment is write-frozen and decommissions only after this port lands
-(`standards/memory-architecture/04-decision-log.md`, 2026-07-08 entry).
+**Answer:** This packet owns **product memory for the professional runtime**.
+It does not own Claude/Codex developer memory, which is operator-level Cognee
+under [`standards/memory-architecture/04-decision-log.md`](../../standards/memory-architecture/04-decision-log.md).
+The packet is a superset of the named `@beep/epistemic-tables` bitemporal port;
+that port is the first-goal core. Landing the core is the doctrine milestone
+that triggers retirement of the write-frozen operator-level Graphiti
+deployment. Product tables must never become an operator-memory backend.
 
----
+**Rationale:** Product authority and operator assistance have different
+lifecycles, owners, and trust boundaries. The doctrine deliberately keeps
+Cognee/Graphiti in operator configuration while the product owns accepted
+claims and relations in repo-native storage.
 
-## Q1: How do we source the borrowed memory primitives — port-with-attribution, reference-only, or clean-room?
+**Rejected options:** Treating this as a Claude/Codex memory redesign; limiting
+the packet to a table-only port with no product program; wiring product tables
+behind Cognee or Graphiti; reusing product tables as the operator-memory store.
 
-**Recommended:** Reimplement everything in Effect-Schema and take **no runtime
-dependency** on any donor. Tier the sourcing by license: (a) **port-with-attribution**
-agentmemory (`rohitg00/agentmemory`, Apache-2.0) — translate its data shapes,
-retention/decay math, and relation-confidence heuristic into `LiteralKit` /
-`Model.Class`, preserve the Apache copyright + text in a repo attribution file,
-mark ported files modified, and discard all iii-sdk / Zod / Anthropic wiring;
-(b) **reference-only** Graphiti / Zep (Apache-2.0 but Python) for the bitemporal
-invalidation semantics; (c) **clean-room, spec-first** the mike-derived gate /
-version-source states (AGPL-3.0) — re-derive from a human-authored behavioral spec,
-never transcribe column names or the enum string list, and do not launder the
-schema through an LLM; (d) **idea-only** for harvest-mcp (license unverified → treat
-all-rights-reserved) and screenpipe (Commercial relicense 2026-06-09). Require
-`live-repo verified` provenance before borrowing any code shape.
+## Decision 1 — sourcing and donor discipline
 
-**Rationale:** The license subtopic two-source-verifies each donor's terms.
-*Computer Associates v. Altai* (AFC) filters functional ideas / standard techniques
-— a 4-tier enum, `salience·exp(−λΔt)`, `tvalid`/`tvalidEnd` fields, a confidence
-heuristic — out as unprotectable, while *Google v. Oracle* leaves verbatim
-field-name/enum copying a fact-specific gamble; so reuse the algorithm/shape and
-rename to repo idioms. agentmemory's DI/Layer patterns do not transfer regardless
-(bespoke iii-sdk), and its `parseTemporalGraphXml` regex must be dropped for lack of
-char-span grounding — reuse the prompt *shape* only.
+**Date / Status:** 2026-07-14 — **LOCKED**
 
-**Status:** open (for /grill-with-docs)
+**Question:** What may this program borrow, under what attribution discipline,
+and may any donor enter the runtime?
 
-## Q2: What does this packet own versus consume or defer?
+**Answer:** Graphiti is the primary attributed port donor under Apache-2.0 for
+temporal field semantics, episode lineage shape, and invalidate-don't-delete.
+The exact mined locations are recorded in
+[`docs/agent-memory-infra/00-recommendation.md`](../../docs/agent-memory-infra/00-recommendation.md):
+`graphiti_core/edges.py:263-285`, `graphiti_core/nodes.py:318-351`, and
+`graphiti_core/utils/maintenance/edge_operations.py:538-847`.
+Agentmemory attribution is deferred until a retention goal actually adopts its
+algorithm. Mike is AGPL and will not be clean-roomed because Beep already owns
+the relevant gate and lineage concepts. Harvest-mcp and screenpipe are
+concept-only. Doc-haus implementation detail is unusable until its license is
+verified live. Every implementation goal starts with a pre-code
+provenance/license inventory. No donor becomes a runtime dependency.
 
-**Recommended:** This packet **OWNS** the durable bitemporal versioned-edge store,
-the claim disposition axis (active / rejected / superseded / conflicted), the
-four-tier `ConsolidationTier` (reconciled with the binding taxonomy), the
-retention/decay scoring + hot/warm/cold/evictable eviction, the two-axis as-of read,
-and the pre-fusion (per-tier candidate generation, retention-weighted recall) +
-post-fusion (session diversification, conflict/supersede filtering) edges of
-retrieval. It **CONSUMES** the scored 3-channel RRF fuser (k=60) from
-`explorations/rag-retrieval-projection` — the single RRF owner — supplying the
-bitemporal-edge graph stream and reading span-carrying fused hits. It **DEFERS** the
-FalkorDB / GraphRAG persistent projection + extraction-pipeline port to
-`goals/trustgraph-port`. Do **not** build a third RRF; the graph stream's intrinsic
-ranking signal (BFS distance? edge weight? recency?) is an upstream open question
-owned by the RRF packet.
+**Rationale:** This preserves the strongest attributed temporal donor while
+keeping license obligations explicit and the product runtime repo-native.
+Provenance is checked at implementation time because upstream licenses and
+source locations can change.
 
-**Rationale:** RESEARCH "Routing cautions" + the designated-RRF-owner finding fix
-this ownership; `standards/memory-architecture/05` fixes durable-truth-repo-native
-vs projections/caches ("the boundary is not graph-or-no-graph, it is authority or
-projection"); the completed `epistemic-claim-lifecycle-gate` explicitly deferred this
-exact scope (FalkorDB, GraphRAG, bitemporal store). Getting the boundary wrong
-duplicates retrieval infrastructure across three packets — the most expensive error
-available here.
+**Rejected options:** Runtime dependencies on donors; unattributed translation;
+clean-rooming Mike; borrowing doc-haus detail before live license verification;
+landing agentmemory attribution before its algorithm is adopted; copying code
+from concept-only sources.
 
-**Status:** open (for /grill-with-docs)
+## Decision 2 — program ownership
 
-## Q3: What is the first shippable slice?
+**Date / Status:** 2026-07-14 — **LOCKED**
 
-**Recommended:** Ship the **durable-truth core first**: the bitemporal versioned-edge
-store (four temporal fields, `supersededBy`/`isLatest`, `sourceObservationIds`,
-`EdgeContext`) + the slice-local disposition axis (active / rejected / superseded) +
-the two-axis `asOf(validAt, recordedAt?)` read — wired so a rejected/superseded
-claim finally has a durable place to land (today `ClaimLifecycle.service.ts:73`
-branches on `verdict === "rejected"` and treats it as a silent no-op). Sequence
-retention tiers / decay + `ConsolidationTier` as a **second** slice, and RRF
-consumption (which depends on `rag-retrieval-projection` landing) as a **third**.
+**Question:** What does this exploration own, consume, and defer?
 
-**Rationale:** `standards/memory-architecture/05` ranks durable truth as repo-native
-and load-bearing, while retention tiers/decay are rebuildable projections — so the
-irreversible, correctness-critical schema lands first under proof, and the
-projections can be rebuilt and re-tuned later. The disposition gap is the smallest,
-highest-value closure of an already-shipped epistemic spine (CandidateClaim +
-Evidence + ClaimLifecycle + ClaimGate), not a greenfield megaproject.
+**Answer:** It owns a program comprising product-runtime bitemporal edge
+authority, durable claim/edge disposition, a separately sequenced
+contradiction-triage capability, and optional later retention/tier projections.
+It consumes `CandidateClaim`, `Evidence`, `EvidenceSpan`, `ClaimGate`, the
+shared `ClaimLifecycle` unchanged, PROV-O, identity, Drizzle/Postgres,
+db-admin migrations, and the future RRF contract from
+`rag-retrieval-projection`. It defers RRF arithmetic to that packet as the
+single owner; external graph projections as rebuildable, driver-isolated,
+non-authoritative consumers; Cognee/Graphiti operator tooling; and
+IP-law-specific records. FalkorDB is SSPL and is not silently authorized.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** One authority owns durable meaning. Retrieval fusion, optional
+graph projections, operator memory, and domain vocabularies remain separate
+capabilities with explicit dependency directions.
 
-## Q4: Where does durable truth live, and do we admit any external graph vendor for it?
+**Rejected options:** A third RRF implementation; an authoritative graph
+projection; bundling contradiction triage into the core transaction slice;
+owning operator tooling; embedding IP-law vocabulary in epistemic memory;
+widening the packet to every future retention policy.
 
-**Recommended:** Durable truth lives in **Postgres, repo-native**, via
-`@beep/epistemic-tables` (which today materializes only `UsageRecord`) + `@beep/drizzle`
-— no external graph vendor (FalkorDB / Neo4j) is ever authoritative. FalkorDB /
-GraphRAG is admitted only as a **rebuildable projection / cache owned by
-`goals/trustgraph-port`**, never as system of record. LLM-extracted edges and
-embeddings are **candidates until gated**; reuse the repo's existing LLM service
-wiring + structured output (BAML / Standard-Schema) with `EvidenceSpan` char-span
-grounding — do **not** import agentmemory's Anthropic-SDK extraction or its brittle
-`parseTemporalGraphXml`. No new external auth surface is introduced for the durable
-store; the only "auth" gate is the existing human-in-the-loop disposition decision.
+## Decision 3 — first shippable slice
 
-**Rationale:** `standards/memory-architecture/05` sets the authority rule explicitly
-and is settled — do not re-argue graph-vs-no-graph. agentmemory's KV-JSON temporal
-layer forces full-scan time-queries (second-source critique), so the ported shape
-must be backed by indexed relational/temporal columns. Char-span grounding
-(`TextAnchorFields` / `EvidenceSpan`) is a repo invariant the donor regex lacks —
-every fused/conflict hit must carry an anchor, never a bare chunk.
+**Date / Status:** 2026-07-14 — **LOCKED**
 
-**Status:** open (for /grill-with-docs)
+**Question:** What is the first end-to-end product slice?
 
-## Q5: Where does the new code live, and is the disposition axis shared-kernel or slice-local?
+**Answer:** Ship the Postgres bitemporal edge-authority core. A gated claim or
+relation is recorded with evidence and review state. A `REJECTED` verdict gains
+a durable disposition, closing the current gap where
+[`ClaimLifecycle.service.ts`](../../packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts)
+returns the claim unchanged at lines 113-121. An approved replacement closes
+the prior valid-time and transaction-time windows atomically without altering
+the fact payload. `asOf(validAt, knownAt)` proves different correct answers
+before and after a retroactive correction, followed by restart/migration proof.
+The slice contains no RRF, decay, semantic extraction, external graph, or
+IP-law vocabulary. Its P0 is spike-gated on Postgres/PGlite compatibility,
+temporal-index strategy, exclusion-constraint support, and concurrent atomic
+supersession.
 
-**Recommended:** All new code lands in the **epistemic slice**, graduating into a NEW
-goal: the versioned-edge table in `@beep/epistemic-tables`; the value/entity models
-(a `BitemporalFields` mixin following the `EvidenceSpan` / `TextAnchorFields` spread
-idiom, the edge entity via `BaseEntity.Class` + `persist.jsonb`, `ConsolidationTier`,
-and the retention sidecar) in `@beep/epistemic-domain`; and the transition / eviction
-services in `@beep/epistemic-use-cases`. The disposition axis is a **new slice-local
-`ClaimDisposition` / `ClaimTruthStatus`** (`LiteralKit(["active","rejected","superseded","conflicted"])`)
-wired beside `lifecycle` on the claim/edge projection — **NOT** folded into the
-shared-kernel `ClaimLifecycle`. `ConsolidationTier` is net-new but must reconcile with
-`standards/memory-architecture/01` (4-LAYER + No-Escape Theorem), not adopt
-agentmemory's enum raw. Mutable retention counters (`accessCount` / `strength` /
-`RetentionScore`) live in a **separate sidecar row keyed by claimId**, never written
-onto the immutable `Evidence` / `CandidateClaim` values.
+**Rationale:** This is the smallest vertical closure of an observed loss of
+durable truth while proving both time axes and recovery before optional
+capabilities depend on them.
 
-**Rationale:** RESEARCH "Locked decisions" — `ClaimLifecycle` is a cross-slice
-shared-kernel enum load-bearing in ≥2 slices today (`CandidateClaim.model.ts:36`,
-`Distinction.model.ts:44`); widening it in place mutates a completed-retained
-contract consumed outside this packet and conflates workflow-*progress* with
-truth-*state*. The shared-kernel guide says keep evolving semantics slice-local until
-multiple slices agree. The never-overwrite invariant forbids mutable counters on
-immutable values.
+**Rejected options:** Starting with retention tiers, retrieval fusion,
+contradiction automation, an external graph, semantic extraction, or a
+domain-specific vocabulary; persisting only current state; treating rejection
+as an unchanged return value.
 
-**Status:** open (for /grill-with-docs)
+## Decision 4 — durable truth authority
 
-## Q6: Do we persist an explicit CONTRADICTS edge, or rely on implicit invalidation only?
+**Date / Status:** 2026-07-14 — **LOCKED** (settled doctrine)
 
-**Recommended:** **Keep both.** Persist an explicit, confidence-weighted `CONTRADICTS`
-edge (the queryable redline-gate signal, agentmemory style) AND a `supersededBy`
-lineage pointer with bitemporal invalidation (the store mechanic, Graphiti style).
-Detection compares a new edge against related existing edges (semantic + keyword +
-graph search); resolution closes valid-time via invalidation and never deletes. The
-contradiction signal is an explainable *triage* input to the human gate (relation
-heuristic: `supersedes +0.1`, `contradicts −0.05`), not an auto-decider.
+**Question:** Where does durable truth live, and may a graph vendor enter the
+authority path?
 
-**Rationale:** This is a genuine design fork, not a settled standard — agentmemory
-persists a contradicts edge; Graphiti persists none (it only invalidates). RESEARCH
-recommends "keep both" because the two serve different consumers: `CONTRADICTS` is
-the queryable retrieval/gate signal, `supersededBy` is the lineage mechanic; the
-doc-haus corpus adds per-anchor conflict detection (same anchor AND clause-scope OR
-overlapping find-text) with an honest `resolved | ambiguous | unmatched` report and a
-transitive cycle guard. RESEARCH "Open / unverified" flags this explicitly as a
-recommendation to ratify — hence a grilling target.
+**Answer:** Durable truth lives in repo-native Postgres through epistemic
+domain entities, `@beep/epistemic-tables`, server-owned transactional
+repositories, and `@beep/db-admin` migrations. No external graph vendor enters
+the authority path. Any future graph service is optional, rebuildable,
+driver-isolated, fed only from accepted authority records, and prohibited from
+direct authoritative writes.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** The binding authority-versus-projection doctrine requires
+accepted product truth to survive vendor loss and projection rebuilds.
 
-## Q7: How are the bitemporal no-overlap / supersession invariants enforced, and how are open intervals represented?
+**Rejected options:** FalkorDB, Graphiti, Neo4j, Cognee, or another graph as
+system of record; dual-write authority; graph-to-Postgres reconciliation as
+the truth path; direct projection writes into authoritative records.
 
-**Recommended:** Represent open intervals with **Effect-Schema `Option` / half-open
-intervals, not magic sentinels** — port courts-db's inclusive comparison but drop its
-`1600-01-01` / `2100-01-01` substitution. Enforce the no-overlap + supersession +
-cycle-guard invariants in **Effect services first** (there is no observed
-`@beep/drizzle` period-overlap-exclusion helper today), backed by btree / gin /
-unique indexes, and leave a documented path to Postgres exclusion constraints once a
-drizzle helper exists. Lock the Graphiti supersede rule as a correctness invariant:
-set the superseded edge's `invalid_at` to the invalidating edge's `valid_at`
-(valid-time), and move `expired_at` to now (transaction-time) — `invalid_at = now()`
-is a bug that corrupts as-of-valid queries.
+## Decision 5 — epistemic-local placement and orthogonal disposition
 
-**Rationale:** Codex gate-1 flagged the bitemporal storage contract as unspecified and
-must-settle: the owner must define table owner + fields, open-interval representation,
-btree/gin/unique index plan, the `asOf(validAt, recordedAt?)` two-axis query shape,
-the no-overlap + cycle-guard policy, the migration path, and **where** invariants live
-(Postgres constraints vs Effect services). Fowler's two-parameter as-of query and the
-locked Graphiti gotcha are the correctness anchors; sentinels silently corrupt
-as-of-valid reads.
+**Date / Status:** 2026-07-14 — **LOCKED** (settled doctrine)
 
-**Status:** open (for /grill-with-docs)
+**Question:** Which packages own the capability, and should disposition widen
+the shared lifecycle?
 
----
+**Answer:** Placement is epistemic-local. `@beep/epistemic-domain` owns the edge
+entity, temporal fields, logical edge identity, disposition/review state,
+lineage, and typed invariants. `@beep/epistemic-tables` owns projected table
+metadata and indexes. `@beep/epistemic-use-cases` owns ports, commands, the
+as-of query contract, and transitions. `@beep/epistemic-server` owns
+repositories and atomic transactions. `@beep/db-admin` owns migrations. Add an
+epistemic-local `ClaimDisposition` for durable truth outcome. Extraction review
+state (`candidate`, `machine-extracted`, `human-reviewed`, `authoritative`)
+remains orthogonal. Shared `ClaimLifecycle` remains unchanged; promotion is
+reconsidered only after multiple real slices require identical semantics.
 
-## Carried into shape (not branch-closing forks)
+**Rationale:** Workflow progress, extraction review, and durable truth outcome
+are distinct axes. Keeping evolving semantics local avoids breaking a shared
+model and follows the prior review that rejected lifecycle widening.
 
-Tunables / proof obligations the grilling need not resolve, but the goal must address
-in shape/decompose:
+**Rejected options:** Widening shared `ClaimLifecycle`; collapsing review and
+disposition into one enum; placing repositories in domain or tables;
+prematurely promoting edge semantics to shared-domain.
 
-- **Decay tuning.** agentmemory's hand-picked `λ=0.01` (≈69-day half-life, slow
-  semantic tier), `σ=0.3`, thresholds `{0.7,0.4,0.15}` almost certainly need a
-  tier-specific `λ` for working/episodic; `strength` is vestigial in the verbatim
-  scorer and the MemoryBank `S+=1; t=0` spacing-aware reinforcement is better-grounded
-  than `1/Δt` if `strength` must move retention. Separate "hotness" (recency) from
-  "durability" (well-spaced strength).
-- **Acceptance gates (Codex gate-1).** Before graduation, define datasets/fixtures +
-  thresholds + proof commands for: bitemporal as-of correctness, stale-vs-fresh
-  retrieval, conflict/supersession, eviction-pressure predictability, RRF
-  empty-channel cases, and token-savings — so "better memory" ships as proven
-  behavior on a change that touches durable memory semantics.
+## Decision 6 — explicit, reviewable contradiction relations
+
+**Date / Status:** 2026-07-14 — **LOCKED**
+
+**Question:** Is contradiction only implicit invalidation, or a persisted
+relation with an independent review path?
+
+**Answer:** Persist explicit `CONTRADICTS` as an evidence-backed,
+confidence-bearing, reviewable relation. Detection creates a candidate or
+machine-extracted relation and never changes authoritative validity. Human or
+policy approval may resolve the conflict as `SUPERSEDES`, atomically closing
+the prior interval. Unresolved conflicts remain visible, and a contradiction
+may stand without supersession. The identity/anchor/symmetry/deduplication
+fixture spike is deferred to the triage goal's P0.
+
+**Rationale:** Contradiction is evidence about a relationship; supersession is
+an authoritative temporal transition. Separating them preserves reviewability
+and prevents automated detection from rewriting accepted history.
+
+**Rejected options:** Auto-supersession; contradiction as a transient alert;
+implicit invalidation only; requiring every contradiction to resolve as
+supersession; hiding unresolved conflicts.
+
+## Decision 7 — bitemporal invariants contract
+
+**Date / Status:** 2026-07-14 — **LOCKED**
+
+**Question:** What temporal semantics and enforcement layers are binding?
+
+**Answer:** Both axes use half-open intervals: `[validFrom, validTo)` and
+`[recordedAt, expiredAt)`. Open ends are SQL `NULL`, modeled through Effect
+Schema `Option`; magic dates are forbidden. All reads use canonical as-of
+predicates. Fact payloads are immutable: supersession atomically closes
+metadata intervals and adds a lineage link, never editing or deleting the
+fact. “Latest” is derived from open intervals; no persisted `isLatest` exists
+unless profiling later demands it. Enforcement combines schema/service typed
+errors with DB backstops: ordered-interval checks, unique logical-version
+identity, lineage foreign keys, and no-overlap exclusion where supported.
+Close-and-insert occurs in one repository transaction with concurrency tests.
+Cycle prevention remains application-side unless the spike finds a simple DB
+mechanism.
+
+**Rationale:** Two-axis correctness requires one interval convention and one
+query contract across domain, repository, and database. Layered enforcement
+keeps errors typed while protecting against bypass and races.
+
+**Rejected options:** Closed intervals; sentinel dates; mutable fact rows;
+delete-on-correction; a persisted `isLatest` flag by default; service-only or
+DB-only enforcement; multi-transaction supersession; unproven DB cycle logic.
+
+## Deferred spike A — core storage and concurrency feasibility
+
+**Date / Status:** 2026-07-14 — **DEFERRED to
+`epistemic-bitemporal-edge-core` P0**
+
+**Question:** Which portable constraint/index/locking design satisfies the
+locked invariants in both production Postgres and the repo's PGlite proof lane?
+
+**Answer:** The goal's pre-code P0 must define the logical edge identity and
+its no-overlap partition key; define the bounded endpoint model (claims,
+evidence, domain entities, observations); test Postgres/PGlite parity,
+temporal indexes, and exclusion-constraint availability; and prove the chosen
+isolation/locking strategy against concurrent supersession. Unsupported DB
+features require an explicit portable backstop, not weakened semantics.
+
+**Rationale:** These are implementation-feasibility questions beneath locked
+product semantics. They need executable migration and concurrency evidence.
+
+**Rejected options:** Resolving portability by intuition; leaving logical
+identity implicit; accepting last-writer-wins; postponing concurrency proof
+until after schema commitment.
+
+## Deferred spike B — contradiction-triage fixtures
+
+**Date / Status:** 2026-07-14 — **DEFERRED to
+`epistemic-contradiction-triage` P0**
+
+**Question:** What matching and transition rules make contradiction candidates
+repeatable without mutating authority?
+
+**Answer:** The triage goal's P0 fixture must cover identity/anchor matching,
+symmetric-edge representation, duplicate suppression, unresolved-conflict
+visibility, and candidate-to-approved transition. It must demonstrate that
+detection alone never changes authoritative validity.
+
+**Rationale:** These rules depend on the core's finalized identity, endpoint,
+and repository contracts and should be shaped against concrete fixtures.
+
+**Rejected options:** Guessing the rules in the core goal; auto-approving
+detection; hiding duplicates only at presentation time; coupling contradiction
+existence to supersession.
+
+## 2026-08-13 — Spin the retention-projections lane
+
+**Decision:** Spin the optional `epistemic-memory-retention-projections` lane
+now. The mechanism ships now; tier, decay, and threshold policy remains
+schema-validated data behind a calibration-evidence phase gate. Use a
+repo-native algorithm with agentmemory cited reference-only.
+
+The first slice is a standalone operator tier/memory-pressure report with
+as-of and disposition-aware views plus a delete-and-rebuild drill. RRF weight
+integration is a follow-on for when `hybrid-retrieval-fusion-core` wakes.
+
+**Ceremony:** The shape is ratified 2026-08-13, but the goal scaffold belongs
+to the next ceremony PR.

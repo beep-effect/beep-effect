@@ -39,11 +39,14 @@ class SentencesSuccess extends S.Class<SentencesSuccess>($I`SentencesSuccess`)(
  * Defines the agent-facing tool contract for splitting text into sentence
  * records with offsets and token counts.
  *
+ * **Details**
+ *
  * Use this tool before chunking, summarization, or citation workflows that need
  * stable sentence boundaries rather than raw token streams.
  *
- * @example
- * ```ts
+ * **Example** (Decode parameters schema)
+ *
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { Sentences } from "@beep/nlp-processing/Tools/Sentences"
  *

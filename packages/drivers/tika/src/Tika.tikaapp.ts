@@ -9,66 +9,28 @@ import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $TikaId } from "@beep/identity";
 import { PosInt, SchemaUtils } from "@beep/schema";
-import { A, O } from "@beep/utils";
-import { Effect, Match, Stream } from "effect";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
+import { O } from "@beep/utils";
+import { Effect, FileSystem, Path, Stream } from "effect";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { makeTikaError } from "./Tika.errors.js";
-import { TikaFileProcessingEngine, TikaFileProcessingEngineDescriptor } from "./Tika.service.js";
+import { tikaOperationError } from "./Tika.error-translation.ts";
+import { makeTikaError } from "./Tika.errors.ts";
+import { decodeTikaResponseRecord, readTikaContentText, stringifyTikaMetadata } from "./Tika.response.ts";
+import { TikaFileProcessingEngine, TikaFileProcessingEngineDescriptor } from "./Tika.service.ts";
 import type { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type { TikaError } from "./Tika.errors.js";
+import type { TikaError } from "./Tika.errors.ts";
 
 const $I = $TikaId.create("Tika.tikaapp");
 
 const defaultJavaPath = "java";
 const defaultTimeoutMillis = 120_000;
 const defaultForceKillAfterMillis = 10_000;
-const tikaContentKey = "X-TIKA:content";
-
-/**
- * Trim-normalized text emitted from tika-app JSON content.
- *
- * @example
- * ```ts
- * import { TikaContentText } from "@beep/tika"
- *
- * const text = TikaContentText.fromUnknown("  hello corpus\n")
- * console.log(text) // "hello corpus"
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const TikaContentText = S.Trim.pipe(
-  $I.annoteSchema("TikaContentText", {
-    description: "Trim-normalized text emitted from the Apache Tika JSON content field.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Type for {@link TikaContentText}.
- *
- * @example
- * ```ts
- * import type { TikaContentText } from "@beep/tika"
- *
- * const text: TikaContentText = "hello corpus"
- * console.log(text)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export type TikaContentText = typeof TikaContentText.Type;
 
 /**
  * Configuration for the tika-app subprocess engine.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { TikaAppEngineConfig } from "@beep/tika"
  *
@@ -96,67 +58,6 @@ export class TikaAppEngineConfig extends S.Class<TikaAppEngineConfig>($I`TikaApp
   })
 ) {}
 
-const operationFailure = (operation: ExtractFileOperation, error: TikaError): FileProcessingOperationError =>
-  Match.value(error.reason).pipe(
-    Match.when("engine-unavailable", () =>
-      FileProcessingOperationError.fromReason("engine-unavailable", {
-        artifactId: operation.source.id,
-        engine: TikaFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "The Tika runtime is not available on this host.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.when("timeout", () =>
-      FileProcessingOperationError.fromReason("operation-timed-out", {
-        artifactId: operation.source.id,
-        engine: TikaFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "Tika extraction timed out.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.orElse(() =>
-      FileProcessingOperationError.fromReason("file-extraction-failed", {
-        artifactId: operation.source.id,
-        engine: TikaFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "Tika extraction failed inside the driver boundary.",
-        operationId: operation.operationId,
-        ...O.getSomesStruct({ details: O.map(error.cause, (cause) => ({ cause })) }),
-      })
-    )
-  );
-
-const metadataValueToString = (value: unknown): O.Option<string> => {
-  if (P.isString(value)) {
-    return O.some(value);
-  }
-  if (A.isArray(value)) {
-    const strings = A.filter(value, P.isString);
-    return A.length(strings) === 0 ? O.none() : O.some(A.join(strings, "; "));
-  }
-  if (P.isNumber(value) || P.isBoolean(value)) {
-    return O.some(`${value}`);
-  }
-  return O.none();
-};
-
-const decodeTikaJsonRows = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Record(S.String, S.Unknown))));
-
-const parseTikaJson = (stdout: string): Effect.Effect<Readonly<Record<string, unknown>>, TikaError> =>
-  decodeTikaJsonRows(stdout).pipe(
-    Effect.mapError(() => makeTikaError("response-decoding")),
-    Effect.flatMap((rows) =>
-      A.head(rows).pipe(
-        O.match({
-          onNone: () => Effect.fail(makeTikaError("response-decoding", { cause: "empty tika -J array" })),
-          onSome: Effect.succeed,
-        })
-      )
-    )
-  );
-
 /**
  * Create the real tika-app-backed file-processing engine.
  *
@@ -166,7 +67,7 @@ const parseTikaJson = (stdout: string): Effect.Effect<Readonly<Record<string, un
  * source file and returns trimmed text plus stringified metadata; the
  * `image-metadata` format returns metadata only.
  *
- * @example
+ * **Example** (Usage)
  * ```ts
  * import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika"
  * import { Effect } from "effect"
@@ -187,14 +88,20 @@ const parseTikaJson = (stdout: string): Effect.Effect<Readonly<Record<string, un
  */
 export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFileProcessingEngine")(function* (
   config: TikaAppEngineConfig
-): Effect.fn.Return<FileProcessingEngineShape, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  FileProcessingEngineShape,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
 
   const runTika = Effect.fn("Tika.tikaapp.run")(function* (sourcePath: string): Effect.fn.Return<string, TikaError> {
     const command = ChildProcess.make(config.javaPath, ["-jar", config.jarPath, "-J", "-t", sourcePath], {
       forceKillAfter: `${defaultForceKillAfterMillis} millis`,
       stdin: "ignore",
-      stderr: "pipe",
+      stderr: "ignore",
       stdout: "pipe",
     });
 
@@ -210,7 +117,20 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
           )
         )
       )
-    ).pipe(Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "tika spawn failed" })));
+    ).pipe(
+      Effect.tapError((error) =>
+        Effect.logDebug("Tika App process failed").pipe(
+          Effect.annotateLogs({
+            "process.error_kind": error.reason._tag,
+            "process.method": error.reason.method,
+            "process.module": error.reason.module,
+            "tika.engine": "tika-app",
+            "tika.operation": "extract",
+          })
+        )
+      ),
+      Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "tika spawn failed" }))
+    );
 
     if (result.exitCode !== 0) {
       return yield* makeTikaError("response-status", { cause: `exit ${result.exitCode}` });
@@ -220,22 +140,22 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
   });
 
   const extractImpl = Effect.fn("TikaAppEngine.extractImpl")(function* (
-    operation: ExtractFileOperation
+    operation: ExtractFileOperation,
+    sourcePath: string
   ): Effect.fn.Return<ExtractionResult, TikaError> {
-    const stdout = yield* runTika(operation.source.locator.value).pipe(
+    const stdout = yield* runTika(sourcePath).pipe(
       Effect.timeoutOrElse({
         duration: `${config.timeoutMillis} millis`,
         orElse: () => Effect.fail(makeTikaError("timeout")),
       })
     );
-    const record = yield* parseTikaJson(stdout);
-    const metadata = R.getSomes(R.map(R.remove(record, tikaContentKey), (value) => metadataValueToString(value)));
-    const text = O.fromUndefinedOr(record[tikaContentKey]).pipe(O.flatMap(TikaContentText.decodeOption));
+    const record = yield* decodeTikaResponseRecord(stdout);
+    const text = readTikaContentText(record);
 
     return ExtractionResult.make({
       engine: TikaFileProcessingEngineDescriptor.name,
       format: operation.format,
-      metadata,
+      metadata: stringifyTikaMetadata(record),
       operationId: operation.operationId,
       sourceArtifactId: operation.source.id,
       warnings: [],
@@ -256,17 +176,33 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
       });
     }),
     extract: Effect.fn("TikaAppEngine.extract")(function* (operation: ExtractFileOperation) {
-      if (operation.source.locator.kind !== "file") {
+      const bytes = operation.source.bytes;
+      if (bytes === undefined) {
         return yield* FileProcessingOperationError.fromReason("file-extraction-failed", {
           artifactId: operation.source.id,
           engine: TikaFileProcessingEngineDescriptor.name,
           format: operation.format,
-          message: "tika-app extraction requires a file locator for the source artifact.",
+          message: "tika-app extraction requires caller-supplied source bytes.",
           operationId: operation.operationId,
         });
       }
 
-      return yield* extractImpl(operation).pipe(Effect.mapError((error) => operationFailure(operation, error)));
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const directory = yield* fs
+            .makeTempDirectoryScoped({ prefix: "beep-tika-app-" })
+            .pipe(
+              Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "source snapshot directory failed" }))
+            );
+          const sourcePath = path.join(directory, `source.${operation.source.extension}`);
+          yield* fs
+            .writeFile(sourcePath, bytes, { flag: "wx", mode: 0o600 })
+            .pipe(
+              Effect.mapError(() => makeTikaError("engine-unavailable", { cause: "source snapshot write failed" }))
+            );
+          return yield* extractImpl(operation, sourcePath);
+        })
+      ).pipe(Effect.mapError((error) => tikaOperationError(operation, error)));
     }),
   };
 

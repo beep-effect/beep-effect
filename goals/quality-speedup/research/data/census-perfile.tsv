@@ -1,0 +1,10 @@
+probe	pkg_dir	file	instantiations	check_s	total_s	max_rss_k	errors	rc	tsgo_version
+mimetype	packages/foundation/modeling/schema	src/MimeType.ts	993247	17.359	17.400	998760	0	0	Version 7.0.2+effect-tsgo.0.24.3
+html-serialize	packages/foundation/modeling/html	src/Html.serialize.ts	11035282	20.136	20.185	3182900	0	0	Version 7.0.2+effect-tsgo.0.24.3
+html-policy	packages/foundation/modeling/html	src/Html.policy.ts	11000820	20.263	20.315	3120820	0	0	Version 7.0.2+effect-tsgo.0.24.3
+html-model	packages/foundation/modeling/html	src/Html.model.ts	4822885	17.621	17.670	2411132	0	0	Version 7.0.2+effect-tsgo.0.24.3
+md-safe	packages/foundation/modeling/md	src/Md.safe.ts	14143091	19.875	19.923	4000084	0	0	Version 7.0.2+effect-tsgo.0.24.3
+ontology-client-session-atoms	packages/ontology/client	src/aggregates/Session/Session.atoms.ts	15658597	20.653	20.713	5298880	0	0	Version 7.0.2+effect-tsgo.0.24.3
+barrel-without-mimetype	packages/shared/domain	src/__census_probe_b.ts	1624030	0.432	0.483	620288	0	0	Version 7.0.2+effect-tsgo.0.24.3
+agents-use-cases-chat-rpc	packages/agents/use-cases	src/processes/Chat/Chat.rpc.ts	14766406	20.476	20.531	4784892	0	0	Version 7.0.2+effect-tsgo.0.24.3
+agents-server-block-repair	packages/agents/server	src/AssistantTurn/BlockRepair.ts	15215430	20.534	20.602	5101128	0	0	Version 7.0.2+effect-tsgo.0.24.3

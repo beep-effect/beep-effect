@@ -9,7 +9,8 @@
 /**
  * Server-only repair port errors.
  *
- * @example
+ * **Example** (Creating BlockRepairFailed error)
+ *
  * ```ts
  * import { AssistantTurn } from "@beep/agents-use-cases/server"
  *
@@ -20,4 +21,4 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./AssistantTurn.repair-errors.js";
+export * from "./AssistantTurn.repair-errors.ts";

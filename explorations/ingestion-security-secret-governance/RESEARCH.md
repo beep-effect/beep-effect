@@ -7,6 +7,39 @@
 > Every external claim is cited inline; in-repo capabilities cite `@beep/*` + a
 > path verified via `rg`/`ls`; genuine gaps are marked **NOT FOUND**.
 
+## 2026-07-14 — Live-checkout amendment after alignment
+
+Three research-era topology statements are now stale and are corrected for the
+shape draft:
+
+1. **Subscription auth shipped and is closed.**
+   `goals/llm-provider-subscription-auth/README.md` records a completed,
+   retained vendor-CLI delegation vertical: vendor CLIs own login, tokens, and
+   refresh; beep persists no provider tokens. It is therefore excluded from
+   credential storage and resolution. "CLI authenticated" is not "credential
+   resolvable" and neither fact grants matter authorization.
+2. **`mcp-kit` `SourceAuth` shipped.** Technical source availability and gate
+   metadata now live at
+   `packages/foundation/capability/mcp-kit/src/SourceAuth.ts`. As ratified in
+   `explorations/uspto-patent-driver-depth/DECISIONS.md` (2026-07-14 Q6-Q7),
+   `SourceAuth` answers whether a source can be called; law practice separately
+   owns whether an external operation is authorized for a matter. Resolver
+   success must never collapse those two controls.
+3. **`api-transport` was promoted.** The shared transport capability exists at
+   `packages/foundation/capability/api-transport/src/`. Guarded-fetch
+   request/redirect policy should extend that package rather than propose a new
+   generic HTTP package. Node/Undici pinned `connect.lookup` remains an explicit
+   server/platform adapter, and consumer migration remains gated by a
+   DNS-rebinding/redirect harness.
+
+The alignment also reordered the first slice from advisory injection detection
+to pre-LLM secret scrub. The live precedents are
+`packages/tooling/library/ai-metrics/src/privacy.ts` for the
+`AiMetricsRedactionResult` counted proof and
+`packages/foundation/capability/observability/src/CauseRedaction.ts` for the
+broader operational redaction patterns. Shape requires one canonical pattern
+bank and forbids raw matched values in `TextAnchor.quote` or audit evidence.
+
 ## External Landscape
 
 ### 1. Prompt-injection / hidden-content detection

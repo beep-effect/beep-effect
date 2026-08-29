@@ -39,11 +39,14 @@ class WordCountSuccess extends S.Class<WordCountSuccess>($I`WordCountSuccess`)(
  * Defines the agent-facing tool contract for counting word-like tokens and
  * characters in text.
  *
+ * **Details**
+ *
  * Use this tool for sizing, routing, or budgeting decisions that depend on the
  * approximate word and character volume of an input.
  *
- * @example
- * ```ts
+ * **Example** (Decode WordCount parameters)
+ *
+ * ```ts import.meta.vitest name="Decode WordCount parameters"
  * import * as S from "effect/Schema"
  * import { WordCount } from "@beep/nlp-processing/Tools/WordCount"
  *

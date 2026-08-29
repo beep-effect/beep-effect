@@ -1,11 +1,14 @@
 /**
  * Typed HTTP error classes and convenience constructors for standard status codes.
  *
- * Each error class extends `TaggedErrorClass` with a fixed status code, carries
+ * **Details**
+ *
+ * Each error class extends `S.TaggedError` with a fixed status code, carries
  * `ErrorReporter.severity` and `ErrorReporter.attributes` for structured
  * observability, and is transport-safe via Effect Schema.
  *
- * @example
+ * **Example** (Fail with typed HTTP errors)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { NotFoundError, makeBadRequestError } from "@beep/observability"
@@ -24,7 +27,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { makeStatusCauseError, StatusCauseFields, TaggedErrorClass } from "@beep/schema";
+import { Defect, makeStatusCauseError, StatusCauseFields } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { ErrorReporter } from "effect";
 import { dual } from "effect/Function";
@@ -46,11 +49,11 @@ const serverStatusAttributes = <Status extends number>(status: Status) =>
     status_class: "5xx",
   }) as const;
 
-type StatusErrorPipeableCause = Error | object | number | boolean | bigint | symbol | null | undefined;
-
 type StatusErrorConstructor<ErrorValue> = {
+  // Data-first first: a lone `string` binds to `message`, so the data-last
+  // overload never absorbs it even though its `cause` accepts `unknown`.
   (message: string, cause?: unknown): ErrorValue;
-  (cause: StatusErrorPipeableCause): (message: string) => ErrorValue;
+  (cause?: unknown): (message: string) => ErrorValue;
 };
 
 const isStatusErrorDataFirst = (args: IArguments): boolean => args.length >= 2 || P.isString(args[0]);
@@ -69,7 +72,8 @@ const statusFields = <Status extends S.Top>(status: Status) =>
 /**
  * Shared tagged error for 4xx HTTP responses with `Warn` severity.
  *
- * @example
+ * **Example** (Create client HTTP error)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { ClientHttpError } from "@beep/observability"
@@ -83,17 +87,17 @@ const statusFields = <Status extends S.Top>(status: Status) =>
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class ClientHttpError extends TaggedErrorClass<ClientHttpError>($I`ClientHttpError`)(
+export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHttpError`)(
   "ClientHttpError",
   {
     message: S.String,
     status: HttpStatus.HttpStatus4XX,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ClientHttpError", {
+  $I.annoteError<ClientHttpError>("ClientHttpError", {
     description: "Shared tagged error for 4xx HTTP responses.",
   })
 ) {
@@ -104,7 +108,8 @@ export class ClientHttpError extends TaggedErrorClass<ClientHttpError>($I`Client
 /**
  * Shared tagged error for 5xx HTTP responses with `Error` severity.
  *
- * @example
+ * **Example** (Create server HTTP error)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { ServerHttpError } from "@beep/observability"
@@ -118,17 +123,17 @@ export class ClientHttpError extends TaggedErrorClass<ClientHttpError>($I`Client
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class ServerHttpError extends TaggedErrorClass<ServerHttpError>($I`ServerHttpError`)(
+export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHttpError`)(
   "ServerHttpError",
   {
     message: S.String,
     status: HttpStatus.HttpStatus5XX,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ServerHttpError", {
+  $I.annoteError<ServerHttpError>("ServerHttpError", {
     description: "Shared tagged error for 5xx HTTP responses.",
   })
 ) {
@@ -139,7 +144,8 @@ export class ServerHttpError extends TaggedErrorClass<ServerHttpError>($I`Server
 /**
  * 400 tagged error.
  *
- * @example
+ * **Example** (Create BadRequestError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { BadRequestError } from "@beep/observability"
@@ -148,13 +154,13 @@ export class ServerHttpError extends TaggedErrorClass<ServerHttpError>($I`Server
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class BadRequestError extends TaggedErrorClass<BadRequestError>($I`BadRequestError`)(
+export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadRequestError`)(
   "BadRequestError",
   statusFields(HttpStatus.BadRequest),
-  $I.annote("BadRequestError", {
+  $I.annoteError<BadRequestError>("BadRequestError", {
     description: "400 tagged error.",
   })
 ) {
@@ -165,7 +171,8 @@ export class BadRequestError extends TaggedErrorClass<BadRequestError>($I`BadReq
 /**
  * 401 tagged error.
  *
- * @example
+ * **Example** (Create UnauthorizedError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { UnauthorizedError } from "@beep/observability"
@@ -174,13 +181,13 @@ export class BadRequestError extends TaggedErrorClass<BadRequestError>($I`BadReq
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class UnauthorizedError extends TaggedErrorClass<UnauthorizedError>($I`UnauthorizedError`)(
+export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`UnauthorizedError`)(
   "UnauthorizedError",
   statusFields(HttpStatus.Unauthorized),
-  $I.annote("UnauthorizedError", {
+  $I.annoteError<UnauthorizedError>("UnauthorizedError", {
     description: "401 tagged error.",
   })
 ) {
@@ -191,7 +198,8 @@ export class UnauthorizedError extends TaggedErrorClass<UnauthorizedError>($I`Un
 /**
  * 403 tagged error.
  *
- * @example
+ * **Example** (Create ForbiddenError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { ForbiddenError } from "@beep/observability"
@@ -200,13 +208,13 @@ export class UnauthorizedError extends TaggedErrorClass<UnauthorizedError>($I`Un
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class ForbiddenError extends TaggedErrorClass<ForbiddenError>($I`ForbiddenError`)(
+export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenError`)(
   "ForbiddenError",
   statusFields(HttpStatus.Forbidden),
-  $I.annote("ForbiddenError", {
+  $I.annoteError<ForbiddenError>("ForbiddenError", {
     description: "403 tagged error.",
   })
 ) {
@@ -217,7 +225,8 @@ export class ForbiddenError extends TaggedErrorClass<ForbiddenError>($I`Forbidde
 /**
  * 404 tagged error.
  *
- * @example
+ * **Example** (Create NotFoundError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { NotFoundError } from "@beep/observability"
@@ -226,13 +235,13 @@ export class ForbiddenError extends TaggedErrorClass<ForbiddenError>($I`Forbidde
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class NotFoundError extends TaggedErrorClass<NotFoundError>($I`NotFoundError`)(
+export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError`)(
   "NotFoundError",
   statusFields(HttpStatus.NotFound),
-  $I.annote("NotFoundError", {
+  $I.annoteError<NotFoundError>("NotFoundError", {
     description: "404 tagged error.",
   })
 ) {
@@ -243,7 +252,8 @@ export class NotFoundError extends TaggedErrorClass<NotFoundError>($I`NotFoundEr
 /**
  * 409 tagged error.
  *
- * @example
+ * **Example** (Create ConflictError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { ConflictError } from "@beep/observability"
@@ -252,13 +262,13 @@ export class NotFoundError extends TaggedErrorClass<NotFoundError>($I`NotFoundEr
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class ConflictError extends TaggedErrorClass<ConflictError>($I`ConflictError`)(
+export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError`)(
   "ConflictError",
   statusFields(HttpStatus.Conflict),
-  $I.annote("ConflictError", {
+  $I.annoteError<ConflictError>("ConflictError", {
     description: "409 tagged error.",
   })
 ) {
@@ -269,7 +279,8 @@ export class ConflictError extends TaggedErrorClass<ConflictError>($I`ConflictEr
 /**
  * 422 tagged error.
  *
- * @example
+ * **Example** (Create UnprocessableEntityError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { UnprocessableEntityError } from "@beep/observability"
@@ -278,13 +289,13 @@ export class ConflictError extends TaggedErrorClass<ConflictError>($I`ConflictEr
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class UnprocessableEntityError extends TaggedErrorClass<UnprocessableEntityError>($I`UnprocessableEntityError`)(
+export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityError>($I`UnprocessableEntityError`)(
   "UnprocessableEntityError",
   statusFields(HttpStatus.UnprocessableEntity),
-  $I.annote("UnprocessableEntityError", {
+  $I.annoteError<UnprocessableEntityError>("UnprocessableEntityError", {
     description: "422 tagged error.",
   })
 ) {
@@ -295,7 +306,8 @@ export class UnprocessableEntityError extends TaggedErrorClass<UnprocessableEnti
 /**
  * 429 tagged error.
  *
- * @example
+ * **Example** (Create TooManyRequestsError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { TooManyRequestsError } from "@beep/observability"
@@ -304,13 +316,13 @@ export class UnprocessableEntityError extends TaggedErrorClass<UnprocessableEnti
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class TooManyRequestsError extends TaggedErrorClass<TooManyRequestsError>($I`TooManyRequestsError`)(
+export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I`TooManyRequestsError`)(
   "TooManyRequestsError",
   statusFields(HttpStatus.TooManyRequests),
-  $I.annote("TooManyRequestsError", {
+  $I.annoteError<TooManyRequestsError>("TooManyRequestsError", {
     description: "429 tagged error.",
   })
 ) {
@@ -321,7 +333,8 @@ export class TooManyRequestsError extends TaggedErrorClass<TooManyRequestsError>
 /**
  * 500 tagged error.
  *
- * @example
+ * **Example** (Create InternalServerErrorError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { InternalServerErrorError } from "@beep/observability"
@@ -330,13 +343,13 @@ export class TooManyRequestsError extends TaggedErrorClass<TooManyRequestsError>
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class InternalServerErrorError extends TaggedErrorClass<InternalServerErrorError>($I`InternalServerErrorError`)(
+export class InternalServerErrorError extends S.TaggedError<InternalServerErrorError>($I`InternalServerErrorError`)(
   "InternalServerErrorError",
   statusFields(HttpStatus.InternalServerError),
-  $I.annote("InternalServerErrorError", {
+  $I.annoteError<InternalServerErrorError>("InternalServerErrorError", {
     description: "500 tagged error.",
   })
 ) {
@@ -347,7 +360,8 @@ export class InternalServerErrorError extends TaggedErrorClass<InternalServerErr
 /**
  * 502 tagged error.
  *
- * @example
+ * **Example** (Create BadGatewayError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { BadGatewayError } from "@beep/observability"
@@ -356,13 +370,13 @@ export class InternalServerErrorError extends TaggedErrorClass<InternalServerErr
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class BadGatewayError extends TaggedErrorClass<BadGatewayError>($I`BadGatewayError`)(
+export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewayError`)(
   "BadGatewayError",
   statusFields(HttpStatus.BadGateway),
-  $I.annote("BadGatewayError", {
+  $I.annoteError<BadGatewayError>("BadGatewayError", {
     description: "502 tagged error.",
   })
 ) {
@@ -373,7 +387,8 @@ export class BadGatewayError extends TaggedErrorClass<BadGatewayError>($I`BadGat
 /**
  * 503 tagged error.
  *
- * @example
+ * **Example** (Create ServiceUnavailableError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { ServiceUnavailableError } from "@beep/observability"
@@ -382,13 +397,13 @@ export class BadGatewayError extends TaggedErrorClass<BadGatewayError>($I`BadGat
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class ServiceUnavailableError extends TaggedErrorClass<ServiceUnavailableError>($I`ServiceUnavailableError`)(
+export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableError>($I`ServiceUnavailableError`)(
   "ServiceUnavailableError",
   statusFields(HttpStatus.ServiceUnavailable),
-  $I.annote("ServiceUnavailableError", {
+  $I.annoteError<ServiceUnavailableError>("ServiceUnavailableError", {
     description: "503 tagged error.",
   })
 ) {
@@ -399,7 +414,8 @@ export class ServiceUnavailableError extends TaggedErrorClass<ServiceUnavailable
 /**
  * 504 tagged error.
  *
- * @example
+ * **Example** (Create GatewayTimeoutError)
+ *
  * ```typescript
  * import { Effect, Option } from "effect"
  * import { GatewayTimeoutError } from "@beep/observability"
@@ -408,13 +424,13 @@ export class ServiceUnavailableError extends TaggedErrorClass<ServiceUnavailable
  * console.log(Effect.fail(err))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export class GatewayTimeoutError extends TaggedErrorClass<GatewayTimeoutError>($I`GatewayTimeoutError`)(
+export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`GatewayTimeoutError`)(
   "GatewayTimeoutError",
   statusFields(HttpStatus.GatewayTimeout),
-  $I.annote("GatewayTimeoutError", {
+  $I.annoteError<GatewayTimeoutError>("GatewayTimeoutError", {
     description: "504 tagged error.",
   })
 ) {
@@ -425,16 +441,17 @@ export class GatewayTimeoutError extends TaggedErrorClass<GatewayTimeoutError>($
 /**
  * Helper constructor for {@link BadRequestError} (400).
  *
- * @example
- * ```typescript
+ * **Example** (Make BadRequestError helper)
+ *
+ * ```ts import.meta.vitest name="Make BadRequestError helper"
  * import { makeBadRequestError } from "@beep/observability"
  *
  * const error = makeBadRequestError("missing required field 'email'")
- * console.log(error.status) // 400
+ * error.status // => 400
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeBadRequestError: StatusErrorConstructor<BadRequestError> = dual(
   isStatusErrorDataFirst,
@@ -444,16 +461,17 @@ export const makeBadRequestError: StatusErrorConstructor<BadRequestError> = dual
 /**
  * Helper constructor for {@link UnauthorizedError} (401).
  *
- * @example
- * ```typescript
+ * **Example** (Make UnauthorizedError helper)
+ *
+ * ```ts import.meta.vitest name="Make UnauthorizedError helper"
  * import { makeUnauthorizedError } from "@beep/observability"
  *
  * const error = makeUnauthorizedError("token expired")
- * console.log(error.status) // 401
+ * error.status // => 401
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeUnauthorizedError: StatusErrorConstructor<UnauthorizedError> = dual(
   isStatusErrorDataFirst,
@@ -463,16 +481,17 @@ export const makeUnauthorizedError: StatusErrorConstructor<UnauthorizedError> = 
 /**
  * Helper constructor for {@link ForbiddenError} (403).
  *
- * @example
- * ```typescript
+ * **Example** (Make ForbiddenError helper)
+ *
+ * ```ts import.meta.vitest name="Make ForbiddenError helper"
  * import { makeForbiddenError } from "@beep/observability"
  *
  * const error = makeForbiddenError("insufficient permissions")
- * console.log(error.status) // 403
+ * error.status // => 403
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeForbiddenError: StatusErrorConstructor<ForbiddenError> = dual(
   isStatusErrorDataFirst,
@@ -482,16 +501,17 @@ export const makeForbiddenError: StatusErrorConstructor<ForbiddenError> = dual(
 /**
  * Helper constructor for {@link NotFoundError} (404).
  *
- * @example
- * ```typescript
+ * **Example** (Make NotFoundError helper)
+ *
+ * ```ts import.meta.vitest name="Make NotFoundError helper"
  * import { makeNotFoundError } from "@beep/observability"
  *
  * const error = makeNotFoundError("resource missing")
- * console.log(error.status) // 404
+ * error.status // => 404
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeNotFoundError: StatusErrorConstructor<NotFoundError> = dual(
   isStatusErrorDataFirst,
@@ -501,16 +521,17 @@ export const makeNotFoundError: StatusErrorConstructor<NotFoundError> = dual(
 /**
  * Helper constructor for {@link ConflictError} (409).
  *
- * @example
- * ```typescript
+ * **Example** (Make ConflictError helper)
+ *
+ * ```ts import.meta.vitest name="Make ConflictError helper"
  * import { makeConflictError } from "@beep/observability"
  *
  * const error = makeConflictError("duplicate key")
- * console.log(error.status) // 409
+ * error.status // => 409
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeConflictError: StatusErrorConstructor<ConflictError> = dual(
   isStatusErrorDataFirst,
@@ -520,16 +541,17 @@ export const makeConflictError: StatusErrorConstructor<ConflictError> = dual(
 /**
  * Helper constructor for {@link UnprocessableEntityError} (422).
  *
- * @example
- * ```typescript
+ * **Example** (Make UnprocessableEntityError helper)
+ *
+ * ```ts import.meta.vitest name="Make UnprocessableEntityError helper"
  * import { makeUnprocessableEntityError } from "@beep/observability"
  *
  * const error = makeUnprocessableEntityError("schema mismatch")
- * console.log(error.status) // 422
+ * error.status // => 422
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeUnprocessableEntityError: StatusErrorConstructor<UnprocessableEntityError> = dual(
   isStatusErrorDataFirst,
@@ -539,16 +561,17 @@ export const makeUnprocessableEntityError: StatusErrorConstructor<UnprocessableE
 /**
  * Helper constructor for {@link TooManyRequestsError} (429).
  *
- * @example
- * ```typescript
+ * **Example** (Make TooManyRequestsError helper)
+ *
+ * ```ts import.meta.vitest name="Make TooManyRequestsError helper"
  * import { makeTooManyRequestsError } from "@beep/observability"
  *
  * const error = makeTooManyRequestsError("rate limit hit")
- * console.log(error.status) // 429
+ * error.status // => 429
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeTooManyRequestsError: StatusErrorConstructor<TooManyRequestsError> = dual(
   isStatusErrorDataFirst,
@@ -558,16 +581,17 @@ export const makeTooManyRequestsError: StatusErrorConstructor<TooManyRequestsErr
 /**
  * Helper constructor for {@link InternalServerErrorError} (500).
  *
- * @example
- * ```typescript
+ * **Example** (Make InternalServerError helper)
+ *
+ * ```ts import.meta.vitest name="Make InternalServerError helper"
  * import { makeInternalServerError } from "@beep/observability"
  *
  * const error = makeInternalServerError("unexpected failure")
- * console.log(error.status) // 500
+ * error.status // => 500
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeInternalServerError: StatusErrorConstructor<InternalServerErrorError> = dual(
   isStatusErrorDataFirst,
@@ -577,16 +601,17 @@ export const makeInternalServerError: StatusErrorConstructor<InternalServerError
 /**
  * Helper constructor for {@link BadGatewayError} (502).
  *
- * @example
- * ```typescript
+ * **Example** (Make BadGatewayError helper)
+ *
+ * ```ts import.meta.vitest name="Make BadGatewayError helper"
  * import { makeBadGatewayError } from "@beep/observability"
  *
  * const error = makeBadGatewayError("upstream unreachable")
- * console.log(error.status) // 502
+ * error.status // => 502
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeBadGatewayError: StatusErrorConstructor<BadGatewayError> = dual(
   isStatusErrorDataFirst,
@@ -596,16 +621,17 @@ export const makeBadGatewayError: StatusErrorConstructor<BadGatewayError> = dual
 /**
  * Helper constructor for {@link ServiceUnavailableError} (503).
  *
- * @example
- * ```typescript
+ * **Example** (Make ServiceUnavailableError helper)
+ *
+ * ```ts import.meta.vitest name="Make ServiceUnavailableError helper"
  * import { makeServiceUnavailableError } from "@beep/observability"
  *
  * const error = makeServiceUnavailableError("service down for maintenance")
- * console.log(error.status) // 503
+ * error.status // => 503
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeServiceUnavailableError: StatusErrorConstructor<ServiceUnavailableError> = dual(
   isStatusErrorDataFirst,
@@ -615,16 +641,17 @@ export const makeServiceUnavailableError: StatusErrorConstructor<ServiceUnavaila
 /**
  * Helper constructor for {@link GatewayTimeoutError} (504).
  *
- * @example
- * ```typescript
+ * **Example** (Make GatewayTimeoutError helper)
+ *
+ * ```ts import.meta.vitest name="Make GatewayTimeoutError helper"
  * import { makeGatewayTimeoutError } from "@beep/observability"
  *
  * const error = makeGatewayTimeoutError("upstream timed out")
- * console.log(error.status) // 504
+ * error.status // => 504
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
 export const makeGatewayTimeoutError: StatusErrorConstructor<GatewayTimeoutError> = dual(
   isStatusErrorDataFirst,

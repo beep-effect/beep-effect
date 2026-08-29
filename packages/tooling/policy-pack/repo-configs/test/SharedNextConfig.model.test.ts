@@ -51,7 +51,7 @@ describe("Shared Next.js config preset", () => {
   it("builds the current shared base config with additive app overrides", () => {
     const config = makeBeepNextBaseConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.localhost"],
+      allowedDevOrigins: ["oip-web.beep.localhost"],
       additionalPageExtensions: ["mdoc"],
       additionalTranspilePackages: ["@beep/shared-domain"],
       additionalOptimizePackageImports: ["@beep/ui"],
@@ -64,7 +64,7 @@ describe("Shared Next.js config preset", () => {
       },
     });
 
-    expect(config.allowedDevOrigins).toEqual(["oip-web.localhost"]);
+    expect(config.allowedDevOrigins).toEqual(["oip-web.beep.localhost"]);
     expect(config.pageExtensions).toEqual(["ts", "tsx", "md", "mdx", "mdoc", "story.tsx"]);
     expect(config.transpilePackages).toEqual([
       "@beep/ui",
@@ -85,11 +85,11 @@ describe("Shared Next.js config preset", () => {
   it("keeps omitted repo-owned list options byte-equivalent to explicit empty lists", () => {
     const omitted = makeBeepNextBaseConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.localhost"],
+      allowedDevOrigins: ["oip-web.beep.localhost"],
     });
     const explicitEmpty = makeBeepNextBaseConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.localhost"],
+      allowedDevOrigins: ["oip-web.beep.localhost"],
       additionalPageExtensions: [],
       additionalTranspilePackages: [],
       additionalOptimizePackageImports: [],
@@ -98,12 +98,12 @@ describe("Shared Next.js config preset", () => {
     expect(omitted).toEqual(explicitEmpty);
   });
 
-  it("adds secure headers without invoking app headers during construction", () =>
+  it.effect("adds secure headers without invoking app headers during construction", () =>
     Effect.gen(function* () {
       let headersCalled = false;
       const config = defineBeepNextConfig({
         repoRoot: "/repo",
-        allowedDevOrigins: ["oip-web.localhost"],
+        allowedDevOrigins: ["oip-web.beep.localhost"],
         mdx: false,
         pwa: false,
         bundleAnalyzer: false,
@@ -133,12 +133,13 @@ describe("Shared Next.js config preset", () => {
         source: "/custom",
         headers: [{ key: "X-App", value: "1" }],
       });
-    }));
+    })
+  );
 
   it("can disable every shared feature wrapper explicitly", () => {
     const config = defineBeepNextConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.localhost"],
+      allowedDevOrigins: ["oip-web.beep.localhost"],
       securityHeaders: false,
       mdx: false,
       pwa: false,
@@ -150,7 +151,7 @@ describe("Shared Next.js config preset", () => {
   });
 
   it("applies secure-header object defaults through the schema", () => {
-    const config = Result.getOrThrow(S.decodeUnknownResult(SecureHeadersConfig)({}));
+    const config = Result.getOrThrow(S.decodeResult(SecureHeadersConfig)({}));
 
     expect(makeSecureHeaders(config)).toEqual(DEFAULT_BEEP_SECURE_HEADERS);
   });
@@ -163,7 +164,7 @@ describe("Shared Next.js config preset", () => {
 
       expect(makeSecureHeaders(partialConfig)).toEqual([...DEFAULT_BEEP_SECURE_HEADERS, additionalHeader]);
 
-      const config = withSecureHeaders({}, partialConfig);
+      const config = withSecureHeaders(partialConfig)({});
       const headers = yield* Effect.promise(() => Promise.resolve(config.headers?.()));
 
       expect(headers?.[0]?.source).toBe("/(.*)");
@@ -173,15 +174,15 @@ describe("Shared Next.js config preset", () => {
 
   it("round-trips defaulted shared feature schemas", () => {
     fc.assert(
-      fc.property(S.toArbitrary(BeepNextMdxConfig), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
+      fc.property(S.toArbitrary(BeepNextMdxConfig)(fc), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(BeepNextPwaConfig), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
+      fc.property(S.toArbitrary(BeepNextPwaConfig)(fc), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
       fcRuns(25)
     );
     fc.assert(
-      fc.property(S.toArbitrary(SecureHeadersConfig), (value) => expectRoundTrip(SecureHeadersConfig, value)),
+      fc.property(S.toArbitrary(SecureHeadersConfig)(fc), (value) => expectRoundTrip(SecureHeadersConfig, value)),
       fcRuns(25)
     );
   });

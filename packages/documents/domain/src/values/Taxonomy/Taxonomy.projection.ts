@@ -6,14 +6,13 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
 import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LegalDocumentConceptId, LegalDocumentTaxonomy, VaultFilingContext } from "./Taxonomy.model.js";
-import type { LegalDocumentTaxonomyConcept } from "./Taxonomy.model.js";
+import { LegalDocumentConceptId, LegalDocumentTaxonomy, VaultFilingContext } from "./Taxonomy.model.ts";
+import type { LegalDocumentTaxonomyConcept } from "./Taxonomy.model.ts";
 
 const $I = $DocumentsDomainId.create("values/Taxonomy/Taxonomy.projection");
 
@@ -25,7 +24,8 @@ const SHORT_DIGEST_LENGTH = 12;
 /**
  * Failure raised when deterministic vault path projection cannot complete.
  *
- * @example
+ * **Example** (Create projection error)
+ *
  * ```ts
  * import { TaxonomyProjectionError } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -36,14 +36,14 @@ const SHORT_DIGEST_LENGTH = 12;
  * @category errors
  * @since 0.0.0
  */
-export class TaxonomyProjectionError extends TaggedErrorClass<TaxonomyProjectionError>($I`TaxonomyProjectionError`)(
+export class TaxonomyProjectionError extends S.TaggedError<TaxonomyProjectionError>($I`TaxonomyProjectionError`)(
   "TaxonomyProjectionError",
   {
     reason: S.NonEmptyString.annotateKey({
       description: "Deterministic projection failure reason.",
     }),
   },
-  $I.annote("TaxonomyProjectionError", {
+  $I.annoteError<TaxonomyProjectionError>("TaxonomyProjectionError", {
     description: "Failure raised when deterministic vault path projection cannot be completed.",
   })
 ) {}
@@ -51,7 +51,8 @@ export class TaxonomyProjectionError extends TaggedErrorClass<TaxonomyProjection
 /**
  * Input accepted by deterministic filed-document path projection.
  *
- * @example
+ * **Example** (Build filed path input)
+ *
  * ```ts
  * import {
  *   DefaultVaultFilingContext,
@@ -100,7 +101,8 @@ export class ProjectFiledDocumentPathInput extends S.Class<ProjectFiledDocumentP
 /**
  * Deterministic relative vault path for a filed document.
  *
- * @example
+ * **Example** (Decode projected vault path)
+ *
  * ```ts
  * import { ProjectedVaultPath } from "@beep/documents-domain/values/Taxonomy"
  * import * as S from "effect/Schema"
@@ -138,7 +140,7 @@ export class ProjectedVaultPath extends S.Class<ProjectedVaultPath>($I`Projected
 ) {}
 
 const decodeSegment = (value: string): Effect.Effect<ValidWindowsPlainPathSegment, TaxonomyProjectionError> =>
-  S.decodeUnknownEffect(ValidWindowsPlainPathSegment)(value).pipe(
+  S.decodeEffect(ValidWindowsPlainPathSegment)(value).pipe(
     Effect.mapError(() => TaxonomyProjectionError.make({ reason: `invalid vault path segment: ${value}` }))
   );
 
@@ -203,7 +205,8 @@ const projectedFileName = (
 /**
  * Projects a taxonomy concept decision into a deterministic vault-relative file path.
  *
- * @example
+ * **Example** (Project filed document path)
+ *
  * ```ts
  * import {
  *   DefaultVaultFilingContext,
@@ -248,7 +251,8 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
 /**
  * Input accepted by deterministic inbox document path projection.
  *
- * @example
+ * **Example** (Build inbox path input)
+ *
  * ```ts
  * import { ProjectInboxDocumentPathInput } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -285,7 +289,8 @@ export class ProjectInboxDocumentPathInput extends S.Class<ProjectInboxDocumentP
 /**
  * Projects an unfiled intake document into the deterministic inbox vault path.
  *
- * @example
+ * **Example** (Project inbox document path)
+ *
  * ```ts
  * import { ProjectInboxDocumentPathInput, projectInboxDocumentPath } from "@beep/documents-domain/values/Taxonomy"
  * import { Effect } from "effect"
@@ -319,7 +324,8 @@ export const projectInboxDocumentPath = Effect.fn("Documents.Taxonomy.projectInb
 /**
  * Projects an intake batch id into the deterministic inbox path.
  *
- * @example
+ * **Example** (Project intake batch path)
+ *
  * ```ts
  * import { projectIntakeInboxPath } from "@beep/documents-domain/values/Taxonomy"
  * import { Effect } from "effect"
@@ -337,7 +343,8 @@ export const projectIntakeInboxPath = (intakeBatchId: string): Effect.Effect<str
 /**
  * Slugifies a display value for use in vault path segments.
  *
- * @example
+ * **Example** (Slugify display value)
+ *
  * ```ts
  * import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy"
  *

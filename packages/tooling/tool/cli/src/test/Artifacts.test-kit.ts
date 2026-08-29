@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "../internal/artifacts/index.js";
+export * from "../internal/artifacts/index.ts";

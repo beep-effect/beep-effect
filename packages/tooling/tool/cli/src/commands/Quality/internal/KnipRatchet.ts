@@ -9,15 +9,15 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
 import { parse } from "jsonc-parser";
-import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.js";
-import { collectText } from "../../../internal/process/index.js";
-import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.js";
-import { QualityScriptCommandError } from "../Quality.errors.js";
+import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { runCapturedStreams } from "../../../internal/process/index.ts";
+import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
+import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 
@@ -35,11 +35,13 @@ const newPackageHandling =
 /**
  * Normalized Knip finding category.
  *
- * @example
+ * **Example** (Check exports finding kind)
+ *
  * ```ts
  * import { KnipFindingKind } from "@beep/repo-cli/test/Quality"
  * console.log(KnipFindingKind.is.exports("exports"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -64,12 +66,14 @@ export const KnipFindingKind = LiteralKit([
 /**
  * Normalized Knip finding category.
  *
- * @example
+ * **Example** (Type a finding kind)
+ *
  * ```ts
  * import type { KnipFindingKind } from "@beep/repo-cli/test/Quality"
  * const kind: KnipFindingKind = "exports"
  * console.log(kind) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -139,12 +143,14 @@ class KnipRawReport extends S.Class<KnipRawReport>($I`KnipRawReport`)(
 /**
  * Stable Knip finding identity retained in the committed baseline.
  *
- * @example
+ * **Example** (Make a Knip finding)
+ *
  * ```ts
  * import { KnipFinding } from "@beep/repo-cli/test/Quality"
  * const finding = KnipFinding.make({ kind: "exports", file: "src/index.ts", name: "unused" })
  * console.log(finding.kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -402,26 +408,12 @@ const runKnipReporterJson = Effect.fn("KnipRatchet.runKnipReporterJson")(functio
   repoRoot: string
 ): Effect.fn.Return<KnipProcessResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[knip] ${knipCommand}`);
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("bun", ["run", "knip", "--reporter", "json"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        {
-          concurrency: 3,
-        }
-      );
-      return {
-        stdout: Str.trim(stdout),
-        stderr: Str.trim(stderr),
-        exitCode,
-      };
-    })
-  ).pipe(
+  return yield* runCapturedStreams({
+    command: "bun",
+    args: ["run", "knip", "--reporter", "json"],
+    cwd: repoRoot,
+    trim: true,
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to run ${knipCommand}.`, {
       command: knipCommand,
     })
@@ -491,12 +483,14 @@ const enforceComparison = Effect.fn("KnipRatchet.enforceComparison")(function* (
 /**
  * Options accepted by {@link runKnipRatchet}.
  *
- * @example
+ * **Example** (Configure ratchet options)
+ *
  * ```ts
  * import type { RunKnipRatchetOptions } from "@beep/repo-cli/test/Quality"
  * const options: RunKnipRatchetOptions = { baselinePath: "standards/knip.regression-baseline.jsonc", writeBaseline: false }
  * console.log(options) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -513,14 +507,16 @@ export class RunKnipRatchetOptions extends S.Class<RunKnipRatchetOptions>($I`Run
 /**
  * Run Knip and enforce or refresh the committed regression baseline.
  *
- * @param options - Baseline path and write mode.
- * @returns Effect that fails only when current Knip findings grow beyond the baseline.
- * @example
+ * **Example** (Run knip ratchet)
+ *
  * ```ts
  * import { runKnipRatchet } from "@beep/repo-cli/test/Quality"
  * const program = runKnipRatchet({ baselinePath: "standards/knip.regression-baseline.jsonc", writeBaseline: false })
  * console.log(program) // example value
  * ```
+ *
+ * @param options - Baseline path and write mode.
+ * @returns Effect that fails only when current Knip findings grow beyond the baseline.
  * @category use-cases
  * @since 0.0.0
  */
@@ -573,7 +569,10 @@ export const normalizeKnipReportForTesting = (text: string) =>
  * @category testing
  * @since 0.0.0
  */
-export const compareKnipFindingsForTesting = compareFindings;
+export const compareKnipFindingsForTesting: {
+  (baseline: ReadonlyArray<KnipFinding>): (current: ReadonlyArray<KnipFinding>) => KnipComparison;
+  (current: ReadonlyArray<KnipFinding>, baseline: ReadonlyArray<KnipFinding>): KnipComparison;
+} = dual(2, compareFindings);
 
 /**
  * Build a deterministic Knip baseline for focused tests.

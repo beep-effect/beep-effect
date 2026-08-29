@@ -1,7 +1,7 @@
 # Batch 3 Prompt: External Prior Art And Synthesis
 
 You are one of six agents for
-`/home/elpresidank/YeeBois/projects/beep-effect`.
+this `beep-effect` checkout.
 
 ## Mission
 

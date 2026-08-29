@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "citation-extraction-engine",
+    "title": "Citation Extraction Engine",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/citation-extraction-engine",
+  "lifecycle": "active",
+  "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
+  "statusNote": "Official eyecite is cloned, pinned, licensed, and green under Python 3.11. P0 case-level accounting and regex evidence remain; production phases are blocked by verified-span and public reporter-vocabulary contracts.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/citation-grounding-hallucination-guard",
+    "graduated": "2026-07-14",
+    "capabilityOverride": "2026-07-29"
+  },
+  "blockedBy": [
+    "goals/citation-verified-span-substrate",
+    "goals/court-reporter-vocabulary"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the packet rebaseline, implementation, corpus, transforms, proof, reflection, and lifecycle update ship in one PR driven to mergeable through bun run beep yeet repair, verify, publish --message, and monitor.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/citation-extraction-engine/README.md",
+    "goals/citation-extraction-engine/SPEC.md",
+    "goals/citation-extraction-engine/PLAN.md",
+    "goals/citation-extraction-engine/GOAL.md",
+    "goals/citation-extraction-engine/research/EYECITE_BASELINE.md",
+    "goals/citation-extraction-engine/research/CAPABILITY_LEDGER.md",
+    "goals/citation-extraction-engine/research/SCHEMA_DISPOSITION.md",
+    "goals/citation-extraction-engine/research/PARITY_METHOD.md",
+    "goals/citation-extraction-engine/research/SOURCES.md",
+    "goals/citation-verified-span-substrate/SPEC.md",
+    "goals/court-reporter-vocabulary/SPEC.md"
+  ],
+  "researchReports": [
+    "research/EYECITE_BASELINE.md",
+    "research/CAPABILITY_LEDGER.md",
+    "research/SCHEMA_DISPOSITION.md",
+    "research/PARITY_METHOD.md",
+    "research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/citation-extraction-engine/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Source baseline and exhaustive capability accounting",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Schema rebaseline and transformation proof",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Canonical eyecite capability parity",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Proven TypeScript-port extensions",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Differential, span, transform, regex, and repo verification",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close one Yeet PR to mergeable",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/citation-extraction-engine/GOAL.md)\" -le 4000",
+    "jq -e . goals/citation-extraction-engine/ops/manifest.json >/dev/null",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
+    "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
+    "git diff --check -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
+    "The pinned canonical oracle cannot be executed, licensed, normalized, or accounted for case by case.",
+    "Parity would require a second public citation hierarchy, hosted truth, weakened exact-source fidelity, or unbounded execution.",
+    "A claimed reversible transform would need to invent missing information.",
+    "Verification requires unnamed credentials, unauthorized cost, destructive side effects, or broader product authority."
+  ]
+}

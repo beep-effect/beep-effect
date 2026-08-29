@@ -81,8 +81,6 @@ const LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["packages/foundation/capability/observability/test/OtlpPacketLab.test.ts", 2],
   ["packages/foundation/capability/observability/test/PhaseProfiler.test.ts", 2],
   ["packages/foundation/capability/semantic-web/test/CanonicalizationSecurity.test.ts", 1],
-  ["packages/foundation/capability/semantic-web/test/JsonLd.test.ts", 13],
-  ["packages/foundation/capability/semantic-web/test/Provenance.test.ts", 1],
   ["packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts", 9],
   ["packages/foundation/modeling/lexical/test/Lexical.codec.test.ts", 6],
   ["packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts", 1],
@@ -117,7 +115,6 @@ const LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["packages/tooling/tool/cli/test/effect-imports.test.ts", 2],
   ["packages/tooling/tool/cli/test/files-command.test.ts", 74],
   ["packages/tooling/tool/cli/test/foundation-topology.test.ts", 2],
-  ["packages/tooling/tool/cli/test/graphiti-proxy-security.test.ts", 2],
   ["packages/tooling/tool/cli/test/image-command.test.ts", 7],
   ["packages/tooling/tool/cli/test/lint-command.test.ts", 27],
   ["packages/tooling/tool/cli/test/native-runtime.test.ts", 5],
@@ -145,7 +142,8 @@ const baselineFor = (repoPath: string): number => {
  * `ManagedRuntime.make` calls in test files while preserving the current
  * legacy baseline counts.
  *
- * @example
+ * **Example** (Manual runtime rule description)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import plugin from "@beep/lint-rules/oxlint"
@@ -154,6 +152,7 @@ const baselineFor = (repoPath: string): number => {
  *
  * strictEqual(description?.includes("@effect/vitest"), true)
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */

@@ -16,11 +16,12 @@ const $I = $PandocAstId.create("Pandoc.report");
 /**
  * Direction of a Pandoc compatibility mapping.
  *
- * @example
- * ```ts
+ * **Example** (Validate mapping direction)
+ *
+ * ```ts import.meta.vitest name="Validate mapping direction"
  * import { PandocMappingDirection } from "@beep/pandoc-ast/Pandoc.report"
  *
- * console.log(PandocMappingDirection.is["pandoc-to-md"]("pandoc-to-md")) // true
+ * PandocMappingDirection.is["pandoc-to-md"]("pandoc-to-md") // => true
  * ```
  *
  * @category models
@@ -35,12 +36,13 @@ export const PandocMappingDirection = LiteralKit(["pandoc-to-md", "md-to-pandoc"
 /**
  * Runtime type for {@link PandocMappingDirection}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate direction variable)
+ *
+ * ```ts import.meta.vitest name="Annotate direction variable"
  * import type { PandocMappingDirection } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const direction: PandocMappingDirection = "pandoc-to-md"
- * console.log(direction) // "pandoc-to-md"
+ * direction // => "pandoc-to-md"
  * ```
  *
  * @category models
@@ -51,11 +53,12 @@ export type PandocMappingDirection = typeof PandocMappingDirection.Type;
 /**
  * Severity for a mapping issue.
  *
- * @example
- * ```ts
+ * **Example** (Validate severity value)
+ *
+ * ```ts import.meta.vitest name="Validate severity value"
  * import { PandocMappingSeverity } from "@beep/pandoc-ast/Pandoc.report"
  *
- * console.log(PandocMappingSeverity.is.lossy("lossy")) // true
+ * PandocMappingSeverity.is.lossy("lossy") // => true
  * ```
  *
  * @category models
@@ -70,12 +73,13 @@ export const PandocMappingSeverity = LiteralKit(["lossy", "unsupported"]).pipe(
 /**
  * Runtime type for {@link PandocMappingSeverity}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate severity variable)
+ *
+ * ```ts import.meta.vitest name="Annotate severity variable"
  * import type { PandocMappingSeverity } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const severity: PandocMappingSeverity = "lossy"
- * console.log(severity) // "lossy"
+ * severity // => "lossy"
  * ```
  *
  * @category models
@@ -86,11 +90,12 @@ export type PandocMappingSeverity = typeof PandocMappingSeverity.Type;
 /**
  * Summary profile for a compatibility report.
  *
- * @example
- * ```ts
+ * **Example** (Validate profile value)
+ *
+ * ```ts import.meta.vitest name="Validate profile value"
  * import { PandocMappingProfile } from "@beep/pandoc-ast/Pandoc.report"
  *
- * console.log(PandocMappingProfile.is.supported("supported")) // true
+ * PandocMappingProfile.is.supported("supported") // => true
  * ```
  *
  * @category models
@@ -105,12 +110,13 @@ export const PandocMappingProfile = LiteralKit(["supported", "gap"]).pipe(
 /**
  * Runtime type for {@link PandocMappingProfile}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate profile variable)
+ *
+ * ```ts import.meta.vitest name="Annotate profile variable"
  * import type { PandocMappingProfile } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const profile: PandocMappingProfile = "supported"
- * console.log(profile) // "supported"
+ * profile // => "supported"
  * ```
  *
  * @category models
@@ -121,11 +127,12 @@ export type PandocMappingProfile = typeof PandocMappingProfile.Type;
 /**
  * A single segment in a Pandoc JSON path.
  *
- * @example
- * ```ts
+ * **Example** (Build pointer from path)
+ *
+ * ```ts import.meta.vitest name="Build pointer from path"
  * import { jsonPointerFromPath } from "@beep/pandoc-ast/Pandoc.report"
  *
- * console.log(jsonPointerFromPath(["blocks", 0, "c"])) // "/blocks/0/c"
+ * jsonPointerFromPath(["blocks", 0, "c"]) // => "/blocks/0/c"
  * ```
  *
  * @category models
@@ -140,12 +147,13 @@ export const JsonPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrE
 /**
  * Runtime type for {@link JsonPathSegment}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate path segment)
+ *
+ * ```ts import.meta.vitest name="Annotate path segment"
  * import type { JsonPathSegment } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const segment: JsonPathSegment = "blocks"
- * console.log(segment) // "blocks"
+ * segment // => "blocks"
  * ```
  *
  * @category models
@@ -162,7 +170,8 @@ const jsonPathToPointer = (path: ReadonlyArray<JsonPathSegment>): string =>
 /**
  * Ordered path to a construct inside Pandoc JSON.
  *
- * @example
+ * **Example** (Convert path via toPointer)
+ *
  * ```ts
  * import { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
  *
@@ -184,12 +193,13 @@ export const JsonPath = S.Array(JsonPathSegment).pipe(
 /**
  * Runtime type for {@link JsonPath}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate JSON path)
+ *
+ * ```ts import.meta.vitest name="Annotate JSON path"
  * import type { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const path: JsonPath = ["blocks", 0]
- * console.log(path.length) // 2
+ * path.length // => 2
  * ```
  *
  * @category models
@@ -200,11 +210,12 @@ export type JsonPath = typeof JsonPath.Type;
 /**
  * Converts a JSON path into a stable JSON Pointer string.
  *
- * @example
- * ```ts
+ * **Example** (Convert path to pointer)
+ *
+ * ```ts import.meta.vitest name="Convert path to pointer"
  * import { jsonPointerFromPath } from "@beep/pandoc-ast/Pandoc.report"
  *
- * console.log(jsonPointerFromPath(["blocks", 0])) // "/blocks/0"
+ * jsonPointerFromPath(["blocks", 0]) // => "/blocks/0"
  * ```
  *
  * @category utilities
@@ -215,8 +226,9 @@ export const jsonPointerFromPath = (path: JsonPath): string => JsonPath.toPointe
 /**
  * A single compatibility issue found while mapping between Pandoc and Md.
  *
- * @example
- * ```ts
+ * **Example** (Create issue from path)
+ *
+ * ```ts import.meta.vitest name="Create issue from path"
  * import { PandocMappingIssue } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const issue = PandocMappingIssue.fromPath({
@@ -226,7 +238,7 @@ export const jsonPointerFromPath = (path: JsonPath): string => JsonPath.toPointe
  *   path: ["blocks", 0],
  *   severity: "unsupported",
  * })
- * console.log(issue.pointer) // "/blocks/0"
+ * issue.pointer // => "/blocks/0"
  * ```
  *
  * @category models
@@ -246,9 +258,6 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
     path: JsonPath.annotateKey({
       description: "Structured path to the construct.",
     }),
-    pointer: S.String.annotateKey({
-      description: "JSON Pointer derived from path.",
-    }),
     severity: PandocMappingSeverity.annotateKey({
       description: "Issue severity.",
     }).pipe(SchemaUtils.withConstantDefault<PandocMappingSeverity>("unsupported")),
@@ -261,14 +270,25 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
     input: Omit<PandocMappingIssue.Type, "pointer" | "severity"> & {
       readonly severity?: PandocMappingSeverity;
     }
-  ): PandocMappingIssue => PandocMappingIssue.make({ ...input, pointer: JsonPath.toPointer(input.path) });
+  ): PandocMappingIssue => PandocMappingIssue.make(input);
+
+  /**
+   * JSON Pointer derived from {@link path}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get pointer(): string {
+    return JsonPath.toPointer(this.path);
+  }
 }
 
 /**
  * Companion namespace for {@link PandocMappingIssue}.
  *
- * @example
- * ```ts
+ * **Example** (Type issue from path)
+ *
+ * ```ts import.meta.vitest name="Type issue from path"
  * import { PandocMappingIssue } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const issue: PandocMappingIssue.Type = PandocMappingIssue.fromPath({
@@ -278,7 +298,7 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
  *   path: ["blocks", 0],
  *   severity: "unsupported",
  * })
- * console.log(issue.pointer) // "/blocks/0"
+ * issue.pointer // => "/blocks/0"
  * ```
  *
  * @category models
@@ -300,18 +320,25 @@ export declare namespace PandocMappingIssue {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly construct: string;
+    readonly direction: PandocMappingDirection;
+    readonly message: string;
+    readonly path: JsonPath;
+    readonly severity: PandocMappingSeverity;
+  }
 }
 
 /**
  * Compatibility report shared by both mapping directions.
  *
- * @example
- * ```ts
+ * **Example** (Create empty compatibility report)
+ *
+ * ```ts import.meta.vitest name="Create empty compatibility report"
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const report = PandocCompatibilityReport.fromIssues([])
- * console.log(report.profile) // "supported"
+ * report.profile // => "supported"
  * ```
  *
  * @category models
@@ -322,9 +349,6 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
     issues: S.Array(PandocMappingIssue).annotateKey({
       description: "Compatibility issues observed during mapping.",
     }),
-    profile: PandocMappingProfile.annotateKey({
-      description: "Coarse compatibility profile.",
-    }),
   },
   $I.annote("PandocCompatibilityReport", {
     description: "Compatibility report shared by both mapping directions.",
@@ -333,17 +357,28 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
   static readonly profileFromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocMappingProfile =>
     issues.length === 0 ? "supported" : "gap";
   static readonly fromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocCompatibilityReport =>
-    PandocCompatibilityReport.make({ issues, profile: PandocCompatibilityReport.profileFromIssues(issues) });
+    PandocCompatibilityReport.make({ issues });
+
+  /**
+   * Coarse compatibility profile derived from {@link issues}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get profile(): PandocMappingProfile {
+    return PandocCompatibilityReport.profileFromIssues(this.issues);
+  }
 }
 
 /**
  * Computes the summary profile from a list of mapping issues.
  *
- * @example
- * ```ts
+ * **Example** (Profile empty issues list)
+ *
+ * ```ts import.meta.vitest name="Profile empty issues list"
  * import { profileFromIssues } from "@beep/pandoc-ast/Pandoc.report"
  *
- * console.log(profileFromIssues([])) // "supported"
+ * profileFromIssues([]) // => "supported"
  * ```
  *
  * @category utilities
@@ -354,12 +389,13 @@ export const profileFromIssues = PandocCompatibilityReport.profileFromIssues;
 /**
  * Companion namespace for {@link PandocCompatibilityReport}.
  *
- * @example
- * ```ts
+ * **Example** (Type empty compatibility report)
+ *
+ * ```ts import.meta.vitest name="Type empty compatibility report"
  * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
  *
  * const report: PandocCompatibilityReport.Type = PandocCompatibilityReport.fromIssues([])
- * console.log(report.profile) // "supported"
+ * report.profile // => "supported"
  * ```
  *
  * @category models
@@ -379,6 +415,5 @@ export declare namespace PandocCompatibilityReport {
    */
   export interface Encoded {
     readonly issues: ReadonlyArray<PandocMappingIssue.Encoded>;
-    readonly profile: PandocMappingProfile;
   }
 }

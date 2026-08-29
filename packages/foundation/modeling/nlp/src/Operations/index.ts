@@ -16,28 +16,30 @@
  * Composable operation builders and the categorical combinators (map/flatMap/
  * product/zipWith/traverse/aggregate).
  *
- * @example
- * ```typescript
+ * **Example** (Import composable operation builders)
+ *
+ * ```ts
  * import { Composable } from "@beep/nlp/Operations"
  *
  * console.log(typeof Composable.makeOperation)
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export * as Composable from "./Composable.ts";
 /**
  * Structured operation definitions (metadata + schemas + implementation).
  *
- * @example
+ * **Example** (Reference operation definition type)
+ *
  * ```typescript
  * import type { Definition } from "@beep/nlp/Operations"
  *
  * type Op = Definition.OperationDefinition<never, never>
  * ```
  *
- * @since 0.0.0
  * @category use-cases
+ * @since 0.0.0
  */
 export type * as Definition from "./Definition.ts";

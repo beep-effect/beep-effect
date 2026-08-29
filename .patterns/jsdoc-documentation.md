@@ -1,926 +1,442 @@
-# JSDoc Documentation Patterns - Effect Library
+# JSDoc Documentation Patterns
 
-## 🎯 OVERVIEW
+## Purpose
 
-Comprehensive JSDoc/TSDoc documentation patterns used throughout the
-[beep-effect](https://github.com/beep-effect/beep-effect) repository, ensuring
-consistent, practical, and compilable examples for all APIs.
+This document is the binding JSDoc/TSDoc law for the beep-effect workspace.
+Documentation must render clearly in IDE hovers, teach callers how to use the API,
+and keep every published example compilable.
 
-This document is the source of truth for JSDoc conventions in the workspace.
-The `jsdoc-annotation-specialist` skill enforces these conventions and adds
-schema-annotation requirements on top.
+The section grammar below ports documentation semantics from Effect v4's JSDoc
+tooling under the MIT license. This is a semantic port only; beep has no code
+dependency on `@effect/jsdocs`.
 
-Conventions are designed for two reader audiences:
+## Hard requirements
 
-1. **Humans browsing rendered documentation** — TypeDoc output, IDE hover,
-   generated reference sites.
-2. **Coding agents loading symbol documentation as context** — when an agent
-   generates a call site for a symbol, the structured tags below become prompt
-   material.
+- Every public export has a useful lead description, canonical `@category`, and
+  `@since 0.0.0`.
+- Value-level exports require at least one Example. Pure type-level exports require
+  useful prose; their Example is optional.
+- Examples compile through the docgen TypeScript gate. Never remove an Example to
+  hide a compilation error.
+- New and touched documentation uses titled `**Example** (Title)` sections.
+- `@remarks` is forbidden. `@module` and `@template` are forbidden in new work.
+- Example code uses Effect patterns and contains no `any`, type assertions,
+  `declare` statements, empty generator bodies, or deprecated `@effect/schema`
+  imports.
 
-The decision rule for every tag: it earns its place only when it encodes
-information an agent or human reader cannot recover from the TypeScript
-signature alone. Tags that *restate* the signature are noise and are avoided.
+## Description and section grammar
 
-## 🚨 CRITICAL REQUIREMENTS
+A doc block begins with exactly one lead paragraph. The lead explains the symbol's
+purpose or the problem it solves instead of restating its name or signature. Do not
+put a Markdown heading or a blank-padded fragment in the lead.
 
-### Compilation Standards
+After the lead, the following body sections are optional. When present, they appear
+in this exact order:
 
-- **MANDATORY**: All JSDoc examples must compile via `bun run docgen`.
-- **ZERO TOLERANCE**: Pre-existing docgen errors must be fixed when encountered.
-- **FORBIDDEN**: Removing examples to fix compilation — always fix the example.
-- **MANDATORY**: Use proper Effect patterns in all examples.
-- **FORBIDDEN**: `any` types, type assertions, `declare` statements, or unsafe
-  patterns in any example.
+1. `**When to use**`
+2. `**Details**`
+3. `**Gotchas**`
+4. one or more `**Example** (Title)` sections
 
-### TSDoc Grammar Hard Rules
+Rules for all sections:
 
-The following break `eslint-plugin-tsdoc`, API Extractor, or TypeDoc rendering.
-Every example in this document follows these rules:
+- A section is non-empty and appears at most once, except Example sections.
+- `**When to use**` opens with `Use to`, `Use when`, `Use as`, or `Use with`.
+- Details and Gotchas contain only information not obvious from the signature.
+- Every Example has a non-empty title, and titles are unique within the doc block.
+- Every Example contains exactly one fenced `ts` block.
+- No fenced `ts` block may appear outside an Example section.
+- Example sections are last in the body. TSDoc tags follow the body.
 
-1. **No type braces in tags.** The TypeScript signature is authoritative.
-   `@param input {Type} - desc` is invalid TSDoc; write `@param input - desc`.
-   Same applies to `@returns` and `@throws`.
-2. **Use `@typeParam`, not `@template`.** `@template` is JSDoc-era and
-   produces TSDoc warnings.
-3. **`@param name - description`** uses a hyphen separator.
-   **`@returns description`** does not — the hyphen is `@param`-only.
-   **`@throws description`** does not either.
-4. **Use `@packageDocumentation`, not `@module`.** `@module` is JSDoc-era;
-   TSDoc and API Extractor recognize `@packageDocumentation` for package
-   entry-point comments.
+Sections are opt-in except where an Example is required by symbol kind. Do not add
+empty or formulaic sections merely to fill out the shape.
 
-## 📝 STANDARD JSDOC STRUCTURE
+## Carrier policy
 
-### Tag Ordering
+`**Example** (Title)` is the canonical carrier. `@example` and `@remarks` are
+forbidden; `AGENTS.md` states that rule without qualification and the quality gate
+enforces it.
 
-Tags appear in this order within a JSDoc block:
+Enforcement is repo-wide and is not advisory. The zero-legacy check in
+`bun run beep quality jsdoc-ratchet` fails when any non-generated
+`{packages,apps}/**/src/**/*.{ts,tsx}` file contains `@example` or `@remarks`.
+Pass `--include-generated` to scan generator outputs in the same workspace
+corpus as well (needed when proving a codegen emitter; the default non-generated
+scope cannot prove generated compliance). The gate inspects whole files, not
+diff hunks.
 
-1. Description (one-line summary; optional detail paragraph)
-2. `@remarks` — semantics, invariants, complexity, ordering guarantees
-3. `@example` — one or more compilable examples
-4. `@typeParam` — only when constraint or semantic role is non-trivial
-5. `@param` — only when prose adds beyond name + type
-6. `@returns` — only when prose adds beyond the return type
-7. `@throws` — only for synchronous throws or defects
-8. `@effects` — side effects not visible in the type signature
-9. `@precondition` / `@postcondition` / `@invariant` — call-site contracts
-10. `@see` — cross-references
-11. `@deprecated` — with `{@link}` migration target
-12. `@public` / `@beta` / `@alpha` / `@internal` / `@experimental` — release stage
-13. `@category` — required, canonical kebab-case slug
-14. `@since` — required, version
+For inventory presence the totals ratchet still counts either a valid Example
+section or a legacy tag. That is a scoring detail of the fail-on-growth comparison,
+not permission to author a legacy carrier.
 
-### Required Tags (Always Present on Exports)
+## Kind-split Example law
 
-Every exported symbol carries:
+An Example is required for value-level exports:
 
-- `@example` — at least one compilable example
-- `@category` — canonical kebab-case slug from the category list below
-- `@since` — currently `@since 0.0.0` workspace-wide (intentional placeholder
-  until v1.0; do not infer real versions from git history)
+- functions and exported constants;
+- classes, including error and schema-backed classes;
+- runtime schemas and schema helpers;
+- services and layers;
+- other runtime values callable or consumable by application code.
 
-### Quality Rubric (Whole Block)
+An Example is optional for pure type-level exports:
 
-Quality review scores the whole JSDoc block, not just the presence of tags.
-A passing block should give a future reader or coding agent enough context to
-use the symbol without inventing intent.
+- type aliases and interfaces;
+- namespaces;
+- `.Encoded` companions;
+- same-name type companions for runtime schemas.
 
-- The description says what problem the symbol solves, not just what its name
-  already says.
-- `@example` is still universal for exported symbols. Error classes, type-only
-  helpers, schemas, and constants need examples too; choose a handling,
-  narrowing, construction, or import example that fits the symbol.
-- Re-export declarations are graph edges, not symbol-quality subjects. Document
-  the exported symbol at its owning declaration; do not add fake examples to a
-  barrel just to satisfy quality tooling.
-- Examples use fenced TypeScript and show an observable result, assertion,
-  decoded value, Effect execution, returned value, or type-level evidence. For
-  type-only exports, useful evidence includes named aliases, assignability or
-  `satisfies` checks, `Equal`/`Expect`-style assertions, or comments that show
-  inferred types. `const result = ...; void result` is a compile trick, not
-  useful documentation.
-- Conditional tags are added only when they supply information that is not
-  visible in the signature.
+Pure type-level exports still require precise prose, `@category`, and `@since`.
+When a type-level Example genuinely teaches narrowing, inference, or composition,
+it may be included and must obey the full Example grammar.
 
-Use `bun run beep docgen quality -p <package> --json --score codex` for the
-report-only quality subject and capped remediation packet shape. Add
-`--packet-limit <count>` to widen or suppress Codex advisory packets.
+Re-export declarations are graph edges, not separate documentation subjects.
+Document the owning declaration rather than inventing a barrel Example.
 
-### Conditional Tags (Present Only When They Add Information)
+## Canonical templates
 
-These tags appear when — and only when — they encode something the signature
-alone does not communicate. The default is to omit them.
-
-| Tag | Add when |
-|---|---|
-| `@param` | Parameter has units, constraints, ordering requirements, or interactions not obvious from `name: Type` |
-| `@returns` | Return value has ordering, filtering, ownership, or semantic interpretation beyond its type. Skip for `Effect<A, E, R>` returns where channels speak for themselves. |
-| `@typeParam` | Type parameter has a constraint or semantic role not obvious from its name. Skip for trivial generics like `<A>`. |
-| `@throws` | Function throws synchronously or produces a defect not in the typed error channel |
-| `@remarks` | Function has non-obvious semantics, ordering guarantees, idempotency claims, or complexity worth documenting |
-
-### Minimal Template — Required Tags Only
-
-This is the **common case** — most symbols need nothing beyond the three
-required tags:
+### Value-level export
 
 ````ts
 /**
- * Brief one-line description.
+ * Decodes an unknown value as a non-empty user name without throwing.
  *
- * @example
+ * **When to use**
+ *
+ * Use when invalid input should be represented by `O.none()` at a boundary.
+ *
+ * **Details**
+ *
+ * The returned `Option` contains the schema-decoded value, not the raw input.
+ *
+ * **Example** (Decode a user name)
+ *
  * ```ts
- * import * as A from "effect/Array"
- *
- * const result = A.map([1, 2, 3], (n) => n * 2)
- * console.log(result) // [2, 4, 6]
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export const myFunction = /* ... */
-````
-
-### Extended Template — With Conditional Tags
-
-When the function has non-obvious semantics or constrained parameters:
-
-````ts
-/**
- * Smooths a time series by averaging over a sliding window.
- *
- * @remarks
- * Edge artifacts at the start and end of the series are zero-padded rather
- * than reflected. Use {@link smoothSeriesReflect} when reflective edge
- * handling is required.
- *
- * @example
- * ```ts
- * import * as A from "effect/Array"
- *
- * const noisy = A.range(1, 10).map((n) => n + Math.random())
- * const smoothed = smoothSeries(noisy, 3, 1.5)
- * ```
- *
- * @param values - Input series, ordered chronologically (older to newer).
- * @param window - Window size in samples; must be odd and at least 3.
- * @param tolerance - Acceptable drift in standard deviations. Values below
- * 1.0 may produce false negatives on noisy inputs.
- *
- * @category combinators
- * @since 0.0.0
- */
-````
-
-## 📚 HIGH-VALUE TAG REFERENCE
-
-The tags below carry information not present in the TypeScript signature.
-They are the highest-leverage additions for both rendered documentation and
-agent context.
-
-### `@remarks` — Semantics, Invariants, Gotchas
-
-Use for ordering guarantees, idempotency, complexity, and edge cases. The
-single highest-leverage tag for non-obvious behavior.
-
-````ts
-/**
- * Runs both effects concurrently and returns the first to succeed.
- *
- * @remarks
- * If both effects fail, the second's failure is reported and the first is
- * attached as a suppressed cause. The loser's interruption is not awaited
- * before the winner's result is returned — side effects in the loser may
- * continue briefly after this function returns. Use {@link raceAwait} when
- * deterministic interrupt-completion ordering matters.
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- *
- * const winner = race(
- *   Effect.delay(Effect.succeed("fast"), "10 millis"),
- *   Effect.delay(Effect.succeed("slow"), "100 millis")
- * )
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-````
-
-### `@see` and `{@link}` — Curated Cross-References
-
-`{@link Symbol}` for inline references inside prose; `@see` for trailing
-related-symbol lists. Both produce hyperlinks in TypeDoc and editor hover.
-
-````ts
-/**
- * Constructs a `Household` from partial input, applying default values for
- * `createdAt` and generating a fresh {@link HouseholdId}.
- *
- * @example
- * ```ts
- * const h = makeHousehold({ name: "Acme", primaryAdvisorId: advisorId })
- * ```
- *
- * @see {@link Household} for the full schema.
- * @see {@link HouseholdRepo.save} to persist the result.
- *
- * @category constructors
- * @since 0.0.0
- */
-````
-
-### `@deprecated` — With Required Migration Target
-
-Every `@deprecated` must include a `{@link}` to the replacement and a one-line
-migration recipe. The linter rejects `@deprecated` without `{@link}`.
-
-````ts
-/**
- * @deprecated Since 2.0.0. Use {@link findHousehold} instead — it returns an
- * `Effect` with a typed failure channel rather than throwing synchronously.
- *
- * Migration:
- * - Sync context: `Effect.runSync(findHousehold(id))`
- * - Effect context: `findHousehold(id)` directly
- *
- * @category constructors
- * @since 0.0.0
- */
-````
-
-### `@throws` — Defects and Synchronous Panics
-
-Effect's typed error channel handles recoverable failure. `@throws` documents
-the *defect* channel (untyped panics) and synchronous throws from constructors
-or refinements outside the Effect.
-
-````ts
-/**
- * Constructs a `HouseholdId` from a raw string, validating UUID v4 format.
- *
- * @example
- * ```ts
- * const id = HouseholdId("550e8400-e29b-41d4-a716-446655440000")
- * ```
- *
- * @throws `Brand.BrandErrors` synchronously when `raw` is not a valid UUID v4.
- * For non-throwing validation, use {@link HouseholdId.either}.
- *
- * @category constructors
- * @since 0.0.0
- */
-````
-
-## 🤖 CUSTOM TAGS FOR AGENT CONTEXT
-
-These tags are registered in `tsdoc.json` (see "Custom Tag Registration"
-below) and encode information specifically valuable to agents reasoning about
-how to call or extend a symbol.
-
-### `@effects` — Side Effects Invisible in the Type
-
-The single highest-value custom tag for an Effect codebase. The requirement
-channel `Effect<A, E, R>` shows `R` is `HouseholdRepo | EventBus | Cache` but
-says nothing about *what* gets written, *which* topics get published to, or
-*what* cache keys are touched. `@effects` closes that gap.
-
-````ts
-/**
- * Persists a household and emits domain events.
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- *
- * const program = saveHousehold(household)
- * ```
- *
- * @effects
- * - Writes to the `households` table (insert on missing `id`, update otherwise).
- * - Writes to the `audit_log` table with `household.created` or `household.updated`.
- * - Publishes `household.updated` to the `domain-events` Kafka topic.
- * - Invalidates `household:{id}` and `advisor:{primaryAdvisorId}:households`
- *   Redis cache keys.
- *
- * @category combinators
- * @since 0.0.0
- */
-````
-
-### `@precondition` — Call-Site Contract
-
-What the caller must guarantee before invocation. High-signal for agents
-generating call sites — they can verify or assert these conditions.
-
-````ts
-/**
- * Advances a meeting through its lifecycle.
- *
- * @precondition The current status must be a valid predecessor of `next`:
- * `Scheduled → InProgress`, `InProgress → Completed`, or
- * `Scheduled → Cancelled`. Any other transition fails with
- * {@link InvalidTransition}.
- * @precondition `meeting.id` must reference a meeting that exists in the
- * underlying store; missing rows produce a defect.
- *
- * @category combinators
- * @since 0.0.0
- */
-````
-
-### `@postcondition` — What Holds After Success
-
-The state guarantee on the success path.
-
-````ts
-/**
- * Persists a household, generating a fresh ID if absent.
- *
- * @postcondition The returned household has a non-null `id` of type
- * {@link HouseholdId}, and a `households` row exists with that ID.
- * @postcondition The `audit_log` table contains a `household.created` or
- * `household.updated` record corresponding to this operation.
- *
- * @category combinators
- * @since 0.0.0
- */
-````
-
-### `@invariant` — What Cannot Change
-
-State the operation never alters. Often used on classes (invariants the class
-maintains) or methods (state the method preserves).
-
-````ts
-/**
- * Returns a copy of this household with the supplied advisor as primary.
- *
- * @invariant `id`, `householdId`, and `createdAt` are never mutated; only
- * `primaryAdvisorId` and a derived `updatedAt` change.
- *
- * @category combinators
- * @since 0.0.0
- */
-````
-
-## 🚦 RELEASE STAGE TAGS
-
-Used by API Extractor to gate the public surface and by agents to choose
-between stable and unstable APIs.
-
-````ts
-/**
- * Stable lookup. Safe for production use.
- *
- * @public
- * @category constructors
- * @since 0.0.0
- */
-export const findHousehold = /* ... */
-
-/**
- * Batched lookup. API may change before v3.0.
- *
- * @beta
- * @category constructors
- * @since 0.0.0
- */
-export const findHouseholdsBatch = /* ... */
-
-/**
- * Eager prefetch driven by an affinity model under active iteration.
- *
- * @experimental Affinity scoring is being tuned; results may vary
- * significantly between minor versions.
- *
- * @category combinators
- * @since 0.0.0
- */
-export const prefetchRelated = /* ... */
-
-/**
- * Internal cache primitive used by `findHousehold`. Not part of the public
- * surface — do not import from outside this package.
- *
- * @internal
- */
-export const _householdCache = /* ... */
-````
-
-Pair `@internal` with `"stripInternal": true` in `tsconfig.json` so internal
-symbols don't leak into emitted `.d.ts` files.
-
-## 🔧 IMPORT PATTERN STANDARDS
-
-### Mandatory Namespace Aliases
-
-These aliases are required inside every `@example` code fence:
-
-| Module | Alias | Correct | Forbidden |
-|--------|-------|---------|-----------|
-| `effect/Schema` | `S` | `import * as S from "effect/Schema"` | `import { Schema }` |
-| `effect/Array` | `A` | `import * as A from "effect/Array"` | `import { Array }` |
-| `effect/Option` | `O` | `import * as O from "effect/Option"` | `import { Option }` |
-| `effect/Predicate` | `P` | `import * as P from "effect/Predicate"` | `import { Predicate }` |
-| `effect/Record` | `R` | `import * as R from "effect/Record"` | `import { Record }` |
-
-Core combinators use named imports: `import { Effect, Console, Layer } from "effect"`.
-
-Never import from the deprecated `@effect/schema` package.
-
-### Schema Module Imports
-
-````ts
-/**
- * @example
- * ```ts
- * // ✅ CORRECT
- * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * class User extends S.Class<User>("User")({
- *   id: S.UUID,
- *   name: S.NonEmptyTrimmedString
- * }) {}
+ * const decoded = decodeUserName("Ada")
  *
- * const program = Effect.gen(function* () {
- *   const decoded = yield* S.decode(User)({ id: "abc", name: "Ada" })
- *   return decoded
- * })
+ * console.log(O.isSome(decoded)) // true
+ * console.log(O.isNone(decodeUserName(""))) // true
  * ```
+ *
+ * @see {@link S.decodeUnknownOption} for the underlying decoding operation.
+ * @category decoding
+ * @since 0.0.0
  */
+export const decodeUserName = S.decodeUnknownOption(S.NonEmptyTrimmedString)
 ````
 
-## 🏗️ EFFECT-TS V4 CANONICAL CONSTRUCT PATTERNS
-
-Effect v4 has specific construct patterns whose JSDoc differs from generic
-function/class documentation. The patterns below are the canonical forms.
-
-### `Effect.Service` — Service Class
-
-Document the class itself; the auto-generated `.Default` layer inherits the
-class comment in editor hover. Document each method on the returned record.
+### Pure type-level export
 
 ````ts
 /**
- * Repository for `Household` aggregate access.
+ * Encoded input accepted by {@link UserName} before schema decoding.
+ *
+ * @see {@link UserName} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UserNameEncoded = typeof UserName.Encoded
+````
+
+### Before and after
+
+Before, the legacy block hides semantics under `@remarks` and uses the degraded
+tag carrier:
+
+````ts
+/**
+ * Decodes a user name.
+ *
+ * @remarks Returns `None` rather than throwing for invalid input.
  *
  * @example
  * ```ts
- * import { Effect } from "effect"
- *
- * const program = Effect.gen(function* () {
- *   const repo = yield* HouseholdRepo
- *   return yield* repo.find(id)
- * })
+ * const result = decodeUserName("Ada")
  * ```
  *
- * @category services
+ * @category decoding
  * @since 0.0.0
  */
-export class HouseholdRepo extends Effect.Service<HouseholdRepo>()(
-  "@beep/HouseholdRepo",
-  {
-    effect: Effect.gen(function* () {
-      const db = yield* Database
-      return {
-        /**
-         * Look up a household by ID. Fails with `HouseholdNotFound` when absent.
-         *
-         * @since 0.0.0
-         */
-        find: (id: HouseholdId) => db.query(/* ... */),
-
-        /**
-         * Persist a new or updated household. Idempotent on the primary key.
-         *
-         * @since 0.0.0
-         */
-        save: (h: Household) => db.upsert(/* ... */)
-      }
-    }),
-    dependencies: [Database.Default]
-  }
-) {}
 ````
 
-### `Schema.Class` — Schema-Backed Class
+After, the lead teaches purpose, semantics have a body section, and the Example is
+titled and observable:
 
 ````ts
 /**
- * A household — the top-level entity grouping clients, accounts, and meetings.
+ * Decodes an unknown value as a non-empty user name without throwing.
  *
- * @example
+ * **Details**
+ *
+ * Invalid input becomes `O.none()`.
+ *
+ * **Example** (Inspect success and failure)
+ *
  * ```ts
- * import * as S from "effect/Schema"
+ * import * as O from "effect/Option"
  *
- * const h = new Household({
- *   id: HouseholdId("550e8400-e29b-41d4-a716-446655440000"),
- *   name: "Acme",
- *   primaryAdvisorId: advisorId,
- *   createdAt: new Date()
- * })
+ * console.log(O.isSome(decodeUserName("Ada"))) // true
+ * console.log(O.isNone(decodeUserName(""))) // true
  * ```
  *
- * @category schemas
+ * @category decoding
  * @since 0.0.0
  */
-export class Household extends S.Class<Household>($I`Household`)(
-  {
-    id: HouseholdId,
-    name: S.NonEmptyTrimmedString,
-    primaryAdvisorId: AdvisorId,
-    createdAt: S.DateFromSelf
-  },
-  $I.annote("Household", {
-    description: "The top-level entity grouping clients, accounts, and meetings."
-  })
-) {}
 ````
 
-### `TaggedErrorClass` — Tagged Error
+## Tag order
 
-Error classes still carry `@example`; prefer showing the function that raises
-or handles the error so the example teaches the reader how the class appears
-at a call site.
+Body sections, including Examples, always precede tags. Within the tag area, use
+this order while omitting tags that do not add information:
 
-````ts
-/**
- * Raised when a household lookup is performed for an ID that does not exist.
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- *
- * const handled = findHousehold(id).pipe(
- *   Effect.catchTag("HouseholdNotFound", (e) => Effect.log(`missing: ${e.id}`))
- * )
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class HouseholdNotFound extends TaggedErrorClass<HouseholdNotFound>(
-  $I`HouseholdNotFound`
-)(
-  "HouseholdNotFound",
-  { id: HouseholdId },
-  $I.annote("HouseholdNotFound", {
-    description: "Raised when a household lookup targets a non-existent ID."
-  })
-) {}
-````
+1. `@typeParam`
+2. `@param`
+3. `@returns`
+4. `@throws`
+5. `@effects`
+6. `@precondition`, `@postcondition`, `@invariant`
+7. `@deprecated`
+8. `@defaultValue`
+9. `@see`
+10. `@public`, `@beta`, `@alpha`, `@internal`, `@experimental`
+11. `@category`
+12. `@since`
 
-### `dual` — Data-First / Data-Last Function
+This preserves Effect's relative order for its shared trailing tags:
+`@deprecated` -> `@defaultValue` -> `@see` -> `@category` -> `@since`.
 
-Document the operation once on the outer const. Inner per-signature comments
-are noise for symmetric `dual` ops; reserve them for cases where the two
-forms have meaningfully different semantics.
+### Conditional tags
 
-````ts
-/**
- * Returns the number of days in the given month of the given year.
- *
- * @example
- * ```ts
- * import { pipe } from "effect"
- *
- * daysInMonth(2024, 2)            // 29 — data-first
- * pipe(2024, daysInMonth(2))      // 29 — data-last
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const daysInMonth: {
-  (month: number): (year: number) => number
-  (year: number, month: number): number
-} = dual(2, (year: number, month: number): number => getDaysInMonth(year, month))
-````
+The default is omission. Add a conditional tag only when it supplies information
+the TypeScript signature and body sections do not communicate.
 
-### `Layer` Definition
+- `@typeParam`: a type parameter has a non-obvious constraint or semantic role.
+- `@param`: a parameter has units, constraints, ordering, or interactions not
+  visible in its type.
+- `@returns`: the result has ordering, filtering, ownership, or interpretation
+  not visible in its type.
+- `@throws`: the symbol can throw synchronously or produce a defect outside an
+  Effect error channel.
+- `@effects`: the operation writes, publishes, invalidates, or performs another
+  side effect not visible in its type.
+- `@precondition`: the caller must establish a non-obvious condition.
+- `@postcondition`: a non-obvious state guarantee holds after success.
+- `@invariant`: the operation or class preserves a non-obvious property.
+- `@deprecated`: the API has a replacement and migration path.
+- `@see`: a related symbol helps the reader choose, compose, or understand the
+  API.
 
-````ts
-/**
- * Live `HouseholdRepo` layer backed by the production database.
- *
- * @example
- * ```ts
- * import { Effect, Layer } from "effect"
- *
- * const AppLive = HouseholdRepoLive.pipe(Layer.provide(DatabaseLive))
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const HouseholdRepoLive: Layer.Layer<HouseholdRepo, never, Database> =
-  HouseholdRepo.Default
-````
+`@remarks` is not a conditional tag. It is retired; use Details or Gotchas.
 
-### Branded Primitive
+## Described links
 
-Pair the type and the brand constructor with matching comments.
+Use `{@link Symbol}` inline where the reference supports the surrounding sentence.
+Every `@see` must include a purpose phrase after its link:
 
-````ts
-/**
- * Strongly-typed identifier for a `Household` aggregate.
- *
- * @category models
- * @since 0.0.0
- */
-export type HouseholdId = string & Brand.Brand<"HouseholdId">
-
-/**
- * Constructor and refinement for {@link HouseholdId}.
- *
- * @example
- * ```ts
- * const id = HouseholdId("550e8400-e29b-41d4-a716-446655440000")
- * ```
- *
- * @throws `Brand.BrandErrors` when input is not a valid UUID v4.
- *
- * @category constructors
- * @since 0.0.0
- */
-export const HouseholdId = Brand.refined<HouseholdId>(
-  (s) => UUID_V4.test(s),
-  (s) => Brand.error(`Invalid HouseholdId: ${s}`)
-)
-````
-
-### Type-Id Symbol
-
-````ts
-/**
- * Unique identifier for the `Household` nominal type.
- *
- * @category symbols
- * @since 0.0.0
- */
-export const HouseholdTypeId: unique symbol = Symbol.for("@beep/Household")
-
-/**
- * @category symbols
- * @since 0.0.0
- */
-export type HouseholdTypeId = typeof HouseholdTypeId
-````
-
-### Effect-Returning Function
-
-Don't reproduce `Effect<A, E, R>` channels in tags; describe them in prose
-when the failure modes warrant it.
-
-````ts
-/**
- * Resolves a household by its ID.
- *
- * @remarks
- * Fails with `HouseholdNotFound` when the ID does not exist, and with
- * `DatabaseError` for any underlying connectivity issue.
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- *
- * const program = findHousehold(id).pipe(
- *   Effect.catchTag("HouseholdNotFound", () => Effect.succeed(null))
- * )
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const findHousehold = (
-  id: HouseholdId
-): Effect.Effect<Household, HouseholdNotFound | DatabaseError, HouseholdRepo> =>
-  HouseholdRepo.pipe(Effect.flatMap((repo) => repo.find(id)))
-````
-
-### `Stream`-Returning Function
-
-````ts
-/**
- * Streams meeting events for a household, ordered by occurrence.
- *
- * @example
- * ```ts
- * import { Stream } from "effect"
- *
- * const recent = meetingEvents(id).pipe(Stream.take(10))
- * ```
- *
- * @category streams
- * @since 0.0.0
- */
-export const meetingEvents = (
-  id: HouseholdId
-): Stream.Stream<MeetingEvent, DatabaseError, EventStore> =>
-  EventStore.pipe(Stream.flatMap((store) => store.eventsFor(id)))
-````
-
-### Package Entry Point
-
-Goes at the top of `src/index.ts` for a published package.
-
-````ts
-/**
- * Household domain package — aggregates, services, and schemas for managing
- * households, their advisors, and lifecycle events.
- *
- * @remarks
- * The public surface is exported from this entry point. Internal helpers
- * marked `@internal` are excluded from the rollup and should not be imported
- * via subpath imports.
- *
- * @packageDocumentation
- */
-
-export * from "./Household.js"
-export * from "./HouseholdRepo.js"
-export * from "./HouseholdId.js"
-export * from "./errors.js"
-````
-
-## 🏷️ CATEGORY ANNOTATION
-
-### Naming Convention
-
-Use canonical kebab-case slugs. Choose the most specific semantic role of the
-exported symbol, not its file location or architectural layer. For example, a
-command schema is `commands`, not `schemas`; a port service contract is
-`ports`, not `services`.
-
-The code source of truth is
-`packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts`.
-
-### Standard Categories
-
-| Group | Categories |
-|---|---|
-| Core API roles | `models`, `schemas`, `type-level`, `constructors`, `factories`, `destructors`, `combinators`, `predicates`, `guards`, `refinements`, `assertions`, `getters`, `setters`, `mapping`, `filtering`, `folding`, `sequencing`, `concurrency`, `resource-management`, `error-handling`, `utilities`, `layers` |
-| Domain roles | `aggregates`, `entities`, `value-objects`, `domain-events`, `policies`, `specifications`, `identifiers`, `entity-ids`, `type-ids`, `symbols`, `errors` |
-| Application and ports | `use-cases`, `commands`, `queries`, `events`, `workflows`, `processes`, `schedulers`, `protocols`, `ports`, `services`, `handlers`, `endpoints`, `clients`, `adapters`, `repositories`, `projections`, `read-models`, `tables` |
-| Data boundaries | `validation`, `parsing`, `encoding`, `decoding`, `serialization`, `codecs`, `formatting`, `normalization`, `dtos`, `mappers` |
-| UI and client state | `components`, `hooks`, `providers`, `themes`, `tokens`, `forms`, `atoms` |
-| Tooling and cross-cutting | `tools`, `tool-schemas`, `cli-commands`, `configuration`, `constants`, `observability`, `diagnostics`, `fixtures`, `testing`, `streams`, `resources`, `interop` |
-
-### Transitional Aliases
-
-Legacy values such as `DomainModel`, `Utility`, `UseCase`, `PortContract`,
-`ToolSchemas`, `entity ids`, `error handling`, and `resource management` are
-accepted as migration aliases by tooling. New or touched JSDoc should use the
-canonical slug.
-
-Values such as `exports`, `re-exports`, `modules`, `core`, `generated`, and
-`presentation` are rejected as categories because those facts belong in AST
-graph metadata or a more specific symbol role.
-
-## 🛠️ CUSTOM TAG REGISTRATION
-
-The custom tags `@effects`, `@precondition`, `@postcondition`, `@invariant`
-must be registered in `tsdoc.json` at the workspace root. Without
-registration, `eslint-plugin-tsdoc` rejects them as unknown tags.
-
-```json
-{
-  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
-  "extends": ["@microsoft/api-extractor/extends/tsdoc-base.json"],
-  "tagDefinitions": [
-    {
-      "tagName": "@invariant",
-      "syntaxKind": "block",
-      "allowMultiple": true
-    },
-    {
-      "tagName": "@precondition",
-      "syntaxKind": "block",
-      "allowMultiple": true
-    },
-    {
-      "tagName": "@postcondition",
-      "syntaxKind": "block",
-      "allowMultiple": true
-    },
-    {
-      "tagName": "@effects",
-      "syntaxKind": "block",
-      "allowMultiple": false
-    }
-  ],
-  "supportForTags": {
-    "@invariant": true,
-    "@precondition": true,
-    "@postcondition": true,
-    "@effects": true
-  }
-}
+```text
+@see {@link UserName} for the runtime schema and decoded representation.
+@see {@link S.decodeUnknownOption} for the underlying non-throwing decoder.
 ```
 
-For TypeDoc rendering, mirror the registration in `typedoc.json`:
+Bare links such as `@see {@link UserName}` are forbidden. Link-target resolution is
+deferred to a follow-on goal; authors must still choose real, documented targets.
 
-```json
-{
-  "blockTags": ["@invariant", "@precondition", "@postcondition", "@effects"]
-}
+Every `@deprecated` includes a `{@link}` replacement and a concise migration
+instruction.
+
+## TSDoc grammar
+
+1. Do not put `{type}` blobs in `@param`, `@returns`, or `@throws`; the TypeScript
+   signature is authoritative.
+2. Use `@typeParam`, never `@template`.
+3. Write `@param name - description`; the hyphen belongs only to `@param`.
+4. Write `@returns description` and `@throws description` without a hyphen.
+5. Use `@packageDocumentation`, never `@module`, at package entry points.
+6. Use `@defaultValue`, not the JSDoc-era `@default` spelling.
+
+## Example quality and compilation
+
+Every Example must compile via the docgen TypeScript gate and demonstrate a useful,
+observable result: a returned or decoded value, assertion, Effect execution,
+visible output, or meaningful inferred type. A void-discarded value is a compile
+trick, not documentation.
+
+Run a bounded edit-loop check with:
+
+```bash
+bun run docgen:local
 ```
 
-## 🔍 FORBIDDEN PATTERNS IN EXAMPLES
+`docgen:local` plans from `origin/main...HEAD` plus dirty worktree files, but it
+refuses rather than narrows when a global input moved. Changing the root
+`bun.lock`, `package.json`, `turbo.json`, `.bun-version`, `tsconfig.json`,
+`tsconfig.base.json`, `tsconfig.packages.json`, or anything under
+`packages/tooling/tool/docgen/` or `packages/tooling/tool/cli/src/commands/Docgen/`
+marks the plan `full-required`, and the bare script then prints
+`full docgen proof required` and exits non-zero. Only `--allow-full` (what the
+hosted `quality:docgen` lane passes) or `--full` executes the repo-wide proof.
+An explicit package selector remains a bounded edit loop even on such a branch:
 
-````ts
-// ❌ WRONG — type braces in tags
-/**
- * @param input {string} - The input          ← invalid TSDoc
- * @returns {number} - The count               ← invalid TSDoc
- * @throws {ValidationError} - When invalid    ← invalid TSDoc
- */
+```bash
+bun run docgen:local -- --package <package>
+```
 
-// ❌ WRONG — JSDoc-era tag names
-/**
- * @template A   ← use @typeParam
- * @packageDocumentation       ← use @packageDocumentation
- */
+Package selection bypasses changed-file planning and stays scoped unless `--full`
+is explicit. The bare automatic loop is unavailable after a global input moves;
+the package-scoped loop is still available when the operator can name the affected
+package. The trigger list is a hand-maintained exact-path constant in
+`packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts`, not a Turbo
+`globalDependencies` declaration.
 
-// ❌ WRONG — hyphen on @returns
-/**
- * @returns - The count   ← drop the hyphen
- */
+Use the full-repo `bun run docgen` only when full proof is required. The report-only
+quality subject remains available as:
 
-// ❌ WRONG — deprecated package
-import { Schema } from "@effect/schema"
+```bash
+bun run beep docgen quality -p <package> --json --score codex
+```
 
-// ❌ WRONG — wrong import alias
-import { Schema } from "effect/Schema"        // use S
-import { Array } from "effect/Array"          // use A
-import { Option } from "effect/Option"        // use O
+Never remove an Example to make compilation pass. Fix the imports, API usage, or
+example itself.
 
-// ❌ WRONG — unsafe patterns in examples
-const data: any = someValue
-const value = something as unknown as SomeType
-declare const Service: any
+### Runnable Example fences
 
-// ❌ WRONG — empty example bodies
-const program = Effect.gen(function* () {
-  // (empty)
-})
-````
+Examples selected for runtime documentation testing use the canonical fence info
+string `ts import.meta.vitest name="<Example title>"`. The name is derived from
+the enclosing `**Example** (Title)` heading. A trailing `// => expected` comment
+asserts the value of the expression on the same line using Effect equality. It
+may trail an expression statement or one initialized `const` identifier. It may
+appear inside control flow only when that control-flow body has an explicit
+block.
 
-````ts
-// ✅ CORRECT — TSDoc-compliant grammar
-/**
- * @param input - The input string.
- * @returns The count of matching elements.
- * @throws `ValidationError` when input is malformed.
- * @typeParam A - Element type, must be comparable.
- */
+Runnable fences complement the docgen TypeScript gate; they do not replace it.
+Type-only fences still compile through docgen and are reported as vacuous by
+`bun run beep docgen doctest verify`. Do not add a tautological runtime assertion
+to make a type-only fence appear executable.
 
-// ✅ CORRECT — TSDoc-era package-level tag
-/**
- * @packageDocumentation
- */
+For pure new and touched Examples, run `bun run beep docgen doctest verify` and
+use `bun run beep docgen doctest mark --write` to apply the canonical marker and
+safe assertion rewrites. `console.log(expression) // expected` is cleanup-on-touch:
+when the expected text is literal-like and the command can prove an equivalent
+doctest assertion, rewrite it to `expression // => expected`. Keep console output
+when the displayed value is prose, formatting, or otherwise not a valid expected
+TypeScript expression. Never mark examples that use environment variables,
+filesystem, network, child processes, Bun APIs, databases, external or relative
+imports, JSX, or React.
 
-// ✅ CORRECT — namespace aliases
-import { Effect } from "effect"
-import * as S from "effect/Schema"
-import * as A from "effect/Array"
-import * as O from "effect/Option"
+## Imports inside Examples
 
-// ✅ CORRECT — complete, compilable example
-const program = Effect.gen(function* () {
-  const user = yield* findUser(id)
-  yield* Console.log(user.name)
-  return user
-})
-````
+Keep beep's namespace-import law; do not port Effect's named-import rule.
 
-## 🎯 SUCCESS CRITERIA
+| Module | Required form |
+| --- | --- |
+| `effect/Schema` | `import * as S from "effect/Schema"` |
+| `effect/Array` | `import * as A from "effect/Array"` |
+| `effect/Option` | `import * as O from "effect/Option"` |
+| `effect/Predicate` | `import * as P from "effect/Predicate"` |
+| `effect/Record` | `import * as R from "effect/Record"` |
 
-### Quality JSDoc Checklist
+Core combinators may use named imports from the root `effect` module, for example
+`import { Console, Effect, Layer } from "effect"`. Never import from the deprecated
+`@effect/schema` package.
 
-- [ ] Brief, clear one-line description
-- [ ] At least one practical, compilable example
-- [ ] Examples compile with `bun run docgen`
-- [ ] Quality report is reviewable with `bun run beep docgen quality -p <package>`
-- [ ] Type-only examples use concrete type evidence instead of value-only noise
-- [ ] Re-export barrels document owning symbols rather than fake barrel examples
-- [ ] All imports use correct namespace aliases
-- [ ] No `any` types, type assertions, `declare`, or empty example bodies
-- [ ] `@category` (canonical kebab-case slug from standard list)
-- [ ] `@since 0.0.0`
-- [ ] Conditional tags present only when they add information
-- [ ] `@remarks` present when semantics are non-obvious
-- [ ] `@effects` present when the function has side effects beyond its type
-- [ ] `@deprecated` includes `{@link}` migration target
-- [ ] No TSDoc grammar violations (no `{type}` blobs, no `@template`,
-      no hyphen on `@returns`, no `@module`)
+## Schema and Effect-specific guidance
 
-This comprehensive approach ensures documentation provides practical, reliable
-examples that compile, render correctly, and supply structured context for
-both human readers and coding agents.
+- Schema values and schema-backed classes are value-level and require an Example.
+- Same-name schema type aliases and `.Encoded` companions are pure type-level and
+  require prose only.
+- Error classes are value-level; show how a caller constructs, raises, or handles
+  the error.
+- Services and layers are value-level; show acquisition, provision, or a useful
+  method call.
+- For `Effect<A, E, R>` results, do not restate the channels in tags. Use prose for
+  non-obvious failure or environment semantics.
+- A `Fn` method takes its type from its `output` schema. When that output is
+  `EffectSchema<A, E, R>()` with a non-`never` `R`, the requirement channel
+  travels with the method, so `Effect.runPromise(shape.method(x))` fails to
+  typecheck even when the fixture implementation needs nothing. Either provide
+  the requirements first — `Effect.runPromise(Effect.provide(shape.method(x), deps))`
+  — or compose the effect without running it. A `Fn` whose output declares
+  `R = never` runs normally.
+- Document a `dual` operation once on the outer declaration unless its call forms
+  have meaningfully different semantics.
+
+## Category annotation
+
+Use the most specific canonical kebab-case role from
+`packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts`. Choose the
+symbol's semantic role rather than its file or architectural layer.
+
+- Core API roles: `models`, `schemas`, `type-level`, `constructors`, `factories`,
+  `destructors`, `combinators`, `predicates`, `guards`, `refinements`,
+  `assertions`, `getters`, `setters`, `mapping`, `filtering`, `folding`,
+  `sequencing`, `concurrency`, `resource-management`, `error-handling`,
+  `utilities`, `layers`.
+- Domain roles: `aggregates`, `entities`, `value-objects`, `domain-events`,
+  `policies`, `specifications`, `identifiers`, `entity-ids`, `type-ids`, `symbols`,
+  `errors`.
+- Application and ports: `use-cases`, `commands`, `queries`, `events`,
+  `workflows`, `processes`, `schedulers`, `protocols`, `ports`, `services`,
+  `handlers`, `endpoints`, `clients`, `adapters`, `repositories`, `projections`,
+  `read-models`, `tables`.
+- Data boundaries: `validation`, `parsing`, `encoding`, `decoding`,
+  `serialization`, `codecs`, `formatting`, `normalization`, `dtos`, `mappers`.
+- UI and client state: `components`, `hooks`, `providers`, `themes`, `tokens`,
+  `forms`, `atoms`.
+- Tooling and cross-cutting: `tools`, `tool-schemas`, `cli-commands`,
+  `configuration`, `constants`, `observability`, `diagnostics`, `fixtures`,
+  `testing`, `streams`, `resources`, `interop`.
+
+Legacy aliases are accepted only for untouched documentation. New and touched blocks
+use canonical slugs. Values such as `exports`, `re-exports`, `modules`, `core`,
+`generated`, and `presentation` are rejected because they describe topology rather
+than a symbol's role.
+
+## Custom agent-context tags
+
+The registered `@effects`, `@precondition`, `@postcondition`, and `@invariant`
+tags capture call-site contracts that a signature cannot express. Keep them concise;
+use Details or Gotchas for general semantics.
+
+```text
+@effects Writes the decoded record and invalidates its lookup cache key.
+@precondition The supplied revision must equal the stored revision.
+@postcondition The returned entity carries the next revision.
+@invariant The entity identifier never changes.
+```
+
+## Forbidden patterns
+
+- `@remarks`, or `@module` / `@template` in new or touched documentation.
+- An undescribed `@see`.
+- Duplicate, empty, out-of-order, or post-Example body sections.
+- An untitled Example, duplicate Example title, multiple fences in one Example,
+  or a loose `ts` fence outside an Example.
+- Type braces in tags or a hyphen after `@returns`/`@throws`.
+- Named imports from `effect/Schema`, `effect/Array`, `effect/Option`,
+  `effect/Predicate`, or `effect/Record`.
+- `any`, type assertions, `declare`, empty `Effect.gen`, or non-compiling code in
+  Examples.
+- Removing an Example to avoid fixing it.
+
+## Review checklist
+
+- [ ] Lead description is one useful paragraph.
+- [ ] Optional sections are non-empty, unique, and in canonical order.
+- [ ] When-to-use text begins with an allowed opener.
+- [ ] Every required value-level Example is titled, unique, last, single-fence,
+      observable, and compilable.
+- [ ] Pure type-level exports have useful prose; Examples are included only when
+      pedagogically valuable.
+- [ ] No loose `ts` fences exist in touched documentation, and no legacy carriers
+      remain anywhere under `{packages,apps}/**/src`.
+- [ ] Every `@see` has a purpose phrase; every deprecation links a replacement.
+- [ ] Conditional tags add information beyond the signature and follow tag order.
+- [ ] Imports use canonical namespace aliases.
+- [ ] `@category` is canonical and `@since` is exactly `0.0.0`.
+- [ ] TSDoc grammar is clean: no `{type}`, `@template`, `@module`, or misplaced
+      hyphen.
+- [ ] Schema annotations remain aligned with runtime schemas.
+- [ ] `bun run docgen:local` passes for the changed documentation.

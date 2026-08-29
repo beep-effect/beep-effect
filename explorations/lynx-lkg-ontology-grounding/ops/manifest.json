@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "lynx-lkg-ontology-grounding",
+    "title": "Lynx LKG Ontology Grounding",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": [
+      "research/SOURCES.md",
+      "research/01-lynx-project-overview.md",
+      "research/02-lkg-ontology-deep-dive.md",
+      "research/03-reference-ontologies-sweep.md",
+      "research/04-beep-effect-grounding.md",
+      "research/05-value-assessment.md"
+    ],
+    "links": {
+      "goals": ["goals/attributed-multi-claim-span"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-06",
+    "updated": "2026-08-13"
+  }
+}

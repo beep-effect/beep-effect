@@ -12,8 +12,9 @@
 /**
  * Blockchain network metadata namespace.
  *
- * @example
- * ```typescript
+ * **Example** (Ethereum network ticker)
+ *
+ * ```ts import.meta.vitest name="Ethereum network ticker"
  * import { Blockchain } from "@beep/data"
  *
  * console.assert(Blockchain.Networks.Ethereum.ticker === "ETH")
@@ -26,8 +27,9 @@ export * as Blockchain from "./Blockchain.ts";
 /**
  * Calendar constants namespace.
  *
- * @example
- * ```typescript
+ * **Example** (ISO month value lookup)
+ *
+ * ```ts import.meta.vitest name="ISO month value lookup"
  * import { Calendar } from "@beep/data"
  *
  * console.assert(Calendar.MonthISOValues[0] === "01")
@@ -40,8 +42,9 @@ export * as Calendar from "./Calendar.ts";
 /**
  * ISO 4217 currency constants namespace.
  *
- * @example
- * ```typescript
+ * **Example** (USD currency name lookup)
+ *
+ * ```ts import.meta.vitest name="USD currency name lookup"
  * import { CurrencyCodes } from "@beep/data"
  *
  * console.assert(CurrencyCodes.CurrencyCodeDataByCode.USD.currency === "US Dollar")
@@ -54,8 +57,9 @@ export * as CurrencyCodes from "./CurrencyCodes.ts";
 /**
  * Keyboard shortcut constants namespace.
  *
- * @example
- * ```typescript
+ * **Example** (Find copy keyboard shortcut)
+ *
+ * ```ts import.meta.vitest name="Find copy keyboard shortcut"
  * import { KeyboardShortcuts } from "@beep/data"
  *
  * const hasCopyShortcut = KeyboardShortcuts.KeyboardShortcutDataValues.some(
@@ -72,8 +76,9 @@ export * as KeyboardShortcuts from "./KeyboardShortcuts.ts";
 /**
  * MIME type lookup utilities namespace.
  *
- * @example
- * ```typescript
+ * **Example** (Lookup JSON MIME type)
+ *
+ * ```ts import.meta.vitest name="Lookup JSON MIME type"
  * import { MimeTypesData } from "@beep/data"
  *
  * console.assert(MimeTypesData.lookup("asset.json") === "application/json")
@@ -86,8 +91,9 @@ export * as MimeTypesData from "./MimeTypes.ts";
 /**
  * Unicode CLDR territory and continent constants namespace.
  *
- * @example
- * ```typescript
+ * **Example** (US territory name lookup)
+ *
+ * ```ts import.meta.vitest name="US territory name lookup"
  * import { Territories } from "@beep/data"
  *
  * console.assert(Territories.TerritoryDataByCode.US.name === "United States")
@@ -100,8 +106,9 @@ export * as Territories from "./Territories.ts";
 /**
  * IANA timezone constants namespace.
  *
- * @example
- * ```typescript
+ * **Example** (UTC timezone name lookup)
+ *
+ * ```ts import.meta.vitest name="UTC timezone name lookup"
  * import { Timezones } from "@beep/data"
  *
  * console.assert(Timezones.TimezoneDataByName.UTC.name === "UTC")

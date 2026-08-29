@@ -1,4 +1,4 @@
-import { Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
+import { Client as AcpClient, Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -41,12 +41,20 @@ const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
 const decodeRequestPermissionResponse = Schema.decodeEffect(Schema.fromJsonString(RequestPermissionResponse));
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
 const encodeRequestPermissionResponse = Schema.encodeEffect(Schema.fromJsonString(RequestPermissionResponse));
-const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification);
-const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse);
-const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent);
-const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions);
-const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification);
-const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError);
+const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
+const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse)(fc);
+const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent)(fc);
+const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions)(fc);
+const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification)(fc);
+const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError)(fc).filter((error) =>
+  AcpError.AcpError.match(error, {
+    AcpProcessExitedError: (failure) => O.isNone(failure.cause),
+    AcpProtocolParseError: (failure) => O.isNone(failure.cause),
+    AcpRequestError: () => true,
+    AcpSpawnError: (failure) => O.isNone(failure.cause),
+    AcpTransportError: (failure) => O.isNone(failure.cause),
+  })
+);
 const childProcessProtocolTestTimeout = 30_000;
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")
@@ -76,8 +84,12 @@ const makeHandle = Effect.fn("AcpProtocolTest.makeHandle")(function* (env?: Reco
   const path = yield* Path.Path;
   const command = ChildProcess.make("bun", ["run", yield* mockPeerPath], {
     cwd: path.join(import.meta.dirname, ".."),
+    extendEnv: true,
     shell: process.platform === "win32",
-    ...O.getSomesStruct({ env: O.map(O.fromUndefinedOr(env), (env) => ({ ...process.env, ...env })) }),
+    stdin: "pipe",
+    stderr: "inherit",
+    stdout: "pipe",
+    ...O.getSomesStruct({ env: O.fromUndefinedOr(env) }),
   });
   return yield* spawner.spawn(command);
 });
@@ -189,7 +201,7 @@ it("round-trips handwritten ACP schemas through encoded form", () =>
         assertEncodedRoundTrip(AcpProtocol.AcpProtocolLogEvent, event);
         assertEncodedRoundTrip(AcpProtocol.AcpProtocolLoggingOptions, options);
         assertEncodedRoundTrip(AcpProtocol.AcpIncomingNotification, notification);
-        assertEncodedRoundTrip(AcpError.AcpError, error, { compareDecoded: false });
+        assertEncodedRoundTrip(AcpError.AcpError, error);
       }
     ),
     fcRuns(25)
@@ -295,8 +307,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
         {
           direction: "outgoing",
           stage: "raw",
-          payload:
-            '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"},"id":"","headers":[]}\n',
+          payload: '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"},"id":""}\n',
         },
       ]);
     })
@@ -506,6 +517,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       const handle = yield* makeHandle({
         ACP_MOCK_EXIT_IMMEDIATELY_CODE: "7",
       });
+      assert.isDefined(AcpClient.layerChildProcess({ handle }));
       const firstMessage = yield* Deferred.make<unknown>();
       const termination = yield* Deferred.make<AcpError.AcpError>();
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({

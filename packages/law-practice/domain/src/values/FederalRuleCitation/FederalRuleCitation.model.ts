@@ -8,22 +8,23 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { FederalRuleComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { FederalRuleComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/FederalRuleCitation/FederalRuleCitation.model");
 
 /**
  * Federal Rules of Procedure citation (type: `federalRule`, #576).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds a `federalRule`
  * discriminant tag plus the parsed rule set, rule number, optional subsection
  * chain, and optional component spans. `rule` is a string so leading zeros and
  * non-numeric suffixes are preserved.
  *
- * **Example**
+ * **Example** (Make civil rule citation)
  *
- * @example
  * ```ts
  * import { FederalRuleCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -84,7 +85,8 @@ export class FederalRuleCitation extends S.Class<FederalRuleCitation>($I`Federal
 /**
  * Companion namespace for `FederalRuleCitation`.
  *
- * @example
+ * **Example** (Access Encoded type field)
+ *
  * ```ts
  * import type { FederalRuleCitation } from "@beep/law-practice-domain"
  *
@@ -99,9 +101,8 @@ export declare namespace FederalRuleCitation {
   /**
    * Wire-encoded representation of a decoded {@link FederalRuleCitation}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { FederalRuleCitation } from "@beep/law-practice-domain"
    *

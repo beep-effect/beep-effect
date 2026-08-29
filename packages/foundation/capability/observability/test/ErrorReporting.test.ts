@@ -15,7 +15,7 @@ describe("ErrorReporting", () => {
 
   it("round-trips schema-derived reporter options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(ConsoleErrorReporterOptions), (options) => {
+      fc.property(S.toArbitrary(ConsoleErrorReporterOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(ConsoleErrorReporterOptions)(options),
           S.decodeUnknownOption(ConsoleErrorReporterOptions)
@@ -28,7 +28,7 @@ describe("ErrorReporting", () => {
 
   it("round-trips schema-derived reporter layer options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(ErrorReporterLayerOptions), (options) => {
+      fc.property(S.toArbitrary(ErrorReporterLayerOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(ErrorReporterLayerOptions)(options),
           S.decodeUnknownOption(ErrorReporterLayerOptions)

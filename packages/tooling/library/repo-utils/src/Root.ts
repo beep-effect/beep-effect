@@ -10,7 +10,7 @@
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, pipe } from "effect";
 import * as O from "effect/Option";
-import { NoSuchFileError } from "./errors/index.js";
+import { NoSuchFileError } from "./errors/index.ts";
 
 /**
  * Markers that indicate a repository root directory.
@@ -24,11 +24,12 @@ const ROOT_MARKERS: ReadonlyArray<string> = [".git", "bun.lock"];
  * Find the repository root by walking upward from the given directory
  * (or the current working directory) until a root marker is found.
  *
+ * **Details**
+ *
  * Root markers are `.git` (directory) and `bun.lock` (file).
  *
- * @param startFrom - Optional starting directory. Defaults to `process.cwd()`.
- * @returns An Effect that succeeds with the absolute path of the repo root.
- * @example
+ * **Example** (Find root from cwd)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { findRepoRoot } from "@beep/repo-utils/Root"
@@ -36,6 +37,9 @@ const ROOT_MARKERS: ReadonlyArray<string> = [".git", "bun.lock"];
  * const program = findRepoRoot()
  * console.log(program)
  * ```
+ *
+ * @param startFrom - Optional starting directory. Defaults to `process.cwd()`.
+ * @returns An Effect that succeeds with the absolute path of the repo root.
  * @category utilities
  * @since 0.0.0
  */

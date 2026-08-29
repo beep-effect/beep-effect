@@ -55,17 +55,23 @@ const toolLayerForRoot = (root: string) =>
     Layer.provide(NodeServices.layer)
   );
 
-const withToolkit = <A2, E>(run: (tools: OntologyToolServiceShape, path: OntologyFilePath) => Effect.Effect<A2, E>) =>
+const withToolkit = <A2, E>(
+  run: (
+    tools: OntologyToolServiceShape,
+    path: OntologyFilePath,
+    root: string
+  ) => Effect.Effect<A2, E, FileSystem.FileSystem | Path.Path>
+) =>
   Effect.fnUntraced(function* () {
     return yield* Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const platformPath = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-tools-" });
       yield* fileSystem.writeFileString(platformPath.join(root, "ontology.ttl"), fixtureSource);
-      const path = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.ttl");
+      const path = yield* S.decodeEffect(OntologyFilePath)("ontology.ttl");
       return yield* Effect.gen(function* () {
         const tools = yield* OntologyToolService;
-        return yield* run(tools, path);
+        return yield* run(tools, path, root);
       }).pipe(provideScopedLayer(toolLayerForRoot(root)));
     }).pipe(provideScopedLayer(NodeServices.layer));
   });
@@ -97,8 +103,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
           })
         );
         const validation = yield* tools.validate(ValidateOntologyRequest.make({ path }));
-        const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.prov.ttl");
-        const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.dataset.ttl");
+        const provPath = yield* S.decodeEffect(OntologyFilePath)("ontology.prov.ttl");
+        const datasetPath = yield* S.decodeEffect(OntologyFilePath)("ontology.dataset.ttl");
         const provenance = yield* tools.exportProvenance(
           ExportProvenanceRequest.make({
             path,
@@ -122,6 +128,89 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(provenance.provPath).toBe("ontology.prov.ttl");
         expect(metadata.capabilities).toHaveLength(9);
         expect(metadata.casSemantics).toBe("semantic");
+      })
+    ),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "refuses to overwrite an unrelated existing Turtle file during provenance export",
+    withToolkit((tools, path, root) =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const platformPath = yield* Path.Path;
+        const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
+        const unrelatedPath = yield* S.decodeEffect(OntologyFilePath)("unrelated.ttl");
+        const datasetPath = yield* S.decodeEffect(OntologyFilePath)("ontology.dataset.ttl");
+        const unrelatedSource = "@prefix ex: <https://unrelated.example/> .\nex:subject ex:predicate ex:object .\n";
+        const unrelatedTarget = platformPath.join(root, unrelatedPath);
+        yield* fileSystem.writeFileString(unrelatedTarget, unrelatedSource);
+
+        const refusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath: unrelatedPath,
+              datasetPath,
+            })
+          )
+        );
+        const after = yield* fileSystem.readFileString(unrelatedTarget);
+
+        expect(refusal._tag).toBe("OntologyToolExecutionError");
+        expect(after).toBe(unrelatedSource);
+      })
+    ),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "refuses canonical provenance path aliases",
+    withToolkit((tools, path, root) =>
+      Effect.gen(function* () {
+        const platformPath = yield* Path.Path;
+        const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
+        const sourceAlias = yield* S.decodeEffect(OntologyFilePath)("./ontology.ttl");
+        const absoluteSourceAlias = yield* S.decodeEffect(OntologyFilePath)(platformPath.join(root, "ontology.ttl"));
+        const provPath = yield* S.decodeEffect(OntologyFilePath)("prov.ttl");
+        const datasetPath = yield* S.decodeEffect(OntologyFilePath)("dataset.ttl");
+        const datasetAlias = yield* S.decodeEffect(OntologyFilePath)("./prov.ttl");
+
+        const sourceRefusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath: sourceAlias,
+              datasetPath,
+            })
+          )
+        );
+        const absoluteSourceRefusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath: absoluteSourceAlias,
+              datasetPath,
+            })
+          )
+        );
+        const outputRefusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath,
+              datasetPath: datasetAlias,
+            })
+          )
+        );
+
+        expect(sourceRefusal._tag).toBe("OntologyToolExecutionError");
+        expect(absoluteSourceRefusal._tag).toBe("OntologyToolExecutionError");
+        expect(outputRefusal._tag).toBe("OntologyToolExecutionError");
       })
     ),
     { timeout: 120_000 }

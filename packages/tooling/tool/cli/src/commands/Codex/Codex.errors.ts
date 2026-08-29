@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -23,22 +23,24 @@ type CodexCommandErrorOptions =
 /**
  * Typed failure for Codex helper commands.
  *
- * @example
+ * **Example** (Construct Codex command error)
+ *
  * ```ts
  * import { CodexCommandError } from "@beep/repo-cli/commands/Codex"
  * const error = new CodexCommandError({ message: "failed" })
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class CodexCommandError extends TaggedErrorClass<CodexCommandError>($I`CodexCommandError`)(
+export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`CodexCommandError`)(
   "CodexCommandError",
   {
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CodexCommandError", {
+  $I.annoteError<CodexCommandError>("CodexCommandError", {
     description: "Failure raised by Codex helper commands.",
   })
 ) {

@@ -13,8 +13,9 @@ const $I = $ObservabilityId.create("web/Config");
 /**
  * Browser-only observability configuration.
  *
- * @example
- * ```typescript
+ * **Example** (Creating browser observability config)
+ *
+ * ```ts import.meta.vitest name="Creating browser observability config"
  * import { WebObservabilityConfig } from "@beep/observability/web"
  *
  * const config = WebObservabilityConfig.make({
@@ -25,11 +26,11 @@ const $I = $ObservabilityId.create("web/Config");
  *   resourceAttributes: {},
  * })
  *
- * console.log(config.serviceName) // "todox-web"
+ * config.serviceName // => "todox-web"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WebObservabilityConfig extends S.Class<WebObservabilityConfig>($I`WebObservabilityConfig`)(
   {
@@ -47,8 +48,9 @@ export class WebObservabilityConfig extends S.Class<WebObservabilityConfig>($I`W
 /**
  * Convert browser config into an OpenTelemetry resource shape.
  *
- * @example
- * ```typescript
+ * **Example** (Converting config to resource)
+ *
+ * ```ts import.meta.vitest name="Converting config to resource"
  * import { WebObservabilityConfig, toWebResource } from "@beep/observability/web"
  *
  * const config = WebObservabilityConfig.make({
@@ -60,11 +62,11 @@ export class WebObservabilityConfig extends S.Class<WebObservabilityConfig>($I`W
  * })
  *
  * const resource = toWebResource(config)
- * console.log(resource.serviceName) // "todox-web"
+ * resource.serviceName // => "todox-web"
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const toWebResource = (config: WebObservabilityConfig) => ({
   serviceName: config.serviceName,

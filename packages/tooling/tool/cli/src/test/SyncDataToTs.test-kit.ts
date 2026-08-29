@@ -6,11 +6,14 @@
  */
 
 export * from "@beep/repo-cli/commands/SyncDataToTs/index";
+export * from "@beep/repo-cli/commands/SyncDataToTs/internal/FreeLawProject";
 export * from "@beep/repo-cli/commands/SyncDataToTs/internal/Source";
 export * from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/CldrTerritories";
+export * from "@beep/repo-cli/commands/SyncDataToTs/targets/CourtsDb";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/IanaMediaTypes";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/IanaTimezones";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/Iso3166";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/Iso4217";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/index";
+export * from "@beep/repo-cli/commands/SyncDataToTs/targets/ReportersDb";

@@ -8,11 +8,11 @@
  * @since 0.0.0
  */
 
+import { Unknown } from "@beep/schema/Unknown";
 import { thunkEmptyStr } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import { DomainError } from "./errors/index.js";
+import { DomainError } from "./errors/index.ts";
 
 const prettyGetter = SchemaGetter.stringifyJson({ space: 2 });
 const compactGetter = SchemaGetter.stringifyJson();
@@ -22,15 +22,17 @@ const compactGetter = SchemaGetter.stringifyJson();
  * using `SchemaGetter.stringifyJson`. Returns an Effect with `DomainError`
  * on serialization failure.
  *
- * @effects Wraps schema-backed JSON stringification in `Effect`; no filesystem,
- * process, or project traversal side effects are performed.
- * @example
+ * **Example** (Map pretty JSON length)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils"
  * const program = Effect.map(jsonStringifyPretty({ ok: true }), (json) => json.length)
  * console.log(program)
  * ```
+ *
+ * @effects Wraps schema-backed JSON stringification in `Effect`; no filesystem,
+ * process, or project traversal side effects are performed.
  * @category utilities
  * @since 0.0.0
  */
@@ -48,15 +50,17 @@ export const jsonStringifyPretty: (value: unknown) => Effect.Effect<string, Doma
  * using `SchemaGetter.stringifyJson`. Returns an Effect with `DomainError`
  * on serialization failure.
  *
- * @effects Wraps schema-backed JSON stringification in `Effect`; no filesystem,
- * process, or project traversal side effects are performed.
- * @example
+ * **Example** (Map compact JSON length)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { jsonStringifyCompact } from "@beep/repo-utils/JsonUtils"
  * const program = Effect.map(jsonStringifyCompact({ ok: true }), (json) => json.length)
  * console.log(program)
  * ```
+ *
+ * @effects Wraps schema-backed JSON stringification in `Effect`; no filesystem,
+ * process, or project traversal side effects are performed.
  * @category utilities
  * @since 0.0.0
  */
@@ -73,20 +77,22 @@ export const jsonStringifyCompact: (value: unknown) => Effect.Effect<string, Dom
  * Parse a JSON string into an unknown value using `SchemaGetter.parseJson`.
  * For typed parsing, prefer `Schema.decodeUnknown(Schema.fromJsonString(MySchema))`.
  *
- * @effects Wraps schema-backed JSON parsing in `Effect`; no filesystem,
- * process, or project traversal side effects are performed.
- * @example
+ * **Example** (Map parsed value type)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { jsonParse } from "@beep/repo-utils/JsonUtils"
  * const program = Effect.map(jsonParse("{\"ok\":true}"), (value) => typeof value)
  * console.log(program)
  * ```
+ *
+ * @effects Wraps schema-backed JSON parsing in `Effect`; no filesystem,
+ * process, or project traversal side effects are performed.
  * @category utilities
  * @since 0.0.0
  */
 export const jsonParse: (input: string) => Effect.Effect<unknown, DomainError> = Effect.fn(function* (input) {
-  return yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(input).pipe(
+  return yield* Unknown.decodeEffectFromJsonString(input).pipe(
     Effect.mapError((e) => DomainError.make({ message: `JSON parse failed: ${e.message}`, cause: e }))
   );
 });

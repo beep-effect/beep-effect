@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import * as ProviderInstance from "./entities/ProviderInstance/index.js";
+import * as ProviderInstance from "./entities/ProviderInstance/index.ts";
 
 type DbSchemaShape = {
   readonly providerInstance: typeof ProviderInstance.providerInstanceTable;
@@ -15,7 +15,8 @@ type DbSchemaShape = {
 /**
  * Drizzle schema object containing the agents table projections.
  *
- * @example
+ * **Example** (Validate provider instance table name)
+ *
  * ```ts
  * import { DbSchema } from "@beep/agents-tables/tables"
  * import { getTableName } from "drizzle-orm"
@@ -38,14 +39,13 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type-level view of the agents Drizzle schema object.
  *
- * @example
+ * **Example** (Access typed table name)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/agents-tables/tables"
  *
  * const schema: DbSchemaType = DbSchema
- * const tableName: "agents_provider_instance" = schema.providerInstance.definition.tableName
- *
- * console.log(tableName)
+ * console.log(schema.providerInstance)
  * ```
  *
  * @category tables

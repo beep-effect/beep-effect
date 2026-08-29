@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active` (first packet graduated; 6 more candidates remain)
+Status: `parked` (mirrors roadmap-paused `domain-kernel-hardening`)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -21,16 +21,10 @@ observability, and queryability — Effect-native, schema-first throughout — a
 
 ## Next Open Question
 
-Phase 0 (orient), **Phase 1 (audit), and Phase 2 (external grounding) are all
-complete** — five-slice audit in [`synthesis/10`–`14`](./synthesis/), rollup
-[`19`](./synthesis/19-phase1-crosscutting.md), external grounding
-[`20`](./synthesis/20-external-law-and-ontology.md)+[`21`](./synthesis/21-external-signature-dms-notes-corpus.md);
-decisions resolved (G1–G14 + N1–N8) in [`DECISIONS.md`](./DECISIONS.md).
-**Phase 3 done:** [`BRIEF.md`](./BRIEF.md) + [`MAP.md`](./MAP.md) shape + decompose
-into 7 goal packets; the first — [`domain-kernel-hardening`](../../goals/domain-kernel-hardening/README.md)
-— is **graduated**. **Next:** graduate sibling packets 2–7 as their predecessors
-land (see `MAP.md` sequencing); the initiative now executes through the `goals/`
-packets, not this exploration.
+Resume when roadmap-paused
+[`goals/domain-kernel-hardening`](../../goals/domain-kernel-hardening/README.md)
+unpauses. Packets 2–7 then receive a fresh align/shape pass because the domain
+layer will have drifted.
 
 ## Read This First
 
@@ -39,8 +33,8 @@ packets, not this exploration.
 3. [`RESEARCH.md`](./RESEARCH.md) — in-repo capability inventory (§A, done) + external grounding (§B, pending) (stage 1).
 4. [`synthesis/`](./synthesis/) — per-slice audit matrices + external-corpus syntheses.
 5. [`DECISIONS.md`](./DECISIONS.md) — align log + recommended-answer-first resolutions (stage 2).
-6. [`BRIEF.md`](./BRIEF.md) — shaped pitch (stage 3, not started).
-7. [`MAP.md`](./MAP.md) — decomposition into candidate goals (stage 4, not started).
+6. [`BRIEF.md`](./BRIEF.md) — completed shaped pitch (stage 3).
+7. [`MAP.md`](./MAP.md) — completed decomposition into candidate goals (stage 4).
 
 The approved execution plan lives at
 `~/.claude/plans/use-grill-with-docs-deep-research-vectorized-elephant.md`.
@@ -58,6 +52,13 @@ The approved execution plan lives at
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
 
+- 2026-08-13: parked to mirror roadmap-paused
+  `goals/domain-kernel-hardening`. Resume when that goal unpauses; packets 2–7
+  require a fresh align/shape pass because the domain layer will have drifted.
+
+- 2026-07-14: sibling review held all six remaining candidates behind paused
+  packet 1; recorded six new bounded law-practice goals as packet-5 shaping
+  inputs that must not be duplicated.
 - 2026-06-29: **Adversarial review + fixes.** Ran a 6-dimension multi-agent
   adversarial review (with an independent verify pass). The Phase-1 audit held
   (code-accuracy refuted nothing load-bearing). Applied 3 upheld serious fixes —

@@ -1,9 +1,14 @@
+import * as A from "effect/Array";
 import type { StorybookConfig } from "@storybook/react-vite";
 import type { Plugin } from "vite";
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
 
 // Lexical 0.46 emits two prod bundles with a pure annotation before `return`.
+// The strip plugin is deliberately copied into each Vite composition root
+// (professional-desktop vite.config.ts is the other); a shared tooling package
+// for a two-site workaround is out of this packet's scope.
+// fallow-ignore-next-line code-duplication -- composition-root workaround mirrors professional-desktop's Lexical plugin
 const lexicalReactProdModule =
   /node_modules[\\/]@lexical[\\/]react[\\/]dist[\\/]Lexical(ContentEditable|ErrorBoundary)\.prod\.mjs(?:\?.*)?$/;
 const misplacedPureAnnotationBeforeReturn = /\/\*#__PURE__\*\/\s*(?=return\b)/g;
@@ -22,22 +27,61 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
   },
 });
 
+// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
+// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
+// fallow-ignore-next-line code-duplication -- composition-root resolver mirrors professional-desktop's Vite plugin
+const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
+  name: "beep:resolve-uniform-typescript-source-specifiers",
+  enforce: "pre",
+  resolveId(source, importer, options) {
+    if (importer === undefined || !source.startsWith(".") || !source.endsWith(".ts")) {
+      return null;
+    }
+
+    return this.resolve(source, importer, { ...options, skipSelf: true }).then((exactSource) =>
+      exactSource === null
+        ? this.resolve(source.replace(/\.ts$/, ".tsx"), importer, { ...options, skipSelf: true })
+        : exactSource
+    );
+  },
+});
+
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
-  stories: ["../../../packages/foundation/ui-system/*/stories/**/*.stories.@(ts|tsx)"],
+  stories: [
+    "../../../packages/foundation/ui-system/*/stories/**/*.stories.@(ts|tsx)",
+    // graph-3d driver stories (goal graph-3d-view): the storybook app is a
+    // composition root, so hosting driver stories keeps slice `ui` clean of
+    // driver imports.
+    "../../../packages/drivers/graph-3d/stories/**/*.stories.@(ts|tsx)",
+  ],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-vitest"],
-  staticDirs: [{ from: "../../../node_modules/emojibase-data", to: "/emojibase-data" }],
+  staticDirs: [
+    { from: "../../../node_modules/emojibase-data", to: "/emojibase-data" },
+    // beep brand assets (favicon, wordmark) for the manager chrome; see manager.ts. Served as
+    // static files on purpose: the manager bundle must not import @beep/brand (effect/Schema).
+    { from: "../../../packages/foundation/ui-system/brand/assets", to: "/brand" },
+  ],
+  managerHead: (head) => `${head}<link rel="icon" type="image/svg+xml" href="./brand/favicon.svg" />`,
   viteFinal(config) {
-    const dedupe = Array.from(new Set(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]));
-    const fsAllow = Array.from(new Set([repoRoot, ...(config.server?.fs?.allow ?? [])]));
+    const dedupe = A.dedupe(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]);
+    const fsAllow = A.dedupe([repoRoot, ...(config.server?.fs?.allow ?? [])]);
 
     return {
       ...config,
+      build: {
+        ...config.build,
+        chunkSizeWarningLimit: 1_250,
+      },
       resolve: {
         ...config.resolve,
         dedupe,
       },
-      plugins: [stripMisplacedLexicalPureAnnotations(), ...(config.plugins ?? [])],
+      plugins: [
+        resolveUniformTypeScriptSourceSpecifiers(),
+        stripMisplacedLexicalPureAnnotations(),
+        ...(config.plugins ?? []),
+      ],
       server: {
         ...config.server,
         fs: {

@@ -8,7 +8,6 @@
 "use client";
 
 import * as BrowserHttpClient from "@effect/platform-browser/BrowserHttpClient";
-import * as BrowserKeyValueStore from "@effect/platform-browser/BrowserKeyValueStore";
 import { Layer } from "effect";
 import { Atom } from "effect/unstable/reactivity";
 
@@ -16,12 +15,11 @@ const oipAtomRuntimeFactory = Atom.context({
   memoMap: Layer.makeMemoMapUnsafe(),
 });
 
-const oipBrowserLayer = Layer.mergeAll(BrowserHttpClient.layerFetch, BrowserKeyValueStore.layerLocalStorage);
-
 /**
  * Browser runtime mounted by the OIP app provider.
  *
- * @example
+ * **Example** (Logging browser runtime)
+ *
  * ```ts
  * import { oipBrowserRuntime } from "@beep/oip-web/runtime/OipAtomRuntime"
  *
@@ -31,4 +29,4 @@ const oipBrowserLayer = Layer.mergeAll(BrowserHttpClient.layerFetch, BrowserKeyV
  * @category runtime
  * @since 0.0.0
  */
-export const oipBrowserRuntime = oipAtomRuntimeFactory(oipBrowserLayer);
+export const oipBrowserRuntime = oipAtomRuntimeFactory(BrowserHttpClient.layerFetch);

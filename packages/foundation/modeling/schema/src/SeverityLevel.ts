@@ -15,17 +15,18 @@ const SeverityLevelBase = LiteralKit(["low", "medium", "high", "critical"]);
 /**
  * Generic four-level severity scale: `"low"`, `"medium"`, `"high"`, `"critical"`.
  *
- * @example
- * ```ts
+ * **Example** (Decode high severity level)
+ *
+ * ```ts import.meta.vitest name="Decode high severity level"
  * import * as S from "effect/Schema"
  * import { SeverityLevel } from "@beep/schema/SeverityLevel"
  *
  * const level = S.decodeUnknownSync(SeverityLevel)("high")
- * console.log(level) // "high"
+ * level // => "high"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SeverityLevel = SeverityLevelBase.pipe(
   $I.annoteSchema("SeverityLevel", {
@@ -36,16 +37,17 @@ export const SeverityLevel = SeverityLevelBase.pipe(
 /**
  * Type for {@link SeverityLevel}.
  *
- * @example
- * ```ts
+ * **Example** (Type critical severity value)
+ *
+ * ```ts import.meta.vitest name="Type critical severity value"
  * import * as S from "effect/Schema"
  * import { SeverityLevel } from "@beep/schema/SeverityLevel"
  *
  * const severity: SeverityLevel = S.decodeUnknownSync(SeverityLevel)("critical")
- * console.log(severity) // "critical"
+ * severity // => "critical"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SeverityLevel = typeof SeverityLevel.Type;

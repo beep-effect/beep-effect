@@ -6,7 +6,7 @@ import {
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderInstanceRpcs, ProviderUnauthenticated } from "@beep/agents-use-cases/public";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -16,7 +16,7 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as RpcTest from "effect/unstable/rpc/RpcTest";
 
 const instance = S.decodeUnknownSync(ProviderInstance)({
-  ...baseEntityFixtureInput("AgentsProviderInstance", 7),
+  ...productEntityFixtureInput("AgentsProviderInstance", 7),
   binaryPath: "/usr/bin/codex",
   envVars: {},
   homePath: null,
@@ -56,8 +56,9 @@ const makeRegistry = () =>
   });
 
 describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, () => {
-  it.effect("reads provider instances through the injected transport", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reads provider instances through the injected transport",
+    Effect.fnUntraced(function* () {
       listReads = 0;
       probeFailure = O.none();
       const registry = makeRegistry();
@@ -74,8 +75,9 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
     })
   );
 
-  it.effect("invalidates the provider-instance list after a probe", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "invalidates the provider-instance list after a probe",
+    Effect.fnUntraced(function* () {
       listReads = 0;
       probeFailure = O.none();
       const registry = makeRegistry();
@@ -94,8 +96,9 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
     })
   );
 
-  it.effect("surfaces ProviderUnauthenticated guidance to the caller", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "surfaces ProviderUnauthenticated guidance to the caller",
+    Effect.fnUntraced(function* () {
       const guidance = "Run `codex login` in your terminal, then probe again.";
       const error = ProviderUnauthenticated.make({ providerInstanceId: instance.id, guidance });
       probeFailure = O.some(error);

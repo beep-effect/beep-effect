@@ -12,21 +12,21 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { jsonObjectTextFromMixedOutput } from "../../../internal/cli/MixedOutputJson.ts";
 import {
   resolveLocalRepoBinary,
   runRepoCommandCapture,
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
-} from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.js";
+} from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { YeetRunOptions } from "../Yeet.schemas.js";
+import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/TurboQuery");
-const decodeJsonTextOption = S.decodeUnknownOption(S.UnknownFromJsonString);
 
 class TurboQueryAffectedReason extends S.Class<TurboQueryAffectedReason>($I`TurboQueryAffectedReason`)(
   {
@@ -131,64 +131,6 @@ const shouldCollectAffectedFeedbackTasks = (mode: YeetRunMode): boolean =>
     status: () => false,
     "pre-push-hook": () => false,
   });
-
-const isEscapedQuote = (output: string, index: number): boolean => {
-  let backslashCount = 0;
-  for (let cursor = index - 1; cursor >= 0 && output[cursor] === "\\"; cursor -= 1) {
-    backslashCount += 1;
-  }
-  return backslashCount % 2 === 1;
-};
-
-// Single forward pass that records every balanced top-level `{...}` span.
-// Tracking brace depth and string state once is O(n); the previous
-// per-closing-brace backward rescan was O(n^2) on output with many unmatched
-// `}` characters and let a large untruncated subprocess buffer hang the CLI.
-// The brace-depth/string-state machine is intentionally inlined as one linear
-// scan; splitting it would break the single-pass O(n) guarantee that bounds the
-// CLI hang fix.
-// fallow-ignore-next-line complexity
-const balancedTopLevelObjectSpans = (output: string): ReadonlyArray<readonly [number, number]> => {
-  let spans = A.empty<readonly [number, number]>();
-  let depth = 0;
-  let openIndex = -1;
-  let inString = false;
-  const length = Str.length(output);
-
-  for (let cursor = 0; cursor < length; cursor += 1) {
-    const char = output[cursor];
-    if (char === '"' && !isEscapedQuote(output, cursor)) {
-      inString = !inString;
-      continue;
-    }
-    if (inString) {
-      continue;
-    }
-    if (char === "{") {
-      if (depth === 0) {
-        openIndex = cursor;
-      }
-      depth += 1;
-      continue;
-    }
-    if (char === "}" && depth > 0) {
-      depth -= 1;
-      if (depth === 0) {
-        spans = A.append(spans, [openIndex, cursor + 1] as const);
-      }
-    }
-  }
-
-  return spans;
-};
-
-const jsonObjectTextFromMixedOutput = (output: string): O.Option<string> =>
-  pipe(
-    balancedTopLevelObjectSpans(output),
-    A.reverse,
-    A.map(([start, end]) => Str.slice(start, end)(output)),
-    A.findFirst((candidate) => O.isSome(decodeJsonTextOption(candidate)))
-  );
 
 /**
  * Extract the last decodable JSON object from mixed command output for tests.
@@ -344,12 +286,14 @@ export const decodeTurboPlanTasksFromQueryJsonForTesting = decodeTurboPlanTasksF
 /**
  * Collect the Turbo package catalog and affected feedback-task snapshot.
  *
- * @example
+ * **Example** (Collect turbo plan snapshot)
+ *
  * ```ts
  * import { collectTurboPlanSnapshot, defaultYeetRunOptions } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(collectTurboPlanSnapshot(".", defaultYeetRunOptions()))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

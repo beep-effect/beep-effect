@@ -7,7 +7,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity";
-import { OntologyGraphProjection } from "@beep/ontology-use-cases/aggregates/Session/worker";
+import { Session } from "@beep/ontology-use-cases/worker";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
@@ -15,7 +15,22 @@ import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 
 const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike.rpc");
 
-const SyntheticProjectionNodeCount = S.Int.check(
+/**
+ * Positive node or element count accepted by the synthetic projection spike.
+ *
+ * **Example** (Schema validation of positive count)
+ *
+ * ```ts
+ * import { SyntheticProjectionNodeCount } from "@/spikes/CosmosSpike.rpc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SyntheticProjectionNodeCount)(1)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SyntheticProjectionNodeCount = S.Int.check(
   S.isGreaterThan(0, {
     identifier: $I`SyntheticProjectionNodeCountCheck`,
     title: "Synthetic projection node count",
@@ -28,7 +43,39 @@ const SyntheticProjectionNodeCount = S.Int.check(
   })
 );
 
-const SyntheticProjectionCount = S.Int.check(
+/**
+ * Runtime type for a positive synthetic projection node or element count.
+ *
+ * **Example** (Constructing branded node count)
+ *
+ * ```ts
+ * import { SyntheticProjectionNodeCount } from "@/spikes/CosmosSpike.rpc"
+ *
+ * const count: SyntheticProjectionNodeCount = SyntheticProjectionNodeCount.make(1)
+ * console.log(count)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SyntheticProjectionNodeCount = typeof SyntheticProjectionNodeCount.Type;
+
+/**
+ * Non-negative edge or aggregate count accepted by the synthetic projection spike.
+ *
+ * **Example** (Schema validation of zero count)
+ *
+ * ```ts
+ * import { SyntheticProjectionCount } from "@/spikes/CosmosSpike.rpc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SyntheticProjectionCount)(0)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SyntheticProjectionCount = S.Int.check(
   S.isGreaterThanOrEqualTo(0, {
     identifier: $I`SyntheticProjectionCountCheck`,
     title: "Synthetic projection count",
@@ -41,6 +88,23 @@ const SyntheticProjectionCount = S.Int.check(
   })
 );
 
+/**
+ * Runtime type for a non-negative synthetic projection edge or aggregate count.
+ *
+ * **Example** (Constructing branded zero count)
+ *
+ * ```ts
+ * import { SyntheticProjectionCount } from "@/spikes/CosmosSpike.rpc"
+ *
+ * const count: SyntheticProjectionCount = SyntheticProjectionCount.make(0)
+ * console.log(count)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SyntheticProjectionCount = typeof SyntheticProjectionCount.Type;
+
 const SyntheticProjectionSeed = SyntheticProjectionCount.pipe(
   S.withConstructorDefault(Effect.succeed(97)),
   S.withDecodingDefaultKey(Effect.succeed(97)),
@@ -52,7 +116,8 @@ const SyntheticProjectionSeed = SyntheticProjectionCount.pipe(
 /**
  * Response returned by the synthetic projection worker.
  *
- * @example
+ * **Example** (Accessing response schema fields)
+ *
  * ```ts
  * import { SyntheticProjectionResponse } from "@/spikes/CosmosSpike.rpc"
  *
@@ -64,8 +129,8 @@ const SyntheticProjectionSeed = SyntheticProjectionCount.pipe(
  */
 export class SyntheticProjectionResponse extends S.Class<SyntheticProjectionResponse>($I`SyntheticProjectionResponse`)(
   {
-    elementCount: SyntheticProjectionCount,
-    projection: OntologyGraphProjection,
+    elementCount: SyntheticProjectionNodeCount,
+    projection: Session.OntologyGraphProjection,
   },
   $I.annote("SyntheticProjectionResponse", {
     description: "Synthetic ontology graph projection returned across the worker RPC boundary.",
@@ -75,7 +140,8 @@ export class SyntheticProjectionResponse extends S.Class<SyntheticProjectionResp
 /**
  * Builds a deterministic synthetic ontology graph projection in a browser worker.
  *
- * @example
+ * **Example** (Inspecting RPC protocol tag)
+ *
  * ```ts
  * import { ProjectSyntheticGraphRpc } from "@/spikes/CosmosSpike.rpc"
  *
@@ -97,7 +163,8 @@ const ProjectSyntheticGraphRpc = Rpc.make("ProjectSyntheticGraph", {
 /**
  * RPC group served by the Cosmos projection worker.
  *
- * @example
+ * **Example** (Checking registered RPC request)
+ *
  * ```ts
  * import { CosmosSpikeRpcs } from "@/spikes/CosmosSpike.rpc"
  *
@@ -112,7 +179,8 @@ export const CosmosSpikeRpcs = RpcGroup.make(ProjectSyntheticGraphRpc);
 /**
  * Decoded payload accepted by {@link ProjectSyntheticGraphRpc}.
  *
- * @example
+ * **Example** (Satisfying request payload type)
+ *
  * ```ts
  * import type { ProjectSyntheticGraphRequest } from "@/spikes/CosmosSpike.rpc"
  *

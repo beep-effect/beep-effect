@@ -8,22 +8,23 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { FederalRegisterComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { FederalRegisterComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/FederalRegisterCitation/FederalRegisterCitation.model");
 
 /**
  * A parsed Federal Register citation (type: `federalRegister`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `federalRegister`
  * discriminant, the Federal Register volume and page, an optional publication
  * year, and the optional {@link FederalRegisterComponentSpan} locating each
  * recognized sub-part within the source text.
  *
- * **Example**
+ * **Example** (Construct Federal Register citation)
  *
- * @example
  * ```ts
  * import { FederalRegisterCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -83,7 +84,8 @@ export class FederalRegisterCitation extends S.Class<FederalRegisterCitation>($I
 /**
  * Companion namespace for `FederalRegisterCitation`.
  *
- * @example
+ * **Example** (Read Encoded type field)
+ *
  * ```ts
  * import type { FederalRegisterCitation } from "@beep/law-practice-domain"
  *
@@ -98,9 +100,8 @@ export declare namespace FederalRegisterCitation {
   /**
    * Wire-encoded representation of a decoded {@link FederalRegisterCitation}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { FederalRegisterCitation } from "@beep/law-practice-domain"
    *

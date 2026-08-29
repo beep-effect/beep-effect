@@ -61,7 +61,9 @@ completion gate satisfied.
 
 - **Supersedes** (ledger surgery 2026-07-05): `agent-effectiveness-phoenix-enrichment`,
   `agent-effectiveness-workflow-integration`, `yeet-operator-clarity` (P5 residue),
-  `yeet-pr-closeout-loop`. Continues `repo-quality-throughput` numbering at **rqt-011**.
+  `yeet-pr-closeout-loop`. Absorbed sequencing constraints and deferred UX are
+  recorded in [`history/absorbed-constraints.md`](./history/absorbed-constraints.md).
+  Continues `repo-quality-throughput` numbering at **rqt-011**.
 - **Fable-direct mandate**: Phase-D (pipeline) analysis/redesign is performed by
   Fable itself; Codex executes only Fable-specified mechanical changes.
 - Single PR; crispen constrained to optimization-serving refactors (debt ledger for the rest).

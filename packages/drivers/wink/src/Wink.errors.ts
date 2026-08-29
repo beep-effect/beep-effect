@@ -6,7 +6,7 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -24,7 +24,8 @@ const getEntityNameOption = (options: { readonly entityName?: string | undefined
 /**
  * Typed failure for initializing or reading from the wink runtime.
  *
- * @example
+ * **Example** (Create engine error from cause)
+ *
  * ```ts
  * import { WinkEngineError } from "@beep/wink"
  *
@@ -35,14 +36,14 @@ const getEntityNameOption = (options: { readonly entityName?: string | undefined
  * @category errors
  * @since 0.0.0
  */
-export class WinkEngineError extends TaggedErrorClass<WinkEngineError>($I`WinkEngineError`)(
+export class WinkEngineError extends S.TaggedError<WinkEngineError>($I`WinkEngineError`)(
   "WinkEngineError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
     operation: S.String,
   },
-  $I.annote("WinkEngineError", {
+  $I.annoteError<WinkEngineError>("WinkEngineError", {
     description: "Failure raised while creating or accessing the wink-nlp runtime.",
   })
 ) {
@@ -70,7 +71,8 @@ export class WinkEngineError extends TaggedErrorClass<WinkEngineError>($I`WinkEn
 /**
  * Typed failure for wink document reads, token collection, and token counts.
  *
- * @example
+ * **Example** (Create tokenization error with text)
+ *
  * ```ts
  * import { WinkTokenizationError } from "@beep/wink"
  *
@@ -84,15 +86,15 @@ export class WinkEngineError extends TaggedErrorClass<WinkEngineError>($I`WinkEn
  * @category errors
  * @since 0.0.0
  */
-export class WinkTokenizationError extends TaggedErrorClass<WinkTokenizationError>($I`WinkTokenizationError`)(
+export class WinkTokenizationError extends S.TaggedError<WinkTokenizationError>($I`WinkTokenizationError`)(
   "WinkTokenizationError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
     operation: S.String,
     text: S.OptionFromOptionalKey(S.String),
   },
-  $I.annote("WinkTokenizationError", {
+  $I.annoteError<WinkTokenizationError>("WinkTokenizationError", {
     description: "Failure raised while tokenizing text with wink-nlp.",
   })
 ) {
@@ -123,7 +125,8 @@ export class WinkTokenizationError extends TaggedErrorClass<WinkTokenizationErro
 /**
  * Typed failure for learning or updating wink custom entity patterns.
  *
- * @example
+ * **Example** (Create entity error with name)
+ *
  * ```ts
  * import { WinkEntityError } from "@beep/wink"
  *
@@ -137,15 +140,15 @@ export class WinkTokenizationError extends TaggedErrorClass<WinkTokenizationErro
  * @category errors
  * @since 0.0.0
  */
-export class WinkEntityError extends TaggedErrorClass<WinkEntityError>($I`WinkEntityError`)(
+export class WinkEntityError extends S.TaggedError<WinkEntityError>($I`WinkEntityError`)(
   "WinkEntityError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     entityName: S.OptionFromOptionalKey(S.String),
     message: S.String,
     operation: S.String,
   },
-  $I.annote("WinkEntityError", {
+  $I.annoteError<WinkEntityError>("WinkEntityError", {
     description: "Failure raised while learning or managing wink custom entities.",
   })
 ) {
@@ -176,7 +179,8 @@ export class WinkEntityError extends TaggedErrorClass<WinkEntityError>($I`WinkEn
 /**
  * Tagged schema union for all wink runtime failures exposed by this module.
  *
- * @example
+ * **Example** (Check error against WinkError union)
+ *
  * ```ts
  * import { WinkEngineError, WinkError } from "@beep/wink"
  *
@@ -199,7 +203,8 @@ export const WinkError = S.Union([WinkEngineError, WinkEntityError, WinkTokeniza
 /**
  * Type-level companion for the {@link WinkError} schema union.
  *
- * @example
+ * **Example** (Assign WinkError schema type)
+ *
  * ```ts
  * import { WinkError } from "@beep/wink"
  * import type { WinkError as WinkErrorSchema } from "@beep/wink"

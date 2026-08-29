@@ -10,19 +10,21 @@ import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.js";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.schemas");
 
 /**
  * Source of a scorer violation.
  *
- * @example
+ * **Example** (Check is.tsgo predicate)
+ *
  * ```ts
  * import { AgentEffectivenessEvalViolationSource } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
  * console.log(AgentEffectivenessEvalViolationSource.is.tsgo("tsgo"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -35,13 +37,15 @@ export const AgentEffectivenessEvalViolationSource = LiteralKit(["schema-first",
 /**
  * Source of a scorer violation.
  *
- * @example
+ * **Example** (Type completion source value)
+ *
  * ```ts
  * import type { AgentEffectivenessEvalViolationSource } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
  * const source: AgentEffectivenessEvalViolationSource = "completion"
  * console.log(source) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -95,7 +99,8 @@ class SkillOptTaskWeights extends S.Class<SkillOptTaskWeights>($I`SkillOptTaskWe
 /**
  * SkillOpt task manifest consumed by the scorer.
  *
- * @example
+ * **Example** (Make SkillOpt task manifest)
+ *
  * ```ts
  * import { SkillOptTaskManifest } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
@@ -110,6 +115,7 @@ class SkillOptTaskWeights extends S.Class<SkillOptTaskWeights>($I`SkillOptTaskWe
  * })
  * console.log(task.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,7 +144,8 @@ export class SkillOptTaskManifest extends S.Class<SkillOptTaskManifest>($I`Skill
 /**
  * One scorer violation in the fixed P2/P3 contract shape.
  *
- * @example
+ * **Example** (Make scorer violation object)
+ *
  * ```ts
  * import { AgentEffectivenessEvalViolation } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
@@ -151,6 +158,7 @@ export class SkillOptTaskManifest extends S.Class<SkillOptTaskManifest>($I`Skill
  * })
  * console.log(violation.source)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -172,12 +180,14 @@ export class AgentEffectivenessEvalViolation extends S.Class<AgentEffectivenessE
 /**
  * Fixed scorer output breakdown.
  *
- * @example
+ * **Example** (Verify breakdown is defined)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScoreBreakdown } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.schemas"
  *
  * console.log(typeof AgentEffectivenessEvalScoreBreakdown !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -198,7 +208,8 @@ export class AgentEffectivenessEvalScoreBreakdown extends S.Class<AgentEffective
 /**
  * Fixed scorer JSON report.
  *
- * @example
+ * **Example** (Make score report object)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScoreBreakdown, AgentEffectivenessEvalScoreReport } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
@@ -210,6 +221,7 @@ export class AgentEffectivenessEvalScoreBreakdown extends S.Class<AgentEffective
  * })
  * console.log(report.score)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -230,12 +242,14 @@ export class AgentEffectivenessEvalScoreReport extends S.Class<AgentEffectivenes
 /**
  * Result of recording a scorer report in ai-metrics.
  *
- * @example
+ * **Example** (Verify record result defined)
+ *
  * ```ts
  * import { AgentEffectivenessEvalRecordResult } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.schemas"
  *
  * console.log(typeof AgentEffectivenessEvalRecordResult !== "undefined") // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -256,7 +270,8 @@ const taskManifestJsonCodec = JsonStringCodec(SkillOptTaskManifest);
 /**
  * Decode a SkillOpt task manifest JSON string.
  *
- * @example
+ * **Example** (Decode task manifest JSON)
+ *
  * ```ts
  * import { decodeTaskManifestJson } from "@beep/repo-cli/commands/AgentEffectiveness"
  * import { Effect } from "effect"
@@ -264,6 +279,7 @@ const taskManifestJsonCodec = JsonStringCodec(SkillOptTaskManifest);
  * const manifest = '{"id":"task","ruleIds":[],"derivedFrom":[],"prompt":"p","fixture":"fixture","entrypoint":"src/index.ts","completion":{}}'
  * console.log(Effect.isEffect(decodeTaskManifestJson(manifest)))
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -275,7 +291,8 @@ const scoreReportJsonCodec = JsonStringCodec(AgentEffectivenessEvalScoreReport);
 /**
  * Encode a score report as the fixed compact JSON output.
  *
- * @example
+ * **Example** (Encode score report JSON)
+ *
  * ```ts
  * import { AgentEffectivenessEvalScoreBreakdown, AgentEffectivenessEvalScoreReport, encodeAgentEffectivenessEvalScoreReportJson } from "@beep/repo-cli/commands/AgentEffectiveness"
  * import { Effect } from "effect"
@@ -288,6 +305,7 @@ const scoreReportJsonCodec = JsonStringCodec(AgentEffectivenessEvalScoreReport);
  * })
  * console.log(Effect.isEffect(encodeAgentEffectivenessEvalScoreReportJson(report)))
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

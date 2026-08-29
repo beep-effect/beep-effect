@@ -9,16 +9,15 @@ import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { GhActor, GhComment } from "../../../../internal/github/index.js";
-import { GreptileSummary } from "./Closeout.schemas.js";
-import type { GhReviewThread } from "./Gh.schemas.js";
+import { GhActor, GhComment } from "../../../../internal/github/index.ts";
+import { GreptileSummary } from "./Closeout.schemas.ts";
+import type { GhReviewThread } from "./Gh.schemas.ts";
 
 /**
  * Return a GitHub actor login with a stable fallback for missing authors.
  *
- * @param author - GitHub actor from a comment or review payload.
- * @returns The actor login, or `"unknown"` when GitHub omits the author.
- * @example
+ * **Example** (Login and null fallback)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { authorLogin } from "@beep/repo-cli/test/Yeet"
@@ -26,6 +25,9 @@ import type { GhReviewThread } from "./Gh.schemas.js";
  * strictEqual(authorLogin({ login: "greptile-ai" }), "greptile-ai")
  * strictEqual(authorLogin(null), "unknown")
  * ```
+ *
+ * @param author - GitHub actor from a comment or review payload.
+ * @returns The actor login, or `"unknown"` when GitHub omits the author.
  * @category getters
  * @since 0.0.0
  */
@@ -39,11 +41,8 @@ const textMatchesAnyToken = (tokens: ReadonlyArray<string>, value: string): bool
 /**
  * Check whether an actor login contains one of the configured bot tokens.
  *
- * @param tokens - Lowercase bot-name tokens such as `greptile` or
- * `coderabbit`.
- * @param author - GitHub actor to classify.
- * @returns Whether the author login contains any configured token.
- * @example
+ * **Example** (Bot token matching checks)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { isBotComment } from "@beep/repo-cli/test/Yeet"
@@ -51,6 +50,11 @@ const textMatchesAnyToken = (tokens: ReadonlyArray<string>, value: string): bool
  * strictEqual(isBotComment(["coderabbit"], { login: "coderabbitai" }), true)
  * strictEqual(isBotComment({ login: "reviewer" })(["coderabbit"]), false)
  * ```
+ *
+ * @param tokens - Lowercase bot-name tokens such as `greptile` or
+ * `coderabbit`.
+ * @param author - GitHub actor to classify.
+ * @returns Whether the author login contains any configured token.
  * @category guards
  * @since 0.0.0
  */
@@ -64,9 +68,8 @@ export const isBotComment: {
 /**
  * Check whether an actor is Greptile-authored.
  *
- * @param author - GitHub actor to classify.
- * @returns Whether the login contains the Greptile token.
- * @example
+ * **Example** (Greptile versus other bots)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { isGreptileComment } from "@beep/repo-cli/test/Yeet"
@@ -74,6 +77,9 @@ export const isBotComment: {
  * strictEqual(isGreptileComment({ login: "greptile-ai" }), true)
  * strictEqual(isGreptileComment({ login: "coderabbitai" }), false)
  * ```
+ *
+ * @param author - GitHub actor to classify.
+ * @returns Whether the login contains the Greptile token.
  * @category guards
  * @since 0.0.0
  */
@@ -109,10 +115,8 @@ const parseIssueCount = (body: string): O.Option<number> => {
 /**
  * Parse the latest Greptile score and issue-count signal from PR comments.
  *
- * @param comments - Pull request comments ordered from oldest to newest.
- * @returns Parsed Greptile summary from the latest comment carrying Greptile
- * signal, or an empty summary when none is present.
- * @example
+ * **Example** (Parse score from comment)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { latestGreptileSummary } from "@beep/repo-cli/test/Yeet"
@@ -128,6 +132,10 @@ const parseIssueCount = (body: string): O.Option<number> => {
  *
  * strictEqual(summary.score, "5/5")
  * ```
+ *
+ * @param comments - Pull request comments ordered from oldest to newest.
+ * @returns Parsed Greptile summary from the latest comment carrying Greptile
+ * signal, or an empty summary when none is present.
  * @category parsing
  * @since 0.0.0
  */
@@ -148,9 +156,8 @@ export const latestGreptileSummary: (comments: ReadonlyArray<GhComment>) => Grep
 /**
  * Count unresolved, non-outdated review threads authored by Greptile.
  *
- * @param threads - Review threads fetched from the pull request.
- * @returns Active Greptile-authored thread count.
- * @example
+ * **Example** (Count unresolved Greptile threads)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GhReviewThread, GhReviewThreadCommentConnection, greptileAuthoredReviewThreadCount } from "@beep/repo-cli/test/Yeet"
@@ -169,6 +176,9 @@ export const latestGreptileSummary: (comments: ReadonlyArray<GhComment>) => Grep
  *
  * strictEqual(greptileAuthoredReviewThreadCount([thread]), 1)
  * ```
+ *
+ * @param threads - Review threads fetched from the pull request.
+ * @returns Active Greptile-authored thread count.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -185,10 +195,8 @@ export const greptileAuthoredReviewThreadCount: (threads: ReadonlyArray<GhReview
 /**
  * Count unresolved, non-outdated review threads authored by a named bot.
  *
- * @param threads - Review threads fetched from the pull request.
- * @param token - Bot-login token to match against nested thread comments.
- * @returns Active review-thread count for the matching bot token.
- * @example
+ * **Example** (Count matching bot threads)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { botAuthoredReviewThreadCount, GhReviewThread, GhReviewThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
@@ -207,6 +215,10 @@ export const greptileAuthoredReviewThreadCount: (threads: ReadonlyArray<GhReview
  *
  * strictEqual(botAuthoredReviewThreadCount([thread], "coderabbit"), 1)
  * ```
+ *
+ * @param threads - Review threads fetched from the pull request.
+ * @param token - Bot-login token to match against nested thread comments.
+ * @returns Active review-thread count for the matching bot token.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -229,10 +241,8 @@ export const botAuthoredReviewThreadCount: {
 /**
  * Count top-level pull request comments authored by a named bot.
  *
- * @param comments - Top-level pull request comments.
- * @param token - Bot-login token to match against comment authors.
- * @returns Count of comments whose author login contains the token.
- * @example
+ * **Example** (Count matching bot comments)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { botCommentCount } from "@beep/repo-cli/test/Yeet"
@@ -243,6 +253,10 @@ export const botAuthoredReviewThreadCount: {
  *
  * strictEqual(botCommentCount(comments, "chatgpt"), 1)
  * ```
+ *
+ * @param comments - Top-level pull request comments.
+ * @param token - Bot-login token to match against comment authors.
+ * @returns Count of comments whose author login contains the token.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -263,12 +277,8 @@ const hasGreptileEvidence = (summary: GreptileSummary, activeThreadCount: number
 /**
  * Fill a missing Greptile issue count from active Greptile-authored threads.
  *
- * @param summary - Parsed Greptile summary from comments.
- * @param activeThreadCount - Count of unresolved Greptile-authored review
- * threads.
- * @returns Summary with inferred `issueCount` only when Greptile evidence is
- * present.
- * @example
+ * **Example** (Fill issue count from threads)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GreptileSummary, inferGreptileIssueCount } from "@beep/repo-cli/test/Yeet"
@@ -277,6 +287,12 @@ const hasGreptileEvidence = (summary: GreptileSummary, activeThreadCount: number
  *
  * strictEqual(summary.issueCount, 2)
  * ```
+ *
+ * @param summary - Parsed Greptile summary from comments.
+ * @param activeThreadCount - Count of unresolved Greptile-authored review
+ * threads.
+ * @returns Summary with inferred `issueCount` only when Greptile evidence is
+ * present.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -300,9 +316,8 @@ type GreptileSummaryCommentInput = {
 /**
  * Parse the latest Greptile summary from simplified comment inputs.
  *
- * @param comments - Simplified comment inputs ordered from oldest to newest.
- * @returns Parsed Greptile summary from the latest bot-authored summary comment.
- * @example
+ * **Example** (Parse simplified summary comments)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { latestGreptileSummaryForTesting } from "@beep/repo-cli/test/Yeet"
@@ -317,6 +332,9 @@ type GreptileSummaryCommentInput = {
  *
  * strictEqual(summary.issueCount, 0)
  * ```
+ *
+ * @param comments - Simplified comment inputs ordered from oldest to newest.
+ * @returns Parsed Greptile summary from the latest bot-authored summary comment.
  * @category testing
  * @since 0.0.0
  */
@@ -340,16 +358,16 @@ export const latestGreptileSummaryForTesting = (
 /**
  * Fill a missing Greptile issue count from active Greptile-authored thread count.
  *
+ * **Details**
+ *
  * Inference is only applied when there is positive evidence that Greptile ran:
  * a parsed summary score/url/issue count, or at least one active Greptile-authored
  * review thread. When no Greptile evidence exists the issue count is left
  * undefined so the closeout gate stays fail-closed instead of treating a missing
  * Greptile result as zero issues.
  *
- * @param summary - Parsed Greptile summary.
- * @param activeThreadCount - Unresolved, non-outdated Greptile-authored thread count.
- * @returns Summary with an inferred issue count only when Greptile evidence is present.
- * @example
+ * **Example** (Infer count from thread evidence)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { GreptileSummary, inferGreptileIssueCountForTesting } from "@beep/repo-cli/test/Yeet"
@@ -358,6 +376,10 @@ export const latestGreptileSummaryForTesting = (
  *
  * strictEqual(summary.issueCount, 3)
  * ```
+ *
+ * @param summary - Parsed Greptile summary.
+ * @param activeThreadCount - Unresolved, non-outdated Greptile-authored thread count.
+ * @returns Summary with an inferred issue count only when Greptile evidence is present.
  * @category testing
  * @since 0.0.0
  */

@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for secure HTTP header option schemas.
  *
- * @example
+ * **Example** (Import SecureHeaderOptions namespace)
+ *
  * ```ts
  * import * as SecureHeaderOptions from "@beep/schema/SecureHeaderOptions"
  *

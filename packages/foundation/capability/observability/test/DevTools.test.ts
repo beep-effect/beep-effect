@@ -13,7 +13,7 @@ describe("DevTools", () => {
 
     expect(shouldPublish("Http.server")).toBe(true);
     expect(shouldPublish("Sql.query")).toBe(false);
-    expect(O.isSome(S.decodeUnknownOption(DevToolsSpanFilter)(shouldPublish))).toBe(true);
-    expect(O.isSome(S.decodeUnknownOption(LayerFilteredDevToolsOptions)(options))).toBe(true);
+    expect(O.isSome(S.decodeOption(DevToolsSpanFilter)(shouldPublish))).toBe(true);
+    expect(O.isSome(S.decodeOption(LayerFilteredDevToolsOptions)(options))).toBe(true);
   });
 });

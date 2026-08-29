@@ -3,8 +3,6 @@
   "tagDefinitions": [
     { "tagName": "@category", "syntaxKind": "block", "allowMultiple": false },
     { "tagName": "@since", "syntaxKind": "block", "allowMultiple": false },
-    { "tagName": "@module", "syntaxKind": "block", "allowMultiple": false },
-    { "tagName": "@template", "syntaxKind": "block", "allowMultiple": true },
     {
       "tagName": "@description",
       "syntaxKind": "block",
@@ -61,8 +59,6 @@
     "@virtual": true,
     "@category": true,
     "@since": true,
-    "@module": true,
-    "@template": true,
     "@description": true,
     "@private": true,
     "@domain": true,

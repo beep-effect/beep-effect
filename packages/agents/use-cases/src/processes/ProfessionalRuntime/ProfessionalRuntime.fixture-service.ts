@@ -4,20 +4,26 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
+import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import { RuntimeScope } from "./ProfessionalRuntime.contracts.js";
-import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.js";
-import { runRuntimeFixture } from "./ProfessionalRuntime.fixtures.js";
-import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.js";
-import type { CandidateOutputSet, RuntimeEvidenceRef, SdkContextPacket } from "./ProfessionalRuntime.contracts.js";
-import type { RuntimeFixtureInput } from "./ProfessionalRuntime.fixtures.js";
-import type { GetContextPacket } from "./ProfessionalRuntime.queries.js";
-import type { ProfessionalRuntimeSdk } from "./ProfessionalRuntime.service.js";
-import type { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
+import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
+import {
+  ProfessionalRuntimePromotionBlocked,
+  ProfessionalRuntimeValidationError,
+} from "./ProfessionalRuntime.errors.ts";
+import { runRuntimeFixture } from "./ProfessionalRuntime.fixtures.ts";
+import type { PromotionGateShape } from "@beep/shared-use-cases/server";
+import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
+import type { CandidateOutputSet, RuntimeEvidenceRef, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
+import type { RuntimeFixtureInput } from "./ProfessionalRuntime.fixtures.ts";
+import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
+import type { ProfessionalRuntimeSdk } from "./ProfessionalRuntime.service.ts";
+import type { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
 const ensure = (condition: boolean, message: string): Effect.Effect<void, ProfessionalRuntimeValidationError> =>
   condition ? Effect.void : ProfessionalRuntimeValidationError.failEffect(message);
@@ -42,7 +48,7 @@ const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<st
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
 
 // TODO(effect-native-migration): model schema
-const toPlainJson = (value: unknown): string => S.encodeUnknownSync(S.UnknownFromJsonString)(value);
+const toPlainJson = (value: unknown): string => Unknown.encodeUnknownSyncFromJsonString(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
   ...O.toArray(evidence.spanId),
@@ -184,21 +190,63 @@ const validateOutputSet = (
     : ProfessionalRuntimeValidationError.failEffect(`${outputSet.scenarioId}: ${A.join(issues, "; ")}`);
 };
 
+const requirePromotionClear = Effect.fn("agents.professional_runtime.require_promotion_clear")(function* (
+  gate: PromotionGateShape,
+  command: ProposeCandidateOutputSet,
+  promotionSubjects: RuntimeFixtureInput["promotionSubjects"]
+) {
+  const evaluateSubjects = Effect.forEach(
+    promotionSubjects,
+    (subject) =>
+      gate
+        .evaluate(
+          PromotionGateRequest.make({
+            subject,
+            tenantRef: PromotionTenantRef.make(command.scope.organizationId),
+          })
+        )
+        .pipe(
+          Effect.flatMap((verdict) =>
+            PromotionGateVerdict.match(verdict, {
+              blocked: ({ reason }) =>
+                Effect.annotateCurrentSpan({ "agents.professional_runtime.promotion_outcome": "blocked" }).pipe(
+                  Effect.andThen(ProfessionalRuntimePromotionBlocked.failEffect(subject, reason))
+                ),
+              clear: () => Effect.void,
+            })
+          )
+        ),
+    { discard: true }
+  );
+
+  // The first pass establishes policy clearance before acceptance work. The
+  // second pass is the acceptance-time revision check: vertical gates must
+  // re-read their authority, so a citation appended during the first pass is
+  // visible before this function returns an accepted candidate.
+  yield* evaluateSubjects;
+  yield* evaluateSubjects;
+
+  yield* Effect.annotateCurrentSpan({ "agents.professional_runtime.promotion_outcome": "clear" });
+});
+
 /**
  * Create an in-memory SDK facade over deterministic runtime fixture inputs.
  *
- * @remarks
+ * **Details**
+ *
  * The facade looks up fixtures by scenario id, validates requested scope and
  * artifact ids, and only accepts proposed output sets that exactly match the
  * deterministic fixture output.
  *
- * @example
+ * **Example** (In-memory SDK fixture lookup)
+ *
  * ```ts
  * import {
  *   RuntimeFixtureInput,
  *   makeInMemoryProfessionalRuntimeSdk
  * } from "@beep/agents-use-cases/proof"
  * import { GetContextPacket, RuntimeScope } from "@beep/agents-use-cases/public"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
  * import { Effect } from "effect"
  *
  * const fixture = RuntimeFixtureInput.make({
@@ -215,6 +263,7 @@ const validateOutputSet = (
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",
@@ -222,7 +271,10 @@ const validateOutputSet = (
  *   }
  * })
  *
- * const sdk = makeInMemoryProfessionalRuntimeSdk([fixture])
+ * const sdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [fixture],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * const program = sdk.getContextPacket(
  *   GetContextPacket.make({
  *     artifactId: "email-artifact-law-001",
@@ -243,11 +295,12 @@ const validateOutputSet = (
  * @category constructors
  * @since 0.0.0
  */
-export const makeInMemoryProfessionalRuntimeSdk = (
-  fixtures: ReadonlyArray<RuntimeFixtureInput>
-): ProfessionalRuntimeSdk => ({
+export const makeInMemoryProfessionalRuntimeSdk = (options: {
+  readonly fixtures: ReadonlyArray<RuntimeFixtureInput>;
+  readonly promotionGate: PromotionGateShape;
+}): ProfessionalRuntimeSdk => ({
   getContextPacket: Effect.fn("ProfessionalRuntimeSdk.getContextPacket")(function* (query: GetContextPacket) {
-    const outputSet = yield* outputForScenario(fixtures, query.scenarioId);
+    const outputSet = yield* outputForScenario(options.fixtures, query.scenarioId);
 
     yield* ensure(
       outputSet.contextPacket.request.artifactId === query.artifactId,
@@ -263,7 +316,8 @@ export const makeInMemoryProfessionalRuntimeSdk = (
   proposeCandidateOutputSet: Effect.fn("ProfessionalRuntimeSdk.proposeCandidateOutputSet")(function* (
     command: ProposeCandidateOutputSet
   ) {
-    const generatedOutputSet = yield* outputForScenario(fixtures, command.outputSet.scenarioId);
+    const fixture = yield* fixtureForScenario(options.fixtures, command.outputSet.scenarioId);
+    const generatedOutputSet = yield* runRuntimeFixture(fixture);
 
     yield* ensure(
       sameScope(command.outputSet.contextPacket.scope, command.scope),
@@ -274,6 +328,8 @@ export const makeInMemoryProfessionalRuntimeSdk = (
       toPlainJson(command.outputSet) === toPlainJson(generatedOutputSet),
       `${command.outputSet.scenarioId}: proposed output set does not match deterministic fixture output`
     );
+    yield* requirePromotionClear(options.promotionGate, command, fixture.promotionSubjects);
+    yield* Effect.annotateCurrentSpan({ "agents.professional_runtime.outcome": "accepted" });
 
     return command.outputSet;
   }),

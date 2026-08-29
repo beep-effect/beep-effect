@@ -39,12 +39,15 @@ class TokenizeSuccess extends S.Class<TokenizeSuccess>($I`TokenizeSuccess`)(
  * Defines the agent-facing tool contract for tokenizing text into annotated
  * linguistic tokens.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs token text, lemmas, stems, part-of-speech
  * tags, stop-word flags, punctuation flags, and character offsets for each
  * token in a document.
  *
- * @example
- * ```ts
+ * **Example** (Decode tokenize parameters)
+ *
+ * ```ts import.meta.vitest name="Decode tokenize parameters"
  * import * as S from "effect/Schema"
  * import { Tokenize } from "@beep/nlp-processing/Tools/Tokenize"
  *

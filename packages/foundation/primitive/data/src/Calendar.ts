@@ -19,8 +19,9 @@ import * as internal from "./internal/data/calendar/index.ts";
 /**
  * Union of lowercase English month name strings.
  *
- * @example
- * ```typescript
+ * **Example** (Assign lowercase month name)
+ *
+ * ```ts import.meta.vitest name="Assign lowercase month name"
  * import type { MonthName } from "@beep/data/Calendar"
  *
  * const month: MonthName = "january"
@@ -35,8 +36,9 @@ export type MonthName = (typeof internal.MonthNameValues)[number];
 /**
  * Union of capitalized English month name strings.
  *
- * @example
- * ```typescript
+ * **Example** (Assign capitalized month name)
+ *
+ * ```ts import.meta.vitest name="Assign capitalized month name"
  * import type { FormalMonthName } from "@beep/data/Calendar"
  *
  * const month: FormalMonthName = "January"
@@ -51,8 +53,9 @@ export type FormalMonthName = (typeof internal.FormalMonthNameValues)[number];
 /**
  * Union of month number literals from 1 through 12.
  *
- * @example
- * ```typescript
+ * **Example** (Assign month number literals)
+ *
+ * ```ts import.meta.vitest name="Assign month number literals"
  * import type { MonthNumber } from "@beep/data/Calendar"
  *
  * const jan: MonthNumber = 1
@@ -68,8 +71,9 @@ export type MonthNumber = (typeof internal.MonthNumberValues)[number];
 /**
  * Union of two-digit ISO month code strings from `"01"` through `"12"`.
  *
- * @example
- * ```typescript
+ * **Example** (Assign ISO month code)
+ *
+ * ```ts import.meta.vitest name="Assign ISO month code"
  * import type { MonthISO } from "@beep/data/Calendar"
  *
  * const jan: MonthISO = "01"
@@ -84,8 +88,9 @@ export type MonthISO = (typeof internal.MonthISOValues)[number];
 /**
  * Union of lowercase English weekday name strings.
  *
- * @example
- * ```typescript
+ * **Example** (Assign lowercase weekday name)
+ *
+ * ```ts import.meta.vitest name="Assign lowercase weekday name"
  * import type { WeekName } from "@beep/data/Calendar"
  *
  * const day: WeekName = "monday"
@@ -100,8 +105,9 @@ export type WeekName = (typeof internal.Weekday.WeekNameValues)[number];
 /**
  * Union of capitalized English weekday name strings.
  *
- * @example
- * ```typescript
+ * **Example** (Assign capitalized weekday name)
+ *
+ * ```ts import.meta.vitest name="Assign capitalized weekday name"
  * import type { FormalWeekName } from "@beep/data/Calendar"
  *
  * const day: FormalWeekName = "Monday"
@@ -120,8 +126,9 @@ export type FormalWeekName = (typeof internal.Weekday.FormalWeekNameValues)[numb
 /**
  * Ordered tuple of all twelve lowercase English month names.
  *
- * @example
- * ```typescript
+ * **Example** (Read ordered month names)
+ *
+ * ```ts import.meta.vitest name="Read ordered month names"
  * import { MonthNameValues } from "@beep/data/Calendar"
  *
  * console.assert(MonthNameValues[0] === "january" && MonthNameValues[11] === "december")
@@ -135,8 +142,9 @@ export const MonthNameValues: typeof internal.MonthNameValues = internal.MonthNa
 /**
  * Ordered tuple of all twelve capitalized English month names.
  *
- * @example
- * ```typescript
+ * **Example** (Read formal month names)
+ *
+ * ```ts import.meta.vitest name="Read formal month names"
  * import { FormalMonthNameValues } from "@beep/data/Calendar"
  *
  * console.assert(FormalMonthNameValues[0] === "January")
@@ -150,8 +158,9 @@ export const FormalMonthNameValues: typeof internal.FormalMonthNameValues = inte
 /**
  * Ordered tuple of month numbers from 1 through 12.
  *
- * @example
- * ```typescript
+ * **Example** (Read ordered month numbers)
+ *
+ * ```ts import.meta.vitest name="Read ordered month numbers"
  * import { MonthNumberValues } from "@beep/data/Calendar"
  *
  * console.assert(MonthNumberValues[0] === 1 && MonthNumberValues[11] === 12)
@@ -165,8 +174,9 @@ export const MonthNumberValues: typeof internal.MonthNumberValues = internal.Mon
 /**
  * Ordered tuple of two-digit ISO month code strings from `"01"` through `"12"`.
  *
- * @example
- * ```typescript
+ * **Example** (Read ISO month codes)
+ *
+ * ```ts import.meta.vitest name="Read ISO month codes"
  * import { MonthISOValues } from "@beep/data/Calendar"
  *
  * console.assert(MonthISOValues[0] === "01" && MonthISOValues[11] === "12")
@@ -180,8 +190,9 @@ export const MonthISOValues: typeof internal.MonthISOValues = internal.MonthISOV
 /**
  * Ordered tuple of all seven lowercase English weekday names, starting with Sunday.
  *
- * @example
- * ```typescript
+ * **Example** (Read ordered weekday names)
+ *
+ * ```ts import.meta.vitest name="Read ordered weekday names"
  * import { WeekNameValues } from "@beep/data/Calendar"
  *
  * console.assert(WeekNameValues[0] === "sunday" && WeekNameValues[1] === "monday")
@@ -195,8 +206,9 @@ export const WeekNameValues: typeof internal.Weekday.WeekNameValues = internal.W
 /**
  * Ordered tuple of all seven capitalized English weekday names, starting with Sunday.
  *
- * @example
- * ```typescript
+ * **Example** (Read formal weekday names)
+ *
+ * ```ts import.meta.vitest name="Read formal weekday names"
  * import { FormalWeekNameValues } from "@beep/data/Calendar"
  *
  * console.assert(FormalWeekNameValues[0] === "Sunday" && FormalWeekNameValues[1] === "Monday")

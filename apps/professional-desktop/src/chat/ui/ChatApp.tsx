@@ -3,7 +3,7 @@
  * {@link Composer} into the chat layout.
  *
  * The desktop is single-workspace for now, so a v1 default workspace id
- * ({@link DEFAULT_WORKSPACE_ID}) feeds {@link threadsAtoms} and
+ * ({@link DEFAULT_PROFESSIONAL_WORKSPACE_ID}) feeds {@link threadsAtoms} and
  * {@link createThreadAtom}. The active thread is the user's explicit
  * {@link selectedThreadAtom} selection, falling back to the most recent thread
  * in the list — mirroring the POC's "follow the list" behavior.
@@ -15,29 +15,28 @@
 "use client";
 
 import { createThreadAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
-import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Button } from "@beep/ui/components/button";
-import { OrbBackground } from "@beep/ui/components/orb-background";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@beep/ui/components/resizable";
 import { A, DateTime, O } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Order } from "effect";
-import * as S from "effect/Schema";
+import { Effect, Order, Stream } from "effect";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import { Composer } from "./Composer.tsx";
-import { SIDEBAR_MAX_PERCENT, SIDEBAR_MIN_PERCENT, sidebarPercentAtom, sidebarSize } from "./layout.atoms.ts";
+import {
+  persistSidebarLayoutAtom,
+  SIDEBAR_MAX_PERCENT,
+  SIDEBAR_MIN_PERCENT,
+  SIDEBAR_PANE_ID,
+  sidebarPercentAtom,
+  sidebarSize,
+} from "./layout.atoms.ts";
 import { Sidebar } from "./Sidebar.tsx";
 import { Thread } from "./Thread.tsx";
+import { YouTubeWatchOpener } from "./YouTubeWatchOpener.tsx";
+import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { JSX } from "react";
-
-/**
- * The v1 default workspace the desktop chat operates in.
- *
- * The desktop chat surface is single-workspace for this increment; threads are
- * created and listed against this id. A workspace switcher arrives once the
- * desktop owns multiple workspaces.
- */
-const DEFAULT_WORKSPACE_ID: WorkspaceIdentity.WorkspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1);
 
 const byUpdatedDesc = Order.mapInput(
   Order.Number,
@@ -50,26 +49,23 @@ const byUpdatedDesc = Order.mapInput(
 // recent thread (below). Fires once per mount; a non-empty list (including the
 // freshly created thread) or an existing selection keeps it from re-firing.
 const autoNewThreadBinding = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  Atom.make((get) => {
-    let created = false;
-    const ensureThread = (): void => {
-      if (created) return;
-      const threads = get.once(threadsAtoms(workspaceId));
-      if (!AsyncResult.isSuccess(threads) || threads.value.length > 0) return;
-      if (O.isSome(get.once(selectedThreadAtom))) return;
-      created = true;
-      get.set(createThreadAtom, { workspaceId, title: "New thread" });
-    };
-    ensureThread();
-    get.subscribe(threadsAtoms(workspaceId), ensureThread);
-    return undefined;
-  })
+  professionalBrowserRuntime.atom((get) =>
+    get.stream(threadsAtoms(workspaceId)).pipe(
+      Stream.filter(AsyncResult.isSuccess),
+      Stream.map((threads) => threads.value),
+      Stream.filter(A.isReadonlyArrayEmpty),
+      Stream.filter(() => O.isNone(get.once(selectedThreadAtom))),
+      Stream.take(1),
+      Stream.runForEach(() => Effect.sync(() => get.set(createThreadAtom, { workspaceId, title: "New thread" })))
+    )
+  )
 );
 
 /**
  * The composed desktop chat application.
  *
- * @example
+ * **Example** (Log ChatApp component name)
+ *
  * ```tsx
  * import { ChatApp } from "@/chat/ui/ChatApp"
  *
@@ -81,14 +77,14 @@ const autoNewThreadBinding = Atom.family((workspaceId: WorkspaceIdentity.Workspa
  */
 export function ChatApp(): JSX.Element {
   const selected = useAtomValue(selectedThreadAtom);
-  const threads = useAtomValue(threadsAtoms(DEFAULT_WORKSPACE_ID));
+  const threads = useAtomValue(threadsAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const createThread = useAtomSet(createThreadAtom);
   // auto-create a thread when the workspace is empty (see binding above).
-  useAtomMount(autoNewThreadBinding(DEFAULT_WORKSPACE_ID));
+  useAtomMount(autoNewThreadBinding(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   // Clamped on the way out, not on the way in: a width persisted by an older build
   // must not be able to hand back a sidebar the user cannot drag.
   const storedPercent = useAtomValue(sidebarPercentAtom);
-  const setSidebarPercent = useAtomSet(sidebarPercentAtom);
+  const persistSidebarLayout = useAtomSet(persistSidebarLayoutAtom);
 
   // active thread: the explicit selection, else the most recent thread.
   const active = O.orElse(selected, () =>
@@ -105,40 +101,38 @@ export function ChatApp(): JSX.Element {
     // shell owns the viewport; a surface fills what it is given, and only the panes
     // inside it scroll.
     <div
-      className="relative isolate flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
       data-testid="chat-app"
     >
-      <OrbBackground tone="green" intensity="subtle" />
+      <YouTubeWatchOpener />
       {/* No second title bar. The app's nav already says where you are, and this
           header only repeated it — costing a strip of vertical height on the one
           surface that needs it most, and hiding the theme control where the other
           three surfaces could not reach it. Both now live in the shell's nav. */}
-      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1" data-testid="chat-panes">
+      <ResizablePanelGroup
+        orientation="horizontal"
+        className="min-h-0 flex-1"
+        data-testid="chat-panes"
+        onLayoutChanged={(layout, meta) => persistSidebarLayout({ layout, isUserInteraction: meta.isUserInteraction })}
+      >
         {/* Sizes are percent STRINGS. react-resizable-panels reads a bare `number` as
             PIXELS — so `minSize={14} maxSize={40}` pinned the sidebar into a 14-to-40
             *pixel* range, which is a sliver you cannot read and cannot drag back out of.
-            The percentages are also why the size is taken from `onResize`, which reports
-            `asPercentage` outright, rather than from the group's layout map, which
-            reports raw flex-grow. */}
+            The completed group layout reports percentage values and is persisted only
+            after the user releases the separator, so atom updates cannot interrupt an
+            active pointer drag. */}
         <ResizablePanel
-          id="sidebar-pane"
+          id={SIDEBAR_PANE_ID}
           defaultSize={sidebarSize(storedPercent)}
           minSize={sidebarSize(SIDEBAR_MIN_PERCENT)}
           maxSize={sidebarSize(SIDEBAR_MAX_PERCENT)}
-          // `inPixels > 0` skips the mount pass, before the group has been measured:
-          // persisting a zero there would restore a collapsed sidebar next launch.
-          onResize={(size) => {
-            if (size.inPixels > 0) setSidebarPercent(size.asPercentage);
-          }}
           className="min-w-0"
         >
-          <Sidebar workspaceId={DEFAULT_WORKSPACE_ID} />
+          <Sidebar workspaceId={DEFAULT_PROFESSIONAL_WORKSPACE_ID} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel id="main-pane" minSize="40%" className="min-w-0">
-          {/* bg-background/60 damps the shared orb glow so the content area reads
-              quieter than the header and sidebar (Taskade-style ambience). */}
-          <main className="flex h-full min-h-0 flex-col bg-background/60">
+          <main className="flex h-full min-h-0 flex-col bg-background">
             {O.match(active, {
               onNone: () => (
                 <div className="flex flex-1 items-center justify-center text-center" data-testid="chat-no-thread">
@@ -161,7 +155,9 @@ export function ChatApp(): JSX.Element {
                         variant="outline"
                         className="mt-4"
                         data-testid="chat-no-thread-create"
-                        onClick={() => createThread({ workspaceId: DEFAULT_WORKSPACE_ID, title: "New thread" })}
+                        onClick={() =>
+                          createThread({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID, title: "New thread" })
+                        }
                       >
                         + New thread
                       </Button>

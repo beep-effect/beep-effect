@@ -44,7 +44,8 @@ type ResolvedHeader = {
 /**
  * Aggregate input options for configuring all secure response headers.
  *
- * @example
+ * **Example** (Make SecureHeaderOptions instance)
+ *
  * ```ts
  * import { SecureHeaderOptions } from "@beep/schema/SecureHeaderOptions"
  *
@@ -52,8 +53,8 @@ type ResolvedHeader = {
  * console.log(options)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureHeaderOptions`)(
   {
@@ -61,12 +62,12 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
     crossOriginEmbedderPolicy: S.optionalKey(CrossOriginEmbedderPolicyOption),
     crossOriginOpenerPolicy: S.optionalKey(CrossOriginOpenerPolicyOption),
     crossOriginResourcePolicy: S.optionalKey(CrossOriginResourcePolicyOption),
-    expectCT: S.optionalKey(ExpectCTOption),
+    expectCT: ExpectCTOption.pipe(S.toEncoded, S.optionalKey),
     forceHttpsRedirect: S.optionalKey(ForceHttpsRedirectOption),
     frameGuard: S.optionalKey(FrameGuardOption),
     noopen: S.optionalKey(NoOpenOption),
     nosniff: S.optionalKey(NoSniffOption),
-    permissionsPolicy: S.optionalKey(PermissionsPolicyOption),
+    permissionsPolicy: PermissionsPolicyOption.pipe(S.toEncoded, S.optionalKey),
     permittedCrossDomainPolicies: S.optionalKey(PermittedCrossDomainPoliciesOption),
     referrerPolicy: S.optionalKey(ReferrerPolicyOption),
     xssProtection: S.optionalKey(XSSProtectionOption),
@@ -79,7 +80,8 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
 /**
  * A rendered secure header pair in `{ key, value }` format.
  *
- * @example
+ * **Example** (Make SecureHeaderEntry pair)
+ *
  * ```ts
  * import { SecureHeaderEntry } from "@beep/schema/SecureHeaderOptions"
  *
@@ -87,8 +89,8 @@ export class SecureHeaderOptions extends S.Class<SecureHeaderOptions>($I`SecureH
  * console.log(entry)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SecureHeaderEntry extends S.Class<SecureHeaderEntry>($I`SecureHeaderEntry`)(
   {
@@ -148,20 +150,20 @@ const resolveHeaders = Effect.fnUntraced(function* (
 /**
  * Resolve secure-header options into a plain `Record<string, string>` header object.
  *
- * @example
- * ```ts
+ * **Example** (Create headers record object)
+ *
+ * ```ts import.meta.vitest name="Create headers record object"
  * import { Effect } from "effect"
  * import { createHeadersObject } from "@beep/schema/SecureHeaderOptions"
  *
  * const headers = Effect.runSync(createHeadersObject({ nosniff: "nosniff" }))
- * console.log(headers["X-Content-Type-Options"]) // "nosniff"
+ * headers["X-Content-Type-Options"] // => "nosniff"
  * ```
  *
  * @effects
  * Resolves configured secure-header options in memory; it performs no I/O.
- *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersObject")(function* (
   options: SecureHeaderOptions = {}
@@ -180,20 +182,20 @@ export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersO
 /**
  * Resolve secure-header options into an array of {@link SecureHeaderEntry} pairs.
  *
- * @example
- * ```ts
+ * **Example** (Create SecureHeaderEntry array)
+ *
+ * ```ts import.meta.vitest name="Create SecureHeaderEntry array"
  * import { Effect } from "effect"
  * import { createSecureHeaders } from "@beep/schema/SecureHeaderOptions"
  *
  * const headers = Effect.runSync(createSecureHeaders({ nosniff: "nosniff" }))
- * console.log(headers[0]?.key) // "X-Content-Type-Options"
+ * headers[3]?.key // => "X-Content-Type-Options"
  * ```
  *
  * @effects
  * Resolves configured secure-header options in memory; it performs no I/O.
- *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const createSecureHeaders = Effect.fn("SecureHeaderOptions.createSecureHeaders")(function* (
   options: SecureHeaderOptions = {}

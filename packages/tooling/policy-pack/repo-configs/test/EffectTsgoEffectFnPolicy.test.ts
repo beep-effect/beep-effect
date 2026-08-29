@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -6,17 +7,18 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import * as jsonc from "jsonc-parser";
+import typescript from "typescript";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
+const tscBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
 const tsgoBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo", import.meta.url));
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)));
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
   stream.pipe(
@@ -97,26 +99,28 @@ const bootstrapTsgoProject = Effect.fn(function* (projectDir: string) {
   );
 });
 
-const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
-  const path = yield* Path.Path;
-  const command = ChildProcess.make(
-    process.execPath,
-    [tsgoBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")],
-    {
-      cwd: projectDir,
-      stdout: "pipe",
-      stderr: "pipe",
-    }
-  );
-
+const runCommand = Effect.fn("EffectTsgoEffectFnPolicy.runCommand")(function* (
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string
+) {
+  const child = ChildProcess.make(command, args, {
+    cwd,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
   return yield* Effect.scoped(
     Effect.gen(function* () {
-      const handle = yield* command;
-      const result = yield* Effect.all({
-        stdout: collectText(handle.stdout),
-        stderr: collectText(handle.stderr),
-        exitCode: handle.exitCode,
-      });
+      const handle = yield* child;
+      const result = yield* Effect.all(
+        {
+          stdout: collectText(handle.stdout),
+          stderr: collectText(handle.stderr),
+          exitCode: handle.exitCode,
+        },
+        { concurrency: 3 }
+      );
 
       return {
         stdout: Str.trim(result.stdout),
@@ -125,6 +129,36 @@ const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
       };
     })
   );
+});
+
+const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
+  const path = yield* Path.Path;
+  return yield* runCommand(
+    process.execPath,
+    [tsgoBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")],
+    projectDir
+  );
+});
+
+describe("TypeScript compiler routing", () => {
+  it("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const [tsc, tsgo] = yield* Effect.all(
+          [
+            runCommand(process.execPath, [tscBinPath, "--version"], repoRoot),
+            runCommand(process.execPath, [tsgoBinPath, "--version"], repoRoot),
+          ],
+          { concurrency: 1 }
+        );
+
+        expect(tsc.exitCode).toBe(0);
+        expect(tsgo.exitCode).toBe(0);
+        expect(tsc.stdout).toBe(tsgo.stdout);
+        expect(tsc.stdout).toMatch(/^Version 7\..*\+effect-tsgo\./u);
+        expect(typescript.version).toMatch(/^6\./u);
+      }).pipe(provideScopedLayer(TestLayer))
+    ));
 });
 
 describe("Effect tsgo effectFn policy", () => {

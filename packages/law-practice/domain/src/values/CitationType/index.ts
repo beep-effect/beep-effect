@@ -9,9 +9,8 @@
 /**
  * Citation-type model exports.
  *
- * **Example**
+ * **Example** (Import CitationType)
  *
- * @example
  * ```ts
  * import { CitationType } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationType.model.js";
+export * from "./CitationType.model.ts";

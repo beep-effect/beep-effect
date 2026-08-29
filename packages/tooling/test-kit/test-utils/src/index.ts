@@ -13,32 +13,32 @@
  * @category testing
  * @since 0.0.0
  */
-export * from "./Entity.js";
+export * from "./Entity.ts";
 /**
  * Fast-check run-count helper exports.
  *
  * @category testing
  * @since 0.0.0
  */
-export * from "./FastCheckRuns.js";
+export * from "./FastCheckRuns.ts";
 /**
  * Effect layer test helper exports.
  *
  * @category testing
  * @since 0.0.0
  */
-export * from "./Layer.js";
+export * from "./Layer.ts";
 /**
  * Schema property-test helper exports.
  *
  * @category schema
  * @since 0.0.0
  */
-export * from "./Schema.js";
+export * from "./Schema.ts";
 /**
  * SQL test utility exports.
  *
  * @category testing
  * @since 0.0.0
  */
-export * from "./SqlTest.js";
+export * from "./SqlTest.ts";

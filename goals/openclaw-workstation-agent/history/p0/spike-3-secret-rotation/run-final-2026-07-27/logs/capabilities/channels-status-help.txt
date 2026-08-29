@@ -1,0 +1,14 @@
+
+OpenClaw 2026.7.1-2 (0790d9f) — All your chats, one OpenClaw.
+
+Usage: openclaw channels status [options]
+
+Show gateway channel status (use status --deep for local)
+
+Options:
+  --channel <name>  Only show one channel
+                    (all|telegram|whatsapp|discord|irc|googlechat|slack|signal|imessage|feishu|nostr|msteams|mattermost|nextcloud-talk|matrix|raft|line|zalo|clickclack|zalouser|sms|synology-chat|tlon|qa-channel|qqbot|twitch)
+  -h, --help        Display help for command
+  --json            Output JSON (default: false)
+  --probe           Probe channel credentials (default: false)
+  --timeout <ms>    Timeout in ms (default: "10000")

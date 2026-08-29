@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "boolean-creep",
+    "title": "Boolean-Creep Eradication",
+    "status": "active",
+    "created": "2026-08-17",
+    "updated": "2026-08-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/boolean-creep",
+  "lifecycle": "active",
+  "mission": "Confirm every parallel-boolean flattening of a single domain state variable with cited E1-E4 evidence, then refactor confirmed instances to LiteralKit/tagged-union/option-literal shapes that delete their coherence guards.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "",
+    "note": "Graduated from the 2026-08-17 boolean-creep grill session and its ratified operator prompt (WebStorm scratch COMMON_CODE_SMELL.md). Not graduated from an explorations/ packet."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/boolean-creep/README.md",
+    "goals/boolean-creep/SPEC.md",
+    "goals/boolean-creep/DECISIONS.md",
+    "goals/boolean-creep/PLAN.md",
+    "goals/boolean-creep/GOAL.md",
+    "goals/boolean-creep/data/inventory.jsonl",
+    "goals/boolean-creep/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/boolean-creep/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Bootstrap packet",
+      "status": "complete",
+      "exit": "Packet on disk; inventory seeded (10 confirmed + 4 disqualified) and schema-valid; DECISIONS.md seeded."
+    },
+    {
+      "id": "P1",
+      "name": "Inventory sweep (grok lanes) to GATE 1",
+      "status": "in-progress",
+      "exit": "Corpus swept until dry; lane outputs merged and spot-checked; Benjamin ratifies the confirmed inventory."
+    },
+    {
+      "id": "P2",
+      "name": "Design (codex Sol medium)",
+      "status": "pending",
+      "exit": "One reviewed design per confirmed instance under designs/, zero orchestrator findings; Benjamin ratifies (GATE 2)."
+    },
+    {
+      "id": "P3",
+      "name": "Apply + land (tiered PRs via yeet)",
+      "status": "pending",
+      "exit": "Tier 1 batches and Tier 2 singles mergeable; inventory statuses advanced to applied."
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending",
+      "exit": "Reflection and lifecycle flip land in the same PR as the final work."
+    }
+  ],
+  "verificationCommands": [
+    "bun goals/boolean-creep/ops/validate-inventory.ts",
+    "test \"$(wc -m < goals/boolean-creep/GOAL.md)\" -le 4000",
+    "jq . goals/boolean-creep/ops/manifest.json",
+    "git diff --check -- goals/boolean-creep",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A sweep lane cannot honor the evidence gate after one prompt correction.",
+    "A design requires persisted/wire encoded-shape changes without a viable compat proof.",
+    "Verification failures attribute as inherited/unrelated/environment-only.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "provides": ["quality/boolean-creep-eradication"],
+  "requires": []
+}

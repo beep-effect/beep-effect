@@ -1,173 +1,132 @@
 {
   "version": 1,
   "skills": {
+    "adhd": {
+      "source": "UditAkhourii/adhd",
+      "sourceType": "github",
+      "computedHash": "80f91a41407324331584093cba54c260bc17402f8777923a70d6550d045bb972",
+      "ref": "main",
+      "skillPath": "skills/adhd/SKILL.md"
+    },
     "atom-reactivity-specialist": {
       "source": "repo-local",
       "sourceType": "local",
       "computedHash": "a87b7f054119d2031ca502ae169cd8172fb589c039e6b6f58769be3d423394ef"
     },
-    "claude-frontend-lane": {
+    "browser-qa-loop": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "c2ab8c801870e92749c966002199e42f1f54091d034aac98a3a7a2749b4fa9e2"
+      "computedHash": "c814cbdb06e3efd668bb2d27dfc20fba62e6dcc2a4d13556b8e752c062992cd8"
+    },
+    "codex-findings": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "c93df7e8afc1fe41dbf5ee31a82f71d8d063a99d286ba56e8700cf55690caddf"
     },
     "crispen": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "cc4f223b9f9dd54842bf32ebb375c01ef69ed2f0cb2b3e3d4736d316ce2c29f9"
+      "computedHash": "57c69242293951527226c3dced9116d98acfa39ae8a138eec1f7e9367cde6f66"
     },
     "effect-first-development": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "d6dcfaa4ba49518aef3e8b52be8d122c213028bda5dba61cc99dc0ced63b185b"
-    },
-    "effect-services": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "312c6fd02f3b3a523975efa14a8a713c84a1563bb01146eb16d49bb324ef91c3"
-    },
-    "effect-v4-imports": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "ef9017b17f61af636932ab9f2c91238f78a65adf4c956952c0e13cf06aeb05d7"
+      "computedHash": "a69c3d4c0911b34025a6759df0a8bfc6b0e5db20d8c81fbd872bb933b48e39b4"
     },
     "explore": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "8d247c47a64b47db2fd037467191dd5224ceac638e4f47eb442af44341a7c7cb"
+      "computedHash": "18c388bc12f6fc8e4ec751d4065bbd2c2312ae8f06b37c84a7121f3aaa30d712"
     },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
-      "computedHash": "5b1d529b1b9575934bb8512d194153f28c7b376c5441a5767203a28c75b1f412",
+      "computedHash": "0a4f8c315b9013756b96d77844edb47e75eb2ddc58d4981ba66e8ac080cc8bc2",
       "ref": "main",
       "skillPath": "skills/productivity/grill-me/SKILL.md"
     },
     "grill-with-docs": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "d6f395710bc291dedb674a99196016a7d195a6117e30e59fa5bc8b26710cd0af"
+      "computedHash": "3e4649223efcbc43fb8917b9a54fe1a2699045d2803701b8735f8e9799584a44"
+    },
+    "grilling": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "30c601f54ccdb52a166f78c95e7891408fd07513490f5c137e5eff13f181a4d1"
     },
     "jsdoc-annotation-specialist": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "10416ab9cef6cae0dfb84e3725ab40147fa876f5e9e62b83f8025be5eabb7c7b"
+      "computedHash": "654e69f1aecec30f6873dda433ef4339a157c83d37f608a0854f3000c6bc3889"
     },
-    "mcp-graphiti-memory": {
+    "motion-evidence-review": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "df29f3fa1a8a8a5c623db0568d54a64f4de591aa0407f582ab857dc37fff5060"
-    },
-    "mcp-jetbrains": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "086f63730b8f67536bef92230b8636fb6c9d1d4af306587b0c5bb18b1d2b1fb3"
+      "computedHash": "c311c1f22327836a68aca7f337031d3e922dc4fa873aea48636f63ba18fd736e"
     },
     "onepassword-secret-refs": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "d847a12fddb0f0c0c06ed8d6939e77dc428f612dc75a2035451a1eb4291d2a64"
+      "computedHash": "e65a19607bf480dafd0059ca7ce223e1794ff8a3725fe20b0d90545786c09266"
     },
     "oracle": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "7d26aca9256fabd6c96a755e980aee8c53f755bbdf361819ac9ac59072d70f9f"
-    },
-    "ponytail": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "5e9e090eb1f26f97d16f81a2260b8844672a5cd1f3ff2a2e87f4b92242077433",
-      "ref": "main",
-      "skillPath": "skills/ponytail/SKILL.md"
-    },
-    "ponytail-audit": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "f078f777f7407af17bd7bc1b6ebfe0cd5dddb82e410baedfdfbbf9f5b63b81a9",
-      "ref": "main",
-      "skillPath": "skills/ponytail-audit/SKILL.md"
-    },
-    "ponytail-debt": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "569ee6f296a958550ddbef89b9555ca3e89f26624d5801981daaa9f881680bac",
-      "ref": "main",
-      "skillPath": "skills/ponytail-debt/SKILL.md"
-    },
-    "ponytail-gain": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "20c10261e06b54c90fa1c57e09b44e84238b0edfcf87291017e5e34df291d960",
-      "ref": "main",
-      "skillPath": "skills/ponytail-gain/SKILL.md"
-    },
-    "ponytail-help": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "98e3c7053fa38c6d84712f4da14fa6c0209773f7fa0cc3cfab06aafaa515f2bc",
-      "ref": "main",
-      "skillPath": "skills/ponytail-help/SKILL.md"
-    },
-    "ponytail-review": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "e1630d6d0d303d676c651c735f8e949e555f238cf93b5ebe48c63bf89dbc663d",
-      "ref": "main",
-      "skillPath": "skills/ponytail-review/SKILL.md"
+      "computedHash": "8a9d9a995c92395ca9d0793c6a96e7d46dd268b19d99649d30a9a1f80465ea93"
     },
     "portless": {
+      "source": "vercel-labs/portless",
+      "sourceType": "github",
+      "computedHash": "8c98797d1447195d3e45abf61fdbc36836cc8a85358c80d840993a88bba8ba6c",
+      "ref": "main",
+      "skillPath": "skills/portless/SKILL.md"
+    },
+    "qa-session-ops": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "0c51d744928d020595c8b5c3ab8ac48354d9600900b0e8af2841f95d087dd181"
+      "computedHash": "f11c0e8f24ebbd85834bf6a0cdb81f48569fd7d11ac59593b5500b3cb67fa86e"
     },
     "quality-review-fix-loop": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "2a5126c4758ee910984735a5f3b82341f730d682e2078c82d705efdd3e26510f"
+      "computedHash": "57260fe53eb760b8acb111a11814ebb61198db155caa24900498e827064273aa"
     },
     "reflect": {
       "source": "repo-local",
       "sourceType": "local",
       "computedHash": "9d10bba8e06073adb65f46a0e0350eccb31c6f77576f04a57a4e7d0586466beb"
     },
-    "repo-symbol-discovery": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "c605786cc13d6f1c12251d1ccf60c338486ff8d28645e89fbcebb7c71881af38"
-    },
     "schema-first-development": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "8bd82c8eadec74ae9f055515bc24214a187752d77f2a5a5ca85d6a3e4c965f34"
-    },
-    "schema-model-specialist": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "56e3ed8a3b57aff0c01216b489f7c6ed322f7fbfd24b2c9c0c447b68f8d07d5a"
+      "computedHash": "188758efa2576aca2013fe48212bd6650f5aa1f098cae121a0c371a33585fc5f"
     },
     "shadcn": {
       "source": "shadcn-ui/ui",
       "sourceType": "github",
-      "computedHash": "f79fbeab14423984bdf1be02868afcf14ce46af27a77acaa261bccc6a053028f",
+      "computedHash": "7e2d6c78f317cddc8033f72e1d31f1d101e437f498fe92061bb27cb0bd3b8617",
       "ref": "main",
       "skillPath": "skills/shadcn/SKILL.md"
     },
     "teach": {
       "source": "mattpocock/skills",
       "sourceType": "github",
-      "computedHash": "ae1fc585cc759811434446a3d34f9fdc0a11de30dc4beff3a1ae242803d44a81",
+      "computedHash": "34543ef16f83356d3dbd325884817f8cafc0f808dfd11d949f7847d266a624af",
       "ref": "main",
       "skillPath": "skills/productivity/teach/SKILL.md"
     },
     "turborepo": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "fcb48d60cfe43a1486f1e82b0ac27423493b6004e1e2d518eec153bb83fcac0e"
+      "source": "vercel/turborepo",
+      "sourceType": "github",
+      "computedHash": "71ea2386bb0e1961d607a25b94d2c783771b33d56ca3a77bb8bc390dbe36c4fd",
+      "ref": "main",
+      "skillPath": "skills/turborepo/SKILL.md"
     },
     "yeet": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "b5eeeb79bea73339040a6b2cd859a9657cc95e2093448d58b372935fa4c21913"
+      "computedHash": "32c36d3536d7f91e680032e2071f53f5024a376b9f0536350fb42811e8f83b5f"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "cluster": "S9-manual",
-  "totalCount": 37,
+  "totalCount": 35,
   "sampled": [
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -33,22 +33,6 @@
       "status": "exception",
       "owner": "@beep/nlp",
       "reason": "Function-local S.Struct wrappers used for transient decode envelopes stay tracked as exceptions."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/core/Errors.ts",
-      "symbol": "FieldErrorEntry",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "UI error presentation shape mirrors @beep/ui FieldError props; it is not a domain data model."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/internal/FieldShell.tsx",
-      "symbol": "FieldShellProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Internal React shell props carry ReactNode slots and UI presentation state; not a domain data model."
     },
     {
       "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",

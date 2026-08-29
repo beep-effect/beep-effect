@@ -6,7 +6,7 @@
  */
 
 import { $ShaclId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ShaclId.create("Shacl.errors");
@@ -14,7 +14,8 @@ const $I = $ShaclId.create("Shacl.errors");
 /**
  * shacl-engine driver failure reason.
  *
- * @example
+ * **Example** (Assign validationFailed reason)
+ *
  * ```ts
  * import { ShaclEngineErrorReason } from "@beep/shacl"
  *
@@ -40,7 +41,8 @@ export const ShaclEngineErrorReason = LiteralKit([
 /**
  * Type for {@link ShaclEngineErrorReason}.
  *
- * @example
+ * **Example** (Assign importFailed reason)
+ *
  * ```ts
  * import { ShaclEngineErrorReason } from "@beep/shacl"
  *
@@ -57,7 +59,8 @@ export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
 /**
  * Typed shacl-engine driver error.
  *
- * @example
+ * **Example** (Make validationFailed error)
+ *
  * ```ts
  * import { ShaclEngineError } from "@beep/shacl"
  *
@@ -72,13 +75,13 @@ export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class ShaclEngineError extends TaggedErrorClass<ShaclEngineError>($I`ShaclEngineError`)(
+export class ShaclEngineError extends S.TaggedError<ShaclEngineError>($I`ShaclEngineError`)(
   "ShaclEngineError",
   {
     reason: ShaclEngineErrorReason,
     message: S.String,
   },
-  $I.annote("ShaclEngineError", {
+  $I.annoteError<ShaclEngineError>("ShaclEngineError", {
     description: "Typed shacl-engine driver error.",
   })
 ) {}

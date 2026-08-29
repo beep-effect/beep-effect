@@ -9,4 +9,4 @@ export {
   insertRows,
   runWithCorpusDb,
   singleRow,
-} from "./ServicePrograms.js";
+} from "./ServicePrograms.ts";

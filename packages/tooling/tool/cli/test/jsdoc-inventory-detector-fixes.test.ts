@@ -1,10 +1,14 @@
-import { writeJSDocDocumentationInventory } from "@beep/repo-cli/test/Quality";
+import {
+  jsdocCommentsFromSource,
+  tagsFromComment,
+  writeJSDocDocumentationInventory,
+} from "@beep/repo-cli/test/Quality";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
@@ -34,7 +38,7 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";
 
 const tsdocPolicy = {
@@ -59,6 +63,7 @@ type ExportFinding = {
   readonly missingRequiredTags: ReadonlyArray<string>;
   readonly missingSummary: boolean;
   readonly remediationStatus: string;
+  readonly documentationShapeViolations: ReadonlyArray<{ readonly rule: string }>;
   readonly unsafeExampleViolations: ReadonlyArray<{ readonly rule: string }>;
 };
 
@@ -162,6 +167,130 @@ const buildInventory = Effect.fnUntraced(function* (repoRoot: string) {
 });
 
 describe("JSDoc inventory detector fixes (P1-B)", () => {
+  it("ignores JSDoc-looking tags inside fenced example source", () => {
+    expect(
+      tagsFromComment(`/**
+ * Outer summary.
+ *
+ * \`\`\`ts
+ * /** Nested summary. */
+ * @remarks This is example source, not an outer tag.
+ * @example This is also example source.
+ * \`\`\`
+ * @category helpers
+ * @since 0.0.0
+ */`)
+    ).toEqual(["@category", "@since"]);
+  });
+
+  it("preserves outer legacy tags after a complete nested JSDoc example", () => {
+    const comments = jsdocCommentsFromSource(`/**
+ * Outer summary.
+ *
+ * \`\`\`ts
+ * /**
+ *  * Nested summary.
+ *  * @example Nested legacy source.
+ *  */
+ * export const nested = 1
+ * \`\`\`
+ *
+ * @remarks Outer legacy tag that the zero-legacy gate must detect.
+ * @category helpers
+ * @since 0.0.0
+ */`);
+
+    expect(comments).toHaveLength(1);
+    expect(tagsFromComment(comments[0] ?? "")).toEqual(["@remarks", "@category", "@since"]);
+  });
+
+  it("keeps delimiter-prefixed source inside the active fence", () => {
+    const comments = jsdocCommentsFromSource(`/**
+ * Outer summary.
+ *
+ * \`\`\`ts
+ * \`\`\`sourceText
+ * /**
+ *  * Nested summary.
+ *  * @remarks Nested legacy source.
+ *  */
+ * \`\`\`
+ *
+ * @category helpers
+ * @since 0.0.0
+ */`);
+
+    expect(comments).toHaveLength(1);
+    expect(tagsFromComment(comments[0] ?? "")).toEqual(["@category", "@since"]);
+  });
+
+  it("checks sectionless prose, loose fences, and empty titled examples", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * A sectionless type summary.
+ *
+ * A second prose paragraph that violates the single-description rule.
+ *
+ * \`\`\`ts
+ * type Example = Sectionless
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Sectionless = string;
+
+/**
+ * A value with an empty titled example.
+ *
+ * **Example** (Use the value)
+ *
+ * \`\`\`ts
+ * \`\`\`
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const emptyExample = 1;
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          const sectionless = pkg?.exports.find((entry) => entry.symbolName === "Sectionless");
+          const emptyExample = pkg?.exports.find((entry) => entry.symbolName === "emptyExample");
+
+          expect(sectionless?.documentationShapeViolations.map((issue) => issue.rule)).toEqual(
+            expect.arrayContaining(["multiple-description-paragraphs", "loose-ts-fence"])
+          );
+          expect(emptyExample?.documentationShapeViolations.map((issue) => issue.rule)).toEqual(
+            expect.arrayContaining(["empty-section", "malformed-example"])
+          );
+        })
+      )
+    ));
+
   it("exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)", () =>
     Effect.runPromise(
       withFixtureRepo(
@@ -198,7 +327,7 @@ export const libValue = "lib";
  * @since 0.0.0
  */
 
-export * from "./lib.js";
+export * from "./lib.ts";
 
 /**
  * Direct helper exported without a compiling example.
@@ -924,4 +1053,19 @@ export * from "./flatTarget.ts";
         })
       )
     ));
+
+  it("does not treat string-literal /** as a JSDoc comment opener", () => {
+    const comments = jsdocCommentsFromSource(`
+const root = Str.endsWith("/**")(path);
+project.addSourceFilesAtPaths(\`\${base}/**/*.ts\`);
+/**
+ * Real doc.
+ * @since 0.0.0
+ */
+export const real = 1;
+`);
+    expect(comments).toHaveLength(1);
+    expect(comments[0]).toContain("Real doc.");
+    expect(comments[0]).not.toContain("addSourceFilesAtPaths");
+  });
 });

@@ -6,7 +6,7 @@
  */
 
 import { $TailscaleId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $TailscaleId.create("Tailscale.errors");
@@ -42,12 +42,13 @@ const commandContextFields = {
   argumentCount: NonNegativeInteger.annotateKey({
     description: "Number of arguments passed to the Tailscale executable.",
   }),
-};
+} satisfies S.Struct.Fields;
 
 /**
  * Failure to start the Tailscale executable.
  *
- * @example
+ * **Example** (Create command spawn error)
+ *
  * ```ts
  * import { TailscaleCommandSpawnError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -63,17 +64,17 @@ const commandContextFields = {
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandSpawnError extends TaggedErrorClass<TailscaleCommandSpawnError>(
+export class TailscaleCommandSpawnError extends S.TaggedError<TailscaleCommandSpawnError>(
   $I`TailscaleCommandSpawnError`
 )(
   "TailscaleCommandSpawnError",
   {
     ...commandContextFields,
-    cause: S.Defect({ includeStack: true }).annotateKey({
+    cause: Defect({ includeStack: true }).annotateKey({
       description: "Underlying platform failure raised while spawning Tailscale.",
     }),
   },
-  $I.annote("TailscaleCommandSpawnError", {
+  $I.annoteError<TailscaleCommandSpawnError>("TailscaleCommandSpawnError", {
     description: "Failure raised when the operating system cannot spawn the Tailscale CLI.",
   })
 ) {
@@ -85,7 +86,8 @@ export class TailscaleCommandSpawnError extends TaggedErrorClass<TailscaleComman
 /**
  * Failure while collecting output from a running Tailscale process.
  *
- * @example
+ * **Example** (Create command output error)
+ *
  * ```ts
  * import { TailscaleCommandOutputError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -101,17 +103,17 @@ export class TailscaleCommandSpawnError extends TaggedErrorClass<TailscaleComman
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandOutputError extends TaggedErrorClass<TailscaleCommandOutputError>(
+export class TailscaleCommandOutputError extends S.TaggedError<TailscaleCommandOutputError>(
   $I`TailscaleCommandOutputError`
 )(
   "TailscaleCommandOutputError",
   {
     ...commandContextFields,
-    cause: S.Defect({ includeStack: true }).annotateKey({
+    cause: Defect({ includeStack: true }).annotateKey({
       description: "Underlying stream failure raised while collecting process output.",
     }),
   },
-  $I.annote("TailscaleCommandOutputError", {
+  $I.annoteError<TailscaleCommandOutputError>("TailscaleCommandOutputError", {
     description: "Failure raised while collecting output from a running Tailscale process.",
   })
 ) {
@@ -123,7 +125,8 @@ export class TailscaleCommandOutputError extends TaggedErrorClass<TailscaleComma
 /**
  * Nonzero Tailscale process exit with redacted output lengths.
  *
- * @example
+ * **Example** (Create command exit error)
+ *
  * ```ts
  * import { TailscaleCommandExitError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -140,9 +143,7 @@ export class TailscaleCommandOutputError extends TaggedErrorClass<TailscaleComma
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommandExitError>(
-  $I`TailscaleCommandExitError`
-)(
+export class TailscaleCommandExitError extends S.TaggedError<TailscaleCommandExitError>($I`TailscaleCommandExitError`)(
   "TailscaleCommandExitError",
   {
     ...commandContextFields,
@@ -156,7 +157,7 @@ export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommand
       description: "Captured standard-error length without exposing its contents.",
     }),
   },
-  $I.annote("TailscaleCommandExitError", {
+  $I.annoteError<TailscaleCommandExitError>("TailscaleCommandExitError", {
     description: "Redacted diagnostic for a Tailscale process that exited unsuccessfully.",
   })
 ) {
@@ -168,7 +169,8 @@ export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommand
 /**
  * Tailscale process timeout with the configured duration in milliseconds.
  *
- * @example
+ * **Example** (Create command timeout error)
+ *
  * ```ts
  * import { TailscaleCommandTimeoutError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -185,7 +187,7 @@ export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommand
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandTimeoutError extends TaggedErrorClass<TailscaleCommandTimeoutError>(
+export class TailscaleCommandTimeoutError extends S.TaggedError<TailscaleCommandTimeoutError>(
   $I`TailscaleCommandTimeoutError`
 )(
   "TailscaleCommandTimeoutError",
@@ -194,11 +196,11 @@ export class TailscaleCommandTimeoutError extends TaggedErrorClass<TailscaleComm
     timeoutMs: NonNegativeInteger.annotateKey({
       description: "Timeout duration in milliseconds.",
     }),
-    cause: S.Defect({ includeStack: true }).annotateKey({
+    cause: Defect({ includeStack: true }).annotateKey({
       description: "Timeout defect emitted by Effect.",
     }),
   },
-  $I.annote("TailscaleCommandTimeoutError", {
+  $I.annoteError<TailscaleCommandTimeoutError>("TailscaleCommandTimeoutError", {
     description: "Failure raised when a Tailscale process exceeds its configured timeout.",
   })
 ) {
@@ -210,7 +212,8 @@ export class TailscaleCommandTimeoutError extends TaggedErrorClass<TailscaleComm
 /**
  * Union of failures emitted while executing a Tailscale command.
  *
- * @example
+ * **Example** (Validate command error union)
+ *
  * ```ts
  * import { TailscaleCommandError, TailscaleCommandExitError } from "@beep/tailscale/Tailscale.errors"
  * import * as S from "effect/Schema"
@@ -243,7 +246,8 @@ export const TailscaleCommandError = S.Union([
 /**
  * Runtime type for {@link TailscaleCommandError}.
  *
- * @example
+ * **Example** (Type annotate command error)
+ *
  * ```ts
  * import type { TailscaleCommandError } from "@beep/tailscale/Tailscale.errors"
  * import { TailscaleCommandExitError } from "@beep/tailscale/Tailscale.errors"
@@ -266,7 +270,8 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
 /**
  * Failure to decode the JSON emitted by `tailscale status`.
  *
- * @example
+ * **Example** (Create status parse error)
+ *
  * ```ts
  * import { TailscaleStatusParseError } from "@beep/tailscale/Tailscale.errors"
  *
@@ -277,16 +282,14 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleStatusParseError extends TaggedErrorClass<TailscaleStatusParseError>(
-  $I`TailscaleStatusParseError`
-)(
+export class TailscaleStatusParseError extends S.TaggedError<TailscaleStatusParseError>($I`TailscaleStatusParseError`)(
   "TailscaleStatusParseError",
   {
-    cause: S.Defect({ includeStack: true }).annotateKey({
+    cause: Defect({ includeStack: true }).annotateKey({
       description: "Schema decoding failure retained for structured diagnostics.",
     }),
   },
-  $I.annote("TailscaleStatusParseError", {
+  $I.annoteError<TailscaleStatusParseError>("TailscaleStatusParseError", {
     description: "Failure raised when Tailscale status JSON cannot be decoded.",
   })
 ) {

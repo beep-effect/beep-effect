@@ -7,28 +7,29 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
-import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
-import { OntologySnapshot } from "./Session.projections.js";
-import { InferOntologySessionInput, OntologyInferenceResult } from "./Session.reasoner.js";
-import { RunOntologySparqlInput, RunOntologySparqlResult } from "./Session.sparql.js";
+import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
+import { OntologySnapshot } from "./Session.projections.ts";
+import { InferOntologySessionInput, OntologyInferenceResult } from "./Session.reasoner.ts";
+import { RunOntologySparqlInput, RunOntologySparqlResult } from "./Session.sparql.ts";
 import {
   ExportOntologyProvenanceCommand,
   ExportOntologyProvenanceResult,
   RunOntologyValidationInput,
   RunOntologyValidationResult,
-} from "./Session.validation.js";
+} from "./Session.validation.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
 
 /**
  * Client-safe ontology action failure carried on every ontology RPC request.
  *
- * @example
+ * **Example** (Create action error)
+ *
  * ```ts
  * import { OntologyActionError } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -37,15 +38,15 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
  * console.log(error.message)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class OntologyActionError extends TaggedErrorClass<OntologyActionError>($I`OntologyActionError`)(
+export class OntologyActionError extends S.TaggedError<OntologyActionError>($I`OntologyActionError`)(
   "OntologyActionError",
   {
     message: S.String,
   },
-  $I.annote("OntologyActionError", {
+  $I.annoteError<OntologyActionError>("OntologyActionError", {
     description: "Client-safe failure raised when an ontology workbench action cannot be completed.",
   })
 ) {
@@ -59,7 +60,8 @@ export class OntologyActionError extends TaggedErrorClass<OntologyActionError>($
 /**
  * Result returned after opening a Turtle document through the sidecar.
  *
- * @example
+ * **Example** (Build open document result)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyFilePath, OntologyMetrics, OntologySnapshot, OpenOntologyDocumentResult } from "@beep/ontology-use-cases/aggregates/Session"
@@ -94,8 +96,8 @@ export class OntologyActionError extends TaggedErrorClass<OntologyActionError>($
  * console.log(result.snapshot.resources.length)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export class OpenOntologyDocumentResult extends S.Class<OpenOntologyDocumentResult>($I`OpenOntologyDocumentResult`)(
   {
@@ -112,7 +114,8 @@ export class OpenOntologyDocumentResult extends S.Class<OpenOntologyDocumentResu
 /**
  * Result returned after saving a Turtle document through the sidecar.
  *
- * @example
+ * **Example** (Build save document result)
+ *
  * ```ts
  * import { OntologyFilePath, SaveOntologyDocumentResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -125,8 +128,8 @@ export class OpenOntologyDocumentResult extends S.Class<OpenOntologyDocumentResu
  * console.log(result.source)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export class SaveOntologyDocumentResult extends S.Class<SaveOntologyDocumentResult>($I`SaveOntologyDocumentResult`)(
   {
@@ -141,7 +144,8 @@ export class SaveOntologyDocumentResult extends S.Class<SaveOntologyDocumentResu
 /**
  * Result returned after previewing Turtle serialization.
  *
- * @example
+ * **Example** (Build preview turtle result)
+ *
  * ```ts
  * import { PreviewOntologyTurtleResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -152,8 +156,8 @@ export class SaveOntologyDocumentResult extends S.Class<SaveOntologyDocumentResu
  * console.log(result.source)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export class PreviewOntologyTurtleResult extends S.Class<PreviewOntologyTurtleResult>($I`PreviewOntologyTurtleResult`)(
   {
@@ -167,7 +171,8 @@ export class PreviewOntologyTurtleResult extends S.Class<PreviewOntologyTurtleRe
 /**
  * Batch operation payload accepted by the ontology sidecar.
  *
- * @example
+ * **Example** (Build batch command)
+ *
  * ```ts
  * import { ChangeOperation, CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { ApplyOntologyBatchCommand } from "@beep/ontology-use-cases/aggregates/Session"
@@ -197,8 +202,8 @@ export class PreviewOntologyTurtleResult extends S.Class<PreviewOntologyTurtleRe
  * console.log(command.operations.length)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export class ApplyOntologyBatchCommand extends S.Class<ApplyOntologyBatchCommand>($I`ApplyOntologyBatchCommand`)(
   {
@@ -213,7 +218,8 @@ export class ApplyOntologyBatchCommand extends S.Class<ApplyOntologyBatchCommand
 /**
  * Batch operation result carrying the updated session and real delta.
  *
- * @example
+ * **Example** (Build batch result)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, emptySessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { ApplyOntologyBatchResult } from "@beep/ontology-use-cases/aggregates/Session"
@@ -234,8 +240,8 @@ export class ApplyOntologyBatchCommand extends S.Class<ApplyOntologyBatchCommand
  * console.log(result.delta.added.length)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export class ApplyOntologyBatchResult extends S.Class<ApplyOntologyBatchResult>($I`ApplyOntologyBatchResult`)(
   {
@@ -290,15 +296,16 @@ class GetOntologySnapshotPayload extends S.Class<GetOntologySnapshotPayload>($I`
 /**
  * Opens a Turtle document into an ontology session.
  *
- * @example
+ * **Example** (Inspect open document RPC)
+ *
  * ```ts
  * import { OpenOntologyDocumentRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(OpenOntologyDocumentRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const OpenOntologyDocumentRpc = Rpc.make("OpenOntologyDocument", {
   payload: OpenOntologyDocumentPayload,
@@ -309,15 +316,16 @@ export const OpenOntologyDocumentRpc = Rpc.make("OpenOntologyDocument", {
 /**
  * Saves the asserted session graph to a Turtle document.
  *
- * @example
+ * **Example** (Inspect save document RPC)
+ *
  * ```ts
  * import { SaveOntologyDocumentRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(SaveOntologyDocumentRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const SaveOntologyDocumentRpc = Rpc.make("SaveOntologyDocument", {
   payload: SaveOntologyDocumentPayload,
@@ -328,15 +336,16 @@ export const SaveOntologyDocumentRpc = Rpc.make("SaveOntologyDocument", {
 /**
  * Serializes the asserted session graph without writing it.
  *
- * @example
+ * **Example** (Inspect preview turtle RPC)
+ *
  * ```ts
  * import { PreviewOntologyTurtleRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(PreviewOntologyTurtleRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const PreviewOntologyTurtleRpc = Rpc.make("PreviewOntologyTurtle", {
   payload: PreviewOntologyTurtlePayload,
@@ -347,15 +356,16 @@ export const PreviewOntologyTurtleRpc = Rpc.make("PreviewOntologyTurtle", {
 /**
  * Applies typed ontology change operations and returns the real RDF delta.
  *
- * @example
+ * **Example** (Inspect apply batch RPC)
+ *
  * ```ts
  * import { ApplyOntologyBatchRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(ApplyOntologyBatchRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const ApplyOntologyBatchRpc = Rpc.make("ApplyOntologyBatch", {
   payload: ApplyOntologyBatchCommand,
@@ -366,15 +376,16 @@ export const ApplyOntologyBatchRpc = Rpc.make("ApplyOntologyBatch", {
 /**
  * Builds the current ontology explorer snapshot.
  *
- * @example
+ * **Example** (Inspect snapshot RPC)
+ *
  * ```ts
  * import { GetOntologySnapshotRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(GetOntologySnapshotRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const GetOntologySnapshotRpc = Rpc.make("GetOntologySnapshot", {
   payload: GetOntologySnapshotPayload,
@@ -385,15 +396,16 @@ export const GetOntologySnapshotRpc = Rpc.make("GetOntologySnapshot", {
 /**
  * Runs structural inference over an ontology session.
  *
- * @example
+ * **Example** (Inspect inference RPC)
+ *
  * ```ts
  * import { RunOntologyInferenceRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(RunOntologyInferenceRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const RunOntologyInferenceRpc = Rpc.make("RunOntologyInference", {
   payload: InferOntologySessionInput,
@@ -404,15 +416,16 @@ export const RunOntologyInferenceRpc = Rpc.make("RunOntologyInference", {
 /**
  * Executes a safeguarded SPARQL query over an ontology session.
  *
- * @example
+ * **Example** (Inspect SPARQL RPC)
+ *
  * ```ts
  * import { RunOntologySparqlRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(RunOntologySparqlRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const RunOntologySparqlRpc = Rpc.make("RunOntologySparql", {
   payload: RunOntologySparqlInput,
@@ -423,15 +436,16 @@ export const RunOntologySparqlRpc = Rpc.make("RunOntologySparql", {
 /**
  * Runs SHACL validation and returns verified repair proposals.
  *
- * @example
+ * **Example** (Inspect validation RPC)
+ *
  * ```ts
  * import { RunOntologyValidationRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(RunOntologyValidationRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const RunOntologyValidationRpc = Rpc.make("RunOntologyValidation", {
   payload: RunOntologyValidationInput,
@@ -442,15 +456,16 @@ export const RunOntologyValidationRpc = Rpc.make("RunOntologyValidation", {
 /**
  * Exports PROV-O journal and VoID/DCAT dataset description artifacts.
  *
- * @example
+ * **Example** (Inspect provenance export RPC)
+ *
  * ```ts
  * import { ExportOntologyProvenanceRpc } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(ExportOntologyProvenanceRpc)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const ExportOntologyProvenanceRpc = Rpc.make("ExportOntologyProvenance", {
   payload: ExportOntologyProvenanceCommand,
@@ -461,15 +476,16 @@ export const ExportOntologyProvenanceRpc = Rpc.make("ExportOntologyProvenance", 
 /**
  * Ontology workbench RPC group registered by the desktop sidecar.
  *
- * @example
+ * **Example** (Inspect ontology RPC group)
+ *
  * ```ts
  * import { OntologyRpcs } from "@beep/ontology-use-cases/aggregates/Session"
  *
  * console.log(OntologyRpcs)
  * ```
  *
- * @since 0.0.0
  * @category protocols
+ * @since 0.0.0
  */
 export const OntologyRpcs = RpcGroup.make(
   OpenOntologyDocumentRpc,

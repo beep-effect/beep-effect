@@ -31,7 +31,7 @@ import { FastCheck as fc } from "effect/testing";
 import type { Readable } from "node:stream";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -320,7 +320,7 @@ const folderSource = (id: string, name: string, parentId: string) => ({
   type: "folder",
 });
 
-const staleRemoteFileId = S.decodeUnknownSync(RemoteItemId)("file-9");
+const staleRemoteFileId = S.decodeSync(RemoteItemId)("file-9");
 
 const boxEvent = (eventId: string, eventType: string, source?: Record<string, unknown>): Record<string, unknown> => ({
   eventId,
@@ -329,8 +329,9 @@ const boxEvent = (eventId: string, eventType: string, source?: Record<string, un
 });
 
 describe("@beep/documents-server DmsMirrorBox", () => {
-  it.effect("resolves an existing mirror root once and caches it", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "resolves an existing mirror root once and caches it",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
       const rootId = fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
 
@@ -352,8 +353,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("creates the mirror root under the Box root when missing", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "creates the mirror root under the Box root when missing",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       const item = yield* Effect.gen(function* () {
@@ -369,8 +371,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("honors the configured mirror root name", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "honors the configured mirror root name",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       yield* Effect.gen(function* () {
@@ -384,8 +387,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("returns the existing folder when Box reports a name conflict", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "returns the existing folder when Box reports a name conflict",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       const { first, second } = yield* Effect.gen(function* () {
@@ -403,8 +407,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("resolves a mirror root that only appears on a later folder-items page", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "resolves a mirror root that only appears on a later folder-items page",
+    Effect.fnUntraced(function* () {
       const rootId = "folder-root-page-2";
       const markers: Array<string | undefined> = [];
       const fake = makeFakeBox({
@@ -441,8 +446,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("recovers the mirror root from a create name conflict by re-resolving the existing id", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "recovers the mirror root from a create name conflict by re-resolving the existing id",
+    Effect.fnUntraced(function* () {
       const rootId = "folder-root-conflict";
       let rootVisible = false;
       let getFolderItemsCalls = 0;
@@ -478,8 +484,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("uploads a file and maps the remote item", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "uploads a file and maps the remote item",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       const { folder, inRoot, uploaded } = yield* Effect.gen(function* () {
@@ -510,8 +517,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("uploads a new version of an existing file", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "uploads a new version of an existing file",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       const { uploaded, versioned } = yield* Effect.gen(function* () {
@@ -540,8 +548,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("recovers an upload name conflict by versioning the existing file", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "recovers an upload name conflict by versioning the existing file",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox({
         uploads: { uploadFile: () => Promise.reject(nameConflictRejection) },
       });
@@ -564,8 +573,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("moves files and folders between parents", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "moves files and folders between parents",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       const { destination, movedFile, movedFolder, movedToRoot, uploaded } = yield* Effect.gen(function* () {
@@ -618,8 +628,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("renames files and folders in place", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "renames files and folders in place",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
 
       const { folder, renamedFile, renamedFolder, uploaded } = yield* Effect.gen(function* () {
@@ -657,8 +668,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("bootstraps event polling at the provider now", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "bootstraps event polling at the provider now",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
       fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
       fake.seedEvents([
@@ -681,8 +693,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("maps polled events and advances the stream window", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "maps polled events and advances the stream window",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
       fake.seedEvents([
         boxEvent("evt-1", "ITEM_CREATE", fileSource("f-1", "a.pdf", "d-1")),
@@ -732,8 +745,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("maps admin-shaped event sources and drops entries without event ids", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "maps admin-shaped event sources and drops entries without event ids",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
       fake.seedEvents([
         { eventType: "ITEM_CREATE", source: fileSource("f-1", "a.pdf", "d-1") },
@@ -761,8 +775,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("translates transient Box failures as retryable", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "translates transient Box failures as retryable",
+    Effect.fnUntraced(function* () {
       const rateLimited = makeFakeBox({
         uploads: { uploadFile: () => Promise.reject({ responseInfo: { statusCode: 429 } }) },
       });
@@ -799,8 +814,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("translates permanent Box failures as non-retryable", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "translates permanent Box failures as non-retryable",
+    Effect.fnUntraced(function* () {
       const rejected = makeFakeBox({
         uploads: {
           uploadFile: () => Promise.reject({ responseInfo: { code: "bad_request", statusCode: 400 } }),
@@ -818,6 +834,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       expect(uploadError.retryable).toBe(false);
       expect(uploadError.reason).toContain("status 400");
       expect(uploadError.reason).toContain("bad_request");
+      // Mirror verbs carry the same probe-facing classification the
+      // availability layer reads: an unclassifiable 400 stays the fallback.
+      expect(uploadError.disconnectReason).toEqual(O.some("probe-failed"));
 
       const thrown = makeFakeBox({
         events: { getEvents: () => Promise.reject("boom") },
@@ -833,8 +852,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("probes the Box availability layer as connected with the resolved mirror root", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "probes the Box availability layer as connected with the resolved mirror root",
+    Effect.fnUntraced(function* () {
       const fake = makeFakeBox();
       const probe = yield* Effect.gen(function* () {
         const availability = yield* DmsMirrorAvailability;
@@ -844,11 +864,13 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       expect(probe.connected).toBe(true);
       expect(probe.provider).toBe("box");
       expect(O.isSome(probe.rootRemoteId)).toBe(true);
+      expect(O.isSome(probe.probedAt)).toBe(true);
     })
   );
 
-  it.effect("probes the Box availability layer as disconnected when the driver fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "probes the Box availability layer as disconnected when the driver fails",
+    Effect.fnUntraced(function* () {
       const failing = makeFakeBox({
         folders: { getFolderItems: () => Promise.reject("box is down") },
       });
@@ -859,6 +881,106 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       expect(probe.connected).toBe(false);
       expect(O.isNone(probe.rootRemoteId)).toBe(true);
+      // A status-less SDK throw carries no classification signal, so the
+      // probe stays on the unclassified fallback.
+      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
+      expect(O.isSome(probe.probedAt)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "classifies availability probe failures from the Box status",
+    Effect.fnUntraced(function* () {
+      const probeWithStatus = (statusCode: number) =>
+        Effect.gen(function* () {
+          const availability = yield* DmsMirrorAvailability;
+          return yield* availability.probe;
+        }).pipe(
+          provideScopedLayer(
+            availabilityLayer(
+              makeFakeBox({
+                folders: { getFolderItems: () => Promise.reject({ responseInfo: { statusCode } }) },
+              })
+            )
+          )
+        );
+
+      const unauthorized = yield* probeWithStatus(401);
+      expect(unauthorized.connected).toBe(false);
+      expect(unauthorized.disconnectReason).toEqual(O.some("auth-failed"));
+
+      const forbidden = yield* probeWithStatus(403);
+      expect(forbidden.disconnectReason).toEqual(O.some("root-unreachable"));
+
+      const missingRoot = yield* probeWithStatus(404);
+      expect(missingRoot.disconnectReason).toEqual(O.some("root-unreachable"));
+
+      const rateLimited = yield* probeWithStatus(429);
+      expect(rateLimited.disconnectReason).toEqual(O.some("transient"));
+
+      const serverDown = yield* probeWithStatus(503);
+      expect(serverDown.disconnectReason).toEqual(O.some("transient"));
+
+      const badRequest = yield* probeWithStatus(400);
+      expect(badRequest.disconnectReason).toEqual(O.some("probe-failed"));
+    })
+  );
+
+  it.effect(
+    "falls back to probe-failed when the resolved mirror-root id fails decoding",
+    Effect.fnUntraced(function* () {
+      // The driver accepts an empty folder id, but RemoteItemId is non-empty:
+      // the probe's own decode step fails, which is the SchemaError (not
+      // DmsMirrorUnavailable) classification path.
+      const malformed = makeFakeBox({
+        folders: {
+          getFolderItems: () =>
+            Promise.resolve({
+              entries: [{ id: "", name: BOX_MIRROR_DEFAULT_ROOT_NAME, type: "folder" }],
+            }),
+        },
+      });
+      const probe = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        return yield* availability.probe;
+      }).pipe(provideScopedLayer(availabilityLayer(malformed)));
+
+      expect(probe.connected).toBe(false);
+      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
+      expect(O.isNone(probe.rootRemoteId)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "refresh bypasses the cached probe answer and asks Box again",
+    Effect.fnUntraced(function* () {
+      // Overrides replace the harness implementation (and its counter), so
+      // the override counts its own invocations.
+      const calls = { getFolderItems: 0 };
+      const failing = makeFakeBox({
+        folders: {
+          getFolderItems: () => {
+            calls.getFolderItems += 1;
+            return Promise.reject({ responseInfo: { statusCode: 503 } });
+          },
+        },
+      });
+      const outcome = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        const first = yield* availability.probe;
+        const cached = yield* availability.probe;
+        const callsBeforeRefresh = calls.getFolderItems;
+        const refreshed = yield* availability.refresh;
+        return { callsAfterRefresh: calls.getFolderItems, callsBeforeRefresh, cached, first, refreshed };
+      }).pipe(provideScopedLayer(availabilityLayer(failing)));
+
+      expect(outcome.first.connected).toBe(false);
+      // Within the failure TTL a passive probe replays the cached answer …
+      expect(outcome.cached).toBe(outcome.first);
+      // … while an explicit refresh must actually re-ask Box.
+      expect(outcome.callsAfterRefresh).toBeGreaterThan(outcome.callsBeforeRefresh);
+      expect(outcome.refreshed.disconnectReason).toEqual(O.some("transient"));
+      expect(O.isSome(outcome.refreshed.probedAt)).toBe(true);
     })
   );
 });
@@ -868,22 +990,26 @@ describe("@beep/documents-server BoxMirrorConfig", () => {
     assertSchemaArbitraryRoundTrip(BoxMirrorConfigValue);
   });
 
-  it.effect("defaults the mirror root name when the environment is empty", () =>
-    Effect.gen(function* () {
-      const config = yield* BoxMirrorConfig;
+  it.effect(
+    "defaults the mirror root name when the environment is empty",
+    Effect.fnUntraced(
+      function* () {
+        const config = yield* BoxMirrorConfig;
 
-      expect(config.mirrorRootName).toBe(BOX_MIRROR_DEFAULT_ROOT_NAME);
-    }).pipe(
+        expect(config.mirrorRootName).toBe(BOX_MIRROR_DEFAULT_ROOT_NAME);
+      },
       provideScopedLayer(BoxMirrorConfigLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))))
     )
   );
 
-  it.effect("reads the mirror root name from the environment", () =>
-    Effect.gen(function* () {
-      const config = yield* BoxMirrorConfig;
+  it.effect(
+    "reads the mirror root name from the environment",
+    Effect.fnUntraced(
+      function* () {
+        const config = yield* BoxMirrorConfig;
 
-      expect(config.mirrorRootName).toBe("custom-vault");
-    }).pipe(
+        expect(config.mirrorRootName).toBe("custom-vault");
+      },
       provideScopedLayer(
         BoxMirrorConfigLayer.pipe(
           Layer.provide(

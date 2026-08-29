@@ -30,8 +30,8 @@ import { Equal, Option as O, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const sessionId = Result.getOrThrow(S.decodeUnknownResult(SessionId)("session-1"));
-const fixturePath = Result.getOrThrow(S.decodeUnknownResult(OntologyFilePath)("fixtures/demo.ttl"));
+const sessionId = Result.getOrThrow(S.decodeResult(SessionId)("session-1"));
+const fixturePath = Result.getOrThrow(S.decodeResult(OntologyFilePath)("fixtures/demo.ttl"));
 const quad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),
@@ -39,11 +39,32 @@ const quad = makeQuad(
 );
 const dataset = makeDataset([quad]);
 
+const schemaRoundTripCases: ReadonlyArray<
+  readonly [string, S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>]
+> = [
+  ["OpenOntologyFileCommand", OpenOntologyFileCommand],
+  ["OpenOntologyDocumentResult", OpenOntologyDocumentResult],
+  ["SaveOntologyDocumentResult", SaveOntologyDocumentResult],
+  ["PreviewOntologyTurtleResult", PreviewOntologyTurtleResult],
+  ["ApplyOntologyBatchCommand", ApplyOntologyBatchCommand],
+  ["ApplyOntologyBatchResult", ApplyOntologyBatchResult],
+  ["OntologyRepairProposal", OntologyRepairProposal],
+  ["RunOntologyValidationInput", RunOntologyValidationInput],
+  ["RunOntologyValidationResult", RunOntologyValidationResult],
+  ["ExportOntologyProvenanceCommand", ExportOntologyProvenanceCommand],
+  ["ExportOntologyProvenanceResult", ExportOntologyProvenanceResult],
+  ["OntologyActionError", OntologyActionError],
+  ["OntologySnapshot", OntologySnapshot],
+  ["WorkerCommand", WorkerCommand],
+  ["WorkerResult", WorkerResult],
+  ["TurtleCodecError", TurtleCodecError],
+];
+
 const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
   schema: Schema
 ): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
       const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
       expect(Equal.equals(decoded, value)).toBe(true);
@@ -53,23 +74,8 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
 };
 
 describe("@beep/ontology-use-cases schema parity", () => {
-  it("round-trips schema-derived command and worker samples", () => {
-    assertRoundTrips(OpenOntologyFileCommand);
-    assertRoundTrips(OpenOntologyDocumentResult);
-    assertRoundTrips(SaveOntologyDocumentResult);
-    assertRoundTrips(PreviewOntologyTurtleResult);
-    assertRoundTrips(ApplyOntologyBatchCommand);
-    assertRoundTrips(ApplyOntologyBatchResult);
-    assertRoundTrips(OntologyRepairProposal);
-    assertRoundTrips(RunOntologyValidationInput);
-    assertRoundTrips(RunOntologyValidationResult);
-    assertRoundTrips(ExportOntologyProvenanceCommand);
-    assertRoundTrips(ExportOntologyProvenanceResult);
-    assertRoundTrips(OntologyActionError);
-    assertRoundTrips(OntologySnapshot);
-    assertRoundTrips(WorkerCommand);
-    assertRoundTrips(WorkerResult);
-    assertRoundTrips(TurtleCodecError);
+  it.each(schemaRoundTripCases)("round-trips schema-derived %s samples", (_name, schema) => {
+    assertRoundTrips(schema);
   });
 
   it("preserves command and worker protocol encoded wire shapes", () => {
@@ -129,24 +135,18 @@ describe("@beep/ontology-use-cases schema parity", () => {
     const parsed = ParseTurtleResult.make({ dataset });
 
     expect(
-      Result.getOrThrow(
-        S.decodeUnknownResult(TurtleCodecError)(Result.getOrThrow(S.encodeResult(TurtleCodecError)(error)))
-      )
+      Result.getOrThrow(S.decodeResult(TurtleCodecError)(Result.getOrThrow(S.encodeResult(TurtleCodecError)(error))))
     ).toEqual(error);
     expect(
       Result.getOrThrow(
-        S.decodeUnknownResult(SerializeTurtleRequest)(
-          Result.getOrThrow(S.encodeResult(SerializeTurtleRequest)(command))
-        )
+        S.decodeResult(SerializeTurtleRequest)(Result.getOrThrow(S.encodeResult(SerializeTurtleRequest)(command)))
       )
     ).toEqual(command);
     expect(
-      Result.getOrThrow(
-        S.decodeUnknownResult(ParseTurtleResult)(Result.getOrThrow(S.encodeResult(ParseTurtleResult)(parsed)))
-      )
+      Result.getOrThrow(S.decodeResult(ParseTurtleResult)(Result.getOrThrow(S.encodeResult(ParseTurtleResult)(parsed))))
     ).toEqual(parsed);
     expect(
-      Result.getOrThrow(S.decodeUnknownResult(WorkerResult)(Result.getOrThrow(S.encodeResult(WorkerResult)(result))))
+      Result.getOrThrow(S.decodeResult(WorkerResult)(Result.getOrThrow(S.encodeResult(WorkerResult)(result))))
     ).toEqual(result);
   });
 });

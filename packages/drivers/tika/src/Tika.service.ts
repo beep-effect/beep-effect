@@ -10,7 +10,9 @@ import { DetectionResult, FileProcessingOperationError } from "@beep/file-proces
 import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, Match } from "effect";
+import { Effect } from "effect";
+import { TIKA_ENGINE_NAME } from "./Tika.config.ts";
+import { TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE, tikaOperationError } from "./Tika.error-translation.ts";
 import { makeTikaError } from "./Tika.errors.ts";
 import type {
   DetectFileOperation,
@@ -24,7 +26,8 @@ import type { TikaError } from "./Tika.errors.ts";
 /**
  * Tika file-processing engine descriptor.
  *
- * @example
+ * **Example** (Log descriptor name)
+ *
  * ```ts
  * import { TikaFileProcessingEngineDescriptor } from "@beep/tika"
  *
@@ -37,7 +40,7 @@ import type { TikaError } from "./Tika.errors.ts";
 export const TikaFileProcessingEngineDescriptor = FileProcessingEngineDescriptor.make({
   capabilities: ["detect", "extract-text", "extract-metadata"],
   engine: "tika",
-  name: "apache-tika",
+  name: TIKA_ENGINE_NAME,
   supportedFormats: [
     "doc",
     "docx",
@@ -58,39 +61,8 @@ const textExtractionFormats: ReadonlyArray<FileFormatFamily> = ["html", "xhtml",
 const deferredExtractionFormats: ReadonlyArray<FileFormatFamily> = ["doc", "docx", "rtf", "pdf-text-layer"];
 const outOfScopeFormats: ReadonlyArray<FileFormatFamily> = ["docm", "xls", "xlsx"];
 
-const mapTikaErrorToOperationError = (
-  error: TikaError,
-  operation: ExtractFileOperation
-): FileProcessingOperationError =>
-  Match.value(error.reason).pipe(
-    Match.when("engine-unavailable", () =>
-      FileProcessingOperationError.fromReason("engine-unavailable", {
-        artifactId: operation.source.id,
-        engine: TikaFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "Tika extraction is deferred because no Tika runtime is configured for this proof.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.when("timeout", () =>
-      FileProcessingOperationError.fromReason("operation-timed-out", {
-        artifactId: operation.source.id,
-        engine: TikaFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "Tika extraction timed out.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.orElse(() =>
-      FileProcessingOperationError.fromReason("file-extraction-failed", {
-        artifactId: operation.source.id,
-        engine: TikaFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "Tika extraction failed inside the driver boundary.",
-        operationId: operation.operationId,
-      })
-    )
-  );
+const scaffoldOperationError = (error: TikaError, operation: ExtractFileOperation): FileProcessingOperationError =>
+  tikaOperationError(operation, error, { engineUnavailableMessage: TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE });
 
 const decodeSourceText = (operation: ExtractFileOperation): Effect.Effect<string, TikaError> => {
   if (operation.source.text !== undefined) {
@@ -110,7 +82,8 @@ const decodeSourceText = (operation: ExtractFileOperation): Effect.Effect<string
 /**
  * Create the P1 Tika file-processing engine.
  *
- * @example
+ * **Example** (Create processing engine)
+ *
  * ```ts
  * import { makeTikaFileProcessingEngine } from "@beep/tika"
  *
@@ -169,7 +142,7 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
     }
 
     if (A.contains(deferredExtractionFormats, operation.format)) {
-      return yield* mapTikaErrorToOperationError(makeTikaError("engine-unavailable"), operation);
+      return yield* scaffoldOperationError(makeTikaError("engine-unavailable"), operation);
     }
 
     if (!A.contains(textExtractionFormats, operation.format)) {
@@ -183,7 +156,7 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
     }
 
     const text = yield* decodeSourceText(operation).pipe(
-      Effect.mapError((error) => mapTikaErrorToOperationError(error, operation))
+      Effect.mapError((error) => scaffoldOperationError(error, operation))
     );
 
     return ExtractionResult.make({
@@ -201,7 +174,8 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
 /**
  * P1 Tika file-processing engine value.
  *
- * @example
+ * **Example** (Check supported formats)
+ *
  * ```ts
  * import { TikaFileProcessingEngine } from "@beep/tika"
  *

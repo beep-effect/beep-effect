@@ -1,16 +1,16 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "gov-legal-data-driver-delivery",
     "title": "Gov/Legal Data Driver Delivery",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-07-11",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/gov-legal-data-driver-delivery",
-  "lifecycle": "paused",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when a product feature pulls a named gov driver (per-driver, not batch).",
+  "lifecycle": "completed-retained",
+  "statusNote": "Terminal as descoped: P0 research specs and P1 @beep/ecfr 15-operation delivery are complete; P2-P5 are won't-do-until-product-pull deferrals. Empty federal-register/dol/courtlistener scaffolds were deleted 2026-08-13; resume recreates each package via goals/honest-repo-signal/research/FOLLOW-UPS.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -70,27 +70,36 @@
     {
       "id": "P2",
       "name": "federal-register keyless driver",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "wont-do-until-product-pull",
+      "resumeFrom": "research/specs/federal-register-openapi.json"
     },
     {
       "id": "P3",
       "name": "dol keyed driver (gated on data-terms matrix)",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "wont-do-until-product-pull",
+      "resumeFrom": "research/data-source-terms-matrix.md and research/SOURCES.md"
     },
     {
       "id": "P4",
       "name": "courtlistener core (gated on data-terms matrix)",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "wont-do-until-product-pull",
+      "resumeFrom": "research/specs/courtlistener/api-root.v4.json and research/courtlistener-deltas.md"
     },
     {
       "id": "P5",
       "name": "courtlistener long tail (full official-schema parity)",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "wont-do-until-product-pull",
+      "resumeFrom": "research/specs/courtlistener/api-root.v4.json, research/specs/courtlistener/options-status.tsv, and research/courtlistener-deltas.md"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete",
+      "disposition": "close-bookkeeping-complete-2026-07-14"
     }
   ],
   "verificationCommands": [

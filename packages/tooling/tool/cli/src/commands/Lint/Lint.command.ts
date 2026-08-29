@@ -13,16 +13,21 @@ import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { runGoalsDoctor } from "../Goals/Doctor.js";
-import { runRootLintPolicyTask } from "../Quality/index.js";
-import { lintIdentityRegistryCommand } from "./IdentityRegistry.js";
-import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
-import { lintPackageTestImportsCommand } from "./PackageTestImports.js";
+import { Command, Flag } from "effect/unstable/cli";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { runToExit } from "../../internal/process/StepExec.ts";
+import { runGoalsDoctor } from "../Goals/Doctor.ts";
+import { runRootLintPolicyTask } from "../Quality/index.ts";
+import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
+import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
+import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
+import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.ts";
+import { lintPackageTestImportsCommand } from "./PackageTestImports.ts";
+import { lintPackageTestTypecheckCommand } from "./PackageTestTypecheck.ts";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
+import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
 import { lintSchemaFirstCommand } from "./SchemaFirst.ts";
 import { lintSchemaTopologyCommand } from "./SchemaTopology.ts";
@@ -37,22 +42,15 @@ const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
   "packages/tooling/tool/cli/src/commands/Laws/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
   "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyResponses.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyBody.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyDependencyHealth.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyForwarder.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyQueue.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyRuntime.ts",
 ]);
 const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
-const DEPRECATED_API_LINT_CACHE_LOCATION = "node_modules/.cache/eslint-deprecated-apis/.eslintcache";
+const DEPRECATED_API_LINT_CACHE_DIRECTORY = "node_modules/.cache/eslint-deprecated-apis";
+const DEPRECATED_API_LINT_CONCURRENCY = 4;
 const DEPRECATED_API_LINT_ESLINT_BIN = "node_modules/.bin/eslint";
 const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=8192";
 const DEPRECATED_API_LINT_SHARDS = [
   "apps/architecture-lab-proof",
+  LABS_WORKSPACE_ROOT,
   "apps/oip-web",
   "apps/professional-desktop",
   "infra",
@@ -60,7 +58,14 @@ const DEPRECATED_API_LINT_SHARDS = [
   "packages/agents",
   "packages/architecture-lab",
   "packages/drivers",
-  "packages/epistemic",
+  "packages/ecosystem",
+  "packages/epistemic/client",
+  "packages/epistemic/config",
+  "packages/epistemic/domain",
+  "packages/epistemic/server",
+  "packages/epistemic/tables",
+  "packages/epistemic/ui",
+  "packages/epistemic/use-cases",
   "packages/foundation/capability",
   "packages/foundation/modeling",
   "packages/foundation/primitive",
@@ -70,6 +75,8 @@ const DEPRECATED_API_LINT_SHARDS = [
   "packages/tooling",
   "packages/workspace",
 ] as const;
+const deprecatedApiLintCacheLocation = (shard: string): string =>
+  `${DEPRECATED_API_LINT_CACHE_DIRECTORY}/.eslintcache-${Str.replaceAll("/", "__")(shard)}`;
 const REQUIRED_TAGGED_UNIONS = [
   "GenerationAction",
   "TsMorphMutation",
@@ -86,10 +93,12 @@ const REQUIRED_TAGGED_UNIONS = [
 /**
  * Lint violation report row.
  *
- * @example
+ * **Example** (Reference the lint violation schema)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -121,12 +130,14 @@ const isContainedLintPath = (path: Path.Path, root: string, candidate: string): 
 /**
  * Collect TypeScript source files under a lint root without following symlink escapes.
  *
- * @param root - Root directory to scan for TypeScript sources.
- * @returns Sorted list of TypeScript source files under the lint root.
- * @example
+ * **Example** (Reference the TypeScript file collector)
+ *
  * ```ts
  * console.log("collectTypeScriptFiles")
  * ```
+ *
+ * @param root - Root directory to scan for TypeScript sources.
+ * @returns Sorted list of TypeScript source files under the lint root.
  * @category utilities
  * @since 0.0.0
  */
@@ -466,30 +477,31 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
   const eslintArgs = [
     "--cache",
     "--cache-location",
-    DEPRECATED_API_LINT_CACHE_LOCATION,
+    deprecatedApiLintCacheLocation(shard),
+    "--cache-strategy",
+    "content",
     "--config",
     "eslint.config.mjs",
+    // The labs root may exist while holding zero lab apps (README-only
+    // container, goals/lab-apps-lifecycle D3); only the labs shard tolerates
+    // an unmatched pattern so an empty root cannot fail the law lane.
+    ...(shard === LABS_WORKSPACE_ROOT ? ["--no-error-on-unmatched-pattern"] : A.empty<string>()),
     shard,
-  ] as const;
-  const args = hasLocalEslint ? eslintArgs : (["eslint", ...eslintArgs] as const);
+  ];
+  const args = hasLocalEslint ? eslintArgs : ["eslint", ...eslintArgs];
   yield* Console.log(`[lint:deprecated-apis] ${shard}: ${command} ${A.join(args, " ")}`);
 
-  const exitCode = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd: process.cwd(),
-        env: {
-          BEEP_ESLINT_PROFILE: "deprecated-apis",
-          NODE_OPTIONS: DEPRECATED_API_LINT_NODE_OPTIONS,
-        },
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  );
+  const exitCode = yield* runToExit({
+    command,
+    args,
+    cwd: process.cwd(),
+    env: {
+      BEEP_ESLINT_PROFILE: "deprecated-apis",
+      NODE_OPTIONS: DEPRECATED_API_LINT_NODE_OPTIONS,
+    },
+    extendEnv: true,
+    stdio: "inherit",
+  });
 
   if (exitCode !== 0) {
     return yield* failWithReportedExit(`lint deprecated-apis: ${shard} failed with exit code ${exitCode}.`, exitCode);
@@ -497,9 +509,14 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
 });
 
 const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
-  for (const shard of DEPRECATED_API_LINT_SHARDS) {
-    yield* runDeprecatedApiLintShard(shard);
-  }
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.makeDirectory(DEPRECATED_API_LINT_CACHE_DIRECTORY, { recursive: true });
+  yield* Console.log(
+    `[lint:deprecated-apis] running ${A.length(DEPRECATED_API_LINT_SHARDS)} shards with concurrency ${DEPRECATED_API_LINT_CONCURRENCY}`
+  );
+  yield* Effect.forEach(DEPRECATED_API_LINT_SHARDS, runDeprecatedApiLintShard, {
+    concurrency: DEPRECATED_API_LINT_CONCURRENCY,
+  });
 
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
@@ -507,10 +524,12 @@ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
 /**
  * Lint command for circular dependency checks.
  *
- * @example
+ * **Example** (Reference the circular-import subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -521,10 +540,12 @@ const lintCircularCommand = Command.make("circular", {}, runLintCircular).pipe(
 /**
  * Lint command for deprecated vendor API usage.
  *
- * @example
+ * **Example** (Show the deprecated-apis invocation)
+ *
  * ```ts
  * console.log("bun run beep lint deprecated-apis")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -535,25 +556,33 @@ const lintDeprecatedApisCommand = Command.make("deprecated-apis", {}, runDepreca
 /**
  * Lint command for repo-wide root policy checks.
  *
- * @example
+ * **Example** (Show the policy lint invocation)
+ *
  * ```ts
  * console.log("bun run beep lint policy")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
-const lintPolicyCommand = Command.make("policy", {}, () => runRootLintPolicyTask).pipe(
-  Command.withDescription("Run repo-wide lint policy checks")
-);
+const lintPolicyCommand = Command.make(
+  "policy",
+  {
+    full: Flag.boolean("full").pipe(Flag.withDefault(false), Flag.withDescription("Run the full policy sweep locally")),
+  },
+  ({ full }) => runRootLintPolicyTask(full)
+).pipe(Command.withDescription("Run repo-wide lint policy checks"));
 
 /**
  * Lint alias for the goals doctor (the CLI has no command-alias mechanism, so
  * this second registration delegates to the Goals runner).
  *
- * @example
+ * **Example** (Show the goal-packets lint invocation)
+ *
  * ```ts
  * console.log("bun run beep lint goal-packets")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -564,10 +593,12 @@ const lintGoalPacketsCommand = Command.make("goal-packets", {}, () => runGoalsDo
 /**
  * Lint command for schema-first CLI conventions.
  *
- * @example
+ * **Example** (Reference the schema-first lint subcommand)
+ *
  * ```ts
  * console.log("docgen metadata")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -575,44 +606,36 @@ const lintToolingSchemaFirstCommand = Command.make("tooling-schema-first", {}, r
   Command.withDescription("Check packages/tooling/tool/cli source for schema-first conventions")
 );
 
+const lintSubcommands = [
+  lintCircularCommand,
+  lintDeprecatedApisCommand,
+  lintEcosystemPolarityCommand,
+  lintGoalPacketsCommand,
+  lintIdentityRegistryCommand,
+  lintJudgeRubricCommand,
+  lintPackageTestImportsCommand,
+  lintPackageTestTypecheckCommand,
+  lintPolicyCommand,
+  lintReflectionArtifactsCommand,
+  lintRoadmapRefsCommand,
+  lintSchemaCatalogCommand,
+  lintSchemaFirstCommand,
+  lintSchemaTopologyCommand,
+  lintToolingSchemaFirstCommand,
+];
+
 /**
  * Lint command group.
  *
- * @example
+ * **Example** (Reference the lint command group)
+ *
  * ```ts
  * console.log("lintCommand")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 export const lintCommand = Command.make("lint", {}, () =>
-  printLines([
-    "Lint commands:",
-    "- bun run beep lint circular",
-    "- bun run beep lint deprecated-apis",
-    "- bun run beep lint goal-packets",
-    "- bun run beep lint identity-registry",
-    "- bun run beep lint package-test-imports",
-    "- bun run beep lint policy",
-    "- bun run beep lint reflection-artifacts",
-    "- bun run beep lint schema-catalog",
-    "- bun run beep lint schema-first",
-    "- bun run beep lint schema-topology",
-    "- bun run beep lint tooling-schema-first",
-  ])
-).pipe(
-  Command.withDescription("Repository lint policy checks"),
-  Command.withSubcommands([
-    lintCircularCommand,
-    lintDeprecatedApisCommand,
-    lintGoalPacketsCommand,
-    lintIdentityRegistryCommand,
-    lintPackageTestImportsCommand,
-    lintPolicyCommand,
-    lintReflectionArtifactsCommand,
-    lintSchemaCatalogCommand,
-    lintSchemaFirstCommand,
-    lintSchemaTopologyCommand,
-    lintToolingSchemaFirstCommand,
-  ])
-);
+  printLines(["Lint commands:", ...A.map(lintSubcommands, (command) => `- bun run beep lint ${command.name}`)])
+).pipe(Command.withDescription("Repository lint policy checks"), Command.withSubcommands(lintSubcommands));

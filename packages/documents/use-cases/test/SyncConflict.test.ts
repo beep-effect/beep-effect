@@ -1,13 +1,14 @@
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import {
   ListOpenSyncConflictsInput,
   MarkSyncConflictReviewedInput,
   SyncConflictRepositoryNotFound,
   SyncConflictSeed,
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -17,7 +18,7 @@ import { FastCheck as fc } from "effect/testing";
 import type { SyncConflictRepositoryShape } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -33,8 +34,8 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const unknownConflictId = S.decodeUnknownSync(Documents.SyncConflictId)(99);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const unknownConflictId = S.decodeSync(Documents.SyncConflictId)(99);
 const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
 const encodeSyncConflict = S.encodeSync(DomainSyncConflict.SyncConflict);
 
@@ -49,7 +50,7 @@ const driftSeed = (remoteEventId: O.Option<string>) =>
   });
 
 const syncConflictRow = (seed: SyncConflictSeed, id: number) => ({
-  ...baseEntityFixtureInput(DomainSyncConflict.SyncConflictId.entityType, id),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, id),
   conflictKind: seed.conflictKind,
   localRelPath: O.getOrNull(seed.localRelPath),
   provider: seed.provider,

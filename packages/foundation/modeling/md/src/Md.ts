@@ -8,10 +8,11 @@
 import { PosInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, Match } from "effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { renderSafeHtml, safeHtmlValue } from "./Md.html.ts";
 import {
   Admonition,
   A as ANode,
@@ -65,14 +66,30 @@ import {
   renderWith,
   renderWithUnsafe,
 } from "./Md.render.ts";
+import {
+  decodeSafeDocument,
+  decodeSafeDocumentEffect,
+  decodeSafeDocumentUnsafe,
+  documentSafetyIssues,
+  refineSafeDocument,
+} from "./Md.safe.ts";
 import type { JsonObject } from "@beep/schema";
 import type { Result } from "effect";
-import type { AdmonitionKind, Block, EmbedKind, Inline, ListItemChild, TableAlignment } from "./Md.model.ts";
+import type {
+  AdmonitionKind,
+  Block,
+  EmbedKind,
+  Inline,
+  ListItemChild,
+  TableAlignment,
+  TaskListItemSpec,
+} from "./Md.model.ts";
 
 /**
  * Inline constructor input accepted by text-oriented builders.
  *
- * @example
+ * **Example** (Accept InlineInput type)
+ *
  * ```ts
  * import type { InlineInput } from "@beep/md/Md"
  *
@@ -88,7 +105,8 @@ export type InlineInput = string | Inline;
 /**
  * Inline child content accepted by inline and text block builders.
  *
- * @example
+ * **Example** (Inline content array)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { InlineContent } from "@beep/md/Md"
@@ -105,7 +123,8 @@ export type InlineContent = InlineInput | ReadonlyArray<InlineInput>;
 /**
  * Overloaded builder shape for inline-content constructors.
  *
- * @example
+ * **Example** (Accept Strong builder)
+ *
  * ```ts
  * import type { InlineContentBuilder } from "@beep/md/Md"
  * import type { Strong } from "@beep/md/Md.model"
@@ -125,7 +144,8 @@ export type InlineContentBuilder<Node> = {
 /**
  * Block constructor input accepted by block containers.
  *
- * @example
+ * **Example** (Accept BlockInput type)
+ *
  * ```ts
  * import type { BlockInput } from "@beep/md/Md"
  *
@@ -141,7 +161,8 @@ export type BlockInput = string | Block;
 /**
  * Block child content accepted by block container call forms.
  *
- * @example
+ * **Example** (Block content array)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { BlockContent } from "@beep/md/Md"
@@ -158,10 +179,13 @@ export type BlockContent = BlockInput | ReadonlyArray<BlockInput>;
 /**
  * Tagged-template interpolation accepted by block containers.
  *
+ * **Details**
+ *
  * Arrays in templates are inline content arrays; use the call form for block
  * arrays.
  *
- * @example
+ * **Example** (Template value as heading)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { BlockTemplateValue } from "@beep/md/Md"
@@ -178,7 +202,8 @@ export type BlockTemplateValue = InlineContent | Block;
 /**
  * Overloaded builder shape for block-content constructors.
  *
- * @example
+ * **Example** (Accept BlockQuote builder)
+ *
  * ```ts
  * import type { BlockContentBuilder } from "@beep/md/Md"
  * import type { BlockQuote } from "@beep/md/Md.model"
@@ -198,7 +223,8 @@ export type BlockContentBuilder<Node> = {
 /**
  * Child input accepted inside list item constructors.
  *
- * @example
+ * **Example** (Strong list item child)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemChildInput } from "@beep/md/Md"
@@ -215,7 +241,8 @@ export type ListItemChildInput = InlineInput | Block;
 /**
  * List item child content accepted by ordered, unordered, and task list builders.
  *
- * @example
+ * **Example** (Nested list item content)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemContent } from "@beep/md/Md"
@@ -232,7 +259,8 @@ export type ListItemContent = ListItemChildInput | ReadonlyArray<ListItemChildIn
 /**
  * Overloaded builder shape for list item content constructors.
  *
- * @example
+ * **Example** (Accept Li builder)
+ *
  * ```ts
  * import type { ListItemContentBuilder } from "@beep/md/Md"
  * import type { Li } from "@beep/md/Md.model"
@@ -252,7 +280,8 @@ export type ListItemContentBuilder<Node> = {
 /**
  * Input accepted by ordered and unordered list constructors.
  *
- * @example
+ * **Example** (List item input array)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { ListItemInput } from "@beep/md/Md"
@@ -266,21 +295,7 @@ export type ListItemContentBuilder<Node> = {
  */
 export type ListItemInput = ListItemContent | Li;
 
-/**
- * Input accepted by task list constructors.
- *
- * @example
- * ```ts
- * import type { TaskListItemInput } from "@beep/md/Md"
- *
- * const item: TaskListItemInput = { text: "Done", checked: true }
- * console.log(item)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TaskListItemInput =
+type TaskListCompatibilityInput =
   | string
   | TaskItem
   | {
@@ -293,9 +308,29 @@ export type TaskListItemInput =
     };
 
 /**
+ * Input accepted by task list constructors.
+ *
+ * **Example** (Checked task item object)
+ *
+ * ```ts
+ * import type { TaskListItemInput } from "@beep/md/Md"
+ *
+ * const item: TaskListItemInput = { text: "Done", checked: true }
+ * console.log(item)
+ * ```
+ *
+ * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
+ * {@link taskListFromItems}. This union remains for shorthand compatibility.
+ * @category models
+ * @since 0.0.0
+ */
+export type TaskListItemInput = TaskListCompatibilityInput;
+
+/**
  * Input accepted by table cell constructors.
  *
- * @example
+ * **Example** (String table cell)
+ *
  * ```ts
  * import type { TableCellInput } from "@beep/md/Md"
  *
@@ -311,7 +346,8 @@ export type TableCellInput = InlineContent | TableCell;
 /**
  * Input accepted by table row constructors.
  *
- * @example
+ * **Example** (Row with table cell)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  * import type { TableRowInput } from "@beep/md/Md"
@@ -328,6 +364,20 @@ export type TableRowInput = TableRow | ReadonlyArray<TableCellInput>;
 const blockTemplateFormattingLinePattern = /[\r\n]/;
 const isTemplateStringsArray = (input: unknown): input is TemplateStringsArray =>
   A.isArray(input) && P.hasProperty(input, "raw");
+
+// Constructor content is always a string, an array of children, or a tagged
+// node; the trailing options object of the same constructors never is. That
+// gap is what makes the data-first / data-last dispatch below decidable.
+const isContentArgument = (input: unknown): boolean =>
+  P.isString(input) || A.isArray(input) || P.hasProperty(input, "_tag");
+
+// Data-first when the leading argument carries the content, e.g. `pre(value)`
+// and `pre(value, options)` against the data-last `pre(options)`.
+const isLeadingContentCall = (args: IArguments): boolean => isContentArgument(args[0]);
+
+// Data-first when the content follows a keying argument (href, kind), e.g.
+// `a(href, children)` against the data-last `a(children, options)`.
+const isKeyedContentCall = (args: IArguments): boolean => args.length >= 2 && isContentArgument(args[1]);
 
 const isInlineInputArray = (input: InlineContent): input is ReadonlyArray<InlineInput> => A.isArray(input);
 
@@ -498,7 +548,7 @@ const makeListItemContentBuilder = <Node>(
 
 const asListItem = (input: ListItemInput): Li => (Li.is(input) ? input : li(input));
 
-const asTaskItem = (input: TaskListItemInput): TaskItem =>
+const asTaskItem = (input: TaskListCompatibilityInput): TaskItem =>
   Match.value(input).pipe(
     Match.when(TaskItem.is, (item) => item),
     Match.when(P.isString, (value) => taskItem(value)),
@@ -518,12 +568,13 @@ const asTableRow = (input: TableRowInput): TableRow =>
 /**
  * Creates plain escaped inline text.
  *
- * @example
- * ```ts
+ * **Example** (Create plain text)
+ *
+ * ```ts import.meta.vitest name="Create plain text"
  * import { Md } from "@beep/md"
  *
  * const node = Md.text("Hello")
- * console.log(node._tag) // "text"
+ * node._tag // => "text"
  * ```
  *
  * @category constructors
@@ -534,12 +585,13 @@ export const text = (value: string): Text => Text.make({ value });
 /**
  * Creates trusted raw Markdown inline content.
  *
- * @example
- * ```ts
+ * **Example** (Create raw Markdown)
+ *
+ * ```ts import.meta.vitest name="Create raw Markdown"
  * import { Md } from "@beep/md"
  *
  * const node = Md.rawMarkdown("**trusted**")
- * console.log(node._tag) // "rawMarkdown"
+ * node._tag // => "rawMarkdown"
  * ```
  *
  * @category constructors
@@ -550,9 +602,12 @@ export const rawMarkdown = (value: string): RawMarkdown => RawMarkdown.make({ va
 /**
  * Creates raw HTML inline content for adapters that opt into trusted HTML rendering.
  *
+ * **Details**
+ *
  * The built-in {@link HtmlFragmentAdapter} escapes this value by default.
  *
- * @example
+ * **Example** (Create raw HTML)
+ *
  * ```ts
  * import { Md } from "@beep/md"
  *
@@ -568,12 +623,13 @@ export const rawHtml = (value: string): RawHtml => RawHtml.make({ value });
 /**
  * Creates strong inline content.
  *
- * @example
- * ```ts
+ * **Example** (Strong with nested code)
+ *
+ * ```ts import.meta.vitest name="Strong with nested code"
  * import { Md } from "@beep/md"
  *
  * const node = Md.strong`Hello ${Md.code("beep")}`
- * console.log(node._tag) // "strong"
+ * node._tag // => "strong"
  * ```
  *
  * @category constructors
@@ -584,12 +640,13 @@ export const strong = makeInlineContentBuilder((children): Strong => Strong.make
 /**
  * Creates emphasized inline content.
  *
- * @example
- * ```ts
+ * **Example** (Create emphasized text)
+ *
+ * ```ts import.meta.vitest name="Create emphasized text"
  * import { Md } from "@beep/md"
  *
  * const node = Md.em("quiet")
- * console.log(node._tag) // "em"
+ * node._tag // => "em"
  * ```
  *
  * @category constructors
@@ -600,12 +657,13 @@ export const em = makeInlineContentBuilder((children): Em => Em.make({ children 
 /**
  * Creates deleted inline content.
  *
- * @example
- * ```ts
+ * **Example** (Create deleted text)
+ *
+ * ```ts import.meta.vitest name="Create deleted text"
  * import { Md } from "@beep/md"
  *
  * const node = Md.del("removed")
- * console.log(node._tag) // "del"
+ * node._tag // => "del"
  * ```
  *
  * @category constructors
@@ -616,12 +674,13 @@ export const del = makeInlineContentBuilder((children): Del => Del.make({ childr
 /**
  * Creates an inline code span.
  *
- * @example
- * ```ts
+ * **Example** (Create inline code)
+ *
+ * ```ts import.meta.vitest name="Create inline code"
  * import { Md } from "@beep/md"
  *
  * const node = Md.code("console.log()")
- * console.log(node._tag) // "code"
+ * node._tag // => "code"
  * ```
  *
  * @category constructors
@@ -632,45 +691,65 @@ export const code = (value: string): Code => Code.make({ value });
 /**
  * Creates an inline hyperlink.
  *
- * @example
- * ```ts
+ * **Example** (Create hyperlink)
+ *
+ * ```ts import.meta.vitest name="Create hyperlink"
  * import { Md } from "@beep/md"
  *
  * const node = Md.a("https://example.com", "Example")
- * console.log(node._tag) // "a"
+ * node._tag // => "a"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const a = (href: string, children: InlineContent, options: { readonly title?: string } = {}): ANode =>
-  ANode.make({ href, children: asInlineArray(children), title: O.fromUndefinedOr(options.title) });
+export const a: {
+  (children: InlineContent, options?: { readonly title?: string }): (href: string) => ANode;
+  (href: string, children: InlineContent, options?: { readonly title?: string }): ANode;
+} = dual(
+  isKeyedContentCall,
+  (href: string, children: InlineContent, options: { readonly title?: string } = {}): ANode =>
+    ANode.make({ href, children: asInlineArray(children), title: O.fromUndefinedOr(options.title) })
+);
 
 /**
  * Creates an inline image.
  *
- * @example
- * ```ts
+ * **Details**
+ *
+ * Alternate text lives in the options object so the constructor keeps a single
+ * positional argument; omitting it yields the empty alt text.
+ *
+ * **Example** (Create inline image)
+ *
+ * ```ts import.meta.vitest name="Create inline image"
  * import { Md } from "@beep/md"
  *
- * const node = Md.img("/logo.png", "Logo")
- * console.log(node._tag) // "img"
+ * const node = Md.img("/logo.png", { alt: "Logo" })
+ * node._tag // => "img"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const img = (src: string, alt = "", options: { readonly title?: string } = {}): Img =>
-  Img.make({ src, alt, title: O.fromUndefinedOr(options.title) });
+export const img: {
+  (options?: { readonly alt?: string; readonly title?: string }): (src: string) => Img;
+  (src: string, options?: { readonly alt?: string; readonly title?: string }): Img;
+} = dual(
+  isLeadingContentCall,
+  (src: string, options: { readonly alt?: string; readonly title?: string } = {}): Img =>
+    Img.make({ src, alt: options.alt ?? "", title: O.fromUndefinedOr(options.title) })
+);
 
 /**
  * Creates an inline line break.
  *
- * @example
- * ```ts
+ * **Example** (Create line break)
+ *
+ * ```ts import.meta.vitest name="Create line break"
  * import { Md } from "@beep/md"
  *
- * console.log(Md.br._tag) // "br"
+ * Md.br._tag // => "br"
  * ```
  *
  * @category constructors
@@ -681,12 +760,13 @@ export const br: Br = Br.make({});
 /**
  * Creates inline TeX math content.
  *
- * @example
- * ```ts
+ * **Example** (Create inline math)
+ *
+ * ```ts import.meta.vitest name="Create inline math"
  * import { Md } from "@beep/md"
  *
  * const node = Md.inlineMath("a^2")
- * console.log(node._tag) // "inlineMath"
+ * node._tag // => "inlineMath"
  * ```
  *
  * @category constructors
@@ -697,12 +777,13 @@ export const inlineMath = (value: string): InlineMath => InlineMath.make({ value
 /**
  * Creates an inline footnote reference.
  *
- * @example
- * ```ts
+ * **Example** (Create footnote reference)
+ *
+ * ```ts import.meta.vitest name="Create footnote reference"
  * import { Md } from "@beep/md"
  *
  * const node = Md.footnoteRef("note-1")
- * console.log(node._tag) // "footnoteReference"
+ * node._tag // => "footnoteReference"
  * ```
  *
  * @category constructors
@@ -714,12 +795,13 @@ export const footnoteRef = (identifier: string): FootnoteReference =>
 /**
  * Creates a level-one heading block.
  *
- * @example
- * ```ts
+ * **Example** (Create h1 heading)
+ *
+ * ```ts import.meta.vitest name="Create h1 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h1`Hello ${Md.em("world")}`
- * console.log(node._tag) // "h1"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -730,12 +812,13 @@ export const h1 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-two heading block.
  *
- * @example
- * ```ts
+ * **Example** (Create h2 heading)
+ *
+ * ```ts import.meta.vitest name="Create h2 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h2`Install`
- * console.log(node._tag) // "h2"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -746,12 +829,13 @@ export const h2 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-three heading block.
  *
- * @example
- * ```ts
+ * **Example** (Create h3 heading)
+ *
+ * ```ts import.meta.vitest name="Create h3 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h3`Config`
- * console.log(node._tag) // "h3"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -762,12 +846,13 @@ export const h3 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-four heading block.
  *
- * @example
- * ```ts
+ * **Example** (Create h4 heading)
+ *
+ * ```ts import.meta.vitest name="Create h4 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h4`Details`
- * console.log(node._tag) // "h4"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -778,12 +863,13 @@ export const h4 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-five heading block.
  *
- * @example
- * ```ts
+ * **Example** (Create h5 heading)
+ *
+ * ```ts import.meta.vitest name="Create h5 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h5`Notes`
- * console.log(node._tag) // "h5"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -794,12 +880,13 @@ export const h5 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a level-six heading block.
  *
- * @example
- * ```ts
+ * **Example** (Create h6 heading)
+ *
+ * ```ts import.meta.vitest name="Create h6 heading"
  * import { Md } from "@beep/md"
  *
  * const node = Md.h6`Footnote`
- * console.log(node._tag) // "h6"
+ * node._tag // => "heading"
  * ```
  *
  * @category constructors
@@ -810,12 +897,13 @@ export const h6 = makeInlineContentBuilder((children): Heading => Heading.make({
 /**
  * Creates a paragraph block.
  *
- * @example
- * ```ts
+ * **Example** (Create paragraph)
+ *
+ * ```ts import.meta.vitest name="Create paragraph"
  * import { Md } from "@beep/md"
  *
  * const node = Md.p`Hello ${Md.strong("world")}`
- * console.log(node._tag) // "p"
+ * node._tag // => "p"
  * ```
  *
  * @category constructors
@@ -826,12 +914,13 @@ export const p = makeInlineContentBuilder((children): PNode => PNode.make({ chil
 /**
  * Creates a list item node.
  *
- * @example
- * ```ts
+ * **Example** (Create list item)
+ *
+ * ```ts import.meta.vitest name="Create list item"
  * import { Md } from "@beep/md"
  *
  * const node = Md.li`Item`
- * console.log(node._tag) // "li"
+ * node._tag // => "li"
  * ```
  *
  * @category constructors
@@ -842,12 +931,13 @@ export const li = makeListItemContentBuilder((children): Li => Li.make({ childre
 /**
  * Creates an unordered list block.
  *
- * @example
- * ```ts
+ * **Example** (Create unordered list)
+ *
+ * ```ts import.meta.vitest name="Create unordered list"
  * import { Md } from "@beep/md"
  *
  * const node = Md.ul(["One", Md.li("Two")])
- * console.log(node._tag) // "ul"
+ * node._tag // => "ul"
  * ```
  *
  * @category constructors
@@ -858,69 +948,109 @@ export const ul = (children: ReadonlyArray<ListItemInput>): Ul => Ul.make({ chil
 /**
  * Creates an ordered list block.
  *
- * @example
- * ```ts
+ * **Example** (Create ordered list)
+ *
+ * ```ts import.meta.vitest name="Create ordered list"
  * import { Md } from "@beep/md"
  *
  * const node = Md.ol(["One", "Two"])
- * console.log(node._tag) // "ol"
+ * node._tag // => "ol"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const ol = (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
-  Ol.make({
-    children: A.map(children, asListItem),
-    ...(P.isNumber(options.start) ? { start: PosInt.make(options.start) } : {}),
-  });
+export const ol: {
+  (options?: { readonly start?: number }): (children: ReadonlyArray<ListItemInput>) => Ol;
+  (children: ReadonlyArray<ListItemInput>, options?: { readonly start?: number }): Ol;
+} = dual(
+  isLeadingContentCall,
+  (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
+    Ol.make({
+      children: A.map(children, asListItem),
+      ...(P.isNumber(options.start) ? { start: PosInt.make(options.start) } : {}),
+    })
+);
 
 /**
  * Creates a GFM task list item.
  *
- * @example
- * ```ts
+ * **Example** (Create checked task item)
+ *
+ * ```ts import.meta.vitest name="Create checked task item"
  * import { Md } from "@beep/md"
  *
  * const node = Md.taskItem("Done", { checked: true })
- * console.log(node.checked) // true
+ * node.checked // => true
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const taskItem = (children: ListItemContent, options: { readonly checked?: boolean } = {}): TaskItem =>
-  TaskItem.make({
-    children: asListItemChildren(children),
-    ...(P.isBoolean(options.checked) ? { checked: options.checked } : {}),
-  });
+export const taskItem: {
+  (options?: { readonly checked?: boolean }): (children: ListItemContent) => TaskItem;
+  (children: ListItemContent, options?: { readonly checked?: boolean }): TaskItem;
+} = dual(
+  isLeadingContentCall,
+  (children: ListItemContent, options: { readonly checked?: boolean } = {}): TaskItem =>
+    TaskItem.make({
+      children: asListItemChildren(children),
+      ...(P.isBoolean(options.checked) ? { checked: options.checked } : {}),
+    })
+);
+
+const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInput>): TaskList =>
+  TaskList.make({ children: A.map(children, asTaskItem) });
 
 /**
  * Creates a GFM task list block.
  *
- * @example
- * ```ts
+ * **Example** (Create task list)
+ *
+ * ```ts import.meta.vitest name="Create task list"
  * import { Md } from "@beep/md"
  *
  * const node = Md.taskList(["Todo", Md.taskItem("Done", { checked: true })])
- * console.log(node._tag) // "taskList"
+ * node._tag // => "taskList"
+ * ```
+ *
+ * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
+ * ambiguous strings and object shapes for compatibility.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const taskList = taskListCompatibility;
+
+/**
+ * Creates a GFM task list from canonical tagged task items.
+ *
+ * **Example** (Task list from items)
+ *
+ * ```ts import.meta.vitest name="Task list from items"
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.taskListFromItems([
+ *   Md.taskItem("Done", { checked: true }),
+ *   Md.taskItem("Todo"),
+ * ])
+ * node.children.length // => 2
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const taskList = (children: ReadonlyArray<TaskListItemInput>): TaskList =>
-  TaskList.make({ children: A.map(children, asTaskItem) });
+export const taskListFromItems = (children: ReadonlyArray<TaskListItemSpec>): TaskList => TaskList.make({ children });
 
 /**
  * Creates a block quote container.
  *
- * @example
- * ```ts
+ * **Example** (Create blockquote)
+ *
+ * ```ts import.meta.vitest name="Create blockquote"
  * import { Md } from "@beep/md"
  *
  * const node = Md.blockquote`Hello ${Md.strong("world")}`
- * console.log(node._tag) // "blockquote"
+ * node._tag // => "blockquote"
  * ```
  *
  * @category constructors
@@ -931,29 +1061,37 @@ export const blockquote = makeBlockContentBuilder((children): BlockQuote => Bloc
 /**
  * Creates a fenced code block.
  *
- * @example
- * ```ts
+ * **Example** (Create fenced code block)
+ *
+ * ```ts import.meta.vitest name="Create fenced code block"
  * import { Md } from "@beep/md"
  *
  * const node = Md.pre("console.log('beep')", { language: "ts" })
- * console.log(node._tag) // "pre"
+ * node._tag // => "pre"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const pre = (value: string, options: { readonly language?: string } = {}): Pre =>
-  Pre.make({ value, language: O.flatMap(O.fromUndefinedOr(options.language), CodeFenceLanguage.decodeOption) });
+export const pre: {
+  (options?: { readonly language?: string }): (value: string) => Pre;
+  (value: string, options?: { readonly language?: string }): Pre;
+} = dual(
+  isLeadingContentCall,
+  (value: string, options: { readonly language?: string } = {}): Pre =>
+    Pre.make({ value, language: O.flatMap(O.fromUndefinedOr(options.language), CodeFenceLanguage.decodeOption) })
+);
 
 /**
  * Creates a table cell with inline content.
  *
- * @example
- * ```ts
+ * **Example** (Create table cell)
+ *
+ * ```ts import.meta.vitest name="Create table cell"
  * import { Md } from "@beep/md"
  *
  * const node = Md.tableCell("Name")
- * console.log(node._tag) // "tableCell"
+ * node._tag // => "tableCell"
  * ```
  *
  * @category constructors
@@ -964,12 +1102,13 @@ export const tableCell = (children: InlineContent): TableCell => TableCell.make(
 /**
  * Creates a table row from table cells.
  *
- * @example
- * ```ts
+ * **Example** (Create table row)
+ *
+ * ```ts import.meta.vitest name="Create table row"
  * import { Md } from "@beep/md"
  *
  * const node = Md.tableRow(["Name", "Value"])
- * console.log(node._tag) // "tableRow"
+ * node._tag // => "tableRow"
  * ```
  *
  * @category constructors
@@ -981,36 +1120,50 @@ export const tableRow = (children: ReadonlyArray<TableCellInput>): TableRow =>
 /**
  * Creates a Markdown table block.
  *
- * @example
- * ```ts
+ * **Example** (Create table with header)
+ *
+ * ```ts import.meta.vitest name="Create table with header"
  * import { Md } from "@beep/md"
  *
  * const node = Md.table([["Name", "Value"]], { headerRow: true })
- * console.log(node._tag) // "table"
+ * node._tag // => "table"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const table = (
-  children: ReadonlyArray<TableRowInput>,
-  options: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> } = {}
-): Table =>
-  Table.make({
-    children: A.map(children, asTableRow),
-    align: options.align ?? [],
-    ...(P.isBoolean(options.headerRow) ? { headerRow: options.headerRow } : {}),
-  });
+export const table: {
+  (options?: {
+    readonly headerRow?: boolean;
+    readonly align?: ReadonlyArray<TableAlignment>;
+  }): (children: ReadonlyArray<TableRowInput>) => Table;
+  (
+    children: ReadonlyArray<TableRowInput>,
+    options?: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> }
+  ): Table;
+} = dual(
+  isLeadingContentCall,
+  (
+    children: ReadonlyArray<TableRowInput>,
+    options: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> } = {}
+  ): Table =>
+    Table.make({
+      children: A.map(children, asTableRow),
+      align: options.align ?? [],
+      ...(P.isBoolean(options.headerRow) ? { headerRow: options.headerRow } : {}),
+    })
+);
 
 /**
  * Creates a display TeX math block.
  *
- * @example
- * ```ts
+ * **Example** (Create math block)
+ *
+ * ```ts import.meta.vitest name="Create math block"
  * import { Md } from "@beep/md"
  *
  * const node = Md.mathBlock("a^2 + b^2 = c^2")
- * console.log(node._tag) // "mathBlock"
+ * node._tag // => "mathBlock"
  * ```
  *
  * @category constructors
@@ -1021,76 +1174,91 @@ export const mathBlock = (value: string): MathBlock => MathBlock.make({ value })
 /**
  * Creates a footnote definition block.
  *
- * @example
- * ```ts
+ * **Example** (Create footnote definition)
+ *
+ * ```ts import.meta.vitest name="Create footnote definition"
  * import { Md } from "@beep/md"
  *
  * const node = Md.footnoteDef("note-1", "Body")
- * console.log(node._tag) // "footnoteDefinition"
+ * node._tag // => "footnoteDefinition"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const footnoteDef = (identifier: string, children: BlockContent): FootnoteDefinition =>
-  FootnoteDefinition.make({ identifier: FootnoteIdentifier.make(identifier), children: asBlockArray(children) });
+export const footnoteDef: {
+  (children: BlockContent): (identifier: string) => FootnoteDefinition;
+  (identifier: string, children: BlockContent): FootnoteDefinition;
+} = dual(
+  2,
+  (identifier: string, children: BlockContent): FootnoteDefinition =>
+    FootnoteDefinition.make({ identifier: FootnoteIdentifier.make(identifier), children: asBlockArray(children) })
+);
 
 /**
  * Creates a typed admonition block.
  *
- * @example
- * ```ts
+ * **Example** (Create warning admonition)
+ *
+ * ```ts import.meta.vitest name="Create warning admonition"
  * import { Md } from "@beep/md"
  *
  * const node = Md.admonition("warning", "Careful")
- * console.log(node._tag) // "admonition"
+ * node._tag // => "admonition"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const admonition = (
-  kind: AdmonitionKind,
-  children: BlockContent,
-  options: { readonly title?: string } = {}
-): Admonition => Admonition.make({ kind, title: O.fromUndefinedOr(options.title), children: asBlockArray(children) });
+export const admonition: {
+  (children: BlockContent, options?: { readonly title?: string }): (kind: AdmonitionKind) => Admonition;
+  (kind: AdmonitionKind, children: BlockContent, options?: { readonly title?: string }): Admonition;
+} = dual(
+  isKeyedContentCall,
+  (kind: AdmonitionKind, children: BlockContent, options: { readonly title?: string } = {}): Admonition =>
+    Admonition.make({ kind, title: O.fromUndefinedOr(options.title), children: asBlockArray(children) })
+);
 
 /**
  * Creates a safe generalized block embed.
  *
- * @example
- * ```ts
+ * **Example** (Create video embed)
+ *
+ * ```ts import.meta.vitest name="Create video embed"
  * import { Md } from "@beep/md"
  *
  * const node = Md.embed("video", "https://example.com/video", { title: "Demo" })
- * console.log(node._tag) // "embed"
+ * node._tag // => "embed"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const embed = (
-  kind: EmbedKind,
-  src: string,
-  options: { readonly title?: string; readonly description?: string } = {}
-): Embed =>
-  Embed.make({
-    kind,
-    src,
-    title: O.fromUndefinedOr(options.title),
-    description: O.fromUndefinedOr(options.description),
-  });
+export const embed: {
+  (src: string, options?: { readonly title?: string; readonly description?: string }): (kind: EmbedKind) => Embed;
+  (kind: EmbedKind, src: string, options?: { readonly title?: string; readonly description?: string }): Embed;
+} = dual(
+  isKeyedContentCall,
+  (kind: EmbedKind, src: string, options: { readonly title?: string; readonly description?: string } = {}): Embed =>
+    Embed.make({
+      kind,
+      src,
+      title: O.fromUndefinedOr(options.title),
+      description: O.fromUndefinedOr(options.description),
+    })
+);
 
 /**
  * Creates the encoded YouTube embed payload decoded by public constructors.
  *
- * @example
- * ```ts
+ * **Example** (Create YouTube embed result)
+ *
+ * ```ts import.meta.vitest name="Create YouTube embed result"
  * import { Result } from "effect"
  * import { Md } from "@beep/md"
  *
- * const node = Result.getOrThrow(Md.youtube("dQw4w9WgXcQ"))
- * console.log(node._tag) // "youtube"
+ * const result = Md.youtube("M7lc1UVf-VE")
+ * Result.isSuccess(result) && result.success._tag === "youtube" // => true
  * ```
  *
  * @category constructors
@@ -1101,50 +1269,56 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
 /**
  * Creates a YouTube embed block and captures schema validation failures.
  *
- * @example
- * ```ts
+ * **Example** (Create YouTube embed)
+ *
+ * ```ts import.meta.vitest name="Create YouTube embed"
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
- * const node = Result.getOrThrow(Md.youtube("dQw4w9WgXcQ"))
- * console.log(node._tag) // "youtube"
+ * const result = Md.youtube("M7lc1UVf-VE")
+ * Result.isSuccess(result) && result.success._tag === "youtube" // => true
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
 export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> =>
-  S.decodeUnknownResult(YouTube)(youtubeInput(videoId));
+  S.decodeResult(YouTube)(youtubeInput(videoId));
 
 /**
  * Effectful YouTube embed constructor.
  *
- * @example
+ * **Example** (Effectful YouTube constructor)
+ *
  * ```ts
+ * import { Effect } from "effect"
  * import { Md } from "@beep/md"
  *
- * const program = Md.youtubeEffect("dQw4w9WgXcQ")
- * console.log(program)
+ * const program = Md.youtubeEffect("M7lc1UVf-VE")
+ * Effect.runPromise(program).then((node) => console.log(node._tag)) // "youtube"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
 export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: string) {
-  return yield* S.decodeUnknownEffect(YouTube)(youtubeInput(videoId));
+  return yield* S.decodeEffect(YouTube)(youtubeInput(videoId));
 });
 
 /**
  * Creates a YouTube embed block and throws on schema validation failure.
  *
+ * **Details**
+ *
  * Prefer {@link youtube} or {@link youtubeEffect} at input boundaries.
  *
- * @example
- * ```ts
+ * **Example** (Unsafe YouTube constructor)
+ *
+ * ```ts import.meta.vitest name="Unsafe YouTube constructor"
  * import { Md } from "@beep/md"
  *
- * const node = Md.youtubeUnsafe("dQw4w9WgXcQ")
- * console.log(node._tag) // "youtube"
+ * const node = Md.youtubeUnsafe("M7lc1UVf-VE")
+ * node._tag // => "youtube"
  * ```
  *
  * @category constructors
@@ -1155,11 +1329,12 @@ export const youtubeUnsafe = (videoId: string): YouTube => YouTube.make({ videoI
 /**
  * Creates a horizontal rule block.
  *
- * @example
- * ```ts
+ * **Example** (Create horizontal rule)
+ *
+ * ```ts import.meta.vitest name="Create horizontal rule"
  * import { Md } from "@beep/md"
  *
- * console.log(Md.hr._tag) // "hr"
+ * Md.hr._tag // => "hr"
  * ```
  *
  * @category constructors
@@ -1170,37 +1345,47 @@ export const hr: Hr = Hr.make({});
 /**
  * Creates a Markdown document from block children.
  *
- * @example
- * ```ts
+ * **Example** (Create Markdown document)
+ *
+ * ```ts import.meta.vitest name="Create Markdown document"
  * import { Md } from "@beep/md"
  *
  * const document = Md.make([Md.h1`Hello`, Md.p`World`])
- * console.log(document._tag) // "document"
+ * document._tag // => "document"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const make = (children: ReadonlyArray<Block>, options: { readonly frontmatter?: JsonObject } = {}): Document =>
-  P.isUndefined(options.frontmatter)
-    ? Document.make({ children })
-    : Document.make({ children, frontmatter: O.some(options.frontmatter) });
+export const make: {
+  (options?: { readonly frontmatter?: JsonObject }): (children: ReadonlyArray<Block>) => Document;
+  (children: ReadonlyArray<Block>, options?: { readonly frontmatter?: JsonObject }): Document;
+} = dual(
+  isLeadingContentCall,
+  (children: ReadonlyArray<Block>, options: { readonly frontmatter?: JsonObject } = {}): Document =>
+    P.isUndefined(options.frontmatter)
+      ? Document.make({ children })
+      : Document.make({ children, frontmatter: O.some(options.frontmatter) })
+);
 
 /**
  * Namespace-style public Markdown DSL.
+ *
+ * **Details**
  *
  * Simple text-oriented block builders such as {@link h1}, {@link h2}, and
  * {@link p} are intended to read naturally as tagged template literals while
  * keeping function-call overloads for dynamic strings and structured inline
  * children.
  *
- * @example
- * ```ts
+ * **Example** (Build and render document)
+ *
+ * ```ts import.meta.vitest name="Build and render document"
  * import { Md } from "@beep/md"
  * import { Result } from "effect"
  *
  * const document = Md.make([Md.h1`Hello`, Md.p`World`])
- * console.log(Result.getOrThrow(Md.render(document))) // "# Hello\n\nWorld"
+ * Result.getOrThrow(Md.render(document)) // => "# Hello\n\nWorld"
  * ```
  *
  * @category constructors
@@ -1215,7 +1400,11 @@ export const Md = {
   blockquote,
   br,
   code,
+  decodeSafeDocument,
+  decodeSafeDocumentEffect,
+  decodeSafeDocumentUnsafe,
   del,
+  documentSafetyIssues,
   embed,
   em,
   footnoteDef,
@@ -1239,6 +1428,7 @@ export const Md = {
   pre,
   rawHtml,
   rawMarkdown,
+  refineSafeDocument,
   render,
   renderEffectWith,
   renderEffectWithUnsafe,
@@ -1246,15 +1436,22 @@ export const Md = {
   renderHtmlUnsafe,
   renderPlainText,
   renderPlainTextUnsafe,
+  renderSafeHtml,
   renderUnsafe,
   renderWith,
   renderWithUnsafe,
   strong,
+  safeHtmlValue,
   table,
   tableCell,
   tableRow,
   taskItem,
-  taskList,
+  /**
+   * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
+   * ambiguous strings and object shapes for compatibility.
+   */
+  taskList: taskListCompatibility,
+  taskListFromItems,
   text,
   ul,
   youtube,

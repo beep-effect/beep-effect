@@ -7,24 +7,26 @@
 
 import { Effect, Match, pipe } from "effect";
 import { dual } from "effect/Function";
-import { renderCompletedProgress, renderInitialProgress, renderProgressBar } from "./Image.render.js";
+import { renderCompletedProgress, renderInitialProgress, renderProgressBar } from "./Image.render.ts";
 import type { FFmpegEvent } from "@beep/ffmpeg";
 import type { Terminal } from "effect";
 
 /**
  * Render one FFmpeg event through the terminal service.
  *
- * @param terminal - Terminal service used for in-place display.
- * @param label - User-facing operation label.
- * @param event - FFmpeg event.
- * @returns Effect that updates the terminal display.
- * @example
+ * **Example** (Render FFmpeg progress event)
+ *
  * ```ts
  * import { renderExtractFramesEvent } from "@beep/repo-cli/commands/Image"
  *
  * const result = renderExtractFramesEvent("clip.mp4", { frameCount: 12, percent: 50 })
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param terminal - Terminal service used for in-place display.
+ * @param label - User-facing operation label.
+ * @param event - FFmpeg event.
+ * @returns Effect that updates the terminal display.
  * @category utilities
  * @since 0.0.0
  */
@@ -48,25 +50,38 @@ export const renderExtractFramesEvent: {
   })
 );
 
+/** Sink invoked once per FFmpeg event while frames are extracted. */
+type ExtractFramesEventSink = (event: FFmpegEvent) => Effect.Effect<void, never>;
+
+/**
+ * An {@link ExtractFramesEventSink} when progress can be displayed, `undefined`
+ * when stdout is not a TTY and FFmpeg progress must stay unobserved.
+ */
+type ExtractFramesEventSinkOrUndefined = ExtractFramesEventSink | undefined;
+
 /**
  * Build a TTY-only FFmpeg event sink.
  *
- * @param terminal - Terminal service used for in-place display.
- * @param label - User-facing operation label.
- * @returns Event sink when stdout is a TTY; otherwise undefined.
- * @example
+ * **Example** (Build TTY FFmpeg event sink)
+ *
  * ```ts
  * import { makeExtractFramesEvents } from "@beep/repo-cli/commands/Image"
  *
  * const result = makeExtractFramesEvents("clip.mp4", [{ frameCount: 12, percent: 50 }])
  * console.log(result) // rendered command output
  * ```
+ *
+ * @param terminal - Terminal service used for in-place display.
+ * @param label - User-facing operation label.
+ * @returns Event sink when stdout is a TTY; otherwise undefined.
  * @category utilities
  * @since 0.0.0
  */
 export const makeExtractFramesEvents: {
-  (terminal: Terminal.Terminal, label: string): ((event: FFmpegEvent) => Effect.Effect<void, never>) | undefined;
-  (label: string): (terminal: Terminal.Terminal) => ((event: FFmpegEvent) => Effect.Effect<void, never>) | undefined;
-} = dual(2, (terminal: Terminal.Terminal, label: string) =>
-  process.stdout.isTTY === true ? (event: FFmpegEvent) => renderExtractFramesEvent(terminal, label, event) : undefined
+  (terminal: Terminal.Terminal, label: string): ExtractFramesEventSinkOrUndefined;
+  (label: string): (terminal: Terminal.Terminal) => ExtractFramesEventSinkOrUndefined;
+} = dual(
+  2,
+  (terminal: Terminal.Terminal, label: string): ExtractFramesEventSinkOrUndefined =>
+    process.stdout.isTTY === true ? (event: FFmpegEvent) => renderExtractFramesEvent(terminal, label, event) : undefined
 );

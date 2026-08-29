@@ -9,9 +9,8 @@
 /**
  * StatutesAtLargeCitation model exports.
  *
- * **Example**
+ * **Example** (Import StatutesAtLargeCitation export)
  *
- * @example
  * ```ts
  * import { StatutesAtLargeCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StatutesAtLargeCitation.model.js";
+export * from "./StatutesAtLargeCitation.model.ts";

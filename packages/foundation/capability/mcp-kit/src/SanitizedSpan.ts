@@ -21,6 +21,7 @@
  */
 
 import { NonNegativeInt } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Context, Effect, Layer, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -28,11 +29,13 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CallToolResult, McpServerClient, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
-import { ApiKeyRequiredFailure } from "./ApiKeyRequired.js";
-import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.js";
+import { Headers, HttpServerRequest } from "effect/unstable/http";
+import { ApiKeyRequiredFailure } from "./ApiKeyRequired.ts";
+import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.ts";
 import type * as Tracer from "effect/Tracer";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 
@@ -40,7 +43,8 @@ import type * as Toolkit from "effect/unstable/ai/Toolkit";
  * Span attribute keys suppressed by default: the raw, undecoded tool call
  * parameters set by upstream `Toolkit.ts:263-265`.
  *
- * @example
+ * **Example** (Log default sanitized keys)
+ *
  * ```ts
  * import { defaultSanitizedSpanKeys } from "@beep/mcp-kit"
  *
@@ -58,7 +62,8 @@ export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters"];
  * set under the given keys, while every other attribute passes through
  * unchanged.
  *
- * @example
+ * **Example** (Wrap tracer suppressing keys)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { sanitizeTracerAttributes } from "@beep/mcp-kit"
@@ -151,13 +156,14 @@ export const sanitizeTracerAttributes: {
  * or `McpServer.callTool(...)`) with this combinator so tool parameters
  * never reach exported span attributes.
  *
- * @example
- * ```ts
+ * **Example** (Run under sanitized span)
+ *
+ * ```ts import.meta.vitest name="Run under sanitized span"
  * import { Effect } from "effect"
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
  *
  * const program = withSanitizedToolSpan(Effect.annotateCurrentSpan({ parameters: { secret: "x" } }), "mcp.tool.call")
- * Effect.runSync(program)
+ * Effect.runSync(program) // => undefined
  * ```
  *
  * @category combinators
@@ -190,6 +196,11 @@ export const withSanitizedToolSpan: {
 
 type JsonObject = Readonly<Record<string, unknown>>;
 
+// The session header upstream mints at `initialize` and echoes on every later
+// request of the same MCP session (`McpServer.ts` `mcpSessionIdHeader`), which
+// upstream keeps private.
+const mcpSessionIdHeader = "mcp-session-id";
+
 const localDefsRefPrefix = "#/$defs/";
 const toolBoundaryFailureText = "Tool call failed before producing a structured result.";
 const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
@@ -209,8 +220,16 @@ const localDefsRefTarget = (schema: JsonObject): O.Option<JsonObject> =>
     return isJsonObject(defs) && isJsonObject(defs[key]) ? O.some(defs[key]) : O.none();
   });
 
+// A parameter class with no fields renders as `anyOf: [object, array]` rather
+// than a bare `type: "object"`, so the object branch has to be recognized too —
+// otherwise a no-argument tool produces an inputSchema with no top-level `type`
+// and fails `McpSchema.Tool`'s validation at registration.
+const isObjectInputTarget = (target: JsonObject): boolean =>
+  target.type === "object" ||
+  (A.isArray(target.anyOf) && target.anyOf.some((branch) => isJsonObject(branch) && branch.type === "object"));
+
 const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
-  schema.type === "object" || !O.exists(localDefsRefTarget(schema), (target) => target.type === "object")
+  schema.type === "object" || !O.exists(localDefsRefTarget(schema), isObjectInputTarget)
     ? schema
     : { type: "object", ...schema };
 
@@ -252,10 +271,25 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       // name at runtime, so no narrower parameter type is available here.
       handle: Effect.fn("McpKit.handle")(function* (payload) {
         const client = yield* Effect.serviceOption(McpServerClient);
+        // Read the session header here, at the request boundary, rather than
+        // inside the handler. `provideContext` below *merges* — the provided
+        // services win on key collisions and request-only services survive
+        // (`internal/effect.ts`: `updateContext(self, Context.merge(context))`,
+        // measured 2026-07-27) — so `HttpServerRequest` would still be
+        // reachable downstream. Reading it once, here, keeps the caller
+        // identity a fact of the dispatch instead of something each handler
+        // rediscovers. `clientId` is minted per request by the HTTP protocol,
+        // so this header is the only stable per-session key a dispatch sees.
+        const httpRequest = yield* Effect.serviceOption(HttpServerRequest.HttpServerRequest);
+        const sessionId = O.flatMap(httpRequest, (request) =>
+          O.filter(Headers.get(request.headers, mcpSessionIdHeader), Str.isNonEmpty)
+        );
         const requestServices = Context.add(
           services,
           CurrentMcpCaller,
-          O.map(client, (current) => McpCallerIdentity.make({ clientId: NonNegativeInt.make(current.clientId) }))
+          O.map(client, (current) =>
+            McpCallerIdentity.make({ clientId: NonNegativeInt.make(current.clientId), sessionId })
+          )
         );
         return yield* withSanitizedToolSpan(built.handle(tool.name, payload), `mcp.tool.call.${tool.name}`).pipe(
           Stream.unwrap,
@@ -273,7 +307,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
               readonly isFailure: boolean;
               readonly result: unknown;
             }) =>
-              S.encodeUnknownEffect(S.UnknownFromJsonString)(result.encodedResult).pipe(
+              Unknown.encodeUnknownEffectFromJsonString(result.encodedResult).pipe(
                 Effect.tapCause(Effect.log),
                 Effect.matchCause({
                   onFailure: () =>
@@ -298,6 +332,15 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * wrapping every tool's dispatch in {@link withSanitizedToolSpan} so raw,
  * undecoded call parameters never reach span attributes.
  *
+ * **When to use**
+ *
+ * Drop-in replacement for `McpServer.toolkit(toolkit)` wherever a host wants
+ * its tool dispatch spans sanitized; same signature, same registration
+ * semantics (McpTool wire shape, hint annotations, `CallToolResult` mapping),
+ * only the dispatch wrapping differs.
+ *
+ * **Details**
+ *
  * **Why this exists**
  *
  * Upstream `McpServer.toolkit` (`effect/unstable/ai/McpServer.ts:749-758`)
@@ -315,14 +358,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * requires mirroring `registerToolkit`'s per-tool registration loop, since
  * upstream offers no dispatch-wrapping hook.
  *
- * **When to use**
+ * **Example** (Register sanitized toolkit)
  *
- * Drop-in replacement for `McpServer.toolkit(toolkit)` wherever a host wants
- * its tool dispatch spans sanitized; same signature, same registration
- * semantics (McpTool wire shape, hint annotations, `CallToolResult` mapping),
- * only the dispatch wrapping differs.
- *
- * @example
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { sanitizedToolkit } from "@beep/mcp-kit"

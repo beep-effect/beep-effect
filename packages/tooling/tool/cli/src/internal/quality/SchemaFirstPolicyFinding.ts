@@ -34,7 +34,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../schema/JsonCodec.js";
+import { JsonStringCodec } from "../schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("internal/quality/SchemaFirstPolicyFinding");
 
@@ -42,12 +42,14 @@ const $I = $RepoCliId.create("internal/quality/SchemaFirstPolicyFinding");
  * Line prefix (including the trailing space) that marks a machine-readable
  * schema-first policy finding on `beep lint schema-first` stdout.
  *
- * @example
+ * **Example** (Prefix match on finding line)
+ *
  * ```ts
  * import { SchemaFirstPolicyIssuePrefix } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  *
  * console.log("line".startsWith(SchemaFirstPolicyIssuePrefix))
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -56,18 +58,22 @@ export const SchemaFirstPolicyIssuePrefix = "[schema-first:issue] " as const;
 /**
  * Severity vocabulary for schema-first policy findings.
  *
+ * **Details**
+ *
  * Represents both spellings observed across the quality lanes: the
  * `[schema-first:issue]` emitter uses `warning`/`error`, while the
  * `Laws/NoNativeRuntime` law severity domain spells the non-blocking level
  * `warn`. Both are retained; no spelling is silently unified.
  *
- * @example
+ * **Example** (Check warn and warning spellings)
+ *
  * ```ts
  * import { SchemaFirstPolicySeverity } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  *
  * console.log(SchemaFirstPolicySeverity.is.warn("warn"))
  * console.log(SchemaFirstPolicySeverity.is.warning("warning"))
  * ```
+ *
  * @category schema
  * @since 0.0.0
  */
@@ -81,11 +87,14 @@ export const SchemaFirstPolicySeverity = LiteralKit(["warn", "warning", "error"]
 /**
  * One machine-readable schema-first policy finding line payload.
  *
+ * **Details**
+ *
  * The single decoded/encoded shape for `[schema-first:issue]` JSON. `severity`
  * and `remediation` are optional to reconcile the diverged consumer copies while
  * remaining a superset that decodes every currently-emitted line.
  *
- * @example
+ * **Example** (Make finding with remediation)
+ *
  * ```ts
  * import { SchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  *
@@ -99,6 +108,7 @@ export const SchemaFirstPolicySeverity = LiteralKit(["warn", "warning", "error"]
  * })
  * console.log(finding.ruleId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +134,8 @@ const codec = JsonStringCodec(SchemaFirstPolicyFinding);
  * Decode the JSON payload of a schema-first policy finding, failing with a
  * `SchemaError` on malformed input.
  *
- * @example
+ * **Example** (Decode finding JSON payload)
+ *
  * ```ts
  * import { decodeSchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  * import { Effect } from "effect"
@@ -132,6 +143,7 @@ const codec = JsonStringCodec(SchemaFirstPolicyFinding);
  * const json = '{"category":"schema-first-policy","ruleId":"SFV4-defaults","file":"a.ts","message":"m"}'
  * console.log(Effect.runSync(decodeSchemaFirstPolicyFinding(json)).ruleId)
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -141,7 +153,8 @@ export const decodeSchemaFirstPolicyFinding: (text: string) => Effect.Effect<Sch
 /**
  * Encode a schema-first policy finding into its compact JSON payload.
  *
- * @example
+ * **Example** (Encode finding to JSON)
+ *
  * ```ts
  * import { encodeSchemaFirstPolicyFinding, SchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  * import { Effect } from "effect"
@@ -154,6 +167,7 @@ export const decodeSchemaFirstPolicyFinding: (text: string) => Effect.Effect<Sch
  * })
  * console.log(Effect.runSync(encodeSchemaFirstPolicyFinding(finding)))
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -164,12 +178,13 @@ export const encodeSchemaFirstPolicyFinding: (
 /**
  * Render a schema-first policy finding as a complete prefixed stdout line.
  *
+ * **Details**
+ *
  * Reproduces the emitter's line exactly: compact JSON prefixed by
  * {@link SchemaFirstPolicyIssuePrefix}.
  *
- * @param finding - The finding to render.
- * @returns The prefixed line for stdout.
- * @example
+ * **Example** (Render prefixed stdout finding line)
+ *
  * ```ts
  * import { renderSchemaFirstPolicyFindingLine, SchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  * import { Effect } from "effect"
@@ -182,6 +197,9 @@ export const encodeSchemaFirstPolicyFinding: (
  * })
  * console.log(Effect.runSync(renderSchemaFirstPolicyFindingLine(finding)).startsWith("[schema-first:issue] "))
  * ```
+ *
+ * @param finding - The finding to render.
+ * @returns The prefixed line for stdout.
  * @category codecs
  * @since 0.0.0
  */
@@ -194,12 +212,13 @@ export const renderSchemaFirstPolicyFindingLine = (
  * Parse a stdout line into a schema-first policy finding, dropping non-matching
  * or malformed lines.
  *
+ * **Details**
+ *
  * Returns `None` when the line lacks the {@link SchemaFirstPolicyIssuePrefix} or
  * when its JSON payload does not decode.
  *
- * @param line - A single stdout line.
- * @returns The decoded finding when the line is a well-formed issue line.
- * @example
+ * **Example** (Parse issue line or noise)
+ *
  * ```ts
  * import { decodeSchemaFirstPolicyFindingLine } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
  * import * as O from "effect/Option"
@@ -208,6 +227,9 @@ export const renderSchemaFirstPolicyFindingLine = (
  * console.log(O.isSome(decodeSchemaFirstPolicyFindingLine(line)))
  * console.log(O.isNone(decodeSchemaFirstPolicyFindingLine("noise")))
  * ```
+ *
+ * @param line - A single stdout line.
+ * @returns The decoded finding when the line is a well-formed issue line.
  * @category codecs
  * @since 0.0.0
  */

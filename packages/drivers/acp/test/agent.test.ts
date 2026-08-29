@@ -27,8 +27,12 @@ const decodeSessionCancelNotification = Schema.decodeEffect(Schema.fromJsonStrin
 const decodeExtRequest = Schema.decodeEffect(Schema.fromJsonString(ExtRequest));
 const encodeInitializeResponse = Schema.encodeEffect(Schema.fromJsonString(InitializeResponse));
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
-const InitializeResponseArbitrary = Schema.toArbitrary(InitializeResponse);
-const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification);
+const InitializeResponseArbitrary = Schema.toArbitrary(InitializeResponse)(fc);
+const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification)(fc);
+
+it("constructs the stdio agent layer with default options", () => {
+  assert.isDefined(AcpAgent.layerStdio());
+});
 
 it("round-trips schema-derived agent JSON-RPC responses and notifications through JSON boundaries", () =>
   fc.assert(
@@ -60,7 +64,7 @@ it.effect(
     const cancelReceived = yield* Deferred.make<void>();
     const extReceived = yield* Deferred.make<void>();
     const scope = yield* Scope.make();
-    const context = yield* Layer.buildWithScope(AcpAgent.layer(stdio), scope);
+    const context = yield* Layer.buildWithScope(AcpAgent.layer({ stdio }), scope);
 
     yield* Effect.gen(function* () {
       const agent = yield* AcpAgent.AcpAgent;
@@ -194,7 +198,7 @@ it.effect(
   Effect.fnUntraced(function* () {
     const { stdio, input, output } = yield* makeInMemoryStdio();
     const scope = yield* Scope.make();
-    const context = yield* Layer.buildWithScope(AcpAgent.layer(stdio), scope);
+    const context = yield* Layer.buildWithScope(AcpAgent.layer({ stdio }), scope);
 
     yield* Effect.gen(function* () {
       const agent = yield* AcpAgent.AcpAgent;

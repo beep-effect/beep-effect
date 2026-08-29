@@ -8,12 +8,13 @@
 
 import { Layer } from "effect";
 import { ThreadStoreDrizzleLayer, ThreadStoreInMemoryLayer } from "./aggregates/Thread/index.ts";
-import { WorkspaceVaultStoreDrizzleLayer, WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.js";
+import { WorkspaceVaultStoreDrizzleLayer, WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.ts";
 
 /**
  * Live workspace server layer backed by Drizzle persistence.
  *
- * @example
+ * **Example** (Log live workspace layer)
+ *
  * ```ts
  * import { WorkspaceServerLive } from "@beep/workspace-server/layer"
  *
@@ -28,7 +29,8 @@ export const WorkspaceServerLive = Layer.mergeAll(ThreadStoreDrizzleLayer, Works
 /**
  * In-memory workspace server layer for fast proofs.
  *
- * @example
+ * **Example** (Log in-memory server layer)
+ *
  * ```ts
  * import { WorkspaceServerInMemory } from "@beep/workspace-server/layer"
  *

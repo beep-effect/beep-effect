@@ -6,14 +6,15 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, thunkEmptyStr } from "@beep/utils";
 import { Effect, HashMap, Inspectable, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { TerseEffectRulesPersistenceError } from "./Laws.errors.js";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { TerseEffectRulesPersistenceError } from "./Laws.errors.ts";
 import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Laws/TerseEffect");
@@ -21,10 +22,11 @@ const $I = $RepoCliId.create("commands/Laws/TerseEffect");
 /**
  * Runtime options for terse Effect style migration checks.
  *
- * @example
+ * **Example** (Configure terse Effect scanning)
  * ```ts
  * console.log("TerseEffectRulesOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,6 +44,7 @@ export class TerseEffectRulesOptions extends S.Class<TerseEffectRulesOptions>($I
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("TerseEffectRulesOptions", {
     description: "Runtime options for terse Effect style migration checks.",
@@ -51,10 +54,12 @@ export class TerseEffectRulesOptions extends S.Class<TerseEffectRulesOptions>($I
 /**
  * Summary of terse Effect style migration results.
  *
- * @example
+ * **Example** (Reference the terse-effect rules summary)
+ *
  * ```ts
  * console.log("TerseEffectRulesSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,6 +125,7 @@ const OPTION_MATCH_HANDLER_NAMES = ["onNone", "onSome"] as const;
 const BOOL_MATCH_HANDLER_NAMES = ["onFalse", "onTrue"] as const;
 
 const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 
 const findingText = (sourceFile: import("ts-morph").SourceFile, filePath: string, kind: string, node: Node): string => {
   const position = sourceFile.getLineAndColumnAtPos(node.getStart());
@@ -213,6 +219,19 @@ const getSingleArgHelperReference = (callExpression: CallExpression, parameterNa
 const getArrowReplacement = (arrowFunction: ArrowFunction): O.Option<string> => {
   const body = arrowFunction.getBody();
   if (!Node.isCallExpression(body)) {
+    return O.none();
+  }
+
+  // The helpers this rule collapses (`O.none`, `A.empty`, `O.some`, `A.make`)
+  // are GENERIC: a bare reference relies on higher-order inference to bind the
+  // type parameter, which fails in positions like `Match.orElse(O.none)` or
+  // `Match.when(P.isString, O.some)` — silently under docgen's tsc (widening
+  // to unknown), loudly under tsgo at the use site. The lambda form binds the
+  // generic at its call site, so it is the safe default. Only collapse calls
+  // that pin the type argument explicitly (`() => O.none<string>()` ->
+  // `O.none<string>`), which stays type-identical as an instantiation
+  // expression.
+  if (body.getTypeArguments().length === 0) {
     return O.none();
   }
 
@@ -561,10 +580,12 @@ const isExplicitDualOverloadCandidate = (functionDeclaration: FunctionDeclaratio
 /**
  * Run terse Effect style migration/check logic.
  *
- * @example
+ * **Example** (Reference the terse-effect rules runner)
+ *
  * ```ts
  * console.log("runTerseEffectRules")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -572,9 +593,8 @@ export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRule
   const path = yield* Path.Path;
 
   const isExcludedFile = (filePath: string): boolean => {
-    const normalized = toPosixPath(filePath);
-    if (A.some(options.excludePaths, (excludePath) => normalized === toPosixPath(excludePath))) return true;
-    return isExcludedTypeScriptSourcePath(normalized);
+    const relative = toPosixPath(path.relative(process.cwd(), filePath));
+    return isEcosystemMemberSourcePath(relative) || isExcludedLawScanPath(options.excludePaths, filePath);
   };
 
   const project = new Project({
@@ -582,9 +602,7 @@ export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRule
     skipAddingFilesFromTsConfig: true,
   });
 
-  for (const pattern of INCLUDED_GLOBS) {
-    project.addSourceFilesAtPaths(pattern);
-  }
+  project.addSourceFilesAtPaths(A.fromIterable(options.includePaths ?? SOURCE_FILE_GLOBS));
 
   const sourceFiles = A.filter(project.getSourceFiles(), (sourceFile) => !isExcludedFile(sourceFile.getFilePath()));
 

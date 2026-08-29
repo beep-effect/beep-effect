@@ -33,20 +33,22 @@ const Sfixed64BigInt = S.BigInt.check(Sfixed64Range);
 /**
  * Branded schema for protobuf `sfixed64` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes and can expose `sfixed64` as eight fixed bytes from `Long`,
  * `number`, decimal `string`, or `bigint` values. This schema accepts those
  * protobufjs-compatible input shapes and normalizes them to `bigint` before
  * enforcing the signed fixed-width 64-bit range.
  *
- * @example
- * ```ts
+ * **Example** (Decode min sfixed64 string)
+ *
+ * ```ts import.meta.vitest name="Decode min sfixed64 string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Sfixed64 } from "@beep/schema/Sfixed64"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Sfixed64)("-9223372036854775808"))
- * console.log(value.toString()) // "-9223372036854775808"
+ * value.toString() // => "-9223372036854775808"
  * ```
  *
  * @invariant Values are bigints from -9223372036854775808 through 9223372036854775807.
@@ -67,8 +69,9 @@ export const Sfixed64 = ProtobufInt64Input.pipe(S.decodeTo(Sfixed64BigInt, decod
 /**
  * Type-level value inferred from {@link Sfixed64}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow unknown to Sfixed64)
+ *
+ * ```ts import.meta.vitest name="Narrow unknown to Sfixed64"
  * import * as S from "effect/Schema"
  * import { Sfixed64 } from "@beep/schema/Sfixed64"
  * import type { Sfixed64 as Sfixed64Value } from "@beep/schema/Sfixed64"
@@ -76,7 +79,7 @@ export const Sfixed64 = ProtobufInt64Input.pipe(S.decodeTo(Sfixed64BigInt, decod
  * const input: unknown = -BigInt(64)
  * if (S.is(Sfixed64)(input)) {
  *   const value: Sfixed64Value = input
- *   console.log(value.toString()) // "-64"
+ *   value.toString() // => "-64"
  * }
  * ```
  *

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -13,12 +13,10 @@ the delivery follow-on to
 
 ## Mission
 
-Finish the four gov/legal data drivers on the substrate the predecessor
-proved: grow `@beep/ecfr` to full endpoint parity, build
-`@beep/federal-register` (keyless), and — once the P0 data/source-terms
-matrix unlocks them — build `@beep/dol` and `@beep/courtlistener` (keyed) to
-full parity with their committed official specs, with offline tests, Stream
-pagination helpers, and green docgen throughout.
+Deliver the research foundation and first product-pulled driver on the substrate
+the predecessor proved: committed source/terms research plus `@beep/ecfr` at
+15-operation parity. Federal Register, DOL, and CourtListener resume
+individually only when a product feature pulls that driver.
 
 ## Launch
 
@@ -35,7 +33,7 @@ Use this command for execution-capable sessions:
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth (Locked Decisions D1–D7
    + inherited predecessor Q2/Q5/Q7/Q8).
-3. [`PLAN.md`](./PLAN.md) - active execution plan (P0–P6).
+3. [`PLAN.md`](./PLAN.md) - terminal execution and deferral record (P0–P6).
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/`](./research/) - provenance ledger + (from P0) the
    data/source-terms matrix.
@@ -55,10 +53,19 @@ only.
 
 ## Current Phase
 
-**Parked** (docs/ROADMAP.md, 2026-07-11) after landing P0 (matrix + specs)
-and P1 (ecfr breadth), both completed 2026-07-11. Next phase on resume:
-P2 — federal-register keyless driver. Resume condition: a product feature
-pulls a named gov driver (per-driver, not batch).
+**Terminal as descoped.** P0 (research specs) and P1 (`@beep/ecfr` breadth)
+are the accepted deliverable. P2 Federal Register, P3 DOL, and P4/P5
+CourtListener are explicit won't-do-until-product-pull deferrals. Each resumes
+independently from the committed research named below; P6 close bookkeeping is
+complete.
+
+The empty Federal Register, DOL, and CourtListener workspace scaffolds were
+deleted by [`goals/honest-repo-signal`](../honest-repo-signal/README.md). Resume
+those drivers from
+[`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../honest-repo-signal/research/FOLLOW-UPS.md)
+when a product feature pulls them; recreate the package in the same PR as the
+first real surface. Committed research under [`research/`](./research/) is
+unchanged.
 
 ## Latest Evidence
 
@@ -89,15 +96,26 @@ P0 (2026-07-11):
   → excluded from P4/P5 generation; v4.3/v4.4/v4.5 change-log deltas.
 - Predecessor cross-links (P2 supersession) verified already landed.
 
+Deferred per-driver restart points (2026-07-14):
+
+- **P2 Federal Register:** resume from
+  [`research/specs/federal-register-openapi.json`](./research/specs/federal-register-openapi.json).
+- **P3 DOL:** resume from
+  [`research/data-source-terms-matrix.md`](./research/data-source-terms-matrix.md)
+  and [`research/SOURCES.md`](./research/SOURCES.md).
+- **P4/P5 CourtListener:** resume from
+  [`research/specs/courtlistener/api-root.v4.json`](./research/specs/courtlistener/api-root.v4.json),
+  [`research/specs/courtlistener/options-status.tsv`](./research/specs/courtlistener/options-status.tsv),
+  and [`research/courtlistener-deltas.md`](./research/courtlistener-deltas.md).
+
 ## Notes
 
-- P3–P5 (dol, courtlistener) are hard-gated on the data/source-terms matrix
-  (SPEC D2, inherited Q8 default-deny). Do not start them before it exists.
+- P2–P5 are won't-do until a product feature pulls a named driver. Resume one
+  driver at a time from its committed research restart point.
 - CourtListener: literal `Authorization: Token` (not Bearer); synthetic-only
   committed fixtures; in-process/ephemeral cache only.
-- The DOL auth mechanism (header vs query `X-API-KEY`) is contradicted across
-  predecessor documents — P0 verifies it against developer.dol.gov before any
-  DOL code exists.
+- P0 resolved the predecessor's DOL auth contradiction: the live portal uses a
+  query-parameter `X-API-KEY` and the restart point records `ApiKeyQueryAuth`.
 - Exemplars to mirror: `packages/drivers/ecfr` (keyless raw-client shape +
   bespoke renderer), `packages/drivers/govinfo` (keyed config patterns).
   All four `ApiAuth` branches (incl. `TokenHeaderAuth`, `ApiKeyHeaderAuth`)

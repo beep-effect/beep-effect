@@ -1,5 +1,17 @@
 # Decisions — grilling log
 
+## 2026-08-13 — Thread-renderer ownership gate resolved
+
+**Decision:** The operator confirmed editor-stack ownership clear for the
+thread renderer surface and authorized `goals/thread-virtualization`. The
+2026-07-14 beep-effect6 gate release covered only the desktop shell; this
+confirmation covers the distinct thread renderer surface.
+
+**Rationale:** The sole open question is resolved. The goal consumes the
+`@beep/pretext` root plus a client capture pass. The 2026-07-14 routing
+decision named `scratchpad/dockview/WHAT-IS-LEFT.md`; that scratchpad was
+retired 2026-07-16 and its residue migrated to the dock-substrate goal README.
+
 Align ran 2026-07-13 via `/grill-with-docs` (Ben present, four
 branch-closing questions). Convention: one question at a time,
 recommended answer first.
@@ -85,3 +97,16 @@ collision). Goal #2 = thread virtualization in the editor stack, explicitly
 gated on coordination with the beep-effect6 write lane before its packet
 opens. Later candidates: dock-adapter minima wiring (kernel side already
 landed), bubble shrinkwrap.
+
+## 2026-07-14 — sibling-closure routing
+
+**Decision:** Keep this exploration `active` at `graduate`. Its sole open
+question is the thread-virtualization coordination gate: a beep-effect6
+editor-stack ownership agreement plus completion of the pretext-driver
+handoff. Route Q2 v2 contract residue to `goals/pretext-driver` and dock-kernel
+residue to `scratchpad/dockview/WHAT-IS-LEFT.md`.
+
+**Rationale:** Both residue sets already have durable owners; retaining them as
+exploration questions would duplicate execution state. Thread virtualization
+still crosses an active ownership boundary, so it remains a real graduation
+gate rather than being silently scaffolded.

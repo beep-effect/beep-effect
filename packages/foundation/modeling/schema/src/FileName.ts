@@ -1,12 +1,15 @@
 /**
  * Portable file-name schema helpers for strings shaped like `basename.ext`.
  *
+ * **Details**
+ *
  * The basename must be non-empty and may include additional dots, while the
  * final extension segment must be one of the known {@link FileExtension}
  * values.
  *
- * @example
- * ```typescript
+ * **Example** (Decode basename with extension)
+ *
+ * ```ts import.meta.vitest name="Decode basename with extension"
  * import * as S from "effect/Schema";
  * import { FileName } from "@beep/schema/FileName";
  *
@@ -97,13 +100,16 @@ const FileNameChecks = S.makeFilterGroup(
 /**
  * Schema for portable file names with a non-empty basename and known file extension.
  *
+ * **Details**
+ *
  * This schema follows the same portability policy as {@link FilePath}: it
  * rejects universal filename hazards such as path separators and embedded NUL
  * bytes while still allowing names that are valid on at least one major
  * operating system.
  *
- * @example
- * ```typescript
+ * **Example** (Decode portable file names)
+ *
+ * ```ts import.meta.vitest name="Decode portable file names"
  * import * as S from "effect/Schema";
  * import { FileName } from "@beep/schema/FileName";
  *
@@ -113,8 +119,8 @@ const FileNameChecks = S.makeFilterGroup(
  * decodeFileName(".cache.png");
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 const FileNameSchema = S.String.check(FileNameChecks).pipe(
   (schema) =>
@@ -134,7 +140,8 @@ const FileNameSchema = S.String.check(FileNameChecks).pipe(
 /**
  * Portable file name schema.
  *
- * @example
+ * **Example** (Decode a file name)
+ *
  * ```ts
  * import { FileName } from "@beep/schema/FileName"
  * import * as S from "effect/Schema"
@@ -143,8 +150,8 @@ const FileNameSchema = S.String.check(FileNameChecks).pipe(
  * console.log(fileName)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const FileName: S.Codec<`${string}.${string}`, `${string}.${string}`> = FileNameSchema as unknown as S.Codec<
   `${string}.${string}`,
@@ -154,16 +161,17 @@ export const FileName: S.Codec<`${string}.${string}`, `${string}.${string}`> = F
 /**
  * Type for {@link FileName}.
  *
- * @example
- * ```ts
+ * **Example** (Type a decoded file name)
+ *
+ * ```ts import.meta.vitest name="Type a decoded file name"
  * import * as S from "effect/Schema"
  * import { FileName } from "@beep/schema/FileName"
  *
  * const file: FileName = S.decodeUnknownSync(FileName)("readme.txt")
- * console.log(file) // "readme.txt"
+ * file // => "readme.txt"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FileName = typeof FileName.Type;

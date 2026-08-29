@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import Workspace module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/Workspace"
  *
@@ -18,11 +19,12 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./Workspace.model.js";
+export * from "./Workspace.model.ts";
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import Workspace module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/Workspace"
  *
@@ -32,4 +34,4 @@ export * from "./Workspace.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Workspace.values.js";
+export * from "./Workspace.values.ts";

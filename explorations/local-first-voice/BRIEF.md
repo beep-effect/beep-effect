@@ -15,67 +15,65 @@ voice-to-voice conversation — but the firm handles **privileged client audio**
 the naive "pipe the mic to a cloud realtime API" answer is a privilege-waiver hazard
 (ABA MR 1.6(c); cloud zero-retention is enterprise-only, ElevenLabs has none).
 
-The repo already has the scattered pieces — a Tauri v2 shell, a Web-Audio waveform
-capture component, an ElevenLabs Scribe STT hook, xAI/Venice/OpenAI voice drivers,
-and (the user's correct hunch) `@effect/platform-browser` primitives (`Permissions`,
-`BrowserKeyValueStore`, `BrowserSocket`, `BrowserWorker`). What's missing is the
-**Effect-first spine** that turns them into one capability: a permission-gated,
-Scope-safe capture service; an on-device inference worker; and a provider port that
-lets us **choose the best model/service per voice feature** and keep privileged
-audio on the box. Now, because mid-2026 closed three gaps at once — on-device model
-quality (Moonshine/Kokoro), WASM/WebGPU ubiquity, and a clean Effect RPC-over-worker
-path — local-first voice is finally buildable without a quality cliff.
+The repo already has scattered pieces—a Tauri v2 shell, Web Audio waveform capture,
+an ElevenLabs Scribe UI/state-machine precedent, xAI/Venice voice drivers, composer
+seams, and `@effect/platform-browser` primitives. What is missing for the shaped bet
+is much smaller than a general voice platform: a proven, scope-safe local capture and
+model path that can insert a Moonshine transcript into the existing composer and play
+Kokoro audio for a completed agent turn without audio egress or chat-domain/sidecar
+protocol changes. Moonshine/Kokoro plus browser workers make that thin loop plausible;
+the bounded spike must prove it on the user's real Linux Tauri target before production
+design earns its budget.
 
 ## Appetite
 
-**Big batch, but sliced.** The whole vision (dictation + TTS + voice-to-voice +
-cloud adapters + selection UI) is multi-cycle. The **shaped bet is the first
-vertical slice only**: local, English, desktop **dictation** — roughly a
-two-to-three-week budget. That budget is the constraint: if the secure-context /
-worker-RPC / permission-atom spine can't be proven inside it, we re-shape rather
-than expand scope. Everything past dictation is named in the MAP as follow-on bets,
-not part of this appetite.
+**One thin composer slice in two to three weeks.** The shaped bet adds local,
+English push-to-talk dictation **and** manual read-aloud of completed agent turns
+to `apps/professional-desktop`. Its first week is a five-engineering-day,
+hard-capped P0 spike on Linux development Tauri. Any failed acceptance threshold
+forces an explicit proceed/reshape/stop decision before production work begins;
+the budget never expands silently. Provider platforms, automatic or streaming
+read-aloud, cloud voice, and voice-to-voice remain later bets in the MAP.
 
 ## Solution Sketch
 
-**Posture:** local-first, privilege-safe, pipeline, desktop-first.
+**Posture:** local-first (for latency and offline dictation, not for
+compliance), pipeline, desktop-first. Hosted providers remain an option.
 
 ```
- mic ─▶ AudioCapture ─▶ Silero VAD ─▶ Transcriber port ─▶ transcript atom ─▶ composer
-        (AudioWorklet,   (worker)      │                    (Atom.kvs)
-         Permissions,                  ├─ LocalMoonshine  ← InferenceWorker (effect/unstable/rpc
-         Scope teardown)               │   (default)         over BrowserWorker, streaming)
-                                       └─ cloud adapters  ← RtcTransport (BrowserSocket WS)
-                                          [gated: PrivilegedAudio never routes here]
+ push-to-talk ─▶ thin AudioWorklet capture ─▶ resample/PCM ─▶ local worker
+                                                               ├─ Moonshine ─▶ composer insertion
+ completed agent turn ─▶ speaker button ───────────────────────└─ Kokoro ─▶ playback buffer
 ```
 
-The Effect spine (each `extends Context.Service`, exports a `layer`):
-- **`AudioCapture`** — `Permissions.query` + `getUserMedia` + AudioWorklet→`Stream`
-  (the `Box.streaming.ts:824–896` pattern), all under `Effect.acquireRelease`/`Scope`
-  so tracks stop and the `AudioContext` closes on interrupt.
-- **`InferenceWorker`** — a single long-lived `BrowserWorker` running Transformers.js
-  (Moonshine STT + Silero VAD), driven by an `effect/unstable/rpc` streaming contract;
-  weights in OPFS; model destroyed via `Scope.addFinalizer`.
-- **Provider ports** — `Transcriber` / `Synthesizer` / `VoiceSession` / `Vad`, each a
-  small typed contract with local + cloud `Layer` adapters and a persisted per-capability
-  selection atom. `PrivilegedAudio` is a schema tag that is structurally un-routable to
-  any cloud adapter.
-- **Atoms** — `audioPermissionAtom` (Atom.kvs, subscribes `PermissionStatus.onchange`,
-  WKWebView/iOS fallback to a `getUserMedia` probe), `deviceListAtom` (refetch on
-  `devicechange`), `selectedDeviceAtom`, `providerSelectionAtom`.
+**P0 spike architecture is deliberately minimal:** capture, a thin worklet frame
+poster, resampling/PCM, one local worker with visible model loading, Moonshine and
+Kokoro calls, a small interruptible playback buffer, and direct composer/message
+seams. It proves secure context, COOP/COEP, `getUserMedia`, model load/cache behavior,
+teardown, zero audio egress, transcript insertion, and time-to-first-audio on Linux
+development Tauri (WebKitGTK).
 
-**First slice (what ships):** on `apps/professional-desktop`, hold-to-talk → local
-Moonshine transcription → text lands in the chat composer. No network, no cloud, full
-teardown, visible recording state.
+**Production slice after a P0 proceed:** a hold-to-talk control records locally and
+inserts the Moonshine transcript into the existing composer; a speaker button on each
+completed agent turn starts local Kokoro playback and can be interrupted. Cancellation
+flows through Reactivity/`AtomRegistry` so tracks, contexts, workers, and playback
+release predictably. No chat-domain or sidecar-protocol change is part of the seam.
+
+Production provider ports, a general `InferenceWorker` platform, provider selection,
+and a full OPFS/model-lifecycle abstraction are **not** in this slice. The slice may
+persist/cache its two fixed local models and recover first-run downloads only to the
+extent required by the locked acceptance thresholds. Extraction waits for a second
+consumer.
 
 ## Rabbit Holes
 
 - **Secure context on the desktop webview.** `tauri://` is not guaranteed secure;
   patch with the Tauri `localhost` plugin (127.0.0.1) + a `window.isSecureContext`
   capability check. Don't bet on `tauri://`.
-- **WKWebView quirks.** No `permissions.query('microphone')` → feature-detect + probe;
-  unreliable WebGPU → WASM-first; a known Whisper window-freeze on Tauri/macOS → keep
-  models small and test on-target. (macOS is the slice target, so this is front-loaded.)
+- **Cross-webview differences.** P0 targets Linux development Tauri/WebKitGTK.
+  Before ship, P1 must check WKWebView microphone permission/WebGPU behavior and the
+  hardened-runtime versus App Sandbox entitlement fork, plus WebView2 permission
+  persistence. Do not claim P0 proves macOS or Windows.
 - **AudioWorklet realm.** Effect can't run in the worklet; keep it a thin frame-poster
   and do all Effect work in the main thread / worker. Resampling 48k→16k and Float32→PCM16
   rounding live just outside the worklet.
@@ -83,16 +81,16 @@ teardown, visible recording state.
   and dev server; forget the dev server and it silently single-threads.
 - **Interrupt cleanup.** Reuse the `Chat.atoms.ts:451–531` lesson — route cancel cleanup
   through `Reactivity`/`AtomRegistry`, not `ctx.set`.
-- **Model download UX.** First-run pulls ~50–130MB; OPFS + `storage.persist()` + a
-  re-download path, with a visible loading state.
+- **Model download UX.** First-run model downloads need visible progress, persistence
+  or cache reuse, interruption/failure recovery, and a re-download path. Avoid turning
+  that bounded requirement into a general model-store platform.
 
 ## No-Gos
 
-- **No cloud path for privileged audio** — structurally prevented, not just policy.
-- **Not voice-to-voice in slice 1** — headline, not first bet.
-- **No native Rust/cpal capture in slice 1** — webview-only first; cpal is a later
-  fallback behind the same interface.
-- **No provider-switching UI in slice 1** — ports + persisted selection only; defaults wired.
-- **No multilingual local models initially** — English-first; non-English is gated cloud.
-- **No in-browser audio encoding** — raw PCM16 end to end.
-- **No speech-to-speech / WebRTC transport yet** — pipeline + WebSocket only.
+- **No cloud routing for privileged audio** — the composer slice has zero audio
+  network egress.
+- **No automatic or streaming read-aloud** — manual completed-turn playback only.
+- **No provider-switching UI or production provider-port platform.**
+- **No voice-to-voice or speech-to-speech session.**
+- **No native Rust/cpal capture** — the slice uses webview Web Audio.
+- **No multilingual local models** — fixed English Moonshine and Kokoro models.

@@ -9,9 +9,8 @@
 /**
  * SessionLawCitation model exports.
  *
- * **Example**
+ * **Example** (Import SessionLawCitation export)
  *
- * @example
  * ```ts
  * import { SessionLawCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SessionLawCitation.model.js";
+export * from "./SessionLawCitation.model.ts";

@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
@@ -31,6 +31,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -47,6 +48,7 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./browser": "./dist/browser.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
@@ -61,7 +63,6 @@
     "sigma": "catalog:"
   },
   "devDependencies": {
-    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "vitest": "catalog:"

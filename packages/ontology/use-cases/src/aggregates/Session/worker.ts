@@ -15,18 +15,18 @@
  * @category read-models
  * @since 0.0.0
  */
-export * from "./Session.projections.js";
+export * from "./Session.projections.ts";
 /**
  * Session graph visualizer projection exports.
  *
  * @category read-models
  * @since 0.0.0
  */
-export * from "./Session.visualizer.js";
+export * from "./Session.visualizer.ts";
 /**
  * Session worker protocol exports.
  *
  * @category protocols
  * @since 0.0.0
  */
-export * from "./Session.worker-protocol.js";
+export * from "./Session.worker-protocol.ts";

@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./ApplicationNumber.model.js";
+export * from "./ApplicationNumber.model.ts";

@@ -9,13 +9,15 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { TreatiseComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { TreatiseComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/TreatiseCitation/TreatiseCitation.model");
 
 /**
  * A parsed legal treatise citation (type: `treatise`). #579
+ *
+ * **Details**
  *
  * Spreads the shared {@link CitationBase} fields and adds the `treatise`
  * discriminant plus the `volume`, `title`, and `section` locating a passage in a
@@ -23,9 +25,8 @@ const $I = $LawPracticeDomainId.create("values/TreatiseCitation/TreatiseCitation
  * `edition` and `year` capture the trailing parenthetical, and the optional
  * component `spans` locate each recognized sub-part within the source text.
  *
- * **Example**
+ * **Example** (Make Wright & Miller citation)
  *
- * @example
  * ```ts
  * import { Span, TreatiseCitation } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -96,7 +97,8 @@ export class TreatiseCitation extends S.Class<TreatiseCitation>($I`TreatiseCitat
 /**
  * Companion namespace for `TreatiseCitation`.
  *
- * @example
+ * **Example** (Alias Encoded wire type)
+ *
  * ```ts
  * import type { TreatiseCitation } from "@beep/law-practice-domain"
  *
@@ -110,9 +112,8 @@ export declare namespace TreatiseCitation {
   /**
    * Wire-encoded representation of a decoded {@link TreatiseCitation}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { TreatiseCitation } from "@beep/law-practice-domain"
    *

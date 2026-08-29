@@ -24,13 +24,14 @@ const OptionFromOptionalSpan = Span.pipe(S.OptionFromOptionalKey, SchemaUtils.wi
 /**
  * Component spans for case citations (type: `case`).
  *
+ * **Details**
+ *
  * Containment: when both `metadataParenthetical` and `court`/`year` are present,
  * `court` and `year` are sub-ranges within `metadataParenthetical`. Consumers
  * rendering highlights should use either the parent or child spans, not both.
  *
- * **Example**
+ * **Example** (Make case component spans)
  *
- * @example
  * ```ts
  * import { CaseComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -76,7 +77,8 @@ export class CaseComponentSpan extends S.Class<CaseComponentSpan>($I`CaseCompone
 /**
  * Companion namespace for `CaseComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { CaseComponentSpan } from "@beep/law-practice-domain"
  *
@@ -91,9 +93,8 @@ export declare namespace CaseComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link CaseComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { CaseComponentSpan } from "@beep/law-practice-domain"
    *
@@ -109,12 +110,13 @@ export declare namespace CaseComponentSpan {
 /**
  * Component spans for statute citations (type: `statute`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make statute component spans)
  *
- * @example
  * ```ts
  * import { Span, StatuteComponentSpan } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -153,7 +155,8 @@ export class StatuteComponentSpan extends S.Class<StatuteComponentSpan>($I`Statu
 /**
  * Companion namespace for `StatuteComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { StatuteComponentSpan } from "@beep/law-practice-domain"
  *
@@ -168,9 +171,8 @@ export declare namespace StatuteComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link StatuteComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { StatuteComponentSpan } from "@beep/law-practice-domain"
    *
@@ -186,12 +188,13 @@ export declare namespace StatuteComponentSpan {
 /**
  * Component spans for constitutional citations (type: `constitutional`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make constitutional component spans)
  *
- * @example
  * ```ts
  * import { ConstitutionalComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -234,7 +237,8 @@ export class ConstitutionalComponentSpan extends S.Class<ConstitutionalComponent
 /**
  * Companion namespace for `ConstitutionalComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { ConstitutionalComponentSpan } from "@beep/law-practice-domain"
  *
@@ -249,9 +253,8 @@ export declare namespace ConstitutionalComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link ConstitutionalComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { ConstitutionalComponentSpan } from "@beep/law-practice-domain"
    *
@@ -267,12 +270,13 @@ export declare namespace ConstitutionalComponentSpan {
 /**
  * Component spans for journal citations (type: `journal`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make journal component spans)
  *
- * @example
  * ```ts
  * import { JournalComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -312,7 +316,8 @@ export class JournalComponentSpan extends S.Class<JournalComponentSpan>($I`Journ
 /**
  * Companion namespace for `JournalComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { JournalComponentSpan } from "@beep/law-practice-domain"
  *
@@ -327,9 +332,8 @@ export declare namespace JournalComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link JournalComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { JournalComponentSpan } from "@beep/law-practice-domain"
    *
@@ -345,12 +349,13 @@ export declare namespace JournalComponentSpan {
 /**
  * Component spans for neutral citations (type: `neutral`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make neutral component spans)
  *
- * @example
  * ```ts
  * import { NeutralComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -389,7 +394,8 @@ export class NeutralComponentSpan extends S.Class<NeutralComponentSpan>($I`Neutr
 /**
  * Companion namespace for `NeutralComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { NeutralComponentSpan } from "@beep/law-practice-domain"
  *
@@ -404,9 +410,8 @@ export declare namespace NeutralComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link NeutralComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { NeutralComponentSpan } from "@beep/law-practice-domain"
    *
@@ -422,9 +427,8 @@ export declare namespace NeutralComponentSpan {
 /**
  * Component spans for Id./Ibid. citations (type: `id`).
  *
- * **Example**
+ * **Example** (Make Id component spans)
  *
- * @example
  * ```ts
  * import { IdComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -459,7 +463,8 @@ export class IdComponentSpan extends S.Class<IdComponentSpan>($I`IdComponentSpan
 /**
  * Companion namespace for `IdComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { IdComponentSpan } from "@beep/law-practice-domain"
  *
@@ -474,9 +479,8 @@ export declare namespace IdComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link IdComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { IdComponentSpan } from "@beep/law-practice-domain"
    *
@@ -492,9 +496,8 @@ export declare namespace IdComponentSpan {
 /**
  * Component spans for supra citations (type: `supra`).
  *
- * **Example**
+ * **Example** (Make supra component spans)
  *
- * @example
  * ```ts
  * import { Span, SupraComponentSpan } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -529,7 +532,8 @@ export class SupraComponentSpan extends S.Class<SupraComponentSpan>($I`SupraComp
 /**
  * Companion namespace for `SupraComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { SupraComponentSpan } from "@beep/law-practice-domain"
  *
@@ -544,9 +548,8 @@ export declare namespace SupraComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link SupraComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { SupraComponentSpan } from "@beep/law-practice-domain"
    *
@@ -562,9 +565,8 @@ export declare namespace SupraComponentSpan {
 /**
  * Component spans for short-form case citations (type: `shortFormCase`).
  *
- * **Example**
+ * **Example** (Make short-form case spans)
  *
- * @example
  * ```ts
  * import { ShortFormCaseComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -599,7 +601,8 @@ export class ShortFormCaseComponentSpan extends S.Class<ShortFormCaseComponentSp
 /**
  * Companion namespace for `ShortFormCaseComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { ShortFormCaseComponentSpan } from "@beep/law-practice-domain"
  *
@@ -614,9 +617,8 @@ export declare namespace ShortFormCaseComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link ShortFormCaseComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { ShortFormCaseComponentSpan } from "@beep/law-practice-domain"
    *
@@ -632,12 +634,13 @@ export declare namespace ShortFormCaseComponentSpan {
 /**
  * Component spans for public law citations (type: `publicLaw`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make public law component spans)
  *
- * @example
  * ```ts
  * import { PublicLawComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -674,7 +677,8 @@ export class PublicLawComponentSpan extends S.Class<PublicLawComponentSpan>($I`P
 /**
  * Companion namespace for `PublicLawComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { PublicLawComponentSpan } from "@beep/law-practice-domain"
  *
@@ -689,9 +693,8 @@ export declare namespace PublicLawComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link PublicLawComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { PublicLawComponentSpan } from "@beep/law-practice-domain"
    *
@@ -707,12 +710,13 @@ export declare namespace PublicLawComponentSpan {
 /**
  * Component spans for federal register citations (type: `federalRegister`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make federal register spans)
  *
- * @example
  * ```ts
  * import { FederalRegisterComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -752,7 +756,8 @@ export class FederalRegisterComponentSpan extends S.Class<FederalRegisterCompone
 /**
  * Companion namespace for `FederalRegisterComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { FederalRegisterComponentSpan } from "@beep/law-practice-domain"
  *
@@ -767,9 +772,8 @@ export declare namespace FederalRegisterComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link FederalRegisterComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { FederalRegisterComponentSpan } from "@beep/law-practice-domain"
    *
@@ -785,12 +789,13 @@ export declare namespace FederalRegisterComponentSpan {
 /**
  * Component spans for statutes at large citations (type: `statutesAtLarge`).
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make statutes at large spans)
  *
- * @example
  * ```ts
  * import { Span, StatutesAtLargeComponentSpan } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -830,7 +835,8 @@ export class StatutesAtLargeComponentSpan extends S.Class<StatutesAtLargeCompone
 /**
  * Companion namespace for `StatutesAtLargeComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { StatutesAtLargeComponentSpan } from "@beep/law-practice-domain"
  *
@@ -845,9 +851,8 @@ export declare namespace StatutesAtLargeComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link StatutesAtLargeComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { StatutesAtLargeComponentSpan } from "@beep/law-practice-domain"
    *
@@ -863,12 +868,13 @@ export declare namespace StatutesAtLargeComponentSpan {
 /**
  * Component spans for federal rule citations (type: `federalRule`). #576
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make federal rule component spans)
  *
- * @example
  * ```ts
  * import { FederalRuleComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -906,7 +912,8 @@ export class FederalRuleComponentSpan extends S.Class<FederalRuleComponentSpan>(
 /**
  * Companion namespace for `FederalRuleComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { FederalRuleComponentSpan } from "@beep/law-practice-domain"
  *
@@ -921,9 +928,8 @@ export declare namespace FederalRuleComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link FederalRuleComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { FederalRuleComponentSpan } from "@beep/law-practice-domain"
    *
@@ -939,12 +945,13 @@ export declare namespace FederalRuleComponentSpan {
 /**
  * Component spans for Restatement citations (type: `restatement`). #578
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make Restatement component spans)
  *
- * @example
  * ```ts
  * import { RestatementComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -983,7 +990,8 @@ export class RestatementComponentSpan extends S.Class<RestatementComponentSpan>(
 /**
  * Companion namespace for `RestatementComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { RestatementComponentSpan } from "@beep/law-practice-domain"
  *
@@ -998,9 +1006,8 @@ export declare namespace RestatementComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link RestatementComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { RestatementComponentSpan } from "@beep/law-practice-domain"
    *
@@ -1016,12 +1023,13 @@ export declare namespace RestatementComponentSpan {
 /**
  * Component spans for treatise citations (type: `treatise`). #579
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make treatise component spans)
  *
- * @example
  * ```ts
  * import { Span, TreatiseComponentSpan } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -1060,7 +1068,8 @@ export class TreatiseComponentSpan extends S.Class<TreatiseComponentSpan>($I`Tre
 /**
  * Companion namespace for `TreatiseComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { TreatiseComponentSpan } from "@beep/law-practice-domain"
  *
@@ -1075,9 +1084,8 @@ export declare namespace TreatiseComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link TreatiseComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { TreatiseComponentSpan } from "@beep/law-practice-domain"
    *
@@ -1093,12 +1101,13 @@ export declare namespace TreatiseComponentSpan {
 /**
  * Component spans for A.L.R. annotation citations (type: `annotation`). #581
  *
+ * **Details**
+ *
  * Note: `signal` is included for future extensibility but is currently only
  * populated for case citations.
  *
- * **Example**
+ * **Example** (Make annotation component spans)
  *
- * @example
  * ```ts
  * import { AnnotationComponentSpan, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -1137,7 +1146,8 @@ export class AnnotationComponentSpan extends S.Class<AnnotationComponentSpan>($I
 /**
  * Companion namespace for `AnnotationComponentSpan`.
  *
- * @example
+ * **Example** (Encoded component key type)
+ *
  * ```ts
  * import type { AnnotationComponentSpan } from "@beep/law-practice-domain"
  *
@@ -1152,9 +1162,8 @@ export declare namespace AnnotationComponentSpan {
   /**
    * Wire-encoded representation of a decoded {@link AnnotationComponentSpan}.
    *
-   * **Example**
+   * **Example** (Alias encoded wire type)
    *
-   * @example
    * ```ts
    * import type { AnnotationComponentSpan } from "@beep/law-practice-domain"
    *

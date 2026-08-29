@@ -21,17 +21,19 @@ const normalizeIdentifierWords = flow(
 /**
  * Split a source identifier or symbol-like phrase into normalized words.
  *
- * @remarks
+ * **Details**
+ *
  * Handles camelCase, PascalCase, snake_case, and kebab-case as equivalent word
  * boundaries. The returned tokens are lowercase because callers use them as the
  * canonical basis for deterministic lookup variants.
  *
- * @example
- * ```typescript
+ * **Example** (Tokenize camelCase identifier)
+ *
+ * ```ts import.meta.vitest name="Tokenize camelCase identifier"
  * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *
  * const result = IdentifierText.tokens("myVariableName")
- * console.log(result) // ["my", "variable", "name"]
+ * result // => ["my", "variable", "name"]
  * ```
  *
  * @category parsing
@@ -42,21 +44,23 @@ export const tokens = flow(normalizeIdentifierWords, Str.split(" "), A.map(Str.t
 /**
  * Generate common source-code spellings for a symbol phrase.
  *
- * @remarks
+ * **Details**
+ *
  * Variants preserve first occurrence order and cover human text, spaced words,
  * camelCase, PascalCase, snake_case, kebab-case, and compact joined text. This
  * lets query code match a user phrase against exported symbols without guessing
  * which naming convention the source used.
  *
- * @example
- * ```typescript
+ * **Example** (Generate user name variants)
+ *
+ * ```ts import.meta.vitest name="Generate user name variants"
  * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *
  * const result = IdentifierText.variants("user name")
  * // Produces camelCase, PascalCase, snake_case, kebab-case, and joined variants
- * console.log(result.includes("userName")) // true
- * console.log(result.includes("UserName")) // true
- * console.log(result.includes("user_name")) // true
+ * result.includes("userName") // => true
+ * result.includes("UserName") // => true
+ * result.includes("user_name") // => true
  * ```
  *
  * @category normalization

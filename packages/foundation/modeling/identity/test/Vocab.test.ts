@@ -1,4 +1,4 @@
-import { CoreVocab, mergeVocab, VocabRegistry } from "@beep/identity";
+import { CoreVocab, mergeVocab, SemanticFoundationVocab, VocabRegistry } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -40,6 +40,18 @@ describe("Vocab literal types", () => {
     expectTypeOf<Curie<typeof extended>>().toEqualTypeOf<CoreCurie | "ex:Thing">();
     expect(extended.ex.terms).toEqual(["Thing"]);
   });
+
+  it("extends the core registry with the repository semantic authority", () => {
+    expect(SemanticFoundationVocab.beep).toEqual({
+      iri: "https://ns.beep.sh/",
+      terms: [
+        "ontology/semantic-foundation",
+        "ontology/semantic-foundation/taxonomy/legal-intake",
+        "ontology/semantic-foundation/filing-root/local-vault",
+        "ontology/semantic-foundation/filing-root/box-mirror",
+      ],
+    });
+  });
 });
 
 describe("CoreVocab runtime invariants", () => {
@@ -66,7 +78,7 @@ describe("CoreVocab runtime invariants", () => {
 
   it("round-trips generated vocabulary registries through their encoded shape", () => {
     fc.assert(
-      fc.property(S.toArbitrary(VocabRegistry), (registry) => {
+      fc.property(S.toArbitrary(VocabRegistry)(fc), (registry) => {
         const decoded = O.flatMap(S.encodeOption(VocabRegistry)(registry), S.decodeUnknownOption(VocabRegistry));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
@@ -75,6 +87,6 @@ describe("CoreVocab runtime invariants", () => {
   });
 
   it("accepts CoreVocab through the runtime registry schema", () => {
-    expect(O.isSome(S.decodeUnknownOption(VocabRegistry)(CoreVocab))).toBe(true);
+    expect(O.isSome(S.decodeOption(VocabRegistry)(CoreVocab))).toBe(true);
   });
 });

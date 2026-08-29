@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "semantica-lab",
+    "title": "Semantica Port Atlas & Lab",
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [
+      "Does the evidence-quote candidate's zero-spend preview ground at least one relation on at least one frozen paper? (DECISIONS E1-E8; preview and the operator spot-check-and-repair pass both gate the live probe; a second park is terminal)"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/semantica-canary", "goals/openai-driver"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-24",
+    "updated": "2026-08-27"
+  }
+}

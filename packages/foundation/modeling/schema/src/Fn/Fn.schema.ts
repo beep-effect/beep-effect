@@ -12,7 +12,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Cause, Effect, Result, SchemaIssue, SchemaParser } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -114,7 +113,8 @@ const anyFnAnnotations = {
  * `undefined`, or `void` produce thunk (zero-argument) call signatures;
  * all other input types produce unary call signatures.
  *
- * @example
+ * **Example** (Thunk and unary signatures)
+ *
  * ```ts
  * import type { FnType } from "@beep/schema/Fn"
  *
@@ -124,8 +124,8 @@ const anyFnAnnotations = {
  * console.log(thunk(), unary(1))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FnType<Input, Output> = [Input] extends [never]
   ? () => Output
@@ -168,7 +168,8 @@ type FnNoArgInput<Input extends S.Top> = [Input["Type"]] extends [never]
  * Schema surface for zero-argument (thunk-like) functions created by {@link Fn}.
  * Provides `implement`, `implementEffect`, and `implementSync` helpers.
  *
- * @example
+ * **Example** (Implement zero-argument schema)
+ *
  * ```ts
  * import { Fn, type FnSchemaNoArg } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
@@ -179,11 +180,16 @@ type FnNoArgInput<Input extends S.Top> = [Input["Type"]] extends [never]
  * console.log(getValue())
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface FnSchemaNoArg<Input extends NoArgInputSchema, Output extends S.Top, Error extends S.Top>
-  extends S.Codec<FnRuntime<Input, Output>, FnRuntime<Input, Output>> {
+  extends S.declareConstructor<
+    FnRuntime<Input, Output>,
+    FnRuntime<Input, Output>,
+    readonly [Input, Output, Error],
+    FnIso<Input, Output>
+  > {
   readonly errorSchema: Error;
   readonly implement: (handler: () => Output["Type"]) => FnEffectWrapperNoArg<Output, SchemaIssue.Issue, never>;
   readonly implementEffect: FnImplementEffectNoArg<Output, Error>;
@@ -198,7 +204,8 @@ export interface FnSchemaNoArg<Input extends NoArgInputSchema, Output extends S.
  * `implement`, `implementEffect`, and `implementSync` helpers that decode
  * input and validate output at invocation time.
  *
- * @example
+ * **Example** (Implement unary schema)
+ *
  * ```ts
  * import { Fn, type FnSchemaUnary } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
@@ -212,11 +219,16 @@ export interface FnSchemaNoArg<Input extends NoArgInputSchema, Output extends S.
  * console.log(format(1))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface FnSchemaUnary<Input extends S.Top, Output extends S.Top, Error extends S.Top>
-  extends S.Codec<FnRuntime<Input, Output>, FnRuntime<Input, Output>> {
+  extends S.declareConstructor<
+    FnRuntime<Input, Output>,
+    FnRuntime<Input, Output>,
+    readonly [Input, Output, Error],
+    FnIso<Input, Output>
+  > {
   readonly errorSchema: Error;
   readonly implement: (
     handler: FnType<Input["Type"], Output["Type"]>
@@ -232,7 +244,8 @@ export interface FnSchemaUnary<Input extends S.Top, Output extends S.Top, Error 
  * Union schema type returned by {@link Fn}. Resolves to either
  * {@link FnSchemaNoArg} or {@link FnSchemaUnary} based on the input schema.
  *
- * @example
+ * **Example** (Union type output schema)
+ *
  * ```ts
  * import type { FnSchema } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
@@ -243,8 +256,8 @@ export interface FnSchemaUnary<Input extends S.Top, Output extends S.Top, Error 
  * console.log(S.isSchema(schema))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FnSchema<Input extends S.Top, Output extends S.Top, Error extends S.Top = typeof S.Never> = [
   Input["Type"],
@@ -259,7 +272,8 @@ export type FnSchema<Input extends S.Top, Output extends S.Top, Error extends S.
  * and sub-schemas (`implement`, `implementEffect`, `implementSync`,
  * `inputSchema`, `outputSchema`, `errorSchema`).
  *
- * @example
+ * **Example** (Statics implementSync helper)
+ *
  * ```ts
  * import { Fn, type FnSchemaStatics } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
@@ -270,8 +284,8 @@ export type FnSchema<Input extends S.Top, Output extends S.Top, Error extends S.
  * console.log(format(1))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FnSchemaStatics<Input extends S.Top, Output extends S.Top, Error extends S.Top = typeof S.Never> = Pick<
   FnSchema<Input, Output, Error>,
@@ -288,7 +302,7 @@ const makeFnDeclaration = <Input extends S.Top, Output extends S.Top, Error exte
     () => (value, ast) =>
       isFunctionValue<FnRuntime<Input, Output>>(value)
         ? Effect.succeed(value)
-        : Effect.fail(new SchemaIssue.InvalidType(ast, O.some(value))),
+        : Effect.fail(new SchemaIssue.InvalidType(ast)),
     fnDeclarationAnnotations
   );
 
@@ -446,7 +460,8 @@ const makeUnaryFnSchema = <Input extends S.Top, Output extends S.Top, Error exte
 /**
  * Schema for any runtime function value.
  *
- * @example
+ * **Example** (Decode unknown function)
+ *
  * ```ts
  * import { AnyFn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -455,8 +470,8 @@ const makeUnaryFnSchema = <Input extends S.Top, Output extends S.Top, Error exte
  * console.log(fn)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const AnyFn = S.declare<Function>(isFunctionValue, anyFnAnnotations).pipe(
   $I.annoteSchema("AnyFn", {
@@ -467,7 +482,8 @@ export const AnyFn = S.declare<Function>(isFunctionValue, anyFnAnnotations).pipe
 /**
  * Type for {@link AnyFn}.
  *
- * @example
+ * **Example** (Typed decoded function)
+ *
  * ```ts
  * import { AnyFn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -476,8 +492,8 @@ export const AnyFn = S.declare<Function>(isFunctionValue, anyFnAnnotations).pipe
  * console.log(fn())
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type AnyFn = typeof AnyFn.Type;
 
@@ -486,7 +502,8 @@ export type AnyFn = typeof AnyFn.Type;
  * provided schema and whose `implementEffect` error channel can optionally be
  * validated against the provided error schema.
  *
- * @example
+ * **Example** (Implement string thunk)
+ *
  * ```ts
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -500,34 +517,36 @@ export type AnyFn = typeof AnyFn.Type;
  * @param output - Schema for the thunk result.
  * @param error - Optional schema for the expected effect error channel.
  * @returns A zero-argument {@link Fn} schema.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function ThunkOf<Output extends S.Top>(output: Output): FnSchema<typeof S.Never, Output, typeof S.Never>;
 /**
  * Creates a thunk schema whose effect failure channel is validated against the
  * provided error schema.
  *
- * @example
+ * **Example** (Thunk with error schema)
+ *
  * ```ts
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
- * const GetCount = ThunkOf(S.Finite, S.String)
+ * const GetCount = ThunkOf({ output: S.Finite, error: S.String })
  * console.log(S.isSchema(GetCount.errorSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
-export function ThunkOf<Output extends S.Top, Error extends S.Top>(
-  output: Output,
-  error: Error
-): FnSchema<typeof S.Never, Output, Error>;
+export function ThunkOf<Output extends S.Top, Error extends S.Top>(options: {
+  readonly output: Output;
+  readonly error: Error;
+}): FnSchema<typeof S.Never, Output, Error>;
 /**
  * Creates a thunk schema from an output schema and optional error schema.
  *
- * @example
+ * **Example** (Create and call thunk)
+ *
  * ```ts
  * import { ThunkOf } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -537,10 +556,16 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(
  * console.log(getName())
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
-export function ThunkOf<Output extends S.Top, Error extends S.Top>(output: Output, error?: Error) {
+export function ThunkOf<Output extends S.Top, Error extends S.Top>(
+  outputOrOptions: Output | { readonly output: Output; readonly error: Error }
+) {
+  const { output, error } = S.isSchema(outputOrOptions)
+    ? { output: outputOrOptions, error: undefined }
+    : outputOrOptions;
+
   return makeNoArgFnSchema(S.Never, output, error ?? S.Never);
 }
 
@@ -548,7 +573,8 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(output: Outpu
  * Creates a zero-argument function schema whose result is validated against the
  * provided output schema.
  *
- * @example
+ * **Example** (Zero-argument greeting schema)
+ *
  * ```ts
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -561,8 +587,8 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(output: Outpu
  *
  * @param options - Output and optional error contracts for the thunk.
  * @returns A thunk schema with invocation helpers.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(options: {
   readonly output: Output;
@@ -573,7 +599,8 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  * Creates a zero-argument function schema that preserves an explicit
  * `Schema.Undefined` input contract.
  *
- * @example
+ * **Example** (Undefined input thunk)
+ *
  * ```ts
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -585,8 +612,8 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  *
  * @param options - Input/output contract for the thunk-like function.
  * @returns A thunk schema whose `inputSchema` remains `Schema.Undefined`.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(options: {
   readonly input: typeof S.Undefined;
@@ -598,7 +625,8 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  * Creates a zero-argument function schema that preserves an explicit
  * `Schema.Void` input contract.
  *
- * @example
+ * **Example** (Void input noop)
+ *
  * ```ts
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -610,8 +638,8 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  *
  * @param options - Input/output contract for the thunk-like function.
  * @returns A thunk schema whose `inputSchema` remains `Schema.Void`.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(options: {
   readonly input: typeof S.Void;
@@ -623,7 +651,8 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  * Creates a unary function schema. Invocation helpers decode incoming payloads
  * with `options.input` and validate handler results against `options.output`.
  *
- * @example
+ * **Example** (Unary format count)
+ *
  * ```ts
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -640,8 +669,8 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  *
  * @param options - Input, output, and optional error contracts for the function.
  * @returns A unary function schema with invocation helpers.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function Fn<Input extends S.Top, Output extends S.Top, Error extends S.Top = typeof S.Never>(options: {
   readonly input: Input;
@@ -652,7 +681,8 @@ export function Fn<Input extends S.Top, Output extends S.Top, Error extends S.To
 /**
  * Creates a function schema from the canonical options object.
  *
- * @example
+ * **Example** (Canonical options schema)
+ *
  * ```ts
  * import { Fn } from "@beep/schema"
  * import * as S from "effect/Schema"
@@ -663,8 +693,8 @@ export function Fn<Input extends S.Top, Output extends S.Top, Error extends S.To
  * console.log(formatCount(1))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(options: {
   readonly input?: S.Top;

@@ -19,12 +19,13 @@ import {
   SyncConflictRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { SyncConflictSeed } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
 const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
@@ -32,7 +33,7 @@ const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
 /**
  * Build a full SyncConflict entity from a drift seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -41,7 +42,7 @@ const syncConflictFromSeed = (id: number, seed: SyncConflictSeed): DomainSyncCon
     conflictKind: seed.conflictKind,
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncConflict.SyncConflictId.entityType,
+    entityType: DocumentsIdentity.SyncConflictId.entityType,
     id,
     localRelPath: O.getOrNull(seed.localRelPath),
     orgId: 1,
@@ -75,11 +76,14 @@ const matchesRemoteEvent =
 /**
  * Build the in-memory SyncConflict repository used by deterministic sync tests.
  *
+ * **Details**
+ *
  * `record` deduplicates by provider event within one workspace: when the
  * seed's `remoteEventId` is present and a record already exists for the same
  * workspace, provider, and event, that record is returned unchanged.
  *
- * @example
+ * **Example** (Import in-memory factory)
+ *
  * ```ts
  * import { makeInMemorySyncConflictRepository } from "@beep/documents-server/entities/SyncConflict"
  *
@@ -88,14 +92,13 @@ const matchesRemoteEvent =
  *
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for record, list, and review repository calls.
- *
  * @category repositories
  * @since 0.0.0
  */
 export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConflictRepository.makeInMemory")(
   function* () {
     const { counter, snapshot, store } = yield* makeEntityStore(
-      HashMap.empty<DomainSyncConflict.SyncConflictId, DomainSyncConflict.SyncConflict>()
+      HashMap.empty<DocumentsIdentity.SyncConflictId, DomainSyncConflict.SyncConflict>()
     );
 
     return SyncConflictRepository.of({
@@ -158,7 +161,8 @@ const repositoryUnavailable =
 /**
  * Build a Drizzle-backed SyncConflict repository used by live persistence tests.
  *
- * @example
+ * **Example** (Import Drizzle factory)
+ *
  * ```ts
  * import { makeDrizzleSyncConflictRepository } from "@beep/documents-server/entities/SyncConflict"
  *
@@ -168,7 +172,6 @@ const repositoryUnavailable =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncConflict table and redacts driver
  * failures to `SyncConflictRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

@@ -3,8 +3,9 @@
  *
  * This is the single port both the (future) Anthropic implementation and the
  * deterministic fixture satisfy: given a plain-text history, stream the next
- * assistant turn as a sequence of indexed blocks. Implementations translate
- * their internal failures into the public {@link TurnGenerationError}.
+ * assistant turn as indexed-block events followed by one provider-usage
+ * finalization signal. Implementations translate their internal failures into
+ * the public {@link TurnGenerationError}.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -13,15 +14,16 @@
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type * as Stream from "effect/Stream";
-import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.js";
-import type { TurnGenerationError } from "./AssistantTurn.errors.js";
+import type { AssistantTurnEvent, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
+import type { TurnGenerationError } from "./AssistantTurn.errors.ts";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.kernel");
 
 /**
  * Service shape of the assistant-turn generation kernel.
  *
- * @example
+ * **Example** (Minimal empty stream kernel)
+ *
  * ```ts
  * import type { AgentTurnKernelShape } from "@beep/agents-use-cases/public"
  * import { Stream } from "effect"
@@ -39,17 +41,21 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.kerne
  */
 export interface AgentTurnKernelShape {
   /**
-   * Streams the next generated assistant turn for the supplied prompt history.
+   * Streams completed blocks followed by one finalization signal carrying
+   * provider usage for the supplied prompt history.
    *
    * @since 0.0.0
    */
-  readonly streamTurn: (history: ReadonlyArray<TurnHistoryItem>) => Stream.Stream<IndexedBlock, TurnGenerationError>;
+  readonly streamTurn: (
+    history: ReadonlyArray<TurnHistoryItem>
+  ) => Stream.Stream<AssistantTurnEvent, TurnGenerationError>;
 }
 
 /**
  * Assistant-turn generation kernel service tag.
  *
- * @example
+ * **Example** (Stream turn with fixture)
+ *
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"
@@ -61,10 +67,10 @@ export interface AgentTurnKernelShape {
  *     kernel.streamTurn([{ role: "user", text: "ping" }])
  *   )
  *
- *   return blocks.map((block) => block.index)
+ *   return blocks.map((event) => event.type)
  * }).pipe(Effect.provide(FixtureTurnKernel))
  *
- * Effect.runPromise(program).then(console.log) // [0, 1, 2, 3]
+ * Effect.runPromise(program).then(console.log) // ["block", "block", "block", "block", "finalization"]
  * ```
  *
  * @category services

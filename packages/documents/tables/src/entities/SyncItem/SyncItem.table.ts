@@ -7,12 +7,14 @@
  */
 
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
+import { getTableName } from "drizzle-orm";
 
 /**
  * Drizzle table projection for documents SyncItem entities.
  *
- * @example
+ * **Example** (Validate SyncItem table projection)
+ *
  * ```ts
  * import { syncItemTable } from "@beep/documents-tables/entities/SyncItem"
  * import { getColumns, getTableName } from "drizzle-orm"
@@ -29,12 +31,13 @@ import { EntityTable } from "@beep/drizzle";
  * @category tables
  * @since 0.0.0
  */
-export const syncItemTable = EntityTable.pgTableFrom(DomainSyncItem.SyncItem);
+export const syncItemTable = toPgTable(DomainSyncItem.SyncItem);
 
 /**
  * Physical Postgres table name derived from the SyncItem entity definition.
  *
- * @example
+ * **Example** (Check physical table name)
+ *
  * ```ts
  * import { SYNC_ITEM_TABLE_NAME } from "@beep/documents-tables/entities/SyncItem"
  *
@@ -49,4 +52,4 @@ export const syncItemTable = EntityTable.pgTableFrom(DomainSyncItem.SyncItem);
  * @category tables
  * @since 0.0.0
  */
-export const SYNC_ITEM_TABLE_NAME = syncItemTable.definition.tableName;
+export const SYNC_ITEM_TABLE_NAME = getTableName(syncItemTable);

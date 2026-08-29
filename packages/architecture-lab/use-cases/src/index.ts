@@ -9,7 +9,8 @@
 /**
  * Package version for the architecture lab use-case role.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-use-cases"
  *
@@ -29,4 +30,4 @@ export const VERSION = "0.0.0" as const;
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./public.js";
+export * from "./public.ts";

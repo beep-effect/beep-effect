@@ -8,14 +8,15 @@
 
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
 import { Layer } from "effect";
-import { makeDrizzleWorkspaceVaultStore, makeInMemoryWorkspaceVaultStore } from "./WorkspaceVault.repo.js";
+import { makeDrizzleWorkspaceVaultStore, makeInMemoryWorkspaceVaultStore } from "./WorkspaceVault.repo.ts";
 
 const WorkspaceVaultStore = WorkspaceUseCases.Workspace.WorkspaceVaultStore;
 
 /**
  * In-memory workspace vault store layer for deterministic tests.
  *
- * @example
+ * **Example** (Import in-memory vault layer)
+ *
  * ```ts
  * import { WorkspaceVaultStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Workspace"
  *
@@ -30,7 +31,8 @@ export const WorkspaceVaultStoreInMemoryLayer = Layer.effect(WorkspaceVaultStore
 /**
  * Drizzle-backed workspace vault store layer.
  *
- * @example
+ * **Example** (Import Drizzle vault layer)
+ *
  * ```ts
  * import { WorkspaceVaultStoreDrizzleLayer } from "@beep/workspace-server/aggregates/Workspace"
  *
@@ -45,7 +47,8 @@ export const WorkspaceVaultStoreDrizzleLayer = Layer.effect(WorkspaceVaultStore,
 /**
  * Default workspace vault store layer used by local server wiring.
  *
- * @example
+ * **Example** (Import live vault layer)
+ *
  * ```ts
  * import { WorkspaceVaultStoreLive } from "@beep/workspace-server/aggregates/Workspace"
  *

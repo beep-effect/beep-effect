@@ -6,13 +6,16 @@
  */
 
 import { Layer } from "effect";
-import { OntologyConfig } from "./ServerConfig.js";
-import type { OntologyServerConfig } from "./ServerConfig.js";
+import { OntologyMcpConfig } from "./McpConfig.ts";
+import { OntologyConfig } from "./ServerConfig.ts";
+import type { OntologyMcpServerConfig } from "./McpConfig.ts";
+import type { OntologyServerConfig } from "./ServerConfig.ts";
 
 /**
  * Build a static ontology configuration layer for tests.
  *
- * @example
+ * **Example** (Build ontology config test layer)
+ *
  * ```ts
  * import { OntologyServerConfig } from "@beep/ontology-config/server"
  * import { makeOntologyConfigTest } from "@beep/ontology-config/test"
@@ -27,3 +30,24 @@ import type { OntologyServerConfig } from "./ServerConfig.js";
  * @since 0.0.0
  */
 export const makeOntologyConfigTest = (config: OntologyServerConfig) => Layer.succeed(OntologyConfig, config);
+
+/**
+ * Build a static ontology MCP surface configuration layer for tests.
+ *
+ * **Example** (Build MCP config test layer)
+ *
+ * ```ts
+ * import { OntologyMcpServerConfig } from "@beep/ontology-config/server"
+ * import { makeOntologyMcpConfigTest } from "@beep/ontology-config/test"
+ * import { Layer } from "effect"
+ *
+ * const layer = makeOntologyMcpConfigTest(
+ *   OntologyMcpServerConfig.make({ mutationsEnabled: true })
+ * )
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeOntologyMcpConfigTest = (config: OntologyMcpServerConfig) => Layer.succeed(OntologyMcpConfig, config);

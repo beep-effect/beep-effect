@@ -35,7 +35,8 @@ const moduleName = "OpenAiCompatClient";
 /**
  * Runtime configuration accepted by {@link OpenAiCompatClient.makeLayer}.
  *
- * @example
+ * **Example** (Make client options)
+ *
  * ```ts
  * import { Redacted } from "effect"
  * import * as O from "effect/Option"
@@ -66,7 +67,8 @@ export class OpenAiCompatClientOptions extends S.Class<OpenAiCompatClientOptions
 /**
  * OpenAI-compatible HTTP client service shape.
  *
- * @example
+ * **Example** (Stub client shape)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import {
@@ -266,6 +268,16 @@ const mapSseRetry = (method: string): AiError.AiError =>
     })
   );
 
+const mapSseError =
+  (method: string) =>
+  (error: Sse.SseError): AiError.AiError =>
+    makeAiError(
+      method,
+      AiError.InvalidOutputError.make({
+        description: `OpenAI-compatible stream response could not be decoded as SSE (${error.reason._tag}).`,
+      })
+    );
+
 const parseSseData: (data: string) => Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> = flow(
   decodeJsonString,
   Effect.flatMap(decodeChatCompletionChunk),
@@ -311,6 +323,7 @@ const makeService = (client: HttpClient.HttpClient, options: OpenAiCompatClientO
               Stream.catchTags({
                 HttpClientError: flow(mapHttpClientError("streamChatCompletion"), Stream.fromEffect),
                 Retry: () => Stream.fail(mapSseRetry("streamChatCompletion")),
+                SseError: flow(mapSseError("streamChatCompletion"), Stream.fail),
               })
             )
           ),
@@ -335,7 +348,8 @@ const makeService = (client: HttpClient.HttpClient, options: OpenAiCompatClientO
 /**
  * OpenAI-compatible HTTP client service.
  *
- * @example
+ * **Example** (Yield client service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { OpenAiCompatClient } from "@beep/openai-compat"
@@ -357,7 +371,8 @@ export class OpenAiCompatClient extends Context.Service<OpenAiCompatClient, Open
   /**
    * Builds an OpenAI-compatible client layer from explicit configuration.
    *
-   * @example
+   * **Example** (Build client layer)
+   *
    * ```ts
    * import { Redacted } from "effect"
    * import * as O from "effect/Option"
@@ -387,7 +402,8 @@ export class OpenAiCompatClient extends Context.Service<OpenAiCompatClient, Open
   /**
    * Live OpenAI-compatible client layer backed by `FetchHttpClient.layer`.
    *
-   * @example
+   * **Example** (Use live client layer)
+   *
    * ```ts
    * import { OpenAiCompatClient } from "@beep/openai-compat"
    *

@@ -32,7 +32,8 @@ const ACP_STDIO_CLIENT_ID = 0;
 /**
  * Fallback handler for ACP extension requests.
  *
- * @example
+ * **Example** (Fallback request handler)
+ *
  * ```ts
  * import type { AcpUnknownExtRequestHandler } from "@beep/acp/protocol"
  * import { Effect } from "effect"
@@ -52,7 +53,8 @@ export type AcpUnknownExtRequestHandler = (
 /**
  * Fallback handler for ACP extension notifications.
  *
- * @example
+ * **Example** (Fallback notification handler)
+ *
  * ```ts
  * import type { AcpUnknownExtNotificationHandler } from "@beep/acp/protocol"
  * import { Effect } from "effect"
@@ -72,7 +74,8 @@ export type AcpUnknownExtNotificationHandler = (
 /**
  * Common ACP extension-handler registration surface shared by agents and clients.
  *
- * @example
+ * **Example** (Register extension request)
+ *
  * ```ts
  * import type { AcpExtensionRegistrars } from "@beep/acp/protocol"
  * import { Effect } from "effect"
@@ -170,7 +173,8 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
 /**
  * Structured log event emitted by the ACP protocol adapter.
  *
- * @example
+ * **Example** (Create event from unknown)
+ *
  * ```ts
  * import { AcpProtocolLogEvent } from "@beep/acp/protocol"
  *
@@ -233,7 +237,8 @@ export const AcpProtocolLogEvent = AcpProtocolLogDirection.mapMembers(
 /**
  * Structured log event emitted by the ACP protocol adapter.
  *
- * @example
+ * **Example** (Typed log event value)
+ *
  * ```ts
  * import type { AcpProtocolLogEvent } from "@beep/acp/protocol"
  *
@@ -253,7 +258,8 @@ export type AcpProtocolLogEvent = typeof AcpProtocolLogEvent.Type;
 /**
  * Schema-backed ACP protocol logging flags.
  *
- * @example
+ * **Example** (Make logging options)
+ *
  * ```ts
  * import { AcpProtocolLoggingOptions } from "@beep/acp/protocol"
  *
@@ -281,7 +287,8 @@ export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions
 /**
  * Schema for notifications decoded from the ACP peer stream.
  *
- * @example
+ * **Example** (Decode extension notification)
+ *
  * ```ts
  * import { AcpIncomingNotification } from "@beep/acp/protocol"
  *
@@ -331,7 +338,8 @@ export const AcpIncomingNotification = S.TaggedUnion({
 /**
  * Type for {@link AcpIncomingNotification}.
  *
- * @example
+ * **Example** (Extract notification tag)
+ *
  * ```ts
  * import type { AcpIncomingNotification } from "@beep/acp/protocol"
  *
@@ -347,7 +355,8 @@ export type AcpIncomingNotification = typeof AcpIncomingNotification.Type;
 /**
  * Options used to create the patched ACP protocol.
  *
- * @example
+ * **Example** (Inspect server request methods)
+ *
  * ```ts
  * import * as HashSet from "effect/HashSet"
  * import type { AcpPatchedProtocolOptions } from "@beep/acp/protocol"
@@ -374,7 +383,8 @@ export interface AcpPatchedProtocolOptions extends AcpProtocolLoggingOptions {
 /**
  * Runtime protocol handles used by ACP clients and agents.
  *
- * @example
+ * **Example** (Access incoming stream)
+ *
  * ```ts
  * import type { AcpPatchedProtocol } from "@beep/acp/protocol"
  *
@@ -436,7 +446,8 @@ const fromWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<
 /**
  * Builds the patched ACP protocol over an Effect `Stdio` transport.
  *
- * @example
+ * **Example** (Build protocol over stdio)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { Stdio } from "effect"
@@ -828,6 +839,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     supportsAck: true,
     supportsTransferables: false,
+    codecFor: parserFactory.codecFor,
   });
 
   const serverProtocol = RpcServer.Protocol.of({
@@ -843,8 +855,10 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     send: Effect.fn($I`AcpServer_Protocol_send`)((_clientId, response) => offerOutgoing(response).pipe(Effect.orDie)),
     supportsAck: true,
+    supportsNotifications: true,
     supportsSpanPropagation: true,
     supportsTransferables: false,
+    codecFor: parserFactory.codecFor,
   });
 
   const sendNotificationEffect = Effect.fn($I`sendNotification`)(function* (method: string, payload: unknown) {

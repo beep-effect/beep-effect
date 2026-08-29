@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/OptionInjectionError");
@@ -22,7 +21,8 @@ const $I = $RepoUtilsId.create("errors/OptionInjectionError");
  * example begins with `-`) and would be reinterpreted as a flag by the spawned
  * process instead of being treated as a literal positional argument.
  *
- * @example
+ * **Example** (Construct option injection error)
+ *
  * ```ts
  * import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionError"
  * const error = OptionInjectionError.make({
@@ -31,16 +31,17 @@ const $I = $RepoUtilsId.create("errors/OptionInjectionError");
  * })
  * console.log(error.value)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class OptionInjectionError extends TaggedErrorClass<OptionInjectionError>($I`OptionInjectionError`)(
+export class OptionInjectionError extends S.TaggedError<OptionInjectionError>($I`OptionInjectionError`)(
   "OptionInjectionError",
   {
     message: S.String,
     value: S.String,
   },
-  $I.annote("OptionInjectionError", {
+  $I.annoteError<OptionInjectionError>("OptionInjectionError", {
     title: "Option Injection Error",
     description:
       "Raised when a data-derived child-process argument is shaped like a\ncommand-line option and would be reinterpreted as a flag by the spawned\nprocess instead of being treated as a literal positional argument.",

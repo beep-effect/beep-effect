@@ -25,17 +25,18 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
 /**
  * Closed v1 metadata kind domain for semantic-web schemas.
  *
- * @example
- * ```ts
+ * **Example** (Validate kind membership)
+ *
+ * ```ts import.meta.vitest name="Validate kind membership"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaMetadataKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
- * console.log(S.is(SemanticSchemaMetadataKind)("identifier")) // true
- * console.log(S.is(SemanticSchemaMetadataKind)("unknown")) // false
+ * S.is(SemanticSchemaMetadataKind)("identifier") // => true
+ * S.is(SemanticSchemaMetadataKind)("unknown") // => false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const SemanticSchemaMetadataKind = LiteralKit([
   "identifier",
@@ -55,7 +56,8 @@ export const SemanticSchemaMetadataKind = LiteralKit([
 /**
  * Type for {@link SemanticSchemaMetadataKind}.
  *
- * @example
+ * **Example** (Type-check kind values)
+ *
  * ```ts
  * import type { SemanticSchemaMetadataKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -63,25 +65,26 @@ export const SemanticSchemaMetadataKind = LiteralKit([
  * console.log(acceptSemanticSchemaMetadataKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SemanticSchemaMetadataKind = typeof SemanticSchemaMetadataKind.Type;
 
 /**
  * Stability classification for semantic-web schema metadata.
  *
- * @example
- * ```ts
+ * **Example** (Validate status membership)
+ *
+ * ```ts import.meta.vitest name="Validate status membership"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaStatus } from "@beep/rdf/SemanticSchemaMetadata"
  *
- * console.log(S.is(SemanticSchemaStatus)("stable")) // true
- * console.log(S.is(SemanticSchemaStatus)("draft")) // false
+ * S.is(SemanticSchemaStatus)("stable") // => true
+ * S.is(SemanticSchemaStatus)("draft") // => false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const SemanticSchemaStatus = LiteralKit(["experimental", "stable", "deprecated"]).pipe(
   $I.annoteSchema("SemanticSchemaStatus", {
@@ -92,7 +95,8 @@ export const SemanticSchemaStatus = LiteralKit(["experimental", "stable", "depre
 /**
  * Type for {@link SemanticSchemaStatus}.
  *
- * @example
+ * **Example** (Type-check status values)
+ *
  * ```ts
  * import type { SemanticSchemaStatus } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -100,25 +104,26 @@ export const SemanticSchemaStatus = LiteralKit(["experimental", "stable", "depre
  * console.log(acceptSemanticSchemaStatus)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SemanticSchemaStatus = typeof SemanticSchemaStatus.Type;
 
 /**
  * Specification disposition attached to a semantic schema reference.
  *
- * @example
- * ```ts
+ * **Example** (Decode disposition value)
+ *
+ * ```ts import.meta.vitest name="Decode disposition value"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaSpecificationDisposition } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const disposition = S.decodeUnknownSync(SemanticSchemaSpecificationDisposition)("normative")
- * console.log(disposition) // "normative"
+ * disposition // => "normative"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const SemanticSchemaSpecificationDisposition = LiteralKit(["normative", "informative"]).pipe(
   $I.annoteSchema("SemanticSchemaSpecificationDisposition", {
@@ -129,7 +134,8 @@ export const SemanticSchemaSpecificationDisposition = LiteralKit(["normative", "
 /**
  * Type for {@link SemanticSchemaSpecificationDisposition}.
  *
- * @example
+ * **Example** (Type-check disposition values)
+ *
  * ```ts
  * import type { SemanticSchemaSpecificationDisposition } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -137,25 +143,26 @@ export const SemanticSchemaSpecificationDisposition = LiteralKit(["normative", "
  * console.log(acceptSemanticSchemaSpecificationDisposition)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SemanticSchemaSpecificationDisposition = typeof SemanticSchemaSpecificationDisposition.Type;
 
 /**
  * Representation label for semantic-web values.
  *
- * @example
- * ```ts
+ * **Example** (Validate representation kind)
+ *
+ * ```ts import.meta.vitest name="Validate representation kind"
  * import * as S from "effect/Schema"
  * import { SemanticRepresentationKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
- * console.log(S.is(SemanticRepresentationKind)("JSON-LD")) // true
- * console.log(S.is(SemanticRepresentationKind)("CSV")) // false
+ * S.is(SemanticRepresentationKind)("JSON-LD") // => true
+ * S.is(SemanticRepresentationKind)("CSV") // => false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const SemanticRepresentationKind = LiteralKit([
   "RDF/JS",
@@ -173,7 +180,8 @@ export const SemanticRepresentationKind = LiteralKit([
 /**
  * Type for {@link SemanticRepresentationKind}.
  *
- * @example
+ * **Example** (Type-check representation kinds)
+ *
  * ```ts
  * import type { SemanticRepresentationKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -181,16 +189,17 @@ export const SemanticRepresentationKind = LiteralKit([
  * console.log(acceptSemanticRepresentationKind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
 
 /**
  * Single specification reference attached to public semantic-web schemas.
  *
- * @example
- * ```ts
+ * **Example** (Decode specification reference)
+ *
+ * ```ts import.meta.vitest name="Decode specification reference"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaSpecification } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -199,11 +208,11 @@ export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
  *   section: "Graph Data Model",
  *   disposition: "normative"
  * })
- * console.log(specification.name) // "RDF 1.1 Concepts"
+ * specification.name // => "RDF 1.1 Concepts"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecification>($I`SemanticSchemaSpecification`)(
   {
@@ -222,8 +231,9 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
 /**
  * Single representation note attached to semantic-web schemas.
  *
- * @example
- * ```ts
+ * **Example** (Decode representation note)
+ *
+ * ```ts import.meta.vitest name="Decode representation note"
  * import * as S from "effect/Schema"
  * import { SemanticRepresentation } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -231,11 +241,11 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
  *   kind: "JSON-LD",
  *   note: "Compacted document shape."
  * })
- * console.log(representation.kind) // "JSON-LD"
+ * representation.kind // => "JSON-LD"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`SemanticRepresentation`)(
   {
@@ -250,8 +260,9 @@ export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`S
 /**
  * Typed metadata payload stored in the `semanticSchemaMetadata` annotation key.
  *
- * @example
- * ```ts
+ * **Example** (Decode full metadata payload)
+ *
+ * ```ts import.meta.vitest name="Decode full metadata payload"
  * import * as S from "effect/Schema"
  * import { SemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -263,11 +274,11 @@ export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`S
  *   specifications: [{ name: "RDF/JS Data Model", disposition: "normative" }],
  *   equivalenceBasis: "IRI equality."
  * })
- * console.log(metadata.canonicalName) // "NamedNode"
+ * metadata.canonicalName // => "NamedNode"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`SemanticSchemaMetadata`)(
   {
@@ -277,8 +288,22 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
     status: SemanticSchemaStatus,
     specifications: S.NonEmptyArray(SemanticSchemaSpecification),
     equivalenceBasis: S.NonEmptyString,
-    canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        deprecated: true,
+        description:
+          "Deprecated address field: composer-derived `iri` annotations own addressing (identity-iri-fold, 2026-08-01). Documentation payload fields remain canonical here.",
+      })
+    ),
+    preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        deprecated: true,
+        description:
+          "Deprecated address field: composer-derived `curie` annotations own addressing (identity-iri-fold, 2026-08-01). Documentation payload fields remain canonical here.",
+      })
+    ),
     aliases: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     canonicalizationRequired: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
     representations: SemanticRepresentation.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -301,7 +326,8 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
 /**
  * Payload stored in the `semanticSchemaMetadata` annotation key.
  *
- * @example
+ * **Example** (Type-check annotation payload)
+ *
  * ```ts
  * import type { SemanticSchemaMetadataAnnotationPayload } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -309,8 +335,8 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
  * console.log(acceptSemanticSchemaMetadataAnnotationPayload)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SemanticSchemaMetadataAnnotationPayload = SemanticSchemaMetadata;
 
@@ -325,8 +351,9 @@ declare module "effect/Schema" {
 /**
  * Validate a metadata payload before attaching it to a public schema.
  *
- * @example
- * ```ts
+ * **Example** (Build validated metadata)
+ *
+ * ```ts import.meta.vitest name="Build validated metadata"
  * import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const metadata = makeSemanticSchemaMetadata({
@@ -337,23 +364,26 @@ declare module "effect/Schema" {
  *   specifications: [{ name: "Example Profile", disposition: "informative" }],
  *   equivalenceBasis: "String equality.",
  * })
- * console.log(metadata.kind) // "identifier"
+ * metadata.kind // => "identifier"
  * ```
  *
  * @param metadata - Encoded metadata payload.
  * @returns Validated metadata payload.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const makeSemanticSchemaMetadata = (
   metadata: typeof SemanticSchemaMetadata.Encoded
 ): SemanticSchemaMetadataAnnotationPayload =>
   pipe(SemanticSchemaMetadata.decodeUnknownResult(metadata), Result.getOrThrowWith(schemaIssueToError));
 
+type Rebuilt<Schema extends S.Top> = Schema["Rebuild"];
+
 /**
  * Attach validated semantic metadata to any Effect schema.
  *
- * @example
+ * **Example** (Attach metadata to schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { annotateSemanticSchema } from "@beep/rdf/SemanticSchemaMetadata"
@@ -372,15 +402,15 @@ export const makeSemanticSchemaMetadata = (
  * @param schema - Target schema.
  * @param metadata - Encoded metadata payload.
  * @returns Annotated schema.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const annotateSemanticSchema: {
-  <Schema extends S.Top>(metadata: typeof SemanticSchemaMetadata.Encoded): (schema: Schema) => Schema["Rebuild"];
-  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Schema["Rebuild"];
+  <Schema extends S.Top>(metadata: typeof SemanticSchemaMetadata.Encoded): (schema: Schema) => Rebuilt<Schema>;
+  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Rebuilt<Schema>;
 } = dual(
   2,
-  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Schema["Rebuild"] =>
+  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Rebuilt<Schema> =>
     schema.annotate({ semanticSchemaMetadata: makeSemanticSchemaMetadata(metadata) })
 );
 
@@ -444,7 +474,8 @@ const findSemanticSchemaMetadata = (
 /**
  * Read semantic metadata from any Effect schema, if present.
  *
- * @example
+ * **Example** (Read missing metadata option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
@@ -456,8 +487,8 @@ const findSemanticSchemaMetadata = (
  *
  * @param schema - Target schema.
  * @returns Metadata payload as an Option.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const getSemanticSchemaMetadata = (schema: S.Top): O.Option<SemanticSchemaMetadataAnnotationPayload> =>
   pipe(

@@ -1,13 +1,29 @@
-import { IrToLawExtractionError, IrToLawExtractionErrorReason } from "@beep/law-practice-use-cases/IrToLaw";
+import {
+  IrToLawExtractionError,
+  IrToLawExtractionErrorReason,
+  IrToLawShape,
+} from "@beep/law-practice-use-cases/IrToLaw";
 import {
   OfficeActionExtractionLabel,
   OfficeActionReviewError,
   OfficeActionReviewInput,
 } from "@beep/law-practice-use-cases/OfficeActionReview";
+import {
+  PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgCandidateClaimsResult,
+  PracticeKgCandidateClaimToolRow,
+  PracticeKgDocumentToolRow,
+  PracticeKgEmailToolRow,
+  PracticeKgFamilyToolRow,
+  PracticeKgGraphToolRow,
+  PracticeKgToolkit,
+} from "@beep/law-practice-use-cases/server";
 import { EntityInput } from "@beep/law-practice-use-cases/test";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -17,7 +33,7 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
     readonly numRuns?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -34,8 +50,25 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     assertSchemaArbitraryDecodesToSelf(IrToLawExtractionErrorReason, { numRuns: 25 });
     assertSchemaArbitraryDecodesToSelf(OfficeActionReviewInput, { numRuns: 10 });
     assertSchemaArbitraryDecodesToSelf(EntityInput, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgCandidateClaimToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgDocumentToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgEmailToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgFamilyToolRow, { numRuns: 10 });
+    assertSchemaArbitraryDecodesToSelf(PracticeKgGraphToolRow, { numRuns: 10 });
     assertSchemaEncodeDecodeRoundTrip(IrToLawExtractionError, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(OfficeActionReviewError, { numRuns: 10 });
+  });
+
+  it("composes the nine-tool practice KG surface with a typed claims not-loaded branch", () => {
+    const notLoaded = PracticeKgCandidateClaimsNotLoadedResult.make({
+      available: false,
+      bundle_version: "fixture-1",
+      epistemic_status: "candidate-unreviewed",
+      reason: "claims batch not yet loaded",
+    });
+
+    expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(9);
+    expect(PracticeKgCandidateClaimsResult.is(notLoaded)).toBe(true);
   });
 
   it("preserves the IrToLawExtractionError encoded wire shape", () => {
@@ -67,7 +100,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   });
 
   it("preserves the spike EntityInput encoded audit envelope", () => {
-    const decoded = S.decodeUnknownSync(EntityInput)({
+    const decoded = S.decodeSync(EntityInput)({
       createdAt: 1,
       createdByPrincipal: { component: "Runtime", kind: "System" },
       entityType: "LawPracticeClaim",
@@ -113,5 +146,14 @@ describe("@beep/law-practice-use-cases schema parity", () => {
 
     expect(OfficeActionReviewError.is(error)).toBe(true);
     expect(O.isSome(OfficeActionReviewError.decodeOption(encoded))).toBe(true);
+  });
+
+  // `toLaw` is a declared schema whose guard is the only thing standing between
+  // the port and a non-callable value, so both branches are asserted here.
+  it("accepts only a callable toLaw port", () => {
+    const decodeShape = S.decodeUnknownResult(IrToLawShape);
+
+    expect(Result.isSuccess(decodeShape({ toLaw: () => Effect.void }))).toBe(true);
+    expect(Result.isFailure(decodeShape({ toLaw: "not-a-function" }))).toBe(true);
   });
 });

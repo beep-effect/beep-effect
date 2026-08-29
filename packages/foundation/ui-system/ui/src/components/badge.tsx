@@ -14,7 +14,8 @@ import type { VariantProps } from "class-variance-authority";
 /**
  * Class variance helper for badge color and emphasis variants.
  *
- * @example
+ * **Example** (Secondary badge class names)
+ *
  * ```ts
  * import { badgeVariants } from "@beep/ui/components/badge"
  *
@@ -49,7 +50,8 @@ const badgeVariants = cva(
 /**
  * Inline status label that can render as a span or custom element.
  *
- * @example
+ * **Example** (Secondary draft badge)
+ *
  * ```tsx
  * import { Badge } from "@beep/ui/components/badge"
  *

@@ -8,7 +8,8 @@
 /**
  * ProviderInstance row converter exports.
  *
- * @example
+ * **Example** (Import insert converter)
+ *
  * ```ts
  * import * as ProviderInstance from "@beep/agents-tables/entities/ProviderInstance"
  *
@@ -22,11 +23,12 @@ export * from "./ProviderInstance.converters.ts";
 /**
  * ProviderInstance table exports.
  *
- * @example
+ * **Example** (Access table entity type)
+ *
  * ```ts
  * import * as ProviderInstance from "@beep/agents-tables/entities/ProviderInstance"
  *
- * console.log(ProviderInstance.providerInstanceTable.definition.entityId.entityType)
+ * console.log(ProviderInstance.PROVIDER_INSTANCE_TABLE_NAME)
  * ```
  *
  * @category tables

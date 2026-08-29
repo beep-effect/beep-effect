@@ -21,6 +21,9 @@
       "path": "../../foundation/capability/langextract/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
@@ -31,6 +34,9 @@
     },
     {
       "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -15,23 +14,25 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.errors");
 /**
  * Drift error raised in check mode when changes are required.
  *
- * @example
+ * **Example** (Make tsconfig drift error)
+ *
  * ```ts
  * import { TsconfigSyncDriftError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * const error = TsconfigSyncDriftError.make({ fileCount: 2, summary: "2 config files need updates" })
  * console.log(error.summary.includes("updates")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigSyncDriftError extends TaggedErrorClass<TsconfigSyncDriftError>($I`TsconfigSyncDriftError`)(
+export class TsconfigSyncDriftError extends S.TaggedError<TsconfigSyncDriftError>($I`TsconfigSyncDriftError`)(
   "TsconfigSyncDriftError",
   {
     fileCount: S.Finite,
     summary: S.String,
   },
-  $I.annote("TsconfigSyncDriftError", {
+  $I.annoteError<TsconfigSyncDriftError>("TsconfigSyncDriftError", {
     title: "Tsconfig Sync Drift Error",
     description: "Raised when tsconfig-sync --check detects one or more files that are out of sync.",
   })
@@ -61,23 +62,25 @@ export class TsconfigSyncDriftError extends TaggedErrorClass<TsconfigSyncDriftEr
 /**
  * Cycle error raised when workspace dependency cycles are detected.
  *
- * @example
+ * **Example** (Make workspace cycle error)
+ *
  * ```ts
  * import { TsconfigSyncCycleError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * const error = TsconfigSyncCycleError.make({ cycles: [["@beep/a", "@beep/b"]], message: "Workspace cycle detected" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigSyncCycleError extends TaggedErrorClass<TsconfigSyncCycleError>($I`TsconfigSyncCycleError`)(
+export class TsconfigSyncCycleError extends S.TaggedError<TsconfigSyncCycleError>($I`TsconfigSyncCycleError`)(
   "TsconfigSyncCycleError",
   {
     cycles: S.String.pipe(S.Array, S.Array),
     message: S.String,
   },
-  $I.annote("TsconfigSyncCycleError", {
+  $I.annoteError<TsconfigSyncCycleError>("TsconfigSyncCycleError", {
     title: "Tsconfig Sync Cycle Error",
     description: "Raised when workspace dependency graph contains one or more cycles.",
   })
@@ -107,23 +110,25 @@ export class TsconfigSyncCycleError extends TaggedErrorClass<TsconfigSyncCycleEr
 /**
  * Filter error raised when `--filter` does not match any workspace package.
  *
- * @example
+ * **Example** (Make filter match error)
+ *
  * ```ts
  * import { TsconfigSyncFilterError } from "@beep/repo-cli/commands/TsconfigSync"
  *
  * const error = TsconfigSyncFilterError.make({ filter: "@beep/missing", message: "No workspace matched filter" })
  * console.log(error.filter === "@beep/missing") // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigSyncFilterError extends TaggedErrorClass<TsconfigSyncFilterError>($I`TsconfigSyncFilterError`)(
+export class TsconfigSyncFilterError extends S.TaggedError<TsconfigSyncFilterError>($I`TsconfigSyncFilterError`)(
   "TsconfigSyncFilterError",
   {
     filter: S.String,
     message: S.String,
   },
-  $I.annote("TsconfigSyncFilterError", {
+  $I.annoteError<TsconfigSyncFilterError>("TsconfigSyncFilterError", {
     title: "Tsconfig Sync Filter Error",
     description: "Raised when tsconfig-sync filter does not match any workspace package name or path.",
   })

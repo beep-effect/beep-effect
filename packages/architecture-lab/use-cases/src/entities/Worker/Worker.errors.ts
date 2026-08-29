@@ -6,9 +6,9 @@
  * @since 0.0.0
  */
 
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
@@ -16,7 +16,8 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
 /**
  * Generic public reason used when internal Worker repository details are redacted.
  *
- * @example
+ * **Example** (Create error with redacted reason)
+ *
  * ```ts
  * import {
  *   WORKER_ACTION_UNAVAILABLE_REASON,
@@ -36,14 +37,16 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
 /**
  * Public failure raised when a requested Worker is absent.
  *
- * @example
+ * **Example** (Create WorkerNotFound with id)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerNotFound } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerNotFound.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(error._tag) // "WorkerNotFound"
@@ -52,12 +55,12 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
  * @category errors
  * @since 0.0.0
  */
-export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNotFound`)(
+export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFound`)(
   "WorkerNotFound",
   {
-    workerId: DomainWorker.WorkerId,
+    workerId: ArchitectureLabIdentity.WorkerId,
   },
-  $I.annote("WorkerNotFound", {
+  $I.annoteError<WorkerNotFound>("WorkerNotFound", {
     title: "Worker not found",
     description: "The requested architecture lab Worker does not exist.",
   })
@@ -66,14 +69,16 @@ export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNo
 /**
  * Public failure raised when a Worker command conflicts with persisted state.
  *
- * @example
+ * **Example** (Create conflict with reason)
+ *
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerConflict } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerConflict.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1),
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
  *   reason: "Worker already exists"
  * })
  *
@@ -83,17 +88,17 @@ export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNo
  * @category errors
  * @since 0.0.0
  */
-export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerConflict`)(
+export class WorkerConflict extends S.TaggedError<WorkerConflict>($I`WorkerConflict`)(
   "WorkerConflict",
   {
-    workerId: DomainWorker.WorkerId.annotateKey({
+    workerId: ArchitectureLabIdentity.WorkerId.annotateKey({
       description: "Worker identity whose command conflicted with persisted state.",
     }),
     reason: S.NonEmptyString.annotateKey({
       description: "Non-empty public conflict reason.",
     }),
   },
-  $I.annote("WorkerConflict", {
+  $I.annoteError<WorkerConflict>("WorkerConflict", {
     title: "Worker conflict",
     description: "The requested Worker command conflicts with persisted state.",
   })
@@ -102,7 +107,8 @@ export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerCo
 /**
  * Public failure raised when a Worker action cannot be completed.
  *
- * @example
+ * **Example** (Create failed action error)
+ *
  * ```ts
  * import { WorkerActionFailed } from "@beep/architecture-lab-use-cases/entities/Worker"
  *
@@ -114,14 +120,14 @@ export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerCo
  * @category errors
  * @since 0.0.0
  */
-export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`WorkerActionFailed`)(
+export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed>($I`WorkerActionFailed`)(
   "WorkerActionFailed",
   {
     reason: S.NonEmptyString.annotateKey({
       description: "Non-empty public failure reason with internal repository details redacted.",
     }),
   },
-  $I.annote("WorkerActionFailed", {
+  $I.annoteError<WorkerActionFailed>("WorkerActionFailed", {
     title: "Worker action failed",
     description: "The Worker use-case action could not be completed.",
   })
@@ -130,7 +136,8 @@ export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`
 /**
  * Public Worker use-case failure schema.
  *
- * @example
+ * **Example** (Check error with is)
+ *
  * ```ts
  * import {
  *   WorkerActionError,
@@ -157,7 +164,8 @@ export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, Worker
 /**
  * Runtime type for {@link WorkerActionError}.
  *
- * @example
+ * **Example** (Annotate error variable type)
+ *
  * ```ts
  * import {
  *   WorkerActionFailed,

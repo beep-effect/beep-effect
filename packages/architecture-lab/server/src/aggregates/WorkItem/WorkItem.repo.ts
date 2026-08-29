@@ -39,7 +39,8 @@ const getStoredWorkItem = Effect.fn("ArchitectureLab.WorkItemRepository.getStore
 /**
  * Build the in-memory WorkItem repository used by the fast architecture lab proof.
  *
- * @example
+ * **Example** (Create and list WorkItems)
+ *
  * ```ts
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
@@ -67,7 +68,6 @@ const getStoredWorkItem = Effect.fn("ArchitectureLab.WorkItemRepository.getStore
  *
  * @effects Reads `WorkItemConfig`, allocates an in-memory `Ref`, and mutates
  * that process-local store for create, save, get, and list repository calls.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -150,7 +150,8 @@ const getDrizzleWorkItem = Effect.fn("ArchitectureLab.WorkItemRepository.getDriz
 /**
  * Build a Drizzle-backed WorkItem repository used by live persistence tests.
  *
- * @example
+ * **Example** (List with unavailable fallback)
+ *
  * ```ts
  * import { makeDrizzleWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { Effect } from "effect"
@@ -167,7 +168,6 @@ const getDrizzleWorkItem = Effect.fn("ArchitectureLab.WorkItemRepository.getDriz
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the WorkItem table and redacts driver failures to
  * `WorkItemRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */
@@ -226,7 +226,8 @@ export const makeDrizzleWorkItemRepository = Effect.fn("ArchitectureLab.WorkItem
 /**
  * Build the default WorkItem repository for normal slice tests.
  *
- * @example
+ * **Example** (List empty default repository)
+ *
  * ```ts
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import { makeWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem"

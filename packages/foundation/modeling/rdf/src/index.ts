@@ -8,12 +8,13 @@
 /**
  * Package version.
  *
- * @example
- * ```ts
+ * **Example** (Check package version)
+ *
+ * ```ts import.meta.vitest name="Check package version"
  * import { VERSION } from "@beep/rdf"
  *
  * const isInitialVersion = VERSION === "0.0.0"
- * console.log(isInitialVersion) // true
+ * isInitialVersion // => true
  * ```
  *
  * @category configuration
@@ -56,6 +57,13 @@ export * from "./JsonLd.ts";
  * @since 0.0.0
  */
 export * from "./Prov.ts";
+/**
+ * Pure PROV-O to RDF dataset codecs.
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export * from "./ProvRdf.ts";
 /**
  * RDF/JS schema models.
  *

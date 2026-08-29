@@ -1,11 +1,15 @@
 # Legal Ontology Landscape Map
 
+**Lifecycle annotation (2026-08-27):** research and semantic-foundation M1 are
+complete. M2-M4 remain future product-gated capabilities; the trademark
+docketing candidate remains queued behind semantic-foundation M3.
+
 ## Candidate Goal Packets
 
 | Goal | Mission | Dependency / sequencing | Status |
 | --- | --- | --- | --- |
-| [`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) | Shared legal semantic substrate: repo-owned SKOS seed, FOLIO alignments, taxonomy registry/loader, gated classification/docketing/SHACL vocabulary work. | First slice. M1 starts now; M2-M4 gated by product metrics and research verdicts. | Graduated 2026-07-08. |
-| [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md) | TrademarkAsset plus docketing entities and workflows. | Deferred. Blocks on semantic-foundation M3 because it needs docketing/deadline vocabulary and enduring-party-vs-role semantics. | Deferred stub created 2026-07-08; non-executable until semantic-foundation M3. |
+| [`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) | Shared legal semantic substrate: repo-owned SKOS seed, FOLIO alignments, taxonomy registry/loader, gated classification/docketing/SHACL vocabulary work. | First slice. M1 shipped; M2-M4 remain gated by product metrics. | Completed-retained after M1. |
+| [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md) | TrademarkAsset plus docketing entities and workflows. | Blocks on semantic-foundation M3 because it needs docketing/deadline vocabulary and enduring-party-vs-role semantics. | Paused stub behind M3. |
 
 ## Routed Work
 
@@ -53,14 +57,14 @@ M1 in `goals/semantic-foundation`:
 - Existing repo capability: `goals/ip-law-knowledge-graph/research/` contains
   ontology and IPC/CPC grounding to mine as reference, but not to edit in this
   graduation.
-- NET-NEW: `@beep/ontology` taxonomy registry models and loader service. The
-  current package surface is FOLIO OpenAPI models only.
+- SHIPPED: `@beep/ontology` taxonomy registry models, loader service, repo-owned
+  seed, filing projection, and librarian fixture loop.
 - NET-NEW later: `goals/trademark-docketing-domain`, gated behind M3.
 
 ## Inherited Risks
 
-- The requested P0 exploration files were absent at graduation drafting time;
-  reconcile this map when they land.
+- P0–P4 research and the verification pass are complete; implementation uses
+  the verified synthesis and manifest-driven asset ledger.
 - Vendor ontology licenses and freshness must be manifest-driven before loader
   code can read any third-party slice.
 - M2 classification data can become large quickly; edition tracking and

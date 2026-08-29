@@ -13,7 +13,7 @@ import type {
   SchemaCrispeningFamily,
   SchemaCrispeningPolicyDocument,
   SchemaFirstInventoryEntry,
-} from "../Lint.schemas.js";
+} from "../Lint.schemas.ts";
 
 const DEFAULT_MISSING_ENTRY_REMEDIATION =
   "Run bun run beep lint schema-first --write after reviewing the finding, or migrate the symbol to an annotated schema.";
@@ -24,15 +24,17 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
   "SFV4-numeric-domain":
     "Review the numeric domain and replace broad S.Number/S.NumberFromString with S.Finite, S.Int, or checks; then run bun run beep lint schema-first --write if the broad domain is intentional.",
   "SFV4-boundary-codec":
-    "Replace direct JSON.parse with S.UnknownFromJsonString or S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
+    "Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
   "SFV4-defaults":
     "Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
   "SFV4-equivalence":
     "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
+  "SFV4-tagged-error-equivalence":
+    "Annotate the class with $I.annoteError<Self>(...) so it adopts the declared struct equivalence; opaque causes use Defect from @beep/schema, which declares its own always-equal equivalence.",
   "SFV4-precision-audit":
     "Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings.",
   "SFV4-arbitrary-tests":
-    "Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage.",
+    "Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage.",
   "SFV4-fn-schema":
     "Model inline object parameter/return contracts with Fn({ input, output }) from @beep/schema or an S.Class, or run bun run beep lint schema-first --write with a justification when the shape intentionally stays inline.",
   "SFV4-normalization":
@@ -76,14 +78,16 @@ const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, SchemaC
  * path by prefix. `packages/shared/**` and `infra/**` are unassigned until
  * their P1 wave assignment lands and resolve to `O.none` (non-blocking).
  *
- * @param file - Repo-relative posix path, e.g. `packages/foundation/modeling/schema/src/Foo.ts`.
- * @returns The resolved wave family, or `O.none` when the path is unassigned.
- * @example
+ * **Example** (Resolve crispening family)
+ *
  * ```ts
  * import { schemaCrispeningFamilyForFile } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Postgres.ts"))
  * ```
+ *
+ * @param file - Repo-relative posix path, e.g. `packages/foundation/modeling/schema/src/Foo.ts`.
+ * @returns The resolved wave family, or `O.none` when the path is unassigned.
  * @category utilities
  * @since 0.0.0
  */
@@ -117,9 +121,8 @@ const resolveSchemaCrispeningPolicyBlocking = (
  * when its `ruleId` is a policy-tracked card AND the resolved blocking flag
  * (owner override, else family, else non-blocking when unassigned) is `false`.
  *
- * @param policyDocument - The decoded `standards/schema-crispening.policy.jsonc` document, if present.
- * @returns A predicate over inventory entries.
- * @example
+ * **Example** (Build exemption predicate)
+ *
  * ```ts
  * import { isSchemaCrispeningPolicyExempt } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -127,6 +130,9 @@ const resolveSchemaCrispeningPolicyBlocking = (
  * const exemptWithoutPolicy = isSchemaCrispeningPolicyExempt(O.none())
  * console.log(exemptWithoutPolicy) // example value
  * ```
+ *
+ * @param policyDocument - The decoded `standards/schema-crispening.policy.jsonc` document, if present.
+ * @returns A predicate over inventory entries.
  * @category utilities
  * @since 0.0.0
  */

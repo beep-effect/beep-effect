@@ -10,17 +10,21 @@ import {
   ClaimProjectionView,
   Confidence,
   EpistemicFixtureKey,
+  EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
   Evidence,
   EvidenceSpan,
   TurnFinalizationUsageAppend,
   UsageRecord,
 } from "@beep/epistemic-domain";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, encoded: Schema["Encoded"]): void => {
@@ -48,7 +52,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
     readonly numRuns?: number;
   }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -69,17 +73,88 @@ describe("@beep/epistemic-domain", () => {
     expect(ClaimLifecycle.is.candidate("candidate")).toBe(true);
   });
 
-  it("wires CandidateClaim to the epistemic BaseEntity identity", () => {
-    expect(CandidateClaim.definition.entityId).toBe(Epistemic.CandidateClaimId);
-    expect(CandidateClaim.definition.entityId.tableName).toBe("epistemic_candidate_claim");
-    expect(CandidateClaim.definition.entityId.entityType).toBe("EpistemicCandidateClaim");
-    expect(CandidateClaim.definition.persisted.id.storageKind).toBe("entityId");
-    expect(CandidateClaim.definition.persisted.snapshot.storageKind).toBe("jsonb");
+  it("publishes canonical arbitrary metadata for Confidence", () => {
+    expect(SchemaAST.resolve(Confidence.ast)?.toArbitrary).toBeDefined();
+  });
+
+  it("wires CandidateClaim to the epistemic product identity", () => {
+    expect(CandidateClaim.sql.tableName).toBe(Epistemic.CandidateClaimId.tableName);
+    expect(Epistemic.CandidateClaimId.entityType).toBe("EpistemicCandidateClaim");
+    expect(Object.keys(CandidateClaim.fields)).toEqual(expect.arrayContaining(["id", "snapshot"]));
+  });
+
+  it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
+    expect(
+      Result.isFailure(
+        S.decodeResult(EvidenceSpan)({
+          confidence: 0.92,
+          endChar: 13,
+          quote: "a claimed fact",
+          startChar: 12,
+        })
+      )
+    ).toBe(true);
+
+    fc.assert(
+      fc.property(S.toArbitrary(EvidenceSpan)(fc), (span) => EvidenceSpan.isInternallyConsistent(span)),
+      fcRuns(25)
+    );
+  });
+
+  it("bounds evidence quotes to one source-text page", () => {
+    const maximumQuote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH)("a");
+    const overLimitQuote = `${maximumQuote}a`;
+
+    expect(
+      Result.isSuccess(
+        S.decodeResult(EvidenceSpan)({
+          confidence: 0.92,
+          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
+          quote: maximumQuote,
+          startChar: 0,
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeResult(EvidenceSpan)({
+          confidence: 0.92,
+          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
+          quote: overLimitQuote,
+          startChar: 0,
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("matches an evidence span only to its exact provenance anchor", () => {
+    const span = Result.getOrThrow(
+      S.decodeResult(EvidenceSpan)({
+        confidence: 0.92,
+        endChar: 8,
+        quote: "amount A",
+        startChar: 0,
+      })
+    );
+    const matching = Result.getOrThrow(
+      S.decodeResult(TextAnchor)({
+        endChar: 8,
+        quote: "amount A",
+        startChar: 0,
+      })
+    );
+    const unrelated = TextAnchor.make({
+      ...matching,
+      quote: "amount B",
+    });
+
+    expect(EvidenceSpan.matchesAnchor(span, matching)).toBe(true);
+    expect(EvidenceSpan.matchesAnchor(span, unrelated)).toBe(false);
   });
 
   it("decodes and constructs a CandidateClaim row", () => {
     const decoded = S.decodeUnknownSync(CandidateClaim)({
-      ...baseEntityFixtureInput("EpistemicCandidateClaim", 3),
+      ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
       fixtureKey: "claim.patentability",
       lifecycle: "candidate",
       snapshot: { confidence: 0.92, label: "Patentability" },
@@ -95,7 +170,7 @@ describe("@beep/epistemic-domain", () => {
 
   it("appends a UsageRecord from turn-finalization activity", () => {
     const decoded = S.decodeUnknownSync(TurnFinalizationUsageAppend)({
-      ...baseEntityFixtureInput("EpistemicUsageRecord", 7),
+      ...productEntityFixtureInput("EpistemicUsageRecord", 7),
       activityId: 5,
       actor: systemPrincipal,
       costUsdApproxMicros: 3000,
@@ -112,7 +187,7 @@ describe("@beep/epistemic-domain", () => {
     const appended = appendTurnFinalizationUsageRecord(decoded);
 
     expect(appended).toBeInstanceOf(UsageRecord);
-    expect(appended.activityId).toBe(5);
+    expect(O.getOrThrow(appended.activityId)).toBe(5);
     expect(appended.entityType).toBe("EpistemicUsageRecord");
     expect(O.getOrElse(appended.credentialReference, () => "")).toBe("op://Private/Claude/token");
     expect(O.getOrElse(appended.unitCount, () => 0)).toBe(0);
@@ -121,29 +196,29 @@ describe("@beep/epistemic-domain", () => {
 
   it("preserves encoded wire shapes for crispened schemas", () => {
     expectMadeValueEncodedRoundTrip(Activity, {
-      ...baseEntityFixtureInput("EpistemicActivity", 1),
+      ...productEntityFixtureInput("EpistemicActivity", 1),
       fixtureKey: "runtime-proof:turn-1",
       snapshot: { status: "completed" },
     });
     expectMadeValueEncodedRoundTrip(CandidateClaim, {
-      ...baseEntityFixtureInput("EpistemicCandidateClaim", 3),
+      ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
       fixtureKey: "claim.patentability",
       lifecycle: "candidate",
       snapshot: { confidence: 0.92, label: "Patentability" },
     });
     expectMadeValueEncodedRoundTrip(Evidence, {
-      ...baseEntityFixtureInput("EpistemicEvidence", 4),
+      ...productEntityFixtureInput("EpistemicEvidence", 4),
       artifactFixtureKey: "artifact.office-action",
       span: {
         confidence: 0.92,
-        endChar: 48,
+        endChar: 57,
         quote: "a processor configured to receive sensor data",
         startChar: 12,
       },
       spanFixtureKey: "span.claim-1",
     });
     expectMadeValueEncodedRoundTrip(UsageRecord, {
-      ...baseEntityFixtureInput("EpistemicUsageRecord", 7),
+      ...productEntityFixtureInput("EpistemicUsageRecord", 7),
       activityId: 5,
       actor: systemPrincipal,
       costUsdApproxMicros: 3000,
@@ -158,7 +233,7 @@ describe("@beep/epistemic-domain", () => {
       unitCount: null,
     });
     expectMadeValueEncodedRoundTrip(TurnFinalizationUsageAppend, {
-      ...baseEntityFixtureInput("EpistemicUsageRecord", 8),
+      ...productEntityFixtureInput("EpistemicUsageRecord", 8),
       activityId: 5,
       actor: systemPrincipal,
       costUsdApproxMicros: 3000,

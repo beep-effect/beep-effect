@@ -9,16 +9,10 @@
   },
   "references": [
     {
-      "path": "../../foundation/modeling/lexical/tsconfig.json"
-    },
-    {
       "path": "../../foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/utils/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/ui-system/editor/tsconfig.json"
     },
     {
       "path": "../../foundation/ui-system/ui/tsconfig.json"

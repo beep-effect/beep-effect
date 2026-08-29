@@ -7,24 +7,49 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
-import { Console, DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
+import {
+  Clock,
+  Console,
+  DateTime,
+  Effect,
+  Equal,
+  FileSystem,
+  flow,
+  Inspectable,
+  Layer,
+  Order,
+  Path,
+  pipe,
+} from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
+import { FetchHttpClient } from "effect/unstable/http";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
-import { configStringEqualsSync } from "../../internal/cli/EnvConfig.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.js";
-import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.js";
-import { runChangesetGraphCheck } from "./ChangesetGraph.js";
-import { qualityFallowCommand } from "./FallowQuality.command.js";
+import { configStringEqualsSync } from "../../internal/cli/EnvConfig.ts";
+import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
+import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
 import {
+  AdmissionConfig,
+  admissionStatus,
+  GITHUB_CHECK_MODE_VALUES,
+  reapAdmissionState,
+} from "../../internal/repo-run/index.ts";
+import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
+import { changesetStatusCommand } from "./ChangesetStatus.ts";
+import { qualityFallowCommand } from "./FallowQuality.command.ts";
+import {
+  githubCheckChangesetStatusLane,
+  githubCheckCheapGateLanes,
   githubCheckFallowLanes,
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting as githubCheckLanesForModeForTestingImpl,
@@ -36,46 +61,57 @@ import {
   githubCheckRepoSanityLanes,
   githubCheckRepoSanityLanesForTesting as githubCheckRepoSanityLanesForTestingImpl,
   promotedFallowGithubCheckLaneIdsForTesting as promotedFallowGithubCheckLaneIdsForTestingImpl,
-} from "./internal/GithubChecks.js";
+} from "./internal/GithubChecks.ts";
 import {
   JSDocDocumentationInventoryOptions,
   writeJSDocDocumentationInventory,
-} from "./internal/JSDocDocumentationInventory.js";
-import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.js";
-import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.js";
-import { runPackageVerifyCli } from "./internal/PackageVerify.js";
-import { repoRelative } from "./internal/QualityArtifactSupport.js";
+} from "./internal/JSDocDocumentationInventory.ts";
+import {
+  RunJSDocMigrateApplyOptions,
+  RunJSDocMigrateVerifyOptions,
+  runJSDocMigrateApply,
+  runJSDocMigrateVerify,
+} from "./internal/JSDocMigrateApply.ts";
+import { RunJSDocMigrateExtractOptions, runJSDocMigrateExtract } from "./internal/JSDocMigrateExtract.ts";
+import { RunJSDocMigrateTitlesOptions, runJSDocMigrateTitles } from "./internal/JSDocMigrateTitles.ts";
+import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.ts";
+import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.ts";
+import { runPackageVerifyCli } from "./internal/PackageVerify.ts";
+import { repoRelative } from "./internal/QualityArtifactSupport.ts";
 import {
   renderTurboConfigProofReport,
   renderTurboConfigProofReportJson,
   runTurboConfigProof,
-} from "./internal/TurboConfigProof.js";
-import { QualityScriptCommandError } from "./Quality.errors.js";
+} from "./internal/TurboConfigProof.ts";
+import { QualityScriptCommandError } from "./Quality.errors.ts";
 import {
   activeOsvIgnoreIdsForTesting as activeOsvIgnoreIdsForTestingImpl,
   selectOsvIgnoreIdsForAudit,
-} from "./Quality.osv-ignore.js";
+} from "./Quality.osv-ignore.ts";
 import {
   detectQualityProfile,
   detectQualityProfileForTesting as detectQualityProfileForTestingImpl,
   qualityProfileConfigForTesting as qualityProfileConfigForTestingImpl,
-} from "./Quality.plan.js";
-import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.js";
+} from "./Quality.plan.ts";
+import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.ts";
 import {
   decodeGithubChecksFallowFeatureMatrix,
+  GithubCheckFailurePolicy,
   GithubCheckMode,
   githubCheckModeFlagChoices,
   QualityHardwareProfile,
-} from "./Quality.schemas.js";
-import { runQualityTaskStreamingStepGroup } from "./Tasks.js";
+} from "./Quality.schemas.ts";
+import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
+import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
 import type {
+  GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
   GithubCheckLaneSpec,
   GithubChecksFallowFeatureMatrix,
   QualityProfileDetectionInput as QualityProfileDetectionInputType,
-} from "./Quality.schemas.js";
-import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.js";
+} from "./Quality.schemas.ts";
+import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.ts";
 
 /**
  * Public quality script command error export.
@@ -83,7 +119,7 @@ import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroup
  * @category errors
  * @since 0.0.0
  */
-export { QualityScriptCommandError } from "./Quality.errors.js";
+export { QualityScriptCommandError } from "./Quality.errors.ts";
 /**
  * Public Quality schemas retained at the legacy command-module specifier.
  *
@@ -98,17 +134,19 @@ export {
   QualityHardwareProfile,
   QualityProfileConfig,
   QualityProfileDetection,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 /**
  * Host facts used when selecting a quality profile.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import type { QualityProfileDetectionInput } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * const example: QualityProfileDetectionInput | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -117,12 +155,14 @@ export type QualityProfileDetectionInput = QualityProfileDetectionInputType;
 /**
  * Return the static GitHub check collector lanes for a mode.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckLanesForModeForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckLanesForModeForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -131,12 +171,14 @@ export const githubCheckLanesForModeForTesting = githubCheckLanesForModeForTesti
 /**
  * Build the external pre-push diagnostic lanes used by GitHub check collectors.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckPrePushExternalLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckPrePushExternalLanesForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -145,12 +187,14 @@ export const githubCheckPrePushExternalLanesForTesting = githubCheckPrePushExter
 /**
  * Compare promoted Fallow matrix rows against static GitHub check lanes.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckPromotedFallowLaneDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckPromotedFallowLaneDiagnosticsForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -160,12 +204,14 @@ export const githubCheckPromotedFallowLaneDiagnosticsForTesting =
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckQualityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckQualityLanesForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -174,12 +220,14 @@ export const githubCheckQualityLanesForTesting = githubCheckQualityLanesForTesti
 /**
  * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof githubCheckRepoSanityLanesForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -188,12 +236,14 @@ export const githubCheckRepoSanityLanesForTesting = githubCheckRepoSanityLanesFo
 /**
  * Derive GitHub check lane ids required by promoted Fallow matrix rows.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { promotedFallowGithubCheckLaneIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof promotedFallowGithubCheckLaneIdsForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -202,12 +252,14 @@ export const promotedFallowGithubCheckLaneIdsForTesting = promotedFallowGithubCh
 /**
  * Detect the quality hardware profile from host facts.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { detectQualityProfileForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof detectQualityProfileForTesting !== "undefined") // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -216,12 +268,14 @@ export const detectQualityProfileForTesting = detectQualityProfileForTestingImpl
 /**
  * Return static quality scheduling settings for a hardware profile.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { qualityProfileConfigForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof qualityProfileConfigForTesting !== "undefined") // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -230,40 +284,73 @@ export const qualityProfileConfigForTesting = qualityProfileConfigForTestingImpl
 /**
  * Select OSV advisory ids that may still be suppressed at a given time.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * console.log(typeof activeOsvIgnoreIdsForTesting !== "undefined") // true
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
 export const activeOsvIgnoreIdsForTesting = activeOsvIgnoreIdsForTestingImpl;
 
 const $I = $RepoCliId.create("commands/Quality/ScriptCommands");
-const { bunRunLane, githubCheckLane, githubCheckLaneSteps } = githubCheckLanePlan;
+const { githubCheckLaneWaves } = githubCheckLanePlan;
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
-const ignoredTestPathSegments = ["/test/fixtures/"] as const;
-const dtslintSearchRoots = ["apps", "packages", "tooling"] as const;
-const testSearchRoots = ["apps", "packages", "tooling", "infra"] as const;
+// infra/lambda/**: self-contained esbuild-bundled Lambda packages typecheck
+// their own tests via tsc in build.sh; they are not workspace test surface.
+const ignoredTestPathSegments = ["/test/fixtures/", "/infra/lambda/"] as const;
+// No `tooling` root: tooling workspaces live under `packages/tooling/*`, which
+// the `packages` root already walks. A top-level `tooling/` directory has never
+// existed in this repo, so the entry only cost a wasted existence probe.
+const testSearchRoots = ["apps", "packages", "infra"] as const;
 const moduleTagScannedRoots = [".patterns", "apps", "packages", "tooling"] as const;
 const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra"] as const;
 const effectDiagnosticsDirectiveScannedExtensions = [".cts", ".mts", ".ts", ".tsx"] as const;
-const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp", "scripts"] as const;
+const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const effectTsgoDiagnosticsTableStartMarker = "<!-- diagnostics-table:start -->";
 const effectTsgoDiagnosticsTableEndMarker = "<!-- diagnostics-table:end -->";
 const effectDiagnosticsDirectivePrefix = "@effect-diagnostics";
-const effectDiagnosticsOffDirectivePattern = new RegExp(`${effectDiagnosticsDirectivePrefix}[^\\n]*:${"off"}\\b`, "u");
+const effectDiagnosticsDirectivePattern = new RegExp(
+  `^\\s*(?:/\\*\\*?|//)\\s*${effectDiagnosticsDirectivePrefix}(?:-next-line)?\\b`,
+  "u"
+);
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
+const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity", "missingPipeableSignature"]);
+const isEcosystemEffectDiagnosticOffRule = S.is(EcosystemEffectDiagnosticOffRule);
+const TsconfigFileName = S.String.check(S.isPattern(/^tsconfig(?:\..+)?\.json$/u));
+const isTsconfigFileName = S.is(TsconfigFileName);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
+const decodeAliasPathsOption = S.decodeUnknownOption(S.Record(S.String, S.Array(S.String)));
 const effectTsgoReadmeParser = new XMLParser({
   ignoreAttributes: false,
   trimValues: true,
 });
+
+/**
+ * Detect an active Effect diagnostics directive comment.
+ *
+ * **Example** (Recognize a file suppression)
+ *
+ * ```ts
+ * import { isEffectDiagnosticsDirectiveForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * isEffectDiagnosticsDirectiveForTesting("// @effect-diagnostics strictEffectProvide:skip-file") // true
+ * ```
+ *
+ * @param line - Source line to test for a diagnostics directive comment.
+ * @returns Whether the line is an active Effect diagnostics directive.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isEffectDiagnosticsDirectiveForTesting = (line: string): boolean =>
+  effectDiagnosticsDirectivePattern.test(line);
 
 class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCell`)(
   {
@@ -271,6 +358,15 @@ class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCe
   },
   $I.annote("EffectTsgoRuleCell", {
     description: "Parsed diagnostics table cell containing an Effect tsgo rule code.",
+  })
+) {}
+
+class EffectTsgoLinkedRuleCell extends S.Class<EffectTsgoLinkedRuleCell>($I`EffectTsgoLinkedRuleCell`)(
+  {
+    a: EffectTsgoRuleCell,
+  },
+  $I.annote("EffectTsgoLinkedRuleCell", {
+    description: "Diagnostics table cell whose rule code is wrapped in a link to that rule's doc page.",
   })
 ) {}
 
@@ -322,6 +418,7 @@ class EffectTsgoDiagnosticsTable extends S.Class<EffectTsgoDiagnosticsTable>($I`
 ) {}
 
 const decodeEffectTsgoRuleCellOption = S.decodeUnknownOption(EffectTsgoRuleCell);
+const decodeEffectTsgoLinkedRuleCellOption = S.decodeUnknownOption(EffectTsgoLinkedRuleCell);
 const decodeEffectTsgoRuleRowOption = S.decodeUnknownOption(EffectTsgoRuleRow);
 const decodeEffectTsgoDiagnosticsTableOption = S.decodeUnknownOption(EffectTsgoDiagnosticsTable);
 
@@ -334,6 +431,7 @@ type GithubCheckError =
 type GithubCheckRunOptions = {
   readonly base?: string;
   readonly head?: string;
+  readonly failurePolicy?: GithubCheckFailurePolicyType;
 };
 type TsgoDiagnosticOutput = {
   readonly output: string;
@@ -421,9 +519,10 @@ const runFixedStep = (repoRoot: string, label: string, command: string, args: Re
 
 const runGithubCheckLaneGroup = (
   label: string,
-  lanes: ReadonlyArray<GithubCheckLaneSpec>
+  lanes: ReadonlyArray<GithubCheckLaneSpec>,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
-  runQualityTaskStreamingStepGroup(label, githubCheckLaneSteps(lanes));
+  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy);
 
 const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function* (
   step: QualityTaskStep
@@ -530,13 +629,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
     return A.empty<GithubCheckLaneSpec>();
   }
 
-  return [
-    githubCheckLane(
-      "quality:changeset-status",
-      "repo-quality",
-      bunRunLane(repoRoot, "quality:changeset-status", ["changeset:status:since-main"])
-    ),
-  ];
+  return [githubCheckChangesetStatusLane(repoRoot)];
 });
 
 // `[[IgnoredVulns]]` table header delimiting one OSV ignore entry in
@@ -549,13 +642,15 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
  * `bun audit --ignore`; expired or malformed-expiry entries are dropped so the
  * audit re-flags the advisory instead of silently suppressing it past expiry.
  *
- * @param repoRoot - Repository root directory.
- * @returns Effect that exits non-zero when audit fails.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runBunAudit } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runBunAudit("/repo")
  * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns Effect that exits non-zero when audit fails.
  * @category use-cases
  * @since 0.0.0
  */
@@ -589,27 +684,51 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 });
 
 const runRepoSanity = Effect.fn("QualityScriptCommands.runRepoSanity")(function* (
-  repoRoot: string
+  repoRoot: string,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> {
-  yield* runGithubCheckLaneGroup("github-checks:repo-sanity", githubCheckRepoSanityLanes(repoRoot));
+  yield* runGithubCheckLaneGroup("github-checks:repo-sanity", githubCheckRepoSanityLanes(repoRoot), failurePolicy);
 });
 
 const runQuality = Effect.fn("QualityScriptCommands.runQuality")(function* (
-  repoRoot: string
+  repoRoot: string,
+  failurePolicy: GithubCheckFailurePolicyType
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
-  yield* runGithubCheckLaneGroup("github-checks:quality", [
-    ...githubCheckQualityLanes(repoRoot),
-    ...githubCheckRepoSanityLanes(repoRoot),
-    ...changesetStatusLanes,
-  ]);
+  yield* runGithubCheckLaneGroup(
+    "github-checks:quality",
+    [...changesetStatusLanes, ...githubCheckRepoSanityLanes(repoRoot), ...githubCheckQualityLanes(repoRoot)],
+    failurePolicy
+  );
 });
 
 const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(function* (
+  repoRoot: string,
+  failurePolicy: GithubCheckFailurePolicyType
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment
+> {
+  const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
+  yield* runGithubCheckLaneGroup(
+    "github-checks:pre-push",
+    [
+      ...changesetStatusLanes,
+      ...githubCheckRepoSanityLanes(repoRoot),
+      ...githubCheckQualityLanes(repoRoot),
+      ...githubCheckFallowLanes(repoRoot),
+      ...githubCheckPrePushExternalLanes(repoRoot),
+    ],
+    failurePolicy
+  );
+});
+
+const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   void,
@@ -617,13 +736,11 @@ const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(fun
   QualityScriptEnvironment
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
-  yield* runGithubCheckLaneGroup("github-checks:pre-push", [
-    ...githubCheckQualityLanes(repoRoot),
-    ...githubCheckFallowLanes(repoRoot),
-    ...githubCheckRepoSanityLanes(repoRoot),
-    ...changesetStatusLanes,
-    ...githubCheckPrePushExternalLanes(repoRoot),
-  ]);
+  yield* runGithubCheckLaneGroup(
+    "github-checks:cheap-gates",
+    [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
+    "collect-all"
+  );
 });
 
 const qualityRangeEnv = (base: string, head: string): Record<string, string | undefined> => ({
@@ -638,10 +755,8 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
 /**
  * Build the balanced local development quality steps for a repository.
  *
- * @param repoRoot - Repository root used as the subprocess working directory.
- * @param options - Git range and surface-check options for the dev quality lane.
- * @returns Planned quality task steps for the requested development profile.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { devQualityStepsForTesting } from "@beep/repo-cli/test/Quality"
  * import * as A from "effect/Array"
@@ -658,6 +773,10 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
  * )
  * console.log(labels) // example value
  * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param options - Git range and surface-check options for the dev quality lane.
+ * @returns Planned quality task steps for the requested development profile.
  * @category testing
  * @since 0.0.0
  */
@@ -684,7 +803,7 @@ export const devQualityStepsForTesting: {
     QualityTaskStep.make({
       label: "dev:test",
       command: "bun",
-      args: ["run", "test", "--", "--unit", "--types", ...devQualityAffectedArgs],
+      args: ["run", "test", "--", "--unit", ...devQualityAffectedArgs],
       cwd: repoRoot,
       env,
     }),
@@ -715,15 +834,17 @@ const runDevQuality = Effect.fn("QualityScriptCommands.runDevQuality")(function*
 /**
  * Build the docgen command arguments for the review-fix proof lane.
  *
- * @param base - Git base ref for changed package discovery.
- * @param head - Git head ref for changed package discovery.
- * @returns Arguments passed to `bun run`.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { reviewFixDocgenLocalArgsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * console.log(reviewFixDocgenLocalArgsForTesting("origin/main", "HEAD"))
  * ```
+ *
+ * @param base - Git base ref for changed package discovery.
+ * @param head - Git head ref for changed package discovery.
+ * @returns Arguments passed to `bun run`.
  * @category testing
  * @since 0.0.0
  */
@@ -756,12 +877,7 @@ const runReviewFix = Effect.fn("QualityScriptCommands.runReviewFix")(function* (
   yield* runBunWithEnv(repoRoot, "review-fix:build", ["build", "--", "--affected", "--summarize"], env);
   yield* runBunWithEnv(repoRoot, "review-fix:check", ["check", "--", "--affected", "--summarize"], env);
   yield* runBunWithEnv(repoRoot, "review-fix:lint", ["lint", "--", "--affected", "--summarize"], env);
-  yield* runBunWithEnv(
-    repoRoot,
-    "review-fix:test",
-    ["test", "--", "--unit", "--types", "--affected", "--summarize"],
-    env
-  );
+  yield* runBunWithEnv(repoRoot, "review-fix:test", ["test", "--", "--unit", "--affected", "--summarize"], env);
 
   yield* Console.log("[github-checks] review-fix: local docgen");
   yield* runBun(repoRoot, "review-fix:docgen-local", reviewFixDocgenLocalArgsForTesting(base, head));
@@ -844,7 +960,10 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
     Str.split(trackedFilesOutput, "\n"),
     A.map(Str.trim),
     A.filter(Str.isNonEmpty),
-    A.filter(P.not(Str.startsWith(".repos/")))
+    A.filter(P.not(Str.startsWith(".repos/"))),
+    A.filter(P.not(Str.startsWith(".claude/skills/impeccable/"))),
+    A.filter(P.not(Str.startsWith(".github/skills/impeccable/"))),
+    A.filter(P.not(Str.startsWith("infra/ci-runners/sdks/")))
   );
   const semgrepFiles = yield* Effect.forEach(
     candidateFiles,
@@ -942,13 +1061,15 @@ const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
 /**
  * Run a GitHub checks mode from the repository root.
  *
- * @param mode - GitHub check mode to run.
- * @returns Effect that executes the requested mode.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runGithubChecks } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runGithubChecks("repo-sanity")
  * ```
+ *
+ * @param mode - GitHub check mode to run.
+ * @returns Effect that executes the requested mode.
  * @category use-cases
  * @since 0.0.0
  */
@@ -957,16 +1078,18 @@ export const runGithubChecks = Effect.fn("QualityScriptCommands.runGithubChecks"
   options: GithubCheckRunOptions = {}
 ): Effect.fn.Return<void, GithubCheckError, QualityScriptEnvironment> {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const failurePolicy = options.failurePolicy ?? GithubCheckFailurePolicy.Enum["fail-fast"];
 
   yield* GithubCheckMode.$match(mode, {
-    quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot))),
+    "cheap-gates": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runCheapGates(repoRoot))),
+    quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot, failurePolicy))),
     "review-fix": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runReviewFix(repoRoot, options))),
-    "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot))),
+    "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot, failurePolicy))),
     secrets: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSecretScan(repoRoot))),
     security: () => runSecurityScan(repoRoot),
     sast: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSastScan(repoRoot))),
     nix: () => runNixChecks(repoRoot),
-    "pre-push": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runPrePushChecks(repoRoot))),
+    "pre-push": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runPrePushChecks(repoRoot, failurePolicy))),
   });
 });
 
@@ -1250,13 +1373,15 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 /**
  * Collect Effect tsgo diagnostics from command output regardless of process exit code.
  *
- * @param results - Completed tsgo command outputs to scan.
- * @returns Matching Effect diagnostic output lines.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { collectEffectTsgoDiagnosticLines } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const diagnostics = collectEffectTsgoDiagnosticLines([{ output: "warning TS90001: effect(service)\\n" }])
  * ```
+ *
+ * @param results - Completed tsgo command outputs to scan.
+ * @returns Matching Effect diagnostic output lines.
  * @category utilities
  * @since 0.0.0
  */
@@ -1270,25 +1395,6 @@ export const collectEffectTsgoDiagnosticLines: (results: ReadonlyArray<TsgoDiagn
     )
   );
 
-const unknownRecordProperty: {
-  (value: unknown, key: string): O.Option<unknown>;
-  (key: string): (value: unknown) => O.Option<unknown>;
-} = dual(2, (value: unknown, key: string): O.Option<unknown> => {
-  if (A.isArray(value)) {
-    return O.none();
-  }
-
-  return pipe(
-    decodeUnknownRecordOption(value),
-    O.flatMap((record) => O.fromUndefinedOr(record[key]))
-  );
-});
-
-const unknownRecordKeys = (value: unknown): ReadonlyArray<string> =>
-  A.isArray(value)
-    ? A.empty<string>()
-    : pipe(decodeUnknownRecordOption(value), O.map(flow(R.keys, A.sort(Order.String))), O.getOrElse(A.empty<string>));
-
 const extractEffectTsgoDiagnosticsTableFragment = (readme: string): O.Option<string> => {
   const tableStart = readme.indexOf(effectTsgoDiagnosticsTableStartMarker);
   const tableEnd = readme.indexOf(effectTsgoDiagnosticsTableEndMarker);
@@ -1298,11 +1404,21 @@ const extractEffectTsgoDiagnosticsTableFragment = (readme: string): O.Option<str
     : O.some(Str.slice(tableStart + effectTsgoDiagnosticsTableStartMarker.length, tableEnd)(readme));
 };
 
+// 0.19 wrote the code bare (`<td><code>name</code></td>`); 0.33 wraps it in a
+// link to the rule's doc page, which nests it one level deeper. Accept both so
+// the lane keeps reading the table across upgrades instead of silently
+// discovering zero rules.
+const extractEffectTsgoRuleCellCode = (cell: unknown): O.Option<string> =>
+  pipe(
+    decodeEffectTsgoRuleCellOption(cell),
+    O.orElse(() => O.map(decodeEffectTsgoLinkedRuleCellOption(cell), (linked) => linked.a)),
+    O.map((decoded) => decoded.code)
+  );
+
 const extractEffectTsgoRuleNameFromRow = flow(
   decodeEffectTsgoRuleRowOption,
   O.flatMap((decodedRow) => A.head(decodedRow.td)),
-  O.flatMap(decodeEffectTsgoRuleCellOption),
-  O.map((cell) => cell.code)
+  O.flatMap(extractEffectTsgoRuleCellCode)
 );
 
 const extractEffectTsgoReadmeRuleNames = flow(
@@ -1394,15 +1510,233 @@ const renderTsgoRuleDiagnostics = (label: string, diagnostics: ReadonlyArray<str
     ? [`${label}:`, ...A.map(diagnostics, (diagnostic) => `  - ${diagnostic}`)]
     : [];
 
+const isDirectEcosystemMemberTsconfig = (filePath: string): boolean => {
+  const segments = Str.split(normalizePath(filePath), "/");
+  return (
+    A.length(segments) === 4 &&
+    O.exists(A.get(segments, 0), Str.equivalence("packages")) &&
+    O.exists(A.get(segments, 1), Str.equivalence("ecosystem")) &&
+    O.exists(A.get(segments, 2), Str.isNonEmpty) &&
+    O.exists(A.get(segments, 3), isTsconfigFileName)
+  );
+};
+
+const findDiagnosticSeverityMap = (
+  plugin: Readonly<Record<string, unknown>>
+): O.Option<Readonly<Record<string, unknown>>> =>
+  pipe(unknownRecordProperty(plugin, "diagnosticSeverity"), O.flatMap(decodeUnknownRecordOption));
+
+const collectEcosystemSeverityDiffDiagnostics = (
+  file: string,
+  baseSeverity: Readonly<Record<string, unknown>>,
+  severity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const baseRuleNames = pipe(R.keys(baseSeverity), A.sort(Order.String));
+  const configuredRuleNames = pipe(R.keys(severity), A.sort(Order.String));
+  const missing = pipe(
+    baseRuleNames,
+    A.filter((ruleName) => !A.contains(configuredRuleNames, ruleName)),
+    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity is missing rule ${ruleName}`)
+  );
+  const unexpected = pipe(
+    configuredRuleNames,
+    A.filter((ruleName) => !A.contains(baseRuleNames, ruleName)),
+    A.map((ruleName) => `${file}: ecosystem diagnosticSeverity has unexpected rule ${ruleName}`)
+  );
+  const mismatched = pipe(
+    baseRuleNames,
+    A.filter((ruleName) => {
+      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
+        ? "off"
+        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
+      return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
+    }),
+    A.map((ruleName) => {
+      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
+        ? "off"
+        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
+      return `${file}: ecosystem diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
+    })
+  );
+  return A.appendAll(A.appendAll(missing, unexpected), mismatched);
+};
+
+const collectEcosystemMemberProfileDiagnostics = (
+  file: string,
+  config: unknown,
+  baseSeverity: Readonly<Record<string, unknown>>
+): ReadonlyArray<string> => {
+  const plugin = findEffectLanguageServicePlugin(config);
+  if (O.isNone(plugin)) {
+    return isDirectEcosystemMemberTsconfig(file)
+      ? A.of(`ecosystem member tsconfig ${file} is missing the @effect/language-service family profile`)
+      : A.empty();
+  }
+  if (!isDirectEcosystemMemberTsconfig(file)) {
+    return A.of(
+      `${file}: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json`
+    );
+  }
+  const severity = findDiagnosticSeverityMap(plugin.value);
+  return O.match(severity, {
+    onNone: () => A.of(`${file}: ecosystem @effect/language-service profile is missing diagnosticSeverity`),
+    onSome: (configured) => collectEcosystemSeverityDiffDiagnostics(file, baseSeverity, configured),
+  });
+};
+
+const collectEcosystemPluginProfileDiagnostics = (
+  basePlugin: Readonly<Record<string, unknown>>,
+  configs: ReadonlyArray<readonly [file: string, config: unknown]>
+): ReadonlyArray<string> =>
+  O.match(findDiagnosticSeverityMap(basePlugin), {
+    onNone: () => A.of("tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map"),
+    onSome: (baseSeverity) =>
+      A.flatMap(configs, ([file, config]) => collectEcosystemMemberProfileDiagnostics(file, config, baseSeverity)),
+  });
+
+/**
+ * Validate package-local Effect language-service profiles against the ecosystem family delta.
+ *
+ * **Example** (Check a conforming member profile)
+ *
+ * ```ts
+ * import { collectTsgoPluginProfileDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const basePlugin = { diagnosticSeverity: { floatingEffect: "error" } }
+ * const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(basePlugin, [])
+ * console.log(diagnostics.length) // => 0
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectTsgoPluginProfileDiagnosticsForTesting: {
+  (
+    configs: ReadonlyArray<readonly [file: string, config: unknown]>
+  ): (basePlugin: Readonly<Record<string, unknown>>) => ReadonlyArray<string>;
+  (
+    basePlugin: Readonly<Record<string, unknown>>,
+    configs: ReadonlyArray<readonly [file: string, config: unknown]>
+  ): ReadonlyArray<string>;
+} = dual(2, collectEcosystemPluginProfileDiagnostics);
+
+const collectGeneratedVitestAliasDiagnostics = (
+  rootTsconfig: unknown,
+  generatedVitestAliases: unknown
+): ReadonlyArray<string> => {
+  const rootTsconfigAliasPaths = pipe(
+    unknownRecordProperty(rootTsconfig, "compilerOptions"),
+    O.flatMap(decodeUnknownRecordOption),
+    O.flatMap((compilerOptions) => unknownRecordProperty(compilerOptions, "paths")),
+    O.flatMap(decodeAliasPathsOption)
+  );
+  const generatedAliasPaths = decodeAliasPathsOption(generatedVitestAliases);
+  return O.isSome(rootTsconfigAliasPaths) &&
+    O.isSome(generatedAliasPaths) &&
+    Equal.equals(rootTsconfigAliasPaths.value, generatedAliasPaths.value)
+    ? A.empty<string>()
+    : A.of("vitest.aliases.generated.json differs from tsconfig.json compilerOptions.paths; regenerate the alias data");
+};
+
+const collectPackageTsconfigProfileDiagnostics = Effect.fn(
+  "QualityScriptCommands.collectPackageTsconfigProfileDiagnostics"
+)(function* (repoRoot: string, basePlugin: Readonly<Record<string, unknown>>) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const packageTsconfigFiles = yield* collectFiles(
+    path.join(repoRoot, "packages"),
+    (_normalized, name) => isTsconfigFileName(name),
+    (_normalized, name) => A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
+  );
+  const packageTsconfigs = yield* Effect.forEach(
+    packageTsconfigFiles,
+    Effect.fnUntraced(function* (filePath) {
+      const text = yield* fs
+        .readFileString(filePath)
+        .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
+      const errors: Array<ParseError> = [];
+      const parsed = parse(text, errors, { allowTrailingComma: true, disallowComments: false });
+      if (A.isReadonlyArrayNonEmpty(errors)) {
+        return yield* QualityScriptCommandError.make({
+          message: `${normalizePath(path.relative(repoRoot, filePath))} is not valid JSONC.`,
+          exitCode: 1,
+        });
+      }
+      return [normalizePath(path.relative(repoRoot, filePath)), parsed] as const;
+    }),
+    { concurrency: 8 }
+  );
+  return collectEcosystemPluginProfileDiagnostics(basePlugin, packageTsconfigs);
+});
+
+const collectDisabledEffectDiagnosticDirectives = Effect.fn(
+  "QualityScriptCommands.collectDisabledEffectDiagnosticDirectives"
+)(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scannedFiles = yield* Effect.forEach(
+    effectDiagnosticsDirectiveScannedRoots,
+    (root) =>
+      collectFiles(
+        path.join(repoRoot, root),
+        (_normalized, name) => A.contains(effectDiagnosticsDirectiveScannedExtensions, path.extname(name)),
+        (normalized, name) =>
+          A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name) ||
+          name === ".storybook" ||
+          Str.includes("/apps/storybook/")(normalized)
+      ),
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.flatten));
+  return yield* Effect.forEach(
+    scannedFiles,
+    Effect.fnUntraced(function* (filePath) {
+      const text = yield* fs
+        .readFileString(filePath)
+        .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
+      return pipe(
+        Str.split(text, "\n"),
+        A.flatMap((line, index) =>
+          effectDiagnosticsDirectivePattern.test(line)
+            ? A.of(`${normalizePath(path.relative(repoRoot, filePath))}:${index + 1}`)
+            : A.empty<string>()
+        )
+      );
+    }),
+    { concurrency: 8 }
+  ).pipe(Effect.map(A.flatten));
+});
+
+const assembleTsgoRuleDiagnostics = (
+  missingRuleNames: ReadonlyArray<string>,
+  extraRuleNames: ReadonlyArray<string>,
+  nonErrorSeverities: ReadonlyArray<string>,
+  disabledSeverityEntries: ReadonlyArray<string>,
+  pluginProfileDiagnostics: ReadonlyArray<string>,
+  generatedAliasDiagnostics: ReadonlyArray<string>,
+  disabledDirectives: ReadonlyArray<string>
+): ReadonlyArray<string> => [
+  ...renderTsgoRuleDiagnostics("missing installed rules", missingRuleNames),
+  ...renderTsgoRuleDiagnostics("unexpected configured rules", extraRuleNames),
+  ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
+  ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
+  ...renderTsgoRuleDiagnostics("invalid package Effect language-service profiles", pluginProfileDiagnostics),
+  ...renderTsgoRuleDiagnostics("generated Vitest alias drift", generatedAliasDiagnostics),
+  ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
+];
+
 /**
  * Check that the root tsgo Effect diagnostics configuration enables every installed rule as an error.
  *
- * @returns Effect that fails when tsgo rules drift or local source suppresses Effect diagnostics.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runTsgoRulesCheck } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runTsgoRulesCheck()
  * ```
+ *
+ * @returns Effect that fails when tsgo rules drift or local source suppresses Effect diagnostics.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1416,6 +1750,8 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const readmePath = path.join(repoRoot, "node_modules", "@effect", "tsgo", "README.md");
   const tsconfigPath = path.join(repoRoot, "tsconfig.base.json");
+  const rootTsconfigPath = path.join(repoRoot, "tsconfig.json");
+  const generatedVitestAliasesPath = path.join(repoRoot, "vitest.aliases.generated.json");
   const readmeText = yield* fs
     .readFileString(readmePath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${readmePath}.`));
@@ -1437,6 +1773,23 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     disallowComments: false,
   });
 
+  const rootTsconfigText = yield* fs
+    .readFileString(rootTsconfigPath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${rootTsconfigPath}.`));
+  const rootTsconfigParseErrors: Array<ParseError> = [];
+  const rootTsconfig = parse(rootTsconfigText, rootTsconfigParseErrors, {
+    allowTrailingComma: true,
+    disallowComments: false,
+  });
+  const generatedVitestAliasesText = yield* fs
+    .readFileString(generatedVitestAliasesPath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${generatedVitestAliasesPath}.`));
+  const generatedVitestAliasesParseErrors: Array<ParseError> = [];
+  const generatedVitestAliases = parse(generatedVitestAliasesText, generatedVitestAliasesParseErrors, {
+    allowTrailingComma: false,
+    disallowComments: true,
+  });
+
   if (A.isReadonlyArrayNonEmpty(parseErrors)) {
     yield* Console.error("[check:tsgo-rules] failed to parse tsconfig.base.json");
     yield* Console.error(
@@ -1447,6 +1800,16 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     );
     return yield* QualityScriptCommandError.make({
       message: "tsconfig.base.json is not valid JSONC.",
+      exitCode: 1,
+    });
+  }
+
+  if (
+    A.isReadonlyArrayNonEmpty(rootTsconfigParseErrors) ||
+    A.isReadonlyArrayNonEmpty(generatedVitestAliasesParseErrors)
+  ) {
+    return yield* QualityScriptCommandError.make({
+      message: "Root tsconfig or generated Vitest aliases are not valid JSONC.",
       exitCode: 1,
     });
   }
@@ -1463,6 +1826,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     unknownRecordProperty(plugin.value, "diagnosticSeverity"),
     O.flatMap(decodeUnknownRecordOption)
   );
+  const generatedAliasDiagnostics = collectGeneratedVitestAliasDiagnostics(rootTsconfig, generatedVitestAliases);
   if (O.isNone(diagnosticSeverity)) {
     return yield* QualityScriptCommandError.make({
       message: "tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map.",
@@ -1486,40 +1850,17 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     "plugins",
     "@effect/language-service",
   ]);
-  const scannedFiles = yield* Effect.forEach(
-    effectDiagnosticsDirectiveScannedRoots,
-    (root) =>
-      collectFiles(
-        path.join(repoRoot, root),
-        (_normalized, name) => A.contains(effectDiagnosticsDirectiveScannedExtensions, path.extname(name)),
-        (_normalized, name) => A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
-      ),
-    { concurrency: 1 }
-  ).pipe(Effect.map(A.flatten));
-  const disabledDirectives = yield* Effect.forEach(
-    scannedFiles,
-    Effect.fn(function* (filePath) {
-      const text = yield* fs
-        .readFileString(filePath)
-        .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
-      return pipe(
-        Str.split(text, "\n"),
-        A.flatMap((line, index) =>
-          effectDiagnosticsOffDirectivePattern.test(line)
-            ? A.of(`${normalizePath(path.relative(repoRoot, filePath))}:${index + 1}`)
-            : A.empty<string>()
-        )
-      );
-    }),
-    { concurrency: 8 }
-  ).pipe(Effect.map(A.flatten));
-  const diagnostics = [
-    ...renderTsgoRuleDiagnostics("missing installed rules", missingRuleNames),
-    ...renderTsgoRuleDiagnostics("unexpected configured rules", extraRuleNames),
-    ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
-    ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
-    ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
-  ];
+  const pluginProfileDiagnostics = yield* collectPackageTsconfigProfileDiagnostics(repoRoot, plugin.value);
+  const disabledDirectives = yield* collectDisabledEffectDiagnosticDirectives(repoRoot);
+  const diagnostics = assembleTsgoRuleDiagnostics(
+    missingRuleNames,
+    extraRuleNames,
+    nonErrorSeverities,
+    disabledSeverityEntries,
+    pluginProfileDiagnostics,
+    generatedAliasDiagnostics,
+    disabledDirectives
+  );
 
   if (A.isReadonlyArrayNonEmpty(diagnostics)) {
     yield* Console.error("[check:tsgo-rules] @effect/tsgo diagnostics are not globally enforced.");
@@ -1535,111 +1876,18 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   );
 });
 
-const runTsgoWithSyntheticConfig = Effect.fn("QualityScriptCommands.runTsgoWithSyntheticConfig")(function* (
-  repoRoot: string,
-  label: string,
-  discoveredFiles: ReadonlyArray<string>,
-  configName: string,
-  baseTsconfig: string,
-  extraCompilerOptions: Record<string, unknown>,
-  extraArgs: unknown
-): Effect.fn.Return<
-  void,
-  QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const tempDir = path.join(repoRoot, "node_modules", ".tmp", label);
-  const syntheticConfigPath = path.join(tempDir, configName);
-  const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
-  const syntheticConfig = {
-    extends: path.join(repoRoot, baseTsconfig),
-    references: [],
-    include: discoveredFiles,
-    exclude: [],
-    compilerOptions: {
-      composite: false,
-      incremental: false,
-      noEmit: true,
-      rootDir: repoRoot,
-      ...extraCompilerOptions,
-    },
-  };
-  const configText = yield* jsonStringifyPretty(syntheticConfig).pipe(
-    QualityScriptCommandError.mapError(`Failed to encode ${label} synthetic tsconfig.`)
-  );
-
-  yield* fs
-    .makeDirectory(tempDir, { recursive: true })
-    .pipe(QualityScriptCommandError.mapError(`Failed to create ${tempDir}.`));
-  yield* fs
-    .writeFileString(syntheticConfigPath, `${configText}\n`)
-    .pipe(QualityScriptCommandError.mapError(`Failed to write ${syntheticConfigPath}.`));
-
-  yield* runFixedStep(repoRoot, label, path.join(repoRoot, "node_modules", ".bin", "tsgo"), [
-    "-p",
-    syntheticConfigPath,
-    ...normalizedExtraArgs,
-  ]).pipe(Effect.ensuring(fs.remove(syntheticConfigPath, { recursive: false }).pipe(Effect.ignore)));
-});
-
-/**
- * Run repo-wide tsgo diagnostics for dtslint files.
- *
- * @param extraArgs - Additional arguments passed to tsgo.
- * @returns Effect that runs the dtslint tsgo lane.
- * @example
- * ```ts
- * import { runDtslintTsgoChecks } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const program = runDtslintTsgoChecks([])
- * ```
- * @category use-cases
- * @since 0.0.0
- */
-export const runDtslintTsgoChecks = Effect.fn("QualityScriptCommands.runDtslintTsgoChecks")(function* (
-  extraArgs: ReadonlyArray<string>
-): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
-  const discoveredFiles = yield* Effect.forEach(
-    dtslintSearchRoots,
-    (root) =>
-      collectFiles(
-        path.join(repoRoot, root),
-        (normalized, name) => Str.includes("/dtslint/")(normalized) && /\.tst\.[^.]+$/u.test(name),
-        thunkFalse
-      ),
-    { concurrency: 1 }
-  ).pipe(Effect.map(A.flatten));
-
-  if (A.isReadonlyArrayEmpty(discoveredFiles)) {
-    yield* Console.log("[check:dtslint:tsgo] no dtslint files found");
-    return;
-  }
-
-  yield* Console.log(`[check:dtslint:tsgo] checking ${A.length(discoveredFiles)} file(s) with tsconfig.json`);
-  yield* runTsgoWithSyntheticConfig(
-    repoRoot,
-    "check:dtslint:tsgo",
-    discoveredFiles,
-    "dtslint.tsconfig.json",
-    "tsconfig.json",
-    {},
-    extraArgs
-  );
-});
-
 /**
  * Run repo-wide Effect diagnostics for test files.
  *
- * @param extraArgs - Additional arguments passed to tsgo.
- * @returns Effect that runs the test-file tsgo lane.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runTestTsgoChecks } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runTestTsgoChecks([])
  * ```
+ *
+ * @param extraArgs - Additional arguments passed to tsgo.
+ * @returns Effect that runs the test-file tsgo lane.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1730,12 +1978,14 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
 /**
  * Verify that tsgo reports the Effect diagnostic expected by this repo.
  *
- * @returns Effect that performs the smoke check.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runTsgoSmokeCheck } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runTsgoSmokeCheck()
  * ```
+ *
+ * @returns Effect that performs the smoke check.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1829,14 +2079,44 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
 });
 
 /**
+ * Predicate deciding whether a tracked file joins the module-tags scan.
+ *
+ * **Details**
+ *
+ * Lab apps under `apps/labs` are ceremony-exempt (goals/lab-apps-lifecycle D2)
+ * and never enter the scan; every other scanned root keeps its coverage.
+ *
+ * **Example** (Run a quality command)
+ *
+ * ```ts
+ * import { isModuleTagScannedPathForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof isModuleTagScannedPathForTesting !== "undefined") // true
+ * ```
+ *
+ * @param path - Path service used to normalize the candidate file path.
+ * @returns Whether the file belongs in the module-tags scan.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isModuleTagScannedPathForTesting =
+  (path: Path.Path) =>
+  (filePath: string): boolean =>
+    A.some(moduleTagScannedRoots, (root) => filePath === root || Str.startsWith(`${root}/`)(filePath)) &&
+    !isLabsWorkspacePath(filePath) &&
+    A.contains(moduleTagScannedExtensions as ReadonlyArray<string>, path.extname(filePath));
+
+/**
  * Verify tracked fileoverview comments do not use the legacy `@module` tag.
  *
- * @returns Effect that performs the module-tag lint.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runJSDocModuleTagsCheck } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runJSDocModuleTagsCheck()
  * ```
+ *
+ * @returns Effect that performs the module-tag lint.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1864,9 +2144,7 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
       return yield* withExitCode("lint:jsdoc-module-tags", "git", ["ls-files"], result.exitCode);
     }
 
-    const isScannedPath = (filePath: string): boolean =>
-      A.some(moduleTagScannedRoots, (root) => filePath === root || Str.startsWith(`${root}/`)(filePath)) &&
-      A.contains(moduleTagScannedExtensions as ReadonlyArray<string>, path.extname(filePath));
+    const isScannedPath = isModuleTagScannedPathForTesting(path);
     const violations = yield* Effect.forEach(
       pipe(Str.split(result.output, "\n"), A.filter(Str.isNonEmpty), A.filter(isScannedPath)),
       Effect.fn(function* (filePath) {
@@ -1908,12 +2186,14 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
 /**
  * Run the JSDoc inventory generator now owned by repo-cli.
  *
- * @returns Effect that writes the tracked inventory artifacts.
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runJSDocInventory } from "@beep/repo-cli/commands/Quality/Quality.command"
  * const program = runJSDocInventory()
  * ```
+ *
+ * @returns Effect that writes the tracked inventory artifacts.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1958,13 +2238,15 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 /**
  * Run the repo-wide JSDoc quality gate.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * import { runJSDocQuality } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * const program = runJSDocQuality()
  * console.log(program) // example value
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -2000,15 +2282,27 @@ const githubChecksCommand = Command.make(
       Flag.withDescription("Base git ref for affected review-fix checks")
     ),
     head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for affected checks")),
+    collectAll: Flag.boolean("collect-all").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Run every local GitHub-check wave after failures instead of stopping before later waves")
+    ),
     mode: Argument.choice("mode", GITHUB_CHECK_MODE_VALUES).pipe(Argument.withDescription("GitHub check mode to run")),
   },
-  ({ base, head, mode }) => runQualityProgram(runGithubChecks(mode, { base, head }))
+  ({ base, collectAll, head, mode }) =>
+    runQualityProgram(
+      runGithubChecks(mode, {
+        base,
+        head,
+        failurePolicy: collectAll ? "collect-all" : "fail-fast",
+      })
+    )
 ).pipe(Command.withDescription("Run repository GitHub verification lanes"));
 
 const githubChecksPlanContractCheckCommand = Command.make(
   "plan-contract-check",
   {
     expectPromotedFallowLanes: Flag.boolean("expect-promoted-fallow-lanes").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Assert that every matrix-promoted Fallow lane is wired into the selected GitHub check mode")
     ),
     featureMatrix: Flag.string("feature-matrix").pipe(
@@ -2040,6 +2334,7 @@ const devQualityCommand = Command.make(
       Flag.withDescription("Head git ref for the local development quality range")
     ),
     surface: Flag.boolean("surface").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Also run affected docgen and repo-export checks for public surface edits")
     ),
   },
@@ -2060,14 +2355,6 @@ const bunAuditCommand = Command.make("bun-audit", {}, () =>
     )
   )
 ).pipe(Command.withDescription("Run Bun audit with OSV ignore config"));
-
-const dtslintTsgoCommand = Command.make(
-  "dtslint-tsgo",
-  {
-    args: Argument.string("args").pipe(Argument.variadic),
-  },
-  ({ args }) => runQualityProgram(runDtslintTsgoChecks(args as ReadonlyArray<string>))
-).pipe(Command.withDescription("Run tsgo diagnostics for dtslint files"));
 
 const testTsgoCommand = Command.make(
   "test-tsgo",
@@ -2127,6 +2414,7 @@ const jsdocRatchetCommand = Command.make(
       Flag.withDescription("Generated JSDoc documentation inventory JSONC path")
     ),
     writeBaseline: Flag.boolean("write-baseline").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Rewrite the JSDoc totals regression baseline from the generated inventory")
     ),
   },
@@ -2140,6 +2428,120 @@ const jsdocRatchetCommand = Command.make(
     )
 ).pipe(Command.withDescription("Run JSDoc inventory totals as a fail-on-growth regression-baseline gate"));
 
+const jsdocMigrateExtractCommand = Command.make(
+  "extract",
+  {
+    output: Flag.string("output").pipe(
+      Flag.withDescription("extract.jsonl output path; defaults to the goal packet data directory"),
+      Flag.optional
+    ),
+  },
+  ({ output }) =>
+    runQualityProgram(
+      runJSDocMigrateExtract(RunJSDocMigrateExtractOptions.make({ ...OptionUtils.getSomesStruct({ output }) }))
+    )
+).pipe(Command.withDescription("Scan the corpus and emit one extract.jsonl record per legacy doc block"));
+
+const jsdocMigrateTitlesCommand = Command.make(
+  "titles",
+  {
+    extract: Flag.string("extract").pipe(Flag.withDescription("extract.jsonl input path"), Flag.optional),
+    titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl append path"), Flag.optional),
+    proxyUrl: Flag.string("proxy-url").pipe(
+      Flag.withDescription("Local CLIProxyAPI base URL; never the xAI API"),
+      Flag.optional
+    ),
+    model: Flag.string("model").pipe(Flag.withDescription("Proxy model id"), Flag.optional),
+    limitFiles: Flag.integer("limit-files").pipe(
+      Flag.withDescription("Process at most this many pending files this run"),
+      Flag.optional
+    ),
+    concurrency: Flag.integer("concurrency").pipe(
+      Flag.withDescription("Concurrent proxy requests (one per file); default 12"),
+      Flag.optional
+    ),
+  },
+  ({ concurrency, extract, limitFiles, model, proxyUrl, titles }) =>
+    runQualityProgram(
+      Effect.scoped(
+        Layer.build(FetchHttpClient.layer).pipe(
+          Effect.flatMap((context) =>
+            Effect.provideContext(
+              runJSDocMigrateTitles(
+                RunJSDocMigrateTitlesOptions.make({
+                  ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles, concurrency }),
+                })
+              ),
+              context
+            )
+          )
+        )
+      )
+    )
+).pipe(Command.withDescription("Append per-anchor title records from the local model proxy (data only)"));
+
+const jsdocMigrateApplyCommand = Command.make(
+  "apply",
+  {
+    titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
+    overrides: Flag.string("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
+    manifest: Flag.string("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Report outcomes without writing any file")
+    ),
+    syntheticTitles: Flag.boolean("synthetic-titles").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Generate in-memory placeholder titles for the residue measurement")
+    ),
+  },
+  ({ dryRun, manifest, overrides, syntheticTitles, titles }) =>
+    runQualityProgram(
+      runJSDocMigrateApply(
+        RunJSDocMigrateApplyOptions.make({
+          dryRun,
+          syntheticTitles,
+          ...OptionUtils.getSomesStruct({ titles, overrides, manifest }),
+        })
+      )
+    )
+).pipe(Command.withDescription("Rewrite affected blocks text-surgically; fail closed on binding doubt"));
+
+const jsdocMigrateVerifyCommand = Command.make(
+  "verify",
+  {
+    extract: Flag.string("extract").pipe(Flag.withDescription("Frozen extract.jsonl input path"), Flag.optional),
+    titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
+    overrides: Flag.string("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
+    manifest: Flag.string("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
+  },
+  ({ extract, manifest, overrides, titles }) =>
+    runQualityProgram(
+      runJSDocMigrateVerify(
+        RunJSDocMigrateVerifyOptions.make({ ...OptionUtils.getSomesStruct({ extract, titles, overrides, manifest }) })
+      )
+    )
+).pipe(Command.withDescription("Prove conservation between frozen originals and the current tree"));
+
+const jsdocMigrateCommand = Command.make("jsdoc-migrate", {}, () =>
+  printLines([
+    "JSDoc carrier-migration commands:",
+    "- bun run beep quality jsdoc-migrate extract",
+    "- bun run beep quality jsdoc-migrate titles --limit-files 5",
+    "- bun run beep quality jsdoc-migrate apply --dry-run --synthetic-titles",
+    "- bun run beep quality jsdoc-migrate apply",
+    "- bun run beep quality jsdoc-migrate verify",
+  ])
+).pipe(
+  Command.withDescription("JSDoc legacy-carrier migration pipeline (extract, titles, apply, verify)"),
+  Command.withSubcommands([
+    jsdocMigrateExtractCommand,
+    jsdocMigrateTitlesCommand,
+    jsdocMigrateApplyCommand,
+    jsdocMigrateVerifyCommand,
+  ])
+);
+
 const knipCommand = Command.make(
   "knip",
   {
@@ -2148,6 +2550,7 @@ const knipCommand = Command.make(
       Flag.withDescription("Committed Knip regression baseline JSONC path")
     ),
     writeBaseline: Flag.boolean("write-baseline").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Rewrite the Knip regression baseline from the current normalized finding set")
     ),
   },
@@ -2175,10 +2578,10 @@ const turboConfigProofCommand = Command.make(
       Flag.withDefault("affected"),
       Flag.withDescription("Dry-run selector: affected for CI shape, filter-range for deterministic base/head probes")
     ),
-    json: Flag.boolean("json").pipe(Flag.withDescription("Print the proof report as JSON")),
+    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the proof report as JSON")),
     taskArgs: Argument.string("task").pipe(
       Argument.variadic,
-      Argument.withDescription("Optional Turbo tasks to prove; defaults to lint check test type-test docgen")
+      Argument.withDescription("Optional Turbo tasks to prove; defaults to lint check test docgen")
     ),
   },
   ({ base, head, json, selector, taskArgs }) =>
@@ -2222,7 +2625,7 @@ const packageVerifyCommand = Command.make(
       Argument.variadic,
       Argument.withDescription("Optional workspace package name to verify")
     ),
-    quick: Flag.boolean("quick").pipe(Flag.withDescription("Run lint and check only")),
+    quick: Flag.boolean("quick").pipe(Flag.withDefault(false), Flag.withDescription("Run lint and check only")),
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
@@ -2249,7 +2652,10 @@ const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
 const qualityProfileDetectCommand = Command.make(
   "detect",
   {
-    json: Flag.boolean("json").pipe(Flag.withDescription("Print the detected profile as JSON")),
+    json: Flag.boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the detected profile as JSON")
+    ),
   },
   ({ json }) => runQualityProgram(printQualityProfileDetection(detectQualityProfile(), json))
 ).pipe(Command.withDescription("Detect the local quality hardware profile"));
@@ -2257,7 +2663,7 @@ const qualityProfileDetectCommand = Command.make(
 const qualityProfileConfigCommand = Command.make(
   "config",
   {
-    json: Flag.boolean("json").pipe(Flag.withDescription("Print the profile config as JSON")),
+    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the profile config as JSON")),
     profile: Argument.choice("profile", QualityHardwareProfile.Options).pipe(
       Argument.withDescription("Quality hardware profile to inspect")
     ),
@@ -2278,13 +2684,80 @@ const qualityProfileCommand = Command.make("profile", {}, () =>
   Command.withSubcommands([qualityProfileDetectCommand, qualityProfileConfigCommand])
 );
 
+const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: number): ReadonlyArray<string> => [
+  `admission capacity: ${snapshot.activeTokens}/${snapshot.capacityTokens} tokens (MemAvailable ${snapshot.memAvailableGib.toFixed(1)} GiB${snapshot.hardFloorEngaged ? ", HARD FLOOR ENGAGED" : ""})`,
+  ...A.map(snapshot.leases, (lease) => {
+    const suspect =
+      nowMillis - lease.heartbeatAtMillis > AdmissionConfig.make({}).suspectAfterSeconds * 1000
+        ? " [suspect: heartbeat stale]"
+        : "";
+    return `- lease pid ${lease.pid} ${lease.kind}(${lease.weightTokens}) ${lease.checkoutRoot} @ ${lease.branch} since ${lease.startedAt}${suspect}`;
+  }),
+  ...A.map(
+    snapshot.tickets,
+    (ticket) =>
+      `- queued pid ${ticket.pid} ${ticket.kind}(${ticket.weightTokens}) ${ticket.checkoutRoot} @ ${ticket.branch}`
+  ),
+  ...A.map(snapshot.dead, (path) => `- dead: ${path}`),
+  ...A.map(snapshot.quarantined, (path) => `- quarantined: ${path}`),
+];
+
+const schedulerStatusCommand = Command.make(
+  "status",
+  {
+    json: Flag.boolean("json").pipe(Flag.withDescription("Emit the admission snapshot as JSON")),
+  },
+  Effect.fn(function* ({ json }) {
+    const snapshot = yield* admissionStatus();
+    if (json) {
+      const rendered = yield* jsonStringifyPretty(snapshot);
+      yield* printLines([rendered]);
+      return;
+    }
+    const nowMillis = yield* Clock.currentTimeMillis;
+    yield* printLines(renderAdmissionSnapshotLines(snapshot, nowMillis));
+  })
+).pipe(Command.withDescription("Show machine-wide admission capacity, leases, and queue"));
+
+const schedulerReapCommand = Command.make(
+  "reap",
+  {
+    apply: Flag.boolean("apply").pipe(
+      Flag.withDescription("Actually remove dead admission state (default: dry-run report)")
+    ),
+  },
+  Effect.fn(function* ({ apply }) {
+    const snapshot = yield* reapAdmissionState({ apply });
+    const deadLines = A.map(snapshot.dead, (path) => `- ${path}`);
+    yield* printLines([
+      apply ? "reaped dead admission state:" : "dry run — would reap:",
+      ...(A.length(deadLines) === 0 ? ["(nothing dead)"] : deadLines),
+    ]);
+  })
+).pipe(Command.withDescription("Reap dead admission leases and tickets (dry-run by default)"));
+
+const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
+  printLines([
+    "Quality scheduler commands:",
+    "- bun run beep quality scheduler status",
+    "- bun run beep quality scheduler status --json",
+    "- bun run beep quality scheduler reap",
+    "- bun run beep quality scheduler reap --apply",
+  ])
+).pipe(
+  Command.withDescription("Inspect and repair machine-wide quality admission"),
+  Command.withSubcommands([schedulerStatusCommand, schedulerReapCommand])
+);
+
 /**
  * Quality command group for repo operational checks.
  *
- * @example
+ * **Example** (Run a quality command)
+ *
  * ```ts
  * console.log("qualityCommand")
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -2299,7 +2772,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run coverage",
     "- bun run coverage:baseline:write",
     "- bun run beep quality bun-audit",
-    "- bun run beep quality dtslint-tsgo",
     "- bun run beep quality test-tsgo",
     "- bun run beep quality tsgo-smoke",
     "- bun run beep quality tsgo-rules",
@@ -2308,6 +2780,8 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality jsdoc-quality",
     "- bun run beep quality jsdoc-ratchet",
     "- bun run beep quality jsdoc-ratchet --write-baseline",
+    "- bun run beep quality jsdoc-migrate extract",
+    "- bun run beep quality jsdoc-migrate apply --dry-run --synthetic-titles",
     "- bun run beep quality knip",
     "- bun run beep quality knip --write-baseline",
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
@@ -2322,7 +2796,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     devQualityCommand,
     githubChecksCommandWithSubcommands,
     bunAuditCommand,
-    dtslintTsgoCommand,
     testTsgoCommand,
     tsgoSmokeCommand,
     tsgoRulesCommand,
@@ -2330,11 +2803,14 @@ export const qualityCommand = Command.make("quality", {}, () =>
     jsdocInventoryCommand,
     jsdocQualityCommand,
     jsdocRatchetCommand,
+    jsdocMigrateCommand,
     knipCommand,
     turboConfigProofCommand,
     qualityProfileCommand,
+    qualitySchedulerCommand,
     packageVerifyCommand,
     changesetGraphCommand,
+    changesetStatusCommand,
     qualityFallowCommand,
   ])
 );

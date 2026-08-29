@@ -1,5 +1,5 @@
 import { make } from "@beep/identity";
-import { $I, $OntologyId } from "@beep/identity/packages";
+import { $I, $OntologyId, $SemanticFoundationId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import type { CurieFromIdentity, IriFromIdentity, SlugFromIdentifier } from "@beep/identity";
@@ -8,8 +8,12 @@ const getProperty = (value: unknown, key: PropertyKey): unknown =>
   value !== null && typeof value === "object" ? Reflect.get(value, key) : undefined;
 
 describe("@beep/identity IRI binding", () => {
+  it("binds the semantic foundation to the repository authority", () => {
+    expect($SemanticFoundationId.iri).toBe("https://ns.beep.sh/ontology/semantic-foundation");
+  });
+
   it("derives exact IRI and CURIE literals through create and compose chains", () => {
-    const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" });
+    const { $BeepId } = make({ authority: "https://ns.beep.sh/", prefix: "beep" })("beep");
     const modules = $BeepId.compose("ontology", "schema");
     const model = modules.$OntologyId.create("Ontology.models").create("HttpUrl");
 

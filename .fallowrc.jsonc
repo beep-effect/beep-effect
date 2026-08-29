@@ -6,8 +6,11 @@
   // reachable instead of invisible (goals/fallow-zero-dead-code).
   "entry": [
     "packages/**/src/*.ts",
+    "packages/**/src/*/index.ts",
     "infra/src/internal/*-entry.ts",
     "apps/*/src/main.tsx",
+    // The `service` AppKind's entry point; peer of the labs-depth glob below.
+    "apps/*/src/main.ts",
     "apps/*/src/index.ts",
     "apps/*/next.config.ts",
     "apps/*/vite.config.ts",
@@ -27,12 +30,47 @@
     "apps/*/src/middleware.ts",
     "apps/*/src/proxy.ts",
     "apps/*/src/instrumentation.ts",
+    // Lab apps live one level deeper (apps/labs/<name>); mirror the framework
+    // entry globs at labs depth. Labs are full law citizens: they must NEVER
+    // be added to ignorePatterns (lab-apps-lifecycle D2, ratified row 13).
+    // Canonical labs path module: packages/tooling/tool/cli/src/internal/cli/Labs.
+    "apps/labs/*/src/main.tsx",
+    // `service` labs emit src/main.ts, not main.tsx (ratified row 13).
+    "apps/labs/*/src/main.ts",
+    "apps/labs/*/src/index.ts",
+    "apps/labs/*/next.config.ts",
+    "apps/labs/*/vite.config.ts",
+    "apps/labs/*/src/app/layout.tsx",
+    "apps/labs/*/src/app/page.tsx",
+    "apps/labs/*/src/app/**/layout.tsx",
+    "apps/labs/*/src/app/**/page.tsx",
+    "apps/labs/*/src/app/**/route.ts",
+    "apps/labs/*/src/app/**/loading.tsx",
+    "apps/labs/*/src/app/**/error.tsx",
+    "apps/labs/*/src/app/**/not-found.tsx",
+    "apps/labs/*/src/app/**/global-error.tsx",
+    "apps/labs/*/src/app/manifest.ts",
+    "apps/labs/*/src/app/robots.ts",
+    "apps/labs/*/src/app/sitemap.ts",
+    "apps/labs/*/src/mdx-components.tsx",
+    "apps/labs/*/src/middleware.ts",
+    "apps/labs/*/src/proxy.ts",
+    "apps/labs/*/src/instrumentation.ts",
     "apps/storybook/.storybook/main.ts",
     "apps/storybook/.storybook/manager.ts",
     "apps/storybook/.storybook/preview.tsx",
     // Story files are tool-loaded roots: the Storybook host discovers them via
     // the stories glob in apps/storybook/.storybook/main.ts.
     "packages/foundation/ui-system/*/stories/**/*.stories.tsx",
+    "packages/drivers/graph-3d/stories/**/*.stories.tsx",
+    // Ecosystem-member tool-loaded roots: tstyche discovers the typetests file,
+    // drizzle-kit receives the sqlite schema module via --schema, the perf
+    // consumer compiles out of band, and the bundle consumer is a Bun.build
+    // entrypoint passed by string path from import-boundary.test.ts.
+    "packages/ecosystem/*/typetests/*.tst.ts",
+    "packages/ecosystem/effect-drizzle/test/integration/sqlite-drizzle-schema.ts",
+    "packages/ecosystem/effect-drizzle/test/perf.consumer.ts",
+    "packages/ecosystem/effect-drizzle/test/bundle-pg-integer.consumer.ts",
     // Tool-loaded roots: syncpack auto-loads its config, eslint.config.mjs is
     // profile-selected by the Lint command, Changesets loads its changelog
     // module from config, and global-cleanup.ts is the vitest globalSetup for
@@ -40,13 +78,37 @@
     "syncpack.config.ts",
     "eslint.config.mjs",
     "scripts/changeset-changelog.cjs",
-    "packages/tooling/tool/cli/test/global-cleanup.ts"
+    "packages/tooling/tool/cli/test/global-cleanup.ts",
+    // Fallow 3.6.0 resolves an explicit `.ts` suffix exactly and does not yet
+    // apply TypeScript's `.ts` -> `.tsx` source fallback. Keep the affected TSX
+    // modules reachable without making every TSX file an entry point; the
+    // matching specifiers are documented under ignoreUnresolvedImports below.
+    "packages/foundation/ui-system/ui/src/components/blocks/editor-00/plugins.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.changelog.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.document.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.graph.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.metrics.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.source.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.validation.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx"
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
   "ignorePatterns": [
-    "**/dtslint/**",
+    // Impeccable is a vendored agent skill mirrored for Claude Code and GitHub
+    // Copilot. Its standalone detector scripts are invoked by editor hooks and
+    // are not authored workspace source.
+    ".claude/skills/impeccable/**",
+    ".github/skills/impeccable/**",
     "goals/**",
     "scratchpad/**",
+    "infra/ci-runners/sdks/**",
+    // Self-contained Lambda bundle source (own package.json + lockfile, not a workspace
+    // member): esbuild bundles it into the deployed ZIP via infra/lambda/turbo-cache/build.sh,
+    // so nothing in the workspace import graph reaches it.
+    "infra/lambda/**",
     "**/test/fixtures/**",
     "**/examples/**",
     "**/postcss.config.*",
@@ -59,19 +121,59 @@
     // Identity-as-IRI exploration prototype assets are packet evidence, not
     // package/app entrypoints in the production dead-code graph.
     "explorations/identity-as-iri/assets/ontology-prototype/**",
+    // LeJeune Bolt exploration ops script is packet tooling (machine-local corpus
+    // miner run ad hoc via `bun run`), not a package/app entrypoint.
+    "explorations/lejeune-bolt-agentic-demo/ops/**",
     // @beep/html: generated AST (one TaggedClass per HTML element) is intentionally
     // repetitive; the codegen script and vendored spec data are tooling, not
     // hand-authored source subject to dead-code/duplication/complexity review.
     "packages/foundation/modeling/html/src/Html.model.ts",
     "packages/foundation/modeling/html/src/Html.meta.ts",
     "packages/foundation/modeling/html/scripts/**",
-    "packages/foundation/modeling/html/data/**"
+    "packages/foundation/modeling/html/data/**",
+    // @beep/data: generator-emitted registry modules (sync-data-to-ts) are intentionally
+    // repetitive tuple/table output, not hand-authored source subject to
+    // dead-code/duplication/complexity review.
+    "packages/foundation/primitive/data/src/generated/**",
+    // @beep/acp: generator-emitted OpenAPI schema modules (one S.Struct per upstream
+    // schema) are intentionally repetitive, not hand-authored source subject to
+    // dead-code/duplication/complexity review; the acp resync regeneration surfaced
+    // 27 self-clone findings inside the single generated file.
+    "packages/drivers/acp/src/_generated/**",
+    // @beep/ecfr, @beep/govinfo, and @beep/runpod: generator-emitted OpenAPI
+    // modules are intentionally repetitive artifacts, not hand-authored source.
+    // Keep this package-specific so no authored source path is excluded.
+    "packages/drivers/ecfr/src/_generated/**",
+    "packages/drivers/govinfo/src/_generated/**",
+    "packages/drivers/runpod/src/_generated/**"
+  ],
+  // Exact compatibility list for authored `.ts` specifiers whose source file
+  // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep
+  // failing Fallow. Remove these entries when Fallow supports the TS fallback.
+  "ignoreUnresolvedImports": [
+    "**/content-editable.ts",
+    "**/App.ts",
+    "**/Session.changelog.ts",
+    "**/Session.document.ts",
+    "**/Session.explorer.ts",
+    "**/Session.graph.ts",
+    "**/Session.inspector.ts",
+    "**/Session.metrics.ts",
+    "**/Session.source.ts",
+    "**/Session.sparql.ts",
+    "**/Session.validation.ts",
+    "**/Session.workbench.ts",
+    "**/plugins.ts"
   ],
   "ignoreDependencies": [
+    // brace-expansion, fast-uri, hono, nanoid: root `dependencies` entries that exist solely to
+    // back the security-pin `overrides` in package.json; nothing imports them at root.
+    "brace-expansion",
+    "fast-uri",
+    "hono",
+    "nanoid",
     "@effect/vitest",
     "@effect/language-service",
-    "cspell",
-    "markdownlint-cli2",
     "babel-plugin-annotate-pure-calls",
     "babel-plugin-transform-next-use-client",
     "@babel/plugin-transform-export-namespace-from",
@@ -109,27 +211,15 @@
     "@mdx-js/react",
     // Next apps: loaded by Next when SharedNextConfig defaults reactCompiler: true.
     "babel-plugin-react-compiler",
-    // Root: used by git-tracked scratchpad tests; scratchpad/** is ignored above.
-    "@faker-js/faker",
-    // @beep/lexical-schema: type-only lexical conformance imports live in
-    // dtslint/** (ignored above); zero runtime lexical imports is the package
-    // contract (goals/rich-text-foundation).
+    // @beep/lexical-schema: unit tests exercise these Lexical dependencies.
     "lexical",
-    "@lexical/code",
-    "@lexical/link",
     "@lexical/list",
-    "@lexical/rich-text",
-    // @beep/storybook: package stories are discovered by Storybook's external
-    // stories glob; the host app declares @beep/form so Vite can resolve the
-    // workspace package while fallow attributes the imports to the package that
-    // owns the stories.
-    "@beep/form",
+    // @beep/storybook: same stories-glob arrangement for the graph-3d driver
+    // stories (goal graph-3d-view).
+    "@beep/graph-3d",
     // @beep/storybook: mounted through Storybook staticDirs so frimousse can
     // load the self-hosted emojibase dataset at runtime.
     "emojibase-data",
-    // @beep/m365: upstream Graph conformance imports live in dtslint/**
-    // (ignored above); the driver intentionally has no runtime SDK dependency.
-    "@microsoft/microsoft-graph-types",
     // @beep/observability: OTel deps staged 2026-06-12 for in-flight tracing
     // work; remove from this list when the wiring lands.
     "@opentelemetry/resources",
@@ -138,6 +228,28 @@
     // @beep/html: used only by the codegen script (scripts/**, ignored above for
     // analysis), so fallow can't see the import and reads it as unused.
     "@effect/platform-node"
+  ],
+  // Root overrides below intentionally pin transitive packages. The @effect/tsgo
+  // entries cover optional platform binaries; the remaining entries retain the
+  // dependency-update security floors. They therefore have no direct manifest
+  // declaration for Fallow to associate with the override.
+  "ignoreDependencyOverrides": [
+    { "package": "@effect/tsgo-darwin-arm64", "source": "package.json" },
+    { "package": "@effect/tsgo-darwin-x64", "source": "package.json" },
+    { "package": "@effect/tsgo-linux-arm", "source": "package.json" },
+    { "package": "@effect/tsgo-linux-arm64", "source": "package.json" },
+    { "package": "@effect/tsgo-linux-x64", "source": "package.json" },
+    { "package": "@effect/tsgo-win32-arm64", "source": "package.json" },
+    { "package": "@effect/tsgo-win32-x64", "source": "package.json" },
+    { "package": "@hono/node-server", "source": "package.json" },
+    { "package": "@opentelemetry/propagator-jaeger", "source": "package.json" },
+    { "package": "brace-expansion", "source": "package.json" },
+    { "package": "detailed-xml-validator", "source": "package.json" },
+    { "package": "fast-uri", "source": "package.json" },
+    { "package": "hono", "source": "package.json" },
+    { "package": "js-yaml", "source": "package.json" },
+    { "package": "minimatch", "source": "package.json" },
+    { "package": "postcss", "source": "package.json" }
   ],
   // `instant` is a Next.js framework config export (blocking-prerender opt-out,
   // see nextjs.org/docs/messages/blocking-prerender-dynamic). The framework
@@ -187,13 +299,140 @@
     { "file": "apps/*/src/app/*.tsx", "exports": ["instant"] },
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
+  "health": {
+    // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
+    // mechanism in standards/architecture/DECISIONS.md). Only maxCognitive tightens vs
+    // fallow defaults; the rest are pinned so the effective gate is explicit in-repo.
+    // Calibration: p99 cognitive = 6 across 41,469 functions; a judged marginal-band
+    // panel put every honest best-version ceiling at <=8 (two outliers, override
+    // material). Revisit 6 after goals/complexity-ceiling-burn-down clears the >15 tail.
+    "maxCognitive": 8,
+    "maxCyclomatic": 20,
+    "maxCrap": 30,
+    "maxUnitSize": 60,
+    "thresholdOverrides": [
+      {
+        "files": [
+          "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"
+        ],
+        "functions": ["sparqlResultPreview", "runSparqlFromKeyboard"],
+        "maxCrap": 57,
+        "reason": "Pre-existing functions unchanged by the import-extension migration; Fallow audit attributes their CRAP findings as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": [
+          "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts"
+        ],
+        "functions": ["normalizeJSDocCategoryKey"],
+        "maxCognitive": 12,
+        "reason": "Pre-existing slug normalizer body unchanged by the jsdoc-carrier migration; Fallow audit attributes its cognitive finding as introduced when only the JSDoc carrier grammar changes. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/Column.ts"],
+        "functions": ["isSpec"],
+        "maxCyclomatic": 35,
+        "maxCognitive": 17,
+        "maxCrap": 38,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/model.ts"],
+        "functions": ["collectPgModelState"],
+        "maxCyclomatic": 34,
+        "maxCognitive": 35,
+        "maxCrap": 269,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/model.ts"],
+        "functions": ["collectSqliteModelState"],
+        "maxCyclomatic": 32,
+        "maxCognitive": 29,
+        "maxCrap": 239,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/extras.ts"],
+        "functions": ["isNode"],
+        "maxCognitive": 15,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/core/Meta.ts"],
+        "functions": ["merge"],
+        "maxCognitive": 12,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/schema.ts"],
+        "functions": ["collectPgEdge"],
+        "maxCognitive": 11,
+        "maxCrap": 38,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/schema.ts"],
+        "functions": ["collectSqliteEdge"],
+        "maxCognitive": 11,
+        "maxCrap": 38,
+        "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/model.ts"],
+        "functions": ["effectiveSchema"],
+        "maxCrap": 38,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its estimated-coverage CRAP finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/derive.ts"],
+        "functions": ["exactLengthFromCheck"],
+        "maxCrap": 32,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its estimated-coverage CRAP finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/sqlite/model.ts"],
+        "functions": ["validateLiteralDefault"],
+        "maxCrap": 32,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its estimated-coverage CRAP finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/core/literals.ts"],
+        "functions": ["stringLiteralsFromAST"],
+        "maxCognitive": 12,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": ["packages/ecosystem/effect-drizzle/src/pg/derive.ts"],
+        "functions": ["Literal"],
+        "maxCognitive": 11,
+        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
+      },
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/internal/cli/MixedOutputJson.ts"
+        ],
+        "functions": [
+          "jsonObjectTextFromMixedOutput",
+          "jsonObjectTextFromRight"
+        ],
+        "maxCognitive": 20,
+        "reason": "Forward scanning preserves linear mixed-output recovery; a bounded reverse fallback resynchronizes after unmatched opening braces without making balanced-object floods quadratic. Review by 2026-11-10: re-measure both passes and reduce or remove these measured ceilings when a simpler equivalent is proven."
+      }
+    ]
+  },
   "audit": {
     "gate": "new-only"
   },
   "rules": {
     "duplicate-exports": "off",
+    // Fallow does not count catalog references under Bun root overrides, so enabling this
+    // falsely reports the seven required @effect/tsgo platform pins.
     "unused-catalog-entries": "off",
     "empty-catalog-groups": "off",
-    "boundary-violation": "error"
+    "boundary-violation": "error",
+    // Suppression hygiene: every fallow-ignore-* marker must carry `-- <reason>`.
+    // Enabled 2026-07-30 with the cognitive-ceiling law; legacy bare pragmas were
+    // backfilled in the same change.
+    "require-suppression-reason": "error"
   }
 }

@@ -1,0 +1,11 @@
+fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966  /etc/beep/openclaw-spike/current/openclaw.json
+pointer=fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966 resolved=/etc/beep/openclaw-spike/fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966
+drwxr-xr-x 755 root:root 5235336 /etc/beep/openclaw-spike
+lrwxrwxrwx 777 root:root 5235340 /etc/beep/openclaw-spike/current
+drwxr-xr-x 755 root:root 5235338 /etc/beep/openclaw-spike/fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966
+-rw-r--r-- 644 root:root 5235339 /etc/beep/openclaw-spike/current/openclaw.json
+drwxr-xr-x root:root 5235336 /etc/beep/openclaw-spike -> 
+drwxr-xr-x root:root 5235338 /etc/beep/openclaw-spike/fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966 -> 
+lrwxrwxrwx root:root 5235340 /etc/beep/openclaw-spike/current -> fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966
+-rw-r--r-- root:root 5235337 /etc/beep/openclaw-spike/.beep-p0-spike1 -> 
+-rw-r--r-- root:root 5235339 /etc/beep/openclaw-spike/fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966/openclaw.json -> 

@@ -30,15 +30,16 @@ const $I = $NlpId.create("Handoff/Contract");
 /**
  * Stable identifier for a {@link TextChunk}.
  *
- * @example
+ * **Example** (Make ChunkId value)
+ *
  * ```ts
  * import { ChunkId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(ChunkId.make("chunk-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const ChunkId = S.String.pipe(
   S.brand("ChunkId"),
@@ -49,7 +50,8 @@ export const ChunkId = S.String.pipe(
 /**
  * Runtime type of {@link ChunkId}.
  *
- * @example
+ * **Example** (Type a ChunkId)
+ *
  * ```ts
  * import { ChunkId } from "@beep/nlp/Handoff/Contract"
  *
@@ -57,23 +59,24 @@ export const ChunkId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type ChunkId = typeof ChunkId.Type;
 
 /**
  * Stable identifier for a {@link Mention}.
  *
- * @example
+ * **Example** (Make MentionId value)
+ *
  * ```ts
  * import { MentionId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(MentionId.make("mention-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const MentionId = S.String.pipe(
   S.brand("MentionId"),
@@ -84,7 +87,8 @@ export const MentionId = S.String.pipe(
 /**
  * Runtime type of {@link MentionId}.
  *
- * @example
+ * **Example** (Type a MentionId)
+ *
  * ```ts
  * import { MentionId } from "@beep/nlp/Handoff/Contract"
  *
@@ -92,23 +96,24 @@ export const MentionId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type MentionId = typeof MentionId.Type;
 
 /**
  * Stable identifier for an {@link Entity}.
  *
- * @example
+ * **Example** (Make EntityId value)
+ *
  * ```ts
  * import { EntityId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(EntityId.make("entity-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const EntityId = S.String.pipe(
   S.brand("EntityId"),
@@ -119,7 +124,8 @@ export const EntityId = S.String.pipe(
 /**
  * Runtime type of {@link EntityId}.
  *
- * @example
+ * **Example** (Type an EntityId)
+ *
  * ```ts
  * import { EntityId } from "@beep/nlp/Handoff/Contract"
  *
@@ -127,23 +133,24 @@ export const EntityId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type EntityId = typeof EntityId.Type;
 
 /**
  * Stable identifier for a {@link Relation}.
  *
- * @example
+ * **Example** (Make RelationId value)
+ *
  * ```ts
  * import { RelationId } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(RelationId.make("relation-1"))
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export const RelationId = S.String.pipe(
   S.brand("RelationId"),
@@ -154,7 +161,8 @@ export const RelationId = S.String.pipe(
 /**
  * Runtime type of {@link RelationId}.
  *
- * @example
+ * **Example** (Type a RelationId)
+ *
  * ```ts
  * import { RelationId } from "@beep/nlp/Handoff/Contract"
  *
@@ -162,23 +170,24 @@ export const RelationId = S.String.pipe(
  * console.log(id)
  * ```
  *
- * @since 0.0.0
  * @category identifiers
+ * @since 0.0.0
  */
 export type RelationId = typeof RelationId.Type;
 
 /**
  * Closed vocabulary of {@link TextChunk} granularities.
  *
- * @example
- * ```ts
+ * **Example** (Check sentence kind)
+ *
+ * ```ts import.meta.vitest name="Check sentence kind"
  * import { ChunkKind } from "@beep/nlp/Handoff/Contract"
  *
- * console.log(ChunkKind.is.sentence("sentence")) // true
+ * ChunkKind.is.sentence("sentence") // => true
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token"]).annotate(
   $I.annote("ChunkKind", { description: "Granularity of a text chunk (document/paragraph/sentence/token)." })
@@ -187,7 +196,8 @@ export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token
 /**
  * Runtime TypeScript union decoded by {@link ChunkKind}.
  *
- * @example
+ * **Example** (Assign ChunkKind union)
+ *
  * ```ts
  * import type { ChunkKind } from "@beep/nlp/Handoff/Contract"
  *
@@ -195,8 +205,8 @@ export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token
  * console.log(kind)
  * ```
  *
- * @since 0.0.0
  * @category type-level
+ * @since 0.0.0
  */
 export type ChunkKind = typeof ChunkKind.Type;
 
@@ -213,7 +223,8 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
 /**
  * A half-open character span `[start, end)` into the source text.
  *
- * @example
+ * **Example** (Make half-open span)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
@@ -221,8 +232,8 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
  * console.log(Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(5) }))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const Span = SpanFields.check(
   S.makeFilter((span: { readonly end: number; readonly start: number }) =>
@@ -245,7 +256,8 @@ export const Span = SpanFields.check(
   })
   .pipe(
     $I.annoteSchema("Span", {
-      description: "A half-open character span [start, end) into the source text (zero-based offsets).",
+      description:
+        "A half-open span [start, end) into the source text, measured in zero-based UTF-16 code units (the unit `String.length` and `slice` use).",
     }),
     SchemaUtils.withCodecStatics
   );
@@ -253,19 +265,36 @@ export const Span = SpanFields.check(
 /**
  * Runtime type of {@link Span}.
  *
- * @example
- * ```ts
+ * **Example** (Compute span length)
+ *
+ * ```ts import.meta.vitest name="Compute span length"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
  *
  * const span: Span = Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(5) })
- * console.log(span.end - span.start) // 5
+ * span.end - span.start // => 5
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Span = typeof Span.Type;
+
+/**
+ * Encoded companion types for the {@link Span} runtime schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Span {
+  /**
+   * Wire representation accepted and emitted by {@link Span}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Span.Encoded;
+}
 
 /**
  * PROV-O-aligned provenance for a piece of derived annotation: where it came
@@ -273,15 +302,16 @@ export type Span = typeof Span.Type;
  * when (`timestamp` ~ `prov:generatedAtTime`, epoch ms), and an optional
  * producer confidence in `[0, 1]`.
  *
- * @example
+ * **Example** (Make provenance record)
+ *
  * ```ts
  * import { Provenance } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(Provenance.make({ source: "doc-1", generatedBy: "wink-nlp", timestamp: 0 }))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Provenance extends S.Class<Provenance>($I`Provenance`)(
   {
@@ -300,8 +330,9 @@ export class Provenance extends S.Class<Provenance>($I`Provenance`)(
  * A contiguous chunk of source text at a given granularity, with its span and
  * provenance. The atomic unit of the handoff IR.
  *
- * @example
- * ```ts
+ * **Example** (Make sentence TextChunk)
+ *
+ * ```ts import.meta.vitest name="Make sentence TextChunk"
  * import { NonNegativeInt } from "@beep/schema"
  * import { ChunkId, Provenance, Span, TextChunk } from "@beep/nlp/Handoff/Contract"
  *
@@ -312,11 +343,11 @@ export class Provenance extends S.Class<Provenance>($I`Provenance`)(
  *   span: Span.make({ end: NonNegativeInt.make(11), start: NonNegativeInt.make(0) }),
  *   text: "Hello world"
  * })
- * console.log(chunk.kind) // "sentence"
+ * chunk.kind // => "sentence"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
   {
@@ -335,8 +366,9 @@ export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
  * A surface mention occurrence: where a span of text within a chunk refers to
  * something nameable.
  *
- * @example
- * ```ts
+ * **Example** (Make surface mention)
+ *
+ * ```ts import.meta.vitest name="Make surface mention"
  * import { NonNegativeInt } from "@beep/schema"
  * import { ChunkId, Mention, MentionId, Provenance, Span } from "@beep/nlp/Handoff/Contract"
  *
@@ -347,11 +379,11 @@ export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
  *   span: Span.make({ end: NonNegativeInt.make(5), start: NonNegativeInt.make(0) }),
  *   text: "Acme"
  * })
- * console.log(mention.chunkId) // "chunk-1"
+ * mention.chunkId // => "chunk-1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Mention extends S.Class<Mention>($I`Mention`)(
   {
@@ -371,8 +403,9 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  * `type` is a GENERIC discriminant a downstream mapping turns into a concrete
  * knowledge-graph node type.
  *
- * @example
- * ```ts
+ * **Example** (Make ORG entity)
+ *
+ * ```ts import.meta.vitest name="Make ORG entity"
  * import { Entity, EntityId, MentionId, Provenance } from "@beep/nlp/Handoff/Contract"
  *
  * const entity = Entity.make({
@@ -382,11 +415,11 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  *   provenance: Provenance.make({ generatedBy: "wink-nlp", source: "doc-1", timestamp: 0 }),
  *   type: "ORG"
  * })
- * console.log(entity.type) // "ORG"
+ * entity.type // => "ORG"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Entity extends S.Class<Entity>($I`Entity`)(
   {
@@ -407,8 +440,9 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  * A directed relation between two {@link Entity}s. Its `type` is a GENERIC
  * predicate a downstream mapping turns into a concrete knowledge-graph edge type.
  *
- * @example
- * ```ts
+ * **Example** (Make ACQUIRED relation)
+ *
+ * ```ts import.meta.vitest name="Make ACQUIRED relation"
  * import { EntityId, Provenance, Relation, RelationId } from "@beep/nlp/Handoff/Contract"
  *
  * const relation = Relation.make({
@@ -418,11 +452,11 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  *   subject: EntityId.make("entity-1"),
  *   type: "ACQUIRED"
  * })
- * console.log(relation.subject) // "entity-1"
+ * relation.subject // => "entity-1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class Relation extends S.Class<Relation>($I`Relation`)(
   {
@@ -442,52 +476,64 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
 
 /**
  * The top-level handoff envelope: a fully annotated document — its chunks,
- * entities, and relations — emitted by `@beep/nlp` for downstream consumption.
- * The `version` pins the contract revision.
+ * mentions, entities, and relations — emitted by `@beep/nlp` for downstream
+ * consumption. The `version` pins the contract revision.
  *
- * @example
- * ```ts
+ * **Details**
+ *
+ * `mentions` carries every {@link Mention} an {@link Entity} refers to by id, so
+ * the per-occurrence character `span` survives the handoff instead of being
+ * dropped at the boundary. `nlp-ir/1.1` added the field; `nlp-ir/1.0`
+ * envelopes carried entities whose `mentions` ids resolved to nothing.
+ *
+ * **Example** (Make empty document)
+ *
+ * ```ts import.meta.vitest name="Make empty document"
  * import { AnnotatedDocument, Provenance } from "@beep/nlp/Handoff/Contract"
  *
  * const provenance = Provenance.make({ generatedBy: "wink-nlp", source: "doc-1", timestamp: 0 })
  * const document = AnnotatedDocument.make({
  *   chunks: [],
  *   entities: [],
+ *   mentions: [],
  *   provenance,
  *   relations: [],
- *   version: "nlp-ir/1.0"
+ *   version: "nlp-ir/1.1"
  * })
- * console.log(document.version) // "nlp-ir/1.0"
+ * document.version // => "nlp-ir/1.1"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class AnnotatedDocument extends S.Class<AnnotatedDocument>($I`AnnotatedDocument`)(
   {
     chunks: S.Array(TextChunk),
     entities: S.Array(Entity),
+    mentions: S.Array(Mention),
     provenance: Provenance,
     relations: S.Array(Relation),
-    version: S.Literal("nlp-ir/1.0"),
+    version: S.Literal("nlp-ir/1.1"),
   },
   $I.annote("AnnotatedDocument", {
-    description: "The top-level handoff envelope: a fully annotated document (chunks + entities + relations).",
+    description:
+      "The top-level handoff envelope: a fully annotated document (chunks + mentions + entities + relations).",
   })
 ) {}
 
 /**
  * Build a {@link Provenance} from an explicit timestamp.
  *
- * @example
+ * **Example** (Build timed provenance)
+ *
  * ```ts
  * import { makeProvenance } from "@beep/nlp/Handoff/Contract"
  *
  * console.log(makeProvenance("doc-1", "wink-nlp", 0))
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const makeProvenance: {
   (source: string, generatedBy: string, timestamp: number, confidence?: number): Provenance;

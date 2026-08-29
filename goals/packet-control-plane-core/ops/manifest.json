@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "packet-control-plane-core",
+    "title": "Packet Control-Plane Core",
+    "status": "completed-retained",
+    "created": "2026-08-17",
+    "updated": "2026-08-26",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/packet-control-plane-core",
+  "lifecycle": "completed-retained",
+  "mission": "Single colocated packet-core in the Goals CLI: versioned CAS events, deterministic fold, derived lifecycle, guarded writers \u2014 self-hosted in advisory mode.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/packet-system-redesign",
+    "graduated": "2026-08-17"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/packet-control-plane-core/README.md",
+    "goals/packet-control-plane-core/SPEC.md",
+    "goals/packet-control-plane-core/PLAN.md",
+    "goals/packet-control-plane-core/GOAL.md",
+    "goals/packet-control-plane-core/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/packet-control-plane-core/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research (inherited from exploration)",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "First vertical slice (event fold + guarded writer + check + projection)",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Advisory self-hosting (D9)",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Remaining core rungs (risk tier, trace projection, fork repair)",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/packet-control-plane-core/GOAL.md)\" -le 4000",
+    "jq . goals/packet-control-plane-core/ops/manifest.json",
+    "rg -n \"packet-control-plane-core|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/packet-control-plane-core",
+    "git diff --check -- goals/packet-control-plane-core",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The fold contract cannot express an existing packet's real history without loss.",
+    "The slice requires candidate-2/3/4 machinery to pass its own proof.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

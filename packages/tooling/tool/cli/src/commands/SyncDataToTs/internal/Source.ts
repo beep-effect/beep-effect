@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { CSV } from "@beep/schema/Csv";
 import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
+import { Unknown } from "@beep/schema/Unknown";
 import { XmlTextToUnknown } from "@beep/schema/Xml";
 import { A, Str } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
@@ -17,16 +18,17 @@ import { dual, flow } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as jsonc from "jsonc-parser";
-import { SyncDataToTsError } from "../SyncDataToTs.errors.js";
-import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.js";
+import { formatJsonValue } from "../../../internal/cli/Json.ts";
+import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
+import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/internal/Source");
 
 const textDecoder = new TextDecoder();
-const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonText = Unknown.decodeUnknownEffectFromJsonString;
+const decodeJsonTextResult = S.decodeUnknownResult(S.fromJsonString(S.Json));
 const decodeXmlText = S.decodeUnknownEffect(XmlTextToUnknown);
-const encodeUnknownJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeUnknownJsonResult = Unknown.encodeUnknownResultFromJsonString;
 const defaultCsvParserOptions = ParserOptions.new();
 
 const ParsedCsvRecord = S.Record(S.String, S.String).pipe(
@@ -81,19 +83,47 @@ const attachCsvColumns = (rows: ReadonlyArray<ParsedCsvRecord>, columns: Readonl
 /**
  * Pretty-print a JSON value as canonical JSON with a trailing newline.
  *
- * @param value - The JSON-compatible value to format.
- * @returns Canonical JSON text with a trailing newline.
+ * **Details**
+ *
+ * A target-facing alias for the package's canonical renderer so every generated
+ * data file shares one byte-for-byte formatting definition.
+ *
+ * **Example** (Render a canonical payload)
+ *
+ * ```ts
+ * import { formatJson } from "@beep/repo-cli/commands/SyncDataToTs/internal/Source"
+ *
+ * console.log(formatJson({ ok: true }) === `{\n  "ok": true\n}\n`) // true
+ * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
-export const formatJson = (value: unknown): string => {
-  const encoded = Result.getOrThrow(encodeUnknownJsonResult(value));
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
+export const formatJson = formatJsonValue;
+
+/**
+ * Normalize a JSON-compatible value into Effect's canonical JSON model.
+ *
+ * @param targetId - The sync target whose canonical payload is being normalized.
+ * @param value - A value accepted by the JSON string codec.
+ * @returns The plain JSON value produced by encoding and decoding the input.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const normalizeJson: {
+  (value: unknown): (targetId: string) => Effect.Effect<S.Json, SyncDataToTsError>;
+  (targetId: string, value: unknown): Effect.Effect<S.Json, SyncDataToTsError>;
+} = dual(
+  2,
+  (targetId: string, value: unknown): Effect.Effect<S.Json, SyncDataToTsError> =>
+    pipe(
+      value,
+      encodeUnknownJsonResult,
+      Result.flatMap(decodeJsonTextResult),
+      Effect.fromResult,
+      SyncDataToTsError.mapError(`Failed to normalize canonical JSON for ${targetId}`, targetId)
+    )
+);
 
 /**
  * Pretty-print a JSON-compatible value as a TypeScript literal.
@@ -128,28 +158,40 @@ export const formatTsDocCommentValue: (value: string) => string = flow(
  * @category constructors
  * @since 0.0.0
  */
-export const outputFile = (path: string, content: string): SyncDataOutputFile =>
-  SyncDataOutputFile.make({ path, content });
+export const outputFile: {
+  (content: string): (path: string) => SyncDataOutputFile;
+  (path: string, content: string): SyncDataOutputFile;
+} = dual(2, (path: string, content: string): SyncDataOutputFile => SyncDataOutputFile.make({ path, content }));
+
+type SourceMetadataExtras = Partial<Pick<SyncDataSourceMetadata, "version" | "published">>;
 
 /**
  * Create stable source metadata.
  *
+ * **Gotchas**
+ *
+ * `extras` is required so the helper stays arity-dispatched: pass `{}` when the
+ * source carries no version or published date.
+ *
  * @param source - The fetched source to describe.
- * @param extras - Optional version and published-date metadata.
+ * @param extras - Version and published-date metadata, possibly empty.
  * @returns Stable source metadata for the fetched source.
  * @category constructors
  * @since 0.0.0
  */
-export const sourceMetadata = (
-  source: SyncDataFetchedSource,
-  extras: Partial<Pick<SyncDataSourceMetadata, "version" | "published">> = {}
-): SyncDataSourceMetadata =>
-  SyncDataSourceMetadata.make({
-    id: source.id,
-    url: source.url,
-    sha256: source.sha256,
-    ...extras,
-  });
+export const sourceMetadata: {
+  (extras: SourceMetadataExtras): (source: SyncDataFetchedSource) => SyncDataSourceMetadata;
+  (source: SyncDataFetchedSource, extras: SourceMetadataExtras): SyncDataSourceMetadata;
+} = dual(
+  2,
+  (source: SyncDataFetchedSource, extras: SourceMetadataExtras): SyncDataSourceMetadata =>
+    SyncDataSourceMetadata.make({
+      id: source.id,
+      url: source.url,
+      sha256: source.sha256,
+      ...extras,
+    })
+);
 
 type FetchSourceOptions = {
   readonly headers?: Readonly<Record<string, string>>;
@@ -262,7 +304,7 @@ const decodeCsvText = Effect.fn("SyncDataToTs.decodeCsvText")(function* (content
         })
       ) {}
 
-      return S.decodeUnknownEffect(CSV({})(ParsedCsvRow))(content).pipe(
+      return S.decodeEffect(CSV({})(ParsedCsvRow))(content).pipe(
         Effect.map((rows) => attachCsvColumns(rows as ReadonlyArray<ParsedCsvRecord>, headerRow))
       );
     },

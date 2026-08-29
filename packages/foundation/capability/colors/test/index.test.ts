@@ -104,7 +104,7 @@ describe("supportsColor", () => {
   });
 
   it("round-trips generated process-like values through the schema", () => {
-    const processLikeArbitrary = S.toArbitrary(ProcessLike);
+    const processLikeArbitrary = S.toArbitrary(ProcessLike)(fc);
     const encodeProcessLike = S.encodeUnknownOption(ProcessLike);
 
     fc.assert(
@@ -127,7 +127,7 @@ describe("supportsColor", () => {
   });
 
   it("honors disable overrides for generated process-like values", () => {
-    const processLikeArbitrary = S.toArbitrary(ProcessLike);
+    const processLikeArbitrary = S.toArbitrary(ProcessLike)(fc);
 
     fc.assert(
       fc.property(processLikeArbitrary, (processLike) => {

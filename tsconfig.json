@@ -15,8 +15,6 @@
     "./packages/**/test/**/*.ts",
     "./packages/**/test/**/*.tsx",
     "./packages/**/test/**/*.json",
-    "./packages/**/dtslint/**/*.ts",
-    "./packages/**/dtslint/**/*.tsx",
     "./syncpack.config.ts",
     "./*.ts",
     "./*.json"
@@ -200,35 +198,11 @@
       "@beep/ffmpeg": ["./packages/drivers/ffmpeg/src/index.ts"],
       "@beep/ffmpeg/*": ["./packages/drivers/ffmpeg/src/*"],
       "@beep/postgres": ["./packages/drivers/postgres/src/index.ts"],
-      "@beep/shared-domain/aggregates": [
-        "./packages/shared/domain/src/aggregates.ts"
-      ],
-      "@beep/shared-domain/entities": [
-        "./packages/shared/domain/src/entities.ts"
-      ],
-      "@beep/shared-domain/entities/Membership": [
-        "./packages/shared/domain/src/entities/Membership/index.ts"
-      ],
-      "@beep/shared-domain/entities/Organization": [
-        "./packages/shared/domain/src/entities/Organization/index.ts"
-      ],
-      "@beep/shared-domain/entities/User": [
-        "./packages/shared/domain/src/entities/User/index.ts"
-      ],
       "@beep/shared-domain/entity": ["./packages/shared/domain/src/entity.ts"],
       "@beep/shared-domain/identity": [
         "./packages/shared/domain/src/identity.ts"
       ],
       "@beep/shared-domain/values": ["./packages/shared/domain/src/values.ts"],
-      "@beep/shared-domain/values/LocalDate": [
-        "./packages/shared/domain/src/values/LocalDate/index.ts"
-      ],
-      "@beep/shared-tables/entities": [
-        "./packages/shared/tables/src/entities/index.ts"
-      ],
-      "@beep/shared-tables/entities/Organization": [
-        "./packages/shared/tables/src/entities/Organization/index.ts"
-      ],
       "@beep/agents-domain/entities": [
         "./packages/agents/domain/src/entities/index.ts"
       ],
@@ -331,9 +305,6 @@
       "@beep/workspace-domain/values/CandidateLifecycle": [
         "./packages/workspace/domain/src/values/CandidateLifecycle/index.ts"
       ],
-      "@beep/shared-domain/entity/BaseEntity": [
-        "./packages/shared/domain/src/entity/BaseEntity.ts"
-      ],
       "@beep/shared-domain/entity/EntityId": [
         "./packages/shared/domain/src/entity/EntityId.ts"
       ],
@@ -350,19 +321,19 @@
         "./packages/shared/domain/src/entity/primitives.ts"
       ],
       "@beep/shared-domain/identity/Agents": [
-        "./packages/shared/domain/src/identity/Agents.ts"
+        "./packages/shared/domain/src/identity/Agents/index.ts"
       ],
       "@beep/shared-domain/identity/Epistemic": [
-        "./packages/shared/domain/src/identity/Epistemic.ts"
+        "./packages/shared/domain/src/identity/Epistemic/index.ts"
       ],
       "@beep/shared-domain/identity/LawPractice": [
-        "./packages/shared/domain/src/identity/LawPractice.ts"
+        "./packages/shared/domain/src/identity/LawPractice/index.ts"
       ],
       "@beep/shared-domain/identity/Shared": [
-        "./packages/shared/domain/src/identity/Shared.ts"
+        "./packages/shared/domain/src/identity/Shared/index.ts"
       ],
       "@beep/shared-domain/identity/Workspace": [
-        "./packages/shared/domain/src/identity/Workspace.ts"
+        "./packages/shared/domain/src/identity/Workspace/index.ts"
       ],
       "@beep/agents-use-cases/proof": [
         "./packages/agents/use-cases/src/proof.ts"
@@ -516,12 +487,6 @@
       "@beep/architecture-lab-domain/entities/Worker": [
         "./packages/architecture-lab/domain/src/entities/Worker/index.ts"
       ],
-      "@beep/architecture-lab-domain/identity": [
-        "./packages/architecture-lab/domain/src/identity/index.ts"
-      ],
-      "@beep/architecture-lab-domain/identity/ArchitectureLab": [
-        "./packages/architecture-lab/domain/src/identity/ArchitectureLab.ts"
-      ],
       "@beep/architecture-lab-domain/values": [
         "./packages/architecture-lab/domain/src/values/index.ts"
       ],
@@ -593,9 +558,6 @@
       "@beep/repo-cli/commands/Files": [
         "./packages/tooling/tool/cli/src/commands/Files/index.ts"
       ],
-      "@beep/repo-cli/commands/Graphiti": [
-        "./packages/tooling/tool/cli/src/commands/Graphiti/index.ts"
-      ],
       "@beep/repo-cli/commands/Image": [
         "./packages/tooling/tool/cli/src/commands/Image/index.ts"
       ],
@@ -635,8 +597,8 @@
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
       ],
-      "@beep/repo-cli/test/Graphiti": [
-        "./packages/tooling/tool/cli/src/test/Graphiti.test-kit.ts"
+      "@beep/repo-cli/test/Knowledge": [
+        "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts"
       ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
@@ -776,9 +738,6 @@
       "@beep/schema/CrossOriginResourcePolicy": [
         "./packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/index.ts"
       ],
-      "@beep/schema/EntitySchema": [
-        "./packages/foundation/modeling/schema/src/EntitySchema/index.ts"
-      ],
       "@beep/schema/FilePath": [
         "./packages/foundation/modeling/schema/src/FilePath/index.ts"
       ],
@@ -794,14 +753,8 @@
       "@beep/schema/MappedLiteralKit": [
         "./packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts"
       ],
-      "@beep/schema/Model": [
-        "./packages/foundation/modeling/schema/src/Model/index.ts"
-      ],
       "@beep/schema/Record": [
         "./packages/foundation/modeling/schema/src/Record/index.ts"
-      ],
-      "@beep/schema/VariantSchema": [
-        "./packages/foundation/modeling/schema/src/VariantSchema/index.ts"
       ],
       "@beep/acp/agent": ["./packages/drivers/acp/src/AcpAgent.service.ts"],
       "@beep/acp/client": ["./packages/drivers/acp/src/AcpClient.service.ts"],
@@ -847,9 +800,6 @@
       "@beep/schema/BufferEncoding": [
         "./packages/foundation/modeling/schema/src/BufferEncoding.ts"
       ],
-      "@beep/schema/CauseTaggedError": [
-        "./packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
-      ],
       "@beep/schema/CommonTextSchemas": [
         "./packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
       ],
@@ -861,9 +811,6 @@
       ],
       "@beep/schema/DateTimeUtcFromValid": [
         "./packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
-      ],
-      "@beep/schema/DomainModel": [
-        "./packages/foundation/modeling/schema/src/DomainModel.ts"
       ],
       "@beep/schema/EffectSchema": [
         "./packages/foundation/modeling/schema/src/EffectSchema.ts"
@@ -968,14 +915,8 @@
       "@beep/schema/StatusCauseError": [
         "./packages/foundation/modeling/schema/src/StatusCauseError.ts"
       ],
-      "@beep/schema/StatusCauseTaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/index.ts"
-      ],
       "@beep/schema/String": [
         "./packages/foundation/modeling/schema/src/String.ts"
-      ],
-      "@beep/schema/TaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/TaggedErrorClass/index.ts"
       ],
       "@beep/schema/Thunk": [
         "./packages/foundation/modeling/schema/src/Thunk.ts"
@@ -993,6 +934,9 @@
         "./packages/foundation/modeling/schema/src/Transformations.ts"
       ],
       "@beep/schema/URL": ["./packages/foundation/modeling/schema/src/URL.ts"],
+      "@beep/schema/Unknown": [
+        "./packages/foundation/modeling/schema/src/Unknown.ts"
+      ],
       "@beep/schema/Xml": ["./packages/foundation/modeling/schema/src/Xml.ts"],
       "@beep/schema/Yaml": [
         "./packages/foundation/modeling/schema/src/Yaml.ts"
@@ -1090,9 +1034,6 @@
       "@beep/lexical-schema": [
         "./packages/foundation/modeling/lexical/src/index.ts"
       ],
-      "@beep/lexical-schema/*": [
-        "./packages/foundation/modeling/lexical/src/*"
-      ],
       "@beep/editor": ["./packages/foundation/ui-system/editor/src/index.ts"],
       "@beep/editor/artifact-ref-node": [
         "./packages/foundation/ui-system/editor/src/artifact-ref-node.tsx"
@@ -1113,7 +1054,6 @@
         "./packages/agents/client/src/ClientObservability.ts"
       ],
       "@beep/html": ["./packages/foundation/modeling/html/src/index.ts"],
-      "@beep/html/*": ["./packages/foundation/modeling/html/src/*"],
       "@beep/editor/mermaid-view": [
         "./packages/foundation/ui-system/editor/src/mermaid-view.tsx"
       ],
@@ -1141,7 +1081,6 @@
       "@beep/file-processing/PathSafety": [
         "./packages/foundation/capability/file-processing/src/PathSafety/index.ts"
       ],
-      "@beep/form": ["./packages/foundation/ui-system/form/src/index.ts"],
       "@beep/epistemic-domain/values/ClaimGate": [
         "./packages/epistemic/domain/src/values/ClaimGate/index.ts"
       ],
@@ -1278,15 +1217,7 @@
       ],
       "@beep/govinfo": ["./packages/drivers/govinfo/src/index.ts"],
       "@beep/govinfo/*": ["./packages/drivers/govinfo/src/*"],
-      "@beep/federal-register": [
-        "./packages/drivers/federal-register/src/index.ts"
-      ],
-      "@beep/federal-register/*": ["./packages/drivers/federal-register/src/*"],
       "@beep/ecfr": ["./packages/drivers/ecfr/src/index.ts"],
-      "@beep/dol": ["./packages/drivers/dol/src/index.ts"],
-      "@beep/dol/*": ["./packages/drivers/dol/src/*"],
-      "@beep/courtlistener": ["./packages/drivers/courtlistener/src/index.ts"],
-      "@beep/courtlistener/*": ["./packages/drivers/courtlistener/src/*"],
       "@beep/nlp-processing": [
         "./packages/foundation/capability/nlp-processing/src/index.ts"
       ],
@@ -1410,9 +1341,6 @@
       "@beep/documents-domain/entities": [
         "./packages/documents/domain/src/entities/index.ts"
       ],
-      "@beep/documents-domain/identity": [
-        "./packages/documents/domain/src/identity/index.ts"
-      ],
       "@beep/documents-domain/values": [
         "./packages/documents/domain/src/values/index.ts"
       ],
@@ -1432,8 +1360,6 @@
       "@beep/documents-use-cases/server": [
         "./packages/documents/use-cases/src/server.ts"
       ],
-      "@beep/protobuf": ["./packages/drivers/protobuf/src/index.ts"],
-      "@beep/protobuf/*": ["./packages/drivers/protobuf/src/*"],
       "@beep/schema/Bytes": [
         "./packages/foundation/modeling/schema/src/Bytes.ts"
       ],
@@ -1510,9 +1436,6 @@
       "@beep/ontology-use-cases/tools": [
         "./packages/ontology/use-cases/src/tools/index.ts"
       ],
-      "@beep/documents-domain/identity/Documents": [
-        "./packages/documents/domain/src/identity/Documents.ts"
-      ],
       "@beep/documents-tables": ["./packages/documents/tables/src/index.ts"],
       "@beep/documents-tables/entities/SyncConflict": [
         "./packages/documents/tables/src/entities/SyncConflict/index.ts"
@@ -1544,7 +1467,510 @@
         "./packages/agents/server/src/ProviderInstance/index.ts"
       ],
       "@beep/pretext": ["./packages/drivers/pretext/src/index.ts"],
-      "@beep/pretext/browser": ["./packages/drivers/pretext/src/browser.ts"]
+      "@beep/pretext/browser": ["./packages/drivers/pretext/src/browser.ts"],
+      "@beep/dock": ["./packages/foundation/ui-system/dock/src/index.ts"],
+      "@beep/graph-3d": ["./packages/drivers/graph-3d/src/index.ts"],
+      "@beep/graph-3d/browser": ["./packages/drivers/graph-3d/src/browser.ts"],
+      "@beep/graph-3d/react": ["./packages/drivers/graph-3d/src/react.ts"],
+      "@beep/dock-react": [
+        "./packages/foundation/ui-system/dock-react/src/index.ts"
+      ],
+      "@beep/agents-client/Chat.layer": [
+        "./packages/agents/client/src/Chat.layer.ts"
+      ],
+      "@beep/schema/SafeObject": [
+        "./packages/foundation/modeling/schema/src/SafeObject/index.ts"
+      ],
+      "@beep/schema/JSONSchema": [
+        "./packages/foundation/modeling/schema/src/JSONSchema/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/ClaimDisposition": [
+        "./packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EdgeVersion": [
+        "./packages/epistemic/domain/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimDispositionStatus": [
+        "./packages/epistemic/domain/src/values/ClaimDispositionStatus/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeEndpoint": [
+        "./packages/epistemic/domain/src/values/EdgeEndpoint/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeRelation": [
+        "./packages/epistemic/domain/src/values/EdgeRelation/index.ts"
+      ],
+      "@beep/epistemic-domain/values/LogicalEdgeIdentity": [
+        "./packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts"
+      ],
+      "@beep/epistemic-server/ClaimDisposition": [
+        "./packages/epistemic/server/src/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-server/EdgeAuthority": [
+        "./packages/epistemic/server/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/CandidateClaim": [
+        "./packages/epistemic/tables/src/entities/CandidateClaim/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/ClaimDisposition": [
+        "./packages/epistemic/tables/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/EdgeVersion": [
+        "./packages/epistemic/tables/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/Evidence": [
+        "./packages/epistemic/tables/src/entities/Evidence/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimDisposition": [
+        "./packages/epistemic/use-cases/src/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-use-cases/EdgeAuthority": [
+        "./packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/cosmos/browser": ["./packages/drivers/cosmos/src/browser.ts"],
+      "@beep/ontology-use-cases/worker": [
+        "./packages/ontology/use-cases/src/worker.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionGrant": [
+        "./packages/epistemic/domain/src/values/ExecutionGrant/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionRecord": [
+        "./packages/epistemic/domain/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionVerdict": [
+        "./packages/epistemic/domain/src/values/ExecutionVerdict/index.ts"
+      ],
+      "@beep/epistemic-domain/values/GrantSet": [
+        "./packages/epistemic/domain/src/values/GrantSet/index.ts"
+      ],
+      "@beep/epistemic-config": ["./packages/epistemic/config/src/index.ts"],
+      "@beep/epistemic-config/layer": [
+        "./packages/epistemic/config/src/layer.ts"
+      ],
+      "@beep/epistemic-config/public": [
+        "./packages/epistemic/config/src/public.ts"
+      ],
+      "@beep/epistemic-config/secrets": [
+        "./packages/epistemic/config/src/secrets.ts"
+      ],
+      "@beep/epistemic-config/server": [
+        "./packages/epistemic/config/src/server.ts"
+      ],
+      "@beep/epistemic-config/test": [
+        "./packages/epistemic/config/src/test.ts"
+      ],
+      "@beep/epistemic-server/ExecutionLedger": [
+        "./packages/epistemic/server/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/epistemic-tables/values": [
+        "./packages/epistemic/tables/src/values/index.ts"
+      ],
+      "@beep/epistemic-tables/values/ExecutionRecord": [
+        "./packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "./packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/chalk/internal/*": [
+        "./packages/foundation/capability/chalk/src/internal/*"
+      ],
+      "@beep/dock-react/internal/*": [
+        "./packages/foundation/ui-system/dock-react/src/internal/*"
+      ],
+      "@beep/dock/internal/*": [
+        "./packages/foundation/ui-system/dock/src/internal/*"
+      ],
+      "@beep/nlp-processing/Backend/*": [
+        "./packages/foundation/capability/nlp-processing/src/Backend/*"
+      ],
+      "@beep/nlp-processing/Core/*": [
+        "./packages/foundation/capability/nlp-processing/src/Core/*"
+      ],
+      "@beep/nlp-processing/Graph/*": [
+        "./packages/foundation/capability/nlp-processing/src/Graph/*"
+      ],
+      "@beep/nlp-processing/Graph/GraphOperations/*": [
+        "./packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/*"
+      ],
+      "@beep/nlp-processing/Tools/*": [
+        "./packages/foundation/capability/nlp-processing/src/Tools/*"
+      ],
+      "@beep/nlp/Algebra/*": [
+        "./packages/foundation/modeling/nlp/src/Algebra/*"
+      ],
+      "@beep/nlp/Core/*": ["./packages/foundation/modeling/nlp/src/Core/*"],
+      "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
+      "@beep/nlp/Handoff/*": [
+        "./packages/foundation/modeling/nlp/src/Handoff/*"
+      ],
+      "@beep/nlp/Ontology/*": [
+        "./packages/foundation/modeling/nlp/src/Ontology/*"
+      ],
+      "@beep/nlp/Operations/*": [
+        "./packages/foundation/modeling/nlp/src/Operations/*"
+      ],
+      "@beep/repo-cli/commands/*": [
+        "./packages/tooling/tool/cli/src/commands/*"
+      ],
+      "@beep/repo-configs/internal/*": [
+        "./packages/tooling/policy-pack/repo-configs/src/internal/*"
+      ],
+      "@beep/schema/SchemaUtils/*": [
+        "./packages/foundation/modeling/schema/src/SchemaUtils/*"
+      ],
+      "@beep/ui/components/*": [
+        "./packages/foundation/ui-system/ui/src/components/*"
+      ],
+      "@beep/ui/components/ui/*": [
+        "./packages/foundation/ui-system/ui/src/components/ui/*"
+      ],
+      "@beep/ui/hooks/*": ["./packages/foundation/ui-system/ui/src/hooks/*"],
+      "@beep/ui/lib/*": ["./packages/foundation/ui-system/ui/src/lib/*"],
+      "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
+      "@beep/epistemic-server/GovernedTierGate": [
+        "./packages/epistemic/server/src/GovernedTierGate/index.ts"
+      ],
+      "@beep/epistemic-server/GovernedEgress": [
+        "./packages/epistemic/server/src/GovernedEgress/index.ts"
+      ],
+      "@beep/law-practice-tables": [
+        "./packages/law-practice/tables/src/index.ts"
+      ],
+      "@beep/law-practice-tables/tables": [
+        "./packages/law-practice/tables/src/Tables.ts"
+      ],
+      "@beep/law-practice-tables/entities": [
+        "./packages/law-practice/tables/src/entities/index.ts"
+      ],
+      "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"],
+      "@beep/ontology-ui/aggregates/Session/metrics": [
+        "./packages/ontology/ui/src/aggregates/Session/Session.metrics.tsx"
+      ],
+      "@beep/ontology-ui/aggregates/Session/sparql": [
+        "./packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"
+      ],
+      "@beep/ontology-ui/aggregates/Session/validation": [
+        "./packages/ontology/ui/src/aggregates/Session/Session.validation.tsx"
+      ],
+      "@beep/editor/chat/atoms": [
+        "./packages/foundation/ui-system/editor/src/chat/atoms.ts"
+      ],
+      "@beep/editor/chat/attachment-model": [
+        "./packages/foundation/ui-system/editor/src/chat/attachment-model.ts"
+      ],
+      "@beep/editor/chat/attachments": [
+        "./packages/foundation/ui-system/editor/src/chat/attachments.tsx"
+      ],
+      "@beep/editor/chat/chat-composer": [
+        "./packages/foundation/ui-system/editor/src/chat/chat-composer.tsx"
+      ],
+      "@beep/editor/chat/code-fence": [
+        "./packages/foundation/ui-system/editor/src/chat/code-fence.ts"
+      ],
+      "@beep/editor/chat/commands": [
+        "./packages/foundation/ui-system/editor/src/chat/commands.ts"
+      ],
+      "@beep/editor/chat/config": [
+        "./packages/foundation/ui-system/editor/src/chat/config.ts"
+      ],
+      "@beep/editor/chat/send": [
+        "./packages/foundation/ui-system/editor/src/chat/send.tsx"
+      ],
+      "@beep/editor/chat/slash-items": [
+        "./packages/foundation/ui-system/editor/src/chat/slash-items.tsx"
+      ],
+      "@beep/editor/chat/toolbar": [
+        "./packages/foundation/ui-system/editor/src/chat/toolbar.tsx"
+      ],
+      "@beep/editor/chat/typeahead": [
+        "./packages/foundation/ui-system/editor/src/chat/typeahead.tsx"
+      ],
+      "@beep/editor/code-block-node": [
+        "./packages/foundation/ui-system/editor/src/code-block-node.tsx"
+      ],
+      "@beep/editor/code-block-view": [
+        "./packages/foundation/ui-system/editor/src/code-block-view.tsx"
+      ],
+      "@beep/editor/runtime": [
+        "./packages/foundation/ui-system/editor/src/runtime.ts"
+      ],
+      "@beep/html/Html.attributes": [
+        "./packages/foundation/modeling/html/src/Html.attributes.ts"
+      ],
+      "@beep/html/Html.conformance": [
+        "./packages/foundation/modeling/html/src/Html.conformance.ts"
+      ],
+      "@beep/html/Html.contract": [
+        "./packages/foundation/modeling/html/src/Html.contract.ts"
+      ],
+      "@beep/html/Html.meta": [
+        "./packages/foundation/modeling/html/src/Html.meta.ts"
+      ],
+      "@beep/html/Html.model": [
+        "./packages/foundation/modeling/html/src/Html.model.ts"
+      ],
+      "@beep/html/Html.nodes": [
+        "./packages/foundation/modeling/html/src/Html.nodes.ts"
+      ],
+      "@beep/html/Html.policy": [
+        "./packages/foundation/modeling/html/src/Html.policy.ts"
+      ],
+      "@beep/html/Html.serialize": [
+        "./packages/foundation/modeling/html/src/Html.serialize.ts"
+      ],
+      "@beep/lexical-schema/Lexical.behavior": [
+        "./packages/foundation/modeling/lexical/src/Lexical.behavior.ts"
+      ],
+      "@beep/lexical-schema/Lexical.codec": [
+        "./packages/foundation/modeling/lexical/src/Lexical.codec.ts"
+      ],
+      "@beep/lexical-schema/Lexical.model": [
+        "./packages/foundation/modeling/lexical/src/Lexical.model.ts"
+      ],
+      "@beep/lexical-schema/Lexical.normalize": [
+        "./packages/foundation/modeling/lexical/src/Lexical.normalize.ts"
+      ],
+      "@beep/md/Md.html": ["./packages/foundation/modeling/md/src/Md.html.ts"],
+      "@beep/md/Md.safe": ["./packages/foundation/modeling/md/src/Md.safe.ts"],
+      "@beep/obs": ["./packages/drivers/obs/src/index.ts"],
+      "@beep/obs/*": ["./packages/drivers/obs/src/*"],
+      "@beep/exiftool": ["./packages/drivers/exiftool/src/index.ts"],
+      "@beep/exiftool/*": ["./packages/drivers/exiftool/src/*"],
+      "@beep/qa-capture": [
+        "./packages/tooling/library/qa-capture/src/index.ts"
+      ],
+      "@beep/qa-capture/*": ["./packages/tooling/library/qa-capture/src/*"],
+      "@beep/repo-cli/commands/Qa": [
+        "./packages/tooling/tool/cli/src/commands/Qa/index.ts"
+      ],
+      "@beep/html/Html.source-size": [
+        "./packages/foundation/modeling/html/src/Html.source-size.ts"
+      ],
+      "@beep/html/Html.srcset": [
+        "./packages/foundation/modeling/html/src/Html.srcset.ts"
+      ],
+      "@beep/gov-legal-mcp": ["./packages/drivers/gov-legal-mcp/src/index.ts"],
+      "@beep/gov-legal-mcp/*": ["./packages/drivers/gov-legal-mcp/src/*"],
+      "@beep/epistemic-client": ["./packages/epistemic/client/src/index.ts"],
+      "@beep/epistemic-domain/entities/Contradiction": [
+        "./packages/epistemic/domain/src/entities/Contradiction/index.ts"
+      ],
+      "@beep/epistemic-domain/values/Contradiction": [
+        "./packages/epistemic/domain/src/values/Contradiction/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/Contradiction": [
+        "./packages/epistemic/tables/src/entities/Contradiction/index.ts"
+      ],
+      "@beep/epistemic-ui": ["./packages/epistemic/ui/src/index.ts"],
+      "@beep/file-processing/SourceText": [
+        "./packages/foundation/capability/file-processing/src/SourceText/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EvidenceVerification": [
+        "./packages/epistemic/domain/src/entities/EvidenceVerification/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EvidenceVerification": [
+        "./packages/epistemic/domain/src/values/EvidenceVerification/index.ts"
+      ],
+      "@beep/epistemic-server/ContradictionTriage": [
+        "./packages/epistemic/server/src/ContradictionTriage/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/EvidenceVerification": [
+        "./packages/epistemic/tables/src/entities/EvidenceVerification/index.ts"
+      ],
+      "@beep/langextract/VerifiedSpan": [
+        "./packages/foundation/capability/langextract/src/VerifiedSpan/index.ts"
+      ],
+      "@beep/workspace-server/SourceText": [
+        "./packages/workspace/server/src/SourceText/index.ts"
+      ],
+      "@beep/agents-server/BlockRepair": [
+        "./packages/agents/server/src/AssistantTurn/BlockRepair.ts"
+      ],
+      "@beep/agents-use-cases/AssistantTurn.contracts": [
+        "./packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts"
+      ],
+      "@beep/agents-use-cases/AssistantTurn.repair-errors": [
+        "./packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.repair-errors.ts"
+      ],
+      "@beep/repo-cli/commands/Knowledge": [
+        "./packages/tooling/tool/cli/src/commands/Knowledge/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/CandorDisposition": [
+        "./packages/law-practice/domain/src/entities/CandorDisposition/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/IdsSubmissionFact": [
+        "./packages/law-practice/domain/src/entities/IdsSubmissionFact/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/PatentCitationEvent": [
+        "./packages/law-practice/domain/src/entities/PatentCitationEvent/index.ts"
+      ],
+      "@beep/law-practice-domain/values/CitingApplicationIdentity": [
+        "./packages/law-practice/domain/src/values/CitingApplicationIdentity/index.ts"
+      ],
+      "@beep/law-practice-domain/values/ObservationVersionRef": [
+        "./packages/law-practice/domain/src/values/ObservationVersionRef/index.ts"
+      ],
+      "@beep/law-practice-server/CandorRecord": [
+        "./packages/law-practice/server/src/CandorRecord/index.ts"
+      ],
+      "@beep/law-practice-use-cases/CandorPolicy": [
+        "./packages/law-practice/use-cases/src/CandorPolicy/index.ts"
+      ],
+      "@beep/law-practice-use-cases/CandorRecord": [
+        "./packages/law-practice/use-cases/src/CandorRecord/index.ts"
+      ],
+      "@beep/law-practice-use-cases/LegalPositionRelatorPolicy": [
+        "./packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/ActFrame": [
+        "./packages/law-practice/domain/src/entities/ActFrame/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/CorrectionDelta": [
+        "./packages/law-practice/domain/src/entities/CorrectionDelta/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/LegalOppositionCandidate": [
+        "./packages/law-practice/domain/src/entities/LegalOppositionCandidate/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/LegalPositionRelator": [
+        "./packages/law-practice/domain/src/entities/LegalPositionRelator/index.ts"
+      ],
+      "@beep/law-practice-domain/entities/PowerExercise": [
+        "./packages/law-practice/domain/src/entities/PowerExercise/index.ts"
+      ],
+      "@beep/law-practice-use-cases/LegalPositionRecord": [
+        "./packages/law-practice/use-cases/src/LegalPositionRecord/index.ts"
+      ],
+      "@beep/schema/HashSet": [
+        "./packages/foundation/modeling/schema/src/HashSet.ts"
+      ],
+      "@beep/law-practice-server/LegalPositionRecord": [
+        "./packages/law-practice/server/src/LegalPositionRecord/index.ts"
+      ],
+      "@beep/schema/FileInfo": [
+        "./packages/foundation/modeling/schema/src/FileInfo.ts"
+      ],
+      "@beep/effect-drizzle": [
+        "./packages/ecosystem/effect-drizzle/src/index.ts"
+      ],
+      "@beep/effect-drizzle/pg": [
+        "./packages/ecosystem/effect-drizzle/src/pg/index.ts"
+      ],
+      "@beep/effect-drizzle/sqlite": [
+        "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
+      ],
+      "@beep/shared-domain/identity/ArchitectureLab": [
+        "./packages/shared/domain/src/identity/ArchitectureLab/index.ts"
+      ],
+      "@beep/shared-domain/identity/Documents": [
+        "./packages/shared/domain/src/identity/Documents/index.ts"
+      ],
+      "@beep/shared-domain/entity/ProductEntity": [
+        "./packages/shared/domain/src/entity/ProductEntity.ts"
+      ],
+      "@beep/epistemic-server/ShaclValidation": [
+        "./packages/epistemic/server/src/ShaclValidation/index.ts"
+      ],
+      "@beep/law-practice-server/CandorPromotionGate": [
+        "./packages/law-practice/server/src/CandorPromotionGate/index.ts"
+      ],
+      "@beep/repo-cli/commands/Runners": [
+        "./packages/tooling/tool/cli/src/commands/Runners/index.ts"
+      ],
+      "@beep/shared-use-cases": ["./packages/shared/use-cases/src/index.ts"],
+      "@beep/shared-use-cases/PromotionGate": [
+        "./packages/shared/use-cases/src/PromotionGate/index.ts"
+      ],
+      "@beep/shared-use-cases/public": [
+        "./packages/shared/use-cases/src/public.ts"
+      ],
+      "@beep/shared-use-cases/server": [
+        "./packages/shared/use-cases/src/server.ts"
+      ],
+      "@beep/repo-cli/commands/DeletePackage": [
+        "./packages/tooling/tool/cli/src/commands/DeletePackage/index.ts"
+      ],
+      "@beep/repo-cli/test/DeletePackage": [
+        "./packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts"
+      ],
+      "@beep/repo-cli/commands/Labs": [
+        "./packages/tooling/tool/cli/src/commands/Labs/index.ts"
+      ],
+      "@beep/repo-cli/test/Labs": [
+        "./packages/tooling/tool/cli/src/test/Labs.test-kit.ts"
+      ],
+      "@beep/shared-tables/entities": [
+        "./packages/shared/tables/src/entities/index.ts"
+      ],
+      "@beep/shared-tables/entities/Organization": [
+        "./packages/shared/tables/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/aggregates": [
+        "./packages/shared/domain/src/aggregates.ts"
+      ],
+      "@beep/shared-domain/entities": [
+        "./packages/shared/domain/src/entities.ts"
+      ],
+      "@beep/shared-domain/entities/Membership": [
+        "./packages/shared/domain/src/entities/Membership/index.ts"
+      ],
+      "@beep/shared-domain/entities/Organization": [
+        "./packages/shared/domain/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/entities/User": [
+        "./packages/shared/domain/src/entities/User/index.ts"
+      ],
+      "@beep/shared-domain/values/LocalDate": [
+        "./packages/shared/domain/src/values/LocalDate/index.ts"
+      ],
+      "@beep/repo-cli/commands/Explore": [
+        "./packages/tooling/tool/cli/src/commands/Explore/index.ts"
+      ],
+      "@beep/skill-contract": [
+        "./packages/foundation/modeling/skill-contract/src/index.ts"
+      ],
+      "@beep/skill-contract/*": [
+        "./packages/foundation/modeling/skill-contract/src/*"
+      ],
+      "@beep/codegen-kit": [
+        "./packages/tooling/library/codegen-kit/src/index.ts"
+      ],
+      "@beep/codegen-kit/*": ["./packages/tooling/library/codegen-kit/src/*"],
+      "@beep/editor/capability": [
+        "./packages/foundation/ui-system/editor/src/capability/index.ts"
+      ],
+      "@beep/editor/capability/*": [
+        "./packages/foundation/ui-system/editor/src/capability/*"
+      ],
+      "@beep/editor/capability/composer": [
+        "./packages/foundation/ui-system/editor/src/capability/composer.tsx"
+      ],
+      "@beep/editor/capability/runtime": [
+        "./packages/foundation/ui-system/editor/src/capability/runtime.tsx"
+      ],
+      "@beep/editor/capability/shortcut-help": [
+        "./packages/foundation/ui-system/editor/src/capability/shortcut-help.tsx"
+      ],
+      "@beep/editor/capability/toolbar": [
+        "./packages/foundation/ui-system/editor/src/capability/toolbar.tsx"
+      ],
+      "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"],
+      "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
+      "@beep/brand/react": [
+        "./packages/foundation/ui-system/brand/src/react.tsx"
+      ],
+      "@beep/shared-domain/entity/AuditEntity": [
+        "./packages/shared/domain/src/entity/AuditEntity.ts"
+      ],
+      "@beep/shared-domain/entity/BaseEntity": [
+        "./packages/shared/domain/src/entity/BaseEntity.ts"
+      ],
+      "@beep/shared-domain/entity/EntityKit": [
+        "./packages/shared/domain/src/entity/EntityKit.ts"
+      ],
+      "@beep/shared-domain/entity/OrgEntity": [
+        "./packages/shared/domain/src/entity/OrgEntity.ts"
+      ],
+      "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
     }
   }
 }

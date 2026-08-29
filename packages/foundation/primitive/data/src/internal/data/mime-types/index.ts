@@ -79,17 +79,20 @@ export const video = _video;
  * Combined record of all MIME type definitions across every category
  * (application, audio, image, text, video, and miscellaneous).
  *
+ * **Details**
+ *
  * This is the raw merged data object that backs the `mimeTypes` typed record.
  *
- * @since 0.0.0
- * @category configuration
- * @example
- * ```typescript
- * import { mimes } from "@beep/data"
+ * **Example** (Access CSS MIME definition)
  *
- * mimes["text/css"]
- * // { source: "iana", charset: "UTF-8", extensions: ["css"] }
+ * ```ts import.meta.vitest name="Access CSS MIME definition"
+ * import { mimes } from "@beep/data/MimeTypes"
+ *
+ * mimes["text/css"].charset // => "UTF-8"
  * ```
+ *
+ * @category configuration
+ * @since 0.0.0
  */
 export const mimes = {
   ...application,
@@ -103,16 +106,20 @@ export const mimes = {
 /**
  * Union of all known MIME type strings derived from the vendored mime-db data.
  *
+ * **Details**
+ *
  * Each member is a full MIME type string such as `"application/json"` or `"image/png"`.
  *
- * @since 0.0.0
- * @category models
- * @example
- * ```typescript
+ * **Example** (Assign JSON content type)
+ *
+ * ```ts import.meta.vitest name="Assign JSON content type"
  * import type { MimeType } from "@beep/data"
  *
  * const contentType: MimeType = "application/json"
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type MimeType = keyof typeof mimes;
 
@@ -120,16 +127,20 @@ export type MimeType = keyof typeof mimes;
  * Union of all known file extension strings (without leading dot) derived
  * from the vendored mime-db data.
  *
+ * **Details**
+ *
  * Each member is a bare extension like `"json"`, `"html"`, or `"png"`.
  *
- * @since 0.0.0
- * @category models
- * @example
- * ```typescript
+ * **Example** (Assign JSON file extension)
+ *
+ * ```ts import.meta.vitest name="Assign JSON file extension"
  * import type { FileExtension } from "@beep/data"
  *
  * const ext: FileExtension = "json"
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type FileExtension = (typeof mimes)[MimeType]["extensions"][number];
 
@@ -138,15 +149,17 @@ export type FileExtension = (typeof mimes)[MimeType]["extensions"][number];
  * file extensions. The source indicates where the MIME type definition
  * originated (`"iana"`, `"apache"`, or `"nginx"`).
  *
- * @since 0.0.0
- * @category configuration
- * @example
- * ```typescript
- * import { mimeTypes } from "@beep/data"
+ * **Example** (Read JSON MIME definition)
+ *
+ * ```ts import.meta.vitest name="Read JSON MIME definition"
+ * import { mimeTypes } from "@beep/data/MimeTypes"
  *
  * const json = mimeTypes["application/json"]
- * // { source: "iana", extensions: ["json", "map"] }
+ * json.extensions.includes("json") // => true
  * ```
+ *
+ * @category configuration
+ * @since 0.0.0
  */
 type MimeTypeDefinition = {
   source: MimeTypeSource;
@@ -211,19 +224,23 @@ function lookupNormalizedExtension(extension: string): false | MimeType {
  * preferred MIME type string. Preference is determined by source priority:
  * IANA, then unspecified, then Apache, then Nginx.
  *
+ * **Details**
+ *
  * Lazily populates the internal lookup tables on first call; subsequent
  * calls return the same cached object.
  *
- * @since 0.0.0
- * @category utilities
- * @example
- * ```typescript
- * import { getTypes } from "@beep/data"
+ * **Example** (Map extensions to MIME types)
+ *
+ * ```ts import.meta.vitest name="Map extensions to MIME types"
+ * import { getTypes } from "@beep/data/MimeTypes"
  *
  * const types = getTypes()
- * types["json"] // "application/json"
- * types["html"] // "text/html"
+ * types["json"] // => "application/json"
+ * types["html"] // => "text/html"
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function getTypes(): Record<FileExtension, MimeType> {
   populateMaps(extensions, types);
@@ -234,19 +251,23 @@ export function getTypes(): Record<FileExtension, MimeType> {
  * Returns a record mapping each known MIME type to an array of its associated
  * file extensions (without leading dots).
  *
+ * **Details**
+ *
  * Lazily populates the internal lookup tables on first call; subsequent
  * calls return the same cached object.
  *
- * @since 0.0.0
- * @category utilities
- * @example
- * ```typescript
- * import { getExtensions } from "@beep/data"
+ * **Example** (Map MIME types to extensions)
+ *
+ * ```ts import.meta.vitest name="Map MIME types to extensions"
+ * import { getExtensions } from "@beep/data/MimeTypes"
  *
  * const extensions = getExtensions()
- * extensions["application/json"] // ["json", "map"]
- * extensions["text/html"]        // ["html", "htm", "shtml"]
+ * extensions["application/json"].includes("json") // => true
+ * extensions["text/html"].includes("html") // => true
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function getExtensions(): Record<MimeType, FileExtension[]> {
   populateMaps(extensions, types);
@@ -256,21 +277,25 @@ export function getExtensions(): Record<MimeType, FileExtension[]> {
 /**
  * Look up the MIME type for a file path or extension.
  *
+ * **Details**
+ *
  * Accepts a bare extension (`"json"`), a dotted extension (`".json"`), or a
  * full file path (`"path/to/file.json"`). The lookup is case-insensitive.
  * Returns the matching MIME type string, or `false` if no match is found.
  *
- * @since 0.0.0
- * @category utilities
- * @example
- * ```typescript
- * import { lookup } from "@beep/data"
+ * **Example** (Look up MIME from path)
  *
- * lookup("json")            // "application/json"
- * lookup(".html")           // "text/html"
- * lookup("photo.png")       // "image/png"
- * lookup("unknown.zzzzz")   // false
+ * ```ts import.meta.vitest name="Look up MIME from path"
+ * import { lookup } from "@beep/data/MimeTypes"
+ *
+ * lookup("json") // => "application/json"
+ * lookup(".html") // => "text/html"
+ * lookup("photo.png") // => "image/png"
+ * lookup("unknown.zzzzz") // => false
  * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function lookup(path: string): false | MimeType {
   return lookupPath(path);

@@ -8,25 +8,23 @@
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { optionFromNonEmpty } from "./GitExec.js";
-import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.js";
-import { validateOpenPullRequest } from "./PullRequest.js";
+import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { optionFromNonEmpty } from "./GitExec.ts";
+import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
+import { validateOpenPullRequest } from "./PullRequest.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunContext } from "../../../internal/repo-run/index.js";
-import type { YeetRunOptions } from "../Yeet.schemas.js";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const blockedMonitorBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
 
 /**
  * Return whether the selected Yeet mode should require PR check monitoring.
  *
- * @param options - Runtime Yeet options after CLI defaults are applied.
- * @returns `true` for explicit monitor requests and modes whose success
- * depends on PR closeout state.
- * @example
+ * **Example** (Contrast closeout and verify modes)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { defaultYeetRunOptions, shouldMonitorChecks } from "@beep/repo-cli/test/Yeet"
@@ -34,6 +32,10 @@ const blockedMonitorBranches: ReadonlyArray<string> = ["main", "master", "HEAD"]
  * strictEqual(shouldMonitorChecks(defaultYeetRunOptions({ mode: "closeout" })), true)
  * strictEqual(shouldMonitorChecks(defaultYeetRunOptions({ mode: "verify" })), false)
  * ```
+ *
+ * @param options - Runtime Yeet options after CLI defaults are applied.
+ * @returns `true` for explicit monitor requests and modes whose success
+ * depends on PR closeout state.
  * @category guards
  * @since 0.0.0
  */
@@ -41,11 +43,30 @@ export const shouldMonitorChecks = (options: YeetRunOptions): boolean =>
   options.monitor || options.mode === "monitor" || options.mode === "closeout";
 
 /**
+ * Require explicit PR creation consent before repository hydration can perform
+ * remote base reads for start-pr-early publish.
+ *
+ * @param options - Runtime Yeet options after CLI defaults are applied.
+ * @returns A successful Effect unless start-pr-early omits `--pr`.
+ * @category guards
+ * @since 0.0.0
+ */
+export const validateStartPrEarlyPrGuard = (options: YeetRunOptions): Effect.Effect<void, YeetCommandError> =>
+  options.startPrEarly && !options.pr
+    ? Effect.fail(
+        YeetCommandError.make({
+          message:
+            "yeet publish --start-pr-early requires --pr so a PR-less branch creates its pull request before monitoring. Add `--pr` and retry.",
+          exitCode: 1,
+        })
+      )
+    : Effect.void;
+
+/**
  * Reject monitor-like Yeet flows on branches that cannot have a PR head.
  *
- * @param context - Repo context carrying the current branch name.
- * @returns A successful Effect when the branch may be monitored.
- * @example
+ * **Example** (Validate a monitor branch)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, validateMonitorBranch } from "@beep/repo-cli/test/Yeet"
@@ -63,6 +84,9 @@ export const shouldMonitorChecks = (options: YeetRunOptions): boolean =>
  *
  * const allowed = validateMonitorBranch(context).pipe(Effect.as("monitorable"))
  * ```
+ *
+ * @param context - Repo context carrying the current branch name.
+ * @returns A successful Effect when the branch may be monitored.
  * @category guards
  * @since 0.0.0
  */
@@ -83,12 +107,8 @@ export const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<vo
 /**
  * Validate cross-flag constraints before Yeet monitor, closeout, or publish work.
  *
- * @param context - Current repository context used for branch and PR checks.
- * @param options - Runtime Yeet options whose mode-specific combinations must
- * be legal.
- * @returns An Effect that completes only when all monitor-related guard rails
- * accept the request.
- * @example
+ * **Example** (Validate monitor guards)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { defaultYeetRunOptions, RepoRunContext, validateMonitorGuards } from "@beep/repo-cli/test/Yeet"
@@ -108,6 +128,12 @@ export const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<vo
  *   Effect.as("guards passed")
  * )
  * ```
+ *
+ * @param context - Current repository context used for branch and PR checks.
+ * @param options - Runtime Yeet options whose mode-specific combinations must
+ * be legal.
+ * @returns An Effect that completes only when all monitor-related guard rails
+ * accept the request.
  * @category guards
  * @since 0.0.0
  */
@@ -115,6 +141,8 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
   context: RepoRunContext,
   options: YeetRunOptions
 ): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* validateStartPrEarlyPrGuard(options);
+
   if (options.fast && options.mode !== "publish") {
     return yield* YeetCommandError.make({
       message: "yeet --fast is only valid for publish.",
@@ -125,6 +153,22 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
   if (options.fast && !options.monitor) {
     return yield* YeetCommandError.make({
       message: "yeet publish --fast requires --monitor so hosted PR checks remain explicit.",
+      exitCode: 1,
+    });
+  }
+
+  if (options.merged && options.mode !== "verify") {
+    return yield* YeetCommandError.make({
+      message:
+        "yeet --merged is only valid for verify. Publish proves the commit it is about to push, which is the tree the operator owns; --merged proves a tree that exists only until the merge happens.",
+      exitCode: 1,
+    });
+  }
+
+  if (options.merged && options.tier !== "full") {
+    return yield* YeetCommandError.make({
+      message:
+        "yeet verify --merged requires the full proof tier. A review-fix tier on a merged tree would report a green that covers neither the branch nor the merge.",
       exitCode: 1,
     });
   }
@@ -233,10 +277,8 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
  * Require an explicit conventional commit message for publish modes that create
  * a commit.
  *
- * @param options - Runtime Yeet options after command-line parsing.
- * @returns The trimmed commit message when one is required and present, or
- * `None` for modes that do not create a commit.
- * @example
+ * **Example** (Validate a required message)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -246,36 +288,23 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
  *   defaultYeetRunOptions({ message: "feat: ship yeet closeout", mode: "publish" })
  * ).pipe(Effect.map((value) => O.getOrThrow(value)))
  * ```
+ *
+ * @param options - Runtime Yeet options after command-line parsing.
+ * @returns The trimmed commit message when one is required and present, or
+ * `None` for modes that do not create a commit.
  * @category guards
  * @since 0.0.0
  */
 export const validateRequiredMessage = (options: YeetRunOptions): Effect.Effect<O.Option<string>, YeetCommandError> => {
   const message = optionFromNonEmpty(options.message);
-  if (
-    options.plan ||
-    options.mode !== "publish" ||
-    O.isSome(message) ||
-    (options.amend && options.noEdit) ||
-    options.pushOnly
-  ) {
-    return Effect.succeed(message);
-  }
-  return Effect.fail(
-    YeetCommandError.make({
-      message: "yeet publish requires --message with a conventional commit message unless --plan is used.",
-      exitCode: 1,
-    })
-  );
+  return Effect.succeed(message);
 };
 
 /**
  * Run commitlint against Yeet's generated commit-message artifact.
  *
- * @param context - Repo context that determines the artifact directory and
- * command working directory.
- * @param message - Conventional commit message text to validate.
- * @returns An Effect that completes after commitlint accepts the message.
- * @example
+ * **Example** (Validate a commit message)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { RepoRunContext, validateCommitMessage } from "@beep/repo-cli/test/Yeet"
@@ -295,6 +324,11 @@ export const validateRequiredMessage = (options: YeetRunOptions): Effect.Effect<
  *   Effect.as("commit message accepted")
  * )
  * ```
+ *
+ * @param context - Repo context that determines the artifact directory and
+ * command working directory.
+ * @param message - Conventional commit message text to validate.
+ * @returns An Effect that completes after commitlint accepts the message.
  * @category guards
  * @since 0.0.0
  */

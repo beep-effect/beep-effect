@@ -10,6 +10,7 @@ import { ConfigProvider, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const HardTool = Tool.make("hard_source_tool", {
   description: "Fixture hard-gated tool.",
@@ -36,6 +37,7 @@ const hardRegistration = SourceAuthRegistration.make({
 const buildComposedLayer = (env: Record<string, string>) =>
   Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(gatedLayer(hardRegistration, hardSourceLayer)).pipe(
       Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
     )
@@ -48,8 +50,9 @@ const callHardTool = Effect.gen(function* () {
 
 describe("composeGatedLayers (hard gate)", () => {
   layer(buildComposedLayer({}))("when the credential is absent", (it) => {
-    it.effect("vanishes the hard-gated source from composition", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "vanishes the hard-gated source from composition",
+      Effect.fnUntraced(function* () {
         const result = yield* callHardTool;
         assert.strictEqual(result._tag, "Failure");
       })
@@ -57,8 +60,9 @@ describe("composeGatedLayers (hard gate)", () => {
   });
 
   layer(buildComposedLayer({ MCP_KIT_TEST_HARD_KEY: "fixture-secret" }))("when the credential is present", (it) => {
-    it.effect("mounts the hard-gated source", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "mounts the hard-gated source",
+      Effect.fnUntraced(function* () {
         const result = yield* callHardTool;
         assert.strictEqual(result._tag, "Success");
         if (result._tag === "Success") {

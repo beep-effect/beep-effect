@@ -9,7 +9,7 @@
 import * as WorkItemUseCaseServer from "@beep/architecture-lab-use-cases/server";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
 import { Context, Effect, Layer } from "effect";
-import { makeWorkItemRepository } from "./WorkItem.repo.js";
+import { makeWorkItemRepository } from "./WorkItem.repo.ts";
 import type { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 
 const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.layer");
@@ -17,7 +17,8 @@ const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.layer")
 /**
  * Build the WorkItem server facade.
  *
- * @example
+ * **Example** (Build server and list items)
+ *
  * ```ts
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import { makeWorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem"
@@ -34,7 +35,6 @@ const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.layer")
  *
  * @effects Reads `WorkItemConfig`, allocates the default WorkItem repository,
  * and returns the repository-backed WorkItem use-case facade.
- *
  * @category layers
  * @since 0.0.0
  */
@@ -46,7 +46,8 @@ export const makeWorkItemServer = Effect.fn("ArchitectureLab.WorkItemServer.make
 /**
  * WorkItem server facade service.
  *
- * @example
+ * **Example** (Yield server and list items)
+ *
  * ```ts
  * import { WorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test"
@@ -71,7 +72,8 @@ export class WorkItemServer extends Context.Service<WorkItemServer, WorkItemUseC
 /**
  * Config-dependent WorkItem server layer.
  *
- * @example
+ * **Example** (Provide layer and list items)
+ *
  * ```ts
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import {

@@ -10,6 +10,7 @@ import { Fn, SchemaUtils } from "@beep/schema";
 import { isNonNegative } from "@beep/schema/Number";
 import { Match } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $AgentsServerId.create("AssistantTurn/ScanState");
@@ -23,7 +24,8 @@ const NonNegativeScanDepth = S.Int.check(isNonNegative).pipe(
 /**
  * The carry state of the incremental block extractor between chunks.
  *
- * @example
+ * **Example** (Assigning initial scan state)
+ *
  * ```ts
  * import { initialScanState } from "@beep/agents-server/AssistantTurn"
  * import type { ScanState } from "@beep/agents-server/AssistantTurn"
@@ -61,7 +63,8 @@ export class ScanState extends S.Class<ScanState>($I`ScanState`)(
 /**
  * Schema-backed input for one incremental scanner transition.
  *
- * @example
+ * **Example** (Building chunk input value)
+ *
  * ```ts
  * import { initialScanState, ScanChunkInput } from "@beep/agents-server/AssistantTurn"
  *
@@ -85,7 +88,8 @@ export class ScanChunkInput extends S.Class<ScanChunkInput>($I`ScanChunkInput`)(
 /**
  * Schema-backed result for one incremental scanner transition.
  *
- * @example
+ * **Example** (Building chunk result value)
+ *
  * ```ts
  * import { initialScanState, ScanChunkResult } from "@beep/agents-server/AssistantTurn"
  *
@@ -111,7 +115,8 @@ export class ScanChunkResult extends S.Class<ScanChunkResult>($I`ScanChunkResult
 /**
  * The empty scan state used to begin scanning a fresh structured-output stream.
  *
- * @example
+ * **Example** (Reading empty state flags)
+ *
  * ```ts
  * import { initialScanState } from "@beep/agents-server/AssistantTurn"
  *
@@ -188,7 +193,8 @@ const scanChunkResult = ScanChunkTransition.implementSync(({ state, text }) => {
  * Fold one chunk of structured-output JSON text into the scan state, returning
  * the next state plus any block element slices that completed within the chunk.
  *
- * @example
+ * **Example** (Extracting completed block slices)
+ *
  * ```ts
  * import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn"
  *
@@ -204,8 +210,11 @@ const scanChunkResult = ScanChunkTransition.implementSync(({ state, text }) => {
 // Its branching is the brace/string/escape state machine itself and is locked
 // down by a fast-check property test (test/scanChunk.test.ts); extracting helpers
 // would scatter the single-pass state without reducing real complexity.
-// fallow-ignore-next-line complexity
-export const scanChunk = (state: ScanState, text: string): [ScanState, Array<string>] => {
+// fallow-ignore-next-line complexity -- single-pass brace and string scanner is a POC port guarded by property tests
+export const scanChunk: {
+  (text: string): (state: ScanState) => [ScanState, Array<string>];
+  (state: ScanState, text: string): [ScanState, Array<string>];
+} = dual(2, (state: ScanState, text: string): [ScanState, Array<string>] => {
   const result = scanChunkResult({ state, text });
   return [
     {
@@ -217,4 +226,4 @@ export const scanChunk = (state: ScanState, text: string): [ScanState, Array<str
     },
     result.completed,
   ];
-};
+});

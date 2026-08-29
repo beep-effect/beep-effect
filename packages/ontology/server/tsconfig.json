@@ -25,6 +25,9 @@
       "path": "../../drivers/shacl/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/api-transport/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/file-processing/tsconfig.json"
     },
     {
@@ -34,6 +37,9 @@
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
       "path": "../config/tsconfig.json"
     },
     {
@@ -41,9 +47,6 @@
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/utils/tsconfig.json"
     }
   ]
 }

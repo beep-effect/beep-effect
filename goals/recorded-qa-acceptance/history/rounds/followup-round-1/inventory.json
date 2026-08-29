@@ -1,0 +1,74 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        {
+          "eventIds": [120],
+          "kind": "frame",
+          "path": "frames/drag-w11_00003.png"
+        },
+        {
+          "eventIds": [123, 135],
+          "kind": "frame",
+          "path": "frames/drag-w11_00005.png"
+        },
+        {
+          "eventIds": [123, 135],
+          "kind": "screenshot",
+          "path": "floating-drag-resize--after-resize.png"
+        }
+      ],
+      "fix": "Stop propagation from the resize handle and route its pointerdown into dedicated resize state that anchors the pane origin and updates width and height from pointer deltas, with pointer-up and pointer-cancel cleanup.",
+      "id": "R1-01",
+      "lens": "floating-chrome",
+      "repro": "Drag the floating pane by its header, then press its bottom-right resize grip and move diagonally 140 px right and 100 px down.",
+      "severity": "P1",
+      "title": "Floating resize grip moves the pane without resizing it"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [225, 237],
+          "kind": "frame",
+          "path": "frames/drag-w14_00010.png"
+        },
+        {
+          "eventIds": [221, 225, 237],
+          "kind": "screenshot",
+          "path": "drop-quadrant-hover--preview-bottom.png"
+        }
+      ],
+      "fix": "Resolve the deepest hovered target group and calculate the bottom indicator relative to that group's bounds instead of the dock root.",
+      "id": "R1-02",
+      "lens": "drop-preview",
+      "repro": "Drag the Drag Source tab to the bottom edge of Drop Target and pause before releasing or pressing Escape.",
+      "severity": "P1",
+      "title": "Bottom drop preview spans both panels instead of the target group"
+    },
+    {
+      "evidence": [
+        {
+          "eventIds": [173, 177, 190],
+          "kind": "screenshot",
+          "path": "drop-quadrant-hover--preview-right.png"
+        },
+        {
+          "eventIds": [221, 225, 237],
+          "kind": "screenshot",
+          "path": "drop-quadrant-hover--preview-bottom.png"
+        }
+      ],
+      "fix": "Make the drag ghost viewport-aware by flipping its offset left or upward near an edge and clamping its final bounds to the visual viewport.",
+      "id": "R1-03",
+      "lens": "overflow",
+      "repro": "Drag Drag Source to within 12 px of Drop Target's right edge, then repeat at its bottom edge.",
+      "severity": "P2",
+      "title": "Drag label clips outside the viewport at right and bottom drop zones"
+    }
+  ],
+  "judge": { "effort": "high", "model": "gpt-5.6-sol" },
+  "requiredCount": 2,
+  "round": 1,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "session.json"
+}

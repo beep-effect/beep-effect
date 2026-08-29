@@ -12,8 +12,8 @@ import { HashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import type { PackageJson } from "./schemas/PackageJson.js";
-import type { DependencyRecord, WorkspaceDeps } from "./schemas/WorkspaceDeps.js";
+import type { PackageJson } from "./schemas/PackageJson.ts";
+import type { DependencyRecord, WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 
 /**
  * Classify a single dependency record into workspace and npm buckets.
@@ -46,14 +46,14 @@ const classifyRecord = (
 /**
  * Extract and classify dependencies from a decoded `PackageJson`.
  *
+ * **Details**
+ *
  * Each dependency field (`dependencies`, `devDependencies`,
  * `peerDependencies`, `optionalDependencies`) is split into workspace
  * deps (names found in `workspaceNames`) and NPM deps (everything else).
  *
- * @param packageJson - A decoded PackageJson object.
- * @param workspaceNames - A HashSet of all workspace package names in the monorepo.
- * @returns A `WorkspaceDeps` object with classified dependencies.
- * @example
+ * **Example** (Classify workspace and NPM deps)
+ *
  * ```typescript
  * import { HashSet } from "effect"
  * import * as O from "effect/Option"
@@ -69,6 +69,10 @@ const classifyRecord = (
  * // deps.workspace.dependencies -> { "@my/other": "workspace:*" }
  * // deps.npm.dependencies -> { "lodash": "^4.0.0" }
  * ```
+ *
+ * @param packageJson - A decoded PackageJson object.
+ * @param workspaceNames - A HashSet of all workspace package names in the monorepo.
+ * @returns A `WorkspaceDeps` object with classified dependencies.
  * @category utilities
  * @since 0.0.0
  */

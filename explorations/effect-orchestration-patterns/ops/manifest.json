@@ -3,24 +3,16 @@
   "exploration": {
     "slug": "effect-orchestration-patterns",
     "title": "Effect Orchestration Patterns",
-    "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Scope boundary \u2014 pure-Schedule layer now vs deferred stateful resilience stack",
-      "Q2: Package placement \u2014 where the pure retry policies and selector live",
-      "Q3: First slice \u2014 which driver migrates first to prove the shared retry module",
-      "Q4: Vendor/auth \u2014 build-time Layer.unwrap selector scope and secret boundary",
-      "Q5: Build-vs-buy \u2014 circuit breaker clean-room vs adopt a dependency",
-      "Q6: Degraded fan-out \u2014 extract a generic tagged-status combinator vs leave per-call",
-      "Q7: Rate limiter & stateful-resilience home \u2014 reuse v4 built-in, and where the stateful stack lives"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/effect-v4-workflow-engine-spike"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-08-13",
     "sources": ["research/SOURCES.md"]
   }
 }

@@ -15,6 +15,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Quality/internal/FallowEnvelope");
@@ -48,6 +49,32 @@ export const FallowFeatureFamily = LiteralKit([
  * @since 0.0.0
  */
 export type FallowFeature = typeof FallowFeatureFamily.Type;
+
+/**
+ * Return the fixed envelope filename for a Fallow feature and execution mode.
+ *
+ * **Example** (Resolve a check-mode envelope filename)
+ *
+ * ```ts
+ * import { fallowEnvelopeFileName } from "@beep/repo-cli/commands/Quality/internal/FallowEnvelope.schema"
+ *
+ * console.log(fallowEnvelopeFileName("audit", false))
+ * // "audit.check.json"
+ * ```
+ *
+ * @param feature - The Fallow feature family the envelope belongs to.
+ * @param advisory - Whether the envelope was produced in advisory mode.
+ * @returns The fixed envelope filename for the feature and mode.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const fallowEnvelopeFileName: {
+  (advisory: boolean): (feature: FallowFeature) => string;
+  (feature: FallowFeature, advisory: boolean): string;
+} = dual(
+  2,
+  (feature: FallowFeature, advisory: boolean): string => `${feature}.${advisory ? "advisory" : "check"}.json`
+);
 
 /**
  * Attribution kind retained by repo-cli Fallow envelopes.
@@ -126,7 +153,10 @@ export const PositiveExitStatus = S.Int.pipe(S.brand("PositiveExitStatus"))
  * @category equivalence
  * @since 0.0.0
  */
-export const sameAttributionKind = S.toEquivalence(FindingAttributionKind);
+export const sameAttributionKind: {
+  (that: typeof FindingAttributionKind.Type): (self: typeof FindingAttributionKind.Type) => boolean;
+  (self: typeof FindingAttributionKind.Type, that: typeof FindingAttributionKind.Type): boolean;
+} = dual(2, S.toEquivalence(FindingAttributionKind));
 
 /**
  * Equivalence over Fallow envelope status discriminators.
@@ -135,7 +165,10 @@ export const sameAttributionKind = S.toEquivalence(FindingAttributionKind);
  * @category equivalence
  * @since 0.0.0
  */
-export const sameEnvelopeStatus = S.toEquivalence(FallowEnvelopeStatus);
+export const sameEnvelopeStatus: {
+  (that: typeof FallowEnvelopeStatus.Type): (self: typeof FallowEnvelopeStatus.Type) => boolean;
+  (self: typeof FallowEnvelopeStatus.Type, that: typeof FallowEnvelopeStatus.Type): boolean;
+} = dual(2, S.toEquivalence(FallowEnvelopeStatus));
 
 /**
  * Equivalence over Fallow feature families.
@@ -144,7 +177,10 @@ export const sameEnvelopeStatus = S.toEquivalence(FallowEnvelopeStatus);
  * @category equivalence
  * @since 0.0.0
  */
-export const sameFeatureFamily = S.toEquivalence(FallowFeatureFamily);
+export const sameFeatureFamily: {
+  (that: FallowFeature): (self: FallowFeature) => boolean;
+  (self: FallowFeature, that: FallowFeature): boolean;
+} = dual(2, S.toEquivalence(FallowFeatureFamily));
 
 /**
  * Count summary for normalized Fallow finding attribution.

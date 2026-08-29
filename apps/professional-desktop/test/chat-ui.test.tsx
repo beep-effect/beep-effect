@@ -14,14 +14,14 @@ import { ChatActionError } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { toast } from "@beep/ui/components/sonner";
-import { RegistryProvider, useAtomSet, useAtomSubscribe } from "@effect/atom-react";
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { RegistryProvider, useAtomInitialValues, useAtomSet, useAtomSubscribe } from "@effect/atom-react";
+import { it } from "@effect/vitest";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { Effect, Layer, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Reactivity } from "effect/unstable/reactivity";
-import { useEffect } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, vi } from "vitest";
 import { userDocument } from "@/chat/ChatFixtures";
 import { ChatApp } from "@/chat/ui/ChatApp";
 import { ChatTurnErrorToasts } from "@/chat/ui/ChatTurnErrorToasts";
@@ -50,11 +50,7 @@ afterEach(() => {
 });
 
 function PushTurnError({ message }: { readonly message: string }) {
-  const setTurnError = useAtomSet(turnErrorAtom);
-
-  useEffect(() => {
-    setTurnError(ChatActionError.new(message).pipe(O.some));
-  }, [message, setTurnError]);
+  useAtomInitialValues([[turnErrorAtom, ChatActionError.new(message).pipe(O.some)]]);
 
   return null;
 }
@@ -68,11 +64,15 @@ function CaptureTurnError({ onValue }: { readonly onValue: (error: O.Option<Chat
 function RunFailingTurn({ threadId }: { readonly threadId: WorkspaceIdentity.ThreadId }) {
   const runTurn = useAtomSet(runTurnAtom);
 
-  useEffect(() => {
-    runTurn(SendTurnRequest.make({ threadId, content: userDocument("Trigger failure") }));
-  }, [runTurn, threadId]);
-
-  return null;
+  return (
+    <button
+      type="button"
+      data-testid="run-failing-turn"
+      onClick={() => runTurn(SendTurnRequest.make({ threadId, content: userDocument("Trigger failure") }))}
+    >
+      Run failing turn
+    </button>
+  );
 }
 
 describe("StreamingBlocks", () => {
@@ -101,7 +101,7 @@ describe("StreamingBlocks", () => {
           { cells: [{ children: [{ type: "text", text: "Language" }] }, { children: [{ type: "text", text: "TS" }] }] },
         ],
       },
-      { type: "youtube", videoId: "dQw4w9WgXcQ" },
+      { type: "youtube", videoId: "M7lc1UVf-VE" },
     ];
 
     const { container } = render(<StreamingBlocks blocks={blocks} />);
@@ -119,7 +119,7 @@ describe("StreamingBlocks", () => {
     expect(container.querySelector("table")).toHaveTextContent("Language");
     expect(container.querySelector("iframe")).toHaveAttribute(
       "src",
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+      "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE"
     );
   });
 
@@ -205,43 +205,42 @@ describe("ChatApp", () => {
 });
 
 describe("ChatTurnErrorToasts", () => {
-  it("toasts a client-safe turn error message and clears the atom", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        let latestTurnError: O.Option<ChatActionError> = O.none();
+  it.effect(
+    "toasts a client-safe turn error message and clears the atom",
+    Effect.fnUntraced(function* () {
+      let latestTurnError: O.Option<ChatActionError> = O.none();
 
-        render(
-          <RegistryProvider>
-            <CaptureTurnError onValue={(error) => (latestTurnError = error)} />
-            <ChatTurnErrorToasts />
-            <PushTurnError message="Assistant stream failed safely" />
-          </RegistryProvider>
-        );
+      render(
+        <RegistryProvider>
+          <CaptureTurnError onValue={(error) => (latestTurnError = error)} />
+          <ChatTurnErrorToasts />
+          <PushTurnError message="Assistant stream failed safely" />
+        </RegistryProvider>
+      );
 
-        yield* Effect.tryPromise(() =>
-          waitFor(() => expect(toast.error).toHaveBeenCalledWith("Assistant stream failed safely"))
-        );
-        yield* Effect.tryPromise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
-      })
-    ));
+      yield* Effect.promise(() =>
+        waitFor(() => expect(toast.error).toHaveBeenCalledWith("Assistant stream failed safely"))
+      );
+      yield* Effect.promise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
+    })
+  );
 
-  it("toasts a failed runTurnAtom RPC stream and clears the atom", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        let latestTurnError: O.Option<ChatActionError> = O.none();
+  it.effect(
+    "toasts a failed runTurnAtom RPC stream and clears the atom",
+    Effect.fnUntraced(function* () {
+      let latestTurnError: O.Option<ChatActionError> = O.none();
 
-        render(
-          <RegistryProvider initialValues={[[ChatClient.runtime.layer, FailingChatClientLayer]]}>
-            <CaptureTurnError onValue={(error) => (latestTurnError = error)} />
-            <ChatTurnErrorToasts />
-            <RunFailingTurn threadId={decodeThreadId(1)} />
-          </RegistryProvider>
-        );
+      const { getByTestId } = render(
+        <RegistryProvider initialValues={[[ChatClient.runtime.layer, FailingChatClientLayer]]}>
+          <CaptureTurnError onValue={(error) => (latestTurnError = error)} />
+          <ChatTurnErrorToasts />
+          <RunFailingTurn threadId={decodeThreadId(1)} />
+        </RegistryProvider>
+      );
+      fireEvent.click(getByTestId("run-failing-turn"));
 
-        yield* Effect.tryPromise(() =>
-          waitFor(() => expect(toast.error).toHaveBeenCalledWith("RPC stream failed safely"))
-        );
-        yield* Effect.tryPromise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
-      })
-    ));
+      yield* Effect.promise(() => waitFor(() => expect(toast.error).toHaveBeenCalledWith("RPC stream failed safely")));
+      yield* Effect.promise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
+    })
+  );
 });

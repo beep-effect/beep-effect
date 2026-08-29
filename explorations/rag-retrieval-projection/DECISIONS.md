@@ -1,185 +1,180 @@
 # RAG Retrieval Projection Layer — Decisions
 
-<!--
-Stage 2 (ALIGN) seed. These are pre-drafted branch-closing questions with a
-RECOMMENDED answer and grounded rationale — NOT resolutions. The user resolves
-them one at a time via `/grill-with-docs rag-retrieval-projection`, which
-rewrites each `**Status:** open` entry into a dated resolution (Question /
-Answer / Rationale) and syncs `ops/manifest.json` `openQuestions`.
+The align gate closed on 2026-07-14. All eight decisions below are locked.
+Deferred items are implementation gates, not unresolved exploration questions.
 
-Source of truth for the grounding below: RESEARCH.md (this packet) and its
-raw threads under research/. Citations point at the synthesis claims there.
--->
+## 2026-07-14 — LOCKED — RRF ownership
 
-## Q1: Build vs buy — does beep own the RRF fusion service in-repo, or delegate fusion to pgvector / a vector DB's built-in hybrid ranker?
+**Question:** Who owns final hybrid ranking?
 
-**Recommended:** Build and own the fusion in-repo. beep authors the 3-channel
-weighted-RRF combiner (k=60), the empty-channel weight renormalization, and the
-literal-match floor; pgvector/PGlite is used only as a per-channel candidate
-source (cosine top-k, lexical top-k, literal-phrase top-k), never as the fuser.
+**Answer:** beep owns weighted RRF fusion in-repo. Migrate the prior-generation
+`../beep-effect4/packages/knowledge/server/src/GraphRAG/RrfScorer.ts` and
+`../beep-effect4/packages/knowledge/server/test/GraphRAG/RrfScorer.test.ts`, then
+extend them for three-channel weights, empty-channel renormalization, a
+deterministic literal tier/floor, span-bearing results, and exposed per-channel
+contributions. Candidate engines emit ranked channels; none owns fusion policy.
 
-**Rationale:** The single most load-bearing reason in RESEARCH to own the fusion
-rather than delegate is the **literal-match floor** — "pure RRF does *not*
-guarantee an exact lexical hit outranks fuzzy consensus" (softwaredoug,
-secondary.ai), and off-the-shelf vector-DB RRF cannot express beep's invariant
-that an exact literal-phrase hit must not be outscored by fuzzy consensus
-(RESEARCH "Locked decisions": literal floor is a hard guarantee, needs a
-dedicated literal-phrase channel **plus a hard tie-break**, not weight alone).
-Two further beep-specific policies are externally unspecified and therefore must
-live in beep code: **whole-empty-channel weight renormalization** (no surveyed
-vendor implements it; OpenSearch explicitly leaves it unimplemented) and the
-weighted-RRF contribution `weight × 1/(rank + k)`. The RRF formula itself is a
-published method (Cormack et al., SIGIR 2009) with no copyright, so
-reimplementation is clean. Owning the fuser also keeps the cold-start behavior
-(channels empty before vectors/graph are populated) correct on day one, which is
-exactly the local-first case beep ships first. This fork is *near-locked* by
-RESEARCH but is restated here so /grill-with-docs can ratify the empty-channel
-renormalization policy explicitly rather than leave it implicit.
+**Rationale:** The literal floor, cold-start renormalization, stable ordering,
+and diagnostics are beep product invariants. This also fulfills the
+`goals/epistemic-bitemporal-edge-core` contract that defers RRF to this packet as
+sole owner.
 
-**Status:** open (for /grill-with-docs)
+**Rejected:** Vendor/database-owned hybrid fusion; score-magnitude alpha fusion;
+duplicating RRF in the epistemic edge packet.
 
-## Q2: First slice — what is the thin V1 vertical that graduates into a `goals/` packet first?
+## 2026-07-14 — LOCKED — first slice
 
-**Recommended:** The **read-path vertical**: the `vector(768)` + `vector_cosine_ops`
-HNSW projection (pgvector wired into `@beep/pglite`) + the offset-preserving
-char-span chunker + the 3-channel weighted-RRF service with the literal floor,
-proven end-to-end over a **hand-seeded / small fixture corpus**. Defer the full
-bounded-concurrency ingestion orchestration, MinHash/LSH dedup, and
-citation-graph BFS to follow-on slices (see Q3).
+**Question:** What is the first graduating vertical slice?
 
-**Rationale:** The packet has six net-new pieces (RESEARCH "Genuine gaps":
-pgvector schema, RRF fusion, local embedding pipeline, char-span chunker, dedup,
-generated-`tsvector` channel) plus two satellites (dedup, BFS). Shipping all of
-them in one goal blows the appetite. The retrieval contract is the packet's
-*reason to exist* — it is the one service the consumers (`agent-memory-tiers-
-bitemporal-edges`, `goals/trustgraph-port`) inject — so proving
-embed → project → fuse → rank with provenance spans is the highest-leverage
-thin vertical and de-risks the two unverified substrate claims (HNSW build
-memory under WASM; opclass/operator agreement) early against a small corpus.
-Ingestion-at-scale, dedup, and BFS are throughput/quality refinements layered on
-a working read path, not prerequisites for it. This is the highest-leverage open
-fork and bounds everything downstream (appetite, decomposition, what the first
-goal's definition-of-ready asserts).
+**Answer:** `hybrid-retrieval-fusion-core`: query to three ranked fixture
+channels to weighted RRF to literal-floor ordering to span-bearing ranked
+candidates with per-channel contributions. Fixtures cover an empty channel,
+fuzzy consensus versus an exact phrase, duplicate IDs across channels, stable
+tie-breaking, and a pre-verified `TextAnchor`. Proof must show the result remains
+a candidate/evidence packet that cannot bypass `ClaimGate`.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** This creates the stable ranked-channel seam before storage,
+encoder, ingestion, or graph adapters exist. It is deterministic and
+fixture-driven, so it is not spike-gated.
 
-## Q3: Scope boundary — do MinHash/LSH evidence-cluster dedup and citation-graph BFS live inside this packet's first graduating goal, or split into separate follow-on goal slices?
+**Rejected:** The pre-draft read-path vertical that bundled pgvector, chunking,
+embedding, and fusion; a full ingestion stack; a vendor-backed spike as the
+first goal.
 
-**Recommended:** Keep both **owned by this packet's research/design**, but split
-them into **separate follow-on goal slices**, out of the first graduating goal.
-Dedup graduates as its own slice (it carries a clean-room obligation); BFS
-graduates as a graph-projection slice gated on the optional graph channel.
+## 2026-07-14 — LOCKED — satellites outside the first goal
 
-**Rationale:** Both are explicitly "feed the same retrieval/projection tier"
-(CAPTURE netNew), but neither is on the critical path of the read-path vertical
-(Q2). Dedup "sits *before* the candidate→approved ClaimGate, not on a
-retrieval-feeds-LLM path" (RESEARCH), so it is a pre-gate ranking refinement, not
-a retrieval primitive. It also carries a **clean-room hazard** — courtlistener's
-clustering *policy* is AGPL-3.0 and "there is no separate non-AGPL courtlistener
-spec"; the policy must be independently authored (math is clean from MIT
-`datasketch`). That authoring cost is real and should not be smuggled into the
-first slice. Citation-graph BFS depends on the optional graph channel /
-`@beep/semantic-web` projection and must source edges from USPTO ODP
-(`api.uspto.gov`), never the sunset PatentsView API (410 Gone since 2025-05-01) —
-a separable concern with its own driver surface. Splitting keeps the first goal's
-appetite honest while preserving single-owner provenance for both satellites.
+**Question:** Are dedup and citation BFS part of the first goal?
 
-**Status:** open (for /grill-with-docs)
+**Answer:** No. MinHash/LSH may graduate later as
+`retrieval-evidence-dedup`, only after an independently authored clean-room
+policy and representative corpus. Citation acquisition and bounded BFS may
+graduate as `citation-graph-retrieval-channel`, consuming `@beep/uspto` and
+emitting a ranked channel into fusion. External graph storage is
+driver-isolated and non-authoritative.
 
-## Q4: Lexical channel — ship the generated-`tsvector` + GIN path (`ts_rank_cd`), or the external `pg_textsearch` BM25 extension?
+**Rationale:** Neither satellite is required to prove fusion. CourtListener is
+AGPL, and `research/bounded-concurrency-ingest-and-dedup.md` reproduces
+AGPL-derived constants, tokenization, representative-selection, and clustering
+details; those details are design-reference poison and cannot drive the
+implementation. Citation BFS separately depends on live ODP edge availability.
 
-**Recommended:** Ship the **generated `tsvector` STORED column + GIN index**
-(ranked by `ts_rank_cd`) as the default lexical channel. Treat true `pg_textsearch`
-BM25 as an **opt-in upgrade gated on a PGlite-WASM load/stability spike**, behind
-a stable channel interface so it can swap in without touching the fuser.
+**Rejected:** Copying or paraphrasing CourtListener policy; treating the poisoned
+research note as a product spec; putting dedup or BFS into fusion-core; allowing
+the graph channel or graph store to own RRF or authority.
 
-**Rationale:** RESEARCH flags `pg_textsearch` BM25 load/stability inside the
-shipped PGlite WASM build as **UNVERIFIED**, and recommends generated-`tsvector` +
-GIN as the safe fallback (self-syncing via a STORED generated column, no triggers,
-Postgres `textsearch-tables` precedent). The hard caveat: `ts_rank_cd` is
-**cover-density ranking, NOT BM25** — so downstream tests must not assert BM25
-semantics against the fallback. Because the fuser consumes *ranks*, not raw
-scores (RRF is rank-based and normalization-free), the lexical channel's internal
-scorer is an implementation detail the fuser is insulated from — which is exactly
-why a clean channel interface lets BM25 land later without reworking fusion. This
-keeps the first slice on verified substrate while reserving the BM25 quality win
-for when the WASM build is proven.
+## 2026-07-14 — LOCKED — lexical default
 
-**Status:** open (for /grill-with-docs)
+**Question:** What is the default lexical ranked channel?
 
-## Q5: Vendor / license — which embedding model is the default, and is the projection column locked to `vector(768)` regardless?
+**Answer:** A generated `tsvector` STORED column, GIN index, and `ts_rank_cd`,
+named honestly **lexical FTS**. `pg_textsearch` is a later upgrade behind the
+same ranked-channel interface. In-memory BM25 from `@beep/nlp-processing` is
+reserved for fixtures and diagnostics.
 
-**Recommended:** Lock the projection column to **`vector(768)` + `vector_cosine_ops`**
-(provider-neutral) unconditionally. Default the encoder to **EmbeddingGemma-300m
-(ONNX, 768 native)** *subject to a one-time Gemma-Terms-of-Use acceptance for the
-firm's commercial use*; if that license gate is unacceptable, fall back to
-**`nomic-embed-text-v1.5` (Apache-2.0)** or **`bge-base-en-v1.5` (MIT)**, both
-768-dim ONNX. Do **not** pin Gemini.
+**Rationale:** Rank-only channel contracts allow a later scorer swap without
+changing fusion. The live checkout pins `@electric-sql/pglite` 0.5.4 and exposes
+neither vector nor textsearch subpaths, so extension enablement needs independent
+P0 proof in the projection goal.
 
-**Rationale:** 768 is "the convergent interop dimension" — EmbeddingGemma-300m,
-bge-base, gte-base, nomic-embed-text-v1.5 are all natively 768, it fits the HNSW
-≤2000-dim cap with margin, and a future Gemini provider can drop into the same
-column via `output_dimensionality=768`. Locking the *column* (not the model)
-realizes the "vectors are a rebuildable projection, not authority" decision: a
-model swap is a re-embed-from-source + rebuild-index, never a schema migration.
-On the model: EmbeddingGemma-300m has the best quality/runnability fit (Gemma-3
-lineage, MTEB-English-v2 ≈ 69.67, q8/q4 WASM ONNX variants), but RESEARCH is
-explicit that it ships under the **Gemma Terms of Use (gated), NOT Apache** —
-"confirm before adopting as default" — and the privilege-safety wall means the
-encoder must run in-process with no API round-trip and no secret. Gemini is
-ruled out on deprecation grounds: the only GA-stable hosted line
-(`gemini-embedding-001`) shuts down 2026-07-14 (~2 weeks out) and `gemini-embedding-2`
-is Public Preview on `v1beta`, not GA — every forced swap costs a full corpus
-re-embed. InLegalBERT is a wiring reference only (masked-LM, wrong jurisdiction).
+**Rejected:** Calling `ts_rank_cd` BM25; making `pg_textsearch` the default
+without installation, migration, restart, query-plan, and license proof; using
+in-memory BM25 as durable projection storage.
 
-**Status:** open (for /grill-with-docs)
+## 2026-07-14 — LOCKED — embedding contract
 
-## Q6: Vendor / runtime — does the embedding encoder run as webview-WASM (transformers.js / onnxruntime-web), or as a Rust-side ONNX sidecar (`ort` / Candle)?
+**Question:** What vector and model contract does projection expose?
 
-**Recommended:** **WASM-first** (onnxruntime-web, q8) as the default runtime, with
-the **Rust `ort` sidecar gated behind a measured perf spike** on the user's Linux
-box. Keep the encoder behind a service interface so the runtime can swap without
-touching the chunker or projection.
+**Answer:** Normalized `vector(768)` with `vector_cosine_ops`. The provisional
+default is `nomic-embed-text-v1.5` (Apache-2.0, asymmetric prefixes).
+EmbeddingGemma is opt-in only after explicit Gemma Terms acceptance. Store model
+identity on every projection, never mix same-dimension vectors from different
+models, and rebuild the full projection on a model change. A US-IP bake-off
+ratifies the final model: nomic versus `bge-base-en-v1.5`, with Gemma optional.
 
-**Rationale:** RESEARCH calls this an explicit "unmeasured align-stage fork." The
-decisive constraint is that **WebGPU is NOT available in WebKitGTK** (the Linux
-Tauri webview), so on the user's box the only webview path is WASM, where "a 300M
-model is the realistic ceiling" — which EmbeddingGemma-300m sits right at. WASM-
-first wins on portability (works in every webview, no second process, no IPC) and
-is sufficient for the small-corpus first slice (Q2). The Rust sidecar "sidesteps
-both the WASM ceiling and the WebGPU gap" and is the right escape hatch *if and
-only if* a measured ingest throughput spike on a real corpus shows WASM is the
-bottleneck — so the decision should be data-gated, not made blind at align time.
-Holding the encoder behind an interface keeps that swap cheap.
+**Rationale:** Dimension compatibility does not imply embedding-space
+compatibility. A rebuildable, model-identified projection preserves authority
+and makes migrations explicit.
 
-**Status:** open (for /grill-with-docs)
+**Rejected:** EmbeddingGemma as an implicit default; hosted Gemini; mixing model
+spaces; rolling partial model replacement; dimension changes without a new
+projection contract.
 
-## Q7: Package placement — where do the net-new pieces live in the repo topology?
+## 2026-07-14 — LOCKED — encoder runtime
 
-**Recommended:** Land the **compute** as a new foundation capability
-`@beep/retrieval` at `packages/foundation/capability/retrieval` (the
-offset-preserving char-span chunker, the local embedding encoder, and the
-weighted-RRF fusion service). Land the **persistence** in the epistemic slice:
-the `vector(768)` HNSW projection schema + thresholded top-k query in
-`@beep/epistemic-tables`, with the pgvector extension wired into the
-`@beep/pglite` driver. The generated-`tsvector` lexical channel co-locates with
-the projection schema in `@beep/epistemic-tables`.
+**Question:** Where and how does local encoding run?
 
-**Rationale:** The repo's foundation capabilities (`packages/foundation/capability/`:
-file-processing, langextract, nlp, semantic-web, observability) are the
-established home for net-new compute that composes over drivers — a new
-`@beep/retrieval` capability matches that pattern and is the single injectable
-service the consumers want. The chunker is confirmed as **this packet's**
-ownership (RESEARCH "Routing cautions": `goals/langextract-capability` SPEC
-non-goals decline standalone `chunk`/`window` primitives), and it sits *between*
-`@beep/md` and `@beep/langextract`, so a capability package upstream of
-langextract is the correct seam — only the UTF-16 offset contract is shared. The
-pgvector projection is persistence and is a *derived projection of the
-Claim/Evidence spine the epistemic slice already owns* (`@beep/epistemic-domain`/
-`-tables`/`-server`/`-use-cases`), so the `vector(768)` schema + HNSW index belong
-in `@beep/epistemic-tables`, and enabling the extension belongs in the
-`@beep/pglite` driver (currently the vector extension is "NOT yet wired" — the
-named gap). This split keeps the rebuildable-projection-over-authority boundary
-aligned to the existing slice boundary instead of inventing a new vertical slice.
+**Answer:** Define a runtime-neutral encoder port outside the renderer. Durable
+projection work runs server-side or in a sidecar; the webview is never the
+projection worker. Select the initial local adapter through a P0 benchmark of
+cold start/RSS, chunks per second at representative lengths, cancellation and
+bounded concurrency, packaged artifact size, Linux restart/rebuild, byte-identical
+model identification, and zero external egress. Prefer Rust `ort` if
+WebKitGTK/WASM misses budget.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** Projection must survive renderer lifecycle and remain measurable,
+cancellable, offline, and runtime-swappable.
+
+**Rejected:** Webview-owned durable encoding; choosing WASM or Rust without the
+benchmark; external embedding egress; adopting transformers.js, ONNX Runtime,
+`ort`, or Candle before a license-of-record entry exists in `SOURCES.md`.
+
+## 2026-07-14 — LOCKED — placement
+
+**Question:** Where do the contracts and adapters live?
+
+**Answer:** Do not create `@beep/retrieval` for the first goal. Extend
+`packages/foundation/capability/nlp-processing` for fusion contracts, weighted
+RRF, and diagnostics; `packages/foundation/modeling/nlp` for generic vector and
+result schemas; `packages/foundation/modeling/provenance` for anchor
+construction; and `packages/foundation/capability/langextract` for window
+normalization, offsets, and straddles against the verified-span contract.
+Projection tables live in `packages/epistemic/tables`, query ports in
+`packages/epistemic/use-cases`, composition/adapters/builders in
+`packages/epistemic/server`, extension registration in `packages/drivers/pglite`,
+ONNX wrappers in `packages/drivers/*`, and patent citation acquisition in
+`packages/drivers/uspto`.
+
+**Rationale:** A short live symbol/topology audit found coherent existing homes.
+A new package is justified only if extension proves incoherent and a promotion
+record passes the negative gate.
+
+**Rejected:** The pre-draft `@beep/retrieval` package; persistence in foundation;
+driver concerns in domain packages; retired repo-export catalog discovery.
+
+## 2026-07-14 — LOCKED — attach versus standalone
+
+**Question:** Does this work attach to another packet or graduate independently?
+
+**Answer:** This exploration graduates its own goals: fusion-core first, then
+projection, encoder, dedup, and citation BFS as gated follow-ons under this map.
+
+**Rationale:** This packet solely owns fusion and its follow-on seams, while
+sibling packets consume contracts without double-owning implementation.
+
+**Rejected:** Attaching fusion to `epistemic-bitemporal-edge-core`; folding the
+whole fan-out into `local-first-projection-sync`; one omnibus goal.
+
+## 2026-07-14 — DEFERRED implementation gates
+
+| Gate | Deferred decision | Reason / unblock condition |
+| --- | --- | --- |
+| `pg_textsearch` spike | Whether to adopt true BM25 as a lexical upgrade | Requires license-of-record plus PGlite installation, migration, restart, query-plan, and stability proof. |
+| Embedding bake-off | Final default model | Requires representative US-IP corpus results for nomic, BGE, and optionally Gemma after terms acceptance. |
+| Encoder benchmark | Initial runtime adapter | Requires the locked P0 measurements on the target Linux packaging path. |
+| Dedup policy authoring | Whether and how dedup graduates | Requires a clean-room product spec and representative corpus authored without the poisoned AGPL-derived note. |
+| BFS edge-availability spike | Whether citation BFS can ship against ODP | Requires proof that live ODP exposes sufficient citation edges through `@beep/uspto`. |
+| PGlite extension proof | Projection extension mechanism | Requires proof for `@electric-sql/pglite` 0.5.4, whose live exports contain no vector/textsearch subpaths. |
+
+## 2026-08-13 — HOLDING-PEN CONVENTION — RATIFIED
+
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
+**Answer:** Graduate the packet now that its promised-now fusion goal exists.
+Keep `retrieval-vector-projection`, `retrieval-local-encoder`,
+`retrieval-evidence-dedup`, and `citation-graph-retrieval-channel` in `MAP.md`
+as re-entry points, with their existing gate proofs as the triggers. A fired
+gate reopens this packet at `decompose`; it does not spawn a goal directly.
+
+**Rationale:** Evidence-gated satellites remain discoverable and testable
+without holding the completed fusion exploration open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).

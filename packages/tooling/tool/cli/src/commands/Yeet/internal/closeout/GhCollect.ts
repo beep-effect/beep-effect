@@ -9,9 +9,9 @@ import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
-import { GhPageInfo, ghOutput } from "../../../../internal/github/index.js";
-import { YeetCommandError } from "../../Yeet.errors.js";
-import { PrCloseoutWriteAction } from "./Closeout.schemas.js";
+import { collectTruncatableThreadPages, GhPageInfo, ghOutput } from "../../../../internal/github/index.ts";
+import { YeetCommandError } from "../../Yeet.errors.ts";
+import { PrCloseoutWriteAction } from "./Closeout.schemas.ts";
 import {
   commentsPageQuery,
   decodeGhCommentsDocument,
@@ -25,25 +25,21 @@ import {
   GhReviewThreadConnection,
   reviewsPageQuery,
   reviewThreadsPageQuery,
-} from "./Gh.schemas.js";
-import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.js";
+} from "./Gh.schemas.ts";
+import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GhComment, GhPrView } from "../../../../internal/github/index.js";
-import type { RepoRunContext } from "../../../../internal/repo-run/index.js";
-import type { GhRepoView, GhReview, GhReviewThread } from "./Gh.schemas.js";
-import type { closeoutWritePlan } from "./WritePlan.js";
+import type { GhComment, GhPrView } from "../../../../internal/github/index.ts";
+import type { RepoRunContext } from "../../../../internal/repo-run/index.ts";
+import type { GhRepoView, GhReview, GhReviewThread } from "./Gh.schemas.ts";
+import type { closeoutWritePlan } from "./WritePlan.ts";
 
 type CloseoutWriteIntent = ReturnType<typeof closeoutWritePlan>["intents"][number];
 
 /**
  * Run a GitHub CLI command with Yeet closeout error normalization.
  *
- * @param context - Repo context whose root becomes the GitHub CLI working
- * directory.
- * @param args - GitHub CLI arguments excluding the `gh` executable.
- * @param label - Human-readable label included in closeout errors.
- * @returns Captured stdout when the command succeeds.
- * @example
+ * **Example** (Read repository coordinates for closeout)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { closeoutGhOutput, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -63,6 +59,12 @@ type CloseoutWriteIntent = ReturnType<typeof closeoutWritePlan>["intents"][numbe
  *   Effect.map((output) => output.length)
  * )
  * ```
+ *
+ * @param context - Repo context whose root becomes the GitHub CLI working
+ * directory.
+ * @param args - GitHub CLI arguments excluding the `gh` executable.
+ * @param label - Human-readable label included in closeout errors.
+ * @returns Captured stdout when the command succeeds.
  * @category clients
  * @since 0.0.0
  */
@@ -175,49 +177,25 @@ const collectCommentPages = Effect.fn("YeetCloseout.collectCommentPages")(functi
   return comments;
 });
 
-const collectReviewThreadPages = Effect.fn("YeetCloseout.collectReviewThreadPages")(function* (
+const collectReviewThreadPages = (
   context: RepoRunContext,
   repo: GhRepoView,
   pr: GhPrView
-): Effect.fn.Return<ReadonlyArray<GhReviewThread>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  let cursor = O.none<string>();
-  let threads: ReadonlyArray<GhReviewThread> = [];
-  let hasNextPage = true;
-
-  while (hasNextPage) {
-    const page = yield* ghGraphqlPage(
-      context,
-      repo,
-      pr,
-      reviewThreadsPageQuery,
-      cursor,
-      "gh api graphql review threads"
-    ).pipe(
-      Effect.flatMap((output) =>
-        decodeGhReviewThreadsDocument(output).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to decode PR closeout review threads GraphQL JSON."))
-        )
+): Effect.Effect<ReadonlyArray<GhReviewThread>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> =>
+  collectTruncatableThreadPages({
+    advance: (pageInfo) => nextCursor("pull request review threads", pageInfo),
+    fetchPage: (cursor) =>
+      ghGraphqlPage(context, repo, pr, reviewThreadsPageQuery, cursor, "gh api graphql review threads").pipe(
+        Effect.flatMap((output) =>
+          decodeGhReviewThreadsDocument(output).pipe(
+            Effect.mapError(YeetCommandError.new("Failed to decode PR closeout review threads GraphQL JSON."))
+          )
+        ),
+        Effect.map((document) => document.data.repository.pullRequest.reviewThreads)
       ),
-      Effect.map((document) => document.data.repository.pullRequest.reviewThreads)
-    );
-    const truncatedThreadIds = pipe(
-      page.nodes,
-      A.filter((thread) => thread.comments.pageInfo.hasNextPage),
-      A.map((thread) => thread.id)
-    );
-    if (A.isReadonlyArrayNonEmpty(truncatedThreadIds)) {
-      yield* Effect.logWarning(
-        `Review thread(s) ${A.join(truncatedThreadIds, ", ")} have more than 100 comments; Yeet closeout inspects only the first 100 nested comments per thread. Untrusted comment volume cannot block closeout.`
-      );
-    }
-
-    threads = [...threads, ...page.nodes];
-    cursor = yield* nextCursor("pull request review threads", page.pageInfo);
-    hasNextPage = O.isSome(cursor);
-  }
-
-  return threads;
-});
+    truncationWarning: (threadIds) =>
+      `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; Yeet closeout inspects only the first 100 nested comments per thread. Untrusted comment volume cannot block closeout.`,
+  });
 
 const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function* (
   context: RepoRunContext,
@@ -259,10 +237,8 @@ const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function
 /**
  * Collect the pull request, comments, review threads, and reviews for closeout.
  *
- * @param context - Repo context whose branch and repository are inspected with
- * GitHub CLI.
- * @returns Closeout payload plus the `gh pr view` metadata used to fetch it.
- * @example
+ * **Example** (Fetch the closeout payload for the current branch)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectPrCloseoutPayload, RepoRunContext } from "@beep/repo-cli/test/Yeet"
@@ -280,6 +256,10 @@ const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function
  *
  * const prNumber = collectPrCloseoutPayload(context).pipe(Effect.map((payload) => payload.pr.number))
  * ```
+ *
+ * @param context - Repo context whose branch and repository are inspected with
+ * GitHub CLI.
+ * @returns Closeout payload plus the `gh pr view` metadata used to fetch it.
  * @category queries
  * @since 0.0.0
  */
@@ -319,10 +299,8 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
 /**
  * Execute explicit closeout writes such as replies and thread resolutions.
  *
- * @param context - Repo context whose repository receives the GraphQL writes.
- * @param intents - Planned write intents produced by closeout write planning.
- * @returns One successful write action record for each performed intent.
- * @example
+ * **Example** (Resolve one review thread during closeout)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -343,6 +321,10 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
  *   { body: O.none(), kind: "resolve", threadId: "PRRT_example" }
  * ]).pipe(Effect.map((written) => written.length))
  * ```
+ *
+ * @param context - Repo context whose repository receives the GraphQL writes.
+ * @param intents - Planned write intents produced by closeout write planning.
+ * @returns One successful write action record for each performed intent.
  * @category commands
  * @since 0.0.0
  */

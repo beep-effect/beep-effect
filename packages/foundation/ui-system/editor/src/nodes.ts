@@ -11,43 +11,27 @@
  * @since 0.0.0
  */
 
-import { CodeNode } from "@lexical/code";
-import { LinkNode } from "@lexical/link";
-import { ListItemNode, ListNode } from "@lexical/list";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { LineBreakNode, ParagraphNode, TabNode, TextNode } from "lexical";
-import { ArtifactRefNode } from "./artifact-ref-node.tsx";
-import { YouTubeNode } from "./youtube-node.tsx";
+import { Result } from "effect";
+import { editorCapabilityCatalog } from "./capability/catalog.ts";
+import { compatibilityProfile } from "./capability/profiles.ts";
+import { resolveEditorProfile } from "./capability/resolver.ts";
+import { resolvedNodes } from "./capability/runtime.tsx";
 import type { Klass, LexicalNode, LexicalNodeReplacement } from "lexical";
+
+const catalogBaseline = Result.getOrThrow(resolveEditorProfile(editorCapabilityCatalog, compatibilityProfile));
 
 /**
  * The Lexical node classes matching the `@beep/lexical-schema` v1 union.
  *
- * @example
- * ```ts
+ * **Example** (Import and length check)
+ *
+ * ```ts import.meta.vitest name="Import and length check"
  * import { editorNodes } from "@beep/editor/nodes"
  *
- * console.log(editorNodes.length > 0) // true
+ * editorNodes.length > 0 // => true
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const editorNodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> = [
-  TextNode,
-  TabNode,
-  LineBreakNode,
-  ParagraphNode,
-  HeadingNode,
-  QuoteNode,
-  ListNode,
-  ListItemNode,
-  LinkNode,
-  CodeNode,
-  TableNode,
-  TableRowNode,
-  TableCellNode,
-  YouTubeNode,
-  ArtifactRefNode,
-];
+export const editorNodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> = resolvedNodes(catalogBaseline);

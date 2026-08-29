@@ -24,7 +24,8 @@ const defaultMaxAge = 60 * 60 * 24;
 /**
  * Configuration for the `Expect-CT` header.
  *
- * @example
+ * **Example** (Making Expect-CT config)
+ *
  * ```ts
  * import { ExpectCTConfig } from "@beep/schema/ExpectCt"
  *
@@ -49,13 +50,14 @@ export class ExpectCTConfig extends S.Class<ExpectCTConfig>($I`ExpectCTConfig`)(
 /**
  * Schema for tuple-based enabled `Expect-CT` configuration.
  *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { ExpectCTConfig, ExpectCTEnabled } from "@beep/schema/ExpectCt"
+ * **Example** (Decoding enabled Expect-CT)
  *
- * const enabled = S.decodeUnknownSync(ExpectCTEnabled)([true, ExpectCTConfig.make({ enforce: true })])
- * console.log(enabled[0])
+ * ```ts import.meta.vitest name="Decoding enabled Expect-CT"
+ * import * as S from "effect/Schema"
+ * import { ExpectCTEnabled } from "@beep/schema/ExpectCt"
+ *
+ * const enabled = S.decodeUnknownSync(ExpectCTEnabled)([true, { enforce: true }])
+ * enabled[0] // => true
  * ```
  *
  * @category schemas
@@ -70,7 +72,8 @@ export const ExpectCTEnabled = S.Tuple([S.Literal(true), ExpectCTConfig]).pipe(
 /**
  * Type for tuple-based enabled `Expect-CT` configuration.
  *
- * @example
+ * **Example** (Typing enabled Expect-CT)
+ *
  * ```ts
  * import { ExpectCTConfig, type ExpectCTEnabled } from "@beep/schema/ExpectCt"
  *
@@ -86,7 +89,8 @@ export type ExpectCTEnabled = typeof ExpectCTEnabled.Type;
 /**
  * Schema for enabled or disabled `Expect-CT` options.
  *
- * @example
+ * **Example** (Decoding Expect-CT option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ExpectCTOption } from "@beep/schema/ExpectCt"
@@ -106,7 +110,8 @@ export const ExpectCTOption = S.Union([S.Boolean, ExpectCTEnabled]).pipe(
 /**
  * Type for enabled or disabled `Expect-CT` options.
  *
- * @example
+ * **Example** (Typing Expect-CT option)
+ *
  * ```ts
  * import type { ExpectCTOption } from "@beep/schema/ExpectCt"
  *
@@ -122,7 +127,8 @@ export type ExpectCTOption = typeof ExpectCTOption.Type;
 /**
  * Model for a rendered `Expect-CT` response header.
  *
- * @example
+ * **Example** (Making response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ExpectCTResponseHeader } from "@beep/schema/ExpectCt"
@@ -198,7 +204,7 @@ const decodeExpectCTValue = Effect.fn("ExpectCT.decodeExpectCTValue")(function* 
   }
 
   const value = yield* formatExpectCTValue(input[1]).pipe(
-    Effect.mapError((error) => new SchemaIssue.InvalidValue(O.some(error), { message: error.message }))
+    Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }))
   );
 
   return {
@@ -210,7 +216,8 @@ const decodeExpectCTValue = Effect.fn("ExpectCT.decodeExpectCTValue")(function* 
 /**
  * Schema that renders Expect-CT options into a response header.
  *
- * @example
+ * **Example** (Decoding Expect-CT header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ExpectCTHeader } from "@beep/schema/ExpectCt"
@@ -234,33 +241,36 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
     description: "A one-way schema that decodes `Expect-CT` options into the response header.",
   }),
   SchemaUtils.withStatics(() => {
-    const createValue: (option?: undefined | ExpectCTOption) => Effect.Effect<O.Option<string>, SecureHeaderError> =
-      Effect.fnUntraced(function* (option?: undefined | ExpectCTOption) {
-        if (P.isUndefined(option) || option === false) {
-          return O.none<string>();
-        }
+    const createValue: (
+      option?: undefined | typeof ExpectCTOption.Encoded
+    ) => Effect.Effect<O.Option<string>, SecureHeaderError> = Effect.fnUntraced(function* (
+      option?: undefined | typeof ExpectCTOption.Encoded
+    ) {
+      if (P.isUndefined(option) || option === false) {
+        return O.none<string>();
+      }
 
-        if (option === true) {
-          return O.some(`max-age=${defaultMaxAge}`);
-        }
+      if (option === true) {
+        return O.some(`max-age=${defaultMaxAge}`);
+      }
 
-        const enabled = yield* S.decodeUnknownEffect(ExpectCTEnabled)(option).pipe(
-          Effect.mapError((cause) =>
-            ExpectCtError.make({
-              message: cause.message,
-              cause: O.none(),
-            })
-          )
-        );
+      const enabled = yield* S.decodeEffect(ExpectCTEnabled)(option).pipe(
+        Effect.mapError((cause) =>
+          ExpectCtError.make({
+            message: cause.message,
+            cause: O.none(),
+          })
+        )
+      );
 
-        return O.some(yield* formatExpectCTValue(enabled[1]));
-      });
+      return O.some(yield* formatExpectCTValue(enabled[1]));
+    });
 
     const create: (
-      option?: undefined | ExpectCTOption,
+      option?: undefined | typeof ExpectCTOption.Encoded,
       headerValueCreator?: undefined | typeof createValue
     ) => Effect.Effect<O.Option<internal.ResponseHeader>, SecureHeaderError> = Effect.fnUntraced(function* (
-      option?: undefined | ExpectCTOption,
+      option?: undefined | typeof ExpectCTOption.Encoded,
       headerValueCreator: typeof createValue = createValue
     ) {
       const value = yield* headerValueCreator(option);
@@ -278,7 +288,8 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
 /**
  * Type for rendered `Expect-CT` response headers.
  *
- * @example
+ * **Example** (Typing Expect-CT header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ExpectCTResponseHeader, type ExpectCTHeader } from "@beep/schema/ExpectCt"
@@ -306,7 +317,8 @@ export { ExpectCTConfig as Config, ExpectCTResponseHeader as ResponseHeader };
 /**
  * Concise alias for {@link ExpectCTOption}.
  *
- * @example
+ * **Example** (Decoding Option alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Option } from "@beep/schema/ExpectCt"
@@ -322,7 +334,8 @@ export const Option = ExpectCTOption;
 /**
  * Type-level representation of {@link Option}.
  *
- * @example
+ * **Example** (Typing Option alias)
+ *
  * ```ts
  * import type { Option } from "@beep/schema/ExpectCt"
  *
@@ -338,7 +351,8 @@ export type Option = typeof Option.Type;
 /**
  * Concise alias for {@link ExpectCTHeader}.
  *
- * @example
+ * **Example** (Decoding Header alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/ExpectCt"
@@ -355,7 +369,8 @@ export const Header = ExpectCTHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Typing Header alias)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { ExpectCTResponseHeader, type Header } from "@beep/schema/ExpectCt"

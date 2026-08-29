@@ -1,0 +1,252 @@
+/**
+ * Schema-backed circuit-breaker and rate-limit failures.
+ *
+ * **Details**
+ *
+ * * Retry timing is normalized to `Option`, and message getters are pure views
+ * over schema-owned fields. A zero-millisecond retry delay remains meaningful.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { Milliseconds, OptionalMilliseconds } from "./Base.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Circuit");
+
+const CircuitOpenErrorFields = {
+  resetTimeoutMs: Milliseconds.annotateKey({
+    description: "Configured circuit reset delay in milliseconds.",
+  }),
+  lastFailureTime: OptionalMilliseconds.annotateKey({
+    description: "Optional Unix epoch time of the last failure, normalized to Option.",
+  }),
+  retryAfterMs: OptionalMilliseconds.annotateKey({
+    description: "Optional server-directed retry delay, normalized to Option.",
+  }),
+} satisfies S.Struct.Fields;
+
+const makeCircuitOpenError = (
+  input: S.Schema.Type<S.TaggedStruct<"CircuitOpenError", typeof CircuitOpenErrorFields>>
+): CircuitOpenError => CircuitOpenError.make(input);
+
+const CircuitOpenErrorBase = S.TaggedError<CircuitOpenError>($I`CircuitOpenError`)(
+  "CircuitOpenError",
+  CircuitOpenErrorFields,
+  {
+    ...$I.annote("CircuitOpenError", {
+      description: "Failure raised when a circuit breaker rejects work while open.",
+    }),
+    toArbitrary:
+      ([from]) =>
+      () => ({
+        arbitrary: from.arbitrary.map(makeCircuitOpenError),
+        terminal: from.terminal?.map(makeCircuitOpenError),
+      }),
+  }
+);
+
+/**
+ * Failure raised when a circuit breaker rejects work while open.
+ *
+ * **Details**
+ *
+ * * `message` prefers a server-directed retry delay and otherwise reports the
+ * configured reset timeout.
+ *
+ * **Example** (Use CircuitOpenError)
+ * ```ts
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CircuitOpenError } from "@effect-ontology/Error/Circuit"
+ *
+ * const error = S.decodeUnknownOption(CircuitOpenError)({
+ *   _tag: "CircuitOpenError", resetTimeoutMs: Milliseconds.make(5_000) })
+ * console.log(O.isSome(error)) // true
+ * ```
+ *
+ * @invariant All timing fields are finite non-negative millisecond counts.
+ * @category errors
+ * @since 0.0.0
+ */
+export class CircuitOpenError extends CircuitOpenErrorBase {
+  /**
+   * Human-readable circuit state and retry delay.
+   *
+   * **Example** (Use RateLimitReason)
+   * ```ts
+   * import { Milliseconds } from "@effect-ontology/Error/Base"
+   * import { CircuitOpenError } from "@effect-ontology/Error/Circuit"
+   *
+   * console.log(CircuitOpenError.make({ resetTimeoutMs: Milliseconds.make(250) }).message)
+   * ```
+   *
+   * @returns A stable retry diagnostic derived from schema-owned timing fields.
+   * @category errors
+   * @since 0.0.0
+   */
+  override get message(): string {
+    const retryMs = O.getOrElse(this.retryAfterMs, () => this.resetTimeoutMs);
+    return `Circuit breaker is open. Will retry in ${retryMs}ms`;
+  }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
+
+  static readonly is = S.is(CircuitOpenError);
+}
+
+/**
+ * Closed resource dimensions used by rate-limit policy.
+ *
+ * **Example** (Use RateLimitReason)
+ * ```ts
+ * import { RateLimitReason } from "@effect-ontology/Error/Circuit"
+ *
+ * console.log(RateLimitReason.is.tokens("tokens")) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const RateLimitReason = LiteralKit(["tokens", "requests", "concurrent"])
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom("tokens", "requests", "concurrent"),
+  })
+  .pipe(
+    $I.annoteSchema("RateLimitReason", {
+      description: "Closed resource dimension whose quota was exhausted.",
+    })
+  );
+
+/**
+ * Runtime value accepted by {@link RateLimitReason}.
+ *
+ * **Example** (Use RateLimitReason)
+ * ```ts
+ * import type { RateLimitReason } from "@effect-ontology/Error/Circuit"
+ *
+ * const reason: RateLimitReason = "requests"
+ * console.log(reason)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RateLimitReason = typeof RateLimitReason.Type;
+
+const RateLimitErrorFields = {
+  reason: RateLimitReason.annotateKey({
+    description: "Resource dimension whose quota was exhausted.",
+  }),
+  retryAfterMs: OptionalMilliseconds.annotateKey({
+    description: "Optional server-directed retry delay, normalized to Option.",
+  }),
+} satisfies S.Struct.Fields;
+
+const makeRateLimitError = (
+  input: S.Schema.Type<S.TaggedStruct<"RateLimitError", typeof RateLimitErrorFields>>
+): RateLimitError => RateLimitError.make(input);
+
+const RateLimitErrorBase = S.TaggedError<RateLimitError>($I`RateLimitError`)("RateLimitError", RateLimitErrorFields, {
+  ...$I.annote("RateLimitError", {
+    description: "Failure raised when a token, request, or concurrency quota is exhausted.",
+  }),
+  toArbitrary:
+    ([from]) =>
+    () => ({
+      arbitrary: from.arbitrary.map(makeRateLimitError),
+      terminal: from.terminal?.map(makeRateLimitError),
+    }),
+});
+
+/**
+ * Failure raised when a token, request, or concurrency quota is exhausted.
+ *
+ * **Example** (Use RateLimitError)
+ * ```ts
+ * import { RateLimitError } from "@effect-ontology/Error/Circuit"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const error = S.decodeUnknownOption(RateLimitError)({
+ *   _tag: "RateLimitError", reason: "requests" })
+ * console.log(O.isSome(error)) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RateLimitError extends RateLimitErrorBase {
+  /**
+   * Human-readable exhausted quota and optional retry delay.
+   *
+   * **Example** (Use CircuitErrorDefinition)
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { Milliseconds } from "@effect-ontology/Error/Base"
+   * import { RateLimitError } from "@effect-ontology/Error/Circuit"
+   *
+   * const error = RateLimitError.make({ reason: "tokens", retryAfterMs: O.some(Milliseconds.make(0)) })
+   * console.log(error.message)
+   * ```
+   *
+   * @returns A stable rate-limit diagnostic that preserves a zero delay.
+   * @category errors
+   * @since 0.0.0
+   */
+  override get message(): string {
+    const base = `Rate limit exceeded: ${this.reason}`;
+    return O.match(this.retryAfterMs, {
+      onNone: () => base,
+      onSome: (retryAfterMs) => `${base}, retry after ${retryAfterMs}ms`,
+    });
+  }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
+}
+
+const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(S.toTaggedUnion("_tag"));
+
+/**
+ * Exhaustive tagged union of circuit-breaker policy failures.
+ *
+ * **Example** (Use CircuitError)
+ * ```ts
+ * import { CircuitError, RateLimitError } from "@effect-ontology/Error/Circuit"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const error = S.decodeUnknownOption(RateLimitError)({
+ *   _tag: "RateLimitError", reason: "concurrent" })
+ * console.log(CircuitError.guards.RateLimitError(error)) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const CircuitError = CircuitErrorDefinition.pipe(
+  $I.annoteSchema("CircuitError", {
+    description: "Exhaustive tagged union of circuit-open and rate-limit failures.",
+    toArbitrary: () => S.toArbitrary(CircuitErrorDefinition),
+  })
+);
+
+/**
+ * Runtime failure decoded by {@link CircuitError}.
+ *
+ * **Example** (Use CircuitError)
+ * ```ts
+ * import { RateLimitError, type CircuitError } from "@effect-ontology/Error/Circuit"
+ *
+ * const error: CircuitError = RateLimitError.make({ reason: "tokens" })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CircuitError = typeof CircuitError.Type;

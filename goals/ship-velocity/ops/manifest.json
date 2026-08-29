@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ship-velocity",
+    "title": "Ship Velocity",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ship-velocity",
+  "lifecycle": "active",
+  "statusNote": "P0 and P1 complete. P0: packet landed, metrics baseline frozen (research/metrics-baseline.md), both in-flight branches landed; the C2/E2/E6 decision notes ride their implementation PRs by design. P1 shipped 2026-08-16..17 as four PRs: #737 B1 same-argv lanes, #736 E1 publish regenerates the derived goals INDEX, #738 A7 monitor hardening, #743 C1 remote-read cache posture. B9 (deterministic coverage runtime, the P3 prerequisite for B2/B4) shipped 2026-08-24 after a 150-run sweep showed Coverage Regression failing 25.7% of PR runs, half of it from locally minted EnvConfig floors. B10 (dependents in pull-request coverage scope) shipped the same day, closing the green-PR-red-main inheritance class. B11 (2026-08-25) added the scoped remediation block and row-only baseline scoping, closing the regeneration treadmill. Next actions are P2's backpressure engine, starting with A1's watch stream and the failure capsules the seven misattributed-repair-hint receipts now argue for.",
+  "mission": "Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guarantees the 16 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "goals/speed-loop",
+    "graduated": "2026-08-13",
+    "note": "Successor surface for speed-loop/repo-quality-throughput/quality-speedup threads plus the 2026-08-13 nine-lane fan-out (codex Sol + grok 4.6) and ADHD backpressure divergence; carries the open monitor/parity/cache/concurrency/hot-file items those retained packets parked."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until a representative week shows: backpressure p95 under 60s to an attached session (under 5 minutes with takeover), the parity ledger records zero recurring locally-catchable required-check failures, every sibling checkout reads the remote cache, at least two concurrent verifies run under admission without OOM, hot-file conflicts no longer force PR rework, and the final PR is driven to mergeable via yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ship-velocity/README.md",
+    "goals/ship-velocity/SPEC.md",
+    "goals/ship-velocity/PLAN.md",
+    "goals/ship-velocity/GOAL.md"
+  ],
+  "researchReports": [
+    "research/c2-yeet-monitor-backpressure.md",
+    "research/c3-local-remote-parity.md",
+    "research/c4-turbo-cache.md",
+    "research/c5-concurrency-policy.md",
+    "research/c6-conflicts-queue.md",
+    "research/c7-opportunities.md",
+    "research/g1-external-research.md",
+    "research/g2-design-ideas.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ship-velocity/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Ratify and baseline",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Instant wins",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Backpressure engine",
+      "status": "in-progress"
+    },
+    {
+      "id": "P3",
+      "name": "Full parity",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Concurrency and cache proof",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Hot-file endgame and close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ship-velocity/GOAL.md)\" -le 4000",
+    "jq . goals/ship-velocity/ops/manifest.json",
+    "bun run beep goals doctor",
+    "git diff --check -- goals/ship-velocity"
+  ],
+  "stopConditions": [
+    "Any backpressure enforcement (hook deny, Stop veto, poison-pill) deadlocks a session or checkout - severity gates and waives must ship with the enforcement, never after.",
+    "Admission/auto-heal/takeover would mutate state it cannot attribute (foreign lease, malformed lock, baseline regeneration) - fail loud and stop.",
+    "PR remote-cache reads (C2), the INDEX end-state change (E2), or path-filtered required checks (E6) proceed without their recorded operator decision note.",
+    "A parity change weakens a security lane (gitleaks pinning, OSV, fork isolation) to make local green easier."
+  ]
+}

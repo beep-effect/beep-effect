@@ -6,7 +6,6 @@
  */
 
 import { $ChalkId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe, Tuple } from "effect";
 import * as O from "effect/Option";
@@ -120,14 +119,12 @@ const levelMapping: Readonly<Record<ColorSupportLevelType, AnsiRenderLevel>> = {
   3: AnsiRenderLevel.Enum.ansi16m,
 };
 
-class MissingBuilderMetadataError extends TaggedErrorClass<MissingBuilderMetadataError>(
-  $I`MissingBuilderMetadataError`
-)(
+class MissingBuilderMetadataError extends S.TaggedError<MissingBuilderMetadataError>($I`MissingBuilderMetadataError`)(
   "MissingBuilderMetadataError",
   {
     message: S.String,
   },
-  $I.annote("MissingBuilderMetadataError", {
+  $I.annoteError<MissingBuilderMetadataError>("MissingBuilderMetadataError", {
     description: "Raised when Chalk builder metadata is unexpectedly unavailable.",
   })
 ) {}
@@ -326,7 +323,8 @@ const createBuilder = (
 /**
  * Create a Chalk instance factory from detected default color support.
  *
- * @example
+ * **Example** (Create chalk with level zero)
+ *
  * ```ts
  * import { makeCreateChalk } from "@beep/chalk/Chalk"
  *

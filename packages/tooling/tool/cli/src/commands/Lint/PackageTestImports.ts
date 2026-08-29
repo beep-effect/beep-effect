@@ -7,13 +7,13 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { A, Str, Text, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command } from "effect/unstable/cli";
+import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestImports");
 
@@ -63,13 +63,13 @@ class PackageNameDocument extends S.Class<PackageNameDocument>($I`PackageNameDoc
 
 const decodePackageNameDocument = S.decodeUnknownEffect(S.fromJsonString(PackageNameDocument));
 const moduleExtensionPattern = /\.(?:[cm]?[tj]sx?)$/;
-const packageTestFilePattern = /^packages\/.+\/(?:test|dtslint)\/.+\.(?:ts|tsx)$/;
+const packageTestFilePattern = /^packages\/.+\/test\/.+\.(?:ts|tsx)$/;
 // Source-owned test helpers live under a package `src` tree, i.e. a `src`
-// directory segment appears before the `test`/`dtslint` boundary (e.g.
+// directory segment appears before the `test` boundary (e.g.
 // `packages/foo/src/internal/test/Example.test-kit.ts`). Package-level tests
 // such as `packages/foo/test/src/Example.test.ts` keep `src` after the
 // boundary and must stay in scope for import linting.
-const packageSourceOwnedTestPattern = /\/src\/(?:.*\/)?(?:test|dtslint)\//;
+const packageSourceOwnedTestPattern = /\/src\/(?:.*\/)?test\//;
 const stripKnownModuleExtension = Str.replace(moduleExtensionPattern, Str.empty);
 const bySourceRootLengthDescending = Order.mapInput(
   Order.Number,
@@ -85,8 +85,15 @@ const isRelativeModuleSpecifier = (specifier: string): boolean =>
 const isPackageTestFilePath = (relativePath: string): boolean =>
   packageTestFilePattern.test(relativePath) && !packageSourceOwnedTestPattern.test(relativePath);
 
-const toRootImportAlias = (source: PackageSourceRoot, sourceSubpath: string): string =>
-  sourceSubpath === Str.empty || sourceSubpath === "index" ? source.name : `${source.name}/${sourceSubpath}`;
+// Directory modules resolve as `@beep/pkg/Foo`, never `@beep/pkg/Foo/index` —
+// dir-uniform wildcard exports (`./src/*` + `/index.ts`) cannot serve the
+// `/index` spelling, so suggestions always strip the trailing segment.
+const toRootImportAlias = (source: PackageSourceRoot, sourceSubpath: string): string => {
+  const normalizedSubpath = Str.replace(/\/index$/u, Str.empty)(sourceSubpath);
+  return normalizedSubpath === Str.empty || normalizedSubpath === "index"
+    ? source.name
+    : `${source.name}/${normalizedSubpath}`;
+};
 
 const isInsideSourceRoot = (sourceRoot: string, targetPath: string): boolean =>
   targetPath === sourceRoot || Str.startsWith(`${sourceRoot}/`)(targetPath);
@@ -273,13 +280,23 @@ const resolveViolation = (
   });
 };
 
-const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* () {
+const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* (
+  includePaths: ReadonlyArray<string> | undefined
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = normalizePath(path.resolve(process.cwd()));
   const packagesRoot = path.join(repoRoot, "packages");
   const sources = yield* collectPackageSourceRoots(packagesRoot);
-  const files = yield* collectPackageTestFiles(packagesRoot, repoRoot);
+  const files =
+    includePaths === undefined
+      ? yield* collectPackageTestFiles(packagesRoot, repoRoot)
+      : pipe(
+          includePaths,
+          A.filter(isPackageTestFilePath),
+          A.map((filePath) => normalizePath(path.resolve(repoRoot, filePath))),
+          A.sort(Order.String)
+        );
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   let violations = A.empty<PackageTestImportViolation>();
 
@@ -298,7 +315,7 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     yield* Console.error(
-      "[check-package-test-imports] relative imports from package test/dtslint files into workspace src are not allowed. Use @beep/* package aliases."
+      "[check-package-test-imports] relative imports from package test files into workspace src are not allowed. Use @beep/* package aliases."
     );
 
     for (const violation of violations) {
@@ -309,19 +326,28 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
     return yield* failWithReportedExit("check-package-test-imports: violations found.");
   }
 
-  yield* Console.log("[check-package-test-imports] OK: package test/dtslint imports use package aliases.");
+  yield* Console.log("[check-package-test-imports] OK: package test imports use package aliases.");
 });
 
 /**
- * Lint command for enforcing package aliases from package test and dtslint files.
+ * Lint command for enforcing package aliases from package test files.
  *
- * @example
+ * **Example** (Run the package-test-imports lint command)
+ *
  * ```ts
  * console.log("bun run beep lint package-test-imports")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export const lintPackageTestImportsCommand = Command.make("package-test-imports", {}, runLintPackageTestImports).pipe(
-  Command.withDescription("Check package test/dtslint files for relative imports into workspace src roots")
-);
+export const lintPackageTestImportsCommand = Command.make(
+  "package-test-imports",
+  {
+    include: Flag.string("include").pipe(
+      Flag.withDescription("Comma-separated repo-relative test files to scan; defaults to the full package test scope"),
+      Flag.withDefault("*")
+    ),
+  },
+  ({ include }) => runLintPackageTestImports(include === "*" ? undefined : Text.splitCommaSeparatedTrimmed(include))
+).pipe(Command.withDescription("Check package test files for relative imports into workspace src roots"));

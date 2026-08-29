@@ -9,10 +9,22 @@
   },
   "references": [
     {
+      "path": "../../drivers/doc-text/tsconfig.json"
+    },
+    {
       "path": "../../drivers/postgres/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"
@@ -34,9 +46,6 @@
     },
     {
       "path": "../use-cases/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/identity/tsconfig.json"
     }
   ]
 }

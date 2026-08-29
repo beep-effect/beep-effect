@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "patent-drafting-episode-ledger",
+    "title": "Patent Drafting Episode Ledger",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/patent-drafting-episode-ledger"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-06",
+    "updated": "2026-08-13"
+  }
+}

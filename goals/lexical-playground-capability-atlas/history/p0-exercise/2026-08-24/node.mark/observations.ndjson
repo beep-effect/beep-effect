@@ -1,0 +1,37 @@
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"node.mark","outcome":"pass","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false}","entryId":"node.mark","outcome":"pass","step":2}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"node.mark","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"node.mark","outcome":"pass","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.mark","outcome":"pass","step":5}
+{"action":"type","detail":"insert \"Comment this range\" in css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":6}
+{"action":"screenshot","detail":"before","entryId":"node.mark","outcome":"pass","step":7}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":8}
+{"action":"expect-selector","detail":"role=toolbar name=\"Floating text format toolbar\" is visible","entryId":"node.mark","outcome":"pass","step":9}
+{"action":"keyboard","detail":"Control+Alt+M on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":10}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentInputBox_Editor is visible","entryId":"node.mark","outcome":"pass","step":11}
+{"action":"type","detail":"fill \"Evidence comment\" in css=.CommentPlugin_CommentInputBox_Editor","entryId":"node.mark","outcome":"pass","step":12}
+{"action":"click","detail":"role=button name=\"Comment\"","entryId":"node.mark","outcome":"pass","step":13}
+{"action":"expect-selector","detail":"css=.PlaygroundEditorTheme__mark is visible","entryId":"node.mark","outcome":"pass","step":14}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentsPanel is visible","entryId":"node.mark","outcome":"pass","step":15}
+{"action":"screenshot","detail":"after","entryId":"node.mark","outcome":"pass","step":16}
+{"action":"click","detail":"role=button name=\"Hide Comments\"","entryId":"node.mark","outcome":"pass","step":17}
+{"action":"expect-selector","detail":"css=.CommentPlugin_CommentsPanel is detached","entryId":"node.mark","outcome":"pass","step":18}
+{"action":"set-viewport","detail":"480x900","entryId":"node.mark","outcome":"pass","step":19}
+{"action":"keyboard","detail":"Tab","entryId":"node.mark","outcome":"pass","step":20}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.mark","outcome":"pass","step":21}
+{"action":"screenshot","detail":"narrow-keyboard","entryId":"node.mark","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":24}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":25}
+{"action":"clipboard-verify","detail":"css=.ContentEditable__root system clipboard matched captured editor text \"Comment this range\"","entryId":"node.mark","outcome":"pass","step":26}
+{"action":"keyboard","detail":"Control+End on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":27}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":28}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"node.mark","outcome":"pass","step":29}
+{"action":"paste-verify","detail":"css=.ContentEditable__root contains 2 whitespace-stripped copies of captured editor text \"Comment this range\"","entryId":"node.mark","outcome":"pass","step":30}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\" :: click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Export editor state to JSON', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button title=\"Export\" class=\"action-button export\" aria-label=\"Export editor state to JSON\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <ul class=\"CommentPlugin_CommentsPanel_List\">…</ul> from <div class=\"CommentPlugin_CommentsPanel\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <ul class=\"CommentPlugin_CommentsPanel_List\">…</ul> from <div class=\"CommentPlugin_CommentsPanel\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    58 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <ul class=\"CommentPlugin_CommentsPanel_List\">…</ul> from <div class=\"CommentPlugin_CommentsPanel\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n","entryId":"node.mark","outcome":"fail","step":31}
+{"action":"export-verify","detail":"download-slot=surface-json editorState.root contains captured editor text :: No download in slot surface-json","entryId":"node.mark","outcome":"fail","step":32}
+{"action":"screenshot","detail":"surface-roundtrip","entryId":"node.mark","outcome":"pass","step":33}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":34}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"node.mark","outcome":"pass","step":35}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"node.mark","outcome":"pass","step":36}
+{"action":"network-summary","detail":"none: 0 capability request(s); 3 baseline egress request(s)","entryId":"node.mark","outcome":"pass","step":37}

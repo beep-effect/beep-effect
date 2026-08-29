@@ -115,7 +115,7 @@ bunx @beep/repo-cli create-package <name> --type=app --app-kind=runtime-proof
 
 `--type app` requires `--app-kind`. `nextjs` and `tauri` generate framework
 apps without a public `@beep/<app>` TypeScript package API: no `src/index.ts`,
-package exports, docgen, dtslint, or type-test script. Use app-local `@/*`
+package exports or docgen. Use app-local `@/*`
 imports for tests and internal modules. `runtime-proof` is the explicit
 exception for app workspaces that intentionally prove runtime package contracts;
 it keeps the package-like scaffold.
@@ -185,12 +185,26 @@ Run repo-local AI-agent analytics workflows for transcript ingest, Phoenix
 install proofs, OTLP export, benchmark scoring, labeling, reports, and P7
 operator workflows.
 
+Every `ai-metrics` subcommand resolves its data root by precedence:
+
+| Rung | Source | Value |
+| --- | --- | --- |
+| 1 | `--data-root` | The flag value, used verbatim |
+| 2 | `BEEP_AI_METRICS_DATA_ROOT` | The environment value, used verbatim |
+| 3 | `--target dankserver` with neither of the above | `/srv/data/ai-metrics` |
+| 4 | otherwise | `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics` |
+
+The canonical store therefore lives outside every clone, and `forwarder timer`
+refuses to render a systemd unit unless the resolved root is absolute — a
+relative root inside a unit binds to `WorkingDirectory`, which is how the store
+previously ended up inside whichever clone the collector happened to run in.
+
 The P7 mirror commands build and inspect sanitized derived mirror bundles. A
 sync is a dry-run by default and requires `--confirm p7-derived-mirror` before
 it writes to the remote mirror root.
 
 ```bash
-bun run beep ai-metrics mirror build --target dankserver --data-root .beep/ai-metrics --json
+bun run beep ai-metrics mirror build --target dankserver --data-root "$BEEP_AI_METRICS_DATA_ROOT" --json
 bun run beep ai-metrics mirror sync --bundle latest --json
 bun run beep ai-metrics mirror status --json
 ```
@@ -200,10 +214,10 @@ workflows; `delete` and `compact` are dry-run previews unless the command also
 has an explicit retention window and `--confirm p7-retention-window`.
 
 ```bash
-bun run beep ai-metrics retention list --data-root .beep/ai-metrics --json
-bun run beep ai-metrics retention restore-drill --data-root .beep/ai-metrics --restore-root /tmp/ai-metrics-restore --before 2026-05-16T00:00:00Z --json
-bun run beep ai-metrics retention delete --data-root .beep/ai-metrics --before 2026-05-16T00:00:00Z --json
-bun run beep ai-metrics retention compact --data-root .beep/ai-metrics --before 2026-05-16T00:00:00Z --json
+bun run beep ai-metrics retention list --data-root "$BEEP_AI_METRICS_DATA_ROOT" --json
+bun run beep ai-metrics retention restore-drill --data-root "$BEEP_AI_METRICS_DATA_ROOT" --restore-root /tmp/ai-metrics-restore --before 2026-05-16T00:00:00Z --json
+bun run beep ai-metrics retention delete --data-root "$BEEP_AI_METRICS_DATA_ROOT" --before 2026-05-16T00:00:00Z --json
+bun run beep ai-metrics retention compact --data-root "$BEEP_AI_METRICS_DATA_ROOT" --before 2026-05-16T00:00:00Z --json
 ```
 
 ### `files`
@@ -221,8 +235,26 @@ The package binary works the same way:
 bunx @beep/repo-cli files <subcommand> [options]
 ```
 
-All `files` subcommands work on direct children of `--dir`; they do not recurse
-into nested directories.
+Except for `flatten-media`, `files` subcommands work on direct children of
+`--dir`; they do not recurse into nested directories.
+
+#### `files flatten-media`
+
+Recursively move image and video files into one flat output directory while
+leaving non-media files and source directories in place.
+
+```bash
+bun run files flatten-media --dir ./dataset/raw --out-dir ./dataset/media --dry-run
+bun run files flatten-media --dir ./dataset/raw --out-dir ./dataset/media
+```
+
+Existing output files are preserved. Name collisions are checked
+case-insensitively and use numeric suffixes such as `_01` and `_02`. Use
+`--dry-run` to print the complete move plan without creating the output
+directory or moving files. If a move fails, completed moves are restored; a
+newly created output directory may remain empty.
+
+Do not modify the source or output tree concurrently while this command runs.
 
 #### `files sort-and-rename`
 
@@ -427,7 +459,6 @@ Run repository operational quality lanes that are not package-local Turbo tasks.
 bun run beep quality github-checks quality
 bun run beep quality github-checks repo-sanity
 bun run beep quality bun-audit
-bun run beep quality dtslint-tsgo
 bun run beep quality test-tsgo
 bun run beep quality tsgo-smoke
 bun run beep quality tsgo-rules
@@ -450,8 +481,8 @@ bun run beep yeet monitor
 ```
 
 `repair` runs deterministic write steps: changed-file lint fixes, local docgen,
-and affected feedback. Affected test feedback is scoped to unit and type-test
-lanes; integration stays in the full proof. `verify` runs the canonical full
+and affected feedback. Affected test feedback is scoped to the unit lane;
+integration stays in the full proof. `verify` runs the canonical full
 local `quality github-checks pre-push` proof without
 duplicate affected feedback first. `publish` requires reviewed staged changes,
 commits them, runs the same `pre-push` proof against the new local commit, and
@@ -474,20 +505,6 @@ Render CI helper output from checked-in repo automation.
 ```bash
 bun run beep ci append-turbo-summary
 bun run beep ci append-turbo-summary .turbo/runs/latest.json
-```
-
-### `graphiti`
-
-Run and manage the local Graphiti MCP queue proxy.
-
-```bash
-bun run beep graphiti proxy
-bun run beep graphiti proxy ensure
-bun run beep graphiti proxy service install
-bun run beep graphiti restore --dry-run
-bun run beep graphiti restore
-bun run beep graphiti verify
-bun run beep graphiti recover --dry-run
 ```
 
 ### `codex`

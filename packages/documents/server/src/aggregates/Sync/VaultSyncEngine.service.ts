@@ -1,12 +1,15 @@
 /**
  * Vault sync engine server service.
  *
+ * **Details**
+ *
  * Implements the {@link VaultSyncEngine} port: one `syncOnce` pass recovers
  * leased outbox operations, scans the local vault, pumps the push outbox
  * against the DMS mirror, polls remote drift events, and returns the resulting
  * status snapshot.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Design posture (goals/legal-document-intake P3): the mirror is a one-way
  * push, so locally deleted items never trigger remote deletes; folder
  * move/rename is not inferred (files converge individually and empty remote
@@ -21,7 +24,7 @@ import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Documen
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import { SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
+import { RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
   DmsEventType,
   DmsMirror,
@@ -31,6 +34,7 @@ import {
   MoveItemInput,
   PollEventsInput,
   RenameItemInput,
+  SyncOnceInput,
   UploadFileInput,
   UploadFileVersionInput,
   VaultScanFailed,
@@ -66,24 +70,25 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { VaultSyncConfig } from "./VaultSync.config.js";
-import type { RemoteItemId } from "@beep/documents-domain/values/Sync";
+import { VaultSyncConfig } from "./VaultSync.config.ts";
 import type {
   DmsRemoteEvent,
   DmsRemoteItem,
   MarkConflictReviewedInput,
-  SyncOnceInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import type { UnknownRecord } from "@beep/schema";
+import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncEngine.service");
@@ -114,6 +119,11 @@ const truncatedPayload = (payload: UnknownRecord): UnknownRecord => {
 };
 
 const scanFailed = (reason: string): VaultScanFailed => VaultScanFailed.make({ reason });
+
+const isPathWithinRoot = (path: Path.Path, root: string, candidate: string): boolean => {
+  const relative = path.relative(root, candidate);
+  return !path.isAbsolute(relative) && !Str.startsWith("..")(relative);
+};
 
 const relPathSegments = (relPath: VaultRelPath): A.NonEmptyArray<string> => Str.split(relPath, "/");
 
@@ -258,24 +268,30 @@ const unknownItemConflictKind = (eventType: DmsEventType): DomainSyncConflict.Sy
  * emit: `content` covers create/upload/version pushes (providers report them
  * as `created` or `edited`); `moved` and `renamed` map one-to-one.
  */
-type EchoClass = "content" | "moved" | "renamed";
+const EchoClass = LiteralKit(["content", "moved", "renamed"]).pipe(
+  $I.annoteSchema("EchoClass", {
+    description:
+      "Echo equivalence class linking push verbs to the provider event types they\nemit: `content` covers create/upload/version pushes (providers report them\nas `created` or `edited`); `moved` and `renamed` map one-to-one.",
+  })
+);
+type EchoClass = typeof EchoClass.Type;
 
 const echoClassForOperation = (operationType: DomainSyncOperation.SyncOperationType): EchoClass =>
   SyncOperationType.$match(operationType, {
-    createFolder: (): EchoClass => "content",
-    moveItem: (): EchoClass => "moved",
-    renameItem: (): EchoClass => "renamed",
-    uploadFile: (): EchoClass => "content",
-    uploadFileVersion: (): EchoClass => "content",
+    createFolder: EchoClass.thunk.content,
+    moveItem: EchoClass.thunk.moved,
+    renameItem: EchoClass.thunk.renamed,
+    uploadFile: EchoClass.thunk.content,
+    uploadFileVersion: EchoClass.thunk.content,
   });
 
 const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>
   DmsEventType.$match(eventType, {
-    created: () => O.some<EchoClass>("content"),
+    created: () => O.some<EchoClass>(EchoClass.Enum.content),
     deleted: O.none<EchoClass>,
-    edited: () => O.some<EchoClass>("content"),
-    moved: () => O.some<EchoClass>("moved"),
-    renamed: () => O.some<EchoClass>("renamed"),
+    edited: () => O.some<EchoClass>(EchoClass.Enum.content),
+    moved: () => O.some<EchoClass>(EchoClass.Enum.moved),
+    renamed: () => O.some<EchoClass>(EchoClass.Enum.renamed),
     unknown: O.none<EchoClass>,
   });
 
@@ -283,10 +299,51 @@ const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>
  * One successful push recorded during the current pass; polled events consume
  * these to suppress the provider echoing our own verbs.
  */
-type PushRecord = {
-  readonly echoClass: EchoClass;
-  readonly remoteId: RemoteItemId;
-};
+class ContentPushRecord extends S.Class<ContentPushRecord>($I`ContentPushRecord`)(
+  {
+    echoClass: S.tag("content"),
+    remoteId: RemoteItemId,
+  },
+  $I.annote("ContentPushRecord", {
+    description: "A successful content push awaiting its provider echo.",
+  })
+) {}
+
+class MovedPushRecord extends S.Class<MovedPushRecord>($I`MovedPushRecord`)(
+  {
+    echoClass: S.tag("moved"),
+    remoteId: RemoteItemId,
+  },
+  $I.annote("MovedPushRecord", {
+    description: "A successful move awaiting its provider echo.",
+  })
+) {}
+
+class RenamedPushRecord extends S.Class<RenamedPushRecord>($I`RenamedPushRecord`)(
+  {
+    echoClass: S.tag("renamed"),
+    remoteId: RemoteItemId,
+  },
+  $I.annote("RenamedPushRecord", {
+    description: "A successful rename awaiting its provider echo.",
+  })
+) {}
+
+const PushRecord = S.Union([ContentPushRecord, MovedPushRecord, RenamedPushRecord]).pipe(
+  S.toTaggedUnion("echoClass"),
+  $I.annoteSchema("PushRecord", {
+    description:
+      "One successful push recorded during the current pass; polled events consume these to suppress the provider echoing our own verbs",
+  })
+);
+type PushRecord = typeof PushRecord.Type;
+
+const makePushRecord = (echoClass: EchoClass, remoteId: RemoteItemId): PushRecord =>
+  EchoClass.$match(echoClass, {
+    content: () => ContentPushRecord.make({ remoteId }),
+    moved: () => MovedPushRecord.make({ remoteId }),
+    renamed: () => RenamedPushRecord.make({ remoteId }),
+  });
 
 const strictFieldMatches = <Value>(field: O.Option<Value>, current: O.Option<Value>): boolean =>
   O.match(field, {
@@ -321,7 +378,8 @@ const matchesPushedState = (
  * Build the vault sync engine from its repository, mirror, configuration, and
  * platform dependencies.
  *
- * @example
+ * **Example** (Construct with in-memory layers)
+ *
  * ```ts
  * import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "@beep/documents-server/aggregates/Sync"
  * import { SyncConflictRepositoryInMemoryLayer } from "@beep/documents-server/entities/SyncConflict"
@@ -355,7 +413,6 @@ const matchesPushedState = (
  * availability probe, the vault sync configuration, and platform filesystem
  * and path services. `syncOnce` reads the local vault tree, mutates sync
  * repository state, and calls remote mirror verbs.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -390,7 +447,60 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       )
     );
 
+  const readRegularFileWithinRoot = Effect.fn($I`readRegularFileWithinRoot`)(function* (
+    canonicalRoot: string,
+    candidatePath: string,
+    displayPath: string
+  ) {
+    const initialLink = yield* Effect.result(fs.readLink(candidatePath));
+    if (Result.isSuccess(initialLink)) {
+      return yield* scanFailed(`vault sync refused symbolic link ${displayPath}`);
+    }
+
+    return yield* Effect.scoped(
+      Effect.gen(function* () {
+        const file = yield* fs
+          .open(candidatePath, { flag: "r" })
+          .pipe(Effect.mapError(() => scanFailed(`vault sync could not open local file ${displayPath}`)));
+        const info = yield* file.stat.pipe(
+          Effect.mapError(() => scanFailed(`vault sync could not inspect open local file ${displayPath}`))
+        );
+        if (info.type !== "File") {
+          return yield* scanFailed(`vault sync refused non-regular file ${displayPath}`);
+        }
+
+        // `File` no longer exposes a descriptor, so the opened path cannot be read back
+        // from `/proc/self/fd`. Binding the canonical path to the open descriptor by
+        // device + inode is the portable equivalent and keeps the same TOCTOU guarantee.
+        const openedPath = yield* fs
+          .realPath(candidatePath)
+          .pipe(Effect.mapError(() => scanFailed(`vault sync could not resolve open local file ${displayPath}`)));
+        const candidateInfo = yield* fs
+          .stat(openedPath)
+          .pipe(Effect.mapError(() => scanFailed(`vault sync could not inspect local file ${displayPath}`)));
+        const inodeMatches = O.getOrElse(O.zipWith(info.ino, candidateInfo.ino, Eq.equals), F.constFalse);
+        if (!Eq.equals(info.dev, candidateInfo.dev) || !inodeMatches || candidateInfo.type !== "File") {
+          return yield* scanFailed(`vault sync refused changed local file ${displayPath}`);
+        }
+        if (!isPathWithinRoot(path, canonicalRoot, openedPath)) {
+          return yield* scanFailed(`vault sync refused file outside the configured vault ${displayPath}`);
+        }
+
+        const finalLink = yield* Effect.result(fs.readLink(candidatePath));
+        if (Result.isSuccess(finalLink)) {
+          return yield* scanFailed(`vault sync refused symbolic link ${displayPath}`);
+        }
+
+        const bytes = yield* file
+          .readAlloc(info.size)
+          .pipe(Effect.mapError(() => scanFailed(`vault sync could not read local file ${displayPath}`)));
+        return O.getOrElse(bytes, () => new Uint8Array());
+      })
+    );
+  });
+
   const walkDirectory = (
+    canonicalRoot: string,
     absolutePath: string,
     relSegments: ReadonlyArray<string>
   ): Effect.Effect<VaultScanObservation, VaultScanFailed> =>
@@ -414,18 +524,26 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
             );
             return emptyObservation;
           }
+          const canonicalChildPath = yield* fs
+            .realPath(childAbsolutePath)
+            .pipe(Effect.mapError(() => scanFailed(`vault scan could not resolve ${childAbsolutePath}`)));
+          if (!isPathWithinRoot(path, canonicalRoot, canonicalChildPath)) {
+            return yield* scanFailed(`vault scan refused path outside the configured vault ${childAbsolutePath}`);
+          }
           const info = yield* fs
-            .stat(childAbsolutePath)
+            .stat(canonicalChildPath)
             .pipe(Effect.mapError(() => scanFailed(`vault scan could not stat ${childAbsolutePath}`)));
           if (info.type === "Directory") {
-            const nested = yield* walkDirectory(childAbsolutePath, childSegments);
+            const nested = yield* walkDirectory(canonicalRoot, canonicalChildPath, childSegments);
             const folder: ObservedFolder = { relPath: VaultRelPath.make(A.join(childSegments, "/")) };
             return mergeObservations([{ files: [], folders: [folder] }, nested]);
           }
           if (info.type === "File") {
-            const bytes = yield* fs
-              .readFile(childAbsolutePath)
-              .pipe(Effect.mapError(() => scanFailed(`vault scan could not read file ${childAbsolutePath}`)));
+            const bytes = yield* readRegularFileWithinRoot(
+              canonicalRoot,
+              childAbsolutePath,
+              A.join(childSegments, "/")
+            );
             const file: ObservedFile = {
               digest: contentDigestOf(bytes),
               relPath: VaultRelPath.make(A.join(childSegments, "/")),
@@ -442,7 +560,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
 
   const queuedOperationsFor = (item: DomainSyncItem.SyncItem) =>
     operationRepository.listQueuedForItem(
-      ListQueuedSyncOperationsForItemInput.make({ syncItemId: item.id, workspaceId: item.workspaceId })
+      ListQueuedSyncOperationsForItemInput.make({
+        syncItemId: item.id,
+        workspaceId: item.workspaceId,
+      })
     );
 
   const enqueueOrSquash = Effect.fn($I`enqueueOrSquash`)(function* (
@@ -509,7 +630,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     const queued = yield* queuedOperationsFor(item);
     yield* Effect.forEach(queued, (operation) =>
       operationRepository.update(
-        DomainSyncOperation.SyncOperation.make({ ...operation, lastError: O.some(reason), status: "failed" })
+        DomainSyncOperation.SyncOperation.make({
+          ...operation,
+          lastError: O.some(reason),
+          status: "failed",
+        })
       )
     );
   });
@@ -645,7 +770,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       const nextItemsByPath = HashMap.set(state.itemsByPath, file.relPath, replaced);
       yield* supersedeQueuedOperations(replaced, `superseded: ${file.relPath} changed kind to file`);
       yield* enqueueOrSquash(replaced, SyncOperationType.Enum.uploadFile, O.some(file.digest));
-      return { itemsByPath: nextItemsByPath, missingFileItems: state.missingFileItems };
+      return {
+        itemsByPath: nextItemsByPath,
+        missingFileItems: state.missingFileItems,
+      };
     }
     if (O.isSome(tracked)) {
       // Same path: only a digest change queues a push.
@@ -666,7 +794,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         ? SyncOperationType.Enum.uploadFileVersion
         : SyncOperationType.Enum.uploadFile;
       yield* enqueueOrSquash(edited, operationType, O.some(file.digest));
-      return { itemsByPath: nextItemsByPath, missingFileItems: state.missingFileItems };
+      return {
+        itemsByPath: nextItemsByPath,
+        missingFileItems: state.missingFileItems,
+      };
     }
 
     const candidate = pickMoveCandidate(state.missingFileItems, file);
@@ -687,7 +818,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       const nextItemsByPath = HashMap.set(HashMap.remove(state.itemsByPath, previousRelPath), file.relPath, moved);
       yield* retargetQueuedOperations(moved);
       yield* enqueueMoveDeltas(moved, previousRelPath, file.relPath);
-      return { itemsByPath: nextItemsByPath, missingFileItems: nextMissingFileItems };
+      return {
+        itemsByPath: nextItemsByPath,
+        missingFileItems: nextMissingFileItems,
+      };
     }
 
     // Brand-new file: track it and queue the initial upload.
@@ -705,13 +839,19 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
     const nextItemsByPath = HashMap.set(state.itemsByPath, file.relPath, created);
     yield* enqueueOrSquash(created, SyncOperationType.Enum.uploadFile, O.some(file.digest));
-    return { itemsByPath: nextItemsByPath, missingFileItems: state.missingFileItems };
+    return {
+      itemsByPath: nextItemsByPath,
+      missingFileItems: state.missingFileItems,
+    };
   });
 
   const scanVault = Effect.fn($I`scanVault`)(function* (input: SyncOnceInput) {
-    const observation = yield* walkDirectory(input.vaultRootPath, A.empty<string>());
+    const observation = yield* walkDirectory(input.vaultRootPath, input.vaultRootPath, A.empty<string>());
     const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListSyncItemsByWorkspaceInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
 
     let itemsByPath = HashMap.fromIterable<string, DomainSyncItem.SyncItem>(
@@ -741,7 +881,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
 
     for (const file of A.sort(observation.files, fileRelPathOrder)) {
-      const next = yield* reconcileObservedFile(input, file, { itemsByPath, missingFileItems });
+      const next = yield* reconcileObservedFile(input, file, {
+        itemsByPath,
+        missingFileItems,
+      });
       itemsByPath = next.itemsByPath;
       missingFileItems = next.missingFileItems;
     }
@@ -752,9 +895,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     relPath: VaultRelPath
   ) {
     const absolutePath = path.join(vaultRootPath, ...relPathSegments(relPath));
-    return yield* fs
-      .readFile(absolutePath)
-      .pipe(Effect.mapError(() => scanFailed(`vault sync could not read local file ${relPath}`)));
+    return yield* readRegularFileWithinRoot(vaultRootPath, absolutePath, relPath);
   });
 
   /**
@@ -771,7 +912,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       onSome: (parentRelPath) =>
         itemRepository
           .findByPath(
-            FindSyncItemByPathInput.make({ localRelPath: parentRelPath, provider: BOX_PROVIDER, workspaceId })
+            FindSyncItemByPathInput.make({
+              localRelPath: parentRelPath,
+              provider: BOX_PROVIDER,
+              workspaceId,
+            })
           )
           .pipe(
             Effect.map((parent) =>
@@ -808,40 +953,74 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     parentRemoteId: O.Option<RemoteItemId>
   ): Effect.Effect<DmsRemoteItem, DmsMirrorUnavailable | VaultScanFailed> =>
     SyncOperationType.$match(operation.operationType, {
-      createFolder: () => mirror.ensureFolder(EnsureFolderInput.make({ name: operation.targetName, parentRemoteId })),
+      createFolder: () =>
+        mirror.ensureFolder(
+          EnsureFolderInput.make({
+            name: operation.targetName,
+            parentRemoteId,
+          })
+        ),
       moveItem: () =>
         withItemRemoteId(item, (remoteId) =>
-          mirror.moveItem(MoveItemInput.make({ itemKind: item.itemKind, newParentRemoteId: parentRemoteId, remoteId }))
+          mirror.moveItem(
+            MoveItemInput.make({
+              itemKind: item.itemKind,
+              newParentRemoteId: parentRemoteId,
+              remoteId,
+            })
+          )
         ),
       renameItem: () =>
         withItemRemoteId(item, (remoteId) =>
-          mirror.renameItem(RenameItemInput.make({ itemKind: item.itemKind, newName: operation.targetName, remoteId }))
+          mirror.renameItem(
+            RenameItemInput.make({
+              itemKind: item.itemKind,
+              newName: operation.targetName,
+              remoteId,
+            })
+          )
         ),
       uploadFile: () =>
         readVaultFileBytes(input.vaultRootPath, operation.targetRelPath).pipe(
           Effect.flatMap((content) =>
-            mirror.uploadFile(UploadFileInput.make({ content, name: operation.targetName, parentRemoteId }))
+            mirror.uploadFile(
+              UploadFileInput.make({
+                content,
+                name: operation.targetName,
+                parentRemoteId,
+              })
+            )
           )
         ),
       uploadFileVersion: () =>
         withItemRemoteId(item, (remoteId) =>
           readVaultFileBytes(input.vaultRootPath, operation.targetRelPath).pipe(
             Effect.flatMap((content) =>
-              mirror.uploadFileVersion(UploadFileVersionInput.make({ content, name: operation.targetName, remoteId }))
+              mirror.uploadFileVersion(
+                UploadFileVersionInput.make({
+                  content,
+                  name: operation.targetName,
+                  remoteId,
+                })
+              )
             )
           )
         ),
     });
 
   const recordPushSuccess = Effect.fn($I`recordPushSuccess`)(function* (
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>>,
+    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
     pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
     operation: DomainSyncOperation.SyncOperation,
     item: DomainSyncItem.SyncItem,
     remote: DmsRemoteItem
   ) {
     yield* operationRepository.update(
-      DomainSyncOperation.SyncOperation.make({ ...operation, lastError: O.none(), status: "succeeded" })
+      DomainSyncOperation.SyncOperation.make({
+        ...operation,
+        lastError: O.none(),
+        status: "succeeded",
+      })
     );
     const updated = yield* itemRepository.update(
       DomainSyncItem.SyncItem.make({
@@ -857,15 +1036,12 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
     yield* Ref.update(itemsByIdRef, HashMap.set(updated.id, updated));
     yield* Ref.update(pushRecordsRef, (records) =>
-      A.append(records, {
-        echoClass: echoClassForOperation(operation.operationType),
-        remoteId: remote.remoteId,
-      } satisfies PushRecord)
+      A.append(records, makePushRecord(echoClassForOperation(operation.operationType), remote.remoteId))
     );
   });
 
   const recordPushFailure = Effect.fn($I`recordPushFailure`)(function* (
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>>,
+    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
     operation: DomainSyncOperation.SyncOperation,
     item: DomainSyncItem.SyncItem,
     error: DmsMirrorUnavailable
@@ -882,7 +1058,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
     if (!requeue) {
       const updated = yield* itemRepository.update(
-        DomainSyncItem.SyncItem.make({ ...item, lastError: O.some(error.reason), syncState: SyncItemState.Enum.error })
+        DomainSyncItem.SyncItem.make({
+          ...item,
+          lastError: O.some(error.reason),
+          syncState: SyncItemState.Enum.error,
+        })
       );
       yield* Ref.update(itemsByIdRef, HashMap.set(updated.id, updated));
     }
@@ -895,7 +1075,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    */
   const runOperation = Effect.fn($I`runOperation`)(function* (
     input: SyncOnceInput,
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>>,
+    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
     pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
     operation: DomainSyncOperation.SyncOperation
   ) {
@@ -903,7 +1083,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     const tracked = HashMap.get(items, operation.syncItemId);
     if (O.isNone(tracked)) {
       yield* Effect.logDebug("Documents vault sync skipped an operation without a tracked item").pipe(
-        Effect.annotateLogs({ syncItemId: operation.syncItemId, syncOperationId: operation.id })
+        Effect.annotateLogs({
+          syncItemId: operation.syncItemId,
+          syncOperationId: operation.id,
+        })
       );
       return false;
     }
@@ -929,7 +1112,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
             itemsByIdRef,
             leased,
             item,
-            DmsMirrorUnavailable.make({ provider: BOX_PROVIDER, reason: error.reason, retryable: false })
+            DmsMirrorUnavailable.make({
+              provider: BOX_PROVIDER,
+              reason: error.reason,
+              retryable: false,
+            })
           ),
       })
     );
@@ -943,14 +1130,20 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    */
   const pumpQueue = Effect.fn($I`pumpQueue`)(function* (input: SyncOnceInput) {
     const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListSyncItemsByWorkspaceInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     const itemsByIdRef = yield* Ref.make(HashMap.fromIterable(A.map(trackedItems, (item) => [item.id, item] as const)));
     const pushRecordsRef = yield* Ref.make<ReadonlyArray<PushRecord>>(A.empty());
     let progressed = true;
     while (progressed) {
       const queue = yield* operationRepository.listQueued(
-        ListQueuedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+        ListQueuedSyncOperationsInput.make({
+          provider: BOX_PROVIDER,
+          workspaceId: input.workspaceId,
+        })
       );
       const outcomes = yield* Effect.forEach(queue, (operation) =>
         runOperation(input, itemsByIdRef, pushRecordsRef, operation)
@@ -1022,7 +1215,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       return;
     }
     const tracked = yield* itemRepository.findByRemoteId(
-      FindSyncItemByRemoteIdInput.make({ provider: BOX_PROVIDER, remoteId: event.remoteId.value, workspaceId })
+      FindSyncItemByRemoteIdInput.make({
+        provider: BOX_PROVIDER,
+        remoteId: event.remoteId.value,
+        workspaceId,
+      })
     );
     if (O.isNone(tracked)) {
       const underMirror = O.exists(
@@ -1032,7 +1229,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       );
       if (!underMirror) {
         yield* Effect.logDebug("Documents vault sync ignored a remote event outside the mirror").pipe(
-          Effect.annotateLogs({ eventId: event.eventId, remoteId: event.remoteId.value })
+          Effect.annotateLogs({
+            eventId: event.eventId,
+            remoteId: event.remoteId.value,
+          })
         );
         return;
       }
@@ -1047,7 +1247,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       const consumed = yield* consumePushEcho(pushRecordsRef, event.remoteId.value, eventClass.value);
       if (consumed || matchesPushedState(event, item, rootRemoteId)) {
         yield* Effect.logDebug("Documents vault sync ignored a push echo event").pipe(
-          Effect.annotateLogs({ eventId: event.eventId, remoteId: event.remoteId.value })
+          Effect.annotateLogs({
+            eventId: event.eventId,
+            remoteId: event.remoteId.value,
+          })
         );
         return;
       }
@@ -1055,7 +1258,12 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     yield* conflictRepository.record(
       conflictSeedFor(workspaceId, event, knownItemConflictKind(event.eventType), tracked)
     );
-    yield* itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.conflict }));
+    yield* itemRepository.update(
+      DomainSyncItem.SyncItem.make({
+        ...item,
+        syncState: SyncItemState.Enum.conflict,
+      })
+    );
   });
 
   /**
@@ -1070,7 +1278,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   ) {
     const probe = yield* availability.probe;
     const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListSyncItemsByWorkspaceInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     const trackedFolderRemoteIds = HashMap.fromIterable<RemoteItemId, boolean>(
       pipe(
@@ -1086,7 +1297,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
     const pushRecordsRef = yield* Ref.make(pushRecords);
     const cursor = yield* cursorRepository.find(
-      FindSyncCursorInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      FindSyncCursorInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     let streamPosition = O.map(cursor, (current) => current.streamPosition);
     let lastEventId = O.flatMap(cursor, (current) => current.lastEventId);
@@ -1110,7 +1324,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         })
       );
       streamPosition = O.some(events.nextStreamPosition);
-      const drained = A.match(events.entries, { onEmpty: F.constTrue, onNonEmpty: F.constFalse });
+      const drained = A.match(events.entries, {
+        onEmpty: F.constTrue,
+        onNonEmpty: F.constFalse,
+      });
       if (drained) {
         return;
       }
@@ -1127,7 +1344,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     error: DmsMirrorUnavailable
   ) {
     const cursor = yield* cursorRepository.find(
-      FindSyncCursorInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      FindSyncCursorInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     yield* O.match(cursor, {
       onNone: () =>
@@ -1189,10 +1409,14 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    */
   const reviveFailedOperations = Effect.fn($I`reviveFailedOperations`)(function* (
     input: SyncOnceInput,
-    itemsById: HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>
+    itemsById: HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>
   ) {
     const failed = yield* operationRepository.listByStatus(
-      ListSyncOperationsByStatusInput.make({ provider: BOX_PROVIDER, status: "failed", workspaceId: input.workspaceId })
+      ListSyncOperationsByStatusInput.make({
+        provider: BOX_PROVIDER,
+        status: "failed",
+        workspaceId: input.workspaceId,
+      })
     );
     for (const operation of failed) {
       const tracked = HashMap.get(itemsById, operation.syncItemId);
@@ -1214,7 +1438,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       );
       if (SyncItemState.is.error(item.syncState)) {
         yield* itemRepository.update(
-          DomainSyncItem.SyncItem.make({ ...item, lastError: O.none(), syncState: SyncItemState.Enum.pending })
+          DomainSyncItem.SyncItem.make({
+            ...item,
+            lastError: O.none(),
+            syncState: SyncItemState.Enum.pending,
+          })
         );
       }
     }
@@ -1228,26 +1456,34 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    * idempotent, so a push that already landed remotely converges rather than
    * duplicating.
    */
+  /**
+   * Heal one tracked item: a `pending` item with a stalled operation type and
+   * no queued or leased twin gets a fresh convergent push enqueued.
+   */
+  const healPendingItem = Effect.fn($I`healPendingItem`)(function* (item: DomainSyncItem.SyncItem) {
+    if (!SyncItemState.is.pending(item.syncState)) {
+      return;
+    }
+    const healType = stalledOperationType(item);
+    if (O.isNone(healType)) {
+      return;
+    }
+    const queued = yield* queuedOperationsFor(item);
+    if (A.isReadonlyArrayNonEmpty(queued)) {
+      return;
+    }
+    yield* enqueueOrSquash(
+      item,
+      healType.value,
+      SyncOperationType.is.createFolder(healType.value) ? O.none() : item.contentDigest
+    );
+  });
+
   const healOrphanedPendingItems = Effect.fn($I`healOrphanedPendingItems`)(function* (
     trackedItems: ReadonlyArray<DomainSyncItem.SyncItem>
   ) {
     for (const item of trackedItems) {
-      if (!SyncItemState.is.pending(item.syncState)) {
-        continue;
-      }
-      const healType = stalledOperationType(item);
-      if (O.isNone(healType)) {
-        continue;
-      }
-      const queued = yield* queuedOperationsFor(item);
-      if (A.isReadonlyArrayNonEmpty(queued)) {
-        continue;
-      }
-      yield* enqueueOrSquash(
-        item,
-        healType.value,
-        SyncOperationType.is.createFolder(healType.value) ? O.none() : item.contentDigest
-      );
+      yield* healPendingItem(item);
     }
   });
 
@@ -1264,7 +1500,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       return;
     }
     const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListSyncItemsByWorkspaceInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     const itemsById = HashMap.fromIterable(A.map(trackedItems, (item) => [item.id, item] as const));
     yield* reviveFailedOperations(input, itemsById);
@@ -1273,33 +1512,54 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
 
   const readStatus = Effect.fn($I`readStatus`)(function* (input: VaultSyncStatusInput) {
     const items = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListSyncItemsByWorkspaceInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     const queued = yield* operationRepository.listByStatus(
-      ListSyncOperationsByStatusInput.make({ provider: BOX_PROVIDER, status: "queued", workspaceId: input.workspaceId })
+      ListSyncOperationsByStatusInput.make({
+        provider: BOX_PROVIDER,
+        status: "queued",
+        workspaceId: input.workspaceId,
+      })
     );
     const failed = yield* operationRepository.listByStatus(
-      ListSyncOperationsByStatusInput.make({ provider: BOX_PROVIDER, status: "failed", workspaceId: input.workspaceId })
+      ListSyncOperationsByStatusInput.make({
+        provider: BOX_PROVIDER,
+        status: "failed",
+        workspaceId: input.workspaceId,
+      })
     );
     const conflicts = yield* conflictRepository.listOpen(
-      ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListOpenSyncConflictsInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     const cursor = yield* cursorRepository.find(
-      FindSyncCursorInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      FindSyncCursorInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
-    const probe = yield* availability.probe;
+    // forceProbe carries an operator's explicit retry: bypass the cached
+    // probe answer and ask the provider now; passive reads stay cached.
+    const probe = yield* input.forceProbe ? availability.refresh : availability.probe;
     const countItemsIn = (guard: (state: DomainSyncItem.SyncItemState) => boolean) =>
       NonNegativeInt.make(A.length(A.filter(items, (item) => guard(item.syncState))));
 
     return VaultSyncStatus.make({
       conflictItems: countItemsIn(SyncItemState.is.conflict),
       connected: probe.connected,
+      disconnectReason: probe.disconnectReason,
       currentItems: countItemsIn(SyncItemState.is.current),
       cursorPosition: O.map(cursor, (current) => current.streamPosition),
       errorItems: countItemsIn(SyncItemState.is.error),
       failedOperations: NonNegativeInt.make(A.length(failed)),
       openConflicts: NonNegativeInt.make(A.length(conflicts)),
       pendingItems: countItemsIn(SyncItemState.is.pending),
+      probedAt: probe.probedAt,
       provider: probe.provider,
       queuedOperations: NonNegativeInt.make(A.length(queued)),
     });
@@ -1307,7 +1567,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
 
   const requeueReviewedConflictItem = Effect.fn($I`requeueReviewedConflictItem`)(function* (
     workspaceId: WorkspaceIdentity.WorkspaceId,
-    syncItemId: DomainSyncItem.SyncItemId
+    syncItemId: DocumentsIdentity.SyncItemId
   ) {
     const items = yield* itemRepository.listByWorkspace(
       ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId })
@@ -1316,7 +1576,12 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       A.findFirst(items, (item) => item.id === syncItemId),
       O.filter((item) => SyncItemState.is.conflict(item.syncState)),
       O.map((item) =>
-        itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending }))
+        itemRepository.update(
+          DomainSyncItem.SyncItem.make({
+            ...item,
+            syncState: SyncItemState.Enum.pending,
+          })
+        )
       ),
       O.getOrElse(() => Effect.void)
     );
@@ -1328,7 +1593,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     // Reviews are workspace-scoped: a conflict id from another workspace is
     // indistinguishable from a missing one.
     const openConflicts = yield* conflictRepository.listOpen(
-      ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      ListOpenSyncConflictsInput.make({
+        provider: BOX_PROVIDER,
+        workspaceId: input.workspaceId,
+      })
     );
     const reviewedConflict = A.findFirst(openConflicts, (conflict) => conflict.id === input.conflictId);
     if (O.isNone(reviewedConflict)) {
@@ -1356,7 +1624,10 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   return VaultSyncEngine.of({
     listOpenConflicts: Effect.fn($I`listOpenConflicts`)(function* (input) {
       return yield* conflictRepository.listOpen(
-        ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+        ListOpenSyncConflictsInput.make({
+          provider: BOX_PROVIDER,
+          workspaceId: input.workspaceId,
+        })
       );
     }),
     markConflictReviewed: Effect.fn($I`markConflictReviewed`)(function* (input) {
@@ -1374,15 +1645,25 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       const lock = yield* lockFor(input.workspaceId);
       return yield* lock.withPermit(
         Effect.gen(function* () {
+          const canonicalRoot = yield* fs
+            .realPath(input.vaultRootPath)
+            .pipe(Effect.mapError(() => scanFailed(`vault sync could not resolve vault root ${input.vaultRootPath}`)));
+          const canonicalInput = SyncOnceInput.make({
+            ...input,
+            vaultRootPath: canonicalRoot,
+          });
           const probe = yield* availability.probe;
           yield* operationRepository.requeueLeased(
-            RequeueLeasedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+            RequeueLeasedSyncOperationsInput.make({
+              provider: BOX_PROVIDER,
+              workspaceId: input.workspaceId,
+            })
           );
-          yield* recoverStalledOperations(input, probe.connected);
-          yield* scanVault(input);
-          const pushRecords = yield* pumpQueue(input);
-          yield* pollRemoteEvents(input, pushRecords).pipe(
-            Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(input, error))
+          yield* recoverStalledOperations(canonicalInput, probe.connected);
+          yield* scanVault(canonicalInput);
+          const pushRecords = yield* pumpQueue(canonicalInput);
+          yield* pollRemoteEvents(canonicalInput, pushRecords).pipe(
+            Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(canonicalInput, error))
           );
           return yield* readStatus(VaultSyncStatusInput.make({ workspaceId: input.workspaceId }));
         })

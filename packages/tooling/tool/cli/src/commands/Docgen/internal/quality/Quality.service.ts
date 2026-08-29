@@ -11,8 +11,8 @@ import { A } from "@beep/utils";
 import { Duration, Effect, flow, identity, Order, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { errorMessage, timestampIso } from "../../../../internal/cli/Timing.js";
-import { scoreSubject } from "./Quality.rubric.js";
+import { errorMessage, timestampIso } from "../../../../internal/cli/Timing.ts";
+import { scoreSubject } from "./Quality.rubric.ts";
 import {
   bySubjectIdentityAscending,
   DocgenQualityPackageReport,
@@ -22,7 +22,7 @@ import {
   DocgenQualitySummary,
   QUALITY_RUBRIC_VERSION,
   QUALITY_SCHEMA_VERSION,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 import {
   budgetDurationMs,
   budgetExceeded,
@@ -31,14 +31,14 @@ import {
   makeRuntimeBudget,
   packageTimeoutMessage,
   withGeneratedDocSnippets,
-} from "./Quality.subjects.js";
-import type { DocgenWorkspacePackage } from "../../Docgen.schemas.js";
+} from "./Quality.subjects.ts";
+import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 import type {
   DocgenQualityReview,
   DocgenQualityScopeMode,
   DocgenQualityScoreMode,
   DocgenQualitySubject,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/quality/Quality.service");
 const DEFAULT_PACKAGE_TIMEOUT = Duration.seconds(180);
@@ -213,8 +213,8 @@ const packageReport = (
 /**
  * Builds a package-local quality report from ts-morph-enriched subjects.
  *
- * @effects Reads package docgen configuration and TypeScript source files.
- * @example
+ * **Example** (Analyze first package quality)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { analyzePackageQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
@@ -234,6 +234,8 @@ const packageReport = (
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @effects Reads package docgen configuration and TypeScript source files.
  * @category workflows
  * @since 0.0.0
  */
@@ -286,8 +288,8 @@ export const analyzePackageQuality = Effect.fn("DocgenQuality.analyzePackageQual
 /**
  * Builds the consolidated report emitted by the quality command.
  *
- * @effects Runs package-local JSDoc quality analysis for the provided targets.
- * @example
+ * **Example** (Analyze all packages quality)
+ *
  * ```ts
  * import { FsUtilsLive } from "@beep/repo-utils"
  * import { analyzeDocgenQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
@@ -305,6 +307,8 @@ export const analyzePackageQuality = Effect.fn("DocgenQuality.analyzePackageQual
  *
  * Effect.runPromise(program.pipe(Effect.provide(RuntimeLayer))).then(console.log)
  * ```
+ *
+ * @effects Runs package-local JSDoc quality analysis for the provided targets.
  * @category workflows
  * @since 0.0.0
  */

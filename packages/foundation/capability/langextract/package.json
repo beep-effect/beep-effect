@@ -19,8 +19,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -41,6 +41,7 @@
     "./Handoff": "./src/Handoff/index.ts",
     "./Service": "./src/Service/index.ts",
     "./Target": "./src/Target/index.ts",
+    "./VerifiedSpan": "./src/VerifiedSpan/index.ts",
     "./*": "./src/*.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -63,6 +64,7 @@
       "./Handoff": "./dist/Handoff/index.js",
       "./Service": "./dist/Service/index.js",
       "./Target": "./dist/Target/index.js",
+      "./VerifiedSpan": "./dist/VerifiedSpan/index.js",
       "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"
@@ -71,6 +73,7 @@
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/nlp": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"

@@ -2,16 +2,16 @@
  * GraphOperations/Errors - failures raised during graph-operation execution.
  *
  * Effect v4 `@beep/nlp` implementation notes:
- * each `Data.TaggedError` becomes a {@link @beep/schema#TaggedErrorClass} scoped
+ * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become
- * `S.Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
+ * `Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
  *
  * @since 0.0.0
  * @packageDocumentation
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
@@ -20,8 +20,9 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
 /**
  * Failure raised when validation rejects an operation for a source node.
  *
- * @example
- * ```ts
+ * **Example** (Construct ValidationError instance)
+ *
+ * ```ts import.meta.vitest name="Construct ValidationError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { ValidationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
@@ -31,20 +32,20 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
  *   errors: ["Node text is empty"]
  * })
  *
- * console.log(error._tag) // "ValidationError"
+ * error._tag // => "ValidationError"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class ValidationError extends TaggedErrorClass<ValidationError>($I`ValidationError`)(
+export class ValidationError extends S.TaggedError<ValidationError>($I`ValidationError`)(
   "ValidationError",
   {
     errors: S.Array(S.String),
     nodeId: NodeId,
     operationName: S.String,
   },
-  $I.annote("ValidationError", {
+  $I.annoteError<ValidationError>("ValidationError", {
     description: "Raised when a graph operation cannot validly be applied to a node.",
   })
 ) {}
@@ -52,8 +53,9 @@ export class ValidationError extends TaggedErrorClass<ValidationError>($I`Valida
 /**
  * Failure raised when an operation exceeds its configured timeout.
  *
- * @example
- * ```ts
+ * **Example** (Construct TimeoutError instance)
+ *
+ * ```ts import.meta.vitest name="Construct TimeoutError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { TimeoutError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
@@ -63,20 +65,20 @@ export class ValidationError extends TaggedErrorClass<ValidationError>($I`Valida
  *   timeoutMs: 1_000
  * })
  *
- * console.log(error.timeoutMs) // 1000
+ * error.timeoutMs // => 1000
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError`)(
+export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
   "TimeoutError",
   {
     nodeId: NodeId,
     operationName: S.String,
     timeoutMs: S.Finite,
   },
-  $I.annote("TimeoutError", {
+  $I.annoteError<TimeoutError>("TimeoutError", {
     description: "Raised when a graph operation exceeds its configured time limit.",
   })
 ) {}
@@ -84,13 +86,15 @@ export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError
 /**
  * Failure raised when a node-level operation application defects.
  *
- * @remarks
+ * **Details**
+ *
  * Recoverable operation failures should normally live in the operation's typed
  * error channel and become per-node result errors. Use this error for defects or
  * bridge failures that must be represented as graph-operation failures.
  *
- * @example
- * ```ts
+ * **Example** (Construct OperationError instance)
+ *
+ * ```ts import.meta.vitest name="Construct OperationError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { OperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
@@ -100,20 +104,20 @@ export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError
  *   cause: new Error("backend defect")
  * })
  *
- * console.log(error.operationName) // "posTag"
+ * error.operationName // => "posTag"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class OperationError extends TaggedErrorClass<OperationError>($I`OperationError`)(
+export class OperationError extends S.TaggedError<OperationError>($I`OperationError`)(
   "OperationError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     nodeId: NodeId,
     operationName: S.String,
   },
-  $I.annote("OperationError", {
+  $I.annoteError<OperationError>("OperationError", {
     description: "Raised when a graph operation fails while being applied to a node.",
   })
 ) {}
@@ -121,8 +125,9 @@ export class OperationError extends TaggedErrorClass<OperationError>($I`Operatio
 /**
  * Failure raised when graph structure is invalid for an operation.
  *
- * @example
- * ```ts
+ * **Example** (Construct GraphError instance)
+ *
+ * ```ts import.meta.vitest name="Construct GraphError instance"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { GraphError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
@@ -132,19 +137,19 @@ export class OperationError extends TaggedErrorClass<OperationError>($I`Operatio
  *   nodeId: O.some(NodeId.make("node-root"))
  * })
  *
- * console.log(error.message) // "Expected at least one leaf node"
+ * error.message // => "Expected at least one leaf node"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class GraphError extends TaggedErrorClass<GraphError>($I`GraphError`)(
+export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
   "GraphError",
   {
     message: S.String,
     nodeId: S.OptionFromOptionalKey(NodeId),
   },
-  $I.annote("GraphError", {
+  $I.annoteError<GraphError>("GraphError", {
     description: "Raised when a graph has an invalid structure for the requested operation.",
   })
 ) {}
@@ -152,12 +157,14 @@ export class GraphError extends TaggedErrorClass<GraphError>($I`GraphError`)(
 /**
  * Failure raised by a result-store backend.
  *
- * @remarks
+ * **Details**
+ *
  * The current in-memory store is total in ordinary use, but the service contract
  * keeps storage failures typed so durable stores can report backend problems.
  *
- * @example
- * ```ts
+ * **Example** (Construct StorageError instance)
+ *
+ * ```ts import.meta.vitest name="Construct StorageError instance"
  * import { StorageError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
  * const error = StorageError.make({
@@ -165,19 +172,19 @@ export class GraphError extends TaggedErrorClass<GraphError>($I`GraphError`)(
  *   cause: new Error("cache unavailable")
  * })
  *
- * console.log(error.operation) // "retrieve"
+ * error.operation // => "retrieve"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class StorageError extends TaggedErrorClass<StorageError>($I`StorageError`)(
+export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
   "StorageError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     operation: S.Literals(["store", "retrieve", "delete", "query"]),
   },
-  $I.annote("StorageError", {
+  $I.annoteError<StorageError>("StorageError", {
     description: "Raised when the result store fails to store, retrieve, delete, or query a result.",
   })
 ) {}
@@ -185,8 +192,9 @@ export class StorageError extends TaggedErrorClass<StorageError>($I`StorageError
 /**
  * Failure raised by the executor for orchestration problems.
  *
- * @example
- * ```ts
+ * **Example** (Construct ExecutionError instance)
+ *
+ * ```ts import.meta.vitest name="Construct ExecutionError instance"
  * import { ExecutionError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  *
@@ -195,19 +203,19 @@ export class StorageError extends TaggedErrorClass<StorageError>($I`StorageError
  *   message: "Storage retrieve failed"
  * })
  *
- * console.log(error.message) // "Storage retrieve failed"
+ * error.message // => "Storage retrieve failed"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class ExecutionError extends TaggedErrorClass<ExecutionError>($I`ExecutionError`)(
+export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionError`)(
   "ExecutionError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.String,
   },
-  $I.annote("ExecutionError", {
+  $I.annoteError<ExecutionError>("ExecutionError", {
     description: "Raised on a general graph-operation execution failure (e.g. an unknown strategy).",
   })
 ) {}
@@ -215,23 +223,25 @@ export class ExecutionError extends TaggedErrorClass<ExecutionError>($I`Executio
 /**
  * Schema union covering every graph-operation failure variant.
  *
- * @remarks
+ * **Details**
+ *
  * Use this schema when decoding or matching errors at a graph-operation boundary
  * where validation, timeout, execution, graph, storage, and executor failures all
  * need to be accepted.
  *
- * @example
- * ```ts
+ * **Example** (Check GraphOperationError membership)
+ *
+ * ```ts import.meta.vitest name="Check GraphOperationError membership"
  * import { GraphError, GraphOperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const error = GraphError.make({ message: "Missing root", nodeId: O.none() })
- * console.log(S.is(GraphOperationError)(error)) // true
+ * S.is(GraphOperationError)(error) // => true
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const GraphOperationError = S.Union([
   ValidationError,
@@ -250,17 +260,18 @@ export const GraphOperationError = S.Union([
 /**
  * Runtime type represented by {@link GraphOperationError}.
  *
- * @example
- * ```ts
+ * **Example** (Assign GraphOperationError type)
+ *
+ * ```ts import.meta.vitest name="Assign GraphOperationError type"
  * import type { GraphOperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import { GraphError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  *
  * const error: GraphOperationError = GraphError.make({ message: "Missing root", nodeId: O.none() })
- * console.log(error._tag) // "GraphError"
+ * error._tag // => "GraphError"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type GraphOperationError = typeof GraphOperationError.Type;

@@ -1,21 +1,53 @@
 import { lintCommand } from "@beep/repo-cli";
+import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
-import * as S from "effect/Schema";
+import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.js";
+import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const deprecatedApiLintShards = [
+  "apps/architecture-lab-proof",
+  "apps/labs",
+  "apps/oip-web",
+  "apps/professional-desktop",
+  "infra",
+  "packages/_internal",
+  "packages/agents",
+  "packages/architecture-lab",
+  "packages/drivers",
+  "packages/ecosystem",
+  "packages/epistemic/client",
+  "packages/epistemic/config",
+  "packages/epistemic/domain",
+  "packages/epistemic/server",
+  "packages/epistemic/tables",
+  "packages/epistemic/ui",
+  "packages/epistemic/use-cases",
+  "packages/foundation/capability",
+  "packages/foundation/modeling",
+  "packages/foundation/primitive",
+  "packages/foundation/ui-system",
+  "packages/law-practice",
+  "packages/shared",
+  "packages/tooling",
+  "packages/workspace",
+];
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
 );
 
 const writePackage = Effect.fn(function* (packageDir: string, packageName: string) {
@@ -49,7 +81,7 @@ const writeSchemaFirstFileFixture = Effect.fn("writeSchemaFirstFileFixture")(fun
       workspaces: ["packages/*"],
     })}\n`
   );
-  yield* fs.writeFileString("tsconfig.json", `${encodeJson({ compilerOptions: {} })}\n`);
+  yield* fs.writeFileString("tsconfig.json", `${encodeJson({ compilerOptions: { strictNullChecks: true } })}\n`);
   yield* fs.makeDirectory(path.dirname(relativePath), { recursive: true });
   yield* fs.writeFileString(relativePath, sourceLines.join("\n"));
 });
@@ -58,6 +90,150 @@ const writeSchemaFirstSourceFixture = Effect.fn("writeSchemaFirstSourceFixture")
   sourceLines: ReadonlyArray<string>
 ) {
   yield* writeSchemaFirstFileFixture("packages/example/src/Example.ts", sourceLines);
+});
+
+const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")(function* (options?: {
+  readonly failingShard?: string;
+  readonly omitShard?: string;
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const failingShard = options?.failingShard;
+  const shards = A.filter(deprecatedApiLintShards, (shard) => shard !== options?.omitShard);
+  yield* Effect.forEach(shards, (shard) => fs.makeDirectory(shard, { recursive: true }), {
+    concurrency: 4,
+  });
+
+  const eslintPath = path.join("node_modules", ".bin", "eslint");
+  yield* fs.makeDirectory(path.dirname(eslintPath), { recursive: true });
+  yield* fs.writeFileString(
+    eslintPath,
+    A.join(
+      [
+        "#!/usr/bin/env sh",
+        ...(P.isUndefined(failingShard)
+          ? A.empty<string>()
+          : ['case "$*" in', `  *${failingShard}*) exit 7 ;;`, "esac"]),
+        "exit 0",
+        "",
+      ],
+      "\n"
+    )
+  );
+  yield* fs.chmod(eslintPath, 0o755);
+});
+
+const argumentAfter = (line: string, argument: string): O.Option<string> => {
+  const parts = Str.split(line, " ");
+  return pipe(
+    A.findFirstIndex(parts, Str.equivalence(argument)),
+    O.flatMap((index) => A.get(parts, index + 1))
+  );
+};
+
+describe("deprecated-apis lint command", { concurrent: false }, () => {
+  it(
+    "constructs unique content-cache shard commands at concurrency four",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDeprecatedApiLintFixture();
+            yield* runLintCommand(["deprecated-apis"]);
+
+            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+            const invocationLines = A.filter(
+              logLines,
+              (line) =>
+                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+            );
+            const cacheLocations = A.getSomes(
+              A.map(invocationLines, (line) => argumentAfter(line, "--cache-location"))
+            );
+
+            expect(logLines).toContain("[lint:deprecated-apis] running 25 shards with concurrency 4");
+            expect(invocationLines).toHaveLength(25);
+            expect(A.dedupe(cacheLocations)).toHaveLength(25);
+            expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
+            expect(
+              A.every(cacheLocations, Str.startsWith("node_modules/.cache/eslint-deprecated-apis/.eslintcache-"))
+            ).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    10_000
+  );
+
+  it(
+    "fails the aggregate when any shard exits nonzero",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDeprecatedApiLintFixture({ failingShard: "packages/agents" });
+
+            const exit = yield* Effect.exit(runLintCommand(["deprecated-apis"]));
+
+            expectReportedExit(exit, 7);
+            expect(A.filter(yield* TestConsole.logLines, P.isString)).not.toContain(
+              "[lint:deprecated-apis] OK: no deprecated vendor API usage found."
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    10_000
+  );
+
+  it(
+    "skips the labs shard when the labs root is absent",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDeprecatedApiLintFixture({ omitShard: "apps/labs" });
+            yield* runLintCommand(["deprecated-apis"]);
+
+            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+            const invocationLines = A.filter(
+              logLines,
+              (line) =>
+                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+            );
+
+            expect(logLines).toContain("[lint:deprecated-apis] skipping missing shard: apps/labs");
+            expect(invocationLines).toHaveLength(24);
+            expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    10_000
+  );
+
+  it(
+    "passes --no-error-on-unmatched-pattern to the labs shard only",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDeprecatedApiLintFixture();
+            yield* runLintCommand(["deprecated-apis"]);
+
+            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+            const invocationLines = A.filter(
+              logLines,
+              (line) =>
+                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+            );
+            const labsLines = A.filter(invocationLines, Str.startsWith("[lint:deprecated-apis] apps/labs: "));
+            const flaggedLines = A.filter(invocationLines, Str.includes("--no-error-on-unmatched-pattern"));
+
+            expect(labsLines).toHaveLength(1);
+            expect(flaggedLines).toEqual(labsLines);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    10_000
+  );
 });
 
 const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(function* (
@@ -73,7 +249,7 @@ const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(f
     `${encodeJson({
       version: 1,
       generatedOn: "2026-06-08",
-      scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+      scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
       entries: [
         {
           file: "packages/example/src/Example.ts",
@@ -445,7 +621,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '"severity":"warning","file":"packages/example/test/Example.test.ts","line":4,' +
               '"symbol":"schema-codec-tests",' +
               '"message":"Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage.",' +
-              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
+              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -463,7 +639,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               'import * as fc from "fast-check";',
               'import * as S from "effect/Schema";',
               "const Worker = S.Struct({ id: S.String, retryCount: S.Int });",
-              "const WorkerArbitrary = S.toArbitrary(Worker);",
+              "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
               "export const staticChecks = [",
               '  S.decodeUnknownEffect(Worker)({ id: "a", retryCount: 1 }),',
               '  S.decodeUnknownEffect(Worker)({ id: "b", retryCount: 2 }),',
@@ -573,7 +749,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
               '"severity":"warning","file":"packages/example/test/Sync.test.ts","line":4,' +
               '"symbol":"schema-codec-tests",' +
               '"message":"Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage.",' +
-              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
+              '"remediation":"Add a focused property test using S.toArbitrary(sourceSchema)(fc) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -666,6 +842,211 @@ describe("schema-first lint command", { concurrent: false }, () => {
   );
 
   it(
+    "reports S.TaggedError declarations without declared equivalence",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  { description: "Worker execution failed." }',
+              ") {}",
+              "",
+            ]);
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+            const logLines = yield* TestConsole.logLines;
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+            expect(errorLines).toContain("[schema-first] untracked live findings:");
+            expect(errorLines).toContain(
+              '- packages/example/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare fields-only equivalence at the class declaration: pass $I.annoteError<WorkerError>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
+            );
+            const structuredIssueLine =
+              '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-tagged-error-equivalence",' +
+              '"severity":"warning","file":"packages/example/src/Example.ts","line":2,' +
+              '"symbol":"WorkerError",' +
+              '"message":"S.TaggedError declaration \\"WorkerError\\" must declare fields-only equivalence at the class declaration: pass $I.annoteError<WorkerError>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.",' +
+              '"remediation":"Annotate the class with $I.annoteError<Self>(...) so it adopts the declared struct equivalence; opaque causes use Defect from @beep/schema, which declares its own always-equal equivalence."}';
+            expect(errorLines).toContain(structuredIssueLine);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "reports named effect/Schema TaggedError imports without declared equivalence",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/ecosystem/effect-drizzle/src/Example.ts", [
+              'import { String as StringSchema, TaggedError } from "effect/Schema";',
+              "export class WorkerError extends TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: StringSchema },",
+              '  { description: "Worker execution failed." }',
+              ") {}",
+              "",
+            ]);
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+            const logLines = yield* TestConsole.logLines;
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(logLines).toContain("[schema-first] sfv4_tagged_error_equivalence_advisories=1");
+            expect(errorLines).toContain(
+              '- packages/ecosystem/effect-drizzle/src/Example.ts :: WorkerError [schema-policy-advisory] S.TaggedError declaration "WorkerError" must declare fields-only equivalence at the class declaration: pass $I.annoteError<WorkerError>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.'
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "ignores unrelated local TaggedError factories",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              "const TaggedError = <Self>() => (_tag: string, _fields: unknown) => class {};",
+              'class LocalError extends TaggedError<LocalError>()("LocalError", {}) {}',
+              "void LocalError;",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "accepts direct and annoteClass tagged-error equivalence annotations",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "const sameWorkerError = (_self: WorkerError, _that: WorkerError): boolean => true;",
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  { description: "Worker execution failed.", toEquivalence: () => sameWorkerError }',
+              ") {}",
+              "const sameTaskError = (_self: TaskError, _that: TaskError): boolean => true;",
+              "const taskErrorAnnotations = { toEquivalence: () => sameTaskError };",
+              "class TaskError extends S.TaggedError<TaskError>()(",
+              '  "TaskError",',
+              "  { taskId: S.String },",
+              '  $I.annoteClass("TaskError", taskErrorAnnotations)',
+              ") {}",
+              "void TaskError;",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "accepts annoteError tagged-error annotations",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  $I.annoteError<WorkerError>("WorkerError", { description: "Worker execution failed." })',
+              ") {}",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "preserves existing tagged-error exceptions without excepting new write findings",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "export class ExistingError extends S.TaggedError<ExistingError>()(",
+              '  "ExistingError",',
+              "  { workerId: S.String },",
+              '  { description: "Existing documented failure." }',
+              ") {}",
+              "export class WorkerError extends S.TaggedError<WorkerError>()(",
+              '  "WorkerError",',
+              "  { workerId: S.String },",
+              '  { description: "Worker execution failed." }',
+              ") {}",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.makeDirectory("standards");
+            yield* fs.writeFileString(
+              "standards/schema-first.inventory.jsonc",
+              `${encodeJson({
+                version: 1,
+                generatedOn: "2026-06-08",
+                scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
+                entries: [
+                  {
+                    file: "packages/example/src/Example.ts",
+                    symbol: "ExistingError",
+                    kind: "schema-policy-advisory",
+                    status: "exception",
+                    ruleId: "SFV4-tagged-error-equivalence",
+                    line: 2,
+                    owner: "@beep/example",
+                    reason: "Existing documented exception.",
+                  },
+                ],
+              })}\n`
+            );
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            expectReportedExit(exit);
+
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
+            expect(inventory).toContain(
+              '"symbol": "ExistingError",\n      "kind": "schema-policy-advisory",\n      "status": "exception"'
+            );
+            expect(inventory).toContain(
+              '"symbol": "WorkerError",\n      "kind": "schema-policy-advisory",\n      "status": "advisory"'
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
     "reports untracked SFV4 boundary-codec JSON.parse advisories",
     () =>
       Effect.runPromise(
@@ -684,14 +1065,14 @@ describe("schema-first lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines).toContain("[schema-first] untracked live findings:");
             expect(errorLines).toContain(
-              "- packages/example/src/Example.ts :: parseConfig.JSON.parse [schema-policy-advisory] Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned."
+              "- packages/example/src/Example.ts :: parseConfig.JSON.parse [schema-policy-advisory] Direct JSON.parse boundary should use S.fromJsonString(schema) so parsing and validation stay schema-owned."
             );
             const structuredIssueLine =
               '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-boundary-codec",' +
               '"severity":"warning","file":"packages/example/src/Example.ts","line":2,' +
               '"symbol":"parseConfig.JSON.parse",' +
-              '"message":"Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned.",' +
-              '"remediation":"Replace direct JSON.parse with S.UnknownFromJsonString or S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard."}';
+              '"message":"Direct JSON.parse boundary should use S.fromJsonString(schema) so parsing and validation stay schema-owned.",' +
+              '"remediation":"Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard."}';
             expect(errorLines).toContain(structuredIssueLine);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -707,7 +1088,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
           Effect.gen(function* () {
             yield* writeSchemaFirstSourceFixture([
               'import * as S from "effect/Schema";',
-              "export const decodeConfig = S.decodeUnknownEffect(S.UnknownFromJsonString);",
+              "export const decodeConfig = Unknown.decodeUnknownEffectFromJsonString;",
               "",
             ]);
 
@@ -813,54 +1194,367 @@ describe("schema-first lint command", { concurrent: false }, () => {
   );
 
   it(
-    "does not suppress S.Struct candidates when a same-named field variable feeds an unrelated class",
+    "filters generic and wholly runtime declarations before inventory comparison",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              "interface BaseData { readonly inheritedId: string }",
+              "interface GenericBase<Value> { readonly value: Value }",
+              "interface AstNode { readonly type: string }",
+              "declare namespace O {",
+              '  type Option<Value> = { readonly _tag: "None" } | { readonly _tag: "Some"; readonly value: Value };',
+              "}",
+              "declare namespace pulumi { type Input<Value> = Value | Promise<Value> }",
+              "export interface Generic<Value> { readonly value: Value }",
+              "export interface GenericDerived<Value extends string = string> extends GenericBase<Value> {}",
+              "export type GenericAlias<Value = string> = { readonly value: Value };",
+              "export type PureAlias = { readonly id: string };",
+              "export type RuntimeAlias = { readonly node: AstNode; readonly visit: () => void };",
+              "export interface RuntimeOnly {",
+              "  readonly layer: Layer.Layer<never>;",
+              "  readonly run: (input: string) => Effect.Effect<void>;",
+              "}",
+              "interface D3Only extends d3.SimulationNodeDatum {}",
+              "export { D3Only };",
+              "export interface D3Mixed extends d3.SimulationNodeDatum { readonly id: string }",
+              "export interface OptionalRuntimeOnly {",
+              "  readonly signal?: AbortSignal;",
+              "  readonly secret?: pulumi.Input<string>;",
+              "}",
+              "export interface RpcRuntimeOnly {",
+              '  readonly client: RpcClient.Protocol["Service"];',
+              "  readonly incoming: Stream.Stream<string>;",
+              "  readonly notify: { (value: string): Effect.Effect<void> };",
+              "}",
+              "export type AstTraversal = {",
+              "  readonly object: O.Option<AstNode>;",
+              "  readonly property: AstNode | null;",
+              "};",
+              "export interface RuntimeContainers {",
+              "  readonly array: ReadonlyArray<AstNode>;",
+              "  readonly mutableArray: AstNode[];",
+              "  readonly tuple: readonly [AstNode];",
+              "  readonly set: ReadonlySet<AstNode>;",
+              "}",
+              "export interface PrimitiveContainers {",
+              "  readonly array: ReadonlyArray<string>;",
+              "  readonly mutableArray: number[];",
+              "  readonly tuple: readonly [string, number];",
+              "  readonly map: ReadonlyMap<string, number>;",
+              "}",
+              "export type RuntimeRecord = { readonly values: Readonly<Record<string, AstNode>> };",
+              "export type PrimitiveRecord = { readonly values: Readonly<Record<string, string>> };",
+              "export interface MixedContract {",
+              "  readonly id: string;",
+              "  readonly run: () => Effect.Effect<void>;",
+              "}",
+              "export interface CallableOnly { (): void }",
+              "export interface CallableMixed { (): void; readonly id: string }",
+              "export interface ConstructOnly { new (): RuntimeOnly }",
+              "export interface ConstructMixed { new (): RuntimeOnly; readonly id: string }",
+              "export interface UnionMixed { readonly state: string | AbortSignal }",
+              "export interface NestedMixed {",
+              "  readonly state: { readonly id: string; readonly signal: AbortSignal };",
+              "}",
+              "export interface ImmutableCollections {",
+              "  readonly map: HashMap.HashMap<string, string>;",
+              "  readonly set: HashSet.HashSet<string>;",
+              "}",
+              "declare function makePayload(): { readonly id: string };",
+              "export interface ReturnTypePayload { readonly payload: ReturnType<typeof makePayload> }",
+              "class SchemaFlags { readonly enabled!: boolean }",
+              "export interface InheritedMixed extends SchemaFlags { readonly run: () => Effect.Effect<void> }",
+              "export interface DerivedData extends BaseData {}",
+              "export interface BinaryPayload { readonly bytes: Uint8Array }",
+              "export interface JournalPayload { readonly entry: EventJournal.Entry }",
+              "export interface SuccessPayload { readonly success: Effect.Success<string, Error> }",
+              "export interface ResultPayload { readonly result: OperationResult }",
+              "export interface SchemaOwned { readonly id: string }",
+              'export const SchemaOwned: SchemaOwned = Field({ id: "schema" });',
+              "",
+            ]);
+
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
-            const exampleSourceDir = path.join("packages", "example", "src");
-            const workspaceFiles: ReadonlyArray<readonly [string, string]> = [
-              [
-                "package.json",
-                `${encodeJson({
-                  name: "@beep/test-root",
-                  private: true,
-                  type: "module",
-                  workspaces: ["packages/*"],
-                })}\n`,
-              ],
-              ["tsconfig.json", `${encodeJson({ compilerOptions: {} })}\n`],
-            ];
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString(path.join("standards", "schema-first.inventory.jsonc"));
 
-            yield* Effect.forEach(workspaceFiles, ([filePath, contents]) => fs.writeFileString(filePath, contents), {
-              discard: true,
-            });
-            yield* fs.makeDirectory(exampleSourceDir, { recursive: true });
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "MixedContract"');
+            expect(inventory).toContain('"symbol": "D3Mixed"');
+            expect(inventory).toContain('"symbol": "CallableMixed"');
+            expect(inventory).toContain('"symbol": "ConstructMixed"');
+            expect(inventory).toContain('"symbol": "UnionMixed"');
+            expect(inventory).toContain('"symbol": "NestedMixed"');
+            expect(inventory).toContain('"symbol": "ImmutableCollections"');
+            expect(inventory).toContain('"symbol": "ReturnTypePayload"');
+            expect(inventory).toContain('"symbol": "InheritedMixed"');
+            expect(inventory).toContain('"symbol": "PrimitiveContainers"');
+            expect(inventory).toContain('"symbol": "PrimitiveRecord"');
+            expect(inventory).toContain('"symbol": "DerivedData"');
+            expect(inventory).toContain('"symbol": "BinaryPayload"');
+            expect(inventory).toContain('"symbol": "JournalPayload"');
+            expect(inventory).toContain('"symbol": "SuccessPayload"');
+            expect(inventory).toContain('"symbol": "ResultPayload"');
+            expect(inventory).toContain('"symbol": "PureAlias"');
+            expect(inventory).not.toContain('"symbol": "Generic"');
+            expect(inventory).not.toContain('"symbol": "GenericDerived"');
+            expect(inventory).not.toContain('"symbol": "GenericAlias"');
+            expect(inventory).not.toContain('"symbol": "CallableOnly"');
+            expect(inventory).not.toContain('"symbol": "ConstructOnly"');
+            expect(inventory).not.toContain('"symbol": "OptionalRuntimeOnly"');
+            expect(inventory).not.toContain('"symbol": "RpcRuntimeOnly"');
+            expect(inventory).not.toContain('"symbol": "AstTraversal"');
+            expect(inventory).not.toContain('"symbol": "RuntimeContainers"');
+            expect(inventory).not.toContain('"symbol": "RuntimeRecord"');
+            expect(inventory).not.toContain('"symbol": "RuntimeOnly"');
+            expect(inventory).not.toContain('"symbol": "D3Only"');
+            expect(inventory).not.toContain('"symbol": "RuntimeAlias"');
+            expect(inventory).not.toContain('"symbol": "SchemaOwned"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "limits normalization advisories to exported schema-boundary helpers",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "const Model = S.Struct({ value: S.String });",
+              "const privateToken = (value: string): string => value.toLowerCase();",
+              "const unrelated = (value: string): string => value.trim();",
+              "const normalizeValue = (input: unknown): string =>",
+              "  S.decodeUnknownSync(Model)(input).value.trim();",
+              "class Normalizer {",
+              "  public normalize(input: unknown): string {",
+              "    return S.decodeUnknownSync(Model)(input).value.toUpperCase();",
+              "  }",
+              "  private privateNormalize(input: unknown): string {",
+              "    return S.decodeUnknownSync(Model)(input).value.toLowerCase();",
+              "  }",
+              "  protected protectedNormalize(input: unknown): string {",
+              "    return S.decodeUnknownSync(Model)(input).value.trim();",
+              "  }",
+              "}",
+              "export { Normalizer, normalizeValue, unrelated };",
+              "void privateToken;",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString(path.join("standards", "schema-first.inventory.jsonc"));
+
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "normalizeValue.trim"');
+            expect(inventory).toContain('"symbol": "Normalizer.toUpperCase"');
+            expect(inventory).not.toContain("privateToken.toLowerCase");
+            expect(inventory).not.toContain("unrelated.trim");
+            expect(inventory).not.toContain("privateNormalize");
+            expect(inventory).not.toContain("protectedNormalize");
+            expect(inventory).not.toContain("Normalizer.toLowerCase");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "omits render contracts without hiding pure data declared in TSX",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/example/src/Example.tsx", [
+              "export interface WidgetProps {",
+              "  readonly label: string;",
+              "  readonly children: React.ReactNode;",
+              "}",
+              "export type PanelProps = { readonly title: string };",
+              "export interface DataPayload { readonly id: string }",
+              "",
+            ]);
+            const fs = yield* FileSystem.FileSystem;
             yield* fs.writeFileString(
-              path.join(exampleSourceDir, "Example.ts"),
+              "packages/example/src/ReactProps.ts",
               [
-                'import * as S from "effect/Schema";',
-                "const buildClass = () => {",
-                "  const fields = { id: S.String };",
-                '  return S.Class<any>("Worker")(fields);',
+                'import type React from "react";',
+                "export type RendererProps = {",
+                "  readonly title: string;",
+                "  readonly component: React.FunctionComponent;",
                 "};",
-                "const fields = S.Struct({ id: S.String });",
-                "void buildClass;",
-                "void fields;",
                 "",
               ].join("\n")
             );
 
-            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
 
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "DataPayload"');
+            expect(inventory).not.toContain('"symbol": "WidgetProps"');
+            expect(inventory).not.toContain('"symbol": "PanelProps"');
+            expect(inventory).not.toContain('"symbol": "RendererProps"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "recognizes local export lists for declarations, schema companions, structs, and functions",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "interface ListedData { readonly id: string }",
+              "type ListedAlias = { readonly id: string };",
+              "interface AliasedData { readonly id: string }",
+              "export default interface DefaultData { readonly id: string }",
+              "interface ListedSchemaOwned { readonly id: string }",
+              'class ListedSchemaOwned extends S.Class<ListedSchemaOwned>("ListedSchemaOwned")({',
+              "  id: S.String,",
+              "}) {}",
+              "const ListedStruct = S.Struct({ id: S.String });",
+              "const AliasedStruct = S.Struct({ id: S.String });",
+              "function listedFunction(input: { readonly id: string }): void { void input; }",
+              "function aliasedFunction(input: { readonly id: string }): void { void input; }",
+              "const listedArrow = (input: { readonly id: string }): void => { void input; };",
+              "export {",
+              "  AliasedData as PublicData,",
+              "  AliasedStruct as PublicStruct,",
+              "  ListedAlias,",
+              "  ListedData,",
+              "  ListedSchemaOwned,",
+              "  ListedStruct,",
+              "  aliasedFunction as publicFunction,",
+              "  listedArrow,",
+              "  listedFunction,",
+              "};",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
+
+            expectReportedExit(exit);
+            expect(inventory).toContain('"symbol": "ListedData"');
+            expect(inventory).toContain('"symbol": "ListedAlias"');
+            expect(inventory).toContain('"symbol": "AliasedData"');
+            expect(inventory).toContain('"symbol": "DefaultData"');
+            expect(inventory).toContain('"symbol": "ListedStruct"');
+            expect(inventory).toContain('"symbol": "AliasedStruct"');
+            expect(inventory).toContain('"symbol": "listedFunction"');
+            expect(inventory).toContain('"symbol": "aliasedFunction"');
+            expect(inventory).toContain('"symbol": "listedArrow"');
+            expect(inventory).not.toContain('"symbol": "ListedSchemaOwned"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "recognizes anonymous direct default exports with stable fallback symbols",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/example/src/DefaultInterface.ts", [
+              "export default interface { readonly id: string }",
+              "",
+            ]);
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.writeFileString(
+              "packages/example/src/DefaultFunction.ts",
+              [
+                'import * as S from "effect/Schema";',
+                "const Model = S.Struct({ id: S.String });",
+                "export default function(input: { readonly id: string }): void { void input; }",
+                "void Model;",
+                "",
+              ].join("\n")
+            );
+            yield* fs.writeFileString(
+              "packages/example/src/DefaultArrow.ts",
+              [
+                'import * as S from "effect/Schema";',
+                "const Model = S.Struct({ id: S.String });",
+                "export default (input: { readonly id: string }): void => { void input; };",
+                "void Model;",
+                "",
+              ].join("\n")
+            );
+            yield* fs.writeFileString(
+              "packages/example/src/DefaultStruct.ts",
+              ['import * as S from "effect/Schema";', "export default S.Struct({ id: S.String });", ""].join("\n")
+            );
+
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString("standards/schema-first.inventory.jsonc");
+
+            expectReportedExit(exit);
+            expect(inventory.match(/"symbol": "default@\d+"/g)).toHaveLength(4);
+            expect(inventory).not.toContain('"symbol": ""');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "inventories only exported top-level plain S.Struct object models",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              "const fields = { id: S.String };",
+              "const internal = S.Struct({ id: S.String });",
+              "const nested = S.Struct({ child: S.Struct({ id: S.String }) });",
+              "const dynamic = S.Struct(fields);",
+              "const spread = S.Struct({ ...fields });",
+              "export const build = () => S.Struct({ id: S.String });",
+              "export const PublicModel = S.Struct({ id: S.String });",
+              "void internal;",
+              "void nested;",
+              "void dynamic;",
+              "void spread;",
+              "",
+            ]);
+
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory("standards");
+            const exit = yield* Effect.exit(runLintCommand(["schema-first", "--write"]));
+            const inventory = yield* fs.readFileString(path.join("standards", "schema-first.inventory.jsonc"));
             const errorLines = yield* TestConsole.errorLines;
+
             expectReportedExit(exit);
             expect(errorLines).toContain("[schema-first] untracked live findings:");
-            expect(errorLines).toContain(
-              "- packages/example/src/Example.ts :: fields [object-struct-schema] Object schema should prefer an annotated S.Class over S.Struct."
-            );
+            expect(inventory).toContain('"symbol": "PublicModel"');
+            expect(inventory).not.toContain('"symbol": "internal"');
+            expect(inventory).not.toContain('"symbol": "nested"');
+            expect(inventory).not.toContain('"symbol": "dynamic"');
+            expect(inventory).not.toContain('"symbol": "spread"');
+            expect(inventory).not.toContain('"symbol": "build"');
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
@@ -891,42 +1585,10 @@ describe("package test import lint command", { concurrent: false }, () => {
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
             expect(errorLines).toContain(
-              "[check-package-test-imports] relative imports from package test/dtslint files into workspace src are not allowed. Use @beep/* package aliases."
+              "[check-package-test-imports] relative imports from package test files into workspace src are not allowed. Use @beep/* package aliases."
             );
             expect(errorLines).toContain(
               "packages/foundation/modeling/example/test/Example.test.ts:1 ../src/index.ts -> @beep/example"
-            );
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    5_000
-  );
-
-  it(
-    "reports cross-package relative imports into src",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const producerDir = path.join("packages", "foundation", "modeling", "producer");
-            const consumerDir = path.join("packages", "foundation", "modeling", "consumer");
-
-            yield* writePackage(producerDir, "@beep/producer");
-            yield* writePackage(consumerDir, "@beep/consumer");
-            yield* fs.makeDirectory(path.join(consumerDir, "dtslint"), { recursive: true });
-            yield* fs.writeFileString(
-              path.join(consumerDir, "dtslint", "Consumer.tst.ts"),
-              `import type { Producer } from "../../producer/src/Producer.ts";\ntype _ = Producer;\n`
-            );
-
-            const exit = yield* Effect.exit(runLintCommand(["package-test-imports"]));
-
-            const errorLines = yield* TestConsole.errorLines;
-            expectReportedExit(exit);
-            expect(errorLines).toContain(
-              "packages/foundation/modeling/consumer/dtslint/Consumer.tst.ts:1 ../../producer/src/Producer.ts -> @beep/producer/Producer"
             );
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -959,9 +1621,7 @@ describe("package test import lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             const errorLines = yield* TestConsole.errorLines;
-            expect(logLines).toEqual([
-              "[check-package-test-imports] OK: package test/dtslint imports use package aliases.",
-            ]);
+            expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
             expect(errorLines).toEqual([]);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -994,9 +1654,7 @@ describe("package test import lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             const errorLines = yield* TestConsole.errorLines;
-            expect(logLines).toEqual([
-              "[check-package-test-imports] OK: package test/dtslint imports use package aliases.",
-            ]);
+            expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
             expect(errorLines).toEqual([]);
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -1025,13 +1683,495 @@ describe("package test import lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             const errorLines = yield* TestConsole.errorLines;
-            expect(logLines).toEqual([
-              "[check-package-test-imports] OK: package test/dtslint imports use package aliases.",
-            ]);
+            expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
             expect(errorLines).toEqual([]);
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
     5_000
+  );
+});
+
+const BASELINE_FILE = "baseline.jsonc";
+
+const blindSpotBaselineText = (input: {
+  readonly findings: ReadonlyArray<{
+    readonly package: string;
+    readonly directory: string;
+    readonly kind: string;
+  }>;
+  readonly notes?: Readonly<Record<string, string>>;
+}): string =>
+  `${encodeJson({
+    schema_version: 1,
+    command: "bun run beep lint package-test-typecheck",
+    regeneration_command: "bun run beep lint package-test-typecheck --write-baseline",
+    comparison: "fail-on-growth: every blind-spot package must already be listed in the committed baseline",
+    new_package_handling: "New packages are compliant by construction.",
+    notes: input.notes ?? {},
+    check: {
+      total_findings: A.length(input.findings),
+      missing_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "missing-test-tsconfig")),
+      unwired_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "unwired-test-tsconfig")),
+    },
+    findings: input.findings,
+  })}\n`;
+
+const writeTestTypecheckPackage = Effect.fn("writeTestTypecheckPackage")(function* (input: {
+  readonly directory: string;
+  readonly name: string;
+  readonly scripts: Readonly<Record<string, string>>;
+  readonly tsconfigs: ReadonlyArray<{ readonly fileName: string; readonly include: ReadonlyArray<string> }>;
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  yield* fs.makeDirectory(path.join(input.directory, "src"), { recursive: true });
+  yield* fs.makeDirectory(path.join(input.directory, "test"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(input.directory, "package.json"),
+    `${encodeJson({ name: input.name, version: "0.0.0", type: "module", scripts: input.scripts })}\n`
+  );
+  yield* fs.writeFileString(path.join(input.directory, "src", "index.ts"), "export const example = 1;\n");
+  yield* fs.writeFileString(
+    path.join(input.directory, "test", "Example.test.ts"),
+    'import { example } from "@beep/example";\nvoid example;\n'
+  );
+
+  yield* Effect.forEach(
+    input.tsconfigs,
+    Effect.fnUntraced(function* (config) {
+      yield* fs.writeFileString(
+        path.join(input.directory, config.fileName),
+        `${encodeJson({ include: config.include })}\n`
+      );
+    })
+  );
+});
+
+describe("package test-typecheck lint command", { concurrent: false }, () => {
+  it(
+    "reports a package whose check script never typechecks its test sources",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: { check: "bun run beep:check", "beep:check": "tsgo -b tsconfig.json" },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts a package whose check script transitively runs a test-covering project",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "reports a test-covering project the check script never runs",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "does not treat compiler names echoed as script text as test typechecking",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": 'echo "tsgo -p tsconfig.test.json --noEmit" && tsgo -b tsconfig.json',
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "treats a baselined blind spot as green",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: { check: "bun run beep:check", "beep:check": "tsgo -b tsconfig.json" },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(
+              BASELINE_FILE,
+              blindSpotBaselineText({
+                findings: [{ package: "@beep/example", directory: "packages/example", kind: "missing-test-tsconfig" }],
+              })
+            );
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=1 baseline=1 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "reports a tail-filtered include that leaves a sibling helper unselected",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+
+            // `test/**/*.test.ts` selects the test files but not the helper
+            // sitting beside them, so the helper is never typechecked.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/**/*.test.ts"] },
+              ],
+            });
+            yield* fs.makeDirectory(path.join("packages", "example", "test", "support"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "support", "Helper.ts"),
+              "export const helper = 1;\n"
+            );
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts a tail-filtered include when it selects every test source",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            // Same glob shape as the case above; here every test source is a
+            // .test.ts file, so nothing is left unselected.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/**/*.test.ts"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "reports a one-level include because nested sources stay unselected",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/*.ts"] },
+              ],
+            });
+            yield* fs.makeDirectory(path.join("packages", "example", "test", "unit"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "unit", "Nested.test.ts"),
+              "export const nested = 1;\n"
+            );
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts a bare test directory include as a recursive subtree",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.makeDirectory(path.join("packages", "example", "test", "unit"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "unit", "Nested.test.ts"),
+              "export const nested = 1;\n"
+            );
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "Helper.ts"),
+              "export const helper = 1;\n"
+            );
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "honors exclude when deciding which test sources a project selects",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+
+            // `test` would cover everything, but the excluded helper is pulled
+            // back out of the program, so no project typechecks it.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "Helper.ts"),
+              "export const helper = 1;\n"
+            );
+            yield* fs.writeFileString(
+              path.join("packages", "example", "tsconfig.test.json"),
+              `${encodeJson({ include: ["src", "test"], exclude: ["test/Helper.ts"] })}\n`
+            );
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "follows check-script delegation through bun run flags",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            // --silent, --filter=<pkg>, and the two-token --cwd <path> form all
+            // sit between `bun run` and the script name.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run --silent beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run --cwd . --filter=@beep/example beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "preserves hand-authored notes when rewriting the baseline",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: { check: "bun run beep:check", "beep:check": "tsgo -b tsconfig.json" },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(
+              BASELINE_FILE,
+              blindSpotBaselineText({ findings: [], notes: { "@beep/example": "Deferred deliberately." } })
+            );
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE, "--write-baseline"]);
+
+            const rewritten = yield* fs.readFileString(BASELINE_FILE);
+            expect(rewritten).toContain('"@beep/example": "Deferred deliberately."');
+            expect(rewritten).toContain('"kind": "missing-test-tsconfig"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
   );
 });

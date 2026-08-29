@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Repo-local `tsgo` bin that runs the Effect-patched TypeScript 7 native compiler from @typescript/native.",
+  "description": "Repo-local `tsgo` bin that runs the exact compiler artifact shipped by @effect/tsgo.",
+  "dependencies": {
+    "@effect/tsgo": "catalog:"
+  },
   "bin": {
     "tsgo": "./tsgo.js"
   }

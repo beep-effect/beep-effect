@@ -8,14 +8,15 @@
 /**
  * Thread model exports.
  *
- * @example
+ * **Example** (Import Thread module)
+ *
  * ```ts
  * import * as Thread from "@beep/workspace-domain/entities/Thread"
  *
- * console.log(Thread.Thread.definition.entityId.entityType)
+ * console.log(Thread.Thread.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export * from "./Thread.model.js";
+export * from "./Thread.model.ts";

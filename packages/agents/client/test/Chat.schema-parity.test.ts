@@ -7,6 +7,7 @@ import {
   TurnRequest,
 } from "@beep/agents-client";
 import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
+import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { fcRuns } from "@beep/test-utils";
@@ -17,8 +18,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const userDocument = (value: string): Document =>
-  Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
+const userDocument = (value: string) =>
+  decodeSafeDocumentUnsafe(Document.make({ children: [P.make({ children: [Text.make({ value })] })] }));
 
 const assistantBlock = ParagraphBlock.make({
   children: [TextInline.make({ text: "Streaming response" })],
@@ -116,7 +117,7 @@ describe("@beep/agents-client schema parity", () => {
 
     for (const schema of schemas) {
       fc.assert(
-        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        fc.property(S.toArbitrary(schema)(fc), (value) => roundTrip(schema, value)),
         fcRuns(10)
       );
     }

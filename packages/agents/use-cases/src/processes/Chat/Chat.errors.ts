@@ -6,7 +6,6 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -18,7 +17,8 @@ const $I = $AgentsUseCasesId.create("processes/Chat/Chat.errors");
  * client-safe shape before they reach the wire, so the desktop client never
  * sees internal error detail.
  *
- * @example
+ * **Example** (Creating ChatActionError with message)
+ *
  * ```ts
  * import { ChatActionError } from "@beep/agents-use-cases/public"
  *
@@ -28,12 +28,12 @@ const $I = $AgentsUseCasesId.create("processes/Chat/Chat.errors");
  * @category errors
  * @since 0.0.0
  */
-export class ChatActionError extends TaggedErrorClass<ChatActionError>($I`ChatActionError`)(
+export class ChatActionError extends S.TaggedError<ChatActionError>($I`ChatActionError`)(
   "ChatActionError",
   {
     message: S.String,
   },
-  $I.annote("ChatActionError", {
+  $I.annoteError<ChatActionError>("ChatActionError", {
     description: "Client-safe failure raised when a chat action cannot be completed.",
   })
 ) {

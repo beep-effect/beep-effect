@@ -5,7 +5,7 @@
  * {@link TextStream}) or a remote `http(s)` URL (via the {@link HttpClient}
  * service, provided at the entrypoint). Remote reads are bounded by
  * {@link Effect.timeout}; JSON payloads are parsed with
- * {@link S.UnknownFromJsonString} rather than raw `JSON.parse`. Each loader
+ * {@link S.fromJsonString} rather than raw `JSON.parse`. Each loader
  * returns the data alongside a {@link DatasetMeta} record describing provenance,
  * and the load timestamp comes from {@link Clock.currentTimeMillis}.
  *
@@ -14,7 +14,8 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -34,7 +35,8 @@ const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
 /**
  * Dataset formats supported by the file and URL loaders.
  *
- * @example
+ * **Example** (Decoding a dataset format)
+ *
  * ```ts
  * import { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -58,7 +60,8 @@ export const DatasetFormat = DatasetFormatBase.pipe(
 /**
  * Type for {@link DatasetFormat}.
  *
- * @example
+ * **Example** (Typing a dataset format)
+ *
  * ```ts
  * import type { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -76,7 +79,8 @@ const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
 /**
  * Provenance source channels supported by dataset loaders.
  *
- * @example
+ * **Example** (Decoding a source type)
+ *
  * ```ts
  * import { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -100,7 +104,8 @@ export const DatasetSourceType = DatasetSourceTypeBase.pipe(
 /**
  * Type for {@link DatasetSourceType}.
  *
- * @example
+ * **Example** (Typing a source type)
+ *
  * ```ts
  * import type { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -116,7 +121,8 @@ export type DatasetSourceType = typeof DatasetSourceType.Type;
 /**
  * Provenance metadata returned alongside every loaded dataset.
  *
- * @example
+ * **Example** (Reading dataset provenance)
+ *
  * ```ts
  * import { DatasetMeta } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -163,7 +169,8 @@ export class DatasetMeta extends S.Class<DatasetMeta>($I`DatasetMeta`)(
 /**
  * A loaded dataset payload paired with its {@link DatasetMeta}.
  *
- * @example
+ * **Example** (Wrapping a loaded payload)
+ *
  * ```ts
  * import { DatasetMeta, DatasetResult } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  * import * as S from "effect/Schema"
@@ -200,7 +207,8 @@ export const DatasetResult = <Data extends S.Top>(data: Data) =>
 /**
  * Options for loading a dataset as raw text.
  *
- * @example
+ * **Example** (Configuring a text load)
+ *
  * ```ts
  * import { DatasetLoadTextOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -228,7 +236,8 @@ export class DatasetLoadTextOptions extends S.Class<DatasetLoadTextOptions>($I`D
 /**
  * Options for loading a dataset as text lines.
  *
- * @example
+ * **Example** (Configuring a line load)
+ *
  * ```ts
  * import { DatasetLoadLinesOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -259,7 +268,8 @@ export class DatasetLoadLinesOptions extends S.Class<DatasetLoadLinesOptions>($I
 /**
  * Options for loading a dataset as JSONL records.
  *
- * @example
+ * **Example** (Configuring a JSONL load)
+ *
  * ```ts
  * import { DatasetLoadJsonlOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -287,7 +297,8 @@ export class DatasetLoadJsonlOptions extends S.Class<DatasetLoadJsonlOptions>($I
 /**
  * Options for loading a dataset as a single JSON document.
  *
- * @example
+ * **Example** (Configuring a JSON load)
+ *
  * ```ts
  * import { DatasetLoadJsonOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -312,7 +323,8 @@ export class DatasetLoadJsonOptions extends S.Class<DatasetLoadJsonOptions>($I`D
 /**
  * Type for {@link DatasetResult}.
  *
- * @example
+ * **Example** (Typing a load result)
+ *
  * ```ts
  * import type { DatasetResult } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  * import * as O from "effect/Option"
@@ -332,7 +344,8 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
 /**
  * Structured failure raised when a remote fetch or JSON decode fails.
  *
- * @example
+ * **Example** (Handling a load failure)
+ *
  * ```ts
  * import { DatasetLoadError } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -343,10 +356,10 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
  * @since 0.0.0
  * @category errors
  */
-export class DatasetLoadError extends TaggedErrorClass<DatasetLoadError>($I`DatasetLoadError`)(
+export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Underlying platform, HTTP, timeout, or schema failure when available.",
@@ -358,7 +371,7 @@ export class DatasetLoadError extends TaggedErrorClass<DatasetLoadError>($I`Data
       description: "File path or URL that failed to load or decode.",
     }),
   },
-  $I.annote("DatasetLoadError", {
+  $I.annoteError<DatasetLoadError>("DatasetLoadError", {
     description: "Structured failure raised when a remote fetch or JSON decode fails.",
   })
 ) {}
@@ -368,14 +381,15 @@ const LinesDatasetResult = DatasetResult(S.String.pipe(S.Array));
 const JsonDatasetResult = DatasetResult(S.Unknown);
 const JsonlDatasetResult = DatasetResult(S.Unknown.pipe(S.Array));
 
-const decodeJson = S.decodeEffect(S.UnknownFromJsonString);
+const decodeJson = Unknown.decodeEffectFromJsonString;
 
 const byteLength = (value: string): number => new TextEncoder().encode(value).length;
 
 /**
  * Report whether a location should be treated as a remote `http(s)` URL.
  *
- * @example
+ * **Example** (Detecting a remote location)
+ *
  * ```ts
  * import { isUrl } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -435,7 +449,7 @@ const isBlockedRemoteHost = (hostname: string): boolean => {
   // rather than coupling this driver to a foundation schema's internals.
   // IPv4-mapped IPv6 is decoded back to its IPv4 form so mapped private ranges
   // classify through the same isInternalIpv4 checks.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- SSRF blocklist mirrors SafeRemoteHost for independent security auditing
   return (
     host === "localhost" ||
     Str.endsWith(".localhost")(host) ||
@@ -502,7 +516,8 @@ const parseJson = (value: string, location: string): Effect.Effect<unknown, Data
 /**
  * Load raw text from a file or remote URL.
  *
- * @example
+ * **Example** (Loading a text dataset)
+ *
  * ```ts
  * import { loadText } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -551,7 +566,8 @@ export const loadText = Effect.fn("DatasetLoader.loadText")(function* (
 /**
  * Load a dataset as an array of lines from a file or remote URL.
  *
- * @example
+ * **Example** (Loading a line dataset)
+ *
  * ```ts
  * import { loadLines } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -613,7 +629,8 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
  * Blank lines are skipped. When `skipInvalid` is `true` lines that fail to parse
  * are dropped; otherwise the first malformed line fails the effect.
  *
- * @example
+ * **Example** (Loading a JSONL dataset)
+ *
  * ```ts
  * import { loadJsonl } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
@@ -663,7 +680,8 @@ export const loadJsonl = Effect.fn("DatasetLoader.loadJsonl")(function* (
 /**
  * Load and parse a single JSON document from a file or remote URL.
  *
- * @example
+ * **Example** (Loading a JSON dataset)
+ *
  * ```ts
  * import { loadJson } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *

@@ -14,7 +14,9 @@ import {
 } from "@beep/openai-compat";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { Effect, Layer, pipe, Result, Stream } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -28,7 +30,8 @@ const $I = $VeniceAiId.create("VeniceAiLanguageModel.service");
 /**
  * Options accepted by the Venice Effect AI language-model adapter.
  *
- * @example
+ * **Example** (Making language model options)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  * import * as S from "effect/Schema"
@@ -84,7 +87,7 @@ const errorDescription = (error: VeniceAIError): string =>
   )}.`;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- adapter maps Venice transport failures locally to Effect AI network errors
 const networkTransportError = (error: VeniceAIError): AiError.NetworkError =>
   AiError.NetworkError.make({
     description: errorDescription(error),
@@ -221,7 +224,8 @@ const streamChatCompletion = (
 /**
  * Builds a Venice Effect AI language-model service.
  *
- * @example
+ * **Example** (Building language model service)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *
@@ -252,7 +256,8 @@ export const make: (
 /**
  * Builds a Venice Effect AI language-model layer.
  *
- * @example
+ * **Example** (Building language model layer)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *
@@ -272,7 +277,8 @@ export const layer = (
 /**
  * Builds an Effect AI model value for Venice.
  *
- * @example
+ * **Example** (Creating Effect AI model)
+ *
  * ```ts
  * import { VeniceAiLanguageModel } from "@beep/venice-ai"
  *
@@ -284,8 +290,20 @@ export const layer = (
  * @category constructors
  * @since 0.0.0
  */
-export const model = (
-  modelName: string,
-  config?: OpenAiCompatLanguageModelConfig | undefined
-): AiModel.Model<"venice", LanguageModel.LanguageModel, VeniceAI> =>
-  AiModel.make("venice", modelName, layer(config === undefined ? { model: modelName } : { config, model: modelName }));
+// fallow-ignore-next-line code-duplication -- provider adapters intentionally mirror the shared Effect AI model surface
+export const model: {
+  (
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): (modelName: string) => AiModel.Model<"venice", LanguageModel.LanguageModel, VeniceAI>;
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"venice", LanguageModel.LanguageModel, VeniceAI>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"venice", LanguageModel.LanguageModel, VeniceAI> =>
+    AiModel.make("venice", modelName, layer(config === undefined ? { model: modelName } : { config, model: modelName }))
+);

@@ -19,6 +19,9 @@
       "path": "../../foundation/capability/observability/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/md/tsconfig.json"
     },
     {
@@ -28,19 +31,13 @@
       "path": "../../foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../../shared/domain/tsconfig.json"
+    },
+    {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     },
     {
-      "path": "../../workspace/domain/tsconfig.json"
-    },
-    {
       "path": "../../workspace/use-cases/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/identity/tsconfig.json"
-    },
-    {
-      "path": "../../shared/domain/tsconfig.json"
     }
   ]
 }

@@ -15,15 +15,19 @@ import {
   ProbeProviderInstanceCommand,
   RemoveProviderInstanceCommand,
   UpdateProviderInstanceCommand,
-} from "./ProviderInstance.commands.js";
-import { ProviderActionError } from "./ProviderInstance.errors.js";
+} from "./ProviderInstance.commands.ts";
+import { ProviderActionError } from "./ProviderInstance.errors.ts";
 
-/** RPC for adding an instance.
- * @example
+/**
+ *  RPC for adding an instance.
+ *
+ * **Example** (RPC request identity check)
+ *
  * ```ts
  * import { AddProviderInstanceRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("AddProviderInstance") === AddProviderInstanceRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -32,12 +36,16 @@ export const AddProviderInstanceRpc = Rpc.make("AddProviderInstance", {
   success: ProviderInstance,
   error: ProviderActionError,
 });
-/** RPC for updating an instance.
- * @example
+/**
+ *  RPC for updating an instance.
+ *
+ * **Example** (RPC request identity check)
+ *
  * ```ts
  * import { ProviderInstanceRpcs, UpdateProviderInstanceRpc } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("UpdateProviderInstance") === UpdateProviderInstanceRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -46,12 +54,16 @@ export const UpdateProviderInstanceRpc = Rpc.make("UpdateProviderInstance", {
   success: ProviderInstance,
   error: ProviderActionError,
 });
-/** RPC for removing an instance.
- * @example
+/**
+ *  RPC for removing an instance.
+ *
+ * **Example** (RPC request identity check)
+ *
  * ```ts
  * import { ProviderInstanceRpcs, RemoveProviderInstanceRpc } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("RemoveProviderInstance") === RemoveProviderInstanceRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -60,12 +72,16 @@ export const RemoveProviderInstanceRpc = Rpc.make("RemoveProviderInstance", {
   success: S.Void,
   error: ProviderActionError,
 });
-/** RPC for probing an instance.
- * @example
+/**
+ *  RPC for probing an instance.
+ *
+ * **Example** (RPC request identity check)
+ *
  * ```ts
  * import { ProbeProviderInstanceRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("ProbeProviderInstance") === ProbeProviderInstanceRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -74,12 +90,16 @@ export const ProbeProviderInstanceRpc = Rpc.make("ProbeProviderInstance", {
   success: ProviderInstance,
   error: ProviderActionError,
 });
-/** RPC for loading an instance.
- * @example
+/**
+ *  RPC for loading an instance.
+ *
+ * **Example** (RPC request identity check)
+ *
  * ```ts
  * import { GetProviderInstanceRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("GetProviderInstance") === GetProviderInstanceRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -88,12 +108,16 @@ export const GetProviderInstanceRpc = Rpc.make("GetProviderInstance", {
   success: ProviderInstance,
   error: ProviderActionError,
 });
-/** RPC for listing instances.
- * @example
+/**
+ *  RPC for listing instances.
+ *
+ * **Example** (RPC request identity check)
+ *
  * ```ts
  * import { ListProviderInstancesRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("ListProviderInstances") === ListProviderInstancesRpc)
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */
@@ -103,12 +127,16 @@ export const ListProviderInstancesRpc = Rpc.make("ListProviderInstances", {
   error: ProviderActionError,
 });
 
-/** Client-safe provider-instance RPC group.
- * @example
+/**
+ *  Client-safe provider-instance RPC group.
+ *
+ * **Example** (Check request group membership)
+ *
  * ```ts
  * import { ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.has("ProbeProviderInstance")) // true
  * ```
+ *
  * @category protocols
  * @since 0.0.0
  */

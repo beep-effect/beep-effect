@@ -384,20 +384,6 @@
       "enforcementScope": "declared-dependency-consistency"
     },
     {
-      "ruleId": "@beep/form",
-      "generatedRuleFrom": "@beep/form",
-      "sourceClass": "manifest-derived",
-      "sourceRefs": [
-        "package.json",
-        "packages/foundation/ui-system/form/package.json",
-        "standards/fallow.boundaries.generated.jsonc"
-      ],
-      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
-      "catalogRefs": [],
-      "promotionEligible": true,
-      "enforcementScope": "declared-dependency-consistency"
-    },
-    {
       "ruleId": "@beep/hubspot",
       "generatedRuleFrom": "@beep/hubspot",
       "sourceClass": "manifest-derived",
@@ -1028,34 +1014,6 @@
       "enforcementScope": "declared-dependency-consistency"
     },
     {
-      "ruleId": "@beep/courtlistener",
-      "generatedRuleFrom": "@beep/courtlistener",
-      "sourceClass": "manifest-derived",
-      "sourceRefs": [
-        "package.json",
-        "packages/drivers/courtlistener/package.json",
-        "standards/fallow.boundaries.generated.jsonc"
-      ],
-      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
-      "catalogRefs": [],
-      "promotionEligible": true,
-      "enforcementScope": "declared-dependency-consistency"
-    },
-    {
-      "ruleId": "@beep/dol",
-      "generatedRuleFrom": "@beep/dol",
-      "sourceClass": "manifest-derived",
-      "sourceRefs": [
-        "package.json",
-        "packages/drivers/dol/package.json",
-        "standards/fallow.boundaries.generated.jsonc"
-      ],
-      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
-      "catalogRefs": [],
-      "promotionEligible": true,
-      "enforcementScope": "declared-dependency-consistency"
-    },
-    {
       "ruleId": "@beep/ecfr",
       "generatedRuleFrom": "@beep/ecfr",
       "sourceClass": "manifest-derived",
@@ -1118,20 +1076,6 @@
       "sourceRefs": [
         "package.json",
         "packages/epistemic/use-cases/package.json",
-        "standards/fallow.boundaries.generated.jsonc"
-      ],
-      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
-      "catalogRefs": [],
-      "promotionEligible": true,
-      "enforcementScope": "declared-dependency-consistency"
-    },
-    {
-      "ruleId": "@beep/federal-register",
-      "generatedRuleFrom": "@beep/federal-register",
-      "sourceClass": "manifest-derived",
-      "sourceRefs": [
-        "package.json",
-        "packages/drivers/federal-register/package.json",
         "standards/fallow.boundaries.generated.jsonc"
       ],
       "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],

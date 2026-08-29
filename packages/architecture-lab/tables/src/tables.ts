@@ -6,8 +6,8 @@
  * @since 0.0.0
  */
 
-import * as WorkItem from "./aggregates/WorkItem/index.js";
-import * as Worker from "./entities/Worker/index.js";
+import * as WorkItem from "./aggregates/WorkItem/index.ts";
+import * as Worker from "./entities/Worker/index.ts";
 
 type DbSchemaShape = {
   readonly workItem: typeof WorkItem.workItemTable;
@@ -17,13 +17,14 @@ type DbSchemaShape = {
 /**
  * Drizzle schema object containing the architecture lab table projections.
  *
- * @example
+ * **Example** (Verify schema table names)
+ *
  * ```ts
  * import { DbSchema } from "@beep/architecture-lab-tables/tables"
  * import { getTableName } from "drizzle-orm"
  *
  * const workItemTableName = getTableName(DbSchema.workItem)
- * const workerTableName = DbSchema.worker.definition.tableName
+ * const workerTableName = getTableName(DbSchema.worker)
  * if (workItemTableName !== "architecture_lab_work_item" || workerTableName !== "architecture_lab_worker") {
  *   throw new Error("unexpected architecture lab schema")
  * }
@@ -42,7 +43,8 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type-level view of the architecture lab Drizzle schema object.
  *
- * @example
+ * **Example** (Type-annotate DbSchema value)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/architecture-lab-tables/tables"
  * import { getTableName } from "drizzle-orm"

@@ -26,7 +26,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
-const MessageRoleArbitrary = S.toArbitrary(MessageRole);
+const MessageRoleArbitrary = S.toArbitrary(MessageRole)(fc);
 const publicIdFor = (entityType: string, id: number) =>
   `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
@@ -62,7 +62,7 @@ const baseEntityInput = (entityType: string, id: number) => ({
 });
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equivalent = S.toEquivalence(schema);
@@ -85,7 +85,7 @@ describe("@beep/workspace-domain", () => {
   it("round-trips schema-derived message roles", () =>
     fc.assert(
       fc.property(MessageRoleArbitrary, (role) => {
-        const decoded = S.decodeUnknownSync(MessageRole)(role);
+        const decoded = S.decodeSync(MessageRole)(role);
         const encoded = S.encodeSync(MessageRole)(decoded);
 
         expect(encoded).toBe(role);
@@ -94,14 +94,18 @@ describe("@beep/workspace-domain", () => {
       fcRuns(25)
     ));
 
-  it("wires Workspace to the workspace BaseEntity identity", () => {
-    expect(WorkspaceEntity.definition.entityId).toBe(WorkspaceIdentity.WorkspaceId);
-    expect(WorkspaceEntity.definition.entityId.tableName).toBe("workspace_workspace");
-    expect(WorkspaceEntity.definition.entityId.entityType).toBe("WorkspaceWorkspace");
-    expect(WorkspaceEntity.definition.persisted.id.storageKind).toBe("entityId");
-    expect(WorkspaceEntity.definition.persisted.ownerPrincipalFixtureKey.columnName).toBe(
-      "owner_principal_fixture_key"
-    );
+  it("wires Workspace to the workspace ProductEntity identity", () => {
+    expect(WorkspaceEntity.sql.tableName).toBe(WorkspaceIdentity.WorkspaceId.tableName);
+    expect(WorkspaceIdentity.WorkspaceId.entityType).toBe("WorkspaceWorkspace");
+    expect(Object.keys(WorkspaceEntity.insert.fields)).not.toContain("id");
+    expect(Object.keys(WorkspaceEntity.update.fields)).toContain("id");
+    expect(Object.keys(WorkspaceEntity.jsonCreate.fields)).toEqual([
+      "fixtureKey",
+      "name",
+      "organizationFixtureKey",
+      "ownerPrincipalFixtureKey",
+      "vaultRootPath",
+    ]);
   });
 
   it("decodes and constructs a Workspace row", () => {
@@ -171,14 +175,12 @@ describe("@beep/workspace-domain", () => {
   });
 
   it("wires Thread, Turn, and Message to workspace identities", () => {
-    expect(Thread.definition.entityId).toBe(WorkspaceIdentity.ThreadId);
-    expect(Thread.definition.entityId.tableName).toBe("workspace_thread");
-    expect(Turn.definition.entityId).toBe(WorkspaceIdentity.TurnId);
-    expect(Turn.definition.entityId.tableName).toBe("workspace_turn");
-    expect(Turn.definition.persisted.parentTurnId.columnName).toBe("parent_turn_id");
-    expect(Message.definition.entityId).toBe(WorkspaceIdentity.MessageId);
-    expect(Message.definition.entityId.tableName).toBe("workspace_message");
-    expect(Message.definition.persisted.content.storageKind).toBe("jsonb");
+    expect(Thread.sql.tableName).toBe(WorkspaceIdentity.ThreadId.tableName);
+    expect(Turn.sql.tableName).toBe(WorkspaceIdentity.TurnId.tableName);
+    expect(Message.sql.tableName).toBe(WorkspaceIdentity.MessageId.tableName);
+    expect(Object.keys(Thread.jsonCreate.fields)).toEqual(["title", "workspaceId"]);
+    expect(Object.keys(Turn.jsonCreate.fields)).toEqual(["items", "parentTurnId", "threadId", "turnIndex"]);
+    expect(Object.keys(Message.jsonCreate.fields)).toEqual(["content", "role", "threadId", "turnId"]);
   });
 
   it("decodes thread branching and md-aligned message content", () => {

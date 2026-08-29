@@ -9,6 +9,7 @@ import { Match } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HasNullByte, SupportedWindowsNamespace, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath.guards.ts";
 import { HasLeafSegment } from "./FilePath.roots.ts";
 import { $I, isWindowsDrivePrefix } from "./FilePath.shared.ts";
@@ -22,18 +23,26 @@ const SupportedPathFamilyKit = LiteralKit([
   "windowsRelative",
 ]);
 
+const FilePathArbitraryValues = [
+  "data/ontology.ttl",
+  "/tmp/ontology.ttl",
+  "fixtures/embeddings.bin",
+  "C:\\ontology\\shapes.ttl",
+] as const;
+
 /**
  * Literal union of file-path families recognized by {@link FilePath}.
  *
- * @example
+ * **Example** (Check supported path family)
+ *
  * ```ts
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
  *
  * console.log(SupportedPathFamily.Options.includes("posixAbsolute"))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
   $I.annoteSchema("SupportedPathFamily", {
@@ -44,7 +53,8 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
 /**
  * Type for {@link SupportedPathFamily}.
  *
- * @example
+ * **Example** (Decode path family literal)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
@@ -53,8 +63,8 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SupportedPathFamily = typeof SupportedPathFamily.Type;
 
@@ -123,12 +133,15 @@ const FilePathChecks = S.makeFilterGroup(
 /**
  * Branded schema for file path strings that are valid on at least one major OS.
  *
+ * **Details**
+ *
  * Validates POSIX absolute, POSIX relative, Windows drive, Windows UNC, and
  * Windows relative path families. Rejects empty strings, embedded NUL bytes,
  * bare root paths, and unsupported Windows namespace prefixes.
  *
- * @example
- * ```ts
+ * **Example** (Decode valid file paths)
+ *
+ * ```ts import.meta.vitest name="Decode valid file paths"
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
  *
@@ -138,7 +151,8 @@ const FilePathChecks = S.makeFilterGroup(
  * const relative = decode("src/index.ts")
  * ```
  *
- * @example
+ * **Example** (Reject bare root paths)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
@@ -149,20 +163,29 @@ const FilePathChecks = S.makeFilterGroup(
  * console.log(is("src/index.ts")) // true
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
-export const FilePath = S.String.check(FilePathChecks).pipe(
-  S.brand("FilePath"),
-  $I.annoteSchema("FilePath", {
-    description: "A file path string valid for at least one supported operating-system path family.",
+export const FilePath = S.String.check(FilePathChecks)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...FilePathArbitraryValues),
   })
-);
+  .pipe(
+    S.brand("FilePath"),
+    SchemaUtils.withCodecStatics,
+    SchemaUtils.withStatics((schema) => ({
+      is: S.is(schema),
+    })),
+    $I.annoteSchema("FilePath", {
+      description: "A file path string valid for at least one supported operating-system path family.",
+    })
+  );
 
 /**
  * Branded file path string type extracted from {@link FilePath}.
  *
- * @example
+ * **Example** (Type annotated file path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FilePath } from "@beep/schema/FilePath"
@@ -171,7 +194,7 @@ export const FilePath = S.String.check(FilePathChecks).pipe(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FilePath = typeof FilePath.Type;

@@ -18,8 +18,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -28,14 +28,13 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "dtslint": "bunx tstyche --config ../../../tstyche.json --root ../../.. packages/drivers/m365/dtslint/M365.tst.ts",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
-    "type-test": "bun run dtslint"
+    "test:integration:parallel": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -74,7 +73,6 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@microsoft/microsoft-graph-types": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"
   }

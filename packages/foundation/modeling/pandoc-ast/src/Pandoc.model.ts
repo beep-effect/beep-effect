@@ -6,26 +6,25 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import { A, O } from "@beep/utils";
 import * as S from "effect/Schema";
+import {
+  isPandocKnownConstructorName,
+  PandocListNumberDelimiter,
+  PandocListNumberStyle,
+  PandocMathType,
+  PandocTableAlignmentConstructorName,
+} from "./internal/Pandoc.registry.ts";
 
 const $I = $PandocAstId.create("Pandoc.model");
-
-const withPandocCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown, unknown>>(self: Sch) =>
-  SchemaUtils.withStatics((schema: Sch) => {
-    const decoder = schema as Sch & S.ConstraintDecoder<unknown>;
-
-    return {
-      decodeOption: S.decodeUnknownOption(decoder),
-      fromUnknown: S.decodeUnknownSync(decoder),
-      is: S.is(schema),
-    };
-  })(self);
+type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]>[0];
 
 /**
  * Pandoc API version tuple carried by Pandoc JSON.
  *
- * @example
+ * **Example** (Making API version tuple)
+ *
  * ```ts
  * import { PandocApiVersion } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -44,12 +43,13 @@ export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqu
 /**
  * Runtime type for {@link PandocApiVersion}.
  *
- * @example
- * ```ts
+ * **Example** (Typing version tuple)
+ *
+ * ```ts import.meta.vitest name="Typing version tuple"
  * import type { PandocApiVersion } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const version: PandocApiVersion = [1, 23, 1]
- * console.log(version.length) // 3
+ * version.length // => 3
  * ```
  *
  * @category models
@@ -58,9 +58,100 @@ export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqu
 export type PandocApiVersion = typeof PandocApiVersion.Type;
 
 /**
+ * Default Pandoc JSON API version emitted by Md-to-Pandoc projections.
+ *
+ * **Example** (Joining default version)
+ *
+ * ```ts import.meta.vitest name="Joining default version"
+ * import { DEFAULT_PANDOC_API_VERSION } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * DEFAULT_PANDOC_API_VERSION.join(".") // => "1.23.1"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DEFAULT_PANDOC_API_VERSION: PandocApiVersion = PandocApiVersion.make([1, 23, 1]);
+
+/**
+ * Exact JSON object retained for a future Pandoc constructor.
+ *
+ * **Details**
+ *
+ * The `c` payload is genuinely optional because Pandoc nullary constructors
+ * omit it. Rest fields remain part of the semantic opaque node so a future
+ * constructor can round-trip without guessing which fields matter.
+ *
+ * **Example** (Making unknown constructor wire)
+ *
+ * ```ts import.meta.vitest name="Making unknown constructor wire"
+ * import { PandocUnknownConstructorWire } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const wire = PandocUnknownConstructorWire.make({ t: "Future", extension: true })
+ * wire.extension // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PandocUnknownConstructorWire = S.StructWithRest(
+  S.Struct({
+    c: S.optionalKey(S.Json),
+    t: S.String,
+  }),
+  [S.Record(S.String, S.Json)]
+).pipe(
+  $I.annoteSchema("PandocUnknownConstructorWire", {
+    description: "Exact opaque JSON object for an unknown future Pandoc constructor.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link PandocUnknownConstructorWire}.
+ *
+ * **Example** (Typing unknown constructor wire)
+ *
+ * ```ts import.meta.vitest name="Typing unknown constructor wire"
+ * import type { PandocUnknownConstructorWire } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const wire: PandocUnknownConstructorWire = { t: "Future" }
+ * wire.t // => "Future"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocUnknownConstructorWire = typeof PandocUnknownConstructorWire.Type;
+
+const makePandocFutureConstructorArbitrary = (fc: ArbitraryFastCheck) =>
+  fc.string().map((suffix) => PandocUnknownConstructorWire.make({ t: `Future${suffix}` }));
+const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
+  S.check(
+    S.makeFilter((wire) => !isPandocKnownConstructorName(wire.t), {
+      identifier: $I`PandocFutureConstructorWireCheck`,
+      title: "Future Pandoc constructor",
+      description: "An opaque Pandoc constructor whose name is absent from every known constructor registry.",
+      message: "Expected a future Pandoc constructor name that is not already known.",
+      arbitrary: {
+        candidate: {
+          weight: 32,
+          make: makePandocFutureConstructorArbitrary,
+        },
+      },
+    })
+  ),
+  $I.annoteSchema("PandocFutureConstructorWire", {
+    description: "Exact opaque JSON object whose constructor name is absent from every known registry.",
+    toArbitrary: () => makePandocFutureConstructorArbitrary,
+  })
+);
+
+/**
  * Pandoc attribute key/value pair.
  *
- * @example
+ * **Example** (Decoding key-value pair)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
@@ -81,12 +172,13 @@ export const PandocKeyValue = S.Tuple([S.String, S.String]).pipe(
 /**
  * Runtime type for {@link PandocKeyValue}.
  *
- * @example
- * ```ts
+ * **Example** (Typing key-value pair)
+ *
+ * ```ts import.meta.vitest name="Typing key-value pair"
  * import type { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const pair: PandocKeyValue = ["data-foo", "bar"]
- * console.log(pair[0]) // "data-foo"
+ * pair[0] // => "data-foo"
  * ```
  *
  * @category models
@@ -97,12 +189,13 @@ export type PandocKeyValue = typeof PandocKeyValue.Type;
 /**
  * Pandoc attribute triple represented with named fields.
  *
- * @example
- * ```ts
+ * **Example** (Using empty attributes)
+ *
+ * ```ts import.meta.vitest name="Using empty attributes"
  * import { PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const attr = PandocAttr.empty
- * console.log(attr.id) // ""
+ * attr.id // => ""
  * ```
  *
  * @category models
@@ -110,15 +203,17 @@ export type PandocKeyValue = typeof PandocKeyValue.Type;
  */
 export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
   {
-    classes: S.Array(S.String).annotateKey({
+    classes: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])).annotateKey({
       description: "Pandoc attribute classes.",
     }),
-    id: S.String.annotateKey({
+    id: S.String.pipe(SchemaUtils.withConstantDefault<string>("")).annotateKey({
       description: "Pandoc attribute identifier.",
     }),
-    keyValues: S.Array(PandocKeyValue).annotateKey({
-      description: "Pandoc attribute key/value pairs.",
-    }),
+    keyValues: S.Array(PandocKeyValue)
+      .pipe(SchemaUtils.withConstantDefault<ReadonlyArray<PandocKeyValue>>([]))
+      .annotateKey({
+        description: "Pandoc attribute key/value pairs.",
+      }),
   },
   $I.annote("PandocAttr", {
     description: "Pandoc attribute triple represented with named fields.",
@@ -132,12 +227,13 @@ export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
 /**
  * Companion namespace for {@link PandocAttr}.
  *
- * @example
- * ```ts
+ * **Example** (Making named attributes)
+ *
+ * ```ts import.meta.vitest name="Making named attributes"
  * import { PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const attr: PandocAttr.Type = PandocAttr.make({ classes: ["note"], id: "n1", keyValues: [] })
- * console.log(attr.classes[0]) // "note"
+ * attr.classes[0] // => "note"
  * ```
  *
  * @category models
@@ -162,7 +258,8 @@ export declare namespace PandocAttr {
 /**
  * Pandoc link or image target.
  *
- * @example
+ * **Example** (Making link target)
+ *
  * ```ts
  * import { PandocTarget } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -175,7 +272,7 @@ export declare namespace PandocAttr {
  */
 export class PandocTarget extends S.Class<PandocTarget>($I`PandocTarget`)(
   {
-    title: S.String.annotateKey({
+    title: S.String.pipe(SchemaUtils.withConstantDefault<string>("")).annotateKey({
       description: "Pandoc target title.",
     }),
     url: S.String.annotateKey({
@@ -190,12 +287,13 @@ export class PandocTarget extends S.Class<PandocTarget>($I`PandocTarget`)(
 /**
  * Companion namespace for {@link PandocTarget}.
  *
- * @example
- * ```ts
+ * **Example** (Typing link target)
+ *
+ * ```ts import.meta.vitest name="Typing link target"
  * import { PandocTarget } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const target: PandocTarget.Type = PandocTarget.make({ title: "Example", url: "https://example.com" })
- * console.log(target.title) // "Example"
+ * target.title // => "Example"
  * ```
  *
  * @category models
@@ -219,31 +317,29 @@ export declare namespace PandocTarget {
 /**
  * Pandoc math mode marker.
  *
- * @example
- * ```ts
+ * **Example** (Checking InlineMath marker)
+ *
+ * ```ts import.meta.vitest name="Checking InlineMath marker"
  * import { PandocMathType } from "@beep/pandoc-ast/Pandoc.model"
  *
- * console.log(PandocMathType.is.InlineMath("InlineMath")) // true
+ * PandocMathType.is.InlineMath("InlineMath") // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PandocMathType = LiteralKit(["InlineMath", "DisplayMath"]).pipe(
-  $I.annoteSchema("PandocMathType", {
-    description: "Pandoc math mode marker.",
-  })
-);
+export { PandocMathType };
 
 /**
  * Runtime type for {@link PandocMathType}.
  *
- * @example
- * ```ts
+ * **Example** (Typing math type)
+ *
+ * ```ts import.meta.vitest name="Typing math type"
  * import type { PandocMathType } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const mathType: PandocMathType = "InlineMath"
- * console.log(mathType) // "InlineMath"
+ * mathType // => "InlineMath"
  * ```
  *
  * @category models
@@ -254,39 +350,29 @@ export type PandocMathType = typeof PandocMathType.Type;
 /**
  * Pandoc ordered-list numbering style constructor.
  *
- * @example
- * ```ts
+ * **Example** (Checking DefaultStyle marker)
+ *
+ * ```ts import.meta.vitest name="Checking DefaultStyle marker"
  * import { PandocListNumberStyle } from "@beep/pandoc-ast/Pandoc.model"
  *
- * console.log(PandocListNumberStyle.is.DefaultStyle("DefaultStyle")) // true
+ * PandocListNumberStyle.is.DefaultStyle("DefaultStyle") // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PandocListNumberStyle = LiteralKit([
-  "DefaultStyle",
-  "Example",
-  "Decimal",
-  "LowerRoman",
-  "UpperRoman",
-  "LowerAlpha",
-  "UpperAlpha",
-]).pipe(
-  $I.annoteSchema("PandocListNumberStyle", {
-    description: "Pandoc ordered-list numbering style constructor.",
-  })
-);
+export { PandocListNumberStyle };
 
 /**
  * Runtime type for {@link PandocListNumberStyle}.
  *
- * @example
- * ```ts
+ * **Example** (Typing list number style)
+ *
+ * ```ts import.meta.vitest name="Typing list number style"
  * import type { PandocListNumberStyle } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const style: PandocListNumberStyle = "Decimal"
- * console.log(style) // "Decimal"
+ * style // => "Decimal"
  * ```
  *
  * @category models
@@ -297,31 +383,29 @@ export type PandocListNumberStyle = typeof PandocListNumberStyle.Type;
 /**
  * Pandoc ordered-list numbering delimiter constructor.
  *
- * @example
- * ```ts
+ * **Example** (Checking DefaultDelim marker)
+ *
+ * ```ts import.meta.vitest name="Checking DefaultDelim marker"
  * import { PandocListNumberDelimiter } from "@beep/pandoc-ast/Pandoc.model"
  *
- * console.log(PandocListNumberDelimiter.is.DefaultDelim("DefaultDelim")) // true
+ * PandocListNumberDelimiter.is.DefaultDelim("DefaultDelim") // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PandocListNumberDelimiter = LiteralKit(["DefaultDelim", "Period", "OneParen", "TwoParens"]).pipe(
-  $I.annoteSchema("PandocListNumberDelimiter", {
-    description: "Pandoc ordered-list numbering delimiter constructor.",
-  })
-);
+export { PandocListNumberDelimiter };
 
 /**
  * Runtime type for {@link PandocListNumberDelimiter}.
  *
- * @example
- * ```ts
+ * **Example** (Typing list delimiter)
+ *
+ * ```ts import.meta.vitest name="Typing list delimiter"
  * import type { PandocListNumberDelimiter } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const delimiter: PandocListNumberDelimiter = "Period"
- * console.log(delimiter) // "Period"
+ * delimiter // => "Period"
  * ```
  *
  * @category models
@@ -332,20 +416,21 @@ export type PandocListNumberDelimiter = typeof PandocListNumberDelimiter.Type;
 /**
  * Recursive Pandoc inline child list.
  *
- * @example
- * ```ts
+ * **Example** (Checking empty inline children)
+ *
+ * ```ts import.meta.vitest name="Checking empty inline children"
  * import * as S from "effect/Schema"
  * import { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const isInlineChildren = S.is(PandocInlineChildren)
- * console.log(isInlineChildren([])) // true
+ * isInlineChildren([]) // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const PandocInlineChildren = S.Array(
-  S.suspend((): S.Codec<PandocInline.Type, PandocInline.Encoded, unknown, unknown> => PandocInline)
+  S.suspend((): S.Codec<PandocInline.Type, PandocInline.Encoded> => PandocInline)
 ).pipe(
   $I.annoteSchema("PandocInlineChildren", {
     description: "Recursive Pandoc inline child list.",
@@ -355,12 +440,13 @@ export const PandocInlineChildren = S.Array(
 /**
  * Runtime type for {@link PandocInlineChildren}.
  *
- * @example
- * ```ts
+ * **Example** (Typing empty inline children)
+ *
+ * ```ts import.meta.vitest name="Typing empty inline children"
  * import type { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const children: PandocInlineChildren = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -371,12 +457,13 @@ export type PandocInlineChildren = typeof PandocInlineChildren.Type;
 /**
  * Companion namespace for {@link PandocInlineChildren}.
  *
- * @example
- * ```ts
+ * **Example** (Using inline children Type)
+ *
+ * ```ts import.meta.vitest name="Using inline children Type"
  * import { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const children: PandocInlineChildren.Type = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -397,20 +484,21 @@ export declare namespace PandocInlineChildren {
 /**
  * Recursive Pandoc block child list.
  *
- * @example
- * ```ts
+ * **Example** (Checking empty block children)
+ *
+ * ```ts import.meta.vitest name="Checking empty block children"
  * import * as S from "effect/Schema"
  * import { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const isBlockChildren = S.is(PandocBlockChildren)
- * console.log(isBlockChildren([])) // true
+ * isBlockChildren([]) // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const PandocBlockChildren = S.Array(
-  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded, unknown, unknown> => PandocBlock)
+  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded> => PandocBlock)
 ).pipe(
   $I.annoteSchema("PandocBlockChildren", {
     description: "Recursive Pandoc block child list.",
@@ -420,12 +508,13 @@ export const PandocBlockChildren = S.Array(
 /**
  * Runtime type for {@link PandocBlockChildren}.
  *
- * @example
- * ```ts
+ * **Example** (Typing empty block children)
+ *
+ * ```ts import.meta.vitest name="Typing empty block children"
  * import type { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const children: PandocBlockChildren = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -436,12 +525,13 @@ export type PandocBlockChildren = typeof PandocBlockChildren.Type;
 /**
  * Companion namespace for {@link PandocBlockChildren}.
  *
- * @example
- * ```ts
+ * **Example** (Using block children Type)
+ *
+ * ```ts import.meta.vitest name="Using block children Type"
  * import { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const children: PandocBlockChildren.Type = []
- * console.log(children.length) // 0
+ * children.length // => 0
  * ```
  *
  * @category models
@@ -462,20 +552,21 @@ export declare namespace PandocBlockChildren {
 /**
  * One Pandoc list item as a list of blocks.
  *
- * @example
- * ```ts
+ * **Example** (Checking empty list item)
+ *
+ * ```ts import.meta.vitest name="Checking empty list item"
  * import * as S from "effect/Schema"
  * import { PandocListItem } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const isListItem = S.is(PandocListItem)
- * console.log(isListItem([])) // true
+ * isListItem([]) // => true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const PandocListItem = S.Array(
-  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded, unknown, unknown> => PandocBlock)
+  S.suspend((): S.Codec<PandocBlock.Type, PandocBlock.Encoded> => PandocBlock)
 ).pipe(
   $I.annoteSchema("PandocListItem", {
     description: "One Pandoc list item as a list of blocks.",
@@ -485,12 +576,13 @@ export const PandocListItem = S.Array(
 /**
  * Runtime type for {@link PandocListItem}.
  *
- * @example
- * ```ts
+ * **Example** (Typing empty list item)
+ *
+ * ```ts import.meta.vitest name="Typing empty list item"
  * import type { PandocListItem } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const item: PandocListItem = []
- * console.log(item.length) // 0
+ * item.length // => 0
  * ```
  *
  * @category models
@@ -501,13 +593,14 @@ export type PandocListItem = typeof PandocListItem.Type;
 /**
  * Pandoc list items.
  *
- * @example
- * ```ts
+ * **Example** (Checking empty list items)
+ *
+ * ```ts import.meta.vitest name="Checking empty list items"
  * import * as S from "effect/Schema"
  * import { PandocListItems } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const isListItems = S.is(PandocListItems)
- * console.log(isListItems([])) // true
+ * isListItems([]) // => true
  * ```
  *
  * @category models
@@ -522,12 +615,13 @@ export const PandocListItems = S.Array(PandocListItem).pipe(
 /**
  * Runtime type for {@link PandocListItems}.
  *
- * @example
- * ```ts
+ * **Example** (Typing empty list items)
+ *
+ * ```ts import.meta.vitest name="Typing empty list items"
  * import type { PandocListItems } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const items: PandocListItems = []
- * console.log(items.length) // 0
+ * items.length // => 0
  * ```
  *
  * @category models
@@ -538,12 +632,13 @@ export type PandocListItems = typeof PandocListItems.Type;
 /**
  * Plain text inline.
  *
- * @example
- * ```ts
+ * **Example** (Making plain text inline)
+ *
+ * ```ts import.meta.vitest name="Making plain text inline"
  * import { Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Str.make({ text: "hello" })
- * console.log(node._tag) // "str"
+ * node._tag // => "str"
  * ```
  *
  * @category models
@@ -564,12 +659,13 @@ export class Str extends S.TaggedClass<Str>($I`Str`)(
 /**
  * Companion namespace for {@link Str}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Str node)
+ *
+ * ```ts import.meta.vitest name="Typing Str node"
  * import { Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Str.Type = Str.make({ text: "hello" })
- * console.log(node.text) // "hello"
+ * node.text // => "hello"
  * ```
  *
  * @category models
@@ -593,12 +689,13 @@ export declare namespace Str {
 /**
  * Pandoc space inline.
  *
- * @example
- * ```ts
+ * **Example** (Making space inline)
+ *
+ * ```ts import.meta.vitest name="Making space inline"
  * import { Space } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Space.make()
- * console.log(node._tag) // "space"
+ * node._tag // => "space"
  * ```
  *
  * @category models
@@ -615,12 +712,13 @@ export class Space extends S.TaggedClass<Space>($I`Space`)(
 /**
  * Companion namespace for {@link Space}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Space node)
+ *
+ * ```ts import.meta.vitest name="Typing Space node"
  * import { Space } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Space.Type = Space.make()
- * console.log(node._tag) // "space"
+ * node._tag // => "space"
  * ```
  *
  * @category models
@@ -643,12 +741,13 @@ export declare namespace Space {
 /**
  * Pandoc soft line break inline.
  *
- * @example
- * ```ts
+ * **Example** (Making soft break inline)
+ *
+ * ```ts import.meta.vitest name="Making soft break inline"
  * import { SoftBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = SoftBreak.make()
- * console.log(node._tag) // "softbreak"
+ * node._tag // => "softbreak"
  * ```
  *
  * @category models
@@ -665,12 +764,13 @@ export class SoftBreak extends S.TaggedClass<SoftBreak>($I`SoftBreak`)(
 /**
  * Companion namespace for {@link SoftBreak}.
  *
- * @example
- * ```ts
+ * **Example** (Typing SoftBreak node)
+ *
+ * ```ts import.meta.vitest name="Typing SoftBreak node"
  * import { SoftBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: SoftBreak.Type = SoftBreak.make()
- * console.log(node._tag) // "softbreak"
+ * node._tag // => "softbreak"
  * ```
  *
  * @category models
@@ -693,12 +793,13 @@ export declare namespace SoftBreak {
 /**
  * Pandoc hard line break inline.
  *
- * @example
- * ```ts
+ * **Example** (Making hard line break)
+ *
+ * ```ts import.meta.vitest name="Making hard line break"
  * import { LineBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = LineBreak.make()
- * console.log(node._tag) // "linebreak"
+ * node._tag // => "linebreak"
  * ```
  *
  * @category models
@@ -715,12 +816,13 @@ export class LineBreak extends S.TaggedClass<LineBreak>($I`LineBreak`)(
 /**
  * Companion namespace for {@link LineBreak}.
  *
- * @example
- * ```ts
+ * **Example** (Typing LineBreak node)
+ *
+ * ```ts import.meta.vitest name="Typing LineBreak node"
  * import { LineBreak } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: LineBreak.Type = LineBreak.make()
- * console.log(node._tag) // "linebreak"
+ * node._tag // => "linebreak"
  * ```
  *
  * @category models
@@ -743,12 +845,13 @@ export declare namespace LineBreak {
 /**
  * Pandoc emphasis inline.
  *
- * @example
- * ```ts
+ * **Example** (Making emphasis inline)
+ *
+ * ```ts import.meta.vitest name="Making emphasis inline"
  * import { Emph, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Emph.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -769,12 +872,13 @@ export class Emph extends S.TaggedClass<Emph>($I`Emph`)(
 /**
  * Companion namespace for {@link Emph}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Emph node)
+ *
+ * ```ts import.meta.vitest name="Typing Emph node"
  * import { Emph, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Emph.Type = Emph.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -801,12 +905,13 @@ export declare namespace Emph {
 /**
  * Pandoc strong inline.
  *
- * @example
- * ```ts
+ * **Example** (Making strong inline)
+ *
+ * ```ts import.meta.vitest name="Making strong inline"
  * import { Strong, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Strong.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -827,12 +932,13 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 /**
  * Companion namespace for {@link Strong}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Strong node)
+ *
+ * ```ts import.meta.vitest name="Typing Strong node"
  * import { Strong, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Strong.Type = Strong.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -859,12 +965,13 @@ export declare namespace Strong {
 /**
  * Pandoc strikeout inline.
  *
- * @example
- * ```ts
+ * **Example** (Making strikeout inline)
+ *
+ * ```ts import.meta.vitest name="Making strikeout inline"
  * import { Strikeout, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Strikeout.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -885,12 +992,13 @@ export class Strikeout extends S.TaggedClass<Strikeout>($I`Strikeout`)(
 /**
  * Companion namespace for {@link Strikeout}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Strikeout node)
+ *
+ * ```ts import.meta.vitest name="Typing Strikeout node"
  * import { Strikeout, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Strikeout.Type = Strikeout.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -917,12 +1025,13 @@ export declare namespace Strikeout {
 /**
  * Pandoc code inline.
  *
- * @example
- * ```ts
+ * **Example** (Making code inline)
+ *
+ * ```ts import.meta.vitest name="Making code inline"
  * import { Code, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Code.make({ attr: PandocAttr.empty, text: "const x = 1" })
- * console.log(node.text) // "const x = 1"
+ * node.text // => "const x = 1"
  * ```
  *
  * @category models
@@ -946,12 +1055,13 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 /**
  * Companion namespace for {@link Code}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Code node)
+ *
+ * ```ts import.meta.vitest name="Typing Code node"
  * import { Code, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Code.Type = Code.make({ attr: PandocAttr.empty, text: "const x = 1" })
- * console.log(node.text) // "const x = 1"
+ * node.text // => "const x = 1"
  * ```
  *
  * @category models
@@ -980,8 +1090,9 @@ export declare namespace Code {
 /**
  * Pandoc link inline.
  *
- * @example
- * ```ts
+ * **Example** (Making link inline)
+ *
+ * ```ts import.meta.vitest name="Making link inline"
  * import { Link, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Link.make({
@@ -989,7 +1100,7 @@ export declare namespace Code {
  *   children: [Str.make({ text: "example" })],
  *   target: PandocTarget.make({ title: "", url: "https://example.com" }),
  * })
- * console.log(node.target.url) // "https://example.com"
+ * node.target.url // => "https://example.com"
  * ```
  *
  * @category models
@@ -1016,8 +1127,9 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
 /**
  * Companion namespace for {@link Link}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Link node)
+ *
+ * ```ts import.meta.vitest name="Typing Link node"
  * import { Link, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Link.Type = Link.make({
@@ -1025,7 +1137,7 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
  *   children: [Str.make({ text: "example" })],
  *   target: PandocTarget.make({ title: "", url: "https://example.com" }),
  * })
- * console.log(node.target.url) // "https://example.com"
+ * node.target.url // => "https://example.com"
  * ```
  *
  * @category models
@@ -1056,8 +1168,9 @@ export declare namespace Link {
 /**
  * Pandoc image inline.
  *
- * @example
- * ```ts
+ * **Example** (Making image inline)
+ *
+ * ```ts import.meta.vitest name="Making image inline"
  * import { Image, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Image.make({
@@ -1065,7 +1178,7 @@ export declare namespace Link {
  *   children: [Str.make({ text: "alt text" })],
  *   target: PandocTarget.make({ title: "", url: "https://example.com/logo.png" }),
  * })
- * console.log(node.target.url) // "https://example.com/logo.png"
+ * node.target.url // => "https://example.com/logo.png"
  * ```
  *
  * @category models
@@ -1092,8 +1205,9 @@ export class Image extends S.TaggedClass<Image>($I`Image`)(
 /**
  * Companion namespace for {@link Image}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Image node)
+ *
+ * ```ts import.meta.vitest name="Typing Image node"
  * import { Image, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Image.Type = Image.make({
@@ -1101,7 +1215,7 @@ export class Image extends S.TaggedClass<Image>($I`Image`)(
  *   children: [Str.make({ text: "alt text" })],
  *   target: PandocTarget.make({ title: "", url: "https://example.com/logo.png" }),
  * })
- * console.log(node.target.url) // "https://example.com/logo.png"
+ * node.target.url // => "https://example.com/logo.png"
  * ```
  *
  * @category models
@@ -1132,12 +1246,13 @@ export declare namespace Image {
 /**
  * Pandoc span inline.
  *
- * @example
- * ```ts
+ * **Example** (Making span inline)
+ *
+ * ```ts import.meta.vitest name="Making span inline"
  * import { Span, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Span.make({ attr: PandocAttr.empty, children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1161,12 +1276,13 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
 /**
  * Companion namespace for {@link Span}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Span node)
+ *
+ * ```ts import.meta.vitest name="Typing Span node"
  * import { Span, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Span.Type = Span.make({ attr: PandocAttr.empty, children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1195,12 +1311,13 @@ export declare namespace Span {
 /**
  * Pandoc footnote or endnote inline.
  *
- * @example
- * ```ts
+ * **Example** (Making footnote inline)
+ *
+ * ```ts import.meta.vitest name="Making footnote inline"
  * import { Note, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Note.make({ blocks: [Para.make({ children: [Str.make({ text: "note" })] })] })
- * console.log(node.blocks.length) // 1
+ * node.blocks.length // => 1
  * ```
  *
  * @category models
@@ -1221,12 +1338,13 @@ export class Note extends S.TaggedClass<Note>($I`Note`)(
 /**
  * Companion namespace for {@link Note}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Note node)
+ *
+ * ```ts import.meta.vitest name="Typing Note node"
  * import { Note, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Note.Type = Note.make({ blocks: [Para.make({ children: [Str.make({ text: "note" })] })] })
- * console.log(node.blocks.length) // 1
+ * node.blocks.length // => 1
  * ```
  *
  * @category models
@@ -1253,12 +1371,13 @@ export declare namespace Note {
 /**
  * Pandoc math inline.
  *
- * @example
- * ```ts
+ * **Example** (Making math inline)
+ *
+ * ```ts import.meta.vitest name="Making math inline"
  * import { Math } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Math.make({ mathType: "InlineMath", text: "x^2" })
- * console.log(node.text) // "x^2"
+ * node.text // => "x^2"
  * ```
  *
  * @category models
@@ -1282,12 +1401,13 @@ export class Math extends S.TaggedClass<Math>($I`Math`)(
 /**
  * Companion namespace for {@link Math}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Math node)
+ *
+ * ```ts import.meta.vitest name="Typing Math node"
  * import { Math } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Math.Type = Math.make({ mathType: "InlineMath", text: "x^2" })
- * console.log(node.mathType) // "InlineMath"
+ * node.mathType // => "InlineMath"
  * ```
  *
  * @category models
@@ -1310,14 +1430,15 @@ export declare namespace Math {
 }
 
 /**
- * Pandoc inline constructor outside the supported v1 surface.
+ * Future Pandoc inline constructor outside the pinned 1.23.1 registry.
  *
- * @example
- * ```ts
+ * **Example** (Making unknown inline)
+ *
+ * ```ts import.meta.vitest name="Making unknown inline"
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = UnknownInline.make({ constructor: "Cite", payload: { citations: [] } })
- * console.log(node.constructor) // "Cite"
+ * const node = UnknownInline.make({ wire: { c: { extension: true }, t: "FutureInline" } })
+ * node.constructorName // => "FutureInline"
  * ```
  *
  * @category models
@@ -1326,27 +1447,45 @@ export declare namespace Math {
 export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline`)(
   "unknownInline",
   {
-    constructor: S.String.annotateKey({
-      description: "Original Pandoc constructor name.",
-    }),
-    payload: S.Unknown.annotateKey({
-      description: "Original Pandoc constructor payload.",
+    wire: PandocFutureConstructorWire.annotateKey({
+      description: "Exact original future Pandoc constructor object.",
     }),
   },
   $I.annote("UnknownInline", {
-    description: "Pandoc inline constructor outside the supported v1 surface.",
+    description: "Future Pandoc inline constructor outside the pinned 1.23.1 registry.",
   })
-) {}
+) {
+  /**
+   * Original Pandoc constructor name derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get constructorName(): string {
+    return this.wire.t;
+  }
+
+  /**
+   * Optional Pandoc constructor payload derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get payload(): S.Json | undefined {
+    return this.wire.c;
+  }
+}
 
 /**
  * Companion namespace for {@link UnknownInline}.
  *
- * @example
- * ```ts
+ * **Example** (Typing UnknownInline node)
+ *
+ * ```ts import.meta.vitest name="Typing UnknownInline node"
  * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: UnknownInline.Type = UnknownInline.make({ constructor: "Cite", payload: { citations: [] } })
- * console.log(node.constructor) // "Cite"
+ * const node: UnknownInline.Type = UnknownInline.make({ wire: { c: { extension: true }, t: "FutureInline" } })
+ * node.constructorName // => "FutureInline"
  * ```
  *
  * @category models
@@ -1358,25 +1497,30 @@ export declare namespace UnknownInline {
    */
   export interface Type {
     readonly _tag: "unknownInline";
-    readonly constructor: string;
-    readonly payload: unknown;
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "unknownInline";
+    readonly wire: PandocUnknownConstructorWire;
+  }
 }
 
 /**
  * Pandoc inline union for the v1 compatibility slice.
  *
- * @example
- * ```ts
+ * **Example** (Checking inline union)
+ *
+ * ```ts import.meta.vitest name="Checking inline union"
  * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const inline = Str.make({ text: "hi" })
- * console.log(PandocInline.is(inline)) // true
+ * PandocInline.is(inline) // => true
  * ```
  *
  * @category models
@@ -1402,18 +1546,19 @@ export const PandocInline = S.Union([
   $I.annoteSchema("PandocInline", {
     description: "Pandoc inline union for the v1 compatibility slice.",
   }),
-  withPandocCodecStatics
+  SchemaUtils.withCodecStatics
 );
 
 /**
  * Runtime type for {@link PandocInline}.
  *
- * @example
- * ```ts
+ * **Example** (Typing inline union)
+ *
+ * ```ts import.meta.vitest name="Typing inline union"
  * import { Str, type PandocInline } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const inline: PandocInline = Str.make({ text: "hi" })
- * console.log(inline._tag) // "str"
+ * inline._tag // => "str"
  * ```
  *
  * @category models
@@ -1424,12 +1569,13 @@ export type PandocInline = typeof PandocInline.Type;
 /**
  * Companion namespace for {@link PandocInline}.
  *
- * @example
- * ```ts
+ * **Example** (Using inline Type alias)
+ *
+ * ```ts import.meta.vitest name="Using inline Type alias"
  * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const inline: PandocInline.Type = Str.make({ text: "hi" })
- * console.log(inline._tag) // "str"
+ * inline._tag // => "str"
  * ```
  *
  * @category models
@@ -1478,12 +1624,13 @@ export declare namespace PandocInline {
 /**
  * Pandoc plain block.
  *
- * @example
- * ```ts
+ * **Example** (Making plain block)
+ *
+ * ```ts import.meta.vitest name="Making plain block"
  * import { Plain, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Plain.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1504,12 +1651,13 @@ export class Plain extends S.TaggedClass<Plain>($I`Plain`)(
 /**
  * Companion namespace for {@link Plain}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Plain node)
+ *
+ * ```ts import.meta.vitest name="Typing Plain node"
  * import { Plain, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Plain.Type = Plain.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1536,12 +1684,13 @@ export declare namespace Plain {
 /**
  * Pandoc paragraph block.
  *
- * @example
- * ```ts
+ * **Example** (Making paragraph block)
+ *
+ * ```ts import.meta.vitest name="Making paragraph block"
  * import { Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Para.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1562,12 +1711,13 @@ export class Para extends S.TaggedClass<Para>($I`Para`)(
 /**
  * Companion namespace for {@link Para}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Para node)
+ *
+ * ```ts import.meta.vitest name="Typing Para node"
  * import { Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Para.Type = Para.make({ children: [Str.make({ text: "hi" })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1594,12 +1744,13 @@ export declare namespace Para {
 /**
  * Pandoc header block.
  *
- * @example
- * ```ts
+ * **Example** (Making header block)
+ *
+ * ```ts import.meta.vitest name="Making header block"
  * import { Header, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Header.make({ attr: PandocAttr.empty, children: [Str.make({ text: "Title" })], level: 1 })
- * console.log(node.level) // 1
+ * node.level // => 1
  * ```
  *
  * @category models
@@ -1626,12 +1777,13 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
 /**
  * Companion namespace for {@link Header}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Header node)
+ *
+ * ```ts import.meta.vitest name="Typing Header node"
  * import { Header, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Header.Type = Header.make({ attr: PandocAttr.empty, children: [Str.make({ text: "Title" })], level: 1 })
- * console.log(node.level) // 1
+ * node.level // => 1
  * ```
  *
  * @category models
@@ -1662,12 +1814,13 @@ export declare namespace Header {
 /**
  * Pandoc block quote.
  *
- * @example
- * ```ts
+ * **Example** (Making block quote)
+ *
+ * ```ts import.meta.vitest name="Making block quote"
  * import { BlockQuote, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = BlockQuote.make({ children: [Para.make({ children: [Str.make({ text: "quoted" })] })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1688,12 +1841,13 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
 /**
  * Companion namespace for {@link BlockQuote}.
  *
- * @example
- * ```ts
+ * **Example** (Typing BlockQuote node)
+ *
+ * ```ts import.meta.vitest name="Typing BlockQuote node"
  * import { BlockQuote, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: BlockQuote.Type = BlockQuote.make({ children: [Para.make({ children: [Str.make({ text: "quoted" })] })] })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1720,12 +1874,13 @@ export declare namespace BlockQuote {
 /**
  * Pandoc fenced code block.
  *
- * @example
- * ```ts
+ * **Example** (Making fenced code block)
+ *
+ * ```ts import.meta.vitest name="Making fenced code block"
  * import { CodeBlock, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = CodeBlock.make({ attr: PandocAttr.empty, text: "const x = 1" })
- * console.log(node.text) // "const x = 1"
+ * node.text // => "const x = 1"
  * ```
  *
  * @category models
@@ -1749,12 +1904,13 @@ export class CodeBlock extends S.TaggedClass<CodeBlock>($I`CodeBlock`)(
 /**
  * Companion namespace for {@link CodeBlock}.
  *
- * @example
- * ```ts
+ * **Example** (Typing CodeBlock node)
+ *
+ * ```ts import.meta.vitest name="Typing CodeBlock node"
  * import { CodeBlock, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: CodeBlock.Type = CodeBlock.make({ attr: PandocAttr.empty, text: "const x = 1" })
- * console.log(node.text) // "const x = 1"
+ * node.text // => "const x = 1"
  * ```
  *
  * @category models
@@ -1783,12 +1939,13 @@ export declare namespace CodeBlock {
 /**
  * Pandoc bullet list block.
  *
- * @example
- * ```ts
+ * **Example** (Making bullet list)
+ *
+ * ```ts import.meta.vitest name="Making bullet list"
  * import { BulletList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = BulletList.make({ items: [[Para.make({ children: [Str.make({ text: "item" })] })]] })
- * console.log(node.items.length) // 1
+ * node.items.length // => 1
  * ```
  *
  * @category models
@@ -1809,12 +1966,13 @@ export class BulletList extends S.TaggedClass<BulletList>($I`BulletList`)(
 /**
  * Companion namespace for {@link BulletList}.
  *
- * @example
- * ```ts
+ * **Example** (Typing BulletList node)
+ *
+ * ```ts import.meta.vitest name="Typing BulletList node"
  * import { BulletList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: BulletList.Type = BulletList.make({ items: [[Para.make({ children: [Str.make({ text: "item" })] })]] })
- * console.log(node.items.length) // 1
+ * node.items.length // => 1
  * ```
  *
  * @category models
@@ -1832,14 +1990,18 @@ export declare namespace BulletList {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "bulletlist";
+    readonly items: ReadonlyArray<ReadonlyArray<PandocBlock.Encoded>>;
+  }
 }
 
 /**
  * Pandoc ordered list block.
  *
- * @example
- * ```ts
+ * **Example** (Making ordered list)
+ *
+ * ```ts import.meta.vitest name="Making ordered list"
  * import { OrderedList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = OrderedList.make({
@@ -1848,7 +2010,7 @@ export declare namespace BulletList {
  *   start: 1,
  *   style: "Decimal",
  * })
- * console.log(node.start) // 1
+ * node.start // => 1
  * ```
  *
  * @category models
@@ -1878,8 +2040,9 @@ export class OrderedList extends S.TaggedClass<OrderedList>($I`OrderedList`)(
 /**
  * Companion namespace for {@link OrderedList}.
  *
- * @example
- * ```ts
+ * **Example** (Typing OrderedList node)
+ *
+ * ```ts import.meta.vitest name="Typing OrderedList node"
  * import { OrderedList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: OrderedList.Type = OrderedList.make({
@@ -1888,7 +2051,7 @@ export class OrderedList extends S.TaggedClass<OrderedList>($I`OrderedList`)(
  *   start: 1,
  *   style: "Decimal",
  * })
- * console.log(node.start) // 1
+ * node.start // => 1
  * ```
  *
  * @category models
@@ -1909,18 +2072,25 @@ export declare namespace OrderedList {
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "orderedlist";
+    readonly delimiter: PandocListNumberDelimiter;
+    readonly items: ReadonlyArray<ReadonlyArray<PandocBlock.Encoded>>;
+    readonly start: number;
+    readonly style: PandocListNumberStyle;
+  }
 }
 
 /**
  * Pandoc horizontal rule block.
  *
- * @example
- * ```ts
+ * **Example** (Making horizontal rule)
+ *
+ * ```ts import.meta.vitest name="Making horizontal rule"
  * import { HorizontalRule } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = HorizontalRule.make({})
- * console.log(node._tag) // "horizontalrule"
+ * node._tag // => "horizontalrule"
  * ```
  *
  * @category models
@@ -1937,12 +2107,13 @@ export class HorizontalRule extends S.TaggedClass<HorizontalRule>($I`HorizontalR
 /**
  * Companion namespace for {@link HorizontalRule}.
  *
- * @example
- * ```ts
+ * **Example** (Typing HorizontalRule node)
+ *
+ * ```ts import.meta.vitest name="Typing HorizontalRule node"
  * import { HorizontalRule } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: HorizontalRule.Type = HorizontalRule.make({})
- * console.log(node._tag) // "horizontalrule"
+ * node._tag // => "horizontalrule"
  * ```
  *
  * @category models
@@ -1965,15 +2136,16 @@ export declare namespace HorizontalRule {
 /**
  * Pandoc div block, including DOCX custom-style wrappers.
  *
- * @example
- * ```ts
+ * **Example** (Making div block)
+ *
+ * ```ts import.meta.vitest name="Making div block"
  * import { Div, Para, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node = Div.make({
  *   attr: PandocAttr.empty,
  *   children: [Para.make({ children: [Str.make({ text: "hi" })] })],
  * })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -1997,15 +2169,16 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
 /**
  * Companion namespace for {@link Div}.
  *
- * @example
- * ```ts
+ * **Example** (Typing Div node)
+ *
+ * ```ts import.meta.vitest name="Typing Div node"
  * import { Div, Para, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const node: Div.Type = Div.make({
  *   attr: PandocAttr.empty,
  *   children: [Para.make({ children: [Str.make({ text: "hi" })] })],
  * })
- * console.log(node.children.length) // 1
+ * node.children.length // => 1
  * ```
  *
  * @category models
@@ -2031,15 +2204,295 @@ export declare namespace Div {
   }
 }
 
+const PandocAttrPayload = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
+const PandocTablePayloadShape = S.Tuple([PandocAttrPayload, S.Json, S.Array(S.Json), S.Json, S.Array(S.Json), S.Json]);
+const PandocTargetPayload = S.Tuple([S.String, S.String]);
+const pandocConstructorWithPayload = <const Name extends string, Payload extends S.Top>(t: Name, c: Payload) =>
+  S.Struct({ c, t: S.Literal(t) });
+const pandocNullaryConstructor = <const Name extends string>(t: Name) =>
+  S.Struct({ c: S.optionalKey(S.Undefined), t: S.Literal(t) });
+const PandocMathTypeWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocMathType,
+});
+const PandocListNumberStyleWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocListNumberStyle,
+});
+const PandocListNumberDelimiterWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocListNumberDelimiter,
+});
+const PandocTableAlignmentWire = S.Union([
+  S.Struct({
+    c: S.optionalKey(S.Undefined),
+    t: PandocTableAlignmentConstructorName,
+  }),
+  PandocFutureConstructorWire,
+]);
+const PandocTableColumnWidthWire = S.Union([
+  pandocConstructorWithPayload("ColWidth", S.Finite),
+  pandocNullaryConstructor("ColWidthDefault"),
+  PandocFutureConstructorWire,
+]);
+const DeferredPandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() => PandocBlockWire);
+const DeferredPandocTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() => PandocSemanticTablePayloadWire);
+
+const PandocInlineWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    pandocConstructorWithPayload("Str", S.String),
+    pandocNullaryConstructor("Space"),
+    pandocNullaryConstructor("SoftBreak"),
+    pandocNullaryConstructor("LineBreak"),
+    pandocConstructorWithPayload("Emph", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Strong", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Strikeout", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Code", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("Link", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
+    pandocConstructorWithPayload("Image", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
+    pandocConstructorWithPayload("Span", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("Note", S.Array(DeferredPandocBlockWire)),
+    pandocConstructorWithPayload("Math", S.Tuple([PandocMathTypeWire, S.String])),
+    PandocFutureConstructorWire,
+  ])
+);
+
+const PandocTableCaptionPairWire = S.Tuple([
+  PandocInlineWire.pipe(S.Array, S.NullOr),
+  S.Array(DeferredPandocBlockWire),
+]);
+const PandocTableCaptionWire = S.Union([PandocTableCaptionPairWire, PandocFutureConstructorWire]);
+const PandocTableColumnSpecWire = S.Union([
+  S.Tuple([PandocTableAlignmentWire, PandocTableColumnWidthWire]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableCellWire = S.Union([
+  S.Tuple([PandocAttrPayload, PandocTableAlignmentWire, S.Int, S.Int, S.Array(DeferredPandocBlockWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableRowWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableCellWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableHeadOrFootWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableRowWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableBodyWire = S.Union([
+  S.Tuple([PandocAttrPayload, S.Int, S.Array(PandocTableRowWire), S.Array(PandocTableRowWire)]),
+  PandocFutureConstructorWire,
+]);
+const PandocSemanticTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Tuple([
+    PandocAttrPayload,
+    PandocTableCaptionWire,
+    S.Array(PandocTableColumnSpecWire),
+    PandocTableHeadOrFootWire,
+    S.Array(PandocTableBodyWire),
+    PandocTableHeadOrFootWire,
+  ])
+);
+
+const PandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    pandocConstructorWithPayload("Plain", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Para", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Header", S.Tuple([S.Int, PandocAttrPayload, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("BlockQuote", S.Array(PandocBlockWire)),
+    pandocConstructorWithPayload("CodeBlock", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("BulletList", PandocBlockWire.pipe(S.Array, S.Array)),
+    pandocConstructorWithPayload(
+      "OrderedList",
+      S.Tuple([
+        S.Tuple([S.Int, PandocListNumberStyleWire, PandocListNumberDelimiterWire]),
+        PandocBlockWire.pipe(S.Array, S.Array),
+      ])
+    ),
+    pandocNullaryConstructor("HorizontalRule"),
+    pandocConstructorWithPayload("Div", S.Tuple([PandocAttrPayload, S.Array(PandocBlockWire)])),
+    pandocConstructorWithPayload("Table", DeferredPandocTablePayloadWire),
+    PandocFutureConstructorWire,
+  ])
+);
+const isPandocSemanticTablePayload = S.is(PandocSemanticTablePayloadWire);
+const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => {
+  const futureConstructor = makePandocFutureConstructorArbitrary(fc);
+  const attr = fc.tuple(fc.string(), fc.array(fc.string()), fc.array(fc.tuple(fc.string(), fc.string())));
+  const inline = fc.oneof(
+    fc.string().map((c) => S.Json.make({ c, t: "Str" })),
+    fc.constant(S.Json.make({ t: "Space" })),
+    futureConstructor
+  );
+  const block = fc.oneof(
+    fc.array(inline).map((c) => S.Json.make({ c, t: "Para" })),
+    fc.constant(S.Json.make({ t: "HorizontalRule" })),
+    futureConstructor
+  );
+  const captionPair = fc.tuple(fc.option(fc.array(inline), { nil: null }), fc.array(block));
+  const caption = fc.oneof(captionPair, futureConstructor);
+  const alignment = fc.oneof(
+    fc.constantFrom("AlignLeft", "AlignRight", "AlignCenter", "AlignDefault").map((t) => S.Json.make({ t })),
+    futureConstructor
+  );
+  const columnWidth = fc.oneof(
+    fc.integer().map((c) => S.Json.make({ c, t: "ColWidth" })),
+    fc.constant(S.Json.make({ t: "ColWidthDefault" })),
+    futureConstructor
+  );
+  const columnSpec = fc.oneof(fc.tuple(alignment, columnWidth), futureConstructor);
+  const cell = fc.oneof(fc.tuple(attr, alignment, fc.integer(), fc.integer(), fc.array(block)), futureConstructor);
+  const row = fc.oneof(fc.tuple(attr, fc.array(cell)), futureConstructor);
+  const headOrFoot = fc.oneof(fc.tuple(attr, fc.array(row)), futureConstructor);
+  const body = fc.oneof(fc.tuple(attr, fc.integer(), fc.array(row), fc.array(row)), futureConstructor);
+
+  return fc
+    .tuple(attr, caption, fc.array(columnSpec), headOrFoot, fc.array(body), headOrFoot)
+    .map(PandocTablePayloadShape.make);
+};
+class PandocConstructorJson extends S.Class<PandocConstructorJson>($I`PandocConstructorJson`)(
+  {
+    c: S.optionalKey(S.Json),
+    t: S.String,
+  },
+  $I.annote("PandocConstructorJson", {
+    description: "Internal structural view of a Pandoc JSON constructor.",
+  })
+) {}
+const PandocJsonArray = S.Array(S.Json);
+const PandocTableCaptionPair = S.Tuple([S.NullOr(PandocJsonArray), PandocJsonArray]);
+const decodePandocConstructorOption = S.decodeUnknownOption(PandocConstructorJson);
+const decodePandocJsonArrayOption = S.decodeUnknownOption(PandocJsonArray);
+const decodePandocStringOption = S.decodeUnknownOption(S.String);
+const decodePandocTableCaptionPairOption = S.decodeUnknownOption(PandocTableCaptionPair);
+
+/**
+ * Canonical validated Pandoc table payload.
+ *
+ * **Details**
+ *
+ * Tables remain an explicit compatibility gap, so the complete six-field JSON
+ * tuple is retained as the sole stored truth. Attribute and caption inspection
+ * are derived from this payload by {@link Table}.
+ *
+ * **Example** (Making six-field table payload)
+ *
+ * ```ts import.meta.vitest name="Making six-field table payload"
+ * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const payload = PandocTablePayload.make([
+ *   ["", [], []],
+ *   [null, []],
+ *   [],
+ *   [["", [], []], []],
+ *   [],
+ *   [["", [], []], []],
+ * ])
+ * payload.length // => 6
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const PandocTablePayload = PandocTablePayloadShape.pipe(
+  S.check(
+    S.makeFilter(isPandocSemanticTablePayload, {
+      identifier: $I`PandocTablePayloadSemanticCheck`,
+      title: "Semantically valid Pandoc table payload",
+      description: "A six-field Pandoc table payload accepted by the strict recursive constructor grammar.",
+      message: "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts.",
+      arbitrary: {
+        candidate: {
+          weight: 32,
+          make: makePandocTablePayloadArbitrary,
+        },
+      },
+    })
+  ),
+  $I.annoteSchema("PandocTablePayload", {
+    description: "Canonical validated six-field Pandoc table payload retained without duplicate semantic fields.",
+    toArbitrary: () => makePandocTablePayloadArbitrary,
+  })
+);
+
+/**
+ * Runtime type for {@link PandocTablePayload}.
+ *
+ * **Example** (Decoding table payload)
+ *
+ * ```ts import.meta.vitest name="Decoding table payload"
+ * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(PandocTablePayload)([
+ *   ["", [], []],
+ *   [null, []],
+ *   [],
+ *   [["", [], []], []],
+ *   [],
+ *   [["", [], []], []],
+ * ])
+ * if (Result.isSuccess(decoded)) {
+ *   const payload: PandocTablePayload = decoded.success
+ *   payload.length // => 6
+ * }
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export type PandocTablePayload = typeof PandocTablePayload.Type;
+
+const tableCaptionInlineFromWire = (input: S.Json): O.Option<PandocInline.Type> =>
+  O.flatMap(decodePandocConstructorOption(input), (wire) => {
+    if (wire.t === "Str") {
+      return O.map(decodePandocStringOption(wire.c), (text) => Str.make({ text }));
+    }
+    if (wire.t === "Space") {
+      return O.some(Space.make());
+    }
+    if (wire.t === "SoftBreak") {
+      return O.some(SoftBreak.make());
+    }
+    if (wire.t === "LineBreak") {
+      return O.some(LineBreak.make());
+    }
+    return O.none();
+  });
+
+const tableCaptionInlinesFromBlockWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
+  O.getOrElse(
+    O.map(
+      O.flatMap(
+        O.filter(decodePandocConstructorOption(input), (wire) => wire.t === "Plain" || wire.t === "Para"),
+        (wire) => decodePandocJsonArrayOption(wire.c)
+      ),
+      (values) => A.getSomes(A.map(values, tableCaptionInlineFromWire))
+    ),
+    A.emptyReadonly
+  );
+
+const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
+  O.match(decodePandocTableCaptionPairOption(input), {
+    onNone: A.emptyReadonly,
+    onSome: ([shortCaption, longCaption]) => {
+      const short = shortCaption === null ? [] : A.getSomes(A.map(shortCaption, tableCaptionInlineFromWire));
+      return A.isReadonlyArrayNonEmpty(short) ? short : A.flatMap(longCaption, tableCaptionInlinesFromBlockWire);
+    },
+  });
+
 /**
  * Pandoc table block captured as an explicit gap node.
  *
- * @example
- * ```ts
- * import { Table, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ * **Example** (Making table gap node)
  *
- * const node = Table.make({ attr: PandocAttr.empty, caption: [], payload: {} })
- * console.log(node._tag) // "table"
+ * ```ts import.meta.vitest name="Making table gap node"
+ * import { Table } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Table.make({
+ *   payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
+ * })
+ * node._tag // => "table"
  * ```
  *
  * @category models
@@ -2048,30 +2501,48 @@ export declare namespace Div {
 export class Table extends S.TaggedClass<Table>($I`Table`)(
   "table",
   {
-    attr: PandocAttr.annotateKey({
-      description: "Table attributes.",
-    }),
-    caption: PandocInlineChildren.annotateKey({
-      description: "Best-effort table caption inline children.",
-    }),
-    payload: S.Unknown.annotateKey({
+    payload: PandocTablePayload.annotateKey({
       description: "Original Pandoc table payload.",
     }),
   },
   $I.annote("Table", {
     description: "Pandoc table block captured as an explicit gap node.",
   })
-) {}
+) {
+  /**
+   * Table attributes derived from the canonical payload.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get attr(): PandocAttr {
+    const [id, classes, keyValues] = this.payload[0];
+    return PandocAttr.make({ classes, id, keyValues });
+  }
+
+  /**
+   * Best-effort caption derived from the canonical payload.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get caption(): ReadonlyArray<PandocInline.Type> {
+    return tableCaptionFromPayload(this.payload[1]);
+  }
+}
 
 /**
  * Companion namespace for {@link Table}.
  *
- * @example
- * ```ts
- * import { Table, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ * **Example** (Typing Table node)
  *
- * const node: Table.Type = Table.make({ attr: PandocAttr.empty, caption: [], payload: {} })
- * console.log(node._tag) // "table"
+ * ```ts import.meta.vitest name="Typing Table node"
+ * import { Table } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Table.Type = Table.make({
+ *   payload: [["", [], []], [null, []], [], [["", [], []], []], [], [["", [], []], []]],
+ * })
+ * node._tag // => "table"
  * ```
  *
  * @category models
@@ -2085,7 +2556,7 @@ export declare namespace Table {
     readonly _tag: "table";
     readonly attr: PandocAttr.Type;
     readonly caption: PandocInlineChildren.Type;
-    readonly payload: unknown;
+    readonly payload: PandocTablePayload;
   }
 
   /**
@@ -2093,21 +2564,20 @@ export declare namespace Table {
    */
   export interface Encoded {
     readonly _tag: "table";
-    readonly attr: PandocAttr.Encoded;
-    readonly caption: PandocInlineChildren.Encoded;
-    readonly payload: unknown;
+    readonly payload: PandocTablePayload;
   }
 }
 
 /**
- * Pandoc block constructor outside the supported v1 surface.
+ * Future Pandoc block constructor outside the pinned 1.23.1 registry.
  *
- * @example
- * ```ts
+ * **Example** (Making unknown block)
+ *
+ * ```ts import.meta.vitest name="Making unknown block"
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node = UnknownBlock.make({ constructor: "Figure", payload: {} })
- * console.log(node.constructor) // "Figure"
+ * const node = UnknownBlock.make({ wire: { c: { extension: true }, t: "FutureBlock" } })
+ * node.constructorName // => "FutureBlock"
  * ```
  *
  * @category models
@@ -2116,27 +2586,45 @@ export declare namespace Table {
 export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
   "unknownBlock",
   {
-    constructor: S.String.annotateKey({
-      description: "Original Pandoc constructor name.",
-    }),
-    payload: S.Unknown.annotateKey({
-      description: "Original Pandoc constructor payload.",
+    wire: PandocFutureConstructorWire.annotateKey({
+      description: "Exact original future Pandoc constructor object.",
     }),
   },
   $I.annote("UnknownBlock", {
-    description: "Pandoc block constructor outside the supported v1 surface.",
+    description: "Future Pandoc block constructor outside the pinned 1.23.1 registry.",
   })
-) {}
+) {
+  /**
+   * Original Pandoc constructor name derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get constructorName(): string {
+    return this.wire.t;
+  }
+
+  /**
+   * Optional Pandoc constructor payload derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get payload(): S.Json | undefined {
+    return this.wire.c;
+  }
+}
 
 /**
  * Companion namespace for {@link UnknownBlock}.
  *
- * @example
- * ```ts
+ * **Example** (Typing UnknownBlock node)
+ *
+ * ```ts import.meta.vitest name="Typing UnknownBlock node"
  * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const node: UnknownBlock.Type = UnknownBlock.make({ constructor: "Figure", payload: {} })
- * console.log(node.constructor) // "Figure"
+ * const node: UnknownBlock.Type = UnknownBlock.make({ wire: { c: { extension: true }, t: "FutureBlock" } })
+ * node.constructorName // => "FutureBlock"
  * ```
  *
  * @category models
@@ -2148,25 +2636,30 @@ export declare namespace UnknownBlock {
    */
   export interface Type {
     readonly _tag: "unknownBlock";
-    readonly constructor: string;
-    readonly payload: unknown;
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "unknownBlock";
+    readonly wire: PandocUnknownConstructorWire;
+  }
 }
 
 /**
  * Pandoc block union for the v1 compatibility slice.
  *
- * @example
- * ```ts
+ * **Example** (Checking block union)
+ *
+ * ```ts import.meta.vitest name="Checking block union"
  * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const block = Para.make({ children: [Str.make({ text: "hi" })] })
- * console.log(PandocBlock.is(block)) // true
+ * PandocBlock.is(block) // => true
  * ```
  *
  * @category models
@@ -2189,18 +2682,19 @@ export const PandocBlock = S.Union([
   $I.annoteSchema("PandocBlock", {
     description: "Pandoc block union for the v1 compatibility slice.",
   }),
-  withPandocCodecStatics
+  SchemaUtils.withCodecStatics
 );
 
 /**
  * Runtime type for {@link PandocBlock}.
  *
- * @example
- * ```ts
+ * **Example** (Typing block union)
+ *
+ * ```ts import.meta.vitest name="Typing block union"
  * import { Para, Str, type PandocBlock } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const block: PandocBlock = Para.make({ children: [Str.make({ text: "hi" })] })
- * console.log(block._tag) // "para"
+ * block._tag // => "para"
  * ```
  *
  * @category models
@@ -2211,12 +2705,13 @@ export type PandocBlock = typeof PandocBlock.Type;
 /**
  * Companion namespace for {@link PandocBlock}.
  *
- * @example
- * ```ts
+ * **Example** (Using block Type alias)
+ *
+ * ```ts import.meta.vitest name="Using block Type alias"
  * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const block: PandocBlock.Type = Para.make({ children: [Str.make({ text: "hi" })] })
- * console.log(block._tag) // "para"
+ * block._tag // => "para"
  * ```
  *
  * @category models
@@ -2257,35 +2752,599 @@ export declare namespace PandocBlock {
 }
 
 /**
- * Pandoc document metadata.
+ * Companion recursive type knot for {@link PandocMetaValue}.
  *
- * @example
- * ```ts
+ * **Example** (Decoding meta list value)
+ *
+ * ```ts import.meta.vitest name="Decoding meta list value"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
- * import { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
+ * import { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const decode = S.decodeUnknownSync(PandocMeta)
- * console.log(decode({ title: "Doc" }).title)
+ * const decoded = S.decodeUnknownResult(PandocMetaValue)({
+ *   _tag: "metaList",
+ *   values: [{ _tag: "metaString", value: "Document" }],
+ * })
+ * if (Result.isSuccess(decoded)) {
+ *   const value: PandocMetaValue.Type = decoded.success
+ *   value._tag // => "metaList"
+ * }
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PandocMeta = S.Record(S.String, S.Unknown).pipe(
-  $I.annoteSchema("PandocMeta", {
-    description: "Pandoc document metadata.",
+export declare namespace PandocMetaValue {
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBoolShape {
+    readonly _tag: "metaBool";
+    readonly value: boolean;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaStringShape {
+    readonly _tag: "metaString";
+    readonly value: string;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaInlinesShape {
+    readonly _tag: "metaInlines";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaInlinesEncodedShape {
+    readonly _tag: "metaInlines";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBlocksShape {
+    readonly _tag: "metaBlocks";
+    readonly children: PandocBlockChildren.Type;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaBlocksEncodedShape {
+    readonly _tag: "metaBlocks";
+    readonly children: PandocBlockChildren.Encoded;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaListShape {
+    readonly _tag: "metaList";
+    readonly values: ReadonlyArray<Type>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaListEncodedShape {
+    readonly _tag: "metaList";
+    readonly values: ReadonlyArray<Encoded>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaMapShape {
+    readonly _tag: "metaMap";
+    readonly entries: Readonly<Record<string, Type>>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface MetaMapEncodedShape {
+    readonly _tag: "metaMap";
+    readonly entries: Readonly<Record<string, Encoded>>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface UnknownMetaShape {
+    readonly _tag: "unknownMeta";
+    readonly constructorName: string;
+    readonly payload: S.Json | undefined;
+    readonly wire: PandocUnknownConstructorWire;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface UnknownMetaEncodedShape {
+    readonly _tag: "unknownMeta";
+    readonly wire: PandocUnknownConstructorWire;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export type Type =
+    | MetaBoolShape
+    | MetaStringShape
+    | MetaInlinesShape
+    | MetaBlocksShape
+    | MetaListShape
+    | MetaMapShape
+    | UnknownMetaShape;
+
+  /**
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | MetaBoolShape
+    | MetaStringShape
+    | MetaInlinesEncodedShape
+    | MetaBlocksEncodedShape
+    | MetaListEncodedShape
+    | MetaMapEncodedShape
+    | UnknownMetaEncodedShape;
+}
+
+const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Encoded> = S.suspend(
+  () => PandocMetaValue
+);
+
+/**
+ * Boolean Pandoc metadata value.
+ *
+ * **Example** (Making boolean meta value)
+ *
+ * ```ts
+ * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaBool.make({ value: true }).value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
+  $I.annoteSchema("MetaBool", { description: "Boolean Pandoc metadata value." })
+);
+
+/**
+ * String Pandoc metadata value.
+ *
+ * **Example** (Making string meta value)
+ *
+ * ```ts
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaString.make({ value: "Document" }).value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe(
+  $I.annoteSchema("MetaString", { description: "String Pandoc metadata value." })
+);
+
+/**
+ * Inline-list Pandoc metadata value.
+ *
+ * **Example** (Making inline-list meta)
+ *
+ * ```ts
+ * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaInlines.make({ children: [] }).children.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlineChildren }).pipe(
+  $I.annoteSchema("MetaInlines", { description: "Inline-list Pandoc metadata value." })
+);
+
+/**
+ * Block-list Pandoc metadata value.
+ *
+ * **Example** (Making block-list meta)
+ *
+ * ```ts
+ * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaBlocks.make({ children: [] }).children.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockChildren }).pipe(
+  $I.annoteSchema("MetaBlocks", { description: "Block-list Pandoc metadata value." })
+);
+
+/**
+ * Recursive list Pandoc metadata value.
+ *
+ * **Example** (Making recursive meta list)
+ *
+ * ```ts
+ * import { MetaList, MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaList.make({ values: [MetaString.make({ value: "one" })] }).values.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaValue.pipe(S.Array) }).pipe(
+  $I.annoteSchema("MetaList", { description: "Recursive list Pandoc metadata value." })
+);
+
+/**
+ * Recursive mapping Pandoc metadata value.
+ *
+ * **Example** (Making recursive meta map)
+ *
+ * ```ts
+ * import { MetaMap, MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(MetaMap.make({ entries: { title: MetaString.make({ value: "Doc" }) } }).entries.title)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetaMap = S.TaggedStruct("metaMap", {
+  entries: S.Record(S.String, DeferredPandocMetaValue),
+}).pipe($I.annoteSchema("MetaMap", { description: "Recursive mapping Pandoc metadata value." }));
+
+/**
+ * Future Pandoc metadata constructor outside the supported surface.
+ *
+ * **Example** (Making unknown meta value)
+ *
+ * ```ts
+ * import { UnknownMeta } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(UnknownMeta.make({ wire: { t: "MetaFuture" } }).constructorName)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
+  "unknownMeta",
+  {
+    wire: PandocFutureConstructorWire.annotateKey({
+      description: "Exact original future Pandoc metadata constructor object.",
+    }),
+  },
+  $I.annote("UnknownMeta", {
+    description: "Future Pandoc metadata constructor outside the supported surface.",
   })
+) {
+  /**
+   * Original Pandoc constructor name derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get constructorName(): string {
+    return this.wire.t;
+  }
+
+  /**
+   * Optional Pandoc constructor payload derived from {@link wire}.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get payload(): S.Json | undefined {
+    return this.wire.c;
+  }
+}
+
+/**
+ * Recursive semantic Pandoc metadata-value union.
+ *
+ * **Example** (Checking meta value union)
+ *
+ * ```ts
+ * import { MetaString, PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * console.log(PandocMetaValue.is(MetaString.make({ value: "Doc" })))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PandocMetaValue = S.Union([
+  MetaBool,
+  MetaString,
+  MetaInlines,
+  MetaBlocks,
+  MetaList,
+  MetaMap,
+  UnknownMeta,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("PandocMetaValue", {
+    description: "Recursive semantic Pandoc metadata-value union.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Decoded boolean metadata payload.
+ *
+ * **Example** (Typing boolean meta payload)
+ *
+ * ```ts import.meta.vitest name="Typing boolean meta payload"
+ * import { MetaBool } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBool = MetaBool.make({ value: true })
+ * value.value // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBool = typeof MetaBool.Type;
+
+/**
+ * Decoded string metadata payload.
+ *
+ * **Example** (Typing string meta payload)
+ *
+ * ```ts import.meta.vitest name="Typing string meta payload"
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaString = MetaString.make({ value: "Document" })
+ * value.value // => "Document"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaString = typeof MetaString.Type;
+
+/**
+ * Decoded inline-list metadata payload.
+ *
+ * **Example** (Typing inline-list meta)
+ *
+ * ```ts import.meta.vitest name="Typing inline-list meta"
+ * import { MetaInlines } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaInlines = MetaInlines.make({ children: [] })
+ * value.children.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaInlines = typeof MetaInlines.Type;
+
+/**
+ * Encoded inline-list metadata payload.
+ *
+ * **Example** (Typing encoded inline meta)
+ *
+ * ```ts import.meta.vitest name="Typing encoded inline meta"
+ * import type { MetaInlinesEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaInlinesEncoded = { _tag: "metaInlines", children: [] }
+ * value.children.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaInlinesEncoded = typeof MetaInlines.Encoded;
+
+/**
+ * Decoded block-list metadata payload.
+ *
+ * **Example** (Typing block-list meta)
+ *
+ * ```ts import.meta.vitest name="Typing block-list meta"
+ * import { MetaBlocks } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBlocks = MetaBlocks.make({ children: [] })
+ * value.children.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBlocks = typeof MetaBlocks.Type;
+
+/**
+ * Encoded block-list metadata payload.
+ *
+ * **Example** (Typing encoded block meta)
+ *
+ * ```ts import.meta.vitest name="Typing encoded block meta"
+ * import type { MetaBlocksEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaBlocksEncoded = { _tag: "metaBlocks", children: [] }
+ * value.children.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaBlocksEncoded = typeof MetaBlocks.Encoded;
+
+/**
+ * Decoded recursive metadata-list payload.
+ *
+ * **Example** (Typing recursive meta list)
+ *
+ * ```ts import.meta.vitest name="Typing recursive meta list"
+ * import { MetaList } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaList = MetaList.make({ values: [] })
+ * value.values.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaList = typeof MetaList.Type;
+
+/**
+ * Encoded recursive metadata-list payload.
+ *
+ * **Example** (Typing encoded meta list)
+ *
+ * ```ts import.meta.vitest name="Typing encoded meta list"
+ * import type { MetaListEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaListEncoded = { _tag: "metaList", values: [] }
+ * value.values.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaListEncoded = typeof MetaList.Encoded;
+
+/**
+ * Decoded recursive metadata-map payload.
+ *
+ * **Example** (Typing recursive meta map)
+ *
+ * ```ts import.meta.vitest name="Typing recursive meta map"
+ * import { MetaMap } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaMap = MetaMap.make({ entries: {} })
+ * Object.keys(value.entries).length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaMap = typeof MetaMap.Type;
+
+/**
+ * Encoded recursive metadata-map payload.
+ *
+ * **Example** (Typing encoded meta map)
+ *
+ * ```ts import.meta.vitest name="Typing encoded meta map"
+ * import type { MetaMapEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: MetaMapEncoded = { _tag: "metaMap", entries: {} }
+ * Object.keys(value.entries).length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetaMapEncoded = typeof MetaMap.Encoded;
+
+/**
+ * Encoded exact future metadata constructor.
+ *
+ * **Example** (Typing encoded unknown meta)
+ *
+ * ```ts import.meta.vitest name="Typing encoded unknown meta"
+ * import type { UnknownMetaEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: UnknownMetaEncoded = { _tag: "unknownMeta", wire: { t: "MetaFuture" } }
+ * value.wire.t // => "MetaFuture"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnknownMetaEncoded = typeof UnknownMeta.Encoded;
+
+/**
+ * Recursive decoded Pandoc metadata value.
+ *
+ * **Example** (Typing decoded meta value)
+ *
+ * ```ts import.meta.vitest name="Typing decoded meta value"
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
+ * import type { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: PandocMetaValue = MetaString.make({ value: "Document" })
+ * value._tag // => "metaString"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocMetaValue = typeof PandocMetaValue.Type;
+
+/**
+ * Recursive encoded Pandoc metadata value.
+ *
+ * **Example** (Typing encoded meta value)
+ *
+ * ```ts import.meta.vitest name="Typing encoded meta value"
+ * import type { PandocMetaValueEncoded } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const value: PandocMetaValueEncoded = { _tag: "metaString", value: "Document" }
+ * value._tag // => "metaString"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
+
+/**
+ * Pandoc document metadata map.
+ *
+ * **Example** (Decoding document metadata)
+ *
+ * ```ts import.meta.vitest name="Decoding document metadata"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { MetaString, PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const result = S.decodeUnknownResult(PandocMeta)({
+ *   title: MetaString.make({ value: "Doc" }),
+ * })
+ * Result.isSuccess(result) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PandocMeta = S.Record(S.String, DeferredPandocMetaValue).pipe(
+  $I.annoteSchema("PandocMeta", {
+    description: "Recursive semantic Pandoc document metadata map.",
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
  * Runtime type for {@link PandocMeta}.
  *
- * @example
- * ```ts
+ * **Example** (Typing document metadata)
+ *
+ * ```ts import.meta.vitest name="Typing document metadata"
+ * import { MetaString } from "@beep/pandoc-ast/Pandoc.model"
  * import type { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
  *
- * const meta: PandocMeta = { title: "Doc" }
- * console.log(meta.title)
+ * const meta: PandocMeta = { title: MetaString.make({ value: "Document" }) }
+ * meta.title?._tag // => "metaString"
  * ```
  *
  * @category models
@@ -2296,12 +3355,13 @@ export type PandocMeta = typeof PandocMeta.Type;
 /**
  * Root Pandoc JSON document.
  *
- * @example
- * ```ts
+ * **Example** (Making root document)
+ *
+ * ```ts import.meta.vitest name="Making root document"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const document = PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} })
- * console.log(document._tag) // "pandocDocument"
+ * document._tag // => "pandocDocument"
  * ```
  *
  * @category models
@@ -2310,7 +3370,9 @@ export type PandocMeta = typeof PandocMeta.Type;
 export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocument`)(
   "pandocDocument",
   {
-    apiVersion: PandocApiVersion.annotateKey({
+    apiVersion: PandocApiVersion.pipe(
+      SchemaUtils.withConstantDefault<PandocApiVersion>(DEFAULT_PANDOC_API_VERSION)
+    ).annotateKey({
       description: "Pandoc API version tuple.",
     }),
     blocks: PandocBlockChildren.annotateKey({
@@ -2328,12 +3390,13 @@ export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocum
 /**
  * Companion namespace for {@link PandocDocument}.
  *
- * @example
- * ```ts
+ * **Example** (Typing PandocDocument node)
+ *
+ * ```ts import.meta.vitest name="Typing PandocDocument node"
  * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  *
  * const document: PandocDocument.Type = PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} })
- * console.log(document._tag) // "pandocDocument"
+ * document._tag // => "pandocDocument"
  * ```
  *
  * @category models

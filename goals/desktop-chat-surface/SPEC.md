@@ -18,7 +18,7 @@ Provenance: graduated from `explorations/agent-chat-interface` (back-links:
 [`BRIEF.md`](../../explorations/agent-chat-interface/BRIEF.md),
 [`DECISIONS.md`](../../explorations/agent-chat-interface/DECISIONS.md),
 [`MAP.md`](../../explorations/agent-chat-interface/MAP.md)). Proof-repo
-reference (read-only): `/home/elpresidank/YeeBois/projects/effect-lexical-chat/`
+reference (read-only): the machine-local `effect-lexical-chat` checkout
 (same effect catalog `4.0.0-beta.79`).
 
 ## Non-Goals
@@ -91,19 +91,32 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] E2E on a dev machine: create thread → send rich-block message →
+- [x] E2E on a dev machine: create thread → send rich-block message →
       streamed assistant turn renders block-by-block → edit creates a branch
       with version-selector UX → cancel-in-flight leaves no partial row →
       relaunch app, thread history intact (PGlite).
-- [ ] Fixture agent runs behind the same kernel interface and powers the
+      *(2026-07-31: one recorded full-UI pass against the live Anthropic
+      kernel — real input, CAPTURE-GREEN, vision-judged — landed in
+      `history/e2e-2026-07-31/`. The loop also surfaced and fixed the
+      unreachable version-selector affordance.)*
+- [x] Fixture agent runs behind the same kernel interface and powers the
       app-level contract tests (no real-LLM dependency in CI).
-- [ ] `UsageRecord` rows appear at turn finalization with provider, model,
+- [x] `UsageRecord` rows appear at turn finalization with provider, model,
       tokens, latency, approximate cost, Activity link.
-- [ ] ThreadTimeline (single-branch degenerate view) renders history +
+      *(2026-07-31: kernel finalization now carries provider/model/token/stop
+      metadata; the orchestrator persists clock latency and schema-priced cost,
+      with unavailable Activity linkage explicit as null plus the real turn link
+      in metadata.)*
+- [x] ThreadTimeline (single-branch degenerate view) renders history +
       tool-call placeholders + cost rollup.
-- [ ] Webview and sidecar spans join into one trace; perceived-latency and
+- [x] Webview and sidecar spans join into one trace; perceived-latency and
       decode-failure metrics emit.
-- [ ] Repo quality gates pass; no unrelated refactors or formatting churn.
+- [x] Repo quality gates pass; no unrelated refactors or formatting churn.
+      *(Waiver on record: PR #243 was admin-merged during a GitHub outage
+      with the hosted `Check` and `Lint Policy` lanes still red (infra
+      artifacts — see README/Exception Ledger). Both lanes have since proven
+      green against `main` content repeatedly, e.g. the 2026-07-31 PR #524
+      run at `main` parity.)*
 
 ## Verification Matrix
 
@@ -138,4 +151,6 @@ candidate gating; v1 block scope; convergence target professional-desktop.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Full dev-machine UI E2E evidenced piecewise only | E2E acceptance criterion | packet owner | Browser E2E + rpc-client finalize proof + contract tests cover the flow's pieces; no single recorded full-UI pass (edit-as-branch, version selector, UI cancel in one run) exists | Satisfied 2026-07-31 — recorded full-UI pass (browser-qa-loop, live Anthropic kernel) landed in `history/e2e-2026-07-31/`; row retained as the waiver record |
+| UsageRecord provider fields unpopulated | UsageRecord acceptance criterion | packet owner | Satisfied: kernel finalization carries provider usage; the orchestrator records model, tokens, latency, and schema-priced approximate cost. Because no persisted Activity surface exists, `activityId` is explicitly null and metadata links the real assistant turn instead of synthesizing an id. | Satisfied in substance by provider capture and explicit Activity-link truth; row retained as implementation history |
+| PR #243 admin-merged with two hosted lanes red | Quality-gates acceptance criterion | packet owner | GitHub outage at merge time; `Check` passed locally identically to CI, `Lint Policy` hit the outage timeout (recorded in README) | Satisfied in substance — both lanes green on subsequent `main`-parity runs (e.g. PR #524, 2026-07-31); row retained as the waiver record |

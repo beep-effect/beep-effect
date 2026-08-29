@@ -2,8 +2,8 @@
 // fixture.json); this test reproduces the browser's own wrap counts with
 // pure arithmetic — no DOM, no jsdom, no canvas, no screenshots.
 import { describe, expect, test } from "bun:test";
-import fixture from "./fixture.json";
-import fixtureV1 from "./fixture-v1.json";
+import fixture from "./fixture.json" with { type: "json" };
+import fixtureV1 from "./fixture-v1.json" with { type: "json" };
 import { decodeFontMetricsSnapshot, encodeFontMetricsSnapshot } from "./FontMetrics.schema.ts";
 import { decodeFontMetricsSnapshotV1, encodeFontMetricsSnapshotV1 } from "./FontMetricsV1.schema.ts";
 import { layoutLineCount, naturalWidth } from "./layout.ts";
@@ -68,7 +68,7 @@ describe("v1 envelope: versioned, engine-profiled, migration-ready", () => {
 
   test("v1 round-trips: encode ∘ decode is identity on the wire format", () => {
     const v1 = decodeFontMetricsSnapshotV1(fixtureV1);
-    expect(encodeFontMetricsSnapshotV1(v1)).toEqual(fixtureV1);
+    expect(encodeFontMetricsSnapshotV1(v1)).toEqual({ ...fixtureV1, version: 1 });
   });
 });
 

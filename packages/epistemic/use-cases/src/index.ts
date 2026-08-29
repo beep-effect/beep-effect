@@ -9,7 +9,8 @@
 /**
  * Package version for the epistemic use-case role.
  *
- * @example
+ * **Example** (Assert VERSION equals 0.0.0)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { VERSION } from "@beep/epistemic-use-cases"
@@ -28,4 +29,4 @@ export const VERSION = "0.0.0" as const;
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./public.js";
+export * from "./public.ts";

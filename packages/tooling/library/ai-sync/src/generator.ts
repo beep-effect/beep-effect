@@ -15,12 +15,14 @@ import { TIER_ONE_SOURCES } from "./source-map.ts";
 /**
  * Generated schemas file path relative to the package root.
  *
- * @example
+ * **Example** (Inspect the generated schemas path)
+ *
  * ```ts
  * import { GENERATED_SCHEMAS_PATH } from "@beep/ai-sync/generator"
  *
  * console.log(GENERATED_SCHEMAS_PATH.endsWith("schemas.gen.ts"))
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -29,12 +31,14 @@ export const GENERATED_SCHEMAS_PATH = "src/_generated/schemas.gen.ts" as const;
 /**
  * Generated source metadata file path relative to the package root.
  *
- * @example
+ * **Example** (Inspect the generated source metadata path)
+ *
  * ```ts
  * import { GENERATED_SOURCE_METADATA_PATH } from "@beep/ai-sync/generator"
  *
  * console.log(GENERATED_SOURCE_METADATA_PATH.endsWith("source-metadata.gen.ts"))
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -96,13 +100,15 @@ const renderSourceMetadata = (source: AiSyncSourceMetadata): string =>
 /**
  * Render generated source metadata without network access.
  *
- * @param sources - Source metadata records to render.
- * @returns Generated TypeScript source for the metadata module.
- * @example
+ * **Example** (Render an empty metadata module)
+ *
  * ```ts
  * import { renderGeneratedSourceMetadata } from "@beep/ai-sync/generator"
  * console.log(renderGeneratedSourceMetadata([]))
  * ```
+ *
+ * @param sources - Source metadata records to render.
+ * @returns Generated TypeScript source for the metadata module.
  * @category utilities
  * @since 0.0.0
  */
@@ -113,12 +119,14 @@ export const renderGeneratedSourceMetadata = (sources: ReadonlyArray<AiSyncSourc
       "/**",
       " * Generated source metadata with content hashes for Tier-1 sources.",
       " *",
-      " * @example",
+      " * **Example** (Read the generated Tier-1 source metadata)",
+      " *",
       " * ```ts",
       ' * import { GENERATED_TIER_ONE_SOURCE_METADATA } from "@beep/ai-sync/_generated/source-metadata.gen"',
       " *",
       " * console.log(GENERATED_TIER_ONE_SOURCE_METADATA.length)",
       " * ```",
+      " *",
       " * @category constants",
       " * @since 0.0.0",
       " */",
@@ -143,13 +151,15 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated MCP server command configuration.",
       " *",
-      " * @example",
+      " * **Example** (Construct a CodexMcpServer)",
+      " *",
       " * ```ts",
       ' * import { CodexMcpServer } from "@beep/ai-sync"',
       " *",
       ' * const server = CodexMcpServer.make({ command: "node", args: ["mcp.js"] })',
       " * console.log(server.command)",
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -170,12 +180,14 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated Codex skill entry.",
       " *",
-      " * @example",
+      " * **Example** (Construct a CodexSkillEntry)",
+      " *",
       " * ```ts",
       ' * import { CodexSkillEntry } from "@beep/ai-sync"',
       ' * const entry = CodexSkillEntry.make({ name: "effect-first-development", enabled: true })',
       " * console.log(entry.name)",
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -192,7 +204,8 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated Codex skills block.",
       " *",
-      " * @example",
+      " * **Example** (Construct a CodexSkills block)",
+      " *",
       " * ```ts",
       ' * import { CodexSkills } from "@beep/ai-sync"',
       " *",
@@ -202,6 +215,7 @@ const renderSchemasFile = (): string =>
       " * })",
       " * console.log(skills.config?.[0]?.name)",
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -218,7 +232,8 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated Codex config schema.",
       " *",
-      " * @example",
+      " * **Example** (Construct a CodexConfig)",
+      " *",
       " * ```ts",
       ' * import { CodexConfig } from "@beep/ai-sync"',
       " *",
@@ -228,6 +243,7 @@ const renderSchemasFile = (): string =>
       " * })",
       " * console.log(config.mcp_servers?.local?.command)",
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -247,13 +263,15 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated Claude-style MCP server schema.",
       " *",
-      " * @example",
+      " * **Example** (Construct an McpJsonServer)",
+      " *",
       " * ```ts",
       ' * import { McpJsonServer } from "@beep/ai-sync"',
       " *",
       ' * const server = McpJsonServer.make({ type: "stdio", command: "node" })',
       " * console.log(server.type)",
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -275,7 +293,8 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated Claude-style MCP JSON schema.",
       " *",
-      " * @example",
+      " * **Example** (Construct a ClaudeMcpJson)",
+      " *",
       " * ```ts",
       ' * import { ClaudeMcpJson } from "@beep/ai-sync"',
       " *",
@@ -284,6 +303,7 @@ const renderSchemasFile = (): string =>
       " * })",
       " * console.log(config.mcpServers.local?.command)",
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -299,7 +319,8 @@ const renderSchemasFile = (): string =>
       "/**",
       " * Generated Claude Code settings schema subset.",
       " *",
-      " * @example",
+      " * **Example** (Construct ClaudeSettings)",
+      " *",
       " * ```ts",
       ' * import { ClaudeSettings } from "@beep/ai-sync"',
       " *",
@@ -309,6 +330,7 @@ const renderSchemasFile = (): string =>
       " * })",
       ' * console.log(settings.enabledMcpjsonServers?.includes("local"))',
       " * ```",
+      " *",
       " * @category schemas",
       " * @since 0.0.0",
       " */",
@@ -330,9 +352,8 @@ const renderSchemasFile = (): string =>
 /**
  * Compute a public SHA-256 content hash.
  *
- * @effects Uses the Web Crypto SHA-256 implementation when the returned Effect
- * is executed; requires no Effect services.
- * @example
+ * **Example** (Hash an agent instruction body)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { hashSourceText } from "@beep/ai-sync/generator"
@@ -341,6 +362,9 @@ const renderSchemasFile = (): string =>
  *   console.log(hash.length)
  * )
  * ```
+ *
+ * @effects Uses the Web Crypto SHA-256 implementation when the returned Effect
+ * is executed; requires no Effect services.
  * @category utilities
  * @since 0.0.0
  */
@@ -363,9 +387,8 @@ export const hashSourceText: (value: string) => Effect.Effect<AiSyncContentHash,
 /**
  * Fetch an upstream source body.
  *
- * @effects Performs one HTTP GET through the active Effect HTTP client and
- * fails with {@link AiSyncError} when the response cannot be fetched as text.
- * @example
+ * **Example** (Fetch a pinned Codex config source)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl } from "@beep/ai-sync"
@@ -387,6 +410,9 @@ export const hashSourceText: (value: string) => Effect.Effect<AiSyncContentHash,
  *
  * Effect.runPromise(program).then(console.log)
  * ```
+ *
+ * @effects Performs one HTTP GET through the active Effect HTTP client and
+ * fails with {@link AiSyncError} when the response cannot be fetched as text.
  * @category services
  * @since 0.0.0
  */
@@ -443,11 +469,13 @@ const writePackageFile = Effect.fn("AiSync.writePackageFile")(function* (relativ
 /**
  * Render generated schemas without network access.
  *
- * @example
+ * **Example** (Render the generated schemas module)
+ *
  * ```ts
  * import { renderGeneratedSchemas } from "@beep/ai-sync/generator"
  * console.log(renderGeneratedSchemas().includes("CodexConfig"))
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -456,10 +484,8 @@ export const renderGeneratedSchemas = renderSchemasFile;
 /**
  * Generate committed schema and source metadata files.
  *
- * @effects Fetches Tier-1 source bodies, computes content hashes, writes the
- * committed generated schema and source-metadata files, and logs a completion
- * message.
- * @example
+ * **Example** (Run the generator over the Node runtime)
+ *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
  * import { Effect, Layer } from "effect"
@@ -473,6 +499,10 @@ export const renderGeneratedSchemas = renderSchemasFile;
  *
  * Effect.runPromise(program).then(console.log)
  * ```
+ *
+ * @effects Fetches Tier-1 source bodies, computes content hashes, writes the
+ * committed generated schema and source-metadata files, and logs a completion
+ * message.
  * @category workflows
  * @since 0.0.0
  */
@@ -486,12 +516,14 @@ export const generateAiSyncArtifacts = Effect.fn("AiSync.generateAiSyncArtifacts
 /**
  * Runtime layer for generator and drift commands.
  *
- * @example
+ * **Example** (Reference the AI sync HTTP layer)
+ *
  * ```ts
  * import { AiSyncHttpLayer } from "@beep/ai-sync/generator"
  *
  * console.log(AiSyncHttpLayer !== undefined)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

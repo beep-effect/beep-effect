@@ -23,15 +23,11 @@
     "isolatedModules": true,
     "incremental": true,
     "jsx": "react-jsx",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": {{{nextjsLanguageServicePlugins}}},
     "paths": {
       "@/*": ["./src/*"]
     },
     "outDir": "dist",
-    "rootDir": "../.."
+    "rootDir": "{{rootDirRelative}}"
   }
 }

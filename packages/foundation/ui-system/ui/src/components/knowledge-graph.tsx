@@ -22,7 +22,8 @@ import { cn } from "../lib/index.ts";
 /**
  * Graph node type.
  *
- * @example
+ * **Example** (Create concept graph node)
+ *
  * ```ts
  * import type { GraphNode } from "@beep/ui/components/knowledge-graph"
  *
@@ -52,7 +53,8 @@ export interface GraphNode extends d3.SimulationNodeDatum {
 /**
  * Graph link type.
  *
- * @example
+ * **Example** (Create source target link)
+ *
  * ```ts
  * import type { GraphLink } from "@beep/ui/components/knowledge-graph"
  *
@@ -97,7 +99,8 @@ interface KnowledgeGraphProps {
 /**
  * Knowledge graph handle type.
  *
- * @example
+ * **Example** (Define export handle methods)
+ *
  * ```ts
  * import type { KnowledgeGraphHandle } from "@beep/ui/components/knowledge-graph"
  *
@@ -177,7 +180,8 @@ const formatTypeLabel: (type: string) => string = flow(
 /**
  * Knowledge graph component.
  *
- * @example
+ * **Example** (Import KnowledgeGraph component)
+ *
  * ```tsx
  * import { KnowledgeGraph } from "@beep/ui/components/knowledge-graph"
  *

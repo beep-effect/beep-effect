@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Sha256Hex, TaggedErrorClass } from "@beep/schema";
+import { Defect, Sha256Hex } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -16,23 +16,25 @@ const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
 /**
  * Error raised by corpus curation commands.
  *
- * @example
+ * **Example** (Create corpus command error)
+ *
  * ```ts
  * import { CorpusCommandError } from "@beep/repo-cli/commands/Corpus/index"
  *
  * const error = CorpusCommandError.make({ message: "Invalid corpus root" })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`CorpusCommandError`)(
+export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`CorpusCommandError`)(
   "CorpusCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("CorpusCommandError", {
+  $I.annoteError<CorpusCommandError>("CorpusCommandError", {
     description: "A failure raised while preparing or applying a corpus curation operation.",
   })
 ) {
@@ -52,7 +54,8 @@ export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`
 /**
  * Error raised when an archive-move source file has no covering provenance row.
  *
- * @example
+ * **Example** (Make uncovered file error)
+ *
  * ```ts
  * import { CorpusArchiveMoveUncoveredFileError } from "@beep/repo-cli/commands/Corpus/index"
  *
@@ -63,10 +66,11 @@ export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`
  * })
  * console.log(error._tag) // "CorpusArchiveMoveUncoveredFileError"
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<CorpusArchiveMoveUncoveredFileError>(
+export class CorpusArchiveMoveUncoveredFileError extends S.TaggedError<CorpusArchiveMoveUncoveredFileError>(
   $I`CorpusArchiveMoveUncoveredFileError`
 )(
   "CorpusArchiveMoveUncoveredFileError",
@@ -75,7 +79,7 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
     originPath: S.NonEmptyString,
     sourcePath: S.NonEmptyString,
   },
-  $I.annote("CorpusArchiveMoveUncoveredFileError", {
+  $I.annoteError<CorpusArchiveMoveUncoveredFileError>("CorpusArchiveMoveUncoveredFileError", {
     title: "Corpus Archive Move Uncovered File Error",
     description: "A source file selected for archive-move was not covered by the provided provenance manifests.",
   })
@@ -84,7 +88,8 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
 /**
  * Error raised when a provenance-covered raw file digest does not match.
  *
- * @example
+ * **Example** (Make digest mismatch error)
+ *
  * ```ts
  * import { CorpusArchiveMoveDigestMismatchError } from "@beep/repo-cli/commands/Corpus/index"
  * import { Sha256Hex } from "@beep/schema"
@@ -98,10 +103,11 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
  * })
  * console.log(error._tag) // "CorpusArchiveMoveDigestMismatchError"
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<CorpusArchiveMoveDigestMismatchError>(
+export class CorpusArchiveMoveDigestMismatchError extends S.TaggedError<CorpusArchiveMoveDigestMismatchError>(
   $I`CorpusArchiveMoveDigestMismatchError`
 )(
   "CorpusArchiveMoveDigestMismatchError",
@@ -112,7 +118,7 @@ export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<Corpu
     originPath: S.NonEmptyString,
     rawPath: S.NonEmptyString,
   },
-  $I.annote("CorpusArchiveMoveDigestMismatchError", {
+  $I.annoteError<CorpusArchiveMoveDigestMismatchError>("CorpusArchiveMoveDigestMismatchError", {
     title: "Corpus Archive Move Digest Mismatch Error",
     description: "A raw file referenced by archive-move provenance did not hash to the recorded SHA-256 digest.",
   })
@@ -121,7 +127,8 @@ export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<Corpu
 /**
  * Error raised when archive-move would overwrite an existing archive target.
  *
- * @example
+ * **Example** (Make destination conflict error)
+ *
  * ```ts
  * import { CorpusArchiveMoveDestinationConflictError } from "@beep/repo-cli/commands/Corpus/index"
  *
@@ -132,10 +139,11 @@ export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<Corpu
  * })
  * console.log(error.archivePath)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<CorpusArchiveMoveDestinationConflictError>(
+export class CorpusArchiveMoveDestinationConflictError extends S.TaggedError<CorpusArchiveMoveDestinationConflictError>(
   $I`CorpusArchiveMoveDestinationConflictError`
 )(
   "CorpusArchiveMoveDestinationConflictError",
@@ -144,7 +152,7 @@ export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<
     message: S.String,
     sourcePath: S.NonEmptyString,
   },
-  $I.annote("CorpusArchiveMoveDestinationConflictError", {
+  $I.annoteError<CorpusArchiveMoveDestinationConflictError>("CorpusArchiveMoveDestinationConflictError", {
     title: "Corpus Archive Move Destination Conflict Error",
     description: "An archive-move destination already exists or is duplicated by another selected source.",
   })
@@ -153,7 +161,8 @@ export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<
 /**
  * Error union returned by archive-move operations.
  *
- * @example
+ * **Example** (Handle archive-move error union)
+ *
  * ```ts
  * import { CorpusArchiveMoveUncoveredFileError } from "@beep/repo-cli/commands/Corpus/index"
  * import type { CorpusArchiveMoveError } from "@beep/repo-cli/commands/Corpus/index"
@@ -165,6 +174,7 @@ export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<
  *   sourcePath: "/tmp/source-a"
  * })))
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */

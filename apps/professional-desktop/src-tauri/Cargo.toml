@@ -10,6 +10,8 @@ name = "professional_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
+cc = "1"
+pkg-config = "0.3"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
@@ -20,6 +22,7 @@ libc = "0.2"
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-log = "2"
+tauri-plugin-opener = "2.5.4"
 tauri-plugin-shell = "2"
 tauri-plugin-updater = "2"
 uuid = { version = "1", features = ["v4"] }

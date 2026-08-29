@@ -9,8 +9,6 @@ export {
   appendCorpusJsonLines,
   basenameOf,
   dedupeBySha256,
-  extensionOf,
-  fileMtimeFields,
   hashFileSha256,
   jsonlContent,
   labelPathKey,
@@ -19,4 +17,4 @@ export {
   sanitizeSegment,
   validatePathSegment,
   writeCorpusStringFile,
-} from "./ServicePrograms.js";
+} from "./ServicePrograms.ts";

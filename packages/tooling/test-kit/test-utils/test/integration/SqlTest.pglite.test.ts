@@ -10,7 +10,7 @@ import {
 } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect, it } from "@effect/vitest";
-import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Scope } from "effect";
+import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
 
@@ -27,6 +27,9 @@ const ContainerInspectTimeout = Duration.seconds(5);
 // CI load a scoped-layer provision can queue well past a minute.
 const SharedPgliteIntegrationTimeoutMs = 180_000;
 const PgliteTestcontainersIntegrationTimeoutMs = 120_000;
+const PostCloseConnectRetryPolicy = Schedule.spaced(Duration.seconds(1)).pipe(
+  Schedule.upTo({ duration: Duration.seconds(60) })
+);
 
 beforeAll(() => {
   if (hasSharedConnectionUri) {
@@ -185,10 +188,10 @@ describe("PGLite in-process SQL test driver", () => {
 });
 
 // Sequential (overriding the global `sequence.concurrent: true`): every test in this block opens
-// its own connection to the single shared external database. The PGLite wire-protocol server backing
-// the integration lane accepts only one connection at a time, so concurrent tests would terminate
-// each other's connections and hang. The provisioning lane already enforces this with
-// `--concurrency=1` and `BEEP_TEST_DATABASE_MAX_CONNECTIONS=1`.
+// its own connection to the single shared external database. PGLite executes one query at a time;
+// its socket bridge permits a small handler overlap only so a new scope cannot race the prior
+// socket's asynchronous close. The provisioning lane still enforces one-at-a-time test and client
+// concurrency with `--concurrency=1` and `BEEP_TEST_DATABASE_MAX_CONNECTIONS=1`.
 describe("PGLite shared external SQL test driver", { concurrent: false }, () => {
   it.effect(
     "creates, inserts, and queries PostgreSQL tables inside the generated schema",
@@ -367,7 +370,8 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
       ).toBe(true);
       yield* Scope.close(scope, Exit.void);
       const existsAfterClose = yield* schemaExists(schemaName).pipe(
-        provideScopedLayer(makeExternalNoIsolationLayer(connectionUri))
+        provideScopedLayer(makeExternalNoIsolationLayer(connectionUri)),
+        Effect.retry(PostCloseConnectRetryPolicy)
       );
 
       expect(existsAfterClose).toBe(false);

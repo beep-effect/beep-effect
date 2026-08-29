@@ -16,17 +16,18 @@ const $I = $SchemaId.create("TerritoryCode");
 /**
  * CLDR territory code schema derived from generated territory data.
  *
- * @example
- * ```ts
+ * **Example** (Decode territory code US)
+ *
+ * ```ts import.meta.vitest name="Decode territory code US"
  * import * as S from "effect/Schema"
  * import { TerritoryCode } from "@beep/schema/TerritoryCode"
  *
  * const code = S.decodeUnknownSync(TerritoryCode)("US")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TerritoryCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.TerritoryDataByCode)).pipe(
   $I.annoteSchema("TerritoryCode", {
@@ -36,18 +37,8 @@ export const TerritoryCode = LiteralKit(Struct.keysNonEmpty(TerritoriesData.Terr
 
 /**
  * {@inheritDoc TerritoryCode}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { TerritoryCode } from "@beep/schema/TerritoryCode"
- *
- * const code: TerritoryCode = S.decodeUnknownSync(TerritoryCode)("US")
- * console.log(code) // "US"
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TerritoryCode = typeof TerritoryCode.Type;
 
@@ -56,17 +47,18 @@ const territoryNameByCodeEntries = Struct.entriesNonEmpty(TerritoriesData.Territ
 /**
  * CLDR territory display-name schema derived from generated territory data.
  *
- * @example
- * ```ts
+ * **Example** (Decode United States name)
+ *
+ * ```ts import.meta.vitest name="Decode United States name"
  * import * as S from "effect/Schema"
  * import { TerritoryName } from "@beep/schema/TerritoryCode"
  *
  * const name = S.decodeUnknownSync(TerritoryName)("United States")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TerritoryName = LiteralKit(
   Struct.keysNonEmpty(Struct.reverse(TerritoriesData.TerritoryDataNameByCode))
@@ -78,38 +70,31 @@ export const TerritoryName = LiteralKit(
 
 /**
  * {@inheritDoc TerritoryName}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { TerritoryName } from "@beep/schema/TerritoryCode"
- *
- * const name: TerritoryName = S.decodeUnknownSync(TerritoryName)("United States")
- * console.log(name) // "United States"
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TerritoryName = typeof TerritoryName.Type;
 
 /**
  * Reversible CLDR territory code/name codec.
  *
+ * **Details**
+ *
  * Decoding maps territory code to display name; `TerritoryNameFromCode.To`
  * maps display name back to territory code.
  *
- * @example
- * ```ts
+ * **Example** (Map code to display name)
+ *
+ * ```ts import.meta.vitest name="Map code to display name"
  * import * as S from "effect/Schema"
  * import { TerritoryNameFromCode } from "@beep/schema/TerritoryCode"
  *
  * const name = S.decodeUnknownSync(TerritoryNameFromCode)("US")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TerritoryNameFromCode = MappedLiteralKit(territoryNameByCodeEntries).pipe(
   $I.annoteSchema("TerritoryNameFromCode", {
@@ -120,16 +105,17 @@ export const TerritoryNameFromCode = MappedLiteralKit(territoryNameByCodeEntries
 /**
  * Reverse codec from CLDR territory display name to territory code.
  *
- * @example
- * ```ts
+ * **Example** (Map name to territory code)
+ *
+ * ```ts import.meta.vitest name="Map name to territory code"
  * import * as S from "effect/Schema"
  * import { TerritoryCodeFromName } from "@beep/schema/TerritoryCode"
  *
  * const code = S.decodeUnknownSync(TerritoryCodeFromName)("United States")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const TerritoryCodeFromName = TerritoryNameFromCode.To;

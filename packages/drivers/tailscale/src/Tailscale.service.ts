@@ -32,6 +32,7 @@ import type { TailscaleCommandError } from "./Tailscale.errors.ts";
 import type { TailnetIpv4Address as TailnetIpv4AddressType } from "./Tailscale.models.ts";
 
 const tailscaleExecutable = "tailscale";
+const forceKillGrace = Duration.seconds(2);
 const emptyString = () => Str.empty;
 
 const collectStdout = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
@@ -55,7 +56,8 @@ const tailnetIpv4AddressOption = O.liftPredicate(S.is(TailnetIpv4Address));
 /**
  * Decode and normalize the local node's MagicDNS name.
  *
- * @example
+ * **Example** (Parse MagicDNS name JSON)
+ *
  * ```ts
  * import { parseTailscaleMagicDnsName } from "@beep/tailscale/Tailscale.service"
  * import { Effect } from "effect"
@@ -78,7 +80,8 @@ export const parseTailscaleMagicDnsName = Effect.fn("Tailscale.parseMagicDnsName
 /**
  * Check whether a string is an IPv4 address in Tailscale's assigned range.
  *
- * @example
+ * **Example** (Check Tailscale IPv4 range)
+ *
  * ```ts
  * import { isTailscaleIpv4Address } from "@beep/tailscale/Tailscale.service"
  *
@@ -94,7 +97,8 @@ export const isTailscaleIpv4Address: (address: string) => address is TailnetIpv4
 /**
  * Decode the local node facts returned by `tailscale status --json`.
  *
- * @example
+ * **Example** (Parse status JSON string)
+ *
  * ```ts
  * import { parseTailscaleStatus } from "@beep/tailscale/Tailscale.service"
  * import { Effect } from "effect"
@@ -129,7 +133,8 @@ export const parseTailscaleStatus = Effect.fn("Tailscale.parseStatus")((rawStatu
 /**
  * Read and normalize the local node's current Tailscale status.
  *
- * @example
+ * **Example** (Map status to magic DNS)
+ *
  * ```ts
  * import { readTailscaleStatus } from "@beep/tailscale/Tailscale.service"
  * import { Effect } from "effect"
@@ -157,14 +162,23 @@ export const readTailscaleStatus = Effect.gen(function* () {
     argumentCount: A.length(args),
   };
   return yield* Effect.gen(function* () {
-    const child = yield* spawner.spawn(ChildProcess.make(tailscaleExecutable, args)).pipe(
-      Effect.mapError((cause) =>
-        TailscaleCommandSpawnError.make({
-          ...commandContext,
-          cause,
+    const child = yield* spawner
+      .spawn(
+        ChildProcess.make(tailscaleExecutable, args, {
+          forceKillAfter: forceKillGrace,
+          stdin: "ignore",
+          stderr: "pipe",
+          stdout: "pipe",
         })
       )
-    );
+      .pipe(
+        Effect.mapError((cause) =>
+          TailscaleCommandSpawnError.make({
+            ...commandContext,
+            cause,
+          })
+        )
+      );
     const [stdout, stderr, exitCode] = yield* Effect.all(
       [collectStdout(child.stdout), collectStderr(child.stderr), child.exitCode.pipe(Effect.map(Number))],
       { concurrency: "unbounded" }
@@ -227,14 +241,23 @@ const runTailscaleCommand: {
     };
     const timeout = Duration.fromInputUnsafe(timeoutInput);
     return yield* Effect.gen(function* () {
-      const child = yield* spawner.spawn(ChildProcess.make(tailscaleExecutable, args)).pipe(
-        Effect.mapError((cause) =>
-          TailscaleCommandSpawnError.make({
-            ...commandContext,
-            cause,
+      const child = yield* spawner
+        .spawn(
+          ChildProcess.make(tailscaleExecutable, args, {
+            forceKillAfter: forceKillGrace,
+            stdin: "ignore",
+            stderr: "pipe",
+            stdout: "ignore",
           })
         )
-      );
+        .pipe(
+          Effect.mapError((cause) =>
+            TailscaleCommandSpawnError.make({
+              ...commandContext,
+              cause,
+            })
+          )
+        );
       const [stderr, exitCode] = yield* Effect.all(
         [collectStderr(child.stderr), child.exitCode.pipe(Effect.map(Number))],
         { concurrency: "unbounded" }
@@ -273,7 +296,8 @@ const runTailscaleCommand: {
 /**
  * Configure Tailscale Serve to proxy HTTPS traffic to a local port.
  *
- * @example
+ * **Example** (Configure Serve local proxy)
+ *
  * ```ts
  * import { ensureTailscaleServe } from "@beep/tailscale/Tailscale.service"
  *
@@ -299,7 +323,8 @@ export const ensureTailscaleServe = Effect.fn("Tailscale.ensureServe")(function*
 /**
  * Disable the configured HTTPS listener for Tailscale Serve.
  *
- * @example
+ * **Example** (Disable Serve on port)
+ *
  * ```ts
  * import { disableTailscaleServe } from "@beep/tailscale/Tailscale.service"
  *
@@ -321,7 +346,8 @@ export const disableTailscaleServe = Effect.fn("Tailscale.disableServe")(functio
 /**
  * Probe the environment-discovery endpoint through Tailscale HTTPS.
  *
- * @example
+ * **Example** (Probe HTTPS base URL)
+ *
  * ```ts
  * import { probeTailscaleHttpsEndpoint } from "@beep/tailscale/Tailscale.service"
  *
@@ -357,7 +383,8 @@ export const probeTailscaleHttpsEndpoint = Effect.fn("Tailscale.probeHttpsEndpoi
 /**
  * Build the normalized HTTPS origin for a MagicDNS node name.
  *
- * @example
+ * **Example** (Build HTTPS origin URL)
+ *
  * ```ts
  * import { buildTailscaleHttpsBaseUrl } from "@beep/tailscale/Tailscale.service"
  *
@@ -384,7 +411,8 @@ export function buildTailscaleHttpsBaseUrl(input: {
 /**
  * Resolve the local node's Tailscale HTTPS origin from live status.
  *
- * @example
+ * **Example** (Resolve HTTPS from status)
+ *
  * ```ts
  * import { resolveTailscaleHttpsBaseUrl } from "@beep/tailscale/Tailscale.service"
  *

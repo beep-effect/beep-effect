@@ -72,7 +72,8 @@ class M365AuthRuntime extends S.Class<M365AuthRuntime>($I`M365AuthRuntime`)(
  * Authorization request passed from the MSAL token provider to the host-owned
  * redirect-capture flow.
  *
- * @example
+ * **Example** (Make authorization request)
+ *
  * ```ts
  * import { M365AuthorizationRequest } from "@beep/m365"
  *
@@ -104,10 +105,13 @@ export class M365AuthorizationRequest extends S.Class<M365AuthorizationRequest>(
 /**
  * Host-supplied interactive authorizer.
  *
+ * **Details**
+ *
  * The host owns browser opening and loopback/sidecar redirect capture, then
  * returns only the authorization code to the driver.
  *
- * @example
+ * **Example** (Implement interactive authorizer)
+ *
  * ```ts
  * import { M365AuthorizationRequest } from "@beep/m365"
  * import type { M365InteractiveAuthorizer } from "@beep/m365"
@@ -135,7 +139,6 @@ export class M365AuthorizationRequest extends S.Class<M365AuthorizationRequest>(
  * - Captures the authorization redirect at the host-owned redirect URI.
  * - Returns only the authorization code; token exchange and token persistence
  *   stay inside {@link M365Auth}.
- *
  * @category services
  * @since 0.0.0
  */
@@ -261,7 +264,8 @@ const acquireToken = Effect.fn("M365Auth.acquireToken")(function* (
  * re-runnable Effect yielding a redacted Graph access token (silent when a
  * cached account exists, interactive otherwise).
  *
- * @example
+ * **Example** (Satisfy auth shape contract)
+ *
  * ```ts
  * import type { M365AuthShape } from "@beep/m365"
  * import { Effect, Redacted } from "effect"
@@ -280,7 +284,8 @@ export type M365AuthShape = {
 /**
  * Delegated Microsoft Graph token provider service.
  *
- * @example
+ * **Example** (Create static token layer)
+ *
  * ```ts
  * import { M365Auth } from "@beep/m365"
  * import { Redacted } from "effect"
@@ -297,7 +302,8 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
    * Build a token provider that returns a fixed token. Use for tests or when an
    * external component already minted a delegated Graph token.
    *
-   * @example
+   * **Example** (Build fixed token provider)
+   *
    * ```ts
    * import { M365Auth } from "@beep/m365"
    * import { Redacted } from "effect"
@@ -316,7 +322,8 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
    * Build the live MSAL-backed token provider (auth-code + PKCE, silent refresh,
    * encrypted cache when `tokenCachePath` is configured).
    *
-   * @example
+   * **Example** (Build live MSAL layer)
+   *
    * ```ts
    * import { M365Auth, M365ConfigInput } from "@beep/m365"
    *

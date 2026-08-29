@@ -1,0 +1,632 @@
+name: Fleet Shadow Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      redteam:
+        description: Run the live security-boundary gates
+        required: false
+        type: boolean
+        default: false
+      jit_replay:
+        description: Attempt an operator-controlled replay of the one-use JIT configuration
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  shadow-probe:
+    name: Shadow Probe
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 10
+    steps:
+      - name: Prove the ephemeral worker
+        run: |
+          echo "runner: $(hostname)"
+          uname -a
+          nproc
+          free -g
+          echo "shadow probe OK"
+
+      # curlimages/curl 8.16.0 manifest-list digest: sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+      # linux/amd64 image digest: sha256:5a91ea0c9c3ee27b4abe657b68cf6bf0676afa13b236b3bda34283cb3924d4f6
+      - name: Preflight - pull digest-pinned curl probe image
+        if: ${{ inputs.redteam }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull 'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6'
+
+      - name: Gate E - require armed runner IMDS hook
+        if: ${{ inputs.redteam }}
+        id: gate_e_runner_imds_hook
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          echo "RUNNER_NAME: ${RUNNER_NAME:-unset}"
+          echo "hostname: $(hostname)"
+
+          # CSF-003 denies IMDS to the runner user by design; RUNNER_NAME carries the instance ID.
+          if [[ "${RUNNER_NAME:-}" =~ ^beep-ci-(i-[0-9a-f]+)$ ]]; then
+            instance_id="${BASH_REMATCH[1]}"
+          else
+            echo "Could not recover an instance ID from RUNNER_NAME"
+            exit 1
+          fi
+          echo "Runner instance-id: ${instance_id}"
+
+          if curl --noproxy '*' --silent --show-error --fail \
+            --connect-timeout 3 --max-time 3 \
+            --request PUT \
+            --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+            --output /dev/null \
+            http://169.254.169.254/latest/api/token; then
+            echo "FORBIDDEN SUCCESS: runner reached IMDSv2"
+            exit 1
+          else
+            echo "DENIED AS EXPECTED: runner could not reach IMDSv2"
+          fi
+
+      - name: Gate F - deny root IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_f_root_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          for endpoint in \
+            'http://169.254.169.254/latest/api/token' \
+            'http://[fd00:ec2::254]/latest/api/token'; do
+            if sudo curl --noproxy '*' --silent --show-error --fail --globoff \
+              --connect-timeout 2 --max-time 3 \
+              --request PUT \
+              --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+              --output /dev/null \
+              "${endpoint}"; then
+              echo "FORBIDDEN SUCCESS: root reached ${endpoint}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: root could not reach ${endpoint}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate G - deny host-network container IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_g_hostnet_container_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          probe_number=0
+          for endpoint in \
+            'http://169.254.169.254/latest/api/token' \
+            'http://[fd00:ec2::254]/latest/api/token'; do
+            probe_number=$(( probe_number + 1 ))
+            probe_output="${RUNNER_TEMP}/gate-g-probe-${probe_number}.stdout"
+            docker_exit=0
+            if docker run --rm --network host --entrypoint sh \
+              'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \
+              -c '
+                set -u
+                echo PROBE_RAN
+                if curl --noproxy "*" --silent --show-error --fail --globoff \
+                  --connect-timeout 2 --max-time 3 \
+                  --request PUT \
+                  --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+                  --output /dev/null \
+                  "$1"; then
+                  echo IMDS_REACHABLE
+                fi
+              ' sh "${endpoint}" >"${probe_output}"; then
+              :
+            else
+              docker_exit=$?
+            fi
+            cat -- "${probe_output}"
+            if ! grep -Fxq PROBE_RAN "${probe_output}"; then
+              echo "PROBE FAILED TO RUN: host-network container did not run curl for ${endpoint} (docker exit ${docker_exit})"
+              failed=1
+            elif grep -Fxq IMDS_REACHABLE "${probe_output}"; then
+              echo "FORBIDDEN SUCCESS: host-network container reached ${endpoint}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: host-network container could not reach ${endpoint}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate H - deny privileged host-network container IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_h_privileged_container_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          probe_number=0
+          for endpoint in \
+            'http://169.254.169.254/latest/api/token' \
+            'http://[fd00:ec2::254]/latest/api/token'; do
+            probe_number=$(( probe_number + 1 ))
+            probe_output="${RUNNER_TEMP}/gate-h-probe-${probe_number}.stdout"
+            docker_exit=0
+            if docker run --rm --privileged --network host --entrypoint sh \
+              'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \
+              -c '
+                set -u
+                echo PROBE_RAN
+                if curl --noproxy "*" --silent --show-error --fail --globoff \
+                  --connect-timeout 2 --max-time 3 \
+                  --request PUT \
+                  --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+                  --output /dev/null \
+                  "$1"; then
+                  echo IMDS_REACHABLE
+                fi
+              ' sh "${endpoint}" >"${probe_output}"; then
+              :
+            else
+              docker_exit=$?
+            fi
+            cat -- "${probe_output}"
+            if ! grep -Fxq PROBE_RAN "${probe_output}"; then
+              echo "PROBE FAILED TO RUN: privileged host-network container did not run curl for ${endpoint} (docker exit ${docker_exit})"
+              failed=1
+            elif grep -Fxq IMDS_REACHABLE "${probe_output}"; then
+              echo "FORBIDDEN SUCCESS: privileged host-network container reached ${endpoint}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: privileged host-network container could not reach ${endpoint}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate J - require the owner IMDS hook to remain armed
+        if: ${{ always() && inputs.redteam }}
+        id: gate_j_hook_still_armed
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_hook='ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/beep/imds-job-started-hook.sh'
+          grep -Fxq "${expected_hook}" /opt/actions-runner/.env
+          test -x /opt/beep/imds-job-started-hook.sh
+          runner_uid="$(id -u)"
+          sudo iptables -C OUTPUT \
+            -d 169.254.169.254/32 \
+            -m owner --uid-owner "${runner_uid}" \
+            -j DROP
+          if command -v ip6tables >/dev/null 2>&1; then
+            sudo ip6tables -C OUTPUT \
+              -d fd00:ec2::254/128 \
+              -m owner --uid-owner "${runner_uid}" \
+              -j DROP
+          fi
+          echo "Gate E owner DROP remains armed"
+
+      - name: Gate L - require live IAM edge dry-runs
+        if: ${{ always() && inputs.redteam }}
+        id: gate_l_iam_edges
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          edge_log="${RUNNER_TEMP}/imds-edges.log"
+          if ! sudo journalctl -t beep-imds-edges --no-pager -o cat > "${edge_log}"; then
+            sudo grep -h beep-imds-edges /var/log/messages > "${edge_log}" || : > "${edge_log}"
+          fi
+          grep -E \
+            'IMDS_EDGE (self_disable|self_reenable|self_redisable|other_disable): (PASS|FAIL|INCONCLUSIVE)' \
+            "${edge_log}" || true
+          edge_count() { grep -Ec "$1" "${edge_log}" || true; }
+          [[ "$(edge_count 'IMDS_EDGE self_disable: PASS$'):$(edge_count 'IMDS_EDGE self_disable: ')" == 1:1 ]]
+          [[ "$(edge_count 'IMDS_EDGE self_reenable: PASS$'):$(edge_count 'IMDS_EDGE self_reenable: ')" == 1:1 ]]
+          [[ "$(edge_count 'IMDS_EDGE self_redisable: PASS$'):$(edge_count 'IMDS_EDGE self_redisable: ')" == 1:1 ]]
+          case "$(edge_count 'IMDS_EDGE other_disable: PASS$'):$(edge_count \
+            'IMDS_EDGE other_disable: INCONCLUSIVE( \([A-Za-z0-9._-]+\))?$'):$(edge_count \
+            'IMDS_EDGE other_disable: ')" in
+            1:0:1) ;;
+            0:1:1) echo "NOTE: other-instance authorization order was inconclusive; accepting Gate L" ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Ensure AWS CLI is available
+        if: ${{ inputs.redteam }}
+        id: aws_cli
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v aws >/dev/null 2>&1; then
+            aws --version
+            exit 0
+          fi
+
+          case "$(uname -m)" in
+            x86_64) aws_arch=x86_64 ;;
+            aarch64|arm64) aws_arch=aarch64 ;;
+            *) echo "Unsupported AWS CLI architecture: $(uname -m)"; exit 1 ;;
+          esac
+          command -v curl >/dev/null
+          command -v python3 >/dev/null
+          install_dir="${RUNNER_TEMP}/aws-cli"
+          bin_dir="${RUNNER_TEMP}/bin"
+          mkdir -p "${bin_dir}"
+          curl --silent --show-error --fail --location \
+            "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" \
+            --output "${RUNNER_TEMP}/awscliv2.zip"
+          python3 -m zipfile -e "${RUNNER_TEMP}/awscliv2.zip" "${RUNNER_TEMP}/awscliv2"
+          "${RUNNER_TEMP}/awscliv2/aws/install" \
+            --install-dir "${install_dir}" --bin-dir "${bin_dir}"
+          echo "${bin_dir}" >> "${GITHUB_PATH}"
+          "${bin_dir}/aws" --version
+
+      - name: Gate I - deny root STS identity
+        if: ${{ always() && inputs.redteam }}
+        id: gate_i_root_sts
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          if ! sudo aws --version >/dev/null 2>&1; then
+            echo "AWS CLI unavailable to root; denial cannot be proven"
+            exit 1
+          fi
+          if ! sudo env -i PATH=/usr/local/bin:/usr/bin:/bin aws --version >/dev/null 2>&1; then
+            echo "AWS CLI unavailable to clean-environment root; denial cannot be proven"
+            exit 1
+          fi
+          failed=0
+          if sudo aws sts get-caller-identity >/dev/null 2>&1; then
+            echo "FORBIDDEN SUCCESS: sudo aws obtained an STS identity"
+            failed=1
+          else
+            echo "DENIED AS EXPECTED: sudo aws could not obtain an STS identity"
+          fi
+          if sudo env -i PATH=/usr/local/bin:/usr/bin:/bin \
+            aws sts get-caller-identity >/dev/null 2>&1; then
+            echo "FORBIDDEN SUCCESS: clean-environment root obtained an STS identity"
+            failed=1
+          else
+            echo "DENIED AS EXPECTED: clean-environment root could not obtain an STS identity"
+          fi
+          exit "${failed}"
+
+      - name: Informational K - report JIT argv residue
+        if: ${{ always() && inputs.redteam }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          jit_visible=false
+          for cmdline in /proc/[0-9]*/cmdline; do
+            if [[ -r "${cmdline}" ]] && \
+              tr '\0' '\n' < "${cmdline}" 2>/dev/null | grep -Fxq -- '--jitconfig'; then
+              jit_visible=true
+              break
+            fi
+          done
+          if [[ "${jit_visible}" == true ]]; then
+            echo "JIT residue: visible"
+          else
+            echo "JIT residue: absent"
+          fi
+
+      - name: Probe M - JIT configuration replay
+        if: ${{ inputs.redteam && inputs.jit_replay }}
+        id: gate_m_jit_replay
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          scratch_runner="${RUNNER_TEMP}/jit-replay-runner"
+          listener_log="${RUNNER_TEMP}/jit-replay-listener.log"
+          trap 'unset jit_value; rm -rf -- "${scratch_runner}"' EXIT
+          mkdir -p "${scratch_runner}"
+          cp -a /opt/actions-runner/bin "${scratch_runner}/bin"
+          cp -a /opt/actions-runner/externals "${scratch_runner}/externals"
+          (cd "${scratch_runner}" && "${scratch_runner}/bin/Runner.Listener" --help >/dev/null 2>&1 || true)
+
+          jit_value="$(
+            for f in /proc/[0-9]*/cmdline; do
+              tr '\0' ' ' < "$f" 2>/dev/null
+            done | grep -o -- '--jitconfig [A-Za-z0-9+/=_-]*' \
+              | grep -E '^--jitconfig [A-Za-z0-9+/=_-]+$' | head -1 || true
+          )"
+          jit_value="${jit_value#--jitconfig }"
+          if [[ -z "${jit_value}" ]]; then
+            echo "JIT replay: inconclusive (running listener configuration was not readable)"
+            exit 1
+          fi
+
+          replay_runner_name="$(
+            printf '%s' "${jit_value}" | python3 -c '
+          import base64, json, re, sys
+          encoded = sys.stdin.read().strip()
+          encoded += "=" * (-len(encoded) % 4)
+          try:
+              payload = json.loads(base64.urlsafe_b64decode(encoded))
+          except Exception:
+              payload = {}
+          runner = payload.get("runner")
+          name = runner.get("name") if isinstance(runner, dict) else None
+          name = name if isinstance(name, str) else payload.get("agentName")
+          if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9._-]{1,128}", name):
+              print(name)
+          ' || true
+          )"
+
+          set +e
+          (cd "${scratch_runner}" && timeout 90 "${scratch_runner}/bin/Runner.Listener" run \
+            --jitconfig "${jit_value}" > "${listener_log}" 2>&1)
+          listener_status=$?
+          set -e
+
+          # Only a recognized server-side rejection marker may classify the replay as rejected.
+          # A marker-free non-zero exit is a local setup or runtime failure and must stay
+          # inconclusive, or the gate reports PASS without evidence GitHub rejected the replay.
+          # Markers are case-sensitive and phrase-anchored so a local diagnostic that merely
+          # contains a keyword (for example a missing shared library reported as "not found")
+          # cannot pass as a server-side rejection; an unanticipated rejection phrase fails
+          # inconclusive, which is the safe direction for this gate.
+          error_line="$(grep -Em1 \
+            -e 'already (been )?(registered|used|configured|exists)' \
+            -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
+            -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
+            -e '\bUnauthorized\b' \
+            -e '[Rr]unner (was )?not found' \
+            -e '(access|permission) denied' \
+            "${listener_log}" | tr -d '\r' || true)"
+          diag_line=""
+          if [[ -z "${error_line}" && "${listener_status}" -ne 0 && "${listener_status}" -ne 124 ]]; then
+            diag_line="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${listener_log}")"
+            diag_line="${diag_line:-no listener output}"
+            diag_line="${diag_line//${jit_value}/[redacted]}"
+            diag_line="$(printf '%s' "${diag_line}" | sed -E \
+              's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)"
+          fi
+          if [[ -n "${error_line}" ]]; then
+            error_line="${error_line//${jit_value}/[redacted]}"
+            error_line="$(printf '%s' "${error_line}" | sed -E \
+              's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-240)"
+            unset jit_value
+            echo "JIT replay: rejected (${error_line})"
+            exit 0
+          fi
+
+          unset jit_value
+          if grep -Eq 'Listening for Jobs|Connected to GitHub' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
+            echo "JIT replay: accepted"
+            [[ -z "${replay_runner_name}" ]] || echo "JIT replay runner: ${replay_runner_name}"
+            exit 1
+          fi
+
+          if [[ -n "${diag_line}" ]]; then
+            echo "JIT replay: inconclusive (listener exited with status ${listener_status}: ${diag_line})"
+            exit 1
+          fi
+
+          echo "JIT replay: inconclusive (listener exited without a rejection or connection marker)"
+          exit 1
+
+      - name: Gate A - deny GitHub App secrets
+        if: ${{ always() && inputs.redteam }}
+        id: gate_a
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          if ! command -v aws >/dev/null 2>&1; then
+            echo "AWS CLI unavailable; denial cannot be proven"
+            exit 1
+          fi
+
+          # CSF-003 denies IMDS credentials to the runner user by design.
+          failed=0
+          for parameter in github_app_key_base64 github_app_webhook_secret; do
+            error_file="${RUNNER_TEMP}/ssm-${parameter}.error"
+            if aws ssm get-parameter \
+              --name "/github-action-runners/app/${parameter}" \
+              --with-decryption --region us-east-1 \
+              >/dev/null 2>"${error_file}"; then
+              echo "FORBIDDEN SUCCESS: read ${parameter}"
+              failed=1
+            elif grep -Eqi 'AccessDenied|not authorized' "${error_file}"; then
+              echo "DENIED AS EXPECTED: ${parameter}"
+            elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${error_file}"; then
+              echo "DENIED AS EXPECTED: ${parameter} (guest credentials unavailable)"
+            else
+              echo "UNEXPECTED ERROR: ${parameter}"
+              sed -n '1,8p' "${error_file}"
+              failed=1
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate B - deny S3 access
+        if: ${{ always() && inputs.redteam }}
+        id: gate_b
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          if ! command -v aws >/dev/null 2>&1; then
+            echo "AWS CLI unavailable; denial cannot be proven"
+            exit 1
+          fi
+
+          # CSF-003 denies IMDS credentials to the runner user by design.
+          failed=0
+          if aws s3api list-buckets >/dev/null 2>"${RUNNER_TEMP}/s3-list.error"; then
+            echo "FORBIDDEN SUCCESS: listed S3 buckets"
+            failed=1
+          elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-list.error"; then
+            echo "DENIED AS EXPECTED: list-buckets"
+          elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${RUNNER_TEMP}/s3-list.error"; then
+            echo "DENIED AS EXPECTED: list-buckets (guest credentials unavailable)"
+          else
+            echo "UNEXPECTED ERROR: list-buckets"
+            sed -n '1,8p' "${RUNNER_TEMP}/s3-list.error"
+            failed=1
+          fi
+          if aws s3api put-object \
+            --bucket beep-ci-dist-8xycw0prvbhmjow8r6vp4uqv \
+            --key redteam-probe.txt \
+            --body /etc/hostname \
+            >/dev/null 2>"${RUNNER_TEMP}/s3-put.error"; then
+            echo "FORBIDDEN SUCCESS: wrote redteam-probe.txt"
+            failed=1
+          elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-put.error"; then
+            echo "DENIED AS EXPECTED: put-object"
+          elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${RUNNER_TEMP}/s3-put.error"; then
+            echo "DENIED AS EXPECTED: put-object (guest credentials unavailable)"
+          else
+            echo "UNEXPECTED ERROR: put-object"
+            sed -n '1,8p' "${RUNNER_TEMP}/s3-put.error"
+            failed=1
+          fi
+          exit "${failed}"
+
+      - name: Gate C - deny tailnet and LAN reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_c_tailnet_lan
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          failed=0
+          for target in 100.100.100.100 192.168.1.1 10.0.0.1; do
+            if curl --noproxy '*' --silent --show-error \
+              --connect-timeout 3 --max-time 3 \
+              --output /dev/null "http://${target}/"; then
+              echo "FORBIDDEN SUCCESS: HTTP response from ${target}"
+              failed=1
+            else
+              echo "DENIED AS EXPECTED: ${target}"
+            fi
+          done
+          exit "${failed}"
+
+      - name: Gate D - deny container IMDS reachability
+        if: ${{ always() && inputs.redteam }}
+        id: gate_d_container_imds
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe_output="${RUNNER_TEMP}/gate-d-container-imds.stdout"
+          docker_exit=0
+          if docker run --rm --entrypoint sh \
+            'curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6' \
+            -c '
+            set -u
+            echo PROBE_RAN
+            if curl --noproxy "*" --silent --show-error --fail \
+              --connect-timeout 2 --max-time 3 \
+              --request PUT \
+              --header "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+              --output /dev/null \
+              http://169.254.169.254/latest/api/token; then
+              echo IMDS_REACHABLE
+            fi
+          ' >"${probe_output}"; then
+            :
+          else
+            docker_exit=$?
+          fi
+          cat -- "${probe_output}"
+          if ! grep -Fxq PROBE_RAN "${probe_output}"; then
+            echo "PROBE FAILED TO RUN: bridged container did not run curl (docker exit ${docker_exit})"
+            exit 1
+          fi
+          if grep -Fxq IMDS_REACHABLE "${probe_output}"; then
+            echo "FORBIDDEN SUCCESS: container reached IMDSv2"
+            exit 1
+          fi
+          echo "DENIED AS EXPECTED: container could not reach IMDSv2"
+
+      - name: Summarize red-team gates
+        if: ${{ always() && inputs.redteam }}
+        shell: bash
+        run: |
+          failed=0
+          if [[ "${{ steps.gate_a.outcome }}" == success ]]; then
+            echo "GATE A_APP_SECRET_SSM: PASS"
+          else
+            echo "GATE A_APP_SECRET_SSM: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_b.outcome }}" == success ]]; then
+            echo "GATE B_S3: PASS"
+          else
+            echo "GATE B_S3: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_c_tailnet_lan.outcome }}" == success ]]; then
+            echo "GATE C_TAILNET_LAN: PASS"
+          else
+            echo "GATE C_TAILNET_LAN: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_d_container_imds.outcome }}" == success ]]; then
+            echo "GATE D_CONTAINER_IMDS: PASS"
+          else
+            echo "GATE D_CONTAINER_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_e_runner_imds_hook.outcome }}" == success ]]; then
+            echo "GATE E_RUNNER_IMDS_HOOK: PASS"
+          else
+            echo "GATE E_RUNNER_IMDS_HOOK: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_f_root_imds.outcome }}" == success ]]; then
+            echo "GATE F_ROOT_IMDS: PASS"
+          else
+            echo "GATE F_ROOT_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_g_hostnet_container_imds.outcome }}" == success ]]; then
+            echo "GATE G_HOSTNET_CONTAINER_IMDS: PASS"
+          else
+            echo "GATE G_HOSTNET_CONTAINER_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_h_privileged_container_imds.outcome }}" == success ]]; then
+            echo "GATE H_PRIVILEGED_CONTAINER_IMDS: PASS"
+          else
+            echo "GATE H_PRIVILEGED_CONTAINER_IMDS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_i_root_sts.outcome }}" == success ]]; then
+            echo "GATE I_ROOT_STS: PASS"
+          else
+            echo "GATE I_ROOT_STS: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_j_hook_still_armed.outcome }}" == success ]]; then
+            echo "GATE J_HOOK_STILL_ARMED: PASS"
+          else
+            echo "GATE J_HOOK_STILL_ARMED: FAIL"
+            failed=1
+          fi
+          if [[ "${{ steps.gate_l_iam_edges.outcome }}" == success ]]; then
+            echo "GATE L_IAM_EDGES: PASS"
+          else
+            echo "GATE L_IAM_EDGES: FAIL"
+            failed=1
+          fi
+          if [[ "${{ inputs.jit_replay }}" != true ]]; then
+            echo "GATE M_JIT_REPLAY: SKIPPED"
+          elif [[ "${{ steps.gate_m_jit_replay.outcome }}" == success ]]; then
+            echo "GATE M_JIT_REPLAY: PASS"
+          else
+            echo "GATE M_JIT_REPLAY: FAIL"
+            failed=1
+          fi
+          exit "${failed}"

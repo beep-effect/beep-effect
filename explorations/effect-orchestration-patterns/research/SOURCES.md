@@ -212,7 +212,7 @@ RESEARCH In-Repo Inventory). Marked reuse / extend / NET-NEW.
 ## 5. Cross-links & provenance
 
 - **Cluster id / route:** "Effect orchestration patterns (Schedule, Layer provider, bounded fan-out)" → `new-exploration` → this packet (cluster primary target).
-- **Exploration ↔ goal links:** none yet — `ops/manifest.json` `links.goals` is empty (packet is at `research` stage). `secondaryTargets` name `goals/effect-native-migration` only as an explicit out-of-scope boundary.
+- **Exploration ↔ goal links:** graduated [`goals/effect-v4-workflow-engine-spike`](../../../goals/effect-v4-workflow-engine-spike/README.md) on 2026-07-14; `ops/manifest.json` records the same link. `secondaryTargets` name `goals/effect-native-migration` only as an explicit out-of-scope boundary.
 - **Sibling packets (proposed, not yet live):** `multi-provider-llm-dispatch-fallback` (runtime fallback/dispatch — keep distinct from this packet's build-time selector) and the deferred `resilience-stack-circuit-breaker-budget` (Q1/Q5/Q7 stateful stack). `crossref` in the bundle is empty.
 - **This packet's own artifacts:** [`CAPTURE.md`](../CAPTURE.md) · [`RESEARCH.md`](../RESEARCH.md) (External Landscape + In-Repo Inventory + Constraints) · [`DECISIONS.md`](../DECISIONS.md) (7 open forks, recommended answers) · [`BRIEF.md`](../BRIEF.md) · [`MAP.md`](../MAP.md).
 - **Codex review:** [`reviews/2026-06-29-codex-research.md`](../reviews/2026-06-29-codex-research.md) — folded 2026-06-29 (2 blocking: M365 retry prior art, existing degraded fan-out; 5 advisory).

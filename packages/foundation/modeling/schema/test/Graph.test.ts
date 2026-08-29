@@ -6,30 +6,28 @@ import * as Graph_ from "effect/Graph";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const NodeIndexArbitrary = S.toArbitrary(GraphSchema.NodeIndex);
-const EdgeIndexArbitrary = S.toArbitrary(GraphSchema.EdgeIndex);
-const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind);
+const NodeIndexArbitrary = S.toArbitrary(GraphSchema.NodeIndex)(fc);
+const EdgeIndexArbitrary = S.toArbitrary(GraphSchema.EdgeIndex)(fc);
+const GraphKindArbitrary = S.toArbitrary(GraphSchema.GraphKind)(fc);
 
 describe("Graph indices", () => {
   it("brands non-negative integer node and edge indices", () => {
-    expect(S.decodeUnknownSync(GraphSchema.NodeIndex)(0)).toBe(0);
-    expect(S.decodeUnknownSync(GraphSchema.NodeIndexFromString)("2")).toBe(2);
-    expect(S.decodeUnknownSync(GraphSchema.EdgeIndex)(1)).toBe(1);
-    expect(S.decodeUnknownSync(GraphSchema.EdgeIndexFromString)("3")).toBe(3);
+    expect(S.decodeSync(GraphSchema.NodeIndex)(0)).toBe(0);
+    expect(S.decodeSync(GraphSchema.NodeIndexFromString)("2")).toBe(2);
+    expect(S.decodeSync(GraphSchema.EdgeIndex)(1)).toBe(1);
+    expect(S.decodeSync(GraphSchema.EdgeIndexFromString)("3")).toBe(3);
   });
 
   it("rejects invalid indices", () => {
-    expect(() => S.decodeUnknownSync(GraphSchema.NodeIndex)(-1)).toThrow(
-      "Expected a value greater than or equal to 0, got -1"
-    );
-    expect(() => S.decodeUnknownSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
-      "Expected a value greater than or equal to 0, got -1"
+    expect(() => S.decodeSync(GraphSchema.NodeIndex)(-1)).toThrow("Expected a value greater than or equal to 0");
+    expect(() => S.decodeSync(GraphSchema.EdgeIndexFromString)("-1")).toThrow(
+      "Expected a value greater than or equal to 0"
     );
   });
 
   it("decodes graph kind discriminators", () => {
-    expect(S.decodeUnknownSync(GraphSchema.GraphKind)("directed")).toBe("directed");
-    expect(S.decodeUnknownSync(GraphSchema.GraphKind)("undirected")).toBe("undirected");
+    expect(S.decodeSync(GraphSchema.GraphKind)("directed")).toBe("directed");
+    expect(S.decodeSync(GraphSchema.GraphKind)("undirected")).toBe("undirected");
   });
 
   it("derives valid graph primitives from their source schemas", () => {
@@ -52,12 +50,11 @@ describe("Graph edge schemas", () => {
     expect(schema.annotate({}).data).toBe(S.FiniteFromString);
   });
 
-  it("transforms encoded edges into Graph.Edge instances and back", () => {
+  it("transforms encoded edges into Graph.Edge values and back", () => {
     const schema = GraphSchema.EdgeTransform(S.FiniteFromString);
     const decoded = S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "1" });
 
     expect(GraphSchema.isEdge(decoded)).toBe(true);
-    expect(decoded).toBeInstanceOf(Graph_.Edge);
     expect(decoded.source).toBe(0);
     expect(decoded.target).toBe(1);
     expect(decoded.data).toBe(1);
@@ -68,31 +65,29 @@ describe("Graph edge schemas", () => {
     const schema = GraphSchema.Edge(S.FiniteFromString);
     const decoded = S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(decoded).toBeInstanceOf(Graph_.Edge);
+    expect(GraphSchema.isEdge(decoded)).toBe(true);
     expect(decoded.data).toBe(1);
   });
 
-  it("validates existing Graph.Edge instances with nested transforms", () => {
+  it("validates existing Graph.Edge values with nested transforms", () => {
     const schema = GraphSchema.EdgeFromSelf(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: "1" }));
+    const decoded = S.decodeSync(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(decoded).toBeInstanceOf(Graph_.Edge);
+    expect(GraphSchema.isEdge(decoded)).toBe(true);
     expect(decoded.data).toBe(1);
-    expect(() => S.decodeUnknownSync(schema)(new Graph_.Edge({ source: 0, target: 1, data: null }))).toThrow(
-      "Expected string, got null"
-    );
+    expect(() => S.decodeUnknownSync(schema)({ source: 0, target: 1, data: null })).toThrow("Expected string");
   });
 
-  it("rejects non-edge values and derives edge equivalence", () => {
+  it("rejects malformed edge values and derives edge equivalence", () => {
     const schema = GraphSchema.EdgeFromSelf(S.String);
     const equivalent = S.toEquivalence(schema);
-    const edge = new Graph_.Edge({ source: 0, target: 1, data: "x" });
+    const edge = { source: 0, target: 1, data: "x" };
 
-    expect(() => S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "x" })).toThrow();
-    expect(equivalent(edge, new Graph_.Edge({ source: 0, target: 1, data: "x" }))).toBe(true);
-    expect(equivalent(edge, new Graph_.Edge({ source: 1, target: 1, data: "x" }))).toBe(false);
-    expect(equivalent(edge, new Graph_.Edge({ source: 0, target: 2, data: "x" }))).toBe(false);
-    expect(equivalent(edge, new Graph_.Edge({ source: 0, target: 1, data: "y" }))).toBe(false);
+    expect(() => S.decodeSync(schema)({ source: -1, target: 1, data: "x" })).toThrow();
+    expect(equivalent(edge, { source: 0, target: 1, data: "x" })).toBe(true);
+    expect(equivalent(edge, { source: 1, target: 1, data: "x" })).toBe(false);
+    expect(equivalent(edge, { source: 0, target: 2, data: "x" })).toBe(false);
+    expect(equivalent(edge, { source: 0, target: 1, data: "y" })).toBe(false);
   });
 });
 
@@ -128,13 +123,11 @@ describe("DirectedGraph", () => {
     expect(GraphSchema.isGraph(decoded)).toBe(true);
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
-    expect(A.fromIterable(decoded.edges.entries())).toEqual([
-      [0, new Graph_.Edge({ source: 0, target: 1, data: "a" })],
-    ]);
+    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: "a" }]]);
   });
 
   it("encodes immutable directed graphs back to the wire shape", () => {
@@ -166,7 +159,7 @@ describe("DirectedGraph", () => {
     });
 
     expect(() =>
-      S.decodeUnknownSync(schema)({
+      S.decodeSync(schema)({
         _tag: "Graph",
         type: "undirected",
         nodes: [],
@@ -224,7 +217,7 @@ describe("UndirectedGraph", () => {
 
     expect(decoded.type).toBe("undirected");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.edges.entries())).toEqual([[0, new Graph_.Edge({ source: 0, target: 1, data: 1 })]]);
+    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: 1 }]]);
   });
 
   it("validates existing immutable undirected graphs with nested transforms", () => {
@@ -238,11 +231,11 @@ describe("UndirectedGraph", () => {
       Graph_.addEdge(mutable, a, b, "x");
     });
 
-    const decoded = S.decodeUnknownSync(schema)(graph);
+    const decoded = S.decodeSync(schema)(graph);
 
     expect(decoded.type).toBe("undirected");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
@@ -260,11 +253,11 @@ describe("Graph FromSelf schemas", () => {
       const b = Graph_.addNode(mutable, "2");
       Graph_.addEdge(mutable, a, b, "x");
     });
-    const decoded = S.decodeUnknownSync(schema)(graph);
+    const decoded = S.decodeSync(schema)(graph);
 
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
@@ -281,7 +274,7 @@ describe("Graph FromSelf schemas", () => {
       Graph_.addEdge(mutable, a, b, "x");
     });
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(`Expected string, got null
+    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(`Expected string
   at ["nodes"][1][1]`);
   });
 
@@ -298,9 +291,7 @@ describe("Graph FromSelf schemas", () => {
       })
     );
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(
-      "Expected @beep/schema/Graph/GraphFromSelf, got Graph(directed, 2, 1)"
-    );
+    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow("Expected @beep/schema/Graph/GraphFromSelf");
   });
 
   it("validates existing mutable directed graphs and preserves mutability", () => {
@@ -313,11 +304,11 @@ describe("Graph FromSelf schemas", () => {
     const b = Graph_.addNode(graph, "2");
     Graph_.addEdge(graph, a, b, "x");
 
-    const decoded = S.decodeUnknownSync(schema)(graph);
+    const decoded = S.decodeSync(schema)(graph);
 
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(true);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
@@ -341,8 +332,8 @@ describe("Graph FromSelf schemas", () => {
     const b = Graph_.addNode(graph, "2");
     Graph_.addEdge(graph, a, b, "x");
 
-    const generic = S.decodeUnknownSync(genericSchema)(graph);
-    const undirected = S.decodeUnknownSync(undirectedSchema)(graph);
+    const generic = S.decodeSync(genericSchema)(graph);
+    const undirected = S.decodeSync(undirectedSchema)(graph);
 
     expect(generic.type).toBe("undirected");
     expect(generic.mutable).toBe(true);

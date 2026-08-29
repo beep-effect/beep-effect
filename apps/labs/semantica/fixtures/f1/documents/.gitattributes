@@ -1,0 +1,2 @@
+# F1 specimens are byte-exact evidence: no EOL normalization, no diff/merge rewriting.
+* -text -diff -merge

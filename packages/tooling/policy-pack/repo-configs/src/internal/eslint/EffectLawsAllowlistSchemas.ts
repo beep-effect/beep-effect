@@ -91,16 +91,15 @@ export class EffectLawsAllowlistLookupKey extends S.Class<EffectLawsAllowlistLoo
     description: "Normalized key used to compare effect-law findings with allowlist entries.",
   })
 ) {
-  static readonly equivalence = S.toEquivalence(EffectLawsAllowlistLookupKey);
+  static readonly equivalence = SchemaUtils.toEquivalence(EffectLawsAllowlistLookupKey);
 }
 
-const toInvalidValueIssue = (actual: unknown, message: string): SchemaIssue.Issue =>
-  new SchemaIssue.InvalidValue(O.some(actual), { message });
-
-const encodeUnsupported =
-  (transformationName: string) =>
-  (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
-    Effect.fail(toInvalidValueIssue(value, `Encoding unknown values is not supported by ${transformationName}.`));
+const encodeUnsupported = (transformationName: string) => (): Effect.Effect<string, SchemaIssue.Issue> =>
+  Effect.fail(
+    new SchemaIssue.InvalidValue({
+      message: `Encoding unknown values is not supported by ${transformationName}.`,
+    })
+  );
 
 const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssue.Issue> => {
   const parseErrors = A.empty<ParseError>();
@@ -113,15 +112,14 @@ const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssu
     onEmpty: () => Effect.succeed(parsed),
     onNonEmpty: (errors) =>
       Effect.fail(
-        toInvalidValueIssue(
-          content,
-          pipe(
+        new SchemaIssue.InvalidValue({
+          message: pipe(
             errors,
             A.map((error) => `${printParseErrorCode(error.error)}@${error.offset}:${error.length}`),
             A.join(", "),
             (details) => `Allowlist JSONC parse error (${details}).`
-          )
-        )
+          ),
+        })
       ),
   });
 };
@@ -142,9 +140,14 @@ export const AllowlistJsoncTextToUnknown = S.String.pipe(
   }))
 );
 
-export const decodeAllowlistDocumentFromJsoncText = AllowlistJsoncTextToUnknown.decodeDocumentEffect;
+// unary by contract: `options` stays reachable through the schema statics these alias;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeAllowlistDocumentFromJsoncText: (
+  input: unknown
+) => Effect.Effect<EffectLawsAllowlistDocument, S.SchemaError> = AllowlistJsoncTextToUnknown.decodeDocumentEffect;
 
-export const decodeAllowlistCheckInput = EffectLawsAllowlistCheckInput.decodeOption;
+export const decodeAllowlistCheckInput: (input: unknown) => O.Option<EffectLawsAllowlistCheckInput> =
+  EffectLawsAllowlistCheckInput.decodeOption;
 export const decodeAllowlistSnapshot = (input: unknown): EffectLawsAllowlistSnapshot =>
   Result.getOrThrow(EffectLawsAllowlistSnapshot.decodeResult(input));
 export const encodeAllowlistSnapshot = (

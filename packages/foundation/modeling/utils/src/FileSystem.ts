@@ -23,14 +23,14 @@ import * as S from "effect/Schema";
 
 const $I = $UtilsId.create("FileSystem");
 
-class NodeFileSystemUnavailableError extends S.TaggedErrorClass<NodeFileSystemUnavailableError>(
+class NodeFileSystemUnavailableError extends S.TaggedError<NodeFileSystemUnavailableError>(
   $I`NodeFileSystemUnavailableError`
 )(
   "NodeFileSystemUnavailableError",
   {
     module: S.Literal("node:fs"),
   },
-  $I.annote("NodeFileSystemUnavailableError", {
+  $I.annoteError<NodeFileSystemUnavailableError>("NodeFileSystemUnavailableError", {
     description: "Thrown when node:fs is unavailable to sync file system helpers.",
   })
 ) {}
@@ -74,12 +74,13 @@ const AppendFileSyncEncoding = S.Literals([
  * Options for {@link appendFileSync}, mirroring Node's `fs.appendFileSync`
  * options object.
  *
- * @example
- * ```ts
+ * **Example** (Make append options)
+ *
+ * ```ts import.meta.vitest name="Make append options"
  * import { AppendFileSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = AppendFileSyncOptions.make({ encoding: "utf8", flag: "a" })
- * console.log(options.flag)
+ * options.flag // => "a"
  * ```
  *
  * @category models
@@ -106,12 +107,13 @@ export class AppendFileSyncOptions extends S.Class<AppendFileSyncOptions>($I`App
  * Options for {@link rmSync}, mirroring the `recursive`/`force` flags of Node's
  * `fs.rmSync`.
  *
- * @example
- * ```ts
+ * **Example** (Make recursive force options)
+ *
+ * ```ts import.meta.vitest name="Make recursive force options"
  * import { RmSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = RmSyncOptions.make({ recursive: true, force: true })
- * console.log(options)
+ * options.force // => true
  * ```
  *
  * @category models
@@ -135,12 +137,13 @@ export class RmSyncOptions extends S.Class<RmSyncOptions>($I`RmSyncOptions`)(
  * Options for {@link readdirSync}. When `withFileTypes` is `true`, the effect
  * resolves with `node:fs` `Dirent` entries instead of plain name strings.
  *
- * @example
- * ```ts
+ * **Example** (Make withFileTypes options)
+ *
+ * ```ts import.meta.vitest name="Make withFileTypes options"
  * import { ReaddirSyncOptions } from "@beep/utils/FileSystem"
  *
  * const options = ReaddirSyncOptions.make({ withFileTypes: true })
- * console.log(options.withFileTypes)
+ * options.withFileTypes // => true
  * ```
  *
  * @category models
@@ -240,11 +243,14 @@ const toFileInfo = (stats: NodeStats): FileSystem.File.Info => ({
 /**
  * Appends `data` to the file at `path`, creating it if it does not exist.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `appendFileSync`. Run it with
  * `Effect.runSync` at a boundary. Failures surface on the wrapped
  * `PlatformError` channel; narrow them via `error.reason._tag`.
  *
- * @example
+ * **Example** (Append log entry)
+ *
  * ```ts
  * import { appendFileSync } from "@beep/utils/FileSystem"
  *
@@ -284,11 +290,14 @@ export const appendFileSync: {
 /**
  * Reports whether a path exists.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `existsSync`. Because
  * `fs.existsSync` swallows every error and returns `false` instead of throwing,
  * this effect has no failure channel.
  *
- * @example
+ * **Example** (Check path exists)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { existsSync } from "@beep/utils/FileSystem"
@@ -306,11 +315,14 @@ export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(
 /**
  * Removes the file or directory at `path`, honoring `recursive`/`force`.
  *
+ * **Details**
+ *
  * Synchronous, layer-free wrapper over `node:fs` `rmSync`. Run it with
  * `Effect.runSync` at a boundary. Failures surface on the wrapped
  * `PlatformError` channel.
  *
- * @example
+ * **Example** (Remove directory recursively)
+ *
  * ```ts
  * import { rmSync } from "@beep/utils/FileSystem"
  *
@@ -322,20 +334,29 @@ export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(
  * @category combinators
  * @since 0.0.0
  */
-export const rmSync = (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError> =>
-  Effect.try({
-    try: () => NFS().rmSync(path, options),
-    catch: toPlatformError("rmSync", path),
-  });
+export const rmSync: {
+  (options?: RmSyncOptions): (path: string) => Effect.Effect<void, PlatformError.PlatformError>;
+  (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError>;
+} = dual(
+  (args) => P.isString(args[0]),
+  (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError> =>
+    Effect.try({
+      try: () => NFS().rmSync(path, options),
+      catch: toPlatformError("rmSync", path),
+    })
+);
 
 /**
  * Renames (moves) a path from `oldPath` to `newPath`.
+ *
+ * **Details**
  *
  * Synchronous, layer-free wrapper over `node:fs` `renameSync`. Run it with
  * `Effect.runSync` at a boundary. Failures surface on the wrapped
  * `PlatformError` channel.
  *
- * @example
+ * **Example** (Rename temporary file)
+ *
  * ```ts
  * import { renameSync } from "@beep/utils/FileSystem"
  *
@@ -359,8 +380,38 @@ export const renameSync: {
     })
 );
 
+function readdirSyncImpl(path: string): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>;
+function readdirSyncImpl(
+  path: string,
+  options: { readonly withFileTypes: true }
+): Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
+function readdirSyncImpl(
+  path: string,
+  options?: ReaddirSyncOptions
+): Effect.Effect<ReadonlyArray<string | NodeDirent>, PlatformError.PlatformError> {
+  return Effect.try({
+    try: (): ReadonlyArray<string | NodeDirent> =>
+      options?.withFileTypes === true ? NFS().readdirSync(path, { withFileTypes: true }) : NFS().readdirSync(path),
+    catch: toPlatformError("readdirSync", path),
+  });
+}
+
+type ReaddirSyncDataLast = (options: {
+  readonly withFileTypes: true;
+}) => (path: string) => Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
+
+type ReaddirSyncDataFirst = {
+  (path: string): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>;
+  (
+    path: string,
+    options: { readonly withFileTypes: true }
+  ): Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
+};
+
 /**
  * Lists the entries of a directory.
+ *
+ * **Details**
  *
  * Synchronous, layer-free wrapper over `node:fs` `readdirSync`. By default the
  * effect resolves with entry name strings; pass `{ withFileTypes: true }` to
@@ -369,7 +420,8 @@ export const renameSync: {
  * `Effect.runSync` at a boundary; failures surface on the wrapped
  * `PlatformError` channel.
  *
- * @example
+ * **Example** (List directory names)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { readdirSync } from "@beep/utils/FileSystem"
@@ -382,24 +434,15 @@ export const renameSync: {
  * @category getters
  * @since 0.0.0
  */
-export function readdirSync(path: string): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>;
-export function readdirSync(
-  path: string,
-  options: { readonly withFileTypes: true }
-): Effect.Effect<ReadonlyArray<NodeDirent>, PlatformError.PlatformError>;
-export function readdirSync(
-  path: string,
-  options?: ReaddirSyncOptions
-): Effect.Effect<ReadonlyArray<string | NodeDirent>, PlatformError.PlatformError> {
-  return Effect.try({
-    try: (): ReadonlyArray<string | NodeDirent> =>
-      options?.withFileTypes === true ? NFS().readdirSync(path, { withFileTypes: true }) : NFS().readdirSync(path),
-    catch: toPlatformError("readdirSync", path),
-  });
-}
+export const readdirSync: ReaddirSyncDataLast & ReaddirSyncDataFirst = dual<ReaddirSyncDataLast, ReaddirSyncDataFirst>(
+  (args) => P.isString(args[0]),
+  readdirSyncImpl
+);
 
 /**
  * Returns effect's `FileSystem.File.Info` for a path.
+ *
+ * **Details**
  *
  * Synchronous, layer-free wrapper over `node:fs` `statSync`, mapping the
  * resulting `Stats` into effect's `File.Info` (so `info.type === "Directory"`
@@ -407,7 +450,8 @@ export function readdirSync(
  * and `info.size` is a `bigint`). Run it with `Effect.runSync` at a boundary;
  * failures surface on the wrapped `PlatformError` channel.
  *
- * @example
+ * **Example** (Read path file info)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { statSync } from "@beep/utils/FileSystem"
@@ -430,6 +474,8 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  * Creates a dual API helper that waits for the first file-system watch event
  * in `directory` whose basename matches `name`.
  *
+ * **Details**
+ *
  * The returned function subscribes to `FileSystem.watch(directory)`, filters
  * events by exact file name, and resolves with the first matching
  * `WatchEvent`. If the watch stream ends before a match is observed, the
@@ -439,8 +485,9 @@ export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, Plat
  * - Data-first: `waitForFile("/tmp", "done.txt")`
  * - Data-last: `pipe("/tmp", waitForFile("done.txt"))`
  *
- * @example
- * ```typescript
+ * **Example** (Wait for ready file)
+ *
+ * ```ts
  * import { Effect } from "effect"
  * import { makeWaitForFile } from "@beep/utils/FileSystem"
  *

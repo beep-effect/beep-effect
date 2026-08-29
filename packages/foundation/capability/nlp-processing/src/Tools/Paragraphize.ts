@@ -39,11 +39,14 @@ class ParagraphizeSuccess extends S.Class<ParagraphizeSuccess>($I`ParagraphizeSu
  * Defines the agent-facing tool contract for splitting text into paragraphs on
  * blank-line boundaries.
  *
+ * **Details**
+ *
  * Use this tool before chunking or summarization workflows that need
  * paragraph-level segments rather than raw sentences or tokens.
  *
- * @example
- * ```ts
+ * **Example** (Decode parameters schema)
+ *
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { Paragraphize } from "@beep/nlp-processing/Tools/Paragraphize"
  *

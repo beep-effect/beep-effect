@@ -48,8 +48,8 @@ supply the bricks the slices compose, by design.
 Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`,
 `@beep/provenance`) + `@beep/shared-domain`.
 - **Persisted entity:** `BaseEntity.Class<Self>($I\`Name\`)(EntityId, { fields,
-  persisted }, annote)` — `packages/shared/domain/src/entity/BaseEntity.ts`; over
-  `EntitySchema.ClassFactory` (`packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts`).
+  persisted }, annote)` — `packages/shared/domain/src/entity/ProductEntity.ts`; over
+  `EntitySchema.ClassFactory` (`packages/foundation/modeling/schema/src/index.ts`).
   Tables projected via `@beep/drizzle pgTableFrom`, never hand-mapped.
 - **Identity:** `EntityId.factory` (branded PosInt + statics) —
   `packages/shared/domain/src/entity/EntityId.ts`; per-slice registries
@@ -60,7 +60,7 @@ Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`
   `LiteralKit`/`MappedLiteralKit` for literal domains (exhaustive `.match`/`.cases`/guards) —
   `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts`.
 - **Typed errors:** `TaggedErrorClass` (+ `CauseTaggedError`, `StatusCauseTaggedErrorClass`) —
-  `packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts`. No raw `Data.TaggedError`.
+  `packages/foundation/modeling/schema/src/index.ts`. No raw `Data.TaggedError`.
 - **Value objects** (`@beep/schema/*` barrel `packages/foundation/modeling/schema/src/index.ts`):
   Email, Slug, Semver, Sha256, CurrencyCode, URL, Int/PosInt/NonNegativeInt,
   UnitInterval, Percentage, LocalDate, crypto VOs.
@@ -104,7 +104,7 @@ Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`
 4. No temporal validity / bitemporal (`validFrom/validTo`) anywhere.
 5. No domain-event / event-sourcing substrate (`DomainEvent/EventStore`) — NOT FOUND.
 6. No shared cross-field refinement idiom (self-documented gap in `TextAnchor.ts`).
-7. Aggregates near-empty (`packages/shared/domain/src/aggregates/index.ts` is a stub).
+7. Shared-kernel aggregates module retired; identity vocabulary lives in `packages/shared/domain/src/identity/index.ts`.
 8. `ConstraintDecoder`/`Encoder` migration partial; annotation-key duplication smell.
 9. Law-practice rich in nouns, thin in lifecycle/errors/provenance.
 

@@ -25,7 +25,8 @@ const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 /**
  * A run of styled text.
  *
- * @example
+ * **Example** (Decode bold text inline)
+ *
  * ```ts
  * import { TextInline } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -61,7 +62,8 @@ export class TextInline extends S.Class<TextInline>($I`TextInline`)(
 /**
  * A hyperlink inline.
  *
- * @example
+ * **Example** (Decode hyperlink inline)
+ *
  * ```ts
  * import { LinkInline } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -91,7 +93,8 @@ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
 /**
  * Inline content held by an assistant block.
  *
- * @example
+ * **Example** (Decode text inline node)
+ *
  * ```ts
  * import { InlineNode } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -114,7 +117,8 @@ export const InlineNode = S.Union([TextInline, LinkInline]).pipe(
 /**
  * Type accepted by the {@link InlineNode} schema.
  *
- * @example
+ * **Example** (Satisfy InlineNode type)
+ *
  * ```ts
  * import type { InlineNode } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -127,6 +131,12 @@ export const InlineNode = S.Union([TextInline, LinkInline]).pipe(
  */
 export type InlineNode = typeof InlineNode.Type;
 
+const ParagraphBlockInlineNode = InlineNode.annotate({ identifier: $I`ParagraphBlockInlineNode` });
+const HeadingBlockInlineNode = InlineNode.annotate({ identifier: $I`HeadingBlockInlineNode` });
+const QuoteBlockInlineNode = InlineNode.annotate({ identifier: $I`QuoteBlockInlineNode` });
+const ListItemInlineNode = InlineNode.annotate({ identifier: $I`ListItemInlineNode` });
+const TableCellBlockInlineNode = InlineNode.annotate({ identifier: $I`TableCellBlockInlineNode` });
+
 // ---------------------------------------------------------------------------
 // Blocks (structured assistant turn block vocabulary)
 // ---------------------------------------------------------------------------
@@ -134,7 +144,8 @@ export type InlineNode = typeof InlineNode.Type;
 /**
  * Heading tags supported by assistant-content heading blocks.
  *
- * @example
+ * **Example** (Access heading tag enum)
+ *
  * ```ts
  * import { AssistantHeadingTag } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -154,7 +165,8 @@ export const AssistantHeadingTag = LiteralKit(["h1", "h2", "h3"]).pipe(
 /**
  * Type accepted by the {@link AssistantHeadingTag} schema.
  *
- * @example
+ * **Example** (Satisfy heading tag type)
+ *
  * ```ts
  * import type { AssistantHeadingTag } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -170,7 +182,8 @@ export type AssistantHeadingTag = typeof AssistantHeadingTag.Type;
 /**
  * A paragraph of inline content.
  *
- * @example
+ * **Example** (Decode paragraph block)
+ *
  * ```ts
  * import { ParagraphBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -188,7 +201,7 @@ export type AssistantHeadingTag = typeof AssistantHeadingTag.Type;
 export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
   {
     type: S.tag("paragraph"),
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
+    children: S.Array(ParagraphBlockInlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("ParagraphBlock", {
     description: "A paragraph of inline content.",
@@ -198,7 +211,8 @@ export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
 /**
  * A section heading.
  *
- * @example
+ * **Example** (Decode heading block)
+ *
  * ```ts
  * import { HeadingBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -218,7 +232,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
   {
     type: S.tag("heading"),
     level: AssistantHeadingTag.annotateKey({ description: "Heading level" }),
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
+    children: S.Array(HeadingBlockInlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("HeadingBlock", {
     description: "A section heading.",
@@ -228,7 +242,8 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
 /**
  * A block quotation.
  *
- * @example
+ * **Example** (Decode quote block)
+ *
  * ```ts
  * import { QuoteBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -246,7 +261,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
 export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
   {
     type: S.tag("quote"),
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
+    children: S.Array(QuoteBlockInlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("QuoteBlock", {
     description: "A block quotation.",
@@ -256,7 +271,8 @@ export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
 /**
  * List markers supported by assistant-content list blocks.
  *
- * @example
+ * **Example** (Access list type enum)
+ *
  * ```ts
  * import { AssistantListType } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -276,7 +292,8 @@ export const AssistantListType = LiteralKit(["bullet", "number"]).pipe(
 /**
  * Type accepted by the {@link AssistantListType} schema.
  *
- * @example
+ * **Example** (Satisfy list type)
+ *
  * ```ts
  * import type { AssistantListType } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -292,7 +309,8 @@ export type AssistantListType = typeof AssistantListType.Type;
 /**
  * A single item within a {@link ListBlock}.
  *
- * @example
+ * **Example** (Make list item)
+ *
  * ```ts
  * import { ListItem } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -305,7 +323,7 @@ export type AssistantListType = typeof AssistantListType.Type;
  */
 export class ListItem extends S.Class<ListItem>($I`ListItem`)(
   {
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content of the item" }),
+    children: S.Array(ListItemInlineNode).annotateKey({ description: "Inline content of the item" }),
   },
   $I.annote("ListItem", {
     description: "A single item within a list block.",
@@ -315,7 +333,8 @@ export class ListItem extends S.Class<ListItem>($I`ListItem`)(
 /**
  * A flat list of items.
  *
- * @example
+ * **Example** (Decode bullet list block)
+ *
  * ```ts
  * import { ListBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -345,7 +364,8 @@ export class ListBlock extends S.Class<ListBlock>($I`ListBlock`)(
 /**
  * A fenced code block.
  *
- * @example
+ * **Example** (Decode TypeScript code block)
+ *
  * ```ts
  * import { CodeBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -377,7 +397,8 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
 /**
  * A single table cell in an assistant-generated table.
  *
- * @example
+ * **Example** (Decode table cell)
+ *
  * ```ts
  * import { TableCellBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -393,7 +414,7 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
  */
 export class TableCellBlock extends S.Class<TableCellBlock>($I`TableCellBlock`)(
   {
-    children: S.Array(InlineNode).annotateKey({ description: "Inline content of the cell" }),
+    children: S.Array(TableCellBlockInlineNode).annotateKey({ description: "Inline content of the cell" }),
   },
   $I.annote("TableCellBlock", {
     description: "A single table cell in an assistant-generated table.",
@@ -403,7 +424,8 @@ export class TableCellBlock extends S.Class<TableCellBlock>($I`TableCellBlock`)(
 /**
  * A single row in an assistant-generated table.
  *
- * @example
+ * **Example** (Decode table row)
+ *
  * ```ts
  * import { TableRowBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -470,7 +492,8 @@ const YouTubeVideoId = S.String.check(
 /**
  * A rectangular data table.
  *
- * @example
+ * **Example** (Decode table with header)
+ *
  * ```ts
  * import { TableBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -504,7 +527,8 @@ export class TableBlock extends S.Class<TableBlock>($I`TableBlock`)(
 /**
  * An embedded YouTube video.
  *
- * @example
+ * **Example** (Decode YouTube video block)
+ *
  * ```ts
  * import { YouTubeBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -531,7 +555,8 @@ export class YouTubeBlock extends S.Class<YouTubeBlock>($I`YouTubeBlock`)(
 /**
  * A single block of an assistant turn.
  *
- * @example
+ * **Example** (Decode paragraph assistant block)
+ *
  * ```ts
  * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"
@@ -565,7 +590,8 @@ export const AssistantBlock = S.Union([
 /**
  * Type accepted by the {@link AssistantBlock} schema.
  *
- * @example
+ * **Example** (Satisfy AssistantBlock type)
+ *
  * ```ts
  * import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
  *
@@ -585,7 +611,8 @@ export type AssistantBlock = typeof AssistantBlock.Type;
  * A complete assistant turn as structured rich text. This is the forced-tool
  * structured-output envelope the model fills in.
  *
- * @example
+ * **Example** (Decode assistant content)
+ *
  * ```ts
  * import { AssistantContent } from "@beep/agents-domain/values/AssistantContent"
  * import * as S from "effect/Schema"

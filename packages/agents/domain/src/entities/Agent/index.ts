@@ -8,21 +8,23 @@
 /**
  * Agent entity schema exports.
  *
- * @example
+ * **Example** (Import Agent entity type)
+ *
  * ```ts
  * import { Agent } from "@beep/agents-domain/entities/Agent"
  *
- * console.log(Agent.definition.entityId.entityType)
+ * console.log(Agent.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * from "./Agent.model.js";
+export * from "./Agent.model.ts";
 /**
  * Agent value-schema exports.
  *
- * @example
+ * **Example** (Check AgentMode deterministic fixture)
+ *
  * ```ts
  * import { AgentMode } from "@beep/agents-domain/entities/Agent"
  *
@@ -32,4 +34,4 @@ export * from "./Agent.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Agent.values.js";
+export * from "./Agent.values.ts";

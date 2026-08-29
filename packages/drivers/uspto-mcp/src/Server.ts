@@ -18,6 +18,7 @@ import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit"
 import { Uspto } from "@beep/uspto";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
+import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { UsptoToolkitHandlersLive } from "./UsptoHandlers.ts";
 import { UsptoSourceAuthRegistration } from "./UsptoSourceAuth.ts";
@@ -29,7 +30,8 @@ const $I = $UsptoMcpId.create("Server");
 /**
  * Configuration for the MCP server identity advertised to clients.
  *
- * @example
+ * **Example** (Make a server config)
+ *
  * ```ts
  * import { UsptoMcpServerConfig } from "@beep/uspto-mcp/Server"
  *
@@ -37,8 +39,8 @@ const $I = $UsptoMcpId.create("Server");
  * console.log(config.name)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`UsptoMcpServerConfig`)(
   {
@@ -57,6 +59,8 @@ export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`Uspto
 /**
  * Build the stdio-transport MCP server layer exposing the USPTO toolkit.
  *
+ * **Details**
+ *
  * The toolkit's registration layer folds through `@beep/mcp-kit`'s
  * `composeGatedLayers`/`gatedLayer` seam keyed on
  * {@link UsptoSourceAuthRegistration} (`soft` gate — always mounts) and uses
@@ -64,7 +68,8 @@ export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`Uspto
  * (`12-observability.md` §3), matching the `mcp-host-retrofit` hygiene this
  * host ships with from the start.
  *
- * @example
+ * **Example** (Launch stdio MCP server)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import { makeServerLayer, UsptoMcpServerConfig } from "@beep/uspto-mcp/Server"
@@ -77,8 +82,8 @@ export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`Uspto
  * void Layer.launch(server)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const makeServerLayer = (config: UsptoMcpServerConfig): Layer.Layer<never, never, Stdio> => {
   const usptoToolkitLayer = sanitizedToolkit(UsptoToolkit).pipe(
@@ -87,7 +92,9 @@ export const makeServerLayer = (config: UsptoMcpServerConfig): Layer.Layer<never
   );
 
   return composeGatedLayers(gatedLayer(UsptoSourceAuthRegistration, usptoToolkitLayer)).pipe(
-    Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })),
+    Layer.provide(
+      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+    ),
     Layer.orDie
   );
 };

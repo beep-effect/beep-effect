@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `align`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,15 +18,8 @@ good API/MCP/SDK, or hybrid — reliable, agent-integratable, and developer-sane
 
 ## Next Open Question
 
-**Held at the review gate by request.** Research (three deep-research tracks +
-in-repo inventory) and align are complete; the recommendation lives at the bottom
-of [`DECISIONS.md`](./DECISIONS.md). The verified reruns are integrated: CPI is
-headless-agent-ready in principle, ODP polling must be sequential per API key,
-and CourtListener is the webhook/MCP litigation event source. Before `shape`, the
-user confirms four things (see `ops/manifest.json` `openQuestions`): (1) L2 =
-narrow-handroll-first vs buy-first; (2) US-patents-first scope; (3) the
-dead-man's-switch reliability model as a first-class requirement; (4) whether to
-evaluate CPI/LawToolBox partner-API access now or after the handroll spine ships.
+None while graduated. The four queued candidates remain MAP re-entry points; a
+fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -38,8 +31,8 @@ evaluate CPI/LawToolBox partner-API access now or after the handroll spine ships
 6. [`rundown.html`](./rundown.html) - pure HTML/CSS/JS high-level visualization folding in the supplemental findings.
 7. [`research/`](./research/) - the three full deep-research reports cited by RESEARCH.md.
 8. [`DECISIONS.md`](./DECISIONS.md) - grilling log + recommendation (stage 2).
-9. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, not started — held at review gate).
-10. [`MAP.md`](./MAP.md) - decomposition (stage 4, not started — held at review gate).
+9. [`BRIEF.md`](./BRIEF.md) - ratified six-week shaped pitch (stage 3).
+10. [`MAP.md`](./MAP.md) - graduated and gate-queued decomposition (stage 4 surface).
 
 ## Related Packets
 
@@ -55,8 +48,15 @@ evaluate CPI/LawToolBox partner-API access now or after the handroll spine ships
 
 ## Trail
 
-<Dated one-liners, newest first: what each session did and where it stopped.>
-
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. Its four queued MAP candidates remain re-entry points, and a
+  fired gate reopens this packet at `decompose`.
+- 2026-07-14: shape signed off with the six-week appetite and paired
+  acceptance; graduated [`law-docketing-patent-spine`](../../goals/law-docketing-patent-spine/README.md)
+  plus [`law-docketing-reliability`](../../goals/law-docketing-reliability/README.md)
+  and published [`docs/product/solo-firm-docketing.md`](../../docs/product/solo-firm-docketing.md).
+- 2026-07-14: review gate ratified the pending branches; drafted `BRIEF.md`, `MAP.md`,
+  and the `research/SOURCES.md` provenance ledger. Stopped at shape sign-off.
 - 2026-06-18: added this packet to the shared standalone
   [`ip-practice-rundown.html`](../ip-practice-rundown.html) handout for
   nontechnical lawyer review. Still stopped at `align`.

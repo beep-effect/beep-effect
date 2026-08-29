@@ -33,25 +33,27 @@ const effectAnnotations = {
 /**
  * Type guard that checks whether a value is an Effect runtime value.
  *
+ * **Details**
+ *
  * This reuses {@link Effect.isEffect}, the canonical Effect guard, so schema
  * validation stays aligned with the library's own effect detection semantics.
  *
- * @example
- * ```ts
+ * **Example** (Check Effect runtime values)
+ *
+ * ```ts import.meta.vitest name="Check Effect runtime values"
  * import { Effect } from "effect"
  * import { isEffect } from "@beep/schema/EffectSchema"
  *
  * const program = Effect.succeed(1)
  *
- * console.log(isEffect(program)) // true
- * console.log(isEffect("hello")) // false
+ * isEffect(program) // => true
+ * isEffect("hello") // => false
  * ```
  *
  * @param u - The value to test.
  * @returns Whether the value is an Effect runtime value.
  * @effects
  * Inspects the runtime value only; it does not execute the supplied Effect.
- *
  * @category validation
  * @since 0.0.0
  */
@@ -62,8 +64,9 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
 /**
  * Declared schema for Effect runtime values.
  *
- * @example
- * ```ts
+ * **Example** (Decode Effect runtime values)
+ *
+ * ```ts import.meta.vitest name="Decode Effect runtime values"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { EffectSchema } from "@beep/schema/EffectSchema"
@@ -71,12 +74,11 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  * const program = Effect.succeed("done")
  * const decoded = S.decodeUnknownSync(EffectSchema())(program)
  *
- * console.log(Effect.isEffect(decoded)) // true
+ * Effect.isEffect(decoded) // => true
  * ```
  *
  * @effects
  * Validates Effect runtime values without executing them.
- *
  * @category validation
  * @since 0.0.0
  */
@@ -91,17 +93,6 @@ export const EffectSchema = <Success, Failure, Dependencies>(): AnnotatedSchema<
 
 /**
  * {@inheritDoc EffectSchema}
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { EffectSchema } from "@beep/schema/EffectSchema"
- *
- * const program: EffectSchema<string, never, never> = S.decodeUnknownSync(EffectSchema<string, never, never>())(Effect.succeed("done"))
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
  * @category models
  * @since 0.0.0
  */

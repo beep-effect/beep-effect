@@ -6,13 +6,17 @@
  * @since 0.0.0
  */
 
-/** Ontology toolkit handler and layer exports.
- * @example
+/**
+ *  Ontology toolkit handler and layer exports.
+ *
+ * **Example** (Import OntologyToolsLive)
+ *
  * ```ts
  * import { OntologyToolsLive } from "@beep/ontology-server/tools"
  * console.log(OntologyToolsLive)
  * ```
+ *
  * @category handlers
  * @since 0.0.0
  */
-export * from "./OntologyToolHandlers.js";
+export * from "./OntologyToolHandlers.ts";

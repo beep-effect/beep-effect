@@ -8,14 +8,15 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Importing Evidence entity)
+ *
  * ```ts
  * import { Evidence } from "@beep/epistemic-domain/entities/Evidence"
  *
- * console.log(Evidence.definition.entityId.resource)
+ * console.log(Evidence.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * from "./Evidence.model.js";
+export * from "./Evidence.model.ts";

@@ -15,6 +15,7 @@ import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as Tracer from "effect/Tracer";
+import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 
 const site = GraphSite.make({ id: "contoso.sharepoint.com,secret-site-id,web", name: O.none() });
@@ -65,12 +66,35 @@ const registrationLayer = sanitizedToolkit(M365Toolkit).pipe(
   Layer.provide(M365ToolkitHandlersLive),
   Layer.provide(MockM365Layer)
 );
-const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
+
+// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
+// builds `McpServer`, so a direct `callTool` — one with no transport middleware
+// in front of it — has to supply the caller itself.
+const stubClientInfo = { name: "m365-mcp-test-client", version: "0.0.0" };
+
+const StubMcpClientLayer = Layer.succeed(
+  McpServerClient,
+  McpServerClient.of({
+    clientId: 1,
+    protocolVersion: "2025-06-18",
+    clientCapabilities: {},
+    clientInfo: stubClientInfo,
+    getClient: Effect.die("the fixture client is never dereferenced") as never,
+    initializePayload: {
+      capabilities: {},
+      clientInfo: stubClientInfo,
+      protocolVersion: "2025-06-18",
+    } as never,
+  })
+);
+
+const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, StubMcpClientLayer);
 
 describe("m365-mcp sanitized dispatch", () => {
   layer(fullLayer)("with M365Toolkit mounted via sanitizedToolkit", (it) => {
-    it.effect("does not leak the raw m365_get_site request payload onto span attributes", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "does not leak the raw m365_get_site request payload onto span attributes",
+      Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const server = yield* McpServer.McpServer;
 

@@ -16,7 +16,8 @@ import type { DevToolsSpanFilter } from "./DevTools.ts";
 /**
  * Server-only local LGTM wiring for Effect OTLP + optional devtools.
  *
- * @example
+ * **Example** (Create local LGTM layer)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, layerLocalLgtmServer } from "@beep/observability/server"
  *
@@ -36,8 +37,8 @@ import type { DevToolsSpanFilter } from "./DevTools.ts";
  * console.log(ObservabilityLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerLocalLgtmServer: {
   (
@@ -46,7 +47,7 @@ export const layerLocalLgtmServer: {
       readonly shouldPublishDevToolsSpan?: DevToolsSpanFilter | undefined;
     }
   ): Layer.Layer<never, never, HttpClient.HttpClient>;
-  (options: {
+  (options?: {
     readonly shouldPublishDevToolsSpan?: DevToolsSpanFilter | undefined;
   }): (config: ServerObservabilityConfig) => Layer.Layer<never, never, HttpClient.HttpClient>;
 } = dual(

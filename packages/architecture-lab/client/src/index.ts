@@ -1,7 +1,8 @@
 /**
  * Client-facing facade for the architecture lab proof slice.
  *
- * @remarks
+ * **Details**
+ *
  * This entry point exposes the package version and namespace barrels for
  * browser or edge clients that need WorkItem command/query contracts without
  * depending on server repository layers.
@@ -14,7 +15,8 @@
 /**
  * Static version marker for the architecture lab client facade.
  *
- * @example
+ * **Example** (Detect initial client build)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-client"
  *
@@ -30,11 +32,12 @@ export const VERSION = "0.0.0" as const;
 /**
  * Namespace barrel for WorkItem client contracts.
  *
- * @remarks
+ * **Details**
+ *
  * The exported namespace keeps WorkItem client symbols grouped at the package
  * root while the owning declarations remain documented in the aggregate module.
  *
  * @category clients
  * @since 0.0.0
  */
-export * as WorkItem from "./aggregates/WorkItem/index.js";
+export * as WorkItem from "./aggregates/WorkItem/index.ts";

@@ -1,4 +1,5 @@
 ---
+{}
 ---
 
 No release: repair local `yeet verify` blockers by keeping generated eCFR

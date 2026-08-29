@@ -1,23 +1,26 @@
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { $SharedDomainId } from "@beep/identity/packages";
 import { Cuid, CuidState } from "@beep/schema/Cuid";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as DomainBarrel from "@beep/shared-domain";
+import { Membership, Organization } from "@beep/shared-domain/entities";
 import * as EntityBarrel from "@beep/shared-domain/entity";
-import * as BaseEntity from "@beep/shared-domain/entity/BaseEntity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
 import * as Principal from "@beep/shared-domain/entity/Principal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
 import { fcRuns } from "@beep/test-utils";
-import { A, Str } from "@beep/utils";
+import { Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Exit, Layer, Order } from "effect";
+import { getTableConfig } from "drizzle-orm/pg-core";
+import { Crypto, Effect, Exit, Layer } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { makeEffect } from "effect/SchemaParser";
 import { FastCheck as fc } from "effect/testing";
 
 const $I = $SharedDomainId.create("entity/test/EntityKernel");
@@ -55,48 +58,14 @@ const systemPrincipal = {
   kind: "System",
 } as const;
 
-class Document extends BaseEntity.BaseEntity.Class<Document>($I`Document`)(
-  DocumentId,
+class ProductDocument extends ProductEntity.Entity<ProductDocument>()(DocumentId)(
   {
-    fields: {
-      note: S.String,
-      optionalNote: S.String.pipe(S.OptionFromNullOr),
-      payload: S.Record(S.String, S.Unknown),
-    },
-    persisted: {
-      note: EntitySchema.persist.text({
-        columnName: "note",
-      }),
-      optionalNote: EntitySchema.persist.text({
-        columnName: "optional_note",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      payload: EntitySchema.persist.jsonb(),
-    },
+    note: S.String.pipe(ProductEntity.pg.text()),
   },
-  $I.annote("Document", {
-    description: "Document entity.",
+  $I.annote("ProductDocument", {
+    description: "Product-entity kit test model.",
   })
 ) {}
-
-const documentInput = {
-  createdAt: 1,
-  createdByPrincipal: systemPrincipal,
-  entityType: "SharedDocument",
-  id: 1,
-  note: "hello",
-  optionalNote: null,
-  orgId: 1,
-  payload: {
-    fixture: true,
-  },
-  publicId: "shared_document_a123",
-  rowVersion: 1,
-  schemaVersion: "0.0.0",
-  source: "Application",
-  updatedAt: 2,
-  updatedByPrincipal: systemPrincipal,
-} as const;
 
 describe("EntityId", () => {
   it.effect(
@@ -161,63 +130,145 @@ describe("PublicEntityId", () => {
     })
   );
 
-  it.effect("generates public ids with the entity prefix", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "generates public ids with the entity prefix",
+    Effect.fnUntraced(function* () {
       const publicId = yield* PublicEntityId.generate(DocumentId);
 
       expect(DocumentPublicId.is(publicId)).toBe(true);
       expect(publicId.startsWith(`${DocumentId.tableName}_`)).toBe(true);
-    }).pipe(provideScopedLayer(CuidTestLayer))
+    }, provideScopedLayer(CuidTestLayer))
   );
 });
 
-describe("BaseEntity", () => {
-  it("exports invariant fields and persistence descriptors", () => {
-    const orgIdIndexHints = BaseEntity.BaseEntity.definition.persisted.orgId.indexHints;
-
-    expect(BaseEntity.BaseEntity.definition.persisted.createdAt.valueStrategy).toBe("defaultedOnInsert");
-    expect(BaseEntity.BaseEntity.definition.persisted.createdByPrincipal.storageKind).toBe("jsonb");
-    expect(orgIdIndexHints === undefined ? undefined : A.map(orgIdIndexHints, (hint) => hint.kind)).toEqual([
-      "btree",
-      "lookup",
-    ]);
-    expect(BaseEntity.BaseEntity.definition.persisted.rowVersion.valueStrategy).toBe("incrementedOnWrite");
-    expect(BaseEntity.BaseEntity.definition.fields.source).toBe(SourceKind.SourceKind);
+describe("ProductEntity", () => {
+  it("preserves the six product variant memberships", () => {
+    expect(Object.keys(ProductDocument.fields)).toContain("id");
+    expect(Object.keys(ProductDocument.insert.fields)).toEqual(
+      expect.arrayContaining([
+        "createdAt",
+        "createdByPrincipal",
+        "entityType",
+        "note",
+        "orgId",
+        "publicId",
+        "schemaVersion",
+        "source",
+        "updatedAt",
+        "updatedByPrincipal",
+      ])
+    );
+    expect(Object.keys(ProductDocument.insert.fields)).not.toContain("id");
+    expect(Object.keys(ProductDocument.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(ProductDocument.update.fields)).toEqual(
+      expect.arrayContaining(["id", "note", "rowVersion", "updatedAt"])
+    );
+    expect(Object.keys(ProductDocument.update.fields)).not.toContain("createdAt");
+    expect(Object.keys(ProductDocument.update.fields)).not.toContain("publicId");
+    expect(Object.keys(ProductDocument.json.fields)).toEqual(expect.arrayContaining(["id", "publicId", "rowVersion"]));
+    expect(Object.keys(ProductDocument.jsonCreate.fields)).toEqual(["note"]);
+    expect(Object.keys(ProductDocument.jsonUpdate.fields)).toEqual(["note"]);
   });
 
-  it.effect(
-    "extends with entity-specific schema fields and attached persistence metadata",
-    Effect.fnUntraced(function* () {
-      const document = yield* decodeEffect(Document)(documentInput);
+  it("applies insert-time audit defaults without inventing row identity", () => {
+    const inserted = Effect.runSync(
+      makeEffect(ProductDocument.insert)({
+        createdByPrincipal: systemPrincipal,
+        entityType: DocumentId.entityType,
+        note: "hello",
+        orgId: 1,
+        publicId: "shared_document_a123",
+        schemaVersion: "0.0.0",
+        source: "Application",
+        updatedByPrincipal: systemPrincipal,
+      })
+    );
 
-      expect(EntitySchema.getDefinition(Document)).toBe(Document.definition);
-      expect(Document.definition.entityId).toBe(DocumentId);
-      expect(Document.definition.tableName).toBe("shared_document");
-      expect(Document.definition.persisted.id.valueStrategy).toBe("generatedOnInsert");
-      expect(Document.definition.persisted.entityType.columnName).toBe("entity_type");
-      expect(Document.definition.persisted.publicId.columnName).toBe("public_id");
-      expect(Document.definition.persisted.publicId.valueStrategy).toBe("computedByServiceOnInsert");
-      expect(Document.definition.persisted.note.storageKind).toBe("text");
-      expect(Document.definition.persisted.optionalNote.indexHints?.[0]?.kind).toBe("lookup");
-      expect(Document.definition.persisted.payload.storageKind).toBe("jsonb");
-      expect(
-        EntitySchema.selectedRowFieldShape("optionalNote", Document.definition.fields.optionalNote).allowsNull
-      ).toBe(true);
-      expect(O.isNone(document.optionalNote)).toBe(true);
-      expect(document.payload).toEqual({ fixture: true });
-    })
-  );
+    expect(inserted.createdAt).toBeDefined();
+    expect(inserted.updatedAt).toBeDefined();
+    expect("id" in inserted).toBe(false);
+    expect("rowVersion" in inserted).toBe(false);
+  });
 
-  it("derives variant field presence from persistence strategies", () => {
-    expect(A.sort(Object.keys(Document.fields), Order.String)).toContain("id");
-    expect(Object.keys(Document.insert.fields)).not.toContain("id");
-    expect(Object.keys(Document.insert.fields)).toContain("entityType");
-    expect(Object.keys(Document.insert.fields)).toContain("publicId");
-    expect(Object.keys(Document.update.fields)).not.toContain("publicId");
-    expect(Object.keys(Document.insert.fields)).toContain("note");
-    expect(Object.keys(Document.jsonCreate.fields)).not.toContain("createdAt");
-    expect(Object.keys(Document.jsonCreate.fields)).not.toContain("publicId");
-    expect(Object.keys(Document.jsonCreate.fields)).toContain("note");
+  it("materializes model extras into kit-provided table indexes", () => {
+    const membership = Membership.Model.pipe(toPgTable, getTableConfig);
+    const organization = Organization.Model.pipe(toPgTable, getTableConfig);
+    const indexNames = (config: { indexes: ReadonlyArray<{ config: { name?: string } }> }) =>
+      config.indexes.map((index) => index.config.name);
+
+    expect(indexNames(membership)).toEqual(
+      expect.arrayContaining(["shared_membership_user_id_btree_idx", "shared_membership_public_id_unique_idx"])
+    );
+    expect(indexNames(organization)).toEqual(
+      expect.arrayContaining([
+        "shared_organization_license_tier_lookup_idx",
+        "shared_organization_slug_unique_idx",
+        "shared_organization_public_id_unique_idx",
+      ])
+    );
+  });
+});
+
+type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+type Expect<T extends true> = T;
+
+class BaseDocument extends EntityBarrel.BaseEntity.Entity<BaseDocument>()(DocumentId)(
+  {
+    note: S.String.pipe(EntityBarrel.BaseEntity.pg.text()),
+  },
+  $I.annote("BaseDocument", { description: "Base-tier test model." })
+) {}
+
+class OrgDocument extends EntityBarrel.OrgEntity.Entity<OrgDocument>()(DocumentId)(
+  {
+    note: S.String.pipe(EntityBarrel.OrgEntity.pg.text()),
+  },
+  $I.annote("OrgDocument", { description: "Org-tier test model." })
+) {}
+
+// Brand and literal preservation through the generic tier factory (spike law).
+export type _IdBrandKept = Expect<
+  IsEqual<InstanceType<typeof ProductDocument>["id"], EntityId.EntityIdValueFor<"SharedDocumentId">>
+>;
+export type _EntityTypeLiteralKept = Expect<
+  IsEqual<InstanceType<typeof ProductDocument>["entityType"], "SharedDocument">
+>;
+
+describe("entity tier family", () => {
+  it("scales column sets down the tier ladder", () => {
+    expect(Object.keys(BaseDocument.fields)).toEqual(
+      expect.arrayContaining(["createdAt", "rowVersion", "updatedAt", "note", "entityType", "id"])
+    );
+    expect(Object.keys(BaseDocument.fields)).not.toContain("orgId");
+    expect(Object.keys(BaseDocument.fields)).not.toContain("publicId");
+    expect(Object.keys(OrgDocument.fields)).toEqual(
+      expect.arrayContaining(["createdByPrincipal", "orgId", "source", "schemaVersion"])
+    );
+    expect(Object.keys(OrgDocument.fields)).not.toContain("publicId");
+  });
+
+  it("derives colocated default indexes per tier", () => {
+    const orgConfig = OrgDocument.pipe(toPgTable, getTableConfig);
+    const names = orgConfig.indexes.map((index) => index.config.name);
+    expect(names).toEqual(
+      expect.arrayContaining(["shared_document_org_id_btree_idx", "shared_document_source_btree_idx"])
+    );
+    expect(names).not.toContain("shared_document_public_id_unique_idx");
+  });
+
+  it("rejects extensions that shadow inherited kit columns", () => {
+    expect(() => EntityBarrel.BaseEntity.kit.extend(() => ({ columns: { createdAt: S.String } }) as never)).toThrow(
+      "already a kit default column"
+    );
+  });
+
+  it("rejects own fields that shadow identity columns", () => {
+    expect(() =>
+      ProductEntity.Entity<never>()(DocumentId)(
+        { publicId: S.String } as never,
+        $I.annote("ShadowedDocument", { description: "Shadowed identity test model." })
+      )
+    ).toThrow("identity column");
   });
 });
 
@@ -225,7 +276,7 @@ describe("EntityRef and shared entity primitives", () => {
   it.effect(
     "builds entity references and validates primitive schemas",
     Effect.fnUntraced(function* () {
-      const id = yield* S.decodeUnknownEffect(DocumentId)(1);
+      const id = yield* S.decodeEffect(DocumentId)(1);
       const ref = EntityRef.make(DocumentId, id);
       const dataLastRef = EntityRef.make(id)(DocumentId);
       const resultRef = EntityRef.makeResult(DocumentId, id);
@@ -236,22 +287,22 @@ describe("EntityRef and shared entity primitives", () => {
       if (Result.isSuccess(resultRef)) {
         expect(resultRef.success.id).toBe(1);
       }
-      expect(yield* S.decodeUnknownEffect(EntityRef.EntityType)("SharedDocument")).toBe("SharedDocument");
+      expect(yield* S.decodeEffect(EntityRef.EntityType)("SharedDocument")).toBe("SharedDocument");
       const sha256Fixture = Str.repeat("a", 64);
-      expect(yield* S.decodeUnknownEffect(primitives.Sha256)(sha256Fixture)).toBe(sha256Fixture);
-      expect(yield* S.decodeUnknownEffect(primitives.Ed25519Signature)("signature")).toBe("signature");
-      expect(yield* S.decodeUnknownEffect(primitives.EncryptionKeyId)("key")).toBe("key");
-      expect(yield* S.decodeUnknownEffect(primitives.HybridLogicalClock)("clock")).toBe("clock");
-      expect(yield* S.decodeUnknownEffect(primitives.VectorClock)({ replica: 1 })).toEqual({ replica: 1 });
+      expect(yield* S.decodeEffect(primitives.Sha256)(sha256Fixture)).toBe(sha256Fixture);
+      expect(yield* S.decodeEffect(primitives.Ed25519Signature)("signature")).toBe("signature");
+      expect(yield* S.decodeEffect(primitives.EncryptionKeyId)("key")).toBe("key");
+      expect(yield* S.decodeEffect(primitives.HybridLogicalClock)("clock")).toBe("clock");
+      expect(yield* S.decodeEffect(primitives.VectorClock)({ replica: 1 })).toEqual({ replica: 1 });
     })
   );
 
   it("round-trips schema-derived document ids through entity references", () =>
     fc.assert(
-      fc.property(S.toArbitrary(DocumentId), (id) => {
+      fc.property(S.toArbitrary(DocumentId)(fc), (id) => {
         const ref = EntityRef.make(DocumentId, id);
         const encodedRef = S.encodeSync(EntityRef.EntityRef)(ref);
-        const decodedRef = S.decodeUnknownSync(EntityRef.EntityRef)(encodedRef);
+        const decodedRef = S.decodeSync(EntityRef.EntityRef)(encodedRef);
 
         expect(encodedRef).toEqual({
           entityType: DocumentId.entityType,
@@ -301,14 +352,14 @@ describe("EntityRef and shared entity primitives", () => {
       expect(system.component).toBe("Runtime");
       expect(S.is(Principal.SystemPrincipal)(principal)).toBe(true);
       expect(SourceKind.SourceKind.is.Agent("Agent")).toBe(true);
-      expect(EntityBarrel.BaseEntity.BaseEntity).toBe(BaseEntity.BaseEntity);
+      expect(EntityBarrel.ProductEntity.Entity).toBe(ProductEntity.Entity);
       expect(EntityBarrel.EntityId.EntityIdValue).toBe(EntityId.EntityIdValue);
       expect(EntityBarrel.EntityRef.EntityRef).toBe(EntityRef.EntityRef);
       expect(EntityBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
       expect(EntityBarrel.Principal.Principal).toBe(Principal.Principal);
       expect(EntityBarrel.primitives.VectorClock).toBe(primitives.VectorClock);
       expect(EntityBarrel.SourceKind.SourceKind).toBe(SourceKind.SourceKind);
-      expect(DomainBarrel.BaseEntity.BaseEntity).toBe(BaseEntity.BaseEntity);
+      expect(DomainBarrel.ProductEntity.Entity).toBe(ProductEntity.Entity);
       expect(DomainBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
     })
   );

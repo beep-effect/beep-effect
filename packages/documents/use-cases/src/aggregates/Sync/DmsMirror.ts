@@ -18,7 +18,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/DmsMirror");
 /**
  * Provider-neutral view of one item stored in the remote DMS.
  *
- * @example
+ * **Example** (Make remote file item)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import { DmsRemoteItem } from "@beep/documents-use-cases/aggregates/Sync/server"
@@ -58,7 +59,8 @@ export class DmsRemoteItem extends S.Class<DmsRemoteItem>($I`DmsRemoteItem`)(
 /**
  * Provider-neutral kind of remote change reported by the DMS event stream.
  *
- * @example
+ * **Example** (Assert edited event type)
+ *
  * ```ts
  * import { DmsEventType } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -81,7 +83,8 @@ export const DmsEventType = LiteralKit(["created", "edited", "moved", "renamed",
 /**
  * Runtime type for {@link DmsEventType}.
  *
- * @example
+ * **Example** (Type event type string)
+ *
  * ```ts
  * import type { DmsEventType } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -97,7 +100,8 @@ export type DmsEventType = typeof DmsEventType.Type;
 /**
  * One provider-neutral remote event observed on the DMS event stream.
  *
- * @example
+ * **Example** (Make remote edited event)
+ *
  * ```ts
  * import { DmsRemoteEvent } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -144,7 +148,8 @@ export class DmsRemoteEvent extends S.Class<DmsRemoteEvent>($I`DmsRemoteEvent`)(
 /**
  * One page of remote events plus the stream position to resume from.
  *
- * @example
+ * **Example** (Make empty event page)
+ *
  * ```ts
  * import { DmsEventPage } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -172,10 +177,12 @@ export class DmsEventPage extends S.Class<DmsEventPage>($I`DmsEventPage`)(
 /**
  * Input for idempotent remote folder creation.
  *
- * @remarks
+ * **Details**
+ *
  * A `none` `parentRemoteId` targets the provider mirror root.
  *
- * @example
+ * **Example** (Make ensure folder input)
+ *
  * ```ts
  * import { EnsureFolderInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -203,10 +210,12 @@ export class EnsureFolderInput extends S.Class<EnsureFolderInput>($I`EnsureFolde
 /**
  * Input for uploading a new remote file.
  *
- * @remarks
+ * **Details**
+ *
  * A `none` `parentRemoteId` targets the provider mirror root.
  *
- * @example
+ * **Example** (Make upload file input)
+ *
  * ```ts
  * import { UploadFileInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  *
@@ -240,7 +249,8 @@ export class UploadFileInput extends S.Class<UploadFileInput>($I`UploadFileInput
 /**
  * Input for uploading a new version of an existing remote file.
  *
- * @example
+ * **Example** (Make upload version input)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import { UploadFileVersionInput } from "@beep/documents-use-cases/aggregates/Sync/server"
@@ -277,10 +287,12 @@ export class UploadFileVersionInput extends S.Class<UploadFileVersionInput>($I`U
 /**
  * Input for moving a remote item to a new parent folder.
  *
- * @remarks
+ * **Details**
+ *
  * A `none` `newParentRemoteId` targets the provider mirror root.
  *
- * @example
+ * **Example** (Make move item input)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import { MoveItemInput } from "@beep/documents-use-cases/aggregates/Sync/server"
@@ -318,7 +330,8 @@ export class MoveItemInput extends S.Class<MoveItemInput>($I`MoveItemInput`)(
 /**
  * Input for renaming a remote item in place.
  *
- * @example
+ * **Example** (Make rename item input)
+ *
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import { RenameItemInput } from "@beep/documents-use-cases/aggregates/Sync/server"
@@ -355,12 +368,14 @@ export class RenameItemInput extends S.Class<RenameItemInput>($I`RenameItemInput
 /**
  * Input for polling one page of remote events.
  *
- * @remarks
+ * **Details**
+ *
  * A `none` `streamPosition` bootstraps the stream at the provider's "now": the
  * provider returns an empty page whose `nextStreamPosition` is the current
  * stream position, so drift detection starts from bootstrap time.
  *
- * @example
+ * **Example** (Make poll events input)
+ *
  * ```ts
  * import { PollEventsInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as O from "effect/Option"
@@ -386,13 +401,15 @@ export class PollEventsInput extends S.Class<PollEventsInput>($I`PollEventsInput
 /**
  * Provider-neutral one-way-push DMS mirror port shape.
  *
- * @remarks
+ * **Details**
+ *
  * `ensureFolder` is idempotent: when a folder with the same name already exists
  * under the parent, the existing folder is returned instead of failing. All
  * operations fail with {@link DmsMirrorUnavailable} when the provider cannot
  * complete them.
  *
- * @example
+ * **Example** (Build stub mirror shape)
+ *
  * ```ts
  * import {
  *   DmsEventPage,
@@ -433,7 +450,8 @@ export interface DmsMirrorShape {
 /**
  * Context tag for the provider-neutral DMS mirror port.
  *
- * @example
+ * **Example** (Provide mirror and poll)
+ *
  * ```ts
  * import {
  *   DmsEventPage,
@@ -468,9 +486,67 @@ export interface DmsMirrorShape {
 export class DmsMirror extends Context.Service<DmsMirror, DmsMirrorShape>()($I`DmsMirror`) {}
 
 /**
+ * Why a DMS mirror adapter reports the provider as disconnected.
+ *
+ * **Details**
+ *
+ * `credentials-missing` means the application never configured provider
+ * credentials, so no connection was attempted — the operator fixes it by
+ * supplying credentials and restarting. The remaining members classify a
+ * probe that ran with credentials configured: `auth-failed` means the
+ * provider rejected the configured credentials (typically an expired token),
+ * `root-unreachable` means the mirror-root folder could not be listed or
+ * created, `transient` means the provider was unreachable or rate limiting
+ * and retrying shortly may succeed, and `probe-failed` stays the fallback
+ * when the adapter cannot classify the failure. Status surfaces must not
+ * tell the operator to set credentials that are already set.
+ *
+ * **Example** (Guard probe-failed reason)
+ *
+ * ```ts
+ * import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * console.log(DmsMirrorDisconnectReason.is["probe-failed"]("probe-failed")) // true
+ * console.log(DmsMirrorDisconnectReason.is["auth-failed"]("probe-failed")) // false
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export const DmsMirrorDisconnectReason = LiteralKit([
+  "credentials-missing",
+  "auth-failed",
+  "root-unreachable",
+  "transient",
+  "probe-failed",
+]).pipe(
+  $I.annoteSchema("DmsMirrorDisconnectReason", {
+    description: "Why a DMS mirror adapter reports the provider as disconnected.",
+  })
+);
+
+/**
+ * Runtime type for {@link DmsMirrorDisconnectReason}.
+ *
+ * **Example** (Type disconnect reason string)
+ *
+ * ```ts
+ * import type { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * const reason: DmsMirrorDisconnectReason = "credentials-missing"
+ * console.log(reason)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export type DmsMirrorDisconnectReason = typeof DmsMirrorDisconnectReason.Type;
+
+/**
  * Connectivity probe result for one DMS mirror adapter.
  *
- * @remarks
+ * **Details**
+ *
  * `rootRemoteId` carries the provider identifier of the resolved mirror-root
  * folder when the adapter could resolve it: the Box adapter reports the ensured
  * root folder id, the deterministic fixture reports its root node, and the
@@ -479,7 +555,18 @@ export class DmsMirror extends Context.Service<DmsMirror, DmsMirrorShape>()($I`D
  * root stores `none` for its parent while the provider event carries the root
  * id).
  *
- * @example
+ * `disconnectReason` distinguishes the honest disconnected states: it is
+ * `none` while `connected` is `true`, and carries a
+ * {@link DmsMirrorDisconnectReason} when the adapter knows why the provider is
+ * unreachable.
+ *
+ * `probedAt` records when the adapter last actually asked the provider —
+ * cached probe answers keep the timestamp of the resolution that produced
+ * them, and adapters that never contact a provider (the app-side disconnected
+ * layer) report `none`.
+ *
+ * **Example** (Make connected probe result)
+ *
  * ```ts
  * import { DmsMirrorProbe } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as O from "effect/Option"
@@ -495,6 +582,12 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
   {
     connected: S.Boolean.annotateKey({
       description: "Whether the mirror adapter can reach the provider.",
+    }),
+    disconnectReason: S.Option(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Why the provider is disconnected; none while the probe reports connected.",
+    }),
+    probedAt: S.Option(S.DateTimeUtc).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "When the adapter last actually asked the provider; none when no probe has contacted it.",
     }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the probe describes.",
@@ -512,14 +605,24 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  * DMS mirror availability shape; the probe never fails so the app decides how
  * to treat connectivity.
  *
- * @example
+ * **Details**
+ *
+ * `probe` may answer from an adapter-side cache; `refresh` discards any cached
+ * answer and asks the provider now — an operator's explicit "retry connection"
+ * must actually re-ask the provider instead of replaying a cached failure.
+ * Adapters without caching implement both members as the same effect.
+ *
+ * **Example** (Build availability shape)
+ *
  * ```ts
  * import { DmsMirrorProbe, type DmsMirrorAvailabilityShape } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
- * const availability: DmsMirrorAvailabilityShape = {
- *   probe: Effect.succeed(DmsMirrorProbe.make({ connected: false, provider: "box" }))
- * }
+ * const probe = Effect.succeed(
+ *   DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("probe-failed"), provider: "box" })
+ * )
+ * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
  * console.log(Effect.runSync(availability.probe).connected)
  * ```
  *
@@ -528,12 +631,14 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  */
 export interface DmsMirrorAvailabilityShape {
   readonly probe: Effect.Effect<DmsMirrorProbe>;
+  readonly refresh: Effect.Effect<DmsMirrorProbe>;
 }
 
 /**
  * Context tag for the DMS mirror availability probe.
  *
- * @example
+ * **Example** (Provide availability and probe)
+ *
  * ```ts
  * import {
  *   DmsMirrorAvailability,
@@ -542,9 +647,8 @@ export interface DmsMirrorAvailabilityShape {
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import { Effect } from "effect"
  *
- * const availability: DmsMirrorAvailabilityShape = {
- *   probe: Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }))
- * }
+ * const probe = Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }))
+ * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
  *
  * const program = Effect.gen(function* () {
  *   const service = yield* DmsMirrorAvailability

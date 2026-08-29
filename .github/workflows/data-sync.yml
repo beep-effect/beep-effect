@@ -12,14 +12,14 @@ permissions:
 jobs:
   sync-data:
     name: Sync Official Data
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
@@ -37,7 +37,7 @@ jobs:
         run: bun run beep sync-data-to-ts --all --include-authenticated --report-dir "$RUNNER_TEMP/data-sync-report"
 
       - name: Upload data sync report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: data-sync-report
           path: ${{ runner.temp }}/data-sync-report
@@ -45,7 +45,7 @@ jobs:
 
       - name: Run focused check verification
         id: focused-check
-        run: bun run check -- --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
+        run: bun run check -- --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/law-practice-domain --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
 
       - name: Append Turbo summary (check)
         if: always() && steps.focused-check.outcome != 'skipped'
@@ -54,7 +54,7 @@ jobs:
       - name: Run focused unit verification
         id: focused-test
         if: steps.focused-check.outcome == 'success'
-        run: bun run test -- --unit --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
+        run: bun run test -- --unit --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/law-practice-domain --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
 
       - name: Prepare pull request body
         id: pr-body
@@ -79,7 +79,7 @@ jobs:
         run: bun run beep ci append-turbo-summary
 
       - name: Create or update pull request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.BEEP_DATA_SYNC_TOKEN != '' && secrets.BEEP_DATA_SYNC_TOKEN || github.token }}
           branch: automation/data-sync

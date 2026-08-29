@@ -10,7 +10,7 @@ import { HashMap, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Segment } from "../Segment/index.js";
+import { Segment } from "../Segment/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/SegmentMap/SegmentMap.model");
 
@@ -22,7 +22,8 @@ const entryByCleanPosition: Order.Order<readonly [number, number]> = Order.mapIn
 /**
  * Compressed map between cleaned-text and original-text positions.
  *
- * @example
+ * **Example** (Identity map lookup)
+ *
  * ```ts
  * import { SegmentMap } from "@beep/law-practice-domain"
  *
@@ -44,7 +45,8 @@ export class SegmentMap extends S.Class<SegmentMap>($I`SegmentMap`)(
   /**
    * Create an identity map (clean position === original position).
    *
-   * @example
+   * **Example** (Create identity SegmentMap)
+   *
    * ```ts
    * import { SegmentMap } from "@beep/law-practice-domain"
    *
@@ -71,7 +73,8 @@ export class SegmentMap extends S.Class<SegmentMap>($I`SegmentMap`)(
    * Adjacent entries with the same offset (origPos - cleanPos) are merged
    * into a single segment.
    *
-   * @example
+   * **Example** (Compress HashMap to segments)
+   *
    * ```ts
    * import { SegmentMap } from "@beep/law-practice-domain"
    * import * as HashMap from "effect/HashMap"
@@ -131,7 +134,8 @@ export class SegmentMap extends S.Class<SegmentMap>($I`SegmentMap`)(
    * Look up the original position for a clean-text position.
    * Uses binary search on sorted segments.
    *
-   * @example
+   * **Example** (Lookup original position)
+   *
    * ```ts
    * import { SegmentMap } from "@beep/law-practice-domain"
    *

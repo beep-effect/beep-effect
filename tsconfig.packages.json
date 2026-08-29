@@ -13,6 +13,9 @@
       "path": "apps/oip-web"
     },
     {
+      "path": "apps/practice-kg-mcp"
+    },
+    {
       "path": "apps/professional-desktop"
     },
     {
@@ -88,16 +91,10 @@
       "path": "packages/drivers/cosmos"
     },
     {
-      "path": "packages/drivers/courtlistener"
-    },
-    {
       "path": "packages/drivers/discord"
     },
     {
       "path": "packages/drivers/doc-text"
-    },
-    {
-      "path": "packages/drivers/dol"
     },
     {
       "path": "packages/drivers/drizzle"
@@ -109,10 +106,10 @@
       "path": "packages/drivers/ecfr"
     },
     {
-      "path": "packages/drivers/face-detection"
+      "path": "packages/drivers/exiftool"
     },
     {
-      "path": "packages/drivers/federal-register"
+      "path": "packages/drivers/face-detection"
     },
     {
       "path": "packages/drivers/ffmpeg"
@@ -121,7 +118,13 @@
       "path": "packages/drivers/firecrawl"
     },
     {
+      "path": "packages/drivers/gov-legal-mcp"
+    },
+    {
       "path": "packages/drivers/govinfo"
+    },
+    {
+      "path": "packages/drivers/graph-3d"
     },
     {
       "path": "packages/drivers/hubspot"
@@ -142,10 +145,19 @@
       "path": "packages/drivers/nlp-mcp"
     },
     {
+      "path": "packages/drivers/obs"
+    },
+    {
       "path": "packages/drivers/onepassword-cli"
     },
     {
+      "path": "packages/drivers/openai"
+    },
+    {
       "path": "packages/drivers/openai-compat"
+    },
+    {
+      "path": "packages/drivers/openclaw"
     },
     {
       "path": "packages/drivers/oxigraph"
@@ -164,9 +176,6 @@
     },
     {
       "path": "packages/drivers/pretext"
-    },
-    {
-      "path": "packages/drivers/protobuf"
     },
     {
       "path": "packages/drivers/rdf-canonize"
@@ -202,6 +211,15 @@
       "path": "packages/drivers/xai"
     },
     {
+      "path": "packages/ecosystem/effect-drizzle"
+    },
+    {
+      "path": "packages/epistemic/client"
+    },
+    {
+      "path": "packages/epistemic/config"
+    },
+    {
       "path": "packages/epistemic/domain"
     },
     {
@@ -209,6 +227,9 @@
     },
     {
       "path": "packages/epistemic/tables"
+    },
+    {
+      "path": "packages/epistemic/ui"
     },
     {
       "path": "packages/epistemic/use-cases"
@@ -271,6 +292,9 @@
       "path": "packages/foundation/modeling/schema"
     },
     {
+      "path": "packages/foundation/modeling/skill-contract"
+    },
+    {
       "path": "packages/foundation/modeling/utils"
     },
     {
@@ -280,10 +304,16 @@
       "path": "packages/foundation/primitive/types"
     },
     {
-      "path": "packages/foundation/ui-system/editor"
+      "path": "packages/foundation/ui-system/brand"
     },
     {
-      "path": "packages/foundation/ui-system/form"
+      "path": "packages/foundation/ui-system/dock"
+    },
+    {
+      "path": "packages/foundation/ui-system/dock-react"
+    },
+    {
+      "path": "packages/foundation/ui-system/editor"
     },
     {
       "path": "packages/foundation/ui-system/ui"
@@ -293,6 +323,9 @@
     },
     {
       "path": "packages/law-practice/server"
+    },
+    {
+      "path": "packages/law-practice/tables"
     },
     {
       "path": "packages/law-practice/use-cases"
@@ -322,10 +355,19 @@
       "path": "packages/shared/tables"
     },
     {
+      "path": "packages/shared/use-cases"
+    },
+    {
       "path": "packages/tooling/library/ai-metrics"
     },
     {
       "path": "packages/tooling/library/ai-sync"
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit"
+    },
+    {
+      "path": "packages/tooling/library/qa-capture"
     },
     {
       "path": "packages/tooling/library/repo-utils"

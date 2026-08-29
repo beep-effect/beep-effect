@@ -49,8 +49,10 @@ Every agent-produced output remains candidate state in v1:
 - approval gates record the reviewer, requested actions, and evidence context
 - context packets expose bounded work context to SDK clients
 
-Accepted truth is outside the first deterministic fixture. The fixture proves
-that proposed truth is shaped, evidenced, and reviewable before promotion.
+Acceptance decisions are outside the first deterministic fixture. The fixture
+proves that candidate assertions are shaped, evidenced, and reviewable before
+any acceptance decision — and acceptance, when it arrives, records a scoped
+human disposition rather than converting a candidate into truth.
 
 ## Evidence Rules
 
@@ -100,7 +102,7 @@ The runtime data loop is specified when:
 
 - raw `.eml` parsing
 - real email or calendar connector execution
-- real LLM extraction
+- real LLM extraction in this paired deterministic fixture loop
 - direct authoritative agent writes
 - external email sending
 - calendar event creation

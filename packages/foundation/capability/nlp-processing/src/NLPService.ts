@@ -28,12 +28,14 @@ const $I = $NlpProcessingId.create("NLPService");
 /**
  * High-level service facade over an {@link Backend.NLPBackend} implementation.
  *
- * @remarks
+ * **Details**
+ *
  * The facade keeps user-facing NLP calls stable while individual backends own
  * tokenization, POS tagging, entity extraction, relation extraction, and graph
  * construction details.
  *
- * @example
+ * **Example** (Partial extractEntities stub)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { NLPServiceShape } from "@beep/nlp-processing/NLPService"
@@ -63,27 +65,30 @@ export interface NLPServiceShape {
 /**
  * Service tag for the {@link NLPServiceShape} facade.
  *
- * @example
+ * **Example** (Log service key)
+ *
  * ```ts
  * import { NLPService } from "@beep/nlp-processing/NLPService"
  *
  * console.log(NLPService.key)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class NLPService extends Context.Service<NLPService, NLPServiceShape>()($I`NLPService`) {}
 
 /**
  * Build an {@link NLPServiceShape} facade around a concrete backend.
  *
- * @remarks
+ * **Details**
+ *
  * The returned service delegates backend-native operations directly and builds
  * annotated text graphs by providing the backend to the graph construction
  * pipeline.
  *
- * @example
+ * **Example** (Facade around minimal backend)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { make } from "@beep/nlp-processing/NLPService"
@@ -136,7 +141,8 @@ export const make = (backend: NLPBackendShape): NLPServiceShape =>
 /**
  * Lift a backend layer into the high-level {@link NLPService} layer.
  *
- * @example
+ * **Example** (Provide backend via layer)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { NLPService, layer } from "@beep/nlp-processing/NLPService"
@@ -176,8 +182,9 @@ export const layer = <E, R>(backendLayer: Layer.Layer<Backend.NLPBackend, E, R>)
 /**
  * Process text into an annotated graph using {@link NLPService} from context.
  *
- * @example
- * ```ts
+ * **Example** (Process text with stub service)
+ *
+ * ```ts import.meta.vitest name="Process text with stub service"
  * import { Effect } from "effect"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { NLPService, processText } from "@beep/nlp-processing/NLPService"
@@ -215,12 +222,11 @@ export const layer = <E, R>(backendLayer: Layer.Layer<Backend.NLPBackend, E, R>)
  *   Effect.provideService(processText("Effect models typed failure."), NLPService, service),
  *   nodeCount
  * )
- * Effect.runPromise(program).then(console.log) // 0
+ * await Effect.runPromise(program) // => 0
  * ```
  *
  * @effects Requires an {@link NLPService} in context and executes the
  * service's graph-construction effect.
- *
  * @category accessors
  * @since 0.0.0
  */
@@ -230,7 +236,8 @@ export const processText = (text: string): Effect.Effect<AnnotatedTextGraph, NLP
 /**
  * Extract entity nodes using {@link NLPService} from context.
  *
- * @example
+ * **Example** (Extract entities from context)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
@@ -271,7 +278,6 @@ export const processText = (text: string): Effect.Effect<AnnotatedTextGraph, NLP
  *
  * @effects Requires an {@link NLPService} in context and executes the
  * service's entity-extraction effect.
- *
  * @category accessors
  * @since 0.0.0
  */
@@ -281,7 +287,8 @@ export const extractEntities = (text: string): Effect.Effect<ReadonlyArray<Entit
 /**
  * Extract relation nodes using {@link NLPService} from context.
  *
- * @example
+ * **Example** (Extract relations from context)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
@@ -322,7 +329,6 @@ export const extractEntities = (text: string): Effect.Effect<ReadonlyArray<Entit
  *
  * @effects Requires an {@link NLPService} in context and executes the
  * service's relation-extraction effect.
- *
  * @category accessors
  * @since 0.0.0
  */
@@ -334,7 +340,8 @@ export const extractRelations = (
 /**
  * Tag parts of speech using {@link NLPService} from context.
  *
- * @example
+ * **Example** (Tag POS from context)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { empty } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
@@ -375,7 +382,6 @@ export const extractRelations = (
  *
  * @effects Requires an {@link NLPService} in context and executes the
  * service's POS-tagging effect.
- *
  * @category accessors
  * @since 0.0.0
  */

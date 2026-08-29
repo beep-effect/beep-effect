@@ -2,35 +2,32 @@
  * Desktop HTTP RPC protocol wiring.
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 
+import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
 import { Layer } from "effect";
-import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 
-const SERVER_URL = ((): string => {
-  if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    if (Str.startsWith("http://")(origin) || Str.startsWith("https://")(origin)) {
-      return new URL("/rpc", origin).toString();
-    }
-  }
-  return "http://127.0.0.1:3939/rpc";
-})();
+// Packaged-origin detection (Windows `tauri.localhost` included) lives in
+// @beep/agents-client's resolver — one source of truth for the routing rule
+// whose divergence across copies caused the original Windows packaged-RPC bug.
+const SERVER_URL = resolveChatRpcHttpUrl();
 
 /**
  * Build the desktop HTTP RPC protocol, optionally carrying the shell-issued
  * per-launch bearer token required when HTTP exposes vault/document RPCs.
  *
- * @example
+ * **Example** (Build protocol layer)
+ *
  * ```ts
  * import { makeDesktopHttpProtocolLive } from "@/transport/DesktopHttpProtocol"
+ * import { Layer } from "effect"
  *
  * const layer = makeDesktopHttpProtocolLive("session-token")
- * console.log(layer)
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
  * @category layers

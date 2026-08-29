@@ -1,0 +1,81 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 4,
+    "furthestStage": "decompose",
+    "issues": [],
+    "packet": "golden-linear",
+    "resumeStage": "align",
+    "revision": 5,
+    "root": "goals",
+    "status": "paused",
+    "tip": {
+      "id": "3e504c4d293fc7e27c30e64f82d98b5a6d90c0d3f6dc7d433e387a7c0c514056",
+      "seq": 5
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "3e504c4d293fc7e27c30e64f82d98b5a6d90c0d3f6dc7d433e387a7c0c514056",
+    "seq": 5
+  },
+  "timeline": [
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T00:00:00.000Z",
+      "body": {
+        "ordinal": 0,
+        "stage": "capture",
+        "status": "active",
+        "type": "packet-created"
+      },
+      "id": "38d88c5951f93fb4b2eb4434cc1e4d8efafb73e45a85d1dd2a94d157be1017a2",
+      "seq": 1
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T00:01:00.000Z",
+      "body": {
+        "ordinal": 2,
+        "stage": "align",
+        "type": "stage-entered"
+      },
+      "id": "9c4b05e565ffcdb126daa56e0c173bda6f7b252e56e36d90dd3a145816ab180e",
+      "seq": 2
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T00:02:00.000Z",
+      "body": {
+        "ordinal": 4,
+        "stage": "decompose",
+        "type": "stage-entered"
+      },
+      "id": "a73044b02e0cce8100ddc670f989ece8bdb9922c75bcdaf0d3b337f9acc4cdf1",
+      "seq": 3
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T00:03:00.000Z",
+      "body": {
+        "ordinal": 2,
+        "stage": "align",
+        "type": "stage-entered"
+      },
+      "id": "1632ff0221f3fee4db3fd86f6f436c6ae2d7b7054adae15dcf29d67cfaee2086",
+      "seq": 4
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T00:04:00.000Z",
+      "body": {
+        "previous": "active",
+        "status": "paused",
+        "type": "status-set"
+      },
+      "id": "3e504c4d293fc7e27c30e64f82d98b5a6d90c0d3f6dc7d433e387a7c0c514056",
+      "seq": 5
+    }
+  ]
+}

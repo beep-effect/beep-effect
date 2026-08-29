@@ -9,14 +9,15 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
+import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
 
 /**
  * Command to open a Turtle document into a session.
  *
- * @example
+ * **Example** (Make open file command)
+ *
  * ```ts
  * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyFilePath, OpenOntologyFileCommand } from "@beep/ontology-use-cases/aggregates/Session"
@@ -30,8 +31,8 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
  * console.log(command.path)
  * ```
  *
- * @since 0.0.0
  * @category commands
+ * @since 0.0.0
  */
 export class OpenOntologyFileCommand extends S.Class<OpenOntologyFileCommand>($I`OpenOntologyFileCommand`)(
   {
@@ -47,7 +48,8 @@ export class OpenOntologyFileCommand extends S.Class<OpenOntologyFileCommand>($I
 /**
  * Result of opening a Turtle document into a session.
  *
- * @example
+ * **Example** (Make open file result)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyFilePath, OpenOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
@@ -68,8 +70,8 @@ export class OpenOntologyFileCommand extends S.Class<OpenOntologyFileCommand>($I
  * console.log(result.session.id)
  * ```
  *
- * @since 0.0.0
  * @category commands
+ * @since 0.0.0
  */
 export class OpenOntologyFileResult extends S.Class<OpenOntologyFileResult>($I`OpenOntologyFileResult`)(
   {
@@ -85,7 +87,8 @@ export class OpenOntologyFileResult extends S.Class<OpenOntologyFileResult>($I`O
 /**
  * Command to serialize a session's asserted graph without writing it.
  *
- * @example
+ * **Example** (Make serialize session command)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { SerializeOntologySessionCommand } from "@beep/ontology-use-cases/aggregates/Session"
@@ -104,8 +107,8 @@ export class OpenOntologyFileResult extends S.Class<OpenOntologyFileResult>($I`O
  * console.log(command.session.id)
  * ```
  *
- * @since 0.0.0
  * @category commands
+ * @since 0.0.0
  */
 export class SerializeOntologySessionCommand extends S.Class<SerializeOntologySessionCommand>(
   $I`SerializeOntologySessionCommand`
@@ -121,7 +124,8 @@ export class SerializeOntologySessionCommand extends S.Class<SerializeOntologySe
 /**
  * Result of serializing a session's asserted graph.
  *
- * @example
+ * **Example** (Make serialize session result)
+ *
  * ```ts
  * import { SerializeOntologySessionResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -132,8 +136,8 @@ export class SerializeOntologySessionCommand extends S.Class<SerializeOntologySe
  * console.log(result.source)
  * ```
  *
- * @since 0.0.0
  * @category commands
+ * @since 0.0.0
  */
 export class SerializeOntologySessionResult extends S.Class<SerializeOntologySessionResult>(
   $I`SerializeOntologySessionResult`
@@ -149,7 +153,8 @@ export class SerializeOntologySessionResult extends S.Class<SerializeOntologySes
 /**
  * Command to serialize a session's asserted graph to a Turtle document.
  *
- * @example
+ * **Example** (Make save file command)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyFilePath, SaveOntologyFileCommand } from "@beep/ontology-use-cases/aggregates/Session"
@@ -169,8 +174,8 @@ export class SerializeOntologySessionResult extends S.Class<SerializeOntologySes
  * console.log(command.session.changeLog.length)
  * ```
  *
- * @since 0.0.0
  * @category commands
+ * @since 0.0.0
  */
 export class SaveOntologyFileCommand extends S.Class<SaveOntologyFileCommand>($I`SaveOntologyFileCommand`)(
   {
@@ -185,7 +190,8 @@ export class SaveOntologyFileCommand extends S.Class<SaveOntologyFileCommand>($I
 /**
  * Result of saving a session's asserted graph.
  *
- * @example
+ * **Example** (Make save file result)
+ *
  * ```ts
  * import { OntologyFilePath, SaveOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -198,8 +204,8 @@ export class SaveOntologyFileCommand extends S.Class<SaveOntologyFileCommand>($I
  * console.log(result.path)
  * ```
  *
- * @since 0.0.0
  * @category commands
+ * @since 0.0.0
  */
 export class SaveOntologyFileResult extends S.Class<SaveOntologyFileResult>($I`SaveOntologyFileResult`)(
   {

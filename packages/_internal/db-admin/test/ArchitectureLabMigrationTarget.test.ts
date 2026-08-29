@@ -9,7 +9,7 @@ import { FastCheck as fc } from "effect/testing";
 
 const encodeMigrationTarget = S.encodeUnknownResult(DbAdminMigrationTarget);
 const decodeMigrationTarget = S.decodeUnknownResult(DbAdminMigrationTarget);
-const MigrationTargetArbitrary = S.toArbitrary(DbAdminMigrationTarget);
+const MigrationTargetArbitrary = S.toArbitrary(DbAdminMigrationTarget)(fc);
 
 describe("db-admin migration targets", () => {
   it("registers the architecture lab WorkItem and Worker tables", () => {

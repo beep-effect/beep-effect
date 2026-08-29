@@ -33,20 +33,22 @@ const Sint64BigInt = S.BigInt.check(Sint64Range);
 /**
  * Branded schema for protobuf `sint64` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes and can expose `sint64` as a zig-zag encoded 64-bit varint
  * from `Long`, `number`, decimal `string`, or `bigint` values. This schema
  * accepts those protobufjs-compatible input shapes and normalizes them to
  * `bigint` before enforcing the signed 64-bit range.
  *
- * @example
- * ```ts
+ * **Example** (Decode minimum sint64 string)
+ *
+ * ```ts import.meta.vitest name="Decode minimum sint64 string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Sint64 } from "@beep/schema/Sint64"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Sint64)("-9223372036854775808"))
- * console.log(value.toString()) // "-9223372036854775808"
+ * value.toString() // => "-9223372036854775808"
  * ```
  *
  * @invariant Values are bigints from -9223372036854775808 through 9223372036854775807.
@@ -67,8 +69,9 @@ export const Sint64 = ProtobufInt64Input.pipe(S.decodeTo(Sint64BigInt, decodePro
 /**
  * Type-level value inferred from {@link Sint64}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow unknown to Sint64)
+ *
+ * ```ts import.meta.vitest name="Narrow unknown to Sint64"
  * import * as S from "effect/Schema"
  * import { Sint64 } from "@beep/schema/Sint64"
  * import type { Sint64 as Sint64Value } from "@beep/schema/Sint64"
@@ -76,7 +79,7 @@ export const Sint64 = ProtobufInt64Input.pipe(S.decodeTo(Sint64BigInt, decodePro
  * const input: unknown = -BigInt(42)
  * if (S.is(Sint64)(input)) {
  *   const value: Sint64Value = input
- *   console.log(value.toString()) // "-42"
+ *   value.toString() // => "-42"
  * }
  * ```
  *

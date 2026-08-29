@@ -8,13 +8,14 @@
 import { Console, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
-import { printCommandJson } from "./Json.js";
-import type { CliJsonError } from "./Json.js";
+import { printCommandJson } from "./Json.ts";
+import type { CliJsonError } from "./Json.ts";
 
 /**
  * Print each line in order.
  *
- * @example
+ * **Example** (Print sequential lines)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { printLines } from "@beep/repo-cli/internal/cli/Printer"
@@ -29,23 +30,30 @@ import type { CliJsonError } from "./Json.js";
  *   console.log(lines) // ["one", "two"]
  * })
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
 export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
   lines: ReadonlyArray<string>
 ): Effect.fn.Return<void> {
-  yield* Effect.forEach(lines, Console.log, { discard: true });
+  // The lambda is load-bearing: `Effect.forEach` passes the element index as a
+  // second argument, and `Console.log` is variadic, so a bare reference prints
+  // the index after every line.
+  yield* Effect.forEach(lines, (line) => Console.log(line), { discard: true });
 });
 
 /**
  * Print a value as machine JSON when `json` is set, otherwise print lines.
  *
+ * **Details**
+ *
  * Collapses the `if (json) { printCommandJson(value) } else { printLines(lines) }`
  * branch repeated across command handlers. The JSON branch uses
  * {@link printCommandJson}, so it emits the same compact single-line payload.
  *
- * @example
+ * **Example** (Print human-readable lines)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { printJsonOrLines } from "@beep/repo-cli/internal/cli/Printer"
@@ -60,6 +68,7 @@ export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
  *   console.log(lines) // ["count: 2"]
  * })
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
@@ -78,7 +87,8 @@ export const printJsonOrLines = Effect.fn("RepoCli.Printer.printJsonOrLines")(fu
 /**
  * Build a logger that prefixes every message with a `[tag]` marker.
  *
- * @example
+ * **Example** (Create tagged logger)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { makeTaggedLogger } from "@beep/repo-cli/internal/cli/Printer"
@@ -94,6 +104,7 @@ export const printJsonOrLines = Effect.fn("RepoCli.Printer.printJsonOrLines")(fu
  *   console.log(lines) // ["[ci] done"]
  * })
  * ```
+ *
  * @category logging
  * @since 0.0.0
  */
@@ -105,11 +116,14 @@ export const makeTaggedLogger =
 /**
  * Log each record entry as a `[tag] key=value` line, in insertion order.
  *
+ * **Details**
+ *
  * The caller supplies the exact label/value record so hand-chosen metric names
  * (for example `live_entries`) are preserved verbatim rather than derived from
  * struct field names.
  *
- * @example
+ * **Example** (Log summary key-values)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { logTaggedSummary } from "@beep/repo-cli/internal/cli/Printer"
@@ -124,6 +138,7 @@ export const makeTaggedLogger =
  *   console.log(lines) // ["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]
  * })
  * ```
+ *
  * @category logging
  * @since 0.0.0
  */
@@ -139,12 +154,15 @@ export const logTaggedSummary = Effect.fn("RepoCli.Printer.logTaggedSummary")(fu
 /**
  * Render a millisecond duration as fixed-precision seconds with an `s` suffix.
  *
+ * **Details**
+ *
  * The precision is a parameter because call sites diverge (`toFixed(2)` vs
  * `toFixed(1)`); each keeps its current output by passing its own precision.
  * Dual-arity: pass both arguments for data-first, or the precision alone to get
  * a reusable data-last renderer.
  *
- * @example
+ * **Example** (Format duration both arities)
+ *
  * ```ts
  * import { formatDurationSeconds } from "@beep/repo-cli/internal/cli/Printer"
  *
@@ -153,6 +171,7 @@ export const logTaggedSummary = Effect.fn("RepoCli.Printer.logTaggedSummary")(fu
  * const toOneDecimal = formatDurationSeconds(1)
  * console.log(toOneDecimal(1234)) // "1.2s" (data-last)
  * ```
+ *
  * @category formatting
  * @since 0.0.0
  */

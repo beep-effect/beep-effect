@@ -6,12 +6,14 @@
   "build": {
     "beforeDevCommand": "bun run dev",
     "beforeBuildCommand": "bun run build:sidecar && bun run build",
-    "devUrl": "http://localhost:1421",
+    "devUrl": "http://professional-desktop.beep.localhost:1355",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
+        "label": "main",
+        "create": false,
         "title": "Professional Desktop",
         "width": 1280,
         "height": 860,
@@ -20,7 +22,8 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost ws://localhost:1421 http://localhost:1421 http://127.0.0.1:3939"
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:3939 http://127.0.0.1:4318; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; worker-src 'self'; frame-src https://www.youtube-nocookie.com",
+      "devCsp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost ws://professional-desktop.beep.localhost:1355 http://professional-desktop.beep.localhost:1355 http://127.0.0.1:3939 http://127.0.0.1:4318; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; worker-src 'self'; frame-src https://www.youtube-nocookie.com"
     }
   },
   "plugins": {

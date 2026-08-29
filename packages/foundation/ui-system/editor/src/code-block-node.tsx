@@ -39,9 +39,10 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * Serialized shape of {@link CodeBlockNode}. Viewer-internal: the wire profile
  * persists code as a `code` block, never as this type.
  *
- * @example
- * ```ts
- * import { SerializedCodeBlockNode } from "@beep/editor"
+ * **Example** (Make typescript code payload)
+ *
+ * ```ts import.meta.vitest name="Make typescript code payload"
+ * import { SerializedCodeBlockNode } from "@beep/editor/code-block-node"
  *
  * const payload = SerializedCodeBlockNode.make({
  *   format: "",
@@ -50,7 +51,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *   language: "typescript",
  * })
  *
- * console.log(payload.language) // "typescript"
+ * payload.language // => "typescript"
  * ```
  *
  * @category models
@@ -74,11 +75,12 @@ const decodeSerializedCodeBlockNode = (input: unknown) => S.decodeUnknownResult(
 /**
  * Block-level Lexical decorator node that renders a readable, copyable code block.
  *
- * @example
- * ```tsx
- * import { $createCodeBlockNode } from "@beep/editor"
+ * **Example** (Node type is codeblock)
  *
- * console.log($createCodeBlockNode("export {}", "typescript").getType()) // "codeblock"
+ * ```tsx
+ * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
+ *
+ * console.log($createCodeBlockNode({ code: "export {}", language: "typescript" }).getType()) // "codeblock"
  * ```
  *
  * @category components
@@ -94,23 +96,19 @@ export class CodeBlockNode extends DecoratorBlockNode {
     this.__language = language;
   }
 
-  // fallow-ignore-next-line unused-class-member -- required by Lexical's node contract.
   static override getType(): string {
     return "codeblock";
   }
 
-  // fallow-ignore-next-line unused-class-member -- required by Lexical's node contract.
   static override clone(node: CodeBlockNode): CodeBlockNode {
     return new CodeBlockNode(node.__code, node.__language, node.__format, node.__key);
   }
 
-  // fallow-ignore-next-line unused-class-member -- required by Lexical's node contract.
   static override importJSON(serializedNode: SerializedLexicalNode & Record<string, unknown>): CodeBlockNode {
     const decoded = Result.getOrThrowWith(decodeSerializedCodeBlockNode(serializedNode), schemaIssueToError);
-    return $createCodeBlockNode(decoded.code, decoded.language);
+    return $createCodeBlockNode({ code: decoded.code, language: decoded.language });
   }
 
-  // fallow-ignore-next-line unused-class-member -- called by Lexical serialization.
   override exportJSON(): SerializedCodeBlockNode {
     const serialized = super.exportJSON();
     return SerializedCodeBlockNode.make({
@@ -122,12 +120,10 @@ export class CodeBlockNode extends DecoratorBlockNode {
   }
 
   // Copying the message, or exporting it to plain text, still yields the code.
-  // fallow-ignore-next-line unused-class-member -- called by Lexical text export.
   override getTextContent(): string {
     return this.__code;
   }
 
-  // fallow-ignore-next-line unused-class-member -- called by Lexical rendering.
   override decorate(_editor: LexicalEditor, _config: EditorConfig): JSX.Element {
     return <CodeBlockView code={this.__code} language={this.__language} />;
   }
@@ -136,27 +132,29 @@ export class CodeBlockNode extends DecoratorBlockNode {
 /**
  * Create a code-block node.
  *
- * @example
- * ```ts
- * import { $createCodeBlockNode } from "@beep/editor"
+ * **Example** (Create node text content)
  *
- * console.log($createCodeBlockNode("export {}", "ts").getTextContent()) // "export {}"
+ * ```ts
+ * import { $createCodeBlockNode } from "@beep/editor/code-block-node"
+ *
+ * console.log($createCodeBlockNode({ code: "export {}", language: "ts" }).getTextContent()) // "export {}"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const $createCodeBlockNode = (code: string, language: string): CodeBlockNode =>
-  new CodeBlockNode(code, language);
+export const $createCodeBlockNode = (options: { readonly code: string; readonly language: string }): CodeBlockNode =>
+  new CodeBlockNode(options.code, options.language);
 
 /**
  * Type guard for {@link CodeBlockNode}.
  *
- * @example
- * ```ts
- * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor"
+ * **Example** (True for code block nodes)
  *
- * console.log($isCodeBlockNode($createCodeBlockNode("x", "ts"))) // true
+ * ```ts
+ * import { $createCodeBlockNode, $isCodeBlockNode } from "@beep/editor/code-block-node"
+ *
+ * console.log($isCodeBlockNode($createCodeBlockNode({ code: "x", language: "ts" }))) // true
  * ```
  *
  * @category guards

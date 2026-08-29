@@ -133,3 +133,16 @@ load only vetted vendor slices.
 
 **Rejected options:** No checked-in third-party TTL/OWL payloads and no
 unmanifested local corpus paths in repo files.
+
+## 2026-07-14 - Sibling review graduates the exploration
+
+**Question:** Does any exploration work remain after P0–P4 research and the
+verification pass landed?
+
+**Answer:** No. Flip the packet to `graduated`, clear the stale P1–P4 open
+question, and link both execution descendants. `goals/semantic-foundation`
+owns M1; `goals/trademark-docketing-domain` remains paused behind M3.
+
+**Rationale:** The research corpus and synthesis are complete. Remaining work
+is already expressed as goal lifecycle and milestone gates, so retaining an
+active exploration question would duplicate those execution records.

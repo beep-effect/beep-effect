@@ -11,14 +11,15 @@ import { A } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ArchitecturePlanStage, ArchitectureSliceRole, ArchitectureWriterKind } from "../Architecture.schemas.js";
+import { ArchitecturePlanStage, ArchitectureSliceRole, ArchitectureWriterKind } from "../Architecture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Architecture/internal/AcceptedProofManifest");
 
 /**
  * Static descriptor for an accepted architecture proof file.
  *
- * @example
+ * **Example** (Use accepted proof manifests)
+ *
  * ```ts
  * import { AcceptedProofFile } from "@beep/repo-cli/commands/Architecture/internal/AcceptedProofManifest"
  *
@@ -30,6 +31,7 @@ const $I = $RepoCliId.create("commands/Architecture/internal/AcceptedProofManife
  * })
  * console.log(file.writer) // "ts-morph"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -103,12 +105,6 @@ const rolePackageFiles = (
       AcceptedProofFile.make({
         role,
         stage,
-        path: `${basePath}/dtslint/.gitkeep`,
-        writer: "template",
-      }),
-      AcceptedProofFile.make({
-        role,
-        stage,
         path: `${basePath}/test/.gitkeep`,
         writer: "template",
       }),
@@ -119,13 +115,15 @@ const rolePackageFiles = (
 /**
  * Ordered accepted proof-file manifest used to build architecture plans.
  *
- * @example
+ * **Example** (Use accepted proof manifests)
+ *
  * ```ts
  * import { acceptedProofFiles } from "@beep/repo-cli/commands/Architecture/internal/AcceptedProofManifest"
  *
  * const firstDomainFile = acceptedProofFiles.find((file) => file.role === "domain")
  * console.log(firstDomainFile?.stage) // "core"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -176,24 +174,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "domain",
     stage: "core",
-    path: "packages/architecture-lab/domain/dtslint/WorkItem.tst.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "domain",
-    stage: "core",
-    path: "packages/architecture-lab/domain/src/identity/index.ts",
-    writer: "ts-morph",
-  }),
-  AcceptedProofFile.make({
-    role: "domain",
-    stage: "core",
-    path: "packages/architecture-lab/domain/src/identity/ArchitectureLab.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "domain",
-    stage: "core",
     path: "packages/architecture-lab/domain/src/entities/index.ts",
     writer: "ts-morph",
   }),
@@ -212,13 +192,19 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "domain",
     stage: "core",
-    path: "packages/architecture-lab/domain/test/Worker.test.ts",
+    path: "packages/architecture-lab/domain/src/entities/Worker/Worker.values.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
     role: "domain",
     stage: "core",
-    path: "packages/architecture-lab/domain/dtslint/Worker.tst.ts",
+    path: "packages/architecture-lab/domain/src/entities/Worker/Worker.behavior.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "domain",
+    stage: "core",
+    path: "packages/architecture-lab/domain/test/Worker.test.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
@@ -254,7 +240,7 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "domain",
     stage: "core",
-    path: "packages/architecture-lab/domain/dtslint/WorkPriority.tst.ts",
+    path: "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
     writer: "template",
   }),
 
@@ -334,12 +320,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "use-cases",
     stage: "core",
-    path: "packages/architecture-lab/use-cases/dtslint/WorkItem.tst.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "use-cases",
-    stage: "core",
     path: "packages/architecture-lab/use-cases/src/entities/index.ts",
     writer: "ts-morph",
   }),
@@ -394,7 +374,7 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "use-cases",
     stage: "core",
-    path: "packages/architecture-lab/use-cases/dtslint/Worker.tst.ts",
+    path: "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
     writer: "template",
   }),
 
@@ -439,12 +419,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "server",
     stage: "core",
     path: "packages/architecture-lab/server/test/WorkItemServer.test.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "server",
-    stage: "core",
-    path: "packages/architecture-lab/server/dtslint/WorkItemServer.tst.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
@@ -499,12 +473,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "server",
     stage: "core",
     path: "packages/architecture-lab/server/test/WorkerServer.test.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "server",
-    stage: "core",
-    path: "packages/architecture-lab/server/dtslint/WorkerServer.tst.ts",
     writer: "template",
   }),
 
@@ -569,12 +537,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     path: "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
     writer: "template",
   }),
-  AcceptedProofFile.make({
-    role: "config",
-    stage: "persistence",
-    path: "packages/architecture-lab/config/dtslint/WorkItemConfig.tst.ts",
-    writer: "template",
-  }),
 
   ...rolePackageFiles("tables", "persistence"),
   AcceptedProofFile.make({
@@ -610,12 +572,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "tables",
     stage: "persistence",
-    path: "packages/architecture-lab/tables/dtslint/WorkItemTable.tst.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "tables",
-    stage: "persistence",
     path: "packages/architecture-lab/tables/src/entities/index.ts",
     writer: "ts-morph",
   }),
@@ -635,12 +591,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "tables",
     stage: "persistence",
     path: "packages/architecture-lab/tables/test/WorkerTable.test.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "tables",
-    stage: "persistence",
-    path: "packages/architecture-lab/tables/dtslint/WorkerTable.tst.ts",
     writer: "template",
   }),
 
@@ -669,12 +619,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     path: "packages/architecture-lab/client/test/WorkItemClient.test.ts",
     writer: "template",
   }),
-  AcceptedProofFile.make({
-    role: "client",
-    stage: "client",
-    path: "packages/architecture-lab/client/dtslint/WorkItemClient.tst.ts",
-    writer: "template",
-  }),
 
   ...rolePackageFiles("ui", "client"),
   AcceptedProofFile.make({
@@ -701,12 +645,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     path: "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
     writer: "template",
   }),
-  AcceptedProofFile.make({
-    role: "ui",
-    stage: "client",
-    path: "packages/architecture-lab/ui/dtslint/WorkItemViewModel.tst.ts",
-    writer: "template",
-  }),
 
   ...rolePackageFiles("proof-app", "client"),
   AcceptedProofFile.make({
@@ -719,12 +657,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "proof-app",
     stage: "client",
     path: "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "proof-app",
-    stage: "client",
-    path: "apps/architecture-lab-proof/dtslint/ArchitectureLabProof.tst.ts",
     writer: "template",
   }),
 
@@ -786,44 +718,74 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/EpistemicEdge.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/EpistemicContradictionTriage.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/LawPracticeCandorGate.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/LawPracticeLegalPosition.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/src/migrations/DocumentsSync.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260512000000_architecture_lab_work_item/migration.sql",
+    path: "packages/_internal/db-admin/drizzle/20260813130540_baseline/migration.sql",
     writer: "template",
   }),
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260512001000_architecture_lab_worker_archetype/migration.sql",
+    path: "packages/_internal/db-admin/drizzle/20260813130540_baseline/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260813143745_baseline-functions/migration.sql",
     writer: "template",
   }),
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260613000000_workspace_thread_domain/migration.sql",
+    path: "packages/_internal/db-admin/drizzle/20260813143745_baseline-functions/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260814001821_law_practice_st13_office_identity/migration.sql",
     writer: "template",
   }),
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260613000010_epistemic_usage_record/migration.sql",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "db-admin",
-    stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260708000000_workspace_vault_config/migration.sql",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "db-admin",
-    stage: "persistence",
-    path: "packages/_internal/db-admin/drizzle/20260711000000_documents_sync_state/migration.sql",
-    writer: "template",
+    path: "packages/_internal/db-admin/drizzle/20260814001821_law_practice_st13_office_identity/snapshot.json",
+    writer: "json",
   }),
   AcceptedProofFile.make({
     role: "db-admin",
@@ -852,7 +814,31 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/dtslint/ArchitectureLabMigrationTarget.tst.ts",
+    path: "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
     writer: "template",
   }),
 ];
@@ -860,12 +846,14 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
 /**
  * Legacy architecture proof fixture paths removed by canonical plans.
  *
- * @example
+ * **Example** (Use accepted proof manifests)
+ *
  * ```ts
  * import { legacyFixturePaths } from "@beep/repo-cli/commands/Architecture/internal/AcceptedProofManifest"
  *
  * console.log(legacyFixturePaths.includes("packages/fixture-lab/specimen")) // true
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */

@@ -9,7 +9,6 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/CyclicDependencyError");
@@ -18,7 +17,8 @@ const $I = $RepoUtilsId.create("errors/CyclicDependencyError");
  * Raised when topological sorting or cycle detection finds circular
  * dependencies in the workspace dependency graph.
  *
- * @example
+ * **Example** (Construct cyclic dependency error)
+ *
  * ```ts
  * import { CyclicDependencyError } from "@beep/repo-utils/errors/CyclicDependencyError"
  * const error = CyclicDependencyError.make({
@@ -27,16 +27,17 @@ const $I = $RepoUtilsId.create("errors/CyclicDependencyError");
  * })
  * console.log(error.cycles)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class CyclicDependencyError extends TaggedErrorClass<CyclicDependencyError>($I`CyclicDependencyError`)(
+export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>($I`CyclicDependencyError`)(
   "CyclicDependencyError",
   {
     message: S.String,
     cycles: S.String.pipe(S.Array, S.Array),
   },
-  $I.annote("CyclicDependencyError", {
+  $I.annoteError<CyclicDependencyError>("CyclicDependencyError", {
     title: "Cyclic Dependency Error",
     description:
       "Raised when topological sorting or cycle detection finds circular\ndependencies in the workspace dependency graph.",

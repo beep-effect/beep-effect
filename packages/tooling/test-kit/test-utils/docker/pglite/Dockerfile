@@ -11,4 +11,4 @@ RUN npm init -y \
 
 EXPOSE 5432
 
-CMD ["./node_modules/.bin/pglite-server", "--db=memory://", "--host=0.0.0.0", "--port=5432"]
+CMD ["./node_modules/.bin/pglite-server", "--db=memory://", "--host=0.0.0.0", "--port=5432", "--max-connections=8"]

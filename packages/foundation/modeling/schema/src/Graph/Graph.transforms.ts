@@ -21,7 +21,8 @@ import type { GraphKindValue } from "./Graph.shared.ts";
 /**
  * Schema for decoding encoded graph payloads into immutable directed graphs.
  *
- * @example
+ * **Example** (Directed graph schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DirectedGraph } from "@beep/schema/Graph"
@@ -30,8 +31,8 @@ import type { GraphKindValue } from "./Graph.shared.ts";
  * console.log(S.isSchema(GraphSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface DirectedGraph<Node extends S.Top, Edge extends S.Top>
   extends S.decodeTo<DirectedGraphFromSelf<S.toType<Node>, S.toType<Edge>>, GraphEncodedSchema<Node, Edge>> {
@@ -43,7 +44,8 @@ export interface DirectedGraph<Node extends S.Top, Edge extends S.Top>
 /**
  * Schema for decoding encoded graph payloads into immutable undirected graphs.
  *
- * @example
+ * **Example** (Undirected graph schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UndirectedGraph } from "@beep/schema/Graph"
@@ -52,8 +54,8 @@ export interface DirectedGraph<Node extends S.Top, Edge extends S.Top>
  * console.log(S.isSchema(GraphSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface UndirectedGraph<Node extends S.Top, Edge extends S.Top>
   extends S.decodeTo<UndirectedGraphFromSelf<S.toType<Node>, S.toType<Edge>>, GraphEncodedSchema<Node, Edge>> {
@@ -65,7 +67,8 @@ export interface UndirectedGraph<Node extends S.Top, Edge extends S.Top>
 /**
  * Schema for decoding encoded graph payloads into mutable directed graphs.
  *
- * @example
+ * **Example** (Mutable directed schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableDirectedGraph } from "@beep/schema/Graph"
@@ -74,8 +77,8 @@ export interface UndirectedGraph<Node extends S.Top, Edge extends S.Top>
  * console.log(S.isSchema(GraphSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableDirectedGraph<Node extends S.Top, Edge extends S.Top>
   extends S.decodeTo<MutableDirectedGraphFromSelf<S.toType<Node>, S.toType<Edge>>, GraphEncodedSchema<Node, Edge>> {
@@ -87,7 +90,8 @@ export interface MutableDirectedGraph<Node extends S.Top, Edge extends S.Top>
 /**
  * Schema for decoding encoded graph payloads into mutable undirected graphs.
  *
- * @example
+ * **Example** (Mutable undirected schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableUndirectedGraph } from "@beep/schema/Graph"
@@ -96,8 +100,8 @@ export interface MutableDirectedGraph<Node extends S.Top, Edge extends S.Top>
  * console.log(S.isSchema(GraphSchema))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableUndirectedGraph<Node extends S.Top, Edge extends S.Top>
   extends S.decodeTo<MutableUndirectedGraphFromSelf<S.toType<Node>, S.toType<Edge>>, GraphEncodedSchema<Node, Edge>> {
@@ -132,7 +136,7 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
       S.decodeTo(
         target,
         SchemaTransformation.transformOrFail({
-          decode: (encoded) => rebuildMutableGraph(encoded, { actual: encoded, expectedType }),
+          decode: (encoded) => rebuildMutableGraph(encoded, { expectedType }),
           encode: (graph, parseOptions) =>
             SchemaParser.decodeUnknownEffect(decodedGraph)(toRawGraphEncoded(graph), parseOptions),
         })
@@ -155,7 +159,7 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
     S.decodeTo(
       target,
       SchemaTransformation.transformOrFail({
-        decode: (encoded) => rebuildImmutableGraph(encoded, { actual: encoded, expectedType }),
+        decode: (encoded) => rebuildImmutableGraph(encoded, { expectedType }),
         encode: (graph, parseOptions) =>
           SchemaParser.decodeUnknownEffect(decodedGraph)(toRawGraphEncoded(graph), parseOptions),
       })
@@ -166,10 +170,13 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
 /**
  * Schema for immutable directed graphs.
  *
+ * **Details**
+ *
  * Decodes an encoded `{ _tag: "Graph", type: "directed", nodes, edges }`
  * payload into an immutable `Graph.DirectedGraph` value.
  *
- * @example
+ * **Example** (Directed graph schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DirectedGraph } from "@beep/schema/Graph"
@@ -181,8 +188,8 @@ const makeGraphTransform = <Node extends S.Top, Edge extends S.Top>(
  *
  * @param options - Schemas for node and edge payloads.
  * @returns Directed graph transform schema.
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const DirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
   readonly node: Node;
@@ -203,7 +210,8 @@ export const DirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
 /**
  * Schema for immutable undirected graphs.
  *
- * @example
+ * **Example** (Undirected graph schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UndirectedGraph } from "@beep/schema/Graph"
@@ -215,8 +223,8 @@ export const DirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
  *
  * @param options - Schemas for node and edge payloads.
  * @returns Undirected graph transform schema.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UndirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
   readonly node: Node;
@@ -237,7 +245,8 @@ export const UndirectedGraph = <Node extends S.Top, Edge extends S.Top>(options:
 /**
  * Schema for mutable directed graphs.
  *
- * @example
+ * **Example** (Mutable directed schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableDirectedGraph } from "@beep/schema/Graph"
@@ -249,8 +258,8 @@ export const UndirectedGraph = <Node extends S.Top, Edge extends S.Top>(options:
  *
  * @param options - Schemas for node and edge payloads.
  * @returns Mutable directed graph transform schema.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableDirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
   readonly node: Node;
@@ -271,7 +280,8 @@ export const MutableDirectedGraph = <Node extends S.Top, Edge extends S.Top>(opt
 /**
  * Schema for mutable undirected graphs.
  *
- * @example
+ * **Example** (Mutable undirected schema check)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableUndirectedGraph } from "@beep/schema/Graph"
@@ -283,8 +293,8 @@ export const MutableDirectedGraph = <Node extends S.Top, Edge extends S.Top>(opt
  *
  * @param options - Schemas for node and edge payloads.
  * @returns Mutable undirected graph transform schema.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableUndirectedGraph = <Node extends S.Top, Edge extends S.Top>(options: {
   readonly node: Node;

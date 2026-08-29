@@ -611,7 +611,8 @@ allowing Professional Desktop to keep its local-first file-backed database.
 
 ## 2026-04-27: Keep Shared Entity Metadata In The Shared Kernel
 
-- **Status:** Active
+- **Status:** Superseded
+- **Superseded-by:** [2026-08-13: Consolidate Persisted Entities On ProductEntity And Effect Drizzle](#2026-08-13-consolidate-persisted-entities-on-productentity-and-effect-drizzle)
 
 Decision:
 
@@ -754,6 +755,11 @@ now only:
 - `foundation` for domain-agnostic reusable substrate
 - `drivers` for flat repo-level external boundary wrappers
 - `tooling` for developer-operational code packages
+
+*(Amended 2026-08-10: the family list above is superseded — `ecosystem` was
+added as a fourth canonical non-slice family; see the 2026-08-10 entry "Add
+The `ecosystem` Package Family". The retirement of assistant bundles itself
+stands unchanged.)*
 
 Runtime-specific assistant files may exist only as normal harness-native
 configuration, such as Claude project settings or skills. They are not
@@ -1046,13 +1052,530 @@ running against stale guidance. The per-owner ratchet converts a one-time
 cleanup into a permanent property: once a family is green, new PRs in that
 family cannot reintroduce the smells the wave just removed.
 
+## 2026-07-14: Narrow `ui-system` → `drivers` Edge, And Headless UI Kernels Anchor In `ui-system`
+
+- **Status:** Accepted
+
+Decision:
+
+1. A `foundation/ui-system` package may depend on a `drivers/*` package under
+   two constraints, and only these:
+   - it may import the driver's browser-safe **pure root** — pure helpers,
+     schemas, and service *tags* (e.g. `@beep/pretext` root:
+     `FontMetrics`, `naturalWidth`, the `PretextCapture` tag);
+   - it may default the driver's browser-safe **`/browser` layer** as an
+     **overridable** dependency-injection default (e.g. a React adapter
+     defaulting `PretextCaptureLive` while accepting a host-supplied capture
+     layer).
+   A ui-system package must never import or compose a driver's server-only or
+   secret-bearing surfaces, must keep every live layer overridable by the
+   consuming app, and must not re-export a driver's live layers as its own
+   public API. The foundation dependency-ceiling table in
+   `standards/ARCHITECTURE.md` is amended to match.
+2. Headless UI kernels — repo-owned, product-agnostic UI substrate whose core
+   is pure schema + geometry/state arithmetic with a separate DOM/React
+   adapter (glossary: "Headless UI Kernel") — anchor in
+   `foundation/ui-system`, not `foundation/modeling`, even when the kernel
+   package itself contains no React. The purity boundary is expressed as a
+   package boundary (kernel package with no react dependency; adapter package
+   carrying the DOM/React surface).
+
+Rationale:
+
+The dock workspace substrate (`@beep/dock`, landed with this decision, plus
+`@beep/dock-react`, its planned adapter — both graduating from
+`scratchpad/dockview*` per `docs/product/workspace-substrate.md`)
+computes title-width minima from `@beep/pretext` — a driver whose root is a
+browser-safe pure surface by its own ratified entrypoint law. Without this
+edge the kernel would have to hoist content-aware geometry out of the
+substrate into every consumer, splitting the computable-geometry canon across
+packages for no safety gain: the dangerous driver surfaces (server config,
+secrets, live effects) remain forbidden, and live capture stays injectable.
+Routing the pure kernel to `modeling` was rejected because the kernel is
+reactive UI substrate (atom graphs, engines, policies), purpose-routed to
+ui-system by the specific-home-first table; keeping kernel and adapter in one
+family keeps the promotion story and dependency ceilings legible. This
+resolves the known gap that ui-system had no vocabulary for headless kernels
+and no lawful measurement edge.
+
+## 2026-07-25: Foundation-Mediated Port Inversion Is A Legal Cross-Slice Mechanism
+
+- **Status:** Active
+
+Decision:
+
+A slice may implement a `foundation`-owned port that another slice consumes,
+without either slice importing the other. This is a third legal cross-slice
+mechanism alongside emitted events and the future `shared/use-cases` contract
+package.
+
+It is admitted only when **all** of the following hold:
+
+1. The port carries no product semantics — its types name no slice's language.
+2. The port lives in `foundation/*` and satisfies that family's own admission
+   rules.
+3. Both slices import only `foundation`, never each other.
+4. The implementing slice's Layer is bound to the consuming slice at an
+   application entrypoint, per `ARCHITECTURE.md` app-entrypoint composition.
+5. Neither slice names the other in code, package manifests, or project
+   references.
+
+The implementing and consuming packages each record the coupling in their
+package README, naming the producer/consumer pair and the binding site. The
+README record is the durable proof of the specific coupling; this entry is the
+general rule.
+
+If any condition fails, the coupling is a slice-boundary breach and must go
+through events or contract promotion instead.
+
+Rationale:
+
+`10-cross-slice-coordination.md` governs cross-slice *product* coordination —
+one slice's process invoking another's language — and names two mechanisms.
+Neither describes the case where a slice supplies a policy decision for another
+slice's surface through a product-neutral technical port. The first real
+instance is the agent-execution-authority work: `ontology/server` consumes
+`@beep/mcp-kit`'s `TierGate`, `epistemic/server` implements it, and the desktop
+entrypoint binds them. `ontology` cannot learn that `epistemic` exists, and
+`epistemic` cannot learn that `ontology` does.
+
+This was already legal under the existing dependency rules — slice `server`
+packages may import `foundation/capability`, and app-entrypoint composition is
+explicitly blessed. But a reviewer applying `10`'s two-mechanism list reasonably
+reads it as a breach, so the mechanism needed a name. The pattern will recur for
+any slice-owned policy applied to another slice's surface.
+
+Events were rejected as the general answer, not merely as this instance's
+answer: a gate that must fail closed *before* an action runs is synchronous by
+nature, and an emitted event cannot express "and do not proceed." Forcing this
+shape through events would either lose the fail-closed property or reinvent
+synchronous request/response over an event log. Recording the rule now is
+cheaper than reversing it later, since a ban would require rewriting every such
+binding.
+
+## 2026-07-30: Complexity Ceilings Become Law, And Health Becomes A Baseline Ratchet
+
+- **Status:** Active
+
+Decision:
+
+Function complexity is governed by two mechanisms, both driven by the ceilings
+pinned in `.fallowrc.jsonc` `health` (law 23 in `standards/effect-laws-v1.md`;
+the integers live in config, not prose):
+
+1. **New and changed code** fails the existing blocking `audit` lane
+   (`gate: new-only`) when a function exceeds a ceiling. The initial cognitive
+   ceiling is 8; cyclomatic 20, CRAP 30, and unit size 60 are pinned at fallow's
+   defaults so the effective gate is explicit in-repo.
+2. **The inherited tail** is frozen by a committed regression baseline
+   (`standards/fallow.health.regression-baseline.jsonc`) that the health lane
+   compares against with `--fail-on-regression`; the lane promotes from advisory
+   to blocking after three consecutive clean runs, following the
+   `quality-gate-ratchets` promotion pattern. Baselines only shrink; each
+   burn-down wave re-measures the baseline.
+
+Escape hatches are governed: every inline `fallow-ignore-*` suppression carries
+a `-- <reason>` (`require-suppression-reason: error`), and an honestly-complex
+function gets a `thresholdOverrides` entry with `reason` and a review date
+rather than a binary suppression. `goals/complexity-ceiling-burn-down` owns the
+tail remediation (the 60 functions above cognitive 15, hotspot-ranked,
+triage-first).
+
+This entry closes the health-lane deferral recorded in
+`goals/fallow-advisory-ratchets` ("recorded deferral until … calibration still
+requires a health inventory").
+
+Rationale:
+
+The deferred calibration inventory now exists (2026-07-30 session): across
+41,469 functions, p99 cognitive complexity is 6; a judged panel over the
+marginal band found every honest best-version ceiling at or under 8 except two
+outliers, while a 6-ceiling would force suppressions or crispen-violating
+helper fragmentation on roughly a third of the 7–8 band. 8 is therefore the
+tightest ceiling with near-zero false positives; 6 remains the revisit target
+once the >15 tail is gone and suppression pressure at 8 is observed.
+
+A gate alone was rejected because `new-only` attribution cannot see repo-wide
+drift (the two existing `maxCrap` overrides exist precisely because attribution
+mis-fires on import-suffix changes); a baseline alone was rejected because the
+dead-code baseline demonstrated that a written-but-never-read snapshot enforces
+nothing. The pair — gate for the margin, ratchet for the mass — is the same
+division the dead-code campaign proved.
+
+## 2026-08-03: Retire The Tstyche Type-Test Surface
+
+- **Status:** Active
+
+Decision:
+
+beep-effect removes the tstyche/dtslint type-test surface entirely: all
+`*.tst.ts` files, per-package `dtslint/` directories, sentinels, and scripts,
+the root `tstyche.json`/`tsconfig.dtslint.json` configs, the Turbo `type-test`
+task, the `quality dtslint-tsgo` lane, the `--types` test selection, and the
+create-package/tsconfig-sync/architecture generator support for them. The
+architecture proof surface is runtime tests only. The type-level guarantees
+lost are recorded per file in
+`goals/quality-speedup/research/data/tst-coverage-assessment.tsv`; porting any
+of them to a compile-only surface is deliberate future work triggered by an
+actual type-level regression, not maintained insurance.
+
+Rationale:
+
+Measured cost versus proof value (`goals/quality-speedup`): ~110s of serial
+lane time per full local verify (dtslint-tsgo 49.9s + type-test sweep 59.9s),
+the fleet's #2 cumulative Turbo task sink (`@beep/repo-cli#type-test`, p50
+35s, 3.7% cache-hit), 22 package scripts, three generator code paths, and
+~330 tracked files — against a surface whose hosted execution hid inside Test
+Unit and whose local lane ran on every root check. The per-file coverage
+assessment found 117/142 files carrying unique type-only assertions; the loss
+is accepted, documented, and reversible from git history plus the committed
+ledger. Supersedes the 08-testing promise that the architecture proof carries
+focused type tests.
+
+## 2026-08-08: Top-Level research/ Owns Machine-Generated Intel Packets
+
+- **Status:** Active
+
+Decision:
+
+beep-effect adds a top-level `research/` directory owned by the nightly
+autonomous research routine: dated immutable packets
+(`research/<YYYY-MM-DD>/` with `REPORT.md`, `SOURCES.md`,
+`SUGGESTED_ACTIONS.md`, `PROMPT.md`, `claims.jsonl`, `RUN.json`) plus
+single-writer cross-run state under `research/ledger/`. The routine extends
+the existing `beep research` CLI family under a `nightly` sub-namespace
+(schemas co-located with the family in v1; claim tuples promote to
+`@beep/epistemic-domain` in v2 behind a backfill go/no-go experiment).
+Governing rules: per-packet truth with derived-only rebuildable indexes;
+sanitize-at-write for scraped content with gitleaks fail-closed and a
+`research/**` typos exemption; process-separation blinding (search/synthesis
+stages receive no repo checkout; the writer composes from structured records
+without a checkout; only the publisher touches the clone, scoped to the new
+packet plus `research/ledger/`); no explorations
+ceremony — `RUN.json.frictions[]` carries the friction receipts; machine
+proposes / human admits (nothing auto-appends to `explorations/INBOX.md` or
+`goals/`); PR-only delivery from a dedicated clone. Conventions authority:
+`research/README.md`. Work packet: `goals/nightly-research-routine`.
+
+Rationale:
+
+The nightly packets are a different trust domain from both neighbors: public
+and repo-tracked (unlike the private out-of-repo vault the `beep research`
+family already manages) and machine-generated (unlike `explorations/`, the
+human fuzzy front end whose ceremony — manifests, ATLAS sync, reflections —
+encodes human judgment nothing automated performs). Reusing the `research`
+noun inside one CLI family keeps a single discovery surface and reuses proven
+plumbing (DuckDB catalog runners, markdown-truth/derived-index split, the
+`install-timers` systemd precedent). Single-writer ledger placement avoids
+hot-file merge conflicts by construction. Sanitize-at-write is mandatory
+rather than scanner-exemption because republishing token-shaped scraped
+strings in a public repository is a leak vector regardless of scanner
+posture; gitleaks remains the fail-closed backstop that catches sanitizer
+bugs.
+
+## 2026-08-10: Add The `ecosystem` Package Family
+
+- **Status:** Active
+
+Decision:
+
+beep-effect adds a fourth non-slice family: `ecosystem`
+(`packages/ecosystem/<name>` = `@beep/<name>` = the npm name; flat, like
+`drivers`). Members are repo-authored libraries built for external consumption
+and consumed in-repo like any third-party dependency. The family charter is
+`14-ecosystem-packages.md`: member `src/` and runtime manifest edges are
+`@beep/*`-free while tests and `devDependencies` are unrestricted;
+published-package standards supersede repo effect-first style laws inside
+members; artifacts are ESM-only with strict exports maps,
+`sideEffects: false`, `stripInternal` declarations, and peers-only runtime
+dependencies; members stay `private: true` until upstream peers are stable.
+Members run a member-scoped tstyche type-test lane created at package
+creation — a deliberate, family-scoped exception to the 2026-08 repo-wide
+type-test removal above, because a member's published `.d.ts` is its product
+and a type-level regression is a user-facing break. This supersedes the
+"now only" three-family clause of the 2026-05-01 "Retire Assistant Bundles
+From Architecture" entry: the canonical non-slice families are now
+`foundation`, `drivers`, `tooling`, and `ecosystem`. First member:
+`@beep/effect-drizzle`, graduating from `scratchpad/bsl` — the exploration
+was proven and merged in PR #651; the package move itself lands in the P1
+phase of `goals/effect-drizzle-graduation`. It owns schema-derived
+projection/DDL/repositories, while `@beep/drizzle` (drivers) keeps
+execution — the shared-tables projection contract now points at
+`@beep/effect-drizzle`.
+
+Rationale:
+
+The `scratchpad/bsl` experiment produced a library whose audience is the wider
+effect ecosystem, not this repo's product. No existing family fits: `drivers`
+wraps external engines for internal consumption, `foundation` is internal
+substrate, and both may import `@beep/*` freely — the exact thread a published
+artifact must not carry. Inverting the import polarity at a family boundary
+makes publishability a structural property the repo can lint, rather than a
+per-package promise. Family creation, polarity, style-law scoping,
+artifact/peer/release/gate posture, and sequencing were locked by operator
+grill 2026-08-10; the charter's promotion/demotion mechanics and release-lane
+operational detail in doc 14 (including the operator-only `private` flip)
+were authored in the P0 docs PR and ratified through its review. Execution is
+tracked in `goals/effect-drizzle-graduation`.
+
+## 2026-08-13: Consolidate Persisted Entities On ProductEntity And Effect Drizzle
+
+- **Status:** Active
+
+Decision:
+
+The persisted-entity stack swaps `BaseEntity`, `EntitySchema`, the
+hand-maintained `Model` and `VariantSchema` modules, and the `EntityTable`
+projector for `@beep/effect-drizzle` plus the shared-domain `ProductEntity` kit.
+Consolidated identity modules remain in `@beep/shared-domain/identity`; product
+`.model.ts` files own their entity schema and SQL metadata, `.values.ts` files
+own reusable supporting schemas, and `.behavior.ts` files own pure behavior.
+Tables project a model with `toPgTable`.
+
+The migration requires strict declarative DDL parity with the committed
+baseline. Database-only policy that effect-drizzle does not declare—PL/pgSQL
+append-only guards, triggers, named or exclusion constraints, partial indexes,
+and GIN indexes—stays byte-owned by the custom migration. It must not be copied
+into entity definitions.
+
+Rationale:
+
+One executable model should own domain decoding, persistence variants, column
+metadata, and table projection. Removing the parallel metadata stack eliminates
+drift while the byte-stable custom migration preserves database behavior that
+belongs to PostgreSQL rather than the portable entity declaration.
+
+## 2026-08-13: Promote The First Contract-Only `shared/use-cases` Surface
+
+- **Status:** Active
+
+Decision:
+
+Create `@beep/shared-use-cases` with one promoted product contract,
+`PromotionGate`. Client-safe request, subject, tenant, reason, and verdict
+schemas publish through `/public` and the concept subpath; the Context service
+tag publishes only through `/server`. The package exports no placeholder
+aggregate/entity paths and owns no workflow, adapter, driver, or live Layer.
+The gate request binds a subject derived by the trusted candidate-acceptance
+host to that candidate's validated tenant scope. Vertical server adapters
+resolve the pair together and return a total clear/blocked value; resolution
+or policy failures map to a bounded opaque blocked reason.
+
+Rationale:
+
+The agent candidate-acceptance boundary needs a synchronous refusal immediately
+before returning accepted output, while law-practice owns the derived candor
+predicate. An event is too late, a direct slice import violates the acyclic
+ceiling, and a shared law-named command/query/facade would expose the vertical
+operation or own cross-slice workflow. The tenant-bound minimal port preserves
+both ownership boundaries. The current repository has only a deterministic
+fixture acceptance implementation and no production acceptance composition
+root; promotion therefore proves that existing boundary and the fail-closed
+vertical adapter without claiming live product protection.
+
+## 2026-08-13: Establish `apps/labs/*` And Zero-Root-Churn Lab Registration
+
+- **Status:** Active
+
+Decision:
+
+Law-abiding experimental applications live under `apps/labs/*`. Labs are
+private executable workspaces, not a fifth non-slice family, architecture role,
+Scratchpad sublane, or feature-flag experiment. They obey the full code law and
+are exempt only from package ceremony through one-time path-scoped rules.
+
+The labs root uses zero-root-churn registration: one workspace glob and one set
+of gate scopes replace per-lab workspace, changeset, coverage, docgen,
+Storybook, and CI rows. Registration geometry is the single declared surface
+set interpreted forward by create-package, inversely by delete-package, and as
+declared-versus-actual probes by doctor. Root TypeScript solution references
+exclude labs; package-local checks and a visible non-required labs lane own
+their typechecking. Lab identity composers remain real package composers in a
+mechanically generated labs segment. Labs never publish `@beep/*` APIs, add
+tables to `packages/*/tables`, or become dependencies of product slices.
+
+Rationale:
+
+The architecture north star already requires experiments to be easy to create,
+easy to delete, and production-shaped. Scratchpad makes creation cheap by
+relaxing laws; ordinary apps preserve laws but accumulate shared registration
+and deletion ceremony. The labs convention combines full code-law fidelity
+with path-derived ceremony exemption, while registration geometry makes
+deletion completeness testable instead of relying on a parallel hand-written
+checklist. Keeping the CI lane non-required prevents a stale lab from blocking
+unrelated upstream work, while requiring the lab's own PR to pass preserves the
+claim that it is a faithful proving ground.
+
+## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+
+- **Status:** Active
+
+Decision:
+
+Every `S.TaggedError` class declares a fields-only `toEquivalence` annotation
+at the class declaration. The comparator defines diagnostic identity from the
+declared stable fields and excludes opaque `S.Defect(...)` values. Tests and
+consumers use `S.toEquivalence(ErrorClass)` without local overrides.
+
+The schema-first rule `SFV4-tagged-error-equivalence` blocks untracked new or
+changed declarations. Existing declarations enter
+`standards/schema-first.inventory.jsonc` as exceptions through
+`bun run beep lint schema-first --write`, then leave the inventory as the
+burn-down adds declaration-level comparators.
+
+Rationale:
+
+Without a declaration annotation, Effect v4 falls back to `Equal.equals` for
+the error declaration. That comparison includes `Error` runtime metadata such
+as line, column, message, and plain arguments. Issue #677 demonstrated that
+field-equal errors could then compare unequal according to source position and
+property-test seed. A declaration-level comparator gives every consumer the
+same stable diagnostic identity.
+
+This supersedes test-local equivalence overrides and the prior implicit
+acceptance of `S.TaggedError`'s declaration fallback.
+
+Amended 2026-08-24 (same day, after the non-driver burn-down): the declaration
+adopts its struct equivalence through `$I.annoteError<Self>(...)` rather than a
+hand-derived comparator. Effect already passes the declared `TaggedStruct`
+equivalence to the `toEquivalence` hook, so the per-class `*Fields` constant,
+`S.toEquivalence(S.TaggedStruct(...))` comparator, and explicit
+`annoteClass<S.declare<Self>, ...>` type arguments were re-deriving what the hook
+receives; across ~390 declarations they also registered as Fallow clones, grew a
+consumer bundle, and produced a base-type cycle under docgen's `tsc`. Opaque
+causes use `Defect` from `@beep/schema`, whose schema declares an always-true
+equivalence, instead of per-class exclusion. The detector accepts the
+`annoteError` call as the compliant form.
+
+## 2026-08-24: Local Coverage Baseline Regeneration Holds Unchanged Packages
+
+- **Status:** Active
+
+Decision:
+
+The hosted Coverage Regression lane is the authority for the floors in
+`standards/coverage.regression-baseline.jsonc`. An unscoped local
+`bun run coverage:baseline:write` therefore adopts this run's measurement only
+for workspace owners of the changed files (`TURBO_SCM_BASE` or the
+`origin/main` merge-base through `HEAD`, plus the dirty worktree), using the
+same owner mapping as `--affected` coverage. That adoption set is collected
+for every changed file even when another path causes the planner's `full`
+verdict. Every other committed package row is held verbatim; packages with no
+committed row are added; packages that left the workspace are pruned. A `full`
+verdict changes what the run measures, never what the writer adopts.
+`--replace-all` is the only whole-document replacement path. The writer
+reports the replaced/held/added/pruned split and any full-run reasons on every
+write.
+
+Rationale:
+
+Local and hosted measurements disagree for environment-dependent files in both
+directions: local runs raised `EnvConfig.ts` floors the hosted runner could
+not reach (the lane failed on a different unrelated row after every push) and
+lowered `BunResolver.ts` branch floors with an identical uncovered count (a
+loosened ratchet a reviewer had to catch). A `min(local, committed)` rule keeps
+the second defect, so the writer holds rows instead of merging them. Package
+granularity is deliberate: per-file holding inside a changed package cannot be
+reconciled with that package's measured aggregate, so environment-dependent
+rows inside a changed package are still pinned to the hosted figure by hand.
+Over-holding after a global input change is visible immediately in the hosted
+lane and can be corrected by scoping that package into the adoption set;
+silently replacing every measured row would instead import unrelated local
+environment drift across the document.
+
+This supersedes the prior unscoped-regeneration behaviour, which replaced every
+row from the local run.
+
+## 2026-08-24: Pull-Request Coverage Scope Measures Workspace Dependents
+
+- **Status:** Active
+
+Decision:
+
+The `--affected` coverage planner selects, in addition to the directly changed
+coverage owners, every coverage-bearing workspace package that transitively
+depends on a changed owner whose non-test files changed. Dependency edges are
+the workspace-internal names in all four `package.json` buckets, inverted from
+the shared owner inventory (`CoverageScopeOwner.workspaceDependencies`). A
+change confined to a package's `test/` tree seeds no dependents. Lab packages
+and packages without a coverage task are walked through but never selected;
+the repository root is not an owner. The selected scope is the union, with the
+dependents recorded separately, and it is the exact set the ratchet compares
+and the completeness check requires. Selections heavier than the proven
+single-invocation budget execute like the full lane (one prebuild filtered to
+the selection, then weighted `--only` shards, empty shards dropped). Baseline
+adoption is unchanged by this decision: an unscoped `--write-baseline` still
+adopts only the direct owners of the changed files, while a scoped write
+(`--filter` or `--affected` with `--write-baseline`) merges every row it
+measured — dependents included — because the operator asked for exactly that
+scope. (Corrected 2026-08-25: the original text claimed dependents were never
+adopted, which was true only of the unscoped writer.)
+
+Rationale:
+
+A direct-owners-only selection let `@beep/md` change go green in 110 s while
+the dependent `@beep/pandoc-ast` row dropped; the drop surfaced only in the
+full run on `main` after the merge and cost seven red `main` pushes plus three
+inherited pull-request reds before a hand fix (#780 → #783). The dependent's
+measurement is a consequence of the change under review, so it belongs on the
+pull request. Test-only changes cannot alter what dependents import, so
+widening on them would only spend the lane. The width guard exists because
+dependents make wide selections routine — the seven foundation packages close
+over at least 111 of 128 owners and `@beep/md` alone over 18 — and the full
+lane's prebuild-plus-capped-shards shape is the one hosted memory ceilings
+were proven against. Adoption stays narrow so that a dependent's legitimate
+drop is a visible decision (hand-pin the row or scope it explicitly) rather
+than a silent import of downstream drift; widening adoption to dependents is
+deferred to the comparator-policy decision.
+
+This supersedes the direct-owners-only selection introduced with the
+weighted-shard pull-request scoping.
+
+## 2026-08-25: Row-Only Baseline Edits Are Validated By Measuring Their Packages
+
+- **Status:** Active
+
+Decision:
+
+The committed coverage baseline stays a global coverage input, with one
+carve-out: when the pull-request planner can read both the base revision and
+the working copy of `standards/coverage.regression-baseline.jsonc` and finds
+that only `packages` rows differ, it selects the packages those rows name and
+measures them instead of the full workspace. A row for a package that cannot be
+measured (no coverage task, or a lab) forces the full run; a row for a package
+that left the workspace needs no run. Any change to `epsilon`, `minimum`,
+`exemptions`, or `follow_ups` — or a side that cannot be read or decoded, or a
+legacy schema-v1 document — keeps the full-run behaviour. Provenance fields
+(`generated_at`, `git_sha`, `command`) never affect the verdict and are ignored.
+The ratchet's failure output ends with a remediation block that names the
+scoped regeneration command for exactly the regressed packages, and the
+baseline header advertises that scoped form ahead of the whole-document one.
+`standards/**/*.md` is coverage-inert; the `*.jsonc` policy inputs under
+`standards/` remain global.
+
+Rationale:
+
+Regenerating one row used to cost the full lane twice: the agent ran the
+repo-wide writer locally (the only command anything pointed at), and the
+resulting baseline commit was itself a global input that forced the 9–15
+minute full fallback on the PR. That loop produced 39 baseline commits in 90
+days and, before B9, minted floors the hosted runner could not reach. A row
+edit is a claim about one package; measuring that package is the smallest
+proof that validates it, and a change to how every row is judged is the only
+edit that genuinely needs every row measured. Documentation under `standards/`
+was already inert in every other lane; it forced two full coverage runs during
+B10 purely by path.
+
+This supersedes the unconditional global-input treatment of the baseline file
+in the pull-request planner.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
 
 - **Testing strategy.** Doc `08-testing.md` codifies slice-isolation testing, port stubs via `Layer.mock`, fixture ownership, and contract tests between use-cases and server adapters. The doctrine has not yet been load-tested against a real refactor; first contact with a non-trivial slice may surface gaps in the fixture-ownership and contract-test rules.
-- **Cross-slice coordination.** Doc `10-cross-slice-coordination.md` codifies workflow / saga / process-manager governance, future event contracts in `shared/use-cases`, and the God Process Manager anti-pattern. The open question is how the rules hold up the first time a real workflow needs to span three or more slices with partial-failure semantics.
-- **Evolution and deprecation.** Doc `11-evolution-and-deprecation.md` codifies slice retirement, future `shared/use-cases` versioning, port deprecation, and feature-flag lifetime. The deprecation-window durations and the five-step retirement procedure are unproven; the first real slice retirement will tell us whether the windows are realistic and whether the DECISIONS-entry requirement creates useful pressure or just paperwork.
+- **Cross-slice coordination.** Doc `10-cross-slice-coordination.md` codifies workflow / saga / process-manager governance, promoted event contracts in `shared/use-cases`, and the God Process Manager anti-pattern. `PromotionGate` is the first synchronous product port; the open question is how the rules hold up when a real workflow spans three or more slices with partial-failure semantics.
+- **Evolution and deprecation.** Doc `11-evolution-and-deprecation.md` codifies slice retirement, `shared/use-cases` versioning, port deprecation, and feature-flag lifetime. The deprecation-window durations and the five-step retirement procedure are unproven; the first real slice retirement will tell us whether the windows are realistic and whether the DECISIONS-entry requirement creates useful pressure or just paperwork.
 - **Observability conventions.** Doc `12-observability.md` codifies span naming, attribute conventions, the logging-vs-tracing-vs-Console split, and slice boundaries as span boundaries. The open question is whether the span/attribute namespacing survives contact with a real distributed trace across three or more slices, and whether the conventions need adjustment once a tracer backend is wired up end-to-end.
 - **Error translation across boundaries.** Doc `09-errors-across-boundaries.md` codifies who translates, where translation lives, and the canonical translator function shape. The fixture proves port-to-action translation; the doctrine has not yet been exercised against a real driver-to-port adapter path. The first non-trivial adapter will tell us whether the translator placement rules are precise enough or need a worked example per boundary kind.
 - **Promotion record enforcement.** Records are required by doctrine; lint enforcement (`lint:promotion-records`) is planned but not yet implemented.

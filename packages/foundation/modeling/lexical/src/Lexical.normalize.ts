@@ -11,17 +11,15 @@
  * @since 0.0.0
  */
 
-import { sanitizeUrlDestination } from "@beep/md/Md.escape";
+import { BrowserSafeUrlPolicySpec, sanitizeUrlDestinationWithPolicy } from "@beep/md/Md.escape";
 // cspell:word youtu
 import * as Md from "@beep/md/Md.model";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { Match } from "effect";
+import { flow, Match } from "effect";
 import { pipe } from "effect/Function";
 
 const wwwPrefix = /^www\./u;
 const embedOrShortsPrefix = /^\/(?:embed|shorts)\//u;
-const urlSchemePrefix = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
-const safeLinkProtocols: ReadonlyArray<string> = ["http:", "https:", "mailto:", "artifact:"];
 
 const firstPathSegment = (pathname: string): string =>
   pipe(Str.split(pathname, "/"), A.findFirst(Str.isNonEmpty), O.getOrElse(thunkEmptyStr));
@@ -31,17 +29,6 @@ const firstPathSegment = (pathname: string): string =>
  * `None`. Uses the total `URL.parse` constructor (no `try`/`catch`).
  */
 const safeUrl = (value: string): O.Option<URL> => O.fromNullishOr(URL.parse(value));
-
-const hasUrlScheme = (value: string): boolean => O.isSome(Str.match(urlSchemePrefix)(value));
-
-const isAllowedAbsoluteUrl = (value: string): boolean =>
-  pipe(
-    safeUrl(value),
-    O.exists((url) => A.contains(safeLinkProtocols, url.protocol))
-  );
-
-const isSafeRelativeUrl = (value: string): boolean =>
-  !hasUrlScheme(value) && !Str.startsWith("//")(value) && !Str.includes("\\")(value);
 
 const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
   Match.value(Str.replace(wwwPrefix, "")(url.hostname)).pipe(
@@ -62,16 +49,19 @@ const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
 /**
  * Folds a legacy serialized YouTube embed value into a bare candidate video id.
  *
+ * **Details**
+ *
  * Already-bare ids pass through; `watch`, `embed`, `shorts`, and `youtu.be`
  * URLs decode to their canonical 11-character id; anything else (including an
  * unparseable string) returns the trimmed input unchanged so the downstream
  * `YouTubeVideoId` schema makes the accept/reject decision.
  *
- * @example
- * ```ts
+ * **Example** (Decode youtu.be URL)
+ *
+ * ```ts import.meta.vitest name="Decode youtu.be URL"
  * import { legacyYouTubeVideoId } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(legacyYouTubeVideoId("https://youtu.be/dQw4w9WgXcQ")) // "dQw4w9WgXcQ"
+ * legacyYouTubeVideoId("https://youtu.be/M7lc1UVf-VE") // => "M7lc1UVf-VE"
  * ```
  *
  * @param value - Raw serialized YouTube embed value (bare id or legacy URL).
@@ -93,15 +83,17 @@ export const legacyYouTubeVideoId = (value: string): string => {
 /**
  * Sanitizes a serialized Lexical link URL before it reaches an anchor `href`.
  *
- * Active script/data protocols are first neutralized with the canonical
- * `@beep/md` URL destination sanitizer, then the Lexical anchor sink keeps only
- * http, https, mailto, package-owned artifact URLs, and relative URLs.
+ * **Details**
  *
- * @example
- * ```ts
+ * Uses the canonical browser-safe `@beep/md` URL policy so every browser URL
+ * sink in the document stack shares one protocol and relative-path contract.
+ *
+ * **Example** (Reject javascript URL)
+ *
+ * ```ts import.meta.vitest name="Reject javascript URL"
  * import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(sanitizeUrl("javascript:alert(1)")) // "#"
+ * sanitizeUrl("javascript:alert(1)") // => "#"
  * ```
  *
  * @param value - Raw serialized Lexical link URL.
@@ -109,12 +101,7 @@ export const legacyYouTubeVideoId = (value: string): string => {
  * @category normalization
  * @since 0.0.0
  */
-export const sanitizeUrl = (value: string): string => {
-  const sanitized = Str.trim(sanitizeUrlDestination(value));
-  return sanitized === "#" || Str.isEmpty(sanitized) || isAllowedAbsoluteUrl(sanitized) || isSafeRelativeUrl(sanitized)
-    ? sanitized
-    : "#";
-};
+export const sanitizeUrl = flow(Str.trim, sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicySpec));
 
 /**
  * Allowlist of inline CSS properties that are safe to preserve on serialized
@@ -163,11 +150,12 @@ const parseSafeDeclaration = (declaration: string): O.Option<string> => {
  * weaponized for UI redressing or external resource fetches. Empty input (the
  * common Lexical default) round-trips to the empty string.
  *
- * @example
- * ```ts
+ * **Example** (Strip unsafe CSS properties)
+ *
+ * ```ts import.meta.vitest name="Strip unsafe CSS properties"
  * import { sanitizeInlineStyle } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(sanitizeInlineStyle("position:fixed;color:red")) // "color: red"
+ * sanitizeInlineStyle("position:fixed;color:red") // => "color: red"
  * ```
  *
  * @param style - Raw serialized inline CSS declaration list.
@@ -185,11 +173,12 @@ export const sanitizeInlineStyle = (style: string): string =>
  * function call / URL (`(`), or an escape (`\`) is dropped to the empty string,
  * preventing the bare-value sink from being used for CSS injection.
  *
- * @example
- * ```ts
+ * **Example** (Reject multi-declaration value)
+ *
+ * ```ts import.meta.vitest name="Reject multi-declaration value"
  * import { sanitizeStyleValue } from "@beep/lexical-schema/Lexical.normalize"
  *
- * console.log(sanitizeStyleValue("red; position: fixed")) // ""
+ * sanitizeStyleValue("red; position: fixed") // => ""
  * ```
  *
  * @param value - Raw serialized single CSS value.

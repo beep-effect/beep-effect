@@ -8,7 +8,8 @@
 /**
  * Server-only provider-instance ports and implementation factory.
  *
- * @example
+ * **Example** (Access ProviderInstance ProviderProbe)
+ *
  * ```ts
  * import { ProviderInstance } from "@beep/agents-use-cases/server"
  * console.log(ProviderInstance.ProviderProbe)
@@ -17,11 +18,12 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * as ProviderInstance from "./entities/ProviderInstance/server.js";
+export * as ProviderInstance from "./entities/ProviderInstance/server.ts";
 /**
  * Direct server-only provider-instance port and factory exports.
  *
- * @example
+ * **Example** (Import ProviderProbe directly)
+ *
  * ```ts
  * import { ProviderProbe } from "@beep/agents-use-cases/server"
  * console.log(ProviderProbe)
@@ -30,11 +32,12 @@ export * as ProviderInstance from "./entities/ProviderInstance/server.js";
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./entities/ProviderInstance/server.js";
+export * from "./entities/ProviderInstance/server.ts";
 /**
  * Server-only assistant-turn use-case exports.
  *
- * @example
+ * **Example** (Create BlockRepairFailed error)
+ *
  * ```ts
  * import { AssistantTurn } from "@beep/agents-use-cases/server"
  *
@@ -45,11 +48,12 @@ export * from "./entities/ProviderInstance/server.js";
  * @category errors
  * @since 0.0.0
  */
-export * as AssistantTurn from "./processes/AssistantTurn/server.js";
+export * as AssistantTurn from "./processes/AssistantTurn/server.ts";
 /**
  * Direct server-only assistant-turn exports.
  *
- * @example
+ * **Example** (Inspect BlockRepairFailed tag)
+ *
  * ```ts
  * import { BlockRepairFailed } from "@beep/agents-use-cases/server"
  *
@@ -60,4 +64,4 @@ export * as AssistantTurn from "./processes/AssistantTurn/server.js";
  * @category errors
  * @since 0.0.0
  */
-export * from "./processes/AssistantTurn/server.js";
+export * from "./processes/AssistantTurn/server.ts";

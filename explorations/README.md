@@ -72,7 +72,7 @@ flowchart TD
 | Stage | Artifact | What happens | Exit signal |
 | --- | --- | --- | --- |
 | 0 capture | `CAPTURE.md` | Append-only raw dump: text, links, screenshots. Never interrogated, never reorganized. | The idea has enough mass to be worth grounding. |
-| 1 research | `RESEARCH.md` | Cited prior art + in-repo capability inventory (`standards/repo-exports.catalog.md`, targeted code search, local docs); start `research/SOURCES.md` (the provenance ledger). | The landscape and the existing lego bricks are known. |
+| 1 research | `RESEARCH.md` | Cited prior art + in-repo capability inventory (live source search in `packages/**/src/**`, package barrels at `**/src/index.ts`, local docs); start `research/SOURCES.md` (the provenance ledger). | The landscape and the existing lego bricks are known. |
 | 2 align | `DECISIONS.md` | Grilling dialogue: one branch-closing question at a time, recommended answer first. Every resolution is logged. | Manifest `openQuestions` is empty or explicitly deferred. |
 | 3 shape | `BRIEF.md` | Shape Up pitch: problem, appetite, fat-marker solution sketch, rabbit holes, no-gos. | The human says the brief matches the picture in their head. |
 | 4 decompose | `MAP.md` | Candidate goal packets with sequencing, dependency edges, first vertical slice, capability citations. | Graduation definition-of-ready passes. |
@@ -104,7 +104,7 @@ conversation — every stage, both voices, and what changes on disk — lives in
 | --- | --- |
 | `active` | Being worked; appears in the ATLAS active tree. |
 | `parked` | Deliberately shelved with a dated reason in `DECISIONS.md`; revisit later. |
-| `graduated` | Spawned its goal packet(s); packet remains as provenance. |
+| `graduated` | Spawned its promised-now goal packet(s); packet remains as provenance and reopens at `decompose` when a MAP gate fires. |
 | `killed` | Explicitly rejected. Gets a one-line epitaph in `ATLAS.md`. Killing an idea is a successful outcome, not a failure. |
 
 ## Manifest Schema
@@ -150,9 +150,9 @@ An exploration may graduate only when all four hold:
    mission one-liner, dependency/sequencing edges, and the chosen first
    vertical slice.
 4. **Capability check** - every major component in `MAP.md` cites an existing
-   repo capability (`standards/repo-exports.catalog.md`, targeted code search,
-   local docs) or is explicitly marked net-new. Compose the lego bricks; do not
-   rebuild them.
+   repo capability (live source search in `packages/**/src/**`, package barrels
+   at `**/src/index.ts`, local docs) or is explicitly marked net-new. Compose
+   the lego bricks; do not rebuild them.
 
 Mechanics, per approved candidate goal:
 
@@ -161,8 +161,10 @@ Mechanics, per approved candidate goal:
   constraints, `DECISIONS.md` entries seed the decision log.
 - Use back-links to the exploration packet, not copies.
 - Cross-link both manifests (`links.goals` here; provenance entry there).
-- Update `ATLAS.md` and flip the exploration status (`graduated`, or keep
-  `active` if more candidates remain).
+- Once all promised-now goals exist, update `ATLAS.md` and flip the exploration
+  status to `graduated`. Gated candidates remain in `MAP.md` as re-entry points;
+  when a gate fires, reopen the exploration at `decompose` rather than spawning
+  a goal directly.
 
 ## Conventions
 

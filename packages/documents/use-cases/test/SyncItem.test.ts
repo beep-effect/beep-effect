@@ -10,8 +10,9 @@ import {
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import { NonNegativeInt } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -21,7 +22,7 @@ import { FastCheck as fc } from "effect/testing";
 import type { SyncItemRepositoryShape } from "@beep/documents-use-cases/entities/SyncItem/server";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -37,10 +38,10 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const localRelPath = S.decodeUnknownSync(VaultRelPath)("matters/client-default/complaint.pdf");
-const localGeneration = S.decodeUnknownSync(NonNegativeInt)(1);
-const remoteId9001 = S.decodeUnknownSync(RemoteItemId)("9001");
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const localRelPath = S.decodeSync(VaultRelPath)("matters/client-default/complaint.pdf");
+const localGeneration = S.decodeSync(NonNegativeInt)(1);
+const remoteId9001 = S.decodeSync(RemoteItemId)("9001");
 const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
 const decodeSyncItemEffect = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 const encodeSyncItemEffect = S.encodeEffect(DomainSyncItem.SyncItem);
@@ -55,7 +56,7 @@ const fileSeed = SyncItemSeed.make({
 });
 
 const syncItemRow = (seed: SyncItemSeed, id: number) => ({
-  ...baseEntityFixtureInput(DomainSyncItem.SyncItemId.entityType, id),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, id),
   contentDigest: O.getOrNull(seed.contentDigest),
   contentSizeBytes: O.getOrNull(seed.contentSizeBytes),
   itemKind: seed.itemKind,

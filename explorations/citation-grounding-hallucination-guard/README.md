@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,15 +17,15 @@ hangs everything else on.
 
 ## Next Open Question
 
-**Q2: Scope boundary** — does this packet ship the full guard (parser +
-lifecycle + verbatim gate + straddle + matter carrier + fence enforcement +
-court vocab), or own only the grounding core and compose/defer the rest? This is
-the highest-leverage fork: it bounds the packet's surface area and conditions
-every other open question (build-vs-buy, first-slice, placement). RESEARCH flags
-multiple routing items here as "NOT yet settled." Run
-`/grill-with-docs citation-grounding-hallucination-guard` to resolve the open
-questions one at a time (recommended answers pre-drafted in
-[`DECISIONS.md`](./DECISIONS.md)).
+**Guard gate:** `citation-ground-before-cite` reopens this packet at
+`decompose` only after `citation-verified-span-substrate` and
+`citation-extraction-engine` both land. Decide qualifier-aware stance-layer
+placement at that reopened shape gate.
+
+**Trail (2026-08-13):** `@beep/courtlistener` was deleted as a VERSION-only
+stub. Recreate it from `goals/honest-repo-signal/research/FOLLOW-UPS.md` when
+this packet's citation-lookup wrap is pulled. Do not search a missing driver
+tree.
 
 ## Sources & provenance
 
@@ -46,5 +46,30 @@ cluster "Citation lookup + verbatim-span grounding (hallucination guard)".
 
 ## Trail
 
+- 2026-08-13: packet closed `graduated`; `citation-ground-before-cite` remains
+  the re-entry point. Once both prerequisite goals land, reopen at `decompose`;
+  the reopened shape gate decides align Q7's qualifier-aware stance-layer
+  placement from the 2026-07-25 corpus note.
+
+- 2026-07-25: received a corpus dispatch note
+  ([`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md))
+  from the `academia-corpus-mining` align dispatch — shapes the
+  anchor-to-stance-to-authority-to-admission follow-on and carries master
+  align Q7 (where the qualifier-aware stance layer lives, and the minimum
+  qualifiers before two claims may be compared).
+- 2026-07-14: scaffolded
+  [`goals/citation-extraction-engine`](../../goals/citation-extraction-engine/README.md)
+  per the ratified campaign revisit; it is blocked by
+  `citation-verified-span-substrate` and `court-reporter-vocabulary`. The guard
+  remains queued.
+- 2026-07-14: graduated the first program lane into
+  [`goals/citation-verified-span-substrate`](../../goals/citation-verified-span-substrate/README.md)
+  and product doctrine into
+  [`docs/product/citation-grounding.md`](../../docs/product/citation-grounding.md);
+  engine and guard scaffolds remain queued, with the engine revisited when
+  `court-vocabulary-resolver` graduates later in this campaign.
+- 2026-07-14: align closed — 8 decisions locked, including the port-not-adopt
+  user override grounded in the existing law-practice citation taxonomy;
+  BRIEF.md and MAP.md drafted for shape sign-off.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Citation lookup + verbatim-span grounding (hallucination guard)' (11 nuggets).

@@ -7,16 +7,16 @@
 
 import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
-import { SessionId } from "./Session.values.js";
+import { SessionId } from "./Session.values.ts";
 
 const $I = $OntologyDomainId.create("aggregates/Session/Session.errors");
 
 /**
  * Reasons an ontology session change can be rejected.
  *
- * @example
+ * **Example** (Make invalidChange reason)
+ *
  * ```ts
  * import { SessionChangeRejectedReason } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -25,8 +25,8 @@ const $I = $OntologyDomainId.create("aggregates/Session/Session.errors");
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "invalidChange"]).pipe(
   $I.annoteSchema("SessionChangeRejectedReason", {
@@ -37,7 +37,8 @@ export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "inva
 /**
  * Type for {@link SessionChangeRejectedReason}.
  *
- * @example
+ * **Example** (Type a rejection reason)
+ *
  * ```ts
  * import { SessionChangeRejectedReason } from "@beep/ontology-domain/aggregates/Session"
  *
@@ -46,15 +47,16 @@ export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "inva
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Type;
 
 /**
  * Typed domain error for rejected ontology session changes.
  *
- * @example
+ * **Example** (Create SessionChangeRejected error)
+ *
  * ```ts
  * import { SessionChangeRejected, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -68,17 +70,17 @@ export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Typ
  * console.log(error.reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class SessionChangeRejected extends TaggedErrorClass<SessionChangeRejected>($I`SessionChangeRejected`)(
+export class SessionChangeRejected extends S.TaggedError<SessionChangeRejected>($I`SessionChangeRejected`)(
   "SessionChangeRejected",
   {
     sessionId: SessionId,
     reason: SessionChangeRejectedReason,
     message: S.String,
   },
-  $I.annote("SessionChangeRejected", {
+  $I.annoteError<SessionChangeRejected>("SessionChangeRejected", {
     description: "Typed domain error for rejected ontology session changes.",
   })
 ) {}

@@ -9,26 +9,28 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { Console, Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import { VersionCategoryReport, VersionCategoryStatusMatch, VersionSyncModeMatch } from "./VersionSync.schemas.js";
+import { VersionCategoryReport, VersionCategoryStatusMatch, VersionSyncModeMatch } from "./VersionSync.schemas.ts";
 import type {
   VersionCategoryReport as VersionCategoryReportValue,
   VersionCategoryStatus as VersionCategoryStatusValue,
   VersionSyncMode as VersionSyncModeValue,
   VersionSyncReport,
-} from "./VersionSync.schemas.js";
+} from "./VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.render");
 
 /**
  * Service contract for rendering a version-sync report to console.
  *
- * @example
+ * **Example** (Type service shape contract)
+ *
  * ```ts
  * import type { ReportRendererServiceShape } from "@beep/repo-cli/commands/VersionSync/VersionSync.render"
  *
  * const example: ReportRendererServiceShape | undefined = undefined
  * console.log(example === undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -40,12 +42,14 @@ export type ReportRendererServiceShape = {
 /**
  * Service tag for report rendering.
  *
- * @example
+ * **Example** (Check report service tag)
+ *
  * ```ts
  * import { ReportRendererService } from "@beep/repo-cli/commands/VersionSync/VersionSync.render"
  *
  * console.log(typeof ReportRendererService !== "undefined") // true
  * ```
+ *
  * @category ports
  * @since 0.0.0
  */
@@ -130,12 +134,14 @@ const renderReport: ReportRendererServiceShape["renderReport"] = Effect.fn(funct
 /**
  * Live layer for report rendering.
  *
- * @example
+ * **Example** (Check live report layer)
+ *
  * ```ts
  * import { ReportRendererServiceLive } from "@beep/repo-cli/commands/VersionSync/VersionSync.render"
  *
  * console.log(typeof ReportRendererServiceLive !== "undefined") // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

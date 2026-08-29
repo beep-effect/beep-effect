@@ -7,7 +7,7 @@
  */
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
@@ -22,7 +22,8 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
 /**
  * Persistence failure raised when a Thread row is absent.
  *
- * @example
+ * **Example** (Construct not-found error)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -41,14 +42,14 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
  * @category errors
  * @since 0.0.0
  */
-export class ThreadStoreNotFound extends TaggedErrorClass<ThreadStoreNotFound>($I`ThreadStoreNotFound`)(
+export class ThreadStoreNotFound extends S.TaggedError<ThreadStoreNotFound>($I`ThreadStoreNotFound`)(
   "ThreadStoreNotFound",
   {
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
       description: "Thread id requested by the failed operation.",
     }),
   },
-  $I.annote("ThreadStoreNotFound", {
+  $I.annoteError<ThreadStoreNotFound>("ThreadStoreNotFound", {
     title: "Thread store not found",
     description: "The ThreadStore could not find the requested thread.",
   })
@@ -57,7 +58,8 @@ export class ThreadStoreNotFound extends TaggedErrorClass<ThreadStoreNotFound>($
 /**
  * Persistence failure raised when a ThreadStore write conflicts.
  *
- * @example
+ * **Example** (Construct conflict error)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -76,7 +78,7 @@ export class ThreadStoreNotFound extends TaggedErrorClass<ThreadStoreNotFound>($
  * @category errors
  * @since 0.0.0
  */
-export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($I`ThreadStoreConflict`)(
+export class ThreadStoreConflict extends S.TaggedError<ThreadStoreConflict>($I`ThreadStoreConflict`)(
   "ThreadStoreConflict",
   {
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
@@ -86,7 +88,7 @@ export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($
       description: "Non-empty explanation of the rejected write.",
     }),
   },
-  $I.annote("ThreadStoreConflict", {
+  $I.annoteError<ThreadStoreConflict>("ThreadStoreConflict", {
     title: "Thread store conflict",
     description: "The ThreadStore rejected a conflicting write.",
   })
@@ -95,7 +97,8 @@ export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($
 /**
  * Persistence failure raised when the ThreadStore is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
@@ -106,14 +109,14 @@ export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($
  * @category errors
  * @since 0.0.0
  */
-export class ThreadStoreUnavailable extends TaggedErrorClass<ThreadStoreUnavailable>($I`ThreadStoreUnavailable`)(
+export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable>($I`ThreadStoreUnavailable`)(
   "ThreadStoreUnavailable",
   {
     reason: ThreadStoreErrorReason.annotateKey({
       description: "Non-empty explanation of the unavailable persistence operation.",
     }),
   },
-  $I.annote("ThreadStoreUnavailable", {
+  $I.annoteError<ThreadStoreUnavailable>("ThreadStoreUnavailable", {
     title: "Thread store unavailable",
     description: "The ThreadStore could not serve the request.",
   })
@@ -122,7 +125,8 @@ export class ThreadStoreUnavailable extends TaggedErrorClass<ThreadStoreUnavaila
 /**
  * ThreadStore port failure.
  *
- * @example
+ * **Example** (Test ThreadStoreError guard)
+ *
  * ```ts
  * import { ThreadStoreError, ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
@@ -144,7 +148,8 @@ export const ThreadStoreError = S.Union([ThreadStoreNotFound, ThreadStoreConflic
 /**
  * Companion type for {@link ThreadStoreError}
  *
- * @example
+ * **Example** (Enumerate error tag values)
+ *
  * ```ts
  * import type { ThreadStoreError } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *

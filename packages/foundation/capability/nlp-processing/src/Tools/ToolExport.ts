@@ -6,7 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Cause, Effect, Inspectable, pipe, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -80,12 +80,15 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
 /**
  * Typed failure for the positional tool export adapter.
  *
+ * **Details**
+ *
  * The error preserves the tool name, a caller-facing message, and the original
  * unknown cause when parameter decoding, toolkit startup, stream execution, or
  * result extraction fails.
  *
- * @example
- * ```ts
+ * **Example** (Recover from ExportedToolError)
+ *
+ * ```ts import.meta.vitest name="Recover from ExportedToolError"
  * import { Effect } from "effect"
  * import { ExportedToolError } from "@beep/nlp-processing/Tools/ToolExport"
  *
@@ -109,14 +112,14 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
  * @category errors
  * @since 0.0.0
  */
-export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`ExportedToolError`)(
+export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`ExportedToolError`)(
   "ExportedToolError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
     message: S.String,
     toolName: S.String,
   },
-  $I.annote("ExportedToolError", {
+  $I.annoteError<ExportedToolError>("ExportedToolError", {
     description: "Failure raised while exporting or executing a positional NLP tool.",
   })
 ) {
@@ -129,11 +132,28 @@ export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`Ex
    * @returns A typed export-adapter error value.
    */
   static readonly fromCause: {
-    (cause: unknown, toolName: string, options: { readonly message: string }): ExportedToolError;
-    (toolName: string, options: { readonly message: string }): (cause: unknown) => ExportedToolError;
+    (
+      cause: unknown,
+      toolName: string,
+      options: {
+        readonly message: string;
+      }
+    ): ExportedToolError;
+    (
+      toolName: string,
+      options: {
+        readonly message: string;
+      }
+    ): (cause: unknown) => ExportedToolError;
   } = dual(
     3,
-    (cause: unknown, toolName: string, options: { readonly message: string }): ExportedToolError =>
+    (
+      cause: unknown,
+      toolName: string,
+      options: {
+        readonly message: string;
+      }
+    ): ExportedToolError =>
       ExportedToolError.make({
         cause: O.fromUndefinedOr(cause),
         message: options.message,
@@ -145,11 +165,14 @@ export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`Ex
 /**
  * Runtime descriptor for a tool exported as a positional function contract.
  *
+ * **Details**
+ *
  * The descriptor exposes stable argument ordering, JSON schemas, examples, and
  * an Effectful `handle` function that validates positional arguments before
  * delegating to the toolkit handler.
  *
- * @example
+ * **Example** (Define ExportedTool descriptor)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { ExportedTool } from "@beep/nlp-processing/Tools/ToolExport"
@@ -200,7 +223,9 @@ const decodeToolParameters = (
   parameterNames: ReadonlyArray<string>,
   args: ReadonlyArray<unknown>
 ): Effect.Effect<Tool.Parameters<NlpTool>, ExportedToolError> =>
-  S.decodeUnknownEffect(tool.parametersSchema)(buildArgsObject(parameterNames, args)).pipe(
+  pipe(
+    buildArgsObject(parameterNames, args),
+    pipe(tool.parametersSchema, S.decodeEffect),
     Obs.trackNlpDuration("nlp.tool.decode_parameters", {
       argument_count: `${A.length(args)}`,
       operation: "decodeToolParameters",
@@ -370,12 +395,15 @@ const exportToolsEffect: Effect.Effect<
 /**
  * Effect that exports every NLP toolkit tool as a positional descriptor.
  *
+ * **Details**
+ *
  * Use this adapter when an integration cannot call Effect AI toolkit handlers
  * directly and instead needs ordered argument names, JSON schemas, timeouts,
  * usage snippets, and a single Effectful handler per tool.
  *
- * @example
- * ```ts
+ * **Example** (List exported tool names)
+ *
+ * ```ts import.meta.vitest name="List exported tool names"
  * import { Effect } from "effect"
  * import { exportTools } from "@beep/nlp-processing/Tools/ToolExport"
  * import { WinkNlpToolkitLive } from "@beep/wink"

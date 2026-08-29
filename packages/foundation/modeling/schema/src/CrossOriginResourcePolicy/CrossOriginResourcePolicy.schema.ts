@@ -24,12 +24,13 @@ const CorpValueBase = LiteralKit(["same-site", "same-origin", "cross-origin"]);
 /**
  * Schema for allowed `Cross-Origin-Resource-Policy` values.
  *
- * @example
- * ```ts
+ * **Example** (Validate same-origin CORP value)
+ *
+ * ```ts import.meta.vitest name="Validate same-origin CORP value"
  * import * as S from "effect/Schema"
  * import { CorpValue } from "@beep/schema/CrossOriginResourcePolicy"
  *
- * console.log(S.is(CorpValue)("same-origin")) // true
+ * S.is(CorpValue)("same-origin") // => true
  * ```
  *
  * @category schemas
@@ -45,7 +46,8 @@ export const CorpValue = CorpValueBase.pipe(
 /**
  * Type for allowed `Cross-Origin-Resource-Policy` values.
  *
- * @example
+ * **Example** (Assign same-origin CorpValue type)
+ *
  * ```ts
  * import type { CorpValue } from "@beep/schema/CrossOriginResourcePolicy"
  *
@@ -63,7 +65,8 @@ const CrossOriginResourcePolicyOptionBase = LiteralKit([false, ...CorpValueBase.
 /**
  * Schema for enabled or disabled `Cross-Origin-Resource-Policy` options.
  *
- * @example
+ * **Example** (Decode same-site CORP option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CrossOriginResourcePolicyOption } from "@beep/schema/CrossOriginResourcePolicy"
@@ -84,7 +87,8 @@ export const CrossOriginResourcePolicyOption = CrossOriginResourcePolicyOptionBa
 /**
  * Type for enabled or disabled `Cross-Origin-Resource-Policy` options.
  *
- * @example
+ * **Example** (Assign disabled CORP option)
+ *
  * ```ts
  * import type { CrossOriginResourcePolicyOption } from "@beep/schema/CrossOriginResourcePolicy"
  *
@@ -100,7 +104,8 @@ export type CrossOriginResourcePolicyOption = typeof CrossOriginResourcePolicyOp
 /**
  * Model for a rendered `Cross-Origin-Resource-Policy` response header.
  *
- * @example
+ * **Example** (Make CORP response header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginResourcePolicyResponseHeader } from "@beep/schema/CrossOriginResourcePolicy"
@@ -132,7 +137,8 @@ type CrossOriginResourcePolicyResponseHeaderEncoded = typeof CrossOriginResource
 /**
  * Schema that renders CORP options into a response header.
  *
- * @example
+ * **Example** (Decode CORP into header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CrossOriginResourcePolicyHeader } from "@beep/schema/CrossOriginResourcePolicy"
@@ -201,7 +207,8 @@ export const CrossOriginResourcePolicyHeader = S.Union([CrossOriginResourcePolic
 /**
  * Type for rendered `Cross-Origin-Resource-Policy` response headers.
  *
- * @example
+ * **Example** (Type rendered CORP header)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginResourcePolicyResponseHeader, type CrossOriginResourcePolicyHeader } from "@beep/schema/CrossOriginResourcePolicy"
@@ -229,7 +236,8 @@ export { CrossOriginResourcePolicyOption as Option, CrossOriginResourcePolicyRes
 /**
  * Concise alias for {@link CrossOriginResourcePolicyHeader}.
  *
- * @example
+ * **Example** (Decode via Header alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/CrossOriginResourcePolicy"
@@ -246,7 +254,8 @@ export const Header = CrossOriginResourcePolicyHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Type Header alias value)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { CrossOriginResourcePolicyResponseHeader, type Header } from "@beep/schema/CrossOriginResourcePolicy"

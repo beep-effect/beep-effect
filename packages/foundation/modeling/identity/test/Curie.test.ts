@@ -1,4 +1,12 @@
-import { CoreVocab, CurieFromIri, contractOption, expand, expandOption, expandPredicate } from "@beep/identity";
+import {
+  CoreVocab,
+  CurieFromIri,
+  contract,
+  contractOption,
+  expand,
+  expandOption,
+  expandPredicate,
+} from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Equal from "effect/Equal";
@@ -51,8 +59,9 @@ describe("CURIE codec", () => {
     );
   });
 
-  it.effect("decodes and encodes known CURIEs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "decodes and encodes known CURIEs",
+    Effect.fnUntraced(function* () {
       expect(yield* decodeCurie("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
       expect(yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
     })
@@ -60,7 +69,7 @@ describe("CURIE codec", () => {
 
   it("round-trips generated CoreVocab IRIs through the schema codec", () => {
     fc.assert(
-      fc.property(S.toArbitrary(CurieFromIri), (iri) => {
+      fc.property(S.toArbitrary(CurieFromIri)(fc), (iri) => {
         const decoded = O.flatMap(S.encodeOption(CurieFromIri)(iri), S.decodeUnknownOption(CurieFromIri));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
@@ -68,21 +77,32 @@ describe("CURIE codec", () => {
     );
   });
 
-  it.effect("fails schema decoding for unknown prefixes and known-prefix unknown terms", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails schema decoding for unknown prefixes and known-prefix unknown terms",
+    Effect.fnUntraced(function* () {
       expect((yield* Effect.flip(decodeCurie("nope:term")))._tag).toBe("SchemaError");
       expect((yield* Effect.flip(decodeCurie("skos:nope")))._tag).toBe("SchemaError");
     })
   );
 
-  it.effect("fails schema encoding for unregistered IRIs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails schema encoding for unregistered IRIs",
+    Effect.fnUntraced(function* () {
       expect((yield* Effect.flip(encodeIri("http://www.w3.org/2004/02/skos/core#nope")))._tag).toBe("SchemaError");
     })
   );
 
   it("expands inverse predicates", () => {
     expect(expandPredicate("^rdfs:subClassOf")).toEqual({
+      iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      inverse: true,
+    });
+  });
+
+  it("supports data-last CURIE operations", () => {
+    expect(expand(CoreVocab)("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
+    expect(contract(CoreVocab)("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
+    expect(expandPredicate(CoreVocab)("^rdfs:subClassOf")).toEqual({
       iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
       inverse: true,
     });

@@ -48,8 +48,9 @@ tests, fixtures, and compatibility report.
 ## Open Risks Inherited From The Brief
 
 - `@beep/md` may be too markdown-shaped for DOCX interop.
-- Tables and `custom-style` are intentionally gap-only in v1, but may require
-  future `@beep/md` or document-AST decisions.
+- Pandoc tables and `custom-style` are intentionally gap-only in v1. The
+  existence of `@beep/md` tables does not make Pandoc's richer table payload
+  lossless; closing that gap may require richer table or document-AST decisions.
 - Notes, math, images, and tracked changes can blow up scope if pulled into v1.
 - Pandoc JSON shape may drift by version; binary pinning belongs to the later
   driver goal.

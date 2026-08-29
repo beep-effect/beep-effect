@@ -10,14 +10,14 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter, ResearchRepoCardSummary } from "../Research.schemas.js";
-import { catalogDbPath, persistCards } from "./CatalogOps.js";
-import { discoverClones, inspectClone, listStarredRepos, slugPartsOf } from "./RepoCards.js";
-import { VAULT_DIRS } from "./Vault.js";
-import type { ResearchRepoCardOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
-import type { CardPersistRow } from "./CatalogOps.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter, ResearchRepoCardSummary } from "../Research.schemas.ts";
+import { catalogDbPath, persistCards } from "./CatalogOps.ts";
+import { discoverClones, inspectClone, listStarredRepos, slugPartsOf } from "./RepoCards.ts";
+import { VAULT_DIRS } from "./Vault.ts";
+import type { ResearchRepoCardOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
+import type { CardPersistRow } from "./CatalogOps.ts";
 
 const decodeRepoCardSummary = S.decodeUnknownEffect(ResearchRepoCardSummary);
 
@@ -121,7 +121,8 @@ const collectStarCards = Effect.fnUntraced(function* (
 /**
  * Create research cards for cloned and starred repositories.
  *
- * @example
+ * **Example** (Create repo and star cards)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { repoCardImpl } from "@beep/repo-cli/commands/Research/internal/RepoCardRun"
@@ -137,6 +138,7 @@ const collectStarCards = Effect.fnUntraced(function* (
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

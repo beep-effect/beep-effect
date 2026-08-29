@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/ontology-config`.
  *
- * @example
+ * **Example** (Check initial package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-config"
  *
@@ -28,4 +29,4 @@ export const VERSION = "0.0.0" as const;
  * @category configuration
  * @since 0.0.0
  */
-export * from "./public.js";
+export * from "./public.ts";

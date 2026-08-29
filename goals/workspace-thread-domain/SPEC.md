@@ -16,7 +16,7 @@ Provenance: graduated from `explorations/agent-chat-interface` (back-links:
 [`MAP.md`](../../explorations/agent-chat-interface/MAP.md)). Entity
 semantics: `goals/agentic-professional-runtime/docs/data-model-shared-core.md`
 (Thread, Message/Turn, Activity, UsageRecord, read models). Proof-repo
-reference (read-only): `/home/elpresidank/YeeBois/projects/effect-lexical-chat/`.
+reference (read-only): the effect-lexical-chat project (machine-local checkout).
 
 ## Non-Goals
 
@@ -60,7 +60,7 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - Entities via `BaseEntity.Class` + persisted descriptors
-  (`packages/shared/domain/src/entity/BaseEntity.ts`); pattern:
+  (`packages/shared/domain/src/entity/ProductEntity.ts`); pattern:
   `packages/shared/domain/src/entities/Organization/Organization.model.ts` +
   `packages/shared/tables/src/entities/Organization/Organization.table.ts`.
   Tables via `EntityTable.pgTableFrom` (`packages/drivers/drizzle`).

@@ -14,8 +14,8 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
@@ -30,6 +30,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./layer": "./src/Layer.ts",
+    "./CandorPromotionGate": "./src/CandorPromotionGate/index.ts",
+    "./CandorRecord": "./src/CandorRecord/index.ts",
+    "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -42,19 +45,34 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/duckdb": "workspace:^",
+    "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-server": "workspace:^",
+    "@beep/epistemic-tables": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
     "@beep/file-processing": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/langextract": "workspace:^",
     "@beep/law-practice-domain": "workspace:^",
+    "@beep/law-practice-tables": "workspace:^",
     "@beep/law-practice-use-cases": "workspace:^",
+    "@beep/libpff": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
+    "@beep/postgres": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/shared-use-cases": "workspace:^",
     "@beep/tika": "workspace:^",
+    "@beep/utils": "workspace:^",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/pglite": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:"
   }
 }

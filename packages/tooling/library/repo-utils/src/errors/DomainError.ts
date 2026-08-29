@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -18,7 +18,8 @@ const $I = $RepoUtilsId.create("errors/DomainError");
 /**
  * A generic domain-level error with an optional underlying cause.
  *
- * @example
+ * **Example** (Construct domain error)
+ *
  * ```ts
  * import { DomainError } from "@beep/repo-utils/errors/DomainError"
  * const error = DomainError.make({
@@ -26,16 +27,17 @@ const $I = $RepoUtilsId.create("errors/DomainError");
  * })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class DomainError extends TaggedErrorClass<DomainError>($I`DomainError`)(
+export class DomainError extends S.TaggedError<DomainError>($I`DomainError`)(
   "DomainError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("DomainError", {
+  $I.annoteError<DomainError>("DomainError", {
     title: "Domain Error",
     description:
       "A generic domain-level error with an optional underlying cause for JSON parse failures, glob failures, and other operational errors.",

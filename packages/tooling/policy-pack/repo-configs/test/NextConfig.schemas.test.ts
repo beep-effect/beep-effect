@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 const expectRoundTrip = (value: AllowedDevOrigin) => {
   const encoded = Result.getOrThrow(S.encodeResult(AllowedDevOrigin)(value));
-  const decoded = Result.getOrThrow(S.decodeUnknownResult(AllowedDevOrigin)(encoded));
+  const decoded = Result.getOrThrow(S.decodeResult(AllowedDevOrigin)(encoded));
 
   expect(Equal.equals(decoded, value)).toBe(true);
 };
@@ -20,7 +20,7 @@ describe("AllowedDevOrigin", () => {
       Effect.gen(function* () {
         expect(AllowedDevOrigin.fromUnknown("local-origin.dev")).toBe("local-origin.dev");
         expect(AllowedDevOrigin.fromUnknown("*.local-origin.dev")).toBe("*.local-origin.dev");
-        expect(AllowedDevOrigin.fromUnknown(" oip-web.localhost ")).toBe("oip-web.localhost");
+        expect(AllowedDevOrigin.fromUnknown(" oip-web.beep.localhost ")).toBe("oip-web.beep.localhost");
       })
     ));
 
@@ -34,6 +34,6 @@ describe("AllowedDevOrigin", () => {
   });
 
   it("round-trips schema-derived allowed origins", () => {
-    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin), expectRoundTrip), fcRuns(25));
+    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin)(fc), expectRoundTrip), fcRuns(25));
   });
 });

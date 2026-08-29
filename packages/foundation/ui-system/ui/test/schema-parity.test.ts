@@ -22,38 +22,38 @@ describe("@beep/ui schema parity", () => {
   it("round-trips exported schema models through encoded form", () => {
     fc.assert(
       fc.property(
-        S.toArbitrary(BoundaryParams),
-        S.toArbitrary(SpinParams),
-        S.toArbitrary(NumberInputChangeMetadata),
-        S.toArbitrary(NotificationAction),
-        S.toArbitrary(ToastData),
-        S.toArbitrary(ReactContextInvariantOptions),
-        S.toArbitrary(ReactContextInvariantError),
+        S.toArbitrary(BoundaryParams)(fc),
+        S.toArbitrary(SpinParams)(fc),
+        S.toArbitrary(NumberInputChangeMetadata)(fc),
+        S.toArbitrary(NotificationAction)(fc),
+        S.toArbitrary(ToastData)(fc),
+        S.toArbitrary(ReactContextInvariantOptions)(fc),
+        S.toArbitrary(ReactContextInvariantError)(fc),
         (boundary, spin, metadata, action, toast, invariantOptions, invariantError) => {
           const roundTrippedBoundary = Result.getOrThrow(
-            S.decodeUnknownResult(BoundaryParams)(Result.getOrThrow(S.encodeResult(BoundaryParams)(boundary)))
+            S.decodeResult(BoundaryParams)(Result.getOrThrow(S.encodeResult(BoundaryParams)(boundary)))
           );
           const roundTrippedSpin = Result.getOrThrow(
-            S.decodeUnknownResult(SpinParams)(Result.getOrThrow(S.encodeResult(SpinParams)(spin)))
+            S.decodeResult(SpinParams)(Result.getOrThrow(S.encodeResult(SpinParams)(spin)))
           );
           const roundTrippedMetadata = Result.getOrThrow(
-            S.decodeUnknownResult(NumberInputChangeMetadata)(
+            S.decodeResult(NumberInputChangeMetadata)(
               Result.getOrThrow(S.encodeResult(NumberInputChangeMetadata)(metadata))
             )
           );
           const roundTrippedAction = Result.getOrThrow(
-            S.decodeUnknownResult(NotificationAction)(Result.getOrThrow(S.encodeResult(NotificationAction)(action)))
+            S.decodeResult(NotificationAction)(Result.getOrThrow(S.encodeResult(NotificationAction)(action)))
           );
           const roundTrippedToast = Result.getOrThrow(
-            S.decodeUnknownResult(ToastData)(Result.getOrThrow(S.encodeResult(ToastData)(toast)))
+            S.decodeResult(ToastData)(Result.getOrThrow(S.encodeResult(ToastData)(toast)))
           );
           const roundTrippedInvariantOptions = Result.getOrThrow(
-            S.decodeUnknownResult(ReactContextInvariantOptions)(
+            S.decodeResult(ReactContextInvariantOptions)(
               Result.getOrThrow(S.encodeResult(ReactContextInvariantOptions)(invariantOptions))
             )
           );
           const roundTrippedInvariantError = Result.getOrThrow(
-            S.decodeUnknownResult(ReactContextInvariantError)(
+            S.decodeResult(ReactContextInvariantError)(
               Result.getOrThrow(S.encodeResult(ReactContextInvariantError)(invariantError))
             )
           );

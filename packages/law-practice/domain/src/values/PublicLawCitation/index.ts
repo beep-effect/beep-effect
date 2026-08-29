@@ -9,9 +9,8 @@
 /**
  * PublicLawCitation model exports.
  *
- * **Example**
+ * **Example** (Import PublicLawCitation export)
  *
- * @example
  * ```ts
  * import { PublicLawCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PublicLawCitation.model.js";
+export * from "./PublicLawCitation.model.ts";

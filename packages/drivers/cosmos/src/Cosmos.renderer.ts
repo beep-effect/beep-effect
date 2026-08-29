@@ -11,9 +11,9 @@ import { Fn, HexColor, SchemaUtils } from "@beep/schema";
 import { A, O, P } from "@beep/utils";
 import { Duration, Effect, Match, pipe } from "effect";
 import * as S from "effect/Schema";
-import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
-import { CosmosDriverError } from "./Cosmos.errors.js";
-import { CosmosGraphProjection } from "./Cosmos.projection.js";
+import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.ts";
+import { CosmosDriverError } from "./Cosmos.errors.ts";
+import { CosmosGraphProjection } from "./Cosmos.projection.ts";
 
 const $I = $CosmosId.create("Cosmos.renderer");
 
@@ -84,6 +84,84 @@ type CosmosGraphInstance = {
 /** Beyond this many points, labels stop being readable and start being noise. */
 const MAX_RENDERED_LABELS = 300;
 
+type LabelRect = {
+  readonly height: number;
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+};
+
+type LabelCandidate = {
+  readonly anchorX: number;
+  readonly anchorY: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
+};
+
+// Prefer the four cardinal positions, then diagonals, across successively wider
+// rings. The first ring clears the rendered node radius; the stable order keeps
+// labels from wandering once the simulation settles.
+const labelRing = (distance: number): ReadonlyArray<LabelCandidate> => [
+  { anchorX: 0, anchorY: 0.5, offsetX: distance, offsetY: 0 },
+  { anchorX: 1, anchorY: 0.5, offsetX: -distance, offsetY: 0 },
+  { anchorX: 0.5, anchorY: 0, offsetX: 0, offsetY: distance },
+  { anchorX: 0.5, anchorY: 1, offsetX: 0, offsetY: -distance },
+  { anchorX: 0, anchorY: 0, offsetX: distance, offsetY: distance },
+  { anchorX: 1, anchorY: 0, offsetX: -distance, offsetY: distance },
+  { anchorX: 0, anchorY: 1, offsetX: distance, offsetY: -distance },
+  { anchorX: 1, anchorY: 1, offsetX: -distance, offsetY: -distance },
+];
+
+const LABEL_CANDIDATES = A.flatMap([30, 48, 66, 84, 102, 120, 138], labelRing);
+const LABEL_POINT_CLEARANCE = 26;
+
+const labelRect = (
+  x: number,
+  y: number,
+  size: Pick<LabelRect, "height" | "width">,
+  candidate: LabelCandidate
+): LabelRect => ({
+  height: size.height,
+  left: x + candidate.offsetX - size.width * candidate.anchorX,
+  top: y + candidate.offsetY - size.height * candidate.anchorY,
+  width: size.width,
+});
+
+const labelRectsOverlap = (left: LabelRect, right: LabelRect): boolean =>
+  left.left < right.left + right.width &&
+  left.left + left.width > right.left &&
+  left.top < right.top + right.height &&
+  left.top + left.height > right.top;
+
+const labelFits = (candidate: LabelRect, layer: HTMLElement, occupied: ReadonlyArray<LabelRect>): boolean =>
+  candidate.left >= 2 &&
+  candidate.top >= 2 &&
+  candidate.left + candidate.width <= layer.clientWidth - 2 &&
+  candidate.top + candidate.height <= layer.clientHeight - 2 &&
+  A.every(occupied, (placed) => !labelRectsOverlap(candidate, placed));
+
+const graphPointObstacles = (
+  graph: CosmosGraphInstance,
+  positions: ReadonlyArray<number>,
+  count: number
+): Array<LabelRect> => {
+  const obstacles: Array<LabelRect> = [];
+  for (let index = 0; index < count; index += 1) {
+    const x = positions[index * 2];
+    const y = positions[index * 2 + 1];
+    if (x === undefined || y === undefined || Number.isNaN(x) || Number.isNaN(y)) continue;
+    const screen = graph.spaceToScreenPosition?.([x, y]);
+    if (screen === undefined) continue;
+    obstacles.push({
+      height: LABEL_POINT_CLEARANCE * 2,
+      left: screen[0] - LABEL_POINT_CLEARANCE,
+      top: screen[1] - LABEL_POINT_CLEARANCE,
+      width: LABEL_POINT_CLEARANCE * 2,
+    });
+  }
+  return obstacles;
+};
+
 /**
  * An HTML label layer over the WebGL canvas.
  *
@@ -122,8 +200,15 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
 
   container.appendChild(layer);
 
+  const sizes = elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { height: rect.height, width: rect.width };
+  });
+
   return {
+    element: layer,
     elements,
+    sizes,
     count: shown.length,
     // A label layer that cannot place its labels says so, on the layer itself, where
     // both a human and a test can see it. Silence was the original bug.
@@ -136,19 +221,40 @@ const positionLabel = (
   graph: CosmosGraphInstance,
   positions: ReadonlyArray<number>,
   layer: ReturnType<typeof makeLabelLayer>,
-  index: number
-): void => {
+  index: number,
+  occupied: Array<LabelRect>
+): boolean => {
   const x = positions[index * 2];
   const y = positions[index * 2 + 1];
   const element = layer.elements[index];
-  if (element === undefined || x === undefined || y === undefined) return;
-  if (Number.isNaN(x) || Number.isNaN(y)) return;
+  const size = layer.sizes[index];
+  if (element === undefined || size === undefined || x === undefined || y === undefined) return false;
+  if (Number.isNaN(x) || Number.isNaN(y)) return false;
 
   const screen = graph.spaceToScreenPosition?.([x, y]);
-  if (screen === undefined) return;
+  if (screen === undefined) return false;
 
-  // Offset below the point so the text never sits on top of the dot it names.
-  element.style.transform = `translate(${Math.round(screen[0])}px, ${Math.round(screen[1] + 8)}px) translateX(-50%)`;
+  const placement = pipe(
+    LABEL_CANDIDATES,
+    A.findFirst((candidate) => labelFits(labelRect(screen[0], screen[1], size, candidate), layer.element, occupied)),
+    O.map((candidate) => labelRect(screen[0], screen[1], size, candidate))
+  );
+  return O.match(placement, {
+    onNone: () => {
+      // A knowingly colliding fallback is worse than a missing low-priority
+      // label: it obscures both the node and neighboring names. Keep it out of
+      // the visual and expose the suppression count on the layer instead.
+      element.hidden = true;
+      element.style.transform = "translate(-9999px,-9999px)";
+      return false;
+    },
+    onSome: (placed) => {
+      occupied.push(placed);
+      element.hidden = false;
+      element.style.transform = `translate(${Math.round(placed.left)}px, ${Math.round(placed.top)}px)`;
+      return true;
+    },
+  });
 };
 
 type CosmosGraphConstructor = new (container: HTMLElement, config: CosmosGraphConfig) => CosmosGraphInstance;
@@ -295,7 +401,8 @@ const makeFpsSampler = (): FpsSampler => {
 /**
  * Mounted graph renderer handle.
  *
- * @example
+ * **Example** (Construct a render handle)
+ *
  * ```ts
  * import { type CosmosRenderHandle } from "@beep/cosmos"
  *
@@ -396,9 +503,13 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
           // animation frame, where the throw goes nowhere anyone will see it. The
           // labels simply never moved, and nothing said why.
           const positions = graph.getPointPositions?.() ?? [];
+          const occupied = graphPointObstacles(graph, positions, current.count);
+          let suppressedCount = 0;
           for (let index = 0; index < current.count; index += 1) {
-            positionLabel(graph, positions, current, index);
+            if (!positionLabel(graph, positions, current, index, occupied)) suppressedCount += 1;
           }
+          current.element.setAttribute("data-label-collisions", "0");
+          current.element.setAttribute("data-label-suppressed", String(suppressedCount));
         },
       })
     );
@@ -545,11 +656,13 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 /**
  * Renders a graph projection with the selected runtime backend.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The returned handle owns a frame sampler and renderer resources. Call
  * `destroy` when the host unmounts the graph.
  *
- * @example
+ * **Example** (Render graph and extract backend)
+ *
  * ```ts
  * import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos"
  * import { Effect } from "effect"
@@ -569,7 +682,6 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
  * ```
  *
  * @effects Mounts a browser graph renderer and starts a request-animation-frame sampler.
- *
  * @category adapters
  * @since 0.0.0
  */

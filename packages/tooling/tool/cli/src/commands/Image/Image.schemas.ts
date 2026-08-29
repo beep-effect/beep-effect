@@ -7,16 +7,20 @@
 
 import { ExtractFramesResult, PositiveFrameRate } from "@beep/ffmpeg";
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Image/Image.schemas");
 
 /**
  * Options accepted by `image extract-frames`.
  *
- * @example
+ * **Example** (Construct extract-frames options)
+ *
  * ```ts
  * import { ExtractFramesOptions } from "@beep/repo-cli/commands/Image/index"
  * import * as O from "effect/Option"
@@ -31,6 +35,7 @@ const $I = $RepoCliId.create("commands/Image/Image.schemas");
  * })
  * console.log(options) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -60,7 +65,8 @@ export class ExtractFramesOptions extends S.Class<ExtractFramesOptions>($I`Extra
 /**
  * Options accepted by `image extract-frames-dir`.
  *
- * @example
+ * **Example** (Construct directory extract options)
+ *
  * ```ts
  * import { ExtractFramesDirOptions } from "@beep/repo-cli/commands/Image/index"
  * import * as O from "effect/Option"
@@ -73,6 +79,7 @@ export class ExtractFramesOptions extends S.Class<ExtractFramesOptions>($I`Extra
  * })
  * console.log(options) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -97,7 +104,8 @@ export class ExtractFramesDirOptions extends S.Class<ExtractFramesDirOptions>($I
 /**
  * Direct video selected by `image extract-frames-dir`.
  *
- * @example
+ * **Example** (Construct directory video entry)
+ *
  * ```ts
  * import { ExtractFramesDirVideo } from "@beep/repo-cli/commands/Image/index"
  *
@@ -109,6 +117,7 @@ export class ExtractFramesDirOptions extends S.Class<ExtractFramesDirOptions>($I
  * })
  * console.log(video) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,7 +136,8 @@ export class ExtractFramesDirVideo extends S.Class<ExtractFramesDirVideo>($I`Ext
 /**
  * Successful video from a folder-based frame extraction run.
  *
- * @example
+ * **Example** (Construct successful dir outcome)
+ *
  * ```ts
  * import { ExtractFramesDirSuccess } from "@beep/repo-cli/commands/Image/index"
  * import { ExtractFramesResult } from "@beep/ffmpeg"
@@ -146,6 +156,7 @@ export class ExtractFramesDirVideo extends S.Class<ExtractFramesDirVideo>($I`Ext
  * })
  * console.log(success) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -164,7 +175,8 @@ export class ExtractFramesDirSuccess extends S.Class<ExtractFramesDirSuccess>($I
 /**
  * Failed video from a folder-based frame extraction run.
  *
- * @example
+ * **Example** (Construct failed dir outcome)
+ *
  * ```ts
  * import { ExtractFramesDirFailure } from "@beep/repo-cli/commands/Image/index"
  *
@@ -176,6 +188,7 @@ export class ExtractFramesDirSuccess extends S.Class<ExtractFramesDirSuccess>($I
  * })
  * console.log(failure) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -194,7 +207,8 @@ export class ExtractFramesDirFailure extends S.Class<ExtractFramesDirFailure>($I
 /**
  * Ordered outcome for one `image extract-frames-dir` input video.
  *
- * @example
+ * **Example** (Validate outcome schema guard)
+ *
  * ```ts
  * import { ExtractFramesDirOutcome } from "@beep/repo-cli/commands/Image"
  * import * as S from "effect/Schema"
@@ -202,6 +216,7 @@ export class ExtractFramesDirFailure extends S.Class<ExtractFramesDirFailure>($I
  * const value = "example"
  * console.log(S.is(ExtractFramesDirOutcome)(value)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -214,7 +229,8 @@ export const ExtractFramesDirOutcome = S.Union([ExtractFramesDirSuccess, Extract
 /**
  * Ordered outcome for one `image extract-frames-dir` input video.
  *
- * @example
+ * **Example** (Type success as dir outcome)
+ *
  * ```ts
  * import { ExtractFramesDirOutcome, ExtractFramesDirSuccess } from "@beep/repo-cli/commands/Image"
  * import { ExtractFramesResult } from "@beep/ffmpeg"
@@ -233,6 +249,7 @@ export const ExtractFramesDirOutcome = S.Union([ExtractFramesDirSuccess, Extract
  * })
  * console.log(outcome.status)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -241,7 +258,8 @@ export type ExtractFramesDirOutcome = typeof ExtractFramesDirOutcome.Type;
 /**
  * Result returned by `image extract-frames-dir`.
  *
- * @example
+ * **Example** (Construct directory extract result)
+ *
  * ```ts
  * import { ExtractFramesDirResult } from "@beep/repo-cli/commands/Image/index"
  *
@@ -253,6 +271,7 @@ export type ExtractFramesDirOutcome = typeof ExtractFramesDirOutcome.Type;
  * })
  * console.log(result) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -271,7 +290,8 @@ export class ExtractFramesDirResult extends S.Class<ExtractFramesDirResult>($I`E
 /**
  * Decode unknown single-video frame extraction options.
  *
- * @example
+ * **Example** (Wrap options decoder in Effect)
+ *
  * ```ts
  * import { decodeExtractFramesOptions } from "@beep/repo-cli/commands/Image"
  * import { Effect } from "effect"
@@ -279,15 +299,20 @@ export class ExtractFramesDirResult extends S.Class<ExtractFramesDirResult>($I`E
  * const program = Effect.succeed(decodeExtractFramesOptions)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesOptions = S.decodeUnknownEffect(ExtractFramesOptions);
+export const decodeExtractFramesOptions: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ExtractFramesOptions, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ExtractFramesOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ExtractFramesOptions));
 
 /**
  * Decode unknown directory frame extraction options.
  *
- * @example
+ * **Example** (Wrap dir options decoder in Effect)
+ *
  * ```ts
  * import { decodeExtractFramesDirOptions } from "@beep/repo-cli/commands/Image"
  * import { Effect } from "effect"
@@ -295,7 +320,11 @@ export const decodeExtractFramesOptions = S.decodeUnknownEffect(ExtractFramesOpt
  * const program = Effect.succeed(decodeExtractFramesDirOptions)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesDirOptions = S.decodeUnknownEffect(ExtractFramesDirOptions);
+export const decodeExtractFramesDirOptions: {
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<ExtractFramesDirOptions, S.SchemaError>;
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<ExtractFramesDirOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(ExtractFramesDirOptions));

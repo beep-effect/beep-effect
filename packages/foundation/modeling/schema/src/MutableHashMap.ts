@@ -11,7 +11,6 @@ import * as O from "@beep/utils/Option";
 import {
   Effect,
   MutableHashMap as MutableHashMap_,
-  Option,
   pipe,
   SchemaIssue,
   SchemaParser,
@@ -76,7 +75,8 @@ type MutableHashMapEntry<Key extends S.Top, Value extends S.Top> = S.Codec<
 /**
  * Serializable entry-array iso type for `MutableHashMap` schemas.
  *
- * @example
+ * **Example** (Satisfies entry-array iso type)
+ *
  * ```ts
  * import type { MutableHashMapIso } from "@beep/schema/MutableHashMap"
  * import * as S from "effect/Schema"
@@ -85,8 +85,8 @@ type MutableHashMapEntry<Key extends S.Top, Value extends S.Top> = S.Codec<
  * console.log(entries.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = ReadonlyArray<
   readonly [Key["Iso"], Value["Iso"]]
@@ -95,7 +95,8 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
 /**
  * Schema for validating an existing `MutableHashMap` instance.
  *
- * @example
+ * **Example** (Validates existing MutableHashMap)
+ *
  * ```ts
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
@@ -106,8 +107,8 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
  * console.log(S.is(MapSchema)(map))
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
   extends S.declareConstructor<
@@ -124,7 +125,8 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
 /**
  * Schema for transforming entry arrays into `MutableHashMap` instances.
  *
- * @example
+ * **Example** (Decodes entries to MutableHashMap)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
@@ -134,8 +136,8 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
  * console.log(decoded)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
   extends S.decodeTo<
@@ -150,19 +152,20 @@ export interface MutableHashMap<Key extends S.Top, Value extends S.Top>
 /**
  * Type guard for Effect `MutableHashMap` values.
  *
- * @example
- * ```ts
+ * **Example** (Guards MutableHashMap values)
+ *
+ * ```ts import.meta.vitest name="Guards MutableHashMap values"
  * import { MutableHashMap } from "effect"
  * import { isMutableHashMap } from "@beep/schema/MutableHashMap"
  *
- * console.log(isMutableHashMap(MutableHashMap.empty())) // true
- * console.log(isMutableHashMap({})) // false
+ * isMutableHashMap(MutableHashMap.empty()) // => true
+ * isMutableHashMap({}) // => false
  * ```
  *
  * @param value - Unknown input to test.
  * @returns `true` when `value` is a `MutableHashMap`.
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHashMap_.MutableHashMap<Key, Value> =>
   MutableHashMap_.isMutableHashMap(value);
@@ -171,7 +174,8 @@ export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHa
  * Schema for validating existing `MutableHashMap` instances while applying the
  * provided key and value schemas to each entry.
  *
- * @example
+ * **Example** (Decodes existing map entries)
+ *
  * ```ts
  * import { MutableHashMap } from "effect"
  * import * as S from "effect/Schema"
@@ -186,8 +190,8 @@ export const isMutableHashMap = <Key, Value>(value: unknown): value is MutableHa
  * @param options - Schemas for keys and values.
  * @returns Schema whose encoded side is another `MutableHashMap` carrying the
  * encoded key and value types.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(options: {
   readonly key: Key;
@@ -204,13 +208,12 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
 
       return (input, ast, parseOptions) => {
         if (!MutableHashMap_.isMutableHashMap(input)) {
-          return Effect.fail(new SchemaIssue.InvalidType(ast, Option.some(input)));
+          return Effect.fail(new SchemaIssue.InvalidType(ast));
         }
 
-        return Effect.mapBothEager(SchemaParser.decodeUnknownEffect(entries)(A.fromIterable(input), parseOptions), {
+        return Effect.mapBothEager(SchemaParser.decodeEffect(entries)(A.fromIterable(input), parseOptions), {
           onSuccess: MutableHashMap_.fromIterable,
-          onFailure: (issue) =>
-            new SchemaIssue.Composite(ast, Option.some(input), [new SchemaIssue.Pointer(["entries"], issue)]),
+          onFailure: (issue) => new SchemaIssue.Composite(ast, [new SchemaIssue.Pointer(["entries"], issue)]),
         });
       };
     },
@@ -287,7 +290,8 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
  * Schema for decoding entry arrays into `MutableHashMap` instances and encoding
  * maps back to arrays.
  *
- * @example
+ * **Example** (Round-trips map via entry arrays)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { MutableHashMap } from "@beep/schema/MutableHashMap"
@@ -304,8 +308,8 @@ export const MutableHashMapFromSelf = <Key extends S.Top, Value extends S.Top>(o
  *
  * @param options - Schemas for keys and values.
  * @returns Entry-array-backed schema for mutable hash maps.
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MutableHashMap = <Key extends S.Top, Value extends S.Top>(options: {
   readonly key: Key;

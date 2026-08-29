@@ -6,8 +6,11 @@ tmp/
 dist/
 build/
 .direnv/
-.idea/
 .playwright-mcp
+# Nested IDE dirs stay machine-local; the root .idea is tracked and curates
+# its own contents via the whitelist .idea/.gitignore
+**/.idea/
+!/.idea/
 # Environment and secrets - NEVER commit these
 .env
 .env.*
@@ -34,6 +37,7 @@ service-account*.json
 .firecrawl/
 # Client
 stats.html
+map.html
 .env.tmp
 .aider*
 # Turborepo
@@ -91,6 +95,8 @@ storybook-static/
 .claude/ralph-loop.local.md
 .claude/.hook-state.json
 .claude/scheduled_tasks.lock
+# Worktree-isolated agent sessions materialize transient checkouts here
+.claude/worktrees/
 
 # Local code-index cache only (MCP + Codex config are beep-sync managed/committed)
 .code-index/
@@ -117,3 +123,17 @@ openai.com_cookies.txt
 
 # SkillOpt pilot local env (tools/skillopt is a uv project; lock is committed)
 tools/skillopt/.venv/
+
+# graph-3d-navigation reverse-engineering capture corpus: third-party reference
+# artifacts only (proprietary graph.infranodus.com JS/CSS bundle, scraped vendor
+# docs, copyrighted papers, their demo dataset). Reference-only working artifact —
+# never commit (public repo). The packet's committed prose reports are the
+# deliverable; the corpus is reproducible from the URLs in
+# explorations/graph-3d-navigation/research/SEED-INVENTORY.md
+explorations/graph-3d-navigation/research/seed/
+
+# Agent-harness prompt scratch files must never be committed (public repo).
+/codex-task-*.txt
+
+# codegraph local index (shared-memory-code-kg-wiring)
+.codegraph/

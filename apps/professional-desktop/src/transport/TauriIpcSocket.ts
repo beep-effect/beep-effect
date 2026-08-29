@@ -23,22 +23,19 @@
  * browser-safe (see `standards/architecture/03-driver-boundaries.md`).
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { O, P, Str, thunkEffectVoid } from "@beep/utils";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { Effect, Layer, Metric, Queue, Ref, Stream } from "effect";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import { Effect, flow, Layer, Metric, Queue, Ref, Stream } from "effect";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { Socket } from "effect/unstable/socket";
-import { SidecarTransport } from "./SidecarTransport.js";
+import { SidecarTransport } from "./SidecarTransport.ts";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
@@ -73,16 +70,16 @@ const SidecarEvent = {
  * frame is decoded as a non-empty string at the boundary instead of trusting an
  * `unknown` event payload.
  *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import { InboundFrame } from "@/transport/TauriIpcSocket"
+ * **Example** (Validate inbound frame schema)
  *
- * const frame = Effect.runSync(InboundFrame.decodeUnknownEffect("{\"jsonrpc\":\"2.0\"}\n"))
- * console.log(frame.length > 0) // true
+ * ```ts
+ * import { InboundFrame } from "@/transport/TauriIpcSocket"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InboundFrame)("{\"jsonrpc\":\"2.0\"}\n")) // true
  * ```
  *
- * @category transport
+ * @category schemas
  * @since 0.0.0
  */
 export const InboundFrame = S.NonEmptyString.pipe(
@@ -107,24 +104,17 @@ const SidecarClosedKind = LiteralKit(["error", "terminated", "event-stream-close
  * reason. Nullable wire fields decode to `Option` at the boundary so absence is
  * explicit downstream (see effect-first EF-17).
  *
- * @example
+ * **Example** (Make terminated closed payload)
+ *
  * ```ts
- * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import { SidecarClosedPayload } from "@/transport/TauriIpcSocket"
  *
- * const payload = Effect.runSync(
- *   SidecarClosedPayload.decodeUnknownEffect({
- *     code: 0,
- *     kind: "terminated",
- *     message: null,
- *     signal: null,
- *   })
- * )
+ * const payload = SidecarClosedPayload.make({ kind: "terminated" })
  * console.log(O.isNone(payload.message)) // true
  * ```
  *
- * @category transport
+ * @category models
  * @since 0.0.0
  */
 export class SidecarClosedPayload extends S.Class<SidecarClosedPayload>($I`SidecarClosedPayload`)(
@@ -159,16 +149,28 @@ const sidecarClosedMessage = (payload: SidecarClosedPayload): string =>
  * `sidecar://closed`, carrying the decoded payload so callers keep the typed
  * close reason.
  *
+ * **Example** (Create a terminal sidecar failure)
+ *
+ * ```ts
+ * import { SidecarClosedError, SidecarClosedPayload } from "@/transport/TauriIpcSocket"
+ *
+ * const error = SidecarClosedError.make({
+ *   message: "sidecar terminated",
+ *   payload: SidecarClosedPayload.make({ kind: "terminated" })
+ * })
+ * console.log(error.payload.kind)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-class SidecarClosedError extends TaggedErrorClass<SidecarClosedError>($I`SidecarClosedError`)(
+export class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
   "SidecarClosedError",
   {
     message: S.String,
     payload: SidecarClosedPayload,
   },
-  $I.annote("SidecarClosedError", {
+  $I.annoteError<SidecarClosedError>("SidecarClosedError", {
     description: "The sidecar emitted a terminal `sidecar://closed` lifecycle event.",
   })
 ) {}
@@ -177,16 +179,28 @@ class SidecarClosedError extends TaggedErrorClass<SidecarClosedError>($I`Sidecar
  * Raised when writing an outbound frame to the sidecar's stdin via the
  * `sidecar_send` command fails at the Tauri boundary.
  *
+ * **Example** (Create a sidecar send failure)
+ *
+ * ```ts
+ * import { SidecarSendError } from "@/transport/TauriIpcSocket"
+ *
+ * const error = SidecarSendError.make({
+ *   causeMessage: "stdin closed",
+ *   message: "sidecar send failed: stdin closed"
+ * })
+ * console.log(error.causeMessage)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-class SidecarSendError extends TaggedErrorClass<SidecarSendError>($I`SidecarSendError`)(
+export class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
   "SidecarSendError",
   {
     causeMessage: S.String,
     message: S.String,
   },
-  $I.annote("SidecarSendError", {
+  $I.annoteError<SidecarSendError>("SidecarSendError", {
     description: "Writing an outbound ndjson frame to the sidecar's stdin failed.",
   })
 ) {}
@@ -206,7 +220,8 @@ const toSidecarSendError = (cause: unknown): SidecarSendError => {
  * stay `unknown` here and are decoded downstream in the stream pipeline, so the
  * synchronous Tauri callbacks only offer onto the queue and never spawn fibers.
  *
- * @example
+ * **Example** (Construct Rx inbound event)
+ *
  * ```ts
  * import { InboundEvent } from "@/transport/TauriIpcSocket"
  *
@@ -214,7 +229,7 @@ const toSidecarSendError = (cause: unknown): SidecarSendError => {
  * console.log(event._tag) // "Rx"
  * ```
  *
- * @category transport
+ * @category models
  * @since 0.0.0
  */
 export const InboundEvent = S.TaggedUnion({
@@ -242,7 +257,10 @@ const scopedListen = (
 ): Effect.Effect<UnlistenFn, Socket.SocketError, Scope.Scope> =>
   Effect.acquireRelease(
     Effect.tryPromise({
-      try: () => listen<unknown>(event, (received) => Queue.offerUnsafe(queue, toEvent(received.payload))),
+      try: () =>
+        import("@tauri-apps/api/event").then(({ listen }) =>
+          listen<unknown>(event, (received) => Queue.offerUnsafe(queue, toEvent(received.payload)))
+        ),
       catch: toSocketError,
     }),
     (unlisten) => Effect.sync(unlisten)
@@ -277,7 +295,7 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
           })
         ),
         Effect.matchEffect({
-          onFailure: (error) => Effect.fail(toSocketError(error)),
+          onFailure: flow(toSocketError, Effect.fail),
           onSuccess: (decoded) =>
             Metric.update(Metric.withAttributes(ipcClosedEvents, { kind: decoded.kind }), 1).pipe(
               Effect.andThen(
@@ -365,7 +383,7 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
       },
     }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
 
-    const rpcSessionToken = yield* O.match(O.fromUndefinedOr(transport.rpcSessionToken), {
+    const rpcSessionToken = yield* O.match(transport.rpcSessionToken, {
       onNone: () =>
         Effect.fail(
           SidecarSendError.make({
@@ -407,7 +425,7 @@ const flushBufferedFrames = (buffer: Ref.Ref<string>): Effect.Effect<void, Sidec
   Ref.get(buffer).pipe(
     Effect.flatMap((pending) =>
       O.match(Str.indexOf(FRAME_SEPARATOR)(pending), {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (newlineIndex) => {
           const frame = Str.slice(0, newlineIndex + 1)(pending);
           return Ref.set(buffer, Str.slice(newlineIndex + 1)(pending)).pipe(
@@ -472,11 +490,13 @@ const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
  * The `Socket` service that backs the IPC rpc client, bridged to the sidecar's
  * stdio through the Tauri Rust shell.
  *
- * @example
+ * **Example** (Confirm Layer instance)
+ *
  * ```ts
  * import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket"
+ * import { Layer } from "effect"
  *
- * console.log(TauriIpcSocketLive)
+ * console.log(Layer.isLayer(TauriIpcSocketLive)) // true
  * ```
  *
  * @category layers

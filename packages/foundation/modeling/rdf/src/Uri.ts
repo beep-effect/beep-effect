@@ -16,6 +16,12 @@ import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
 
 const $I = $RdfId.create("uri");
 
+const UriArbitraryValues = [
+  "https://example.com/path?q=1#fragment",
+  "mailto:user@example.com",
+  "urn:isbn:9780140328721",
+] as const;
+
 const SCHEME_PREFIX = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const UNRESERVED = /^[A-Za-z0-9._~-]$/;
 
@@ -191,17 +197,18 @@ const uriChecks = makeNonEmptyReferenceChecks("URI", "URI", "An RFC 3986 URI.", 
 /**
  * RFC 3986 `URI-reference` schema, including absolute and relative forms.
  *
- * @example
- * ```ts
+ * **Example** (Decode absolute URI reference)
+ *
+ * ```ts import.meta.vitest name="Decode absolute URI reference"
  * import * as S from "effect/Schema"
  * import { URIReference } from "@beep/rdf/Uri"
  *
  * const decoded = S.decodeUnknownSync(URIReference)("https://example.com/path")
- * console.log(decoded) // "https://example.com/path"
+ * decoded // => "https://example.com/path"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const URIReference = S.String.check(uriReferenceChecks).pipe(
   S.brand("URIReference"),
@@ -215,7 +222,8 @@ export const URIReference = S.String.check(uriReferenceChecks).pipe(
 /**
  * Type for {@link URIReference}.
  *
- * @example
+ * **Example** (Accept URIReference type)
+ *
  * ```ts
  * import type { URIReference } from "@beep/rdf/Uri"
  *
@@ -223,25 +231,26 @@ export const URIReference = S.String.check(uriReferenceChecks).pipe(
  * console.log(acceptURIReference)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type URIReference = typeof URIReference.Type;
 
 /**
  * RFC 3986 `relative-ref` schema.
  *
- * @example
- * ```ts
+ * **Example** (Decode relative path reference)
+ *
+ * ```ts import.meta.vitest name="Decode relative path reference"
  * import * as S from "effect/Schema"
  * import { RelativeURIReference } from "@beep/rdf/Uri"
  *
  * const decoded = S.decodeUnknownSync(RelativeURIReference)("/path/to/resource")
- * console.log(decoded) // "/path/to/resource"
+ * decoded // => "/path/to/resource"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).pipe(
   S.brand("RelativeURIReference"),
@@ -255,7 +264,8 @@ export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).p
 /**
  * Type for {@link RelativeURIReference}.
  *
- * @example
+ * **Example** (Accept RelativeURIReference type)
+ *
  * ```ts
  * import type { RelativeURIReference } from "@beep/rdf/Uri"
  *
@@ -263,25 +273,26 @@ export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).p
  * console.log(acceptRelativeURIReference)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RelativeURIReference = typeof RelativeURIReference.Type;
 
 /**
  * RFC 3986 `absolute-URI` schema without a fragment component.
  *
- * @example
- * ```ts
+ * **Example** (Decode absolute URI)
+ *
+ * ```ts import.meta.vitest name="Decode absolute URI"
  * import * as S from "effect/Schema"
  * import { AbsoluteURI } from "@beep/rdf/Uri"
  *
  * const decoded = S.decodeUnknownSync(AbsoluteURI)("https://example.com")
- * console.log(decoded) // "https://example.com"
+ * decoded // => "https://example.com"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
   S.brand("AbsoluteURI"),
@@ -295,7 +306,8 @@ export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
 /**
  * Type for {@link AbsoluteURI}.
  *
- * @example
+ * **Example** (Accept AbsoluteURI type)
+ *
  * ```ts
  * import type { AbsoluteURI } from "@beep/rdf/Uri"
  *
@@ -303,39 +315,45 @@ export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
  * console.log(acceptAbsoluteURI)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type AbsoluteURI = typeof AbsoluteURI.Type;
 
 /**
  * RFC 3986 `URI` schema.
  *
- * @example
- * ```ts
+ * **Example** (Decode URI with fragment)
+ *
+ * ```ts import.meta.vitest name="Decode URI with fragment"
  * import * as S from "effect/Schema"
  * import { URI } from "@beep/rdf/Uri"
  *
  * const decoded = S.decodeUnknownSync(URI)("https://example.com/page#anchor")
- * console.log(decoded) // "https://example.com/page#anchor"
+ * decoded // => "https://example.com/page#anchor"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export const URI = S.String.check(uriChecks).pipe(
-  S.brand("URI"),
-  $I.annoteSchema("URI", {
-    description: "RFC 3986 URI syntax.",
-    semanticSchemaMetadata: uriMetadata,
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const URI = S.String.check(uriChecks)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...UriArbitraryValues),
+  })
+  .pipe(
+    S.brand("URI"),
+    $I.annoteSchema("URI", {
+      description: "RFC 3986 URI syntax.",
+      semanticSchemaMetadata: uriMetadata,
+    }),
+    SchemaUtils.withCodecStatics
+  );
 
 /**
  * Type for {@link URI}.
  *
- * @example
+ * **Example** (Accept URI type)
+ *
  * ```ts
  * import type { URI } from "@beep/rdf/Uri"
  *
@@ -343,26 +361,27 @@ export const URI = S.String.check(uriChecks).pipe(
  * console.log(acceptURI)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type URI = typeof URI.Type;
 
 /**
  * Normalize a URI or URI reference for transport-oriented comparisons.
  *
- * @example
- * ```ts
+ * **Example** (Normalize scheme host and port)
+ *
+ * ```ts import.meta.vitest name="Normalize scheme host and port"
  * import { normalizeUriReference } from "@beep/rdf/Uri"
  *
  * const normalized = normalizeUriReference("HTTP://Example.COM:80/Path")
- * console.log(normalized) // "http://example.com/Path"
+ * normalized // => "http://example.com/Path"
  * ```
  *
  * @param value - URI or URI reference text.
  * @returns Normalized URI text.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const normalizeUriReference = (value: URIReference | string): string =>
   looksLikeAbsoluteUri(value) && URL.canParse(value) ? normalizeAbsoluteUri(value) : normalizePercentEncoding(value);
@@ -370,19 +389,20 @@ export const normalizeUriReference = (value: URIReference | string): string =>
 /**
  * Resolve a URI reference against an absolute base URI.
  *
- * @example
- * ```ts
+ * **Example** (Resolve relative path against base)
+ *
+ * ```ts import.meta.vitest name="Resolve relative path against base"
  * import { resolveUriReference } from "@beep/rdf/Uri"
  *
  * const resolved = resolveUriReference("https://example.com/a/b", "../c")
- * console.log(resolved) // "https://example.com/c"
+ * resolved // => "https://example.com/c"
  * ```
  *
  * @param base - Absolute base URI.
  * @param reference - Relative or absolute URI reference.
  * @returns Resolved absolute URI string.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const resolveUriReference: {
   (reference: URIReference | string): (base: AbsoluteURI | string) => string;
@@ -394,19 +414,20 @@ export const resolveUriReference: {
 /**
  * Compare two URI values using URI-family normalization rules.
  *
- * @example
- * ```ts
+ * **Example** (Compare case-normalized URIs)
+ *
+ * ```ts import.meta.vitest name="Compare case-normalized URIs"
  * import { areUrisEquivalent } from "@beep/rdf/Uri"
  *
  * const same = areUrisEquivalent("HTTP://Example.COM/", "http://example.com/")
- * console.log(same) // true
+ * same // => true
  * ```
  *
  * @param left - Left URI value.
  * @param right - Right URI value.
  * @returns `true` when both normalized forms are equal.
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const areUrisEquivalent: {
   (right: URIReference | string): (left: URIReference | string) => boolean;

@@ -3,24 +3,16 @@
   "exploration": {
     "slug": "uspto-patent-driver-depth",
     "title": "USPTO Patent Driver Depth",
-    "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Driver-wave scope \u2014 in-place @beep/uspto depth only, or fan out to net-new sibling drivers?",
-      "Q2: First vertical slice \u2014 what is the smallest end-to-end proof that graduates first?",
-      "Q3: searchStructured (POST structured body) \u2014 ship it, or keep it behind a spike?",
-      "Q4: Status-code vocabulary \u2014 versioned generated artifact, or runtime /status-codes cache?",
-      "Q5: Package placement \u2014 where do net-new drivers and the prosecution-phase overlay live?",
-      "Q6: Source/consent matrix \u2014 how is the privilege-safe boundary encoded across all sources?",
-      "Q7: MCP credential gating \u2014 which registration shape, and depend on mcp-auth-gated-registration?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/uspto-prosecution-read", "goals/uspto-ptmnfee2-ingest"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-08-13",
     "sources": ["research/SOURCES.md"]
   }
 }

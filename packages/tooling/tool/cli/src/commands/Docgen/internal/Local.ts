@@ -9,35 +9,39 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, flow, Order, pipe, Stream } from "effect";
+import { Unknown } from "@beep/schema/Unknown";
+import { A, Str } from "@beep/utils";
+import { Console, Duration, Effect, flow, HashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
+import * as ChildProcess from "effect/unstable/process/ChildProcess";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
+import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
+import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "./Operations.js";
+} from "./Operations.ts";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { DocgenWorkspacePackage } from "./Operations.js";
+import type { DocgenWorkspacePackage } from "./Operations.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/Local");
 
 const DEFAULT_LOCAL_PARALLEL = 1 as const;
 const DOCGEN_FULL_COMMAND = "bun run docgen" as const;
+const DOCGEN_FULL_AGGREGATE_ARGS = ["run", "docs:aggregate"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".md", ".mdx"] as const;
-const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/", "dtslint/"] as const;
+const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/"] as const;
 const DOCGEN_LOCAL_PACKAGE_INPUT_FILES = [
   "docgen.json",
   "package.json",
@@ -90,11 +94,26 @@ class TurboDryRunDocument extends S.Class<TurboDryRunDocument>($I`TurboDryRunDoc
   })
 ) {}
 
+class DocgenProcessDiagnostic extends S.Class<DocgenProcessDiagnostic>($I`DocgenProcessDiagnostic`)(
+  {
+    pid: S.FiniteFromString.check(S.isInt(), S.isGreaterThan(0)),
+    parentPid: S.FiniteFromString.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    elapsedSeconds: S.FiniteFromString.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    state: S.NonEmptyString,
+    executable: S.NonEmptyString,
+  },
+  $I.annote("DocgenProcessDiagnostic", {
+    description: "Sanitized process identity and state for one member of a stalled docgen child tree.",
+  })
+) {}
+
 const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDryRunDocument));
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const decodeDocgenProcessDiagnostic = S.decodeUnknownOption(DocgenProcessDiagnostic);
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {
+  readonly allowFull: boolean;
   readonly base: string;
   readonly full: boolean;
   readonly head: string;
@@ -115,7 +134,6 @@ const bySelectedPackagePathAscending: Order.Order<DocgenLocalSelectedPackage> = 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 const normalizedFilePath = flow(Str.trim, normalizeSlashes);
 const packagePrefix = (pkg: DocgenWorkspacePackage): string => `${pkg.relativePath}/`;
-const isNonEmptyLine = flow(Str.trim, Str.isNonEmpty);
 const localParallel = (parallel: number): number => Math.max(DEFAULT_LOCAL_PARALLEL, parallel);
 const turboFilterForPackage = (pkg: DocgenLocalSelectedPackage): string => `--filter=...${pkg.name}`;
 const hasPrefix = (prefixes: ReadonlyArray<string>, filePath: string): boolean =>
@@ -136,12 +154,14 @@ const collectOptions = <T>(options: ReadonlyArray<O.Option<T>>): ReadonlyArray<T
 /**
  * Local docgen execution mode selected by the planner.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalMode } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * console.log(DocgenLocalMode.is.scoped("scoped"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -154,13 +174,15 @@ export const DocgenLocalMode = LiteralKit(["scoped", "full", "full-required", "n
 /**
  * Local docgen execution mode selected by the planner.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import type { DocgenLocalMode } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * const mode: DocgenLocalMode = "scoped"
  * console.log(mode) // example value
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -169,7 +191,8 @@ export type DocgenLocalMode = typeof DocgenLocalMode.Type;
 /**
  * Package selected for a local docgen run.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalSelectedPackage } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -180,6 +203,7 @@ export type DocgenLocalMode = typeof DocgenLocalMode.Type;
  * })
  * console.log(selected.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -197,7 +221,8 @@ export class DocgenLocalSelectedPackage extends S.Class<DocgenLocalSelectedPacka
 /**
  * Reason local docgen must escalate to the full proof.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalFullReason } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -207,6 +232,7 @@ export class DocgenLocalSelectedPackage extends S.Class<DocgenLocalSelectedPacka
  * })
  * console.log(reason.message)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -223,7 +249,8 @@ export class DocgenLocalFullReason extends S.Class<DocgenLocalFullReason>($I`Doc
 /**
  * Planned local docgen proof.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalPlan } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -240,6 +267,7 @@ export class DocgenLocalFullReason extends S.Class<DocgenLocalFullReason>($I`Doc
  * })
  * console.log(plan.mode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -263,7 +291,8 @@ export class DocgenLocalPlan extends S.Class<DocgenLocalPlan>($I`DocgenLocalPlan
 /**
  * Turbo dry-run package summary used by local docgen.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { DocgenLocalTurboTask } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -275,6 +304,7 @@ export class DocgenLocalPlan extends S.Class<DocgenLocalPlan>($I`DocgenLocalPlan
  * })
  * console.log(task.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -376,60 +406,19 @@ const turboArgsForSelectedPackages = (
   `--concurrency=${localParallel(parallel)}`,
   "--summarize",
   "--ui=stream",
+  // No background daemon: a daemon spawned inside this child survives it and
+  // holds process handles, which repeatedly kept the hosted Docgen lane's bun
+  // wrapper from exiting after successful runs (hang or SIGABRT at teardown).
+  // Turbo 2.10 dropped the `--daemon=false` value form (and no longer uses
+  // the daemon for `turbo run` at all); `--no-daemon` remains accepted.
+  "--no-daemon",
 ];
 
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
-
-const runGitLines = Effect.fn("DocgenLocal.runGitLines")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const output = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", [...args], {
-        cwd: repoRoot,
-        stderr: "ignore",
-        stdout: "pipe",
-      });
-      const text = yield* collectText(handle.stdout);
-      const exitCode = yield* handle.exitCode;
-      if (exitCode !== 0) {
-        return yield* DomainError.make({
-          message: `git ${A.join(args, " ")} failed with exit code ${exitCode}: ${Str.trim(text)}`,
-        });
-      }
-      return text;
-    })
-  );
-
-  return pipe(Str.split(/\r?\n/)(output), A.map(normalizedFilePath), A.filter(isNonEmptyLine));
-});
-
-const collectChangedFiles = Effect.fn("DocgenLocal.collectChangedFiles")(function* (
-  repoRoot: string,
-  base: string,
-  head: string
-) {
-  const baseChanged = yield* runGitLines(repoRoot, ["diff", "--name-only", `${base}...${head}`]).pipe(
-    Effect.mapError(
-      DomainError.newCause(
-        `Unable to resolve local docgen base range ${base}...${head}. Pass --package, --full, or refresh ${base}.`
-      )
-    )
-  );
-  const workingTreeChanged = yield* Effect.forEach(
-    [
-      ["diff", "--name-only", "HEAD"] as const,
-      ["diff", "--cached", "--name-only"] as const,
-      ["ls-files", "--others", "--exclude-standard"] as const,
-    ],
-    (args) => runGitLines(repoRoot, args).pipe(Effect.option, Effect.map(O.getOrElse(A.empty<string>))),
-    { concurrency: "unbounded" }
-  );
-
-  return pipe([...baseChanged, ...A.flatten(workingTreeChanged)], A.dedupe, A.sort(Order.String));
-});
+const fullTurboArgs = (parallel: number): ReadonlyArray<string> => [
+  "run",
+  "docgen",
+  `--concurrency=${localParallel(parallel)}`,
+];
 
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
   yield* assertNoOrphanDocgenConfigPaths();
@@ -479,6 +468,19 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
   });
 });
 
+const buildFullPlan = (options: DocgenLocalOptions): DocgenLocalPlan =>
+  DocgenLocalPlan.make({
+    base: options.base,
+    changedFiles: A.empty(),
+    fallbackCommand: DOCGEN_FULL_COMMAND,
+    fullReasons: A.empty(),
+    head: options.head,
+    mode: "full",
+    parallel: localParallel(options.parallel),
+    selectedPackages: A.empty(),
+    turboArgs: A.empty(),
+  });
+
 const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(function* (options: DocgenLocalOptions) {
   const packageSelector = O.getOrUndefined(options.packageSelector);
   if (P.isUndefined(packageSelector)) {
@@ -510,31 +512,173 @@ const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(funct
 
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
+const DOCGEN_PROCESS_DIAGNOSTIC_LIMIT = 40;
+const DOCGEN_PROCESS_DIAGNOSTIC_LINE = /^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(.+?)\s*$/u;
+const byDocgenProcessPidAscending: Order.Order<DocgenProcessDiagnostic> = Order.mapInput(
+  Order.Number,
+  (diagnostic: DocgenProcessDiagnostic) => diagnostic.pid
+);
+
+const parseDocgenProcessDiagnostics = (output: string): ReadonlyArray<DocgenProcessDiagnostic> =>
+  pipe(
+    A.fromIterable(Str.linesIterator(output)),
+    A.map(
+      flow(
+        Str.match(DOCGEN_PROCESS_DIAGNOSTIC_LINE),
+        O.flatMap((match) =>
+          pipe(
+            O.all({
+              pid: O.fromUndefinedOr(match[1]),
+              parentPid: O.fromUndefinedOr(match[2]),
+              elapsedSeconds: O.fromUndefinedOr(match[3]),
+              state: O.fromUndefinedOr(match[4]),
+              executable: O.fromUndefinedOr(match[5]),
+            }),
+            O.flatMap(decodeDocgenProcessDiagnostic)
+          )
+        )
+      )
+    ),
+    A.getSomes,
+    A.sort(byDocgenProcessPidAscending)
+  );
+
+const queryDocgenProcesses = Effect.fn("DocgenLocal.queryDocgenProcesses")(function* (
+  repoRoot: string,
+  processIds: ReadonlyArray<number>,
+  selectChildren: boolean
+) {
+  if (A.isReadonlyArrayEmpty(processIds)) {
+    return O.some(A.empty<DocgenProcessDiagnostic>());
+  }
+
+  const result = yield* runCapturedStreams({
+    command: "ps",
+    args: [
+      "-ww",
+      "-o",
+      "pid=,ppid=,etimes=,stat=,comm=",
+      selectChildren ? "--ppid" : "-p",
+      A.join(
+        A.map(processIds, (processId) => `${processId}`),
+        ","
+      ),
+    ],
+    cwd: repoRoot,
+  }).pipe(Effect.option);
+
+  return pipe(
+    result,
+    O.map((captured) =>
+      captured.exitCode === 0 ? parseDocgenProcessDiagnostics(captured.stdout) : A.empty<DocgenProcessDiagnostic>()
+    )
+  );
+});
+
+const collectDocgenProcessTree = Effect.fn("DocgenLocal.collectDocgenProcessTree")(function* (
+  repoRoot: string,
+  rootProcessId: number
+) {
+  const root = yield* queryDocgenProcesses(repoRoot, [rootProcessId], false);
+  if (O.isNone(root)) {
+    return O.none<ReadonlyArray<DocgenProcessDiagnostic>>();
+  }
+
+  let diagnostics = A.take(root.value, DOCGEN_PROCESS_DIAGNOSTIC_LIMIT);
+  let frontier = A.map(diagnostics, (diagnostic) => diagnostic.pid);
+  let seenProcessIds = HashSet.fromIterable(frontier);
+
+  while (A.isReadonlyArrayNonEmpty(frontier) && A.length(diagnostics) < DOCGEN_PROCESS_DIAGNOSTIC_LIMIT) {
+    const children = yield* queryDocgenProcesses(repoRoot, frontier, true);
+    if (O.isNone(children)) {
+      return O.none<ReadonlyArray<DocgenProcessDiagnostic>>();
+    }
+
+    const remaining = DOCGEN_PROCESS_DIAGNOSTIC_LIMIT - A.length(diagnostics);
+    const discovered = pipe(
+      children.value,
+      A.filter((diagnostic) => !HashSet.has(seenProcessIds, diagnostic.pid)),
+      A.take(remaining)
+    );
+    diagnostics = A.appendAll(diagnostics, discovered);
+    seenProcessIds = A.reduce(discovered, seenProcessIds, (seen, diagnostic) => HashSet.add(seen, diagnostic.pid));
+    frontier = A.map(discovered, (diagnostic) => diagnostic.pid);
+  }
+
+  return O.some(A.sort(diagnostics, byDocgenProcessPidAscending));
+});
+
+const renderDocgenProcessTree = (diagnostics: ReadonlyArray<DocgenProcessDiagnostic>): string =>
+  A.isReadonlyArrayEmpty(diagnostics)
+    ? "(none)"
+    : A.join(
+        A.map(
+          diagnostics,
+          (diagnostic) =>
+            `pid=${diagnostic.pid} ppid=${diagnostic.parentPid} executable=${diagnostic.executable} state=${diagnostic.state} elapsed=${diagnostic.elapsedSeconds}s`
+        ),
+        "\n"
+      );
+
+// Inspect only the process tree rooted at the docgen child. Each ps invocation
+// selects known PIDs or their direct children, and `comm` deliberately exposes
+// executable identity without the raw argument values carried by `args`.
+const logDocgenProcessTree = Effect.fn("DocgenLocal.logDocgenProcessTree")(function* (
+  reason: string,
+  repoRoot: string,
+  rootProcessId: number
+) {
+  const diagnostics = yield* collectDocgenProcessTree(repoRoot, rootProcessId);
+  yield* pipe(
+    diagnostics,
+    O.match({
+      onNone: () => Console.log(`docgen:local: ${reason}: child process-tree diagnostics unavailable`),
+      onSome: (rows) => Console.log(`docgen:local: ${reason}: child process tree:\n${renderDocgenProcessTree(rows)}`),
+    })
+  );
+});
+
 const runStep = Effect.fn("DocgenLocal.runStep")(function* (
   label: string,
   command: string,
   args: ReadonlyArray<string>,
-  cwd: string
+  cwd: string,
+  options: {
+    readonly forceKillAfter: Duration.Duration;
+    readonly timeout: Duration.Duration;
+    readonly timeoutReason: string;
+  }
 ) {
   const cmdTxt = commandText(command, args);
-  yield* Console.log(`[docgen:local] ${label}: ${cmdTxt}`);
-  const exitCode = yield* Effect.scoped(
+  return yield* Effect.scoped(
     Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
+      yield* Console.log(`[docgen:local] ${label}: started: ${cmdTxt}`);
+      const handle = yield* ChildProcess.make(command, args, {
         cwd,
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
+        forceKillAfter: options.forceKillAfter,
+      }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
+      const outcome = yield* Effect.timeoutOption(
+        Effect.timed(handle.exitCode).pipe(Effect.mapError(DomainError.newCause(`Failed to await ${cmdTxt}.`))),
+        options.timeout
+      );
+      if (O.isNone(outcome)) {
+        yield* logDocgenProcessTree(options.timeoutReason, cwd, handle.pid);
+        return false;
+      }
 
-  if (exitCode !== 0) {
-    return yield* DomainError.make({
-      message: `${label} failed with exit code ${exitCode}.`,
-    });
-  }
+      const [elapsed, exitCode] = outcome.value;
+      yield* Console.log(`[docgen:local] ${label}: exited ${exitCode} after ${Duration.format(elapsed)}`);
+      if (exitCode !== 0) {
+        return yield* DomainError.make({
+          message: `${label} failed with exit code ${exitCode}.`,
+        });
+      }
+      return true;
+    })
+  );
 });
 
 const collectStepOutput = Effect.fn("DocgenLocal.collectStepOutput")(function* (
@@ -544,29 +688,21 @@ const collectStepOutput = Effect.fn("DocgenLocal.collectStepOutput")(function* (
   cwd: string
 ) {
   yield* Console.log(`[docgen:local] ${label}: ${commandText(command, args)}`);
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd,
-        stderr: "pipe",
-        stdout: "pipe",
-      });
-      const [output, errorOutput, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      if (exitCode !== 0) {
-        const details = pipe([Str.trim(output), Str.trim(errorOutput)], A.filter(Str.isNonEmpty), A.join("\n"));
-        return yield* DomainError.make({
-          message:
-            details.length > 0
-              ? `${label} failed with exit code ${exitCode}: ${details}`
-              : `${label} failed with exit code ${exitCode}.`,
-        });
-      }
-      return output;
-    })
-  ).pipe(Effect.mapError(DomainError.newCause(`Failed to collect ${label} output.`)));
+  const result = yield* runCapturedStreams({
+    command,
+    args,
+    cwd,
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to collect ${label} output.`)));
+  if (result.exitCode !== 0) {
+    const details = pipe([Str.trim(result.stdout), Str.trim(result.stderr)], A.filter(Str.isNonEmpty), A.join("\n"));
+    return yield* DomainError.make({
+      message:
+        details.length > 0
+          ? `${label} failed with exit code ${result.exitCode}: ${details}`
+          : `${label} failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return result.stdout;
 });
 
 const decodeTurboDryRun = Effect.fn("DocgenLocal.decodeTurboDryRun")(function* (output: string) {
@@ -664,6 +800,10 @@ const renderPlan = Effect.fn("DocgenLocal.renderPlan")(function* (plan: DocgenLo
     yield* Console.log(`- turbo command: bunx ${A.join(plan.turboArgs, " ")}`);
   }
   yield* Console.log(`- full proof: ${plan.fallbackCommand}`);
+  if (plan.mode === "full") {
+    yield* Console.log(`- full turbo command: node_modules/.bin/turbo ${A.join(fullTurboArgs(plan.parallel), " ")}`);
+    yield* Console.log(`- full aggregate command: bun ${A.join(DOCGEN_FULL_AGGREGATE_ARGS, " ")}`);
+  }
   if (A.isReadonlyArrayNonEmpty(plan.fullReasons)) {
     yield* Console.log(`- full proof required:\n${renderFullReasons(plan.fullReasons)}`);
   }
@@ -733,15 +873,148 @@ const verifyPackageProofManifest = (pkg: DocgenWorkspacePackage) =>
     )
   );
 
-const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string) {
-  yield* runStep("full docgen", "bun", ["run", "docgen"], repoRoot);
+const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string, parallel: number) {
+  // Run Turbo directly so the typed lane concurrency setting governs full and
+  // affected proofs through the same local command surface. The full budget is
+  // much larger because a cold full proof legitimately runs for tens of minutes.
+  yield* runStepWithStallWatchdog(
+    "full turbo docgen",
+    turboBinaryPath(repoRoot),
+    fullTurboArgs(parallel),
+    repoRoot,
+    fullDocgenStepBudget
+  );
+  yield* runStepWithStallWatchdog(
+    "full docs aggregate",
+    "bun",
+    DOCGEN_FULL_AGGREGATE_ARGS,
+    repoRoot,
+    fullDocgenStepBudget
+  );
 });
+
+// Spawn the turbo binary directly: `bunx turbo` leaves a resident bun wrapper
+// between the CLI and turbo, and the hosted Docgen lane showed bun processes
+// on the fleet image failing to exit after successful work.
+const turboBinaryPath = (repoRoot: string): string => `${repoRoot}/node_modules/.bin/turbo`;
+
+const directTurboArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => A.drop(turboArgs, 1);
+
+// Turbo has been observed on the hosted fleet to run every task to completion,
+// print its summary, and then never exit: the Docgen lane burned its whole
+// 60-minute budget after 2m8s of real work (run 31991634069, and again on the
+// following push). The parent then sits in `runToExit` waiting on a child that
+// is already done, so the CLI's exit-on-success teardown never gets to run --
+// the stall is mid-program, not at exit, which is why the existing
+// `Exit.isSuccess -> process.exit(0)` fixes in bin-main.ts and the docgen bin
+// cannot help.
+//
+// By the time turbo wedges, every task has succeeded and its output is on disk
+// and in .turbo/cache, so abandoning it and retrying costs seconds: the retry
+// is a full cache hit. That turns an unrecoverable 60-minute stall into a
+// recoverable blip. The budget is ~7x the observed CI runtime so a genuinely
+// slow run is never cut short.
+//
+// This has NOT been reproduced off-runner -- the same command with the same
+// zero-cache conditions finishes locally in 108s -- so treat it as containment
+// for a fleet-specific stall, not as a root-cause fix.
+type DocgenStepBudget = {
+  readonly first: Duration.Duration;
+  readonly retry: Duration.Duration;
+};
+
+// Scoped runs took 2m8s on the fleet before wedging, so ~7x headroom.
+const scopedDocgenStepBudget: DocgenStepBudget = {
+  first: Duration.minutes(15),
+  retry: Duration.minutes(10),
+};
+
+// A cold full proof walks every package in the monorepo. Its budget has to
+// clear a legitimately long run by a wide margin -- killing honest work would
+// be far worse than the stall this guards against.
+const fullDocgenStepBudget: DocgenStepBudget = {
+  first: Duration.minutes(45),
+  retry: Duration.minutes(30),
+};
+
+// Abandoning the step closes the child's scope, which signals the process
+// group and then waits for the exit event. Without an escalation the wait is
+// unbounded against a child ignoring SIGTERM, and the budgets above would not
+// actually reclaim anything.
+const docgenStepForceKillAfter = Duration.seconds(20);
+
+const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog")(function* (
+  label: string,
+  command: string,
+  args: ReadonlyArray<string>,
+  repoRoot: string,
+  budget: DocgenStepBudget
+) {
+  const attempt = (attemptLabel: string, timeout: Duration.Duration, timeoutReason: string) =>
+    runStep(attemptLabel, command, args, repoRoot, {
+      forceKillAfter: docgenStepForceKillAfter,
+      timeout,
+      timeoutReason,
+    });
+
+  const firstSucceeded = yield* attempt(label, budget.first, `after abandoning ${label}`);
+  if (firstSucceeded) {
+    return;
+  }
+
+  yield* Console.log(
+    `docgen:local: ${label} never returned within ${Duration.format(budget.first)}; abandoning it and retrying once against the warm cache.`
+  );
+
+  const retrySucceeded = yield* attempt(`${label} (retry)`, budget.retry, `after the ${label} retry also stalled`);
+  if (!retrySucceeded) {
+    return yield* DomainError.make({
+      message: `${label} never returned within ${Duration.format(budget.retry)} on retry; see the child process-tree diagnostics above.`,
+    });
+  }
+
+  yield* Console.log(`docgen:local: ${label} retry succeeded after the first attempt stalled.`);
+});
+
+/**
+ * Run one docgen child under the stall watchdog.
+ *
+ * **Details**
+ *
+ * Exposed so the stall path can be exercised directly. It only triggers against
+ * a child that outlives its budget, which no production call reproduces on
+ * demand, and the budgets the real callers use are deliberately measured in
+ * tens of minutes.
+ *
+ * **Example** (Bound a child that exits normally)
+ *
+ * ```ts
+ * import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen"
+ * import { Duration } from "effect"
+ *
+ * const step = runDocgenStepWithStallWatchdogForTesting("probe", "true", [], "/repo", {
+ *   first: Duration.seconds(5),
+ *   retry: Duration.seconds(5)
+ * })
+ * console.log(step)
+ * ```
+ *
+ * @param label - Operator-facing step label.
+ * @param command - Executable to spawn.
+ * @param args - Arguments passed to the executable.
+ * @param repoRoot - Working directory for the child.
+ * @param budget - First-attempt and retry ceilings.
+ * @returns An effect completing when the step exits, failing if both attempts stall.
+ * @category testing
+ * @since 0.0.0
+ */
+export const runDocgenStepWithStallWatchdogForTesting = runStepWithStallWatchdog;
 
 const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan: DocgenLocalPlan, repoRoot: string) {
   const dryRunOutput = yield* collectStepOutput(
     "turbo dry-run",
-    "bunx",
-    [...plan.turboArgs, "--dry-run=json"],
+    turboBinaryPath(repoRoot),
+    [...directTurboArgs(plan.turboArgs), "--dry-run=json"],
     repoRoot
   );
   const dryRun = yield* decodeTurboDryRun(dryRunOutput);
@@ -754,28 +1027,43 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
     return;
   }
 
-  const proofStatuses = yield* Effect.forEach(packages, verifyPackageProofManifest, {
-    concurrency: localParallel(plan.parallel),
-  });
+  const [proofElapsed, proofStatuses] = yield* Effect.timed(
+    Effect.forEach(packages, verifyPackageProofManifest, {
+      concurrency: localParallel(plan.parallel),
+    })
+  );
   yield* Console.log(`docgen:local: proof manifests: ${renderProofStatusList(proofStatuses)}`);
+  yield* Console.log(
+    `docgen:local: verified ${A.length(proofStatuses)} proof manifest(s) in ${Duration.format(proofElapsed)}`
+  );
 
   if (A.every(proofStatuses, (status) => status.status === "current")) {
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
     yield* checkPackageDocumentation(packages, plan.parallel);
-    yield* runStep("turbo docgen", "bunx", plan.turboArgs, repoRoot);
+    yield* runStepWithStallWatchdog(
+      "turbo docgen",
+      turboBinaryPath(repoRoot),
+      directTurboArgs(plan.turboArgs),
+      repoRoot,
+      scopedDocgenStepBudget
+    );
   }
 
-  yield* aggregatePackages(packages);
+  // Previously nothing was logged between turbo's own summary and the first
+  // "aggregated" line, so a stall in between was invisible.
+  yield* Console.log(`docgen:local: aggregating ${A.length(packages)} package(s) into docs/generated`);
+  const [aggregateElapsed] = yield* Effect.timed(aggregatePackages(packages));
+  yield* Console.log(
+    `docgen:local: aggregated ${A.length(packages)} package(s) in ${Duration.format(aggregateElapsed)}`
+  );
 });
 
 /**
  * Select package-local docgen targets for changed files.
  *
- * @param packages - Workspace packages eligible for docgen selection.
- * @param changedFiles - Repo-relative changed file paths to classify.
- * @returns Packages selected for a scoped local docgen run.
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { selectDocgenLocalPackagesForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -784,6 +1072,10 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
  * ])
  * console.log(selected.length)
  * ```
+ *
+ * @param packages - Workspace packages eligible for docgen selection.
+ * @param changedFiles - Repo-relative changed file paths to classify.
+ * @returns Packages selected for a scoped local docgen run.
  * @category testing
  * @since 0.0.0
  */
@@ -807,10 +1099,8 @@ export const selectDocgenLocalPackagesForTesting: {
 /**
  * Build Turbo argv for local docgen targets.
  *
- * @param selectedPackages - Packages selected for local docgen execution.
- * @param parallel - Maximum package concurrency requested by the caller.
- * @returns Turbo command arguments for the scoped local docgen run.
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { docgenLocalTurboArgsForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
@@ -819,6 +1109,10 @@ export const selectDocgenLocalPackagesForTesting: {
  * ], 1)
  * console.log(args.join(" "))
  * ```
+ *
+ * @param selectedPackages - Packages selected for local docgen execution.
+ * @param parallel - Maximum package concurrency requested by the caller.
+ * @returns Turbo command arguments for the scoped local docgen run.
  * @category testing
  * @since 0.0.0
  */
@@ -832,15 +1126,17 @@ export const docgenLocalTurboArgsForTesting: {
 /**
  * Resolve changed files that require the full docgen proof.
  *
- * @param changedFiles - Repo-relative changed file paths to classify.
- * @returns Reasons the changed file set requires the full docgen proof.
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { docgenLocalFullReasonsForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * const reasons = docgenLocalFullReasonsForTesting(["turbo.json"])
  * console.log(reasons[0]?.filePath)
  * ```
+ *
+ * @param changedFiles - Repo-relative changed file paths to classify.
+ * @returns Reasons the changed file set requires the full docgen proof.
  * @category testing
  * @since 0.0.0
  */
@@ -853,6 +1149,9 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
   options: DocgenLocalOptions,
   repoRoot: string
 ) {
+  if (options.full) {
+    return buildFullPlan(options);
+  }
   return yield* O.isSome(options.packageSelector)
     ? buildPlanFromPackage(options)
     : buildPlanFromChangedFiles(options, repoRoot);
@@ -861,13 +1160,15 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
 /**
  * Build a local docgen plan from repository state and command options.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { buildDocgenLocalPlan } from "@beep/repo-cli/commands/Docgen/internal/Local"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const program = buildDocgenLocalPlan({
+ *   allowFull: false,
  *   base: "origin/main",
  *   full: false,
  *   head: "HEAD",
@@ -878,6 +1179,7 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -895,7 +1197,8 @@ export const buildDocgenLocalPlan: (
 /**
  * Run the bounded local docgen proof.
  *
- * @example
+ * **Example** (Plan local docgen work)
+ *
  * ```ts
  * import { runDocgenLocal } from "@beep/repo-cli/commands/Docgen/internal/Local"
  * import { Effect } from "effect"
@@ -912,6 +1215,7 @@ export const buildDocgenLocalPlan: (
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -942,6 +1246,11 @@ export const runDocgenLocal: (
     }
 
     if (plan.mode === "full-required") {
+      if (options.allowFull) {
+        yield* Console.log("docgen:local: full docgen proof required; executing it (--allow-full).");
+        yield* runFullDocgen(repoRoot, plan.parallel);
+        return plan;
+      }
       yield* Console.error('docgen:local: full docgen proof required; re-run with "--full" to execute it.');
       return yield* failWithReportedExit("docgen:local: full docgen proof required.");
     }
@@ -952,7 +1261,7 @@ export const runDocgenLocal: (
     }
 
     if (plan.mode === "full") {
-      yield* runFullDocgen(repoRoot);
+      yield* runFullDocgen(repoRoot, plan.parallel);
       return plan;
     }
 

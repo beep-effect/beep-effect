@@ -21,18 +21,22 @@ const $I = $UiId.create("components/toast");
 /**
  * Toast variant type.
  *
+ * **Details**
+ *
  * Toast variant export.
  *
  * Toast data class.
  *
- * @example
+ * **Example** (Import ToastData value)
+ *
  * ```tsx
  * import { ToastData } from "@beep/ui/components/toast"
  *
  * console.log(ToastData)
  * ```
  *
- * @example
+ * **Example** (Import ToastVariant value)
+ *
  * ```tsx
  * import { ToastVariant } from "@beep/ui/components/toast"
  *
@@ -47,7 +51,8 @@ const ToastProvider = ToastPrimitive.Provider;
 /**
  * Toast viewport component.
  *
- * @example
+ * **Example** (Import ToastViewport component)
+ *
  * ```tsx
  * import { ToastViewport } from "@beep/ui/components/toast"
  *
@@ -93,7 +98,8 @@ interface ToastRootProps extends Omit<ToastPrimitive.Root.Props, "toast">, Varia
 /**
  * Toast variant component.
  *
- * @example
+ * **Example** (Import ToastVariant component)
+ *
  * ```tsx
  * import { ToastVariant } from "@beep/ui/components/toast"
  *
@@ -112,7 +118,8 @@ export const ToastVariant = LiteralKit(["default", "destructive"]).pipe(
 /**
  * Toast variant type.
  *
- * @example
+ * **Example** (Assign destructive ToastVariant)
+ *
  * ```ts
  * import type { ToastVariant } from "@beep/ui/components/toast"
  *
@@ -129,7 +136,8 @@ export type ToastVariant = typeof ToastVariant.Type;
 /**
  * Toast data class.
  *
- * @example
+ * **Example** (Import ToastData class)
+ *
  * ```tsx
  * import { ToastData } from "@beep/ui/components/toast"
  *
@@ -157,7 +165,8 @@ export class ToastData extends S.Class<ToastData>($I`ToastData`)(
 /**
  * Toast component.
  *
- * @example
+ * **Example** (Import Toast component)
+ *
  * ```tsx
  * import { Toast } from "@beep/ui/components/toast"
  *
@@ -183,7 +192,8 @@ Toast.displayName = "Toast";
 /**
  * Toast action component.
  *
- * @example
+ * **Example** (Import ToastAction component)
+ *
  * ```tsx
  * import { ToastAction } from "@beep/ui/components/toast"
  *
@@ -210,7 +220,8 @@ ToastAction.displayName = "ToastAction";
 /**
  * Toast close component.
  *
- * @example
+ * **Example** (Import ToastClose component)
+ *
  * ```tsx
  * import { ToastClose } from "@beep/ui/components/toast"
  *
@@ -239,7 +250,8 @@ ToastClose.displayName = "ToastClose";
 /**
  * Toast title component.
  *
- * @example
+ * **Example** (Import ToastTitle component)
+ *
  * ```tsx
  * import { ToastTitle } from "@beep/ui/components/toast"
  *
@@ -259,7 +271,8 @@ ToastTitle.displayName = "ToastTitle";
 /**
  * Toast description component.
  *
- * @example
+ * **Example** (Import ToastDescription component)
+ *
  * ```tsx
  * import { ToastDescription } from "@beep/ui/components/toast"
  *
@@ -280,7 +293,8 @@ ToastDescription.displayName = "ToastDescription";
 /**
  * Toast props type.
  *
- * @example
+ * **Example** (Describe ToastProps className)
+ *
  * ```ts
  * import type { ToastProps } from "@beep/ui/components/toast"
  *
@@ -298,7 +312,8 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
 /**
  * Toast action element type.
  *
- * @example
+ * **Example** (Read ToastActionElement key)
+ *
  * ```ts
  * import type { ToastActionElement } from "@beep/ui/components/toast"
  *

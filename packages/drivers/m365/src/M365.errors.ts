@@ -6,7 +6,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
@@ -35,7 +35,8 @@ type M365HttpStatus = typeof M365HttpStatus.Type;
 /**
  * Technical error reasons emitted by the Microsoft 365 driver.
  *
- * @example
+ * **Example** (Check throttled reason match)
+ *
  * ```ts
  * import { M365ErrorReason } from "@beep/m365"
  *
@@ -63,7 +64,8 @@ export const M365ErrorReason = LiteralKit([
 /**
  * Type for {@link M365ErrorReason}.
  *
- * @example
+ * **Example** (Assign typed reason value)
+ *
  * ```ts
  * import type { M365ErrorReason as M365ErrorReasonType } from "@beep/m365"
  *
@@ -85,32 +87,20 @@ type M365ErrorOptionsInputRaw = {
   readonly url?: string;
 };
 
+const optionalField = <Inner extends S.Top>(inner: Inner, description: string) =>
+  S.OptionFromOptionalKey(inner).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+
 class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorOptionsInput`)(
   {
-    cause: S.OptionFromOptionalKey(S.Unknown).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Original native or third-party cause when one was available." })
+    cause: optionalField(S.Unknown, "Original native or third-party cause when one was available."),
+    itemId: optionalField(S.String, "Graph item id involved, if any."),
+    resource: optionalField(S.String, "Graph resource family involved, if any."),
+    retryAfterSeconds: optionalField(
+      NonNegativeInt,
+      "Honored Retry-After delay in seconds, if the response was throttled."
     ),
-    itemId: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Graph item id involved, if any." })
-    ),
-    resource: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Graph resource family involved, if any." })
-    ),
-    retryAfterSeconds: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Honored Retry-After delay in seconds, if the response was throttled." })
-    ),
-    status: S.OptionFromOptionalKey(M365HttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "HTTP status code associated with the failure, if any." })
-    ),
-    url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Request URL involved, if any." })
-    ),
+    status: optionalField(M365HttpStatus, "HTTP status code associated with the failure, if any."),
+    url: optionalField(S.String, "Request URL involved, if any."),
   },
   $I.annote("M365ErrorOptionsInput", {
     description: "Normalized options for configuring Microsoft 365 driver errors.",
@@ -122,20 +112,6 @@ const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
   O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
 );
-const sameM365ErrorReason = S.toEquivalence(M365ErrorReason);
-const sameOptionalErrorText = S.toEquivalence(S.Option(S.String));
-const sameOptionalRetryAfterSeconds = S.toEquivalence(S.Option(NonNegativeInt));
-const sameOptionalHttpStatus = S.toEquivalence(S.Option(M365HttpStatus));
-
-const sameM365ErrorFields = (self: M365Error, that: M365Error): boolean =>
-  sameM365ErrorReason(self.reason, that.reason) &&
-  sameOptionalErrorText(self.cause, that.cause) &&
-  sameOptionalErrorText(self.itemId, that.itemId) &&
-  sameOptionalErrorText(self.resource, that.resource) &&
-  sameOptionalRetryAfterSeconds(self.retryAfterSeconds, that.retryAfterSeconds) &&
-  sameOptionalHttpStatus(self.status, that.status) &&
-  sameOptionalErrorText(self.url, that.url);
-
 const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365ErrorOptionsInput =>
   M365ErrorOptionsInput.make({
     cause: O.fromUndefinedOr(options.cause),
@@ -149,11 +125,14 @@ const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365Error
 /**
  * Technical failure raised by the Microsoft 365 driver boundary.
  *
+ * **Details**
+ *
  * Carries only sanitized, technical context (reason, HTTP status, requested
  * resource, item id, throttle hint) modeled as `Option`. Never raw file
  * content, mail bodies, or tokens.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { M365Error } from "@beep/m365"
  *
@@ -169,48 +148,29 @@ const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365Error
  * @category errors
  * @since 0.0.0
  */
-export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
+export class M365Error extends S.TaggedError<M365Error>($I`M365Error`)(
   "M365Error",
   {
     reason: M365ErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
-    cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Sanitized cause label (tag/name), if any." })
+    cause: optionalField(S.String, "Sanitized cause label (tag/name), if any."),
+    itemId: optionalField(S.String, "Graph item id involved, if any."),
+    resource: optionalField(S.String, "Graph resource family (drives/sites/messages/events), if any."),
+    retryAfterSeconds: optionalField(
+      NonNegativeInt,
+      "Honored Retry-After delay in seconds, if the response was throttled."
     ),
-    itemId: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Graph item id involved, if any." })
-    ),
-    resource: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Graph resource family (drives/sites/messages/events), if any.",
-      })
-    ),
-    retryAfterSeconds: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Honored Retry-After delay in seconds, if the response was throttled.",
-      })
-    ),
-    status: S.OptionFromOptionalKey(M365HttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "HTTP status code, if any." })
-    ),
-    url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Request URL involved, if any." })
-    ),
+    status: optionalField(M365HttpStatus, "HTTP status code, if any."),
+    url: optionalField(S.String, "Request URL involved, if any."),
   },
-  $I.annote("M365Error", {
+  $I.annoteError<M365Error>("M365Error", {
     description: "Redacted technical failure raised by the Microsoft 365 Graph driver boundary.",
-    toEquivalence: () => sameM365ErrorFields,
   })
 ) {
   /**
    * Create a Microsoft 365 driver error.
    *
-   * @example
+   * **Example** (Create error with status)
+   *
    * ```ts
    * import { M365Error } from "@beep/m365"
    *
@@ -238,7 +198,8 @@ export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   /**
    * Create a failed Effect containing a Microsoft 365 driver error.
    *
-   * @example
+   * **Example** (Fail Effect from reason)
+   *
    * ```ts
    * import { M365Error } from "@beep/m365"
    *
@@ -254,7 +215,8 @@ export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   /**
    * Create a thunk returning a failed Effect containing a Microsoft 365 driver error.
    *
-   * @example
+   * **Example** (Thunk returning failed Effect)
+   *
    * ```ts
    * import { M365Error } from "@beep/m365"
    *
@@ -287,12 +249,12 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
 };
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- driver-local string reader keeps unknown M365 causes inside its boundary
 const readString =
   (key: PropertyKey) =>
   (value: unknown): O.Option<string> =>
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-    // fallow-ignore-next-line code-duplication
+    // fallow-ignore-next-line code-duplication -- M365 property refinement mirrors peer drivers but stays provider-local
     pipe(readProperty(value, key), O.filter(P.isString));
 
 const tryBoolean = (evaluate: () => boolean): Result.Result<boolean, unknown> => Result.try(evaluate);

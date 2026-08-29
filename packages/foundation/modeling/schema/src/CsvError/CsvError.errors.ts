@@ -9,27 +9,14 @@ import { $SchemaId } from "@beep/identity";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
-import type { TaggedErrorClassFromFields } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("CsvError");
-const CsvErrorFields = {
-  message: S.String,
-  offset: S.optionalKey(S.Finite),
-} satisfies S.Struct.Fields;
-const CsvErrorBase: TaggedErrorClassFromFields<CsvError, "CsvError", typeof CsvErrorFields> =
-  TaggedErrorClass<CsvError>($I`CsvError`)(
-    "CsvError",
-    CsvErrorFields,
-    $I.annote("CsvError", {
-      description: "Raised when CSV parsing, header validation, or formatting fails.",
-    })
-  );
 
 /**
  * Raised when CSV parsing, header validation, or formatting fails.
  *
- * @example
+ * **Example** (Create CsvError instance)
+ *
  * ```ts
  * import { CsvError } from "@beep/schema/CsvError"
  *
@@ -40,12 +27,22 @@ const CsvErrorBase: TaggedErrorClassFromFields<CsvError, "CsvError", typeof CsvE
  * @category validation
  * @since 0.0.0
  */
-export class CsvError extends CsvErrorBase {}
+export class CsvError extends S.TaggedError<CsvError>($I`CsvError`)(
+  "CsvError",
+  {
+    message: S.String,
+    offset: S.optionalKey(S.Finite),
+  },
+  $I.annoteError<CsvError>("CsvError", {
+    description: "Raised when CSV parsing, header validation, or formatting fails.",
+  })
+) {}
 
 /**
  * Construct a {@link CsvError}.
  *
- * @example
+ * **Example** (Construct CsvError with offset)
+ *
  * ```ts
  * import { csvError } from "@beep/schema/CsvError"
  *

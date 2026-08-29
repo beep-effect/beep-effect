@@ -6,7 +6,7 @@
  */
 
 import { $VeniceAiId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
@@ -29,7 +29,8 @@ const $I = $VeniceAiId.create("VeniceAI.service");
 /**
  * Venice API base URL used by the live layer.
  *
- * @example
+ * **Example** (Log Venice API URL)
+ *
  * ```ts
  * import { VENICE_API_URL } from "@beep/venice-ai"
  *
@@ -44,7 +45,8 @@ export const VENICE_API_URL = "https://api.venice.ai/api/v1";
 /**
  * Default Venice text model used by the compatibility chat service.
  *
- * @example
+ * **Example** (Log default chat model)
+ *
  * ```ts
  * import { VENICE_CHAT_MODEL } from "@beep/venice-ai"
  *
@@ -97,7 +99,8 @@ const VeniceAIBaseUrl = URLStr.pipe(
 /**
  * Supported HTTP methods in the checked-in Venice OpenAPI document.
  *
- * @example
+ * **Example** (Assign GET method)
+ *
  * ```ts
  * import type { VeniceAIHttpMethod } from "@beep/venice-ai"
  *
@@ -117,7 +120,8 @@ export const VeniceAIHttpMethod = LiteralKit(["DELETE", "GET", "PATCH", "POST"])
 /**
  * Type for {@link VeniceAIHttpMethod}.
  *
- * @example
+ * **Example** (Assign POST method)
+ *
  * ```ts
  * import type { VeniceAIHttpMethod } from "@beep/venice-ai"
  *
@@ -133,7 +137,8 @@ export type VeniceAIHttpMethod = typeof VeniceAIHttpMethod.Type;
 /**
  * Public operation identifiers from `packages/drivers/venice-ai/swagger.yaml`.
  *
- * @example
+ * **Example** (Assign listModels operation)
+ *
  * ```ts
  * import type { VeniceAIOperationId } from "@beep/venice-ai"
  *
@@ -202,7 +207,8 @@ export const VeniceAIOperationId = LiteralKit([
 /**
  * Type for {@link VeniceAIOperationId}.
  *
- * @example
+ * **Example** (Assign createChatCompletion)
+ *
  * ```ts
  * import type { VeniceAIOperationId } from "@beep/venice-ai"
  *
@@ -218,7 +224,8 @@ export type VeniceAIOperationId = typeof VeniceAIOperationId.Type;
 /**
  * Technical error reasons emitted by the Venice AI driver.
  *
- * @example
+ * **Example** (Assign response status reason)
+ *
  * ```ts
  * import type { VeniceAIErrorReason } from "@beep/venice-ai"
  *
@@ -246,7 +253,8 @@ export const VeniceAIErrorReason = LiteralKit([
 /**
  * Type for {@link VeniceAIErrorReason}.
  *
- * @example
+ * **Example** (Assign transport reason)
+ *
  * ```ts
  * import type { VeniceAIErrorReason } from "@beep/venice-ai"
  *
@@ -262,7 +270,8 @@ export type VeniceAIErrorReason = typeof VeniceAIErrorReason.Type;
 /**
  * Query parameter value accepted by Venice request options.
  *
- * @example
+ * **Example** (Assign array query value)
+ *
  * ```ts
  * import type { VeniceAIQueryValue } from "@beep/venice-ai"
  *
@@ -288,7 +297,8 @@ export const VeniceAIQueryValue = S.Union([
 /**
  * Type for {@link VeniceAIQueryValue}.
  *
- * @example
+ * **Example** (Assign numeric query value)
+ *
  * ```ts
  * import type { VeniceAIQueryValue } from "@beep/venice-ai"
  *
@@ -332,10 +342,13 @@ const VeniceAIBytes = S.Uint8Array.annotate({
 /**
  * Request options accepted by each Venice API operation method.
  *
+ * **Details**
+ *
  * `path` fills OpenAPI path parameters, `query` fills URL parameters, `body`
  * sends JSON, and `formData` sends multipart/form-data.
  *
- * @example
+ * **Example** (Make body and query options)
+ *
  * ```ts
  * import { VeniceAIRequestOptions } from "@beep/venice-ai"
  * import * as O from "effect/Option"
@@ -385,7 +398,8 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
 /**
  * Runtime configuration accepted by {@link VeniceAI.makeLayer}.
  *
- * @example
+ * **Example** (Make config with API key)
+ *
  * ```ts
  * import { Redacted } from "effect"
  * import * as O from "effect/Option"
@@ -426,7 +440,8 @@ export class VeniceAIConfigInput extends S.Class<VeniceAIConfigInput>($I`VeniceA
 /**
  * OpenAPI operation descriptor used by the service and coverage tests.
  *
- * @example
+ * **Example** (Log descriptor registry length)
+ *
  * ```ts
  * import { VENICE_AI_OPERATION_DESCRIPTORS } from "@beep/venice-ai"
  *
@@ -462,7 +477,8 @@ export class VeniceAIOperationDescriptor extends S.Class<VeniceAIOperationDescri
 /**
  * JSON response returned by the Venice AI driver.
  *
- * @example
+ * **Example** (Make JSON success response)
+ *
  * ```ts
  * import { VeniceAIJsonResponse } from "@beep/venice-ai"
  *
@@ -497,7 +513,8 @@ export class VeniceAIJsonResponse extends S.TaggedClass<VeniceAIJsonResponse>($I
 /**
  * Text response returned by the Venice AI driver.
  *
- * @example
+ * **Example** (Make text success response)
+ *
  * ```ts
  * import { VeniceAITextResponse } from "@beep/venice-ai"
  * import * as O from "effect/Option"
@@ -534,7 +551,8 @@ export class VeniceAITextResponse extends S.TaggedClass<VeniceAITextResponse>($I
 /**
  * Binary response returned by the Venice AI driver.
  *
- * @example
+ * **Example** (Make binary image response)
+ *
  * ```ts
  * import { VeniceAIBinaryResponse } from "@beep/venice-ai"
  * import * as O from "effect/Option"
@@ -571,7 +589,8 @@ export class VeniceAIBinaryResponse extends S.TaggedClass<VeniceAIBinaryResponse
 /**
  * Response union returned by non-streaming Venice API operation methods.
  *
- * @example
+ * **Example** (Read response tag)
+ *
  * ```ts
  * import type { VeniceAIResponse } from "@beep/venice-ai"
  *
@@ -593,7 +612,8 @@ export const VeniceAIResponse = S.Union([VeniceAIBinaryResponse, VeniceAIJsonRes
 /**
  * Type for {@link VeniceAIResponse}.
  *
- * @example
+ * **Example** (Read response status)
+ *
  * ```ts
  * import type { VeniceAIResponse } from "@beep/venice-ai"
  *
@@ -609,7 +629,8 @@ export type VeniceAIResponse = typeof VeniceAIResponse.Type;
 /**
  * Parsed server-sent event emitted by Venice streaming endpoints.
  *
- * @example
+ * **Example** (Make streaming SSE event)
+ *
  * ```ts
  * import { NonNegativeInt } from "@beep/schema/Number"
  * import { VeniceAIServerSentEvent } from "@beep/venice-ai"
@@ -644,7 +665,8 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
 /**
  * Technical failure raised by the Venice AI driver boundary.
  *
- * @example
+ * **Example** (Make response status error)
+ *
  * ```ts
  * import { HttpStatus } from "@beep/schema/HttpStatus"
  * import { VeniceAIError } from "@beep/venice-ai"
@@ -664,7 +686,7 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
  * @category errors
  * @since 0.0.0
  */
-export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIError`)(
+export class VeniceAIError extends S.TaggedError<VeniceAIError>($I`VeniceAIError`)(
   "VeniceAIError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
@@ -689,14 +711,15 @@ export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIEr
       S.annotateKey({ description: "HTTP response status code associated with the failure when known." })
     ),
   },
-  $I.annote("VeniceAIError", {
+  $I.annoteError<VeniceAIError>("VeniceAIError", {
     description: "Redacted technical failure raised by the Venice AI driver boundary.",
   })
 ) {
   /**
    * Create a driver error scoped to an OpenAPI operation.
    *
-   * @example
+   * **Example** (Error from operation descriptor)
+   *
    * ```ts
    * import { VeniceAIError, VENICE_AI_OPERATION_DESCRIPTORS } from "@beep/venice-ai"
    *
@@ -740,7 +763,8 @@ export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIEr
   /**
    * Create a configuration error before a specific operation exists.
    *
-   * @example
+   * **Example** (Create configuration error)
+   *
    * ```ts
    * import { VeniceAIError } from "@beep/venice-ai"
    *
@@ -761,7 +785,8 @@ export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIEr
 /**
  * Compatibility alias for older chat-wrapper consumers.
  *
- * @example
+ * **Example** (Create chat config error)
+ *
  * ```ts
  * import { VeniceAiChatError } from "@beep/venice-ai"
  *
@@ -777,7 +802,8 @@ export const VeniceAiChatError = VeniceAIError;
 /**
  * Type alias for the centralized Venice AI driver error.
  *
- * @example
+ * **Example** (Read chat error reason)
+ *
  * ```ts
  * import type { VeniceAiChatError } from "@beep/venice-ai"
  *
@@ -818,7 +844,7 @@ const normalizeVeniceAIErrorOptions = (options: VeniceAIErrorOptionsInput): Veni
   });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the Venice boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -834,7 +860,7 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
 
 const readString = (value: unknown, key: PropertyKey): O.Option<string> =>
   // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- Venice property refinement mirrors peer drivers but stays provider-local
   O.filter(readProperty(value, key), P.isString);
 
 const tryBoolean = (evaluate: () => boolean): Result.Result<boolean, unknown> => Result.try(evaluate);
@@ -854,7 +880,7 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
     : O.none();
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice cause normalization preserves provider-specific HTTP labels
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()
@@ -1342,7 +1368,8 @@ const webSearchOperation = VeniceAIOperationDescriptor.make({
 /**
  * Operation registry derived from `swagger.yaml`.
  *
- * @example
+ * **Example** (Map operation IDs)
+ *
  * ```ts
  * import { VENICE_AI_OPERATION_DESCRIPTORS } from "@beep/venice-ai"
  * import { A } from "@beep/utils"
@@ -1412,7 +1439,8 @@ export const VENICE_AI_OPERATION_DESCRIPTORS: ReadonlyArray<VeniceAIOperationDes
 /**
  * Non-streaming Venice API operation method.
  *
- * @example
+ * **Example** (Accept non-streaming method)
+ *
  * ```ts
  * import type { VeniceAIMethod } from "@beep/venice-ai"
  *
@@ -1428,7 +1456,8 @@ export type VeniceAIMethod = (request?: VeniceAIRequestOptions) => Effect.Effect
 /**
  * Streaming Venice API operation method.
  *
- * @example
+ * **Example** (Accept streaming method)
+ *
  * ```ts
  * import type { VeniceAIStreamMethod } from "@beep/venice-ai"
  *
@@ -1450,7 +1479,8 @@ type VeniceAINonStreamingShape = {
 /**
  * Runtime shape exposed by the {@link VeniceAI} service.
  *
- * @example
+ * **Example** (Call listModels on shape)
+ *
  * ```ts
  * import type { VeniceAIShape } from "@beep/venice-ai"
  *
@@ -1492,7 +1522,7 @@ const resolveConfig = (
 });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice keeps response media classification at its provider HTTP boundary
 const isJsonContentType = (contentType: string): boolean => Str.includes("application/json")(contentType);
 
 const isTextContentType = (contentType: string): boolean =>
@@ -1532,7 +1562,7 @@ const defaultAcceptHeader = (descriptor: VeniceAIOperationDescriptor): string =>
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice keeps path interpolation local to its operation request builder
 const applyPathParams = (path: string, params: Readonly<Record<string, string>> = {}): string =>
   pipe(
     params,
@@ -1560,7 +1590,7 @@ const normalizeQuery = (
     O.match({
       onNone: () => Effect.succeed(O.none<VeniceAIEncodedQuery>()),
       onSome: (value) =>
-        S.decodeUnknownEffect(VeniceAIEncodedQuery)(value).pipe(
+        S.decodeEffect(VeniceAIEncodedQuery)(value).pipe(
           Effect.map(O.some),
           Effect.mapError(() => VeniceAIError.fromDescriptor(descriptor, "request encoding"))
         ),
@@ -1661,7 +1691,7 @@ const executeRaw = Effect.fn("VeniceAI.executeRaw")(function* (
 });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice assembles typed provider response metadata at its decode boundary
 const responseContext = (response: HttpClientResponse.HttpClientResponse) => ({
   contentType: responseContentType(response),
   headers: response.headers,
@@ -1777,7 +1807,7 @@ const makeStreamingRequest = (request?: VeniceAIRequestOptions): VeniceAIRequest
 };
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Venice keeps data-line parsing local to its provider SSE decoder
 const dataLine = (line: string): O.Option<string> =>
   Str.startsWith("data:")(line) ? O.some(Str.trim(Str.slice(5)(line))) : O.none();
 
@@ -2001,7 +2031,8 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedVeniceAIConf
 /**
  * Effect service for Venice AI API operations.
  *
- * @example
+ * **Example** (Yield service listModels)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { VeniceAI } from "@beep/venice-ai"
@@ -2020,7 +2051,8 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
   /**
    * Build a Venice AI layer from explicit runtime configuration.
    *
-   * @example
+   * **Example** (Build layer from config)
+   *
    * ```ts
    * import { Redacted } from "effect"
    * import * as O from "effect/Option"
@@ -2047,7 +2079,8 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
   /**
    * Live Venice AI layer backed by `AI_VENICE_API_KEY`.
    *
-   * @example
+   * **Example** (Use live VeniceAI layer)
+   *
    * ```ts
    * import { VeniceAI } from "@beep/venice-ai"
    *
@@ -2071,7 +2104,8 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
 /**
  * Compatibility chat convenience backed by {@link VeniceAI.createChatCompletion}.
  *
- * @example
+ * **Example** (Chat with convenience service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { VeniceAiChat } from "@beep/venice-ai"
@@ -2095,7 +2129,8 @@ export class VeniceAiChat extends Context.Service<
   /**
    * Build the compatibility chat layer from an already provided {@link VeniceAI} service.
    *
-   * @example
+   * **Example** (Provide chat over VeniceAI)
+   *
    * ```ts
    * import { Layer } from "effect"
    * import { VeniceAI, VeniceAiChat } from "@beep/venice-ai"
@@ -2137,7 +2172,8 @@ export class VeniceAiChat extends Context.Service<
   /**
    * Live compatibility chat layer.
    *
-   * @example
+   * **Example** (Use live chat layer)
+   *
    * ```ts
    * import { VeniceAiChat } from "@beep/venice-ai"
    *

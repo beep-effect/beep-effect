@@ -13,20 +13,22 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
-import * as Domain from "./Domain.js";
+import * as Domain from "./Domain.ts";
 
 const $I = $RepoDocgenId.create("Configuration");
 
 /**
  * Default Jekyll remote theme used when neither CLI flags nor `docgen.json` provide one.
  *
- * @example
+ * **Example** (Build remote theme line)
+ *
  * ```ts
  * import { DEFAULT_THEME } from "@beep/repo-docgen/Configuration"
  *
  * const configLine = `remote_theme: ${DEFAULT_THEME}`
  * console.log(configLine)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -40,13 +42,15 @@ const CompilerOptionsShape = S.toEncoded(TSConfigCompilerOptions);
 /**
  * Schema for accepted CLI or config-file compiler options input.
  *
- * @example
+ * **Example** (Validate tsconfig path input)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CompilerOptionsInput } from "@beep/repo-docgen/Configuration"
  *
  * console.log(S.is(CompilerOptionsInput)("tsconfig.json")) // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -71,7 +75,8 @@ const stringArrayKeyDefault = S.Array(S.String).pipe(
 /**
  * Schema for the optional package-local `docgen.json` document.
  *
- * @example
+ * **Example** (Decode docgen.json config)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ConfigurationSchema } from "@beep/repo-docgen/Configuration"
@@ -85,6 +90,7 @@ const stringArrayKeyDefault = S.Array(S.String).pipe(
  *
  * console.log(config.include)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -123,9 +129,6 @@ export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`Configu
     projectHomepage: S.optionalKey(S.String).annotateKey({
       description: "Project homepage URL used as the base for generated links.",
     }),
-    runExamples: booleanKeyDefault(false).annotateKey({
-      description: "Whether generated examples are executed after type-checking.",
-    }),
     srcDir: stringKeyDefault("src").annotateKey({
       description: "Source directory scanned by docgen.",
     }),
@@ -147,7 +150,8 @@ export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`Configu
 /**
  * Runtime type for decoded `docgen.json` configuration documents.
  *
- * @example
+ * **Example** (Make configuration document)
+ *
  * ```ts
  * import { ConfigurationSchema, type ConfigurationDocument } from "@beep/repo-docgen/Configuration"
  *
@@ -158,6 +162,7 @@ export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`Configu
  *
  * console.log(document.srcDir)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -166,7 +171,8 @@ export type ConfigurationDocument = ConfigurationSchema;
 /**
  * Fully resolved configuration values used by the parser, example checker, and printer.
  *
- * @example
+ * **Example** (Build resolved configuration)
+ *
  * ```ts
  * import {
  *   DEFAULT_THEME,
@@ -186,7 +192,6 @@ export type ConfigurationDocument = ConfigurationSchema;
  *   parseCompilerOptions: defaultCompilerOptions,
  *   projectHomepage: "https://github.com/beep-effect/beep-effect",
  *   projectName: "@beep/repo-docgen",
- *   runExamples: false,
  *   srcDir: "src",
  *   srcLink: "https://github.com/beep-effect/beep-effect/blob/main/packages/tooling/tool/docgen/src",
  *   theme: DEFAULT_THEME,
@@ -195,6 +200,7 @@ export type ConfigurationDocument = ConfigurationSchema;
  *
  * console.log(config.include)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -233,9 +239,6 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
     projectName: S.String.annotateKey({
       description: "Resolved package name read from package.json.",
     }),
-    runExamples: S.Boolean.annotateKey({
-      description: "Whether generated examples are executed after type-checking.",
-    }),
     srcDir: S.String.annotateKey({
       description: "Resolved source directory scanned by docgen.",
     }),
@@ -257,7 +260,8 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
 /**
  * Runtime configuration service consumed by docgen parsing, checking, and printing effects.
  *
- * @example
+ * **Example** (Provide configuration service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {
@@ -279,7 +283,6 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
  *   parseCompilerOptions: defaultCompilerOptions,
  *   projectHomepage: "https://github.com/beep-effect/beep-effect",
  *   projectName: "@beep/repo-docgen",
- *   runExamples: false,
  *   srcDir: "src",
  *   srcLink: "https://github.com/beep-effect/beep-effect/blob/main/packages/tooling/tool/docgen/src",
  *   theme: DEFAULT_THEME,
@@ -295,6 +298,7 @@ export class ConfigurationShape extends S.Class<ConfigurationShape>($I`Configura
  *
  * console.log(projectName)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -313,7 +317,8 @@ export class Configuration extends Context.Service<Configuration, ConfigurationS
 /**
  * Accepted CLI or config-file input for compiler options.
  *
- * @example
+ * **Example** (Inline and path options)
+ *
  * ```ts
  * import type { CompilerOptionsInput } from "@beep/repo-docgen/Configuration"
  *
@@ -327,6 +332,7 @@ export class Configuration extends Context.Service<Configuration, ConfigurationS
  *
  * console.log([inlineOptions.moduleResolution, tsconfigPath])
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -336,6 +342,7 @@ export type CompilerOptionsInput = typeof CompilerOptionsInput.Type;
  * @internal
  */
 type LoadArgs = {
+  readonly configFile?: O.Option<string>;
   readonly enableSearch: O.Option<boolean>;
   readonly enforceDescriptions: O.Option<boolean>;
   readonly enforceExamples: O.Option<boolean>;
@@ -346,7 +353,6 @@ type LoadArgs = {
   readonly outDir: O.Option<string>;
   readonly parseCompilerOptions: O.Option<CompilerOptionsInput>;
   readonly projectHomepage: O.Option<string>;
-  readonly runExamples: O.Option<boolean>;
   readonly srcDir: O.Option<string>;
   readonly srcLink: O.Option<string>;
   readonly theme: O.Option<string>;
@@ -356,13 +362,15 @@ type LoadArgs = {
 /**
  * Default compiler options used when no explicit parse configuration is provided.
  *
- * @internal
- * @example
+ * **Example** (Log default module resolution)
+ *
  * ```ts
  * import { defaultCompilerOptions } from "@beep/repo-docgen/Configuration"
  *
  * console.log(defaultCompilerOptions.moduleResolution)
  * ```
+ *
+ * @internal
  * @category configuration
  * @since 0.0.0
  */
@@ -373,7 +381,7 @@ export const defaultCompilerOptions = {
   skipLibCheck: true,
   strict: true,
   target: "es2022",
-} as const satisfies S.Schema.Type<typeof CompilerOptionsShape>;
+} as const satisfies typeof CompilerOptionsShape.Type;
 
 class PackageJsonSchema extends S.Class<PackageJsonSchema>($I`PackageJsonSchema`)({
   homepage: S.String,
@@ -436,7 +444,7 @@ const readDocgenConfig = Effect.fn("Configuration.readDocgenConfig")(function* (
 const readTSConfig = Effect.fn("Configuration.readTSConfig")(function* (
   fileName: string
 ): Effect.fn.Return<
-  S.Schema.Type<typeof CompilerOptionsShape>,
+  typeof CompilerOptionsShape.Type,
   Domain.DocgenError,
   FileSystem.FileSystem | Path.Path | Domain.Process
 > {
@@ -476,7 +484,7 @@ const resolveCompilerOptions = (
   fromCLI: O.Option<CompilerOptionsInput>,
   fromDocgenJson: O.Option<CompilerOptionsInput>
 ): Effect.Effect<
-  S.Schema.Type<typeof CompilerOptionsShape>,
+  typeof CompilerOptionsShape.Type,
   Domain.DocgenError,
   FileSystem.FileSystem | Path.Path | Domain.Process
 > => {
@@ -498,19 +506,19 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
 /**
  * Loads and resolves the effective docgen configuration from CLI input and repo files.
  *
- * @internal
- * @remarks
+ * **Details**
+ *
  * CLI options win over `docgen.json`; missing values fall back to package metadata and repo defaults.
  * Example compiler options are post-processed to allow generated imports and to disable unused checks.
- * @effects
- * - Reads `package.json`, optional `docgen.json`, and any referenced TSConfig file from the current package.
- * - Fails with `DocgenError` when JSONC parsing, schema decoding, or file access fails.
- * @example
+ *
+ * **Example** (Load config from CLI)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import { load } from "@beep/repo-docgen/Configuration"
  * const program = load({
+ *   configFile: O.none(),
  *   enableSearch: O.some(false),
  *   enforceDescriptions: O.none(),
  *   enforceExamples: O.some(true),
@@ -521,7 +529,6 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  *   outDir: O.none(),
  *   parseCompilerOptions: O.none(),
  *   projectHomepage: O.none(),
- *   runExamples: O.none(),
  *   srcDir: O.none(),
  *   srcLink: O.none(),
  *   theme: O.none(),
@@ -529,6 +536,11 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
  * }).pipe(Effect.map((config) => config.include))
  * console.log(program)
  * ```
+ *
+ * @internal
+ * @effects
+ * - Reads `package.json`, optional `docgen.json`, and any referenced TSConfig file from the current package.
+ * - Fails with `DocgenError` when JSONC parsing, schema decoding, or file access fails.
  * @category configuration
  * @since 0.0.0
  */
@@ -538,7 +550,8 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
   const path = yield* Path.Path;
 
   const packageJson = yield* readPackageJson(path.join(cwd, PACKAGE_JSON_FILE_NAME));
-  const maybeConfig = yield* readDocgenConfig(path.join(cwd, CONFIG_FILE_NAME));
+  const configFile = O.getOrElse(args.configFile ?? O.none(), () => CONFIG_FILE_NAME);
+  const maybeConfig = yield* readDocgenConfig(path.resolve(cwd, configFile));
   const docgenConfig = O.getOrElse(maybeConfig, () => ConfigurationSchema.make({}));
 
   const projectName = packageJson.name;
@@ -560,7 +573,6 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
   const enforceExamples = O.getOrElse(args.enforceExamples, () => docgenConfig.enforceExamples);
   const enforceVersion = O.getOrElse(args.enforceVersion, () => docgenConfig.enforceVersion);
   const tscExecutable = O.getOrElse(args.tscExecutable, () => docgenConfig.tscExecutable);
-  const runExamples = O.getOrElse(args.runExamples, () => docgenConfig.runExamples);
   const include = O.getOrElse(args.include, () => docgenConfig.include);
   const exclude = O.getOrElse(args.exclude, () => docgenConfig.exclude);
   const parseCompilerOptions = yield* resolveCompilerOptions(
@@ -597,7 +609,6 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
     parseCompilerOptions,
     projectHomepage,
     projectName,
-    runExamples,
     srcDir,
     srcLink,
     theme,
@@ -608,8 +619,8 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
 /**
  * Empty layer kept for upstream workflow parity while this port resolves configuration in {@link load}.
  *
- * @internal
- * @example
+ * **Example** (Merge empty config layer)
+ *
  * ```ts
  * import { Layer } from "effect"
  * import { configProviderLayer } from "@beep/repo-docgen/Configuration"
@@ -617,6 +628,8 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
  * const merged = Layer.mergeAll(configProviderLayer, Layer.empty)
  * console.log(merged)
  * ```
+ *
+ * @internal
  * @category layers
  * @since 0.0.0
  */

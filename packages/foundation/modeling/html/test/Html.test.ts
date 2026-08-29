@@ -1,21 +1,28 @@
 import {
   BooleanAttribute,
   Comment,
-  Div,
   Doctype,
   ELEMENT_META,
   GlobalAttributesStruct,
+  Html,
+  HtmlDocument,
   HtmlElementMeta,
+  HtmlFragment,
   HtmlNode,
+  Text,
+} from "@beep/html";
+import {
+  Div,
+  Html as HtmlElement,
   Input,
+  Document as LosslessDocument,
   Marquee,
   Script,
   Span,
-  Text,
-} from "@beep/html";
+} from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -23,13 +30,13 @@ import { FastCheck as fc } from "effect/testing";
 
 const decode = S.decodeUnknownSync(HtmlNode);
 const encode = S.encodeSync(HtmlNode);
-const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct);
-const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
-const TextArbitrary = S.toArbitrary(Text);
-const CommentArbitrary = S.toArbitrary(Comment);
-const DoctypeArbitrary = S.toArbitrary(Doctype);
-const InputArbitrary = S.toArbitrary(Input);
-const HtmlElementMetaArbitrary = S.toArbitrary(HtmlElementMeta);
+const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct)(fc);
+const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute)(fc);
+const TextArbitrary = S.toArbitrary(Text)(fc);
+const CommentArbitrary = S.toArbitrary(Comment)(fc);
+const DoctypeArbitrary = S.toArbitrary(Doctype)(fc);
+const InputArbitrary = S.toArbitrary(Input)(fc);
+const HtmlElementMetaArbitrary = S.toArbitrary(HtmlElementMeta)(fc);
 
 const encodeWith = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -42,6 +49,51 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
 };
 
 describe("HtmlNode AST — structure & nodes", () => {
+  it("exposes staged conformance and safe-policy facades", () => {
+    const root = HtmlFragment.make({ children: [] });
+    expect(Html.Conformant.issues(root)).toStrictEqual([]);
+
+    const conformant = Effect.runSync(Html.Conformant.decode(root));
+    expect(Html.Safe.issues(conformant)).toStrictEqual([]);
+    expect(() => Effect.runSync(Html.Safe.decode(conformant))).not.toThrow();
+  });
+
+  it("narrows canonical document children without weakening the lossless document", () => {
+    const comment = Comment.make({ value: "before root" });
+    const documentElement = HtmlElement.make({ children: [] });
+    const canonical = {
+      _tag: "#document",
+      children: [
+        { _tag: "#comment", value: "before root" },
+        { _tag: "html", children: [] },
+      ],
+    };
+    const diagnostic = { _tag: "#document", children: [{ _tag: "div", children: [] }] };
+    const excludedChildren = [
+      { encoded: { _tag: "div", children: [] }, type: Div.make({ children: [] }) },
+      { encoded: { _tag: "#fragment", children: [] }, type: HtmlFragment.make({ children: [] }) },
+      { encoded: { _tag: "#document", children: [] }, type: LosslessDocument.make({ children: [] }) },
+      { encoded: { _tag: "#doctype", name: "html" }, type: Doctype.html() },
+    ];
+
+    expect(Result.isSuccess(S.decodeUnknownResult(HtmlDocument)(canonical))).toBe(true);
+    expect(HtmlDocument.make({ children: [comment, documentElement] })).toBeDefined();
+    for (const { encoded, type } of excludedChildren) {
+      expect(Result.isFailure(S.decodeUnknownResult(HtmlDocument)({ _tag: "#document", children: [encoded] }))).toBe(
+        true
+      );
+      expect(() =>
+        HtmlDocument.make({
+          // @ts-expect-error -- exercise constructor validation for excluded document child kinds.
+          children: [type],
+        })
+      ).toThrow();
+    }
+
+    expect(Result.isSuccess(S.decodeUnknownResult(LosslessDocument)(diagnostic))).toBe(true);
+    expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
+  });
+
   it("decodes and re-encodes a nested tree (JSON identity)", () => {
     const json = {
       _tag: "div",
@@ -157,21 +209,43 @@ describe("HtmlNode AST — schema laws", () => {
       )
     ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
     expect(
-      S.encodeSync(HtmlElementMeta)({
-        tag: "a",
-        interface: "HTMLAnchorElement",
-        conformance: "conforming",
-        void: false,
-        rawText: false,
-        categories: ["flow", "phrasing"],
-      })
+      S.encodeSync(HtmlElementMeta)(
+        HtmlElementMeta.make({
+          tag: "a",
+          interface: "HTMLAnchorElement",
+          conformance: "conforming",
+          void: false,
+          rawText: false,
+          textMode: "normal",
+          categories: ["flow", "phrasing"],
+          children: ["transparent"],
+          currentAttributes: [],
+          obsoleteAttributes: [],
+          conditionalCategories: [],
+          attributeEqualities: [],
+          attributeRequirements: [],
+          numericAttributeRelationships: [],
+          rules: {},
+          uniqueAttributes: [],
+        })
+      )
     ).toStrictEqual({
       tag: "a",
       interface: "HTMLAnchorElement",
       conformance: "conforming",
       void: false,
       rawText: false,
+      textMode: "normal",
       categories: ["flow", "phrasing"],
+      children: ["transparent"],
+      currentAttributes: [],
+      obsoleteAttributes: [],
+      conditionalCategories: [],
+      attributeEqualities: [],
+      attributeRequirements: [],
+      numericAttributeRelationships: [],
+      rules: {},
+      uniqueAttributes: [],
     });
   });
 
@@ -214,8 +288,8 @@ describe("ELEMENT_META", () => {
   });
 
   it("includes obsolete elements as non-conforming", () => {
-    for (const tag of ["marquee", "font", "frame", "frameset", "center", "big", "blink", "applet"]) {
-      expect(ELEMENT_META[tag]?.conformance).toBe("non-conforming");
+    for (const tag of ["marquee", "font", "frame", "frameset", "center", "big", "blink", "applet"] as const) {
+      expect(ELEMENT_META[tag].conformance).toBe("non-conforming");
     }
   });
 });

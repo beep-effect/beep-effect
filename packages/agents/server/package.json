@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -33,13 +33,14 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./test": "./src/test.ts",
-    "./AssistantTurn": "./src/AssistantTurn/index.ts",
-    "./ProviderInstance": "./src/ProviderInstance/index.ts",
     "./AnthropicTurnCodec": "./src/AssistantTurn/AnthropicTurnCodec.ts",
     "./AnthropicTurnKernel": "./src/AssistantTurn/AnthropicTurnKernel.ts",
+    "./AssistantTurn": "./src/AssistantTurn/index.ts",
+    "./BlockRepair": "./src/AssistantTurn/BlockRepair.ts",
+    "./ProviderInstance": "./src/ProviderInstance/index.ts",
     "./internal/*": null,
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./test": "./src/test.ts"
   },
   "files": [
     "src/**/*.ts",
@@ -54,13 +55,14 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
-      "./test": "./dist/test.js",
-      "./AssistantTurn": "./dist/AssistantTurn/index.js",
-      "./ProviderInstance": "./dist/ProviderInstance/index.js",
       "./AnthropicTurnCodec": "./dist/AssistantTurn/AnthropicTurnCodec.js",
       "./AnthropicTurnKernel": "./dist/AssistantTurn/AnthropicTurnKernel.js",
+      "./AssistantTurn": "./dist/AssistantTurn/index.js",
+      "./BlockRepair": "./dist/AssistantTurn/BlockRepair.js",
+      "./ProviderInstance": "./dist/ProviderInstance/index.js",
       "./internal/*": null,
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./test": "./dist/test.js"
     }
   },
   "dependencies": {

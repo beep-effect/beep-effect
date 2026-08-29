@@ -28,17 +28,19 @@ const pathFragmentVariants = (input: string): ReadonlyArray<string> => {
 /**
  * Canonicalize a path-like phrase for file and module lookup.
  *
- * @remarks
+ * **Details**
+ *
  * Backslashes are normalized to forward slashes and repeated separators are
  * collapsed after query-phrase cleanup. The result is suitable for matching
  * user prose against both filesystem paths and package module specifiers.
  *
- * @example
- * ```typescript
+ * **Example** (Normalize backslash path phrase)
+ *
+ * ```ts import.meta.vitest name="Normalize backslash path phrase"
  * import * as PathText from "@beep/nlp/PathText"
  *
  * const normalized = PathText.normalizePathPhrase("src\\\\utils\\\\index.ts")
- * console.log(normalized) // "src/utils/index.ts"
+ * normalized // => "src/utils/index.ts"
  * ```
  *
  * @category normalization
@@ -49,18 +51,20 @@ export const normalizePathPhrase = flow(QueryText.normalizePhrase, Str.replace(/
 /**
  * Check whether normalized text is shaped like a single path or module token.
  *
- * @remarks
+ * **Details**
+ *
  * The predicate accepts scoped package names, dots, slashes, underscores, and
  * dashes, but rejects whitespace. It is a lightweight classifier for query
  * routing, not a filesystem existence check.
  *
- * @example
- * ```typescript
+ * **Example** (Classify path-like tokens)
+ *
+ * ```ts import.meta.vitest name="Classify path-like tokens"
  * import * as PathText from "@beep/nlp/PathText"
  *
- * console.log(PathText.isPathLike("src/index.ts")) // true
- * console.log(PathText.isPathLike("@beep/utils")) // true
- * console.log(PathText.isPathLike("hello world")) // false
+ * PathText.isPathLike("src/index.ts") // => true
+ * PathText.isPathLike("@beep/utils") // => true
+ * PathText.isPathLike("hello world") // => false
  * ```
  *
  * @category predicates
@@ -71,18 +75,20 @@ export const isPathLike = (input: string): boolean => /^[A-Za-z0-9_./@-]+$/.test
 /**
  * Generate source-file lookup variants from a path fragment.
  *
- * @remarks
+ * **Details**
+ *
  * Variants include the normalized path, leading `./` removal, TypeScript
  * extension removal, basename, and basename without extension, preserving order
  * and removing duplicates.
  *
- * @example
- * ```typescript
+ * **Example** (Generate file path variants)
+ *
+ * ```ts import.meta.vitest name="Generate file path variants"
  * import * as PathText from "@beep/nlp/PathText"
  *
  * const variants = PathText.filePathVariants("./src/utils/index.ts")
- * console.log(variants.includes("src/utils/index")) // true
- * console.log(variants.includes("index")) // true
+ * variants.includes("src/utils/index") // => true
+ * variants.includes("index") // => true
  * ```
  *
  * @category normalization
@@ -93,17 +99,19 @@ export const filePathVariants = pathFragmentVariants;
 /**
  * Generate import-specifier lookup variants from a module fragment.
  *
- * @remarks
+ * **Details**
+ *
  * This shares the same normalization as file paths because package subpaths and
  * local source paths are both queried from user text in the repository graph.
  *
- * @example
- * ```typescript
+ * **Example** (Generate module specifier variants)
+ *
+ * ```ts import.meta.vitest name="Generate module specifier variants"
  * import * as PathText from "@beep/nlp/PathText"
  *
  * const variants = PathText.moduleSpecifierVariants("@beep/utils/Str.ts")
- * console.log(variants.includes("@beep/utils/Str")) // true
- * console.log(variants.includes("Str")) // true
+ * variants.includes("@beep/utils/Str") // => true
+ * variants.includes("Str") // => true
  * ```
  *
  * @category normalization

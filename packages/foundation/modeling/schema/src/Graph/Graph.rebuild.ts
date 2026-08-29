@@ -24,26 +24,28 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
   Kind extends GraphKindValue,
 >(
   mutable: Graph_.MutableGraph<Node, Edge, Kind>,
-  encoded: GraphEncoded<Node, Edge, Kind>,
-  actual: unknown
+  encoded: GraphEncoded<Node, Edge, Kind>
 ): Effect.fn.Return<Graph_.MutableGraph<Node, Edge, Kind>, SchemaIssue.Issue> {
   for (const [expectedIndex, node] of sortRawNodeEntries(encoded.nodes)) {
     const receivedIndex = Graph_.addNode(mutable, node);
 
     if (receivedIndex !== expectedIndex) {
-      return yield* Effect.fail(makeGraphConstructionIssue(actual, "node", expectedIndex, receivedIndex));
+      return yield* Effect.fail(
+        makeGraphConstructionIssue({ entity: "node", expected: expectedIndex, received: receivedIndex })
+      );
     }
   }
 
   for (const { index, source, target, data } of sortRawEdgeEntries(encoded.edges)) {
     const receivedIndex = yield* Effect.try({
       try: () => Graph_.addEdge(mutable, source, target, data),
-      catch: (cause) =>
-        makeInvalidGraphIssue(actual, P.isError(cause) ? cause.message : "Failed to construct graph edge"),
+      catch: (cause) => makeInvalidGraphIssue(P.isError(cause) ? cause.message : "Failed to construct graph edge"),
     });
 
     if (receivedIndex !== index) {
-      return yield* Effect.fail(makeGraphConstructionIssue(actual, "edge", index, receivedIndex));
+      return yield* Effect.fail(
+        makeGraphConstructionIssue({ entity: "edge", expected: index, received: receivedIndex })
+      );
     }
   }
 
@@ -55,7 +57,8 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
  * Reconstructs an immutable Effect `Graph.Graph` from an encoded graph payload,
  * failing when node/edge indices do not match the expected insertion order.
  *
- * @example
+ * **Example** (Rebuilding an immutable graph)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -69,7 +72,7 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
  *   nodes: [[0, "Ada"]],
  *   edges: []
  * })
- * const program = rebuildImmutableGraph(encoded, { actual: encoded })
+ * const program = rebuildImmutableGraph(encoded, {})
  * const graph = Effect.runSync(program)
  * console.log(graph.type)
  * ```
@@ -80,10 +83,9 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
 export const rebuildImmutableGraph: {
   <Node, Edge>(
     encoded: GraphEncoded<Node, Edge>,
-    options: { readonly actual: unknown; readonly expectedType?: GraphKindValue | undefined }
+    options: { readonly expectedType?: GraphKindValue | undefined }
   ): Effect.Effect<Graph_.Graph<Node, Edge, GraphKindValue>, SchemaIssue.Issue>;
   (options: {
-    readonly actual: unknown;
     readonly expectedType?: GraphKindValue | undefined;
   }): <Node, Edge>(
     encoded: GraphEncoded<Node, Edge>
@@ -92,22 +94,22 @@ export const rebuildImmutableGraph: {
   2,
   <Node, Edge>(
     encoded: GraphEncoded<Node, Edge>,
-    options: { readonly actual: unknown; readonly expectedType?: GraphKindValue | undefined }
+    options: { readonly expectedType?: GraphKindValue | undefined }
   ): Effect.Effect<Graph_.Graph<Node, Edge, GraphKindValue>, SchemaIssue.Issue> => {
-    const { actual, expectedType } = options;
+    const { expectedType } = options;
     if (expectedType !== undefined && encoded.type !== expectedType) {
-      return Effect.fail(makeInvalidGraphIssue(actual, `Expected ${expectedType} graph, got ${encoded.type}`));
+      return Effect.fail(makeInvalidGraphIssue(`Expected ${expectedType} graph, got ${encoded.type}`));
     }
 
     if (encoded.type === "directed") {
       return Effect.map(
-        populateMutableGraph(Graph_.beginMutation(Graph_.directed<Node, Edge>()), encoded, actual),
+        populateMutableGraph(Graph_.beginMutation(Graph_.directed<Node, Edge>()), encoded),
         Graph_.endMutation
       );
     }
 
     return Effect.map(
-      populateMutableGraph(Graph_.beginMutation(Graph_.undirected<Node, Edge>()), encoded, actual),
+      populateMutableGraph(Graph_.beginMutation(Graph_.undirected<Node, Edge>()), encoded),
       Graph_.endMutation
     );
   }
@@ -118,7 +120,8 @@ export const rebuildImmutableGraph: {
  * Reconstructs a mutable Effect `Graph.MutableGraph` from an encoded graph payload,
  * failing when node/edge indices do not match the expected insertion order.
  *
- * @example
+ * **Example** (Rebuilding a mutable graph)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -132,7 +135,7 @@ export const rebuildImmutableGraph: {
  *   nodes: [[0, "Ada"]],
  *   edges: []
  * })
- * const program = rebuildMutableGraph(encoded, { actual: encoded })
+ * const program = rebuildMutableGraph(encoded, {})
  * const graph = Effect.runSync(program)
  * console.log(graph.type)
  * ```
@@ -143,10 +146,9 @@ export const rebuildImmutableGraph: {
 export const rebuildMutableGraph: {
   <Node, Edge>(
     encoded: GraphEncoded<Node, Edge>,
-    options: { readonly actual: unknown; readonly expectedType?: GraphKindValue | undefined }
+    options: { readonly expectedType?: GraphKindValue | undefined }
   ): Effect.Effect<Graph_.MutableGraph<Node, Edge, GraphKindValue>, SchemaIssue.Issue>;
   (options: {
-    readonly actual: unknown;
     readonly expectedType?: GraphKindValue | undefined;
   }): <Node, Edge>(
     encoded: GraphEncoded<Node, Edge>
@@ -155,7 +157,7 @@ export const rebuildMutableGraph: {
   2,
   <Node, Edge>(
     encoded: GraphEncoded<Node, Edge>,
-    options: { readonly actual: unknown; readonly expectedType?: GraphKindValue | undefined }
+    options: { readonly expectedType?: GraphKindValue | undefined }
   ): Effect.Effect<Graph_.MutableGraph<Node, Edge, GraphKindValue>, SchemaIssue.Issue> =>
     Effect.map(rebuildImmutableGraph(encoded, options), Graph_.beginMutation)
 );

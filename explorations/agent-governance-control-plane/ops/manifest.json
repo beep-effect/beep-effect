@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-governance-control-plane",
+    "title": "Agent Governance Control Plane",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when agentic-governance-laws hits a wall that needs the full role-authority and expiring-exception protocol."
+    ],
+    "sources": [],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-08-13"
+  }
+}

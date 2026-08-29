@@ -11,4 +11,4 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Purge.command.js";
+export * from "./Purge.command.ts";

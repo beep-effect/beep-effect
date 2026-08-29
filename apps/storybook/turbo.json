@@ -1,0 +1,13 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "check": {
+      "dependsOn": [
+        "$TURBO_EXTENDS$",
+        "@beep/dock-react#check",
+        "@beep/editor#check"
+      ]
+    }
+  }
+}

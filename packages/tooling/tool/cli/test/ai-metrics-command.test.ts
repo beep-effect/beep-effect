@@ -10,6 +10,7 @@ import {
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -56,12 +57,12 @@ const encodeLabelQueue = S.encodeUnknownEffect(S.fromJsonString(AiMetricsLabelQu
 const encodeMirrorBundle = S.encodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleResult));
 const encodeOtlpExportResult = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 const encodeWeeklyReport = S.encodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
-const ForwarderResultArbitrary = S.toArbitrary(AiMetricsForwarderRunResult);
-const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult);
-const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult);
-const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult);
-const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult);
-const decodeUnknownJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const ForwarderResultArbitrary = S.toArbitrary(AiMetricsForwarderRunResult)(fc);
+const LabelQueueArbitrary = S.toArbitrary(AiMetricsLabelQueueResult)(fc);
+const MirrorBundleArbitrary = S.toArbitrary(AiMetricsMirrorBundleResult)(fc);
+const OtlpExportResultArbitrary = S.toArbitrary(AiMetricsOtlpExportResult)(fc);
+const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult)(fc);
+const decodeUnknownJson = Unknown.decodeUnknownEffectFromJsonString;
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
 const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
@@ -112,6 +113,20 @@ const writeText = Effect.fn("AIMetricsCommandTest.writeText")(function* (filePat
   yield* fs.writeFileString(filePath, content);
 });
 
+// `runAiMetricsForwarder` upserts the identity registry, which derives clone,
+// repository, and revision identity from the filesystem and refuses a root that
+// is not a git root. Every fixture repository a forwarder run touches therefore
+// needs a real `.git` layout.
+const seedGitRoot = Effect.fn("AIMetricsCommandTest.seedGitRoot")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
+  yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
+  yield* writeText(
+    path.join(repoRoot, ".git/config"),
+    '[remote "origin"]\n\turl = git@github.com:beep-effect/beep-effect.git\n'
+  );
+});
+
 const loggedText = Effect.fn("AIMetricsCommandTest.loggedText")(function* () {
   return pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
 });
@@ -134,6 +149,13 @@ const withRawArchiveKeyEnv = <A, E, R>(rawArchiveKey: string, use: Effect.Effect
     )
   )(use);
 
+// Replaces the ambient provider outright, so a variable omitted here reads as
+// absent no matter what the developer's shell exports.
+const withProcessEnv = <A, E, R>(
+  env: { readonly [key: string]: string },
+  use: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);
+
 const seedAiMetricsData = Effect.fn("AIMetricsCommandTest.seedAiMetricsData")(function* (tmpDir: string) {
   const path = yield* Path.Path;
   const dataRoot = path.join(tmpDir, "metrics");
@@ -152,6 +174,7 @@ const seedAiMetricsData = Effect.fn("AIMetricsCommandTest.seedAiMetricsData")(fu
     )
   );
   yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Test agent guide\n");
+  yield* seedGitRoot(repoRoot);
   yield* runAiMetricsCommand([
     "forwarder",
     "run",
@@ -252,7 +275,9 @@ const waitForCapturedOtlpTraceRequest = (
   requests: ReadonlyArray<CapturedOtlpRequest>
 ): Effect.Effect<CapturedOtlpRequest, string> =>
   findCapturedOtlpTraceRequest(requests).pipe(
-    Effect.retry(Schedule.max([Schedule.spaced(Duration.millis(25)), Schedule.recurs(200)]))
+    // Schedule.max continues while ANY sub-schedule continues, so pairing an infinite
+    // `spaced` with `recurs` never terminates; the delay must ride on `recurs` itself.
+    Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(25)))))
   );
 
 describe("ai-metrics command", () => {
@@ -393,15 +418,16 @@ describe("ai-metrics command", () => {
 
   it("renders a bounded dankserver forwarder timer command", () =>
     Effect.runPromise(
-      withTempDirectory(() =>
+      withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
+          const path = yield* Path.Path;
           yield* runAiMetricsCommand([
             "forwarder",
             "timer",
             "--target",
             "dankserver",
             "--data-root",
-            ".beep/ai-metrics",
+            path.join(tmpDir, "metrics"),
             "--hash-salt-secret-ref",
             "op://TBK/ai-metrics/hash-salt",
             "--raw-archive-key-secret-ref",
@@ -426,6 +452,135 @@ describe("ai-metrics command", () => {
           expect(output).toContain("--otlp-base-url");
           expect(output).toContain("beep-ai-metrics-forwarder.timer");
           expect(output).not.toContain("--max-files 200");
+        })
+      )
+    ));
+
+  // These five pin the data-root precedence introduced by the storage cutover:
+  // `--data-root` -> `BEEP_AI_METRICS_DATA_ROOT` -> `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`,
+  // plus the absolute-path law on anything rendered into a systemd unit.
+  it("resolves the data root from BEEP_AI_METRICS_DATA_ROOT when --data-root is absent", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const envDataRoot = path.join(tmpDir, "env-root");
+
+          yield* withProcessEnv(
+            { BEEP_AI_METRICS_DATA_ROOT: envDataRoot },
+            runAiMetricsCommand(["install", "plan", "--target", "local", "--json"])
+          );
+
+          const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+          expect(plan.storage.dataRoot).toBe(envDataRoot);
+        })
+      )
+    ));
+
+  it("prefers --data-root over BEEP_AI_METRICS_DATA_ROOT", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const flagDataRoot = path.join(tmpDir, "flag-root");
+
+          yield* withProcessEnv(
+            { BEEP_AI_METRICS_DATA_ROOT: path.join(tmpDir, "env-root") },
+            runAiMetricsCommand(["install", "plan", "--target", "local", "--data-root", flagDataRoot, "--json"])
+          );
+
+          const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+          expect(plan.storage.dataRoot).toBe(flagDataRoot);
+        })
+      )
+    ));
+
+  it("falls back to the XDG state store when neither the flag nor the environment supplies a data root", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          yield* withProcessEnv(
+            { HOME: tmpDir },
+            runAiMetricsCommand(["install", "plan", "--target", "local", "--json"])
+          );
+
+          const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+          expect(plan.storage.dataRoot).toBe(`${tmpDir}/.local/state/beep/ai-metrics`);
+          expect(plan.storage.dataRoot).not.toContain(".beep/ai-metrics");
+        })
+      )
+    ));
+
+  // `XDG_STATE_HOME` alone fully determines the root, so resolution must never reach for `HOME`.
+  // Reading it eagerly would fail this shape — a container or a systemd unit with a state home but
+  // no home directory — even though there is nothing left to resolve.
+  it("resolves the XDG state store from XDG_STATE_HOME alone when HOME is absent", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const stateHome = path.join(tmpDir, "state");
+
+          yield* withProcessEnv(
+            { XDG_STATE_HOME: stateHome },
+            runAiMetricsCommand(["install", "plan", "--target", "local", "--json"])
+          );
+
+          const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+          expect(plan.storage.dataRoot).toBe(`${stateHome}/beep/ai-metrics`);
+        })
+      )
+    ));
+
+  it("refuses to render forwarder timer units for a relative data root", () =>
+    Effect.runPromise(
+      withTempDirectory(() =>
+        Effect.gen(function* () {
+          const message = yield* expectAiMetricsCommandFailure([
+            "forwarder",
+            "timer",
+            "--target",
+            "dankserver",
+            "--data-root",
+            ".beep/ai-metrics",
+            "--hash-salt-secret-ref",
+            "op://TBK/ai-metrics/hash-salt",
+            "--raw-archive-key-secret-ref",
+            "op://TBK/ai-metrics/raw-archive-key",
+          ]);
+
+          expect(message).toContain("absolute");
+          expect(yield* loggedText()).toBe("");
+        })
+      )
+    ));
+
+  it("renders forwarder timer units with an absolute data root and status path", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const dataRoot = path.join(tmpDir, "metrics");
+
+          yield* runAiMetricsCommand([
+            "forwarder",
+            "timer",
+            "--target",
+            "dankserver",
+            "--data-root",
+            dataRoot,
+            "--hash-salt-secret-ref",
+            "op://TBK/ai-metrics/hash-salt",
+            "--raw-archive-key-secret-ref",
+            "op://TBK/ai-metrics/raw-archive-key",
+          ]);
+
+          const output = yield* loggedText();
+          expect(output).toContain("ExecStart=");
+          expect(output).toContain("--data-root");
+          expect(output).toContain(dataRoot);
+          expect(output).toContain(`${dataRoot}/forwarder/status/latest.json`);
+          expect(output).not.toContain(".beep/ai-metrics");
         })
       )
     ));
@@ -761,6 +916,7 @@ describe("ai-metrics command", () => {
             )
           );
           yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+          yield* seedGitRoot(repoRoot);
 
           yield* withRawArchiveKeyEnv(
             rawArchiveKey,
@@ -813,6 +969,7 @@ describe("ai-metrics command", () => {
               )
             );
             yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+            yield* seedGitRoot(repoRoot);
 
             yield* runAiMetricsCommand([
               "forwarder",
@@ -879,6 +1036,7 @@ describe("ai-metrics command", () => {
                 )
               );
               yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+              yield* seedGitRoot(repoRoot);
 
               yield* withRawArchiveKeyEnv(
                 rawArchiveKey,
@@ -954,6 +1112,7 @@ describe("ai-metrics command", () => {
                   )
                 );
                 yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+                yield* seedGitRoot(repoRoot);
 
                 yield* withRawArchiveKeyEnv(
                   rawArchiveKey,
@@ -989,15 +1148,19 @@ describe("ai-metrics command", () => {
                   if (otlpExport.value.status === "failed") {
                     expect(otlpExport.value.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
                     expect(otlpExport.value.ingestRunId).toBe(result.ingestRunId);
-                    expect(otlpExport.value.message).toBe("OTLP export did not complete after the forwarder run.");
+                    expect(otlpExport.value.message).toContain("OTLP export did not complete after the forwarder run.");
+                    expect(otlpExport.value.message).toContain("Pending spans remain uncheckpointed for retry.");
+                    expect(otlpExport.value.message).not.toContain("did not accept the exported spans");
                     expect(otlpExport.value.message).not.toContain("private-forwarder-failed-otlp");
                     expect(otlpExport.value.message).not.toContain(tmpDir);
                   }
                 }
                 expect(errorOutput).toContain("OTLP export failed after forwarder run");
                 expect(errorOutput).toContain("OTLP export did not complete after the forwarder run.");
+                expect(errorOutput).not.toContain("did not accept the exported spans");
                 expect(errorOutput).not.toContain("private-forwarder-failed-otlp");
                 expect(errorOutput).not.toContain(tmpDir);
+                expect(resultJson).not.toContain("did not accept the exported spans");
                 expect(resultJson).not.toContain("private-forwarder-failed-otlp");
                 expect(resultJson).not.toContain(rawArchiveKey);
               })
@@ -1022,6 +1185,7 @@ describe("ai-metrics command", () => {
           yield* writeText(sourcePath, '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}');
           yield* fs.chmod(sourcePath, 0o000);
           yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+          yield* seedGitRoot(repoRoot);
 
           const output = yield* withRawArchiveKeyEnv(
             rawArchiveKey,
@@ -1073,6 +1237,7 @@ describe("ai-metrics command", () => {
               )
             );
             yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+            yield* seedGitRoot(repoRoot);
 
             yield* withRawArchiveKeyEnv(
               rawArchiveKey,
@@ -1207,12 +1372,13 @@ describe("ai-metrics command", () => {
             "local",
             "--data-root",
             dataRoot,
-            "--ingest-run",
-            "latest",
             "--json",
           ]);
 
-          expect(output).toContain("Failed to select the latest AI metrics ingest run.");
+          // The export path now migrates the store before reading it, so a data root that
+          // was never ingested fails at that step rather than at the ingest-run lookup.
+          // Both are sanitized; this one is reached earlier and names the remedy.
+          expect(output).toContain("Failed to prepare the AI metrics derived DuckDB store for OTLP export");
           expect(output).not.toContain(dataRoot);
           expect(output).not.toContain(tmpDir);
         })
@@ -1241,6 +1407,7 @@ describe("ai-metrics command", () => {
               )
             );
             yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+            yield* seedGitRoot(repoRoot);
 
             yield* withRawArchiveKeyEnv(
               rawArchiveKey,
@@ -1259,7 +1426,7 @@ describe("ai-metrics command", () => {
                 "--json",
               ])
             );
-            const forwarderResult = yield* decodeForwarderResult(yield* lastLoggedLine());
+            yield* decodeForwarderResult(yield* lastLoggedLine());
 
             yield* runAiMetricsCommand([
               "otlp",
@@ -1268,8 +1435,6 @@ describe("ai-metrics command", () => {
               "local",
               "--data-root",
               dataRoot,
-              "--ingest-run",
-              "latest",
               "--otlp-base-url",
               otlpBaseUrl,
               "--json",
@@ -1284,7 +1449,6 @@ describe("ai-metrics command", () => {
             expect(traceRequest.bodyText).not.toContain("private-otlp-fixture");
             expect(traceRequest.bodyText).not.toContain(tmpDir);
             expect(result.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
-            expect(result.ingestRunId).toBe(forwarderResult.ingestRunId);
             expect(result.spanCount).toBeGreaterThan(0);
             expect(resultJson).not.toContain("private-otlp-fixture");
             expect(resultJson).not.toContain(rawArchiveKey);
@@ -1301,7 +1465,7 @@ describe("ai-metrics command", () => {
         withTempDirectory((tmpDir) =>
           Effect.gen(function* () {
             const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(31));
-            const { dataRoot, forwarderResult } = yield* withRawArchiveKeyEnv(rawArchiveKey, seedAiMetricsData(tmpDir));
+            const { dataRoot } = yield* withRawArchiveKeyEnv(rawArchiveKey, seedAiMetricsData(tmpDir));
 
             yield* runAiMetricsCommand([
               "otlp",
@@ -1310,8 +1474,6 @@ describe("ai-metrics command", () => {
               "local",
               "--data-root",
               dataRoot,
-              "--ingest-run",
-              forwarderResult.ingestRunId,
               "--otlp-base-url",
               otlpBaseUrl,
               "--json",
@@ -1321,7 +1483,6 @@ describe("ai-metrics command", () => {
             const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
             expect(traceRequest.contentType).toContain("application/x-protobuf");
-            expect(result.ingestRunId).toBe(forwarderResult.ingestRunId);
             expect(result.spanCount).toBeGreaterThan(0);
           })
         )
@@ -1346,8 +1507,6 @@ describe("ai-metrics command", () => {
                 "dankserver",
                 "--data-root",
                 dataRoot,
-                "--ingest-run",
-                "latest",
                 "--hash-salt-secret-ref",
                 "op://TBK/ai-metrics/hash-salt",
                 "--raw-archive-key-secret-ref",
@@ -1357,7 +1516,9 @@ describe("ai-metrics command", () => {
                 "--json",
               ]);
 
-              expect(output).toContain("Failed to select the latest AI metrics ingest run.");
+              // Fails while preparing the store, still before any derived read and still
+              // before anything reaches the collector -- which is what this test guards.
+              expect(output).toContain("Failed to prepare the AI metrics derived DuckDB store for OTLP export");
               expect(requests).toHaveLength(0);
               expect(output).not.toContain("hash-salt-secret-ref");
               expect(output).not.toContain("raw-archive-key-secret-ref");

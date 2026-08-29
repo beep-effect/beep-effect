@@ -8,11 +8,12 @@
 /**
  * CandidateDraft table metadata namespace.
  *
- * @example
+ * **Example** (Log CandidateDraft table name)
+ *
  * ```ts
  * import { CandidateDraft } from "@beep/workspace-tables/entities"
  *
- * console.log(CandidateDraft.Table.definition.tableName)
+ * console.log(CandidateDraft.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -22,11 +23,12 @@ export * as CandidateDraft from "./CandidateDraft/index.ts";
 /**
  * CandidateProject table metadata namespace.
  *
- * @example
+ * **Example** (Log CandidateProject table name)
+ *
  * ```ts
  * import { CandidateProject } from "@beep/workspace-tables/entities"
  *
- * console.log(CandidateProject.Table.definition.tableName)
+ * console.log(CandidateProject.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -36,11 +38,12 @@ export * as CandidateProject from "./CandidateProject/index.ts";
 /**
  * Message table metadata namespace.
  *
- * @example
+ * **Example** (Log Message table name)
+ *
  * ```ts
  * import { Message } from "@beep/workspace-tables/entities"
  *
- * console.log(Message.Table.definition.tableName)
+ * console.log(Message.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -50,11 +53,12 @@ export * as Message from "./Message/index.ts";
 /**
  * Thread table metadata namespace.
  *
- * @example
+ * **Example** (Log Thread table name)
+ *
  * ```ts
  * import { Thread } from "@beep/workspace-tables/entities"
  *
- * console.log(Thread.Table.definition.tableName)
+ * console.log(Thread.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -64,11 +68,12 @@ export * as Thread from "./Thread/index.ts";
 /**
  * Turn table metadata namespace.
  *
- * @example
+ * **Example** (Log Turn table name)
+ *
  * ```ts
  * import { Turn } from "@beep/workspace-tables/entities"
  *
- * console.log(Turn.Table.definition.tableName)
+ * console.log(Turn.TABLE_NAME)
  * ```
  *
  * @category tables

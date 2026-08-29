@@ -27,51 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/documents-tables": [
-        "../../../packages/documents/tables/src/index.ts"
-      ],
-      "@beep/documents-tables/tables": [
-        "../../../packages/documents/tables/src/tables.ts"
-      ],
-      "@beep/documents-tables/entities/SyncItem": [
-        "../../../packages/documents/tables/src/entities/SyncItem/index.ts"
-      ],
-      "@beep/documents-tables/entities/SyncOperation": [
-        "../../../packages/documents/tables/src/entities/SyncOperation/index.ts"
-      ],
-      "@beep/documents-tables/entities/SyncCursor": [
-        "../../../packages/documents/tables/src/entities/SyncCursor/index.ts"
-      ],
-      "@beep/documents-tables/entities/SyncConflict": [
-        "../../../packages/documents/tables/src/entities/SyncConflict/index.ts"
-      ],
-      "@beep/documents-domain": [
-        "../../../packages/documents/domain/src/index.ts"
-      ],
-      "@beep/documents-domain/aggregates": [
-        "../../../packages/documents/domain/src/aggregates/index.ts"
-      ],
-      "@beep/documents-domain/entities": [
-        "../../../packages/documents/domain/src/entities/index.ts"
-      ],
-      "@beep/documents-domain/identity": [
-        "../../../packages/documents/domain/src/identity/index.ts"
-      ],
-      "@beep/documents-domain/identity/Documents": [
-        "../../../packages/documents/domain/src/identity/Documents.ts"
-      ],
-      "@beep/documents-domain/values": [
-        "../../../packages/documents/domain/src/values/index.ts"
-      ],
-      "@beep/drizzle": ["../../../packages/drivers/drizzle/src/index.ts"],
-      "@beep/test-utils": [
-        "../../../packages/tooling/test-kit/test-utils/src/index.ts"
-      ],
-      "@beep/test-utils/*": [
-        "../../../packages/tooling/test-kit/test-utils/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

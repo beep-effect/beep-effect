@@ -7,13 +7,15 @@
 
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { Effect, Path } from "effect";
-import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.js";
-import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.js";
+import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
+import { isEcosystemMemberSourcePath } from "../../Laws/internal/LawScan.ts";
+import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
 
 /**
  * Create the package-owner resolver used by schema-first repository scans.
  *
- * @example
+ * **Example** (Wrap owner resolver in Effect)
+ *
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -21,6 +23,7 @@ import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.js";
  * const program = Effect.succeed(makeSchemaFirstOwnerResolver)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -38,7 +41,8 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
 /**
  * Create a ts-morph project loaded with the schema-first scan source globs.
  *
- * @example
+ * **Example** (Wrap project factory in Effect)
+ *
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -46,6 +50,7 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
  * const program = Effect.succeed(makeSchemaFirstProject)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -60,13 +65,25 @@ export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(functi
 /**
  * Predicate for source paths excluded from schema-first scans.
  *
- * @example
+ * **Details**
+ *
+ * Ecosystem members (`packages/ecosystem/<member>/...`) are excluded alongside
+ * the generic TypeScript source exclusions: published-package standards
+ * supersede the repo's schema-first style law inside that family
+ * (`standards/architecture/14-ecosystem-packages.md`, Style-Law Scoping).
+ *
+ * **Example** (Check excluded dist path)
+ *
  * ```ts
  * import { isSchemaFirstExcludedFile } from "@beep/repo-cli/test/Lint"
  *
  * console.log(isSchemaFirstExcludedFile("packages/demo/dist/index.ts"))
  * ```
+ *
+ * @param filePath - Repo-relative source path under consideration.
+ * @returns `true` when the path must not enter schema-first scans.
  * @category predicates
  * @since 0.0.0
  */
-export const isSchemaFirstExcludedFile = isExcludedTypeScriptSourcePath;
+export const isSchemaFirstExcludedFile = (filePath: string): boolean =>
+  isEcosystemMemberSourcePath(filePath) || isExcludedTypeScriptSourcePath(filePath);

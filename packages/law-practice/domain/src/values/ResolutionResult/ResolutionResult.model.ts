@@ -9,21 +9,22 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
+import { CitationId } from "../CitationId/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ResolutionResult/ResolutionResult.model");
 
 /**
  * Result of resolving a short-form citation.
  *
+ * **Details**
+ *
  * Pairs the target citation (by both fragile array index and stable
  * {@link CitationId}) with the antecedent authority, a resolution `confidence`
- * score, and optional diagnostics — the `failureReason` and `warnings` emitted
- * when resolution is uncertain or fails.
+ * score, and diagnostics — the optional `failureReason` and zero-or-more
+ * `warnings` emitted when resolution is uncertain or fails.
  *
- * **Example**
+ * **Example** (Make a resolution result)
  *
- * @example
  * ```ts
  * import { ResolutionResult } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -82,8 +83,7 @@ export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionRes
       })
     ),
     warnings: S.Array(S.String).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<string>(),
       S.annotateKey({
         description: "Warnings about ambiguous or uncertain resolutions.",
       })
@@ -101,7 +101,8 @@ export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionRes
 /**
  * Companion namespace for `ResolutionResult`.
  *
- * @example
+ * **Example** (Alias the Encoded type)
+ *
  * ```ts
  * import type { ResolutionResult } from "@beep/law-practice-domain"
  *
@@ -115,9 +116,8 @@ export declare namespace ResolutionResult {
   /**
    * Wire-encoded representation of a decoded {@link ResolutionResult}.
    *
-   * **Example**
+   * **Example** (Reference Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { ResolutionResult } from "@beep/law-practice-domain"
    *

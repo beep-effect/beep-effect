@@ -8,20 +8,22 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.js";
+import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Organize.schemas");
 
 /**
  * Validated options used by `corpus organize`.
  *
- * @example
+ * **Example** (Make organize options)
+ *
  * ```ts
  * import { CorpusOrganizeOptions } from "@beep/repo-cli/commands/Corpus"
  *
  * const options = CorpusOrganizeOptions.make({ corpusRoot: "/data/corpus", overwrite: false })
  * console.log(options.corpusRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,13 +41,15 @@ export class CorpusOrganizeOptions extends S.Class<CorpusOrganizeOptions>($I`Cor
 /**
  * Organization category assigned to one canonical corpus artifact.
  *
- * @example
+ * **Example** (Validate category schema)
+ *
  * ```ts
  * import { CorpusOrganizeCategory } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CorpusOrganizeCategory)("docket")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -74,7 +78,8 @@ export type CorpusOrganizeCategory = typeof CorpusOrganizeCategory.Type;
 /**
  * One row of the organize manifest mapping a canonical artifact into the taxonomy.
  *
- * @example
+ * **Example** (Make organize record)
+ *
  * ```ts
  * import { CorpusOrganizeRecord } from "@beep/repo-cli/commands/Corpus"
  *
@@ -92,6 +97,7 @@ export type CorpusOrganizeCategory = typeof CorpusOrganizeCategory.Type;
  * })
  * console.log(record.category) // "docket"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,7 +124,8 @@ export class CorpusOrganizeRecord extends S.Class<CorpusOrganizeRecord>($I`Corpu
 /**
  * JSONL encoder for {@link CorpusOrganizeRecord}.
  *
- * @example
+ * **Example** (Encode record as JSON)
+ *
  * ```ts
  * import { CorpusOrganizeRecord, encodeCorpusOrganizeRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { Effect } from "effect"
@@ -135,6 +142,7 @@ export class CorpusOrganizeRecord extends S.Class<CorpusOrganizeRecord>($I`Corpu
  *
  * Effect.runPromise(encodeCorpusOrganizeRecordJson(record)).then((json) => console.log(json.includes("unsorted"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -143,7 +151,8 @@ export const encodeCorpusOrganizeRecordJson = JsonStringCodec(CorpusOrganizeReco
 /**
  * Summary counts returned by `corpus organize`.
  *
- * @example
+ * **Example** (Make organize summary)
+ *
  * ```ts
  * import { CorpusOrganizeSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -162,6 +171,7 @@ export const encodeCorpusOrganizeRecordJson = JsonStringCodec(CorpusOrganizeReco
  * })
  * console.log(summary.docketFiles) // 2
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -186,7 +196,8 @@ export class CorpusOrganizeSummary extends S.Class<CorpusOrganizeSummary>($I`Cor
 /**
  * JSON encoder for {@link CorpusOrganizeSummary}.
  *
- * @example
+ * **Example** (Encode summary as JSON)
+ *
  * ```ts
  * import { CorpusOrganizeSummary, encodeCorpusOrganizeSummaryJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -207,6 +218,7 @@ export class CorpusOrganizeSummary extends S.Class<CorpusOrganizeSummary>($I`Cor
  *
  * Effect.runPromise(encodeCorpusOrganizeSummaryJson(summary)).then((json) => console.log(json.includes("canonicalArtifacts"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

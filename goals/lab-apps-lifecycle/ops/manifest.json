@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lab-apps-lifecycle",
+    "title": "Lab Apps Lifecycle",
+    "status": "completed-retained",
+    "created": "2026-08-13",
+    "updated": "2026-08-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lab-apps-lifecycle",
+  "lifecycle": "completed-retained",
+  "mission": "Law-abiding apps/labs/* lab apps via create-package variants (nextjs, vite, service; tauri phase 2) and a beep delete-package that fully prunes every registration surface.",
+  "statusNote": "Two tracks, one packet (operator-ratified 2026-08-13): registration geometry + delete-package first, labs scaffolding second, tauri last. Split (phase superseded + sibling packet) if either track grows a second primary. All 14 track decisions are locked in SPEC Decision Log; do not re-litigate them.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "note": "Authored directly from the operator objective plus a 6-lane exploration fan-out and a 4-round /grill-with-docs interview on 2026-08-13. No explorations/ packet; DoR content (problem, appetite, no-gos, decision log, first slice, capability check) is carried in SPEC.md and research/."
+  },
+  "dependencies": [],
+  "blockedBy": [],
+  "provides": [
+    "apps/labs",
+    "tooling/delete-package",
+    "tooling/registration-geometry"
+  ],
+  "requires": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/lab-apps-lifecycle/README.md",
+    "goals/lab-apps-lifecycle/SPEC.md",
+    "goals/lab-apps-lifecycle/PLAN.md",
+    "goals/lab-apps-lifecycle/GOAL.md",
+    "goals/lab-apps-lifecycle/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/01-create-package-anatomy.md",
+    "research/02-registration-blast-radius.md",
+    "research/03-apps-anatomy-variants.md",
+    "research/04-governance-gates.md",
+    "research/05-deletion-prior-art.md",
+    "research/06-goals-packet-conventions.md",
+    "research/10-p0-census-ratification.md",
+    "research/11-registration-geometry-design.md",
+    "research/12-p0-gate-scoping-ratified.md",
+    "goals/speed-loop/research/r3-package-deletions.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lab-apps-lifecycle/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Census ratification and geometry schema design",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement delete-package with doctor mode",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Implement apps/labs substrate and v1 variants",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Tauri lab variant (spike then land)",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Verify create/delete round-trip",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: final PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lab-apps-lifecycle/GOAL.md)\" -le 4000",
+    "jq . goals/lab-apps-lifecycle/ops/manifest.json",
+    "rg -n \"lab-apps-lifecycle|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lab-apps-lifecycle",
+    "git diff --check -- goals/lab-apps-lifecycle",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check"
+  ],
+  "stopConditions": [
+    "A lab variant would require relaxing a code law (schema-first, effect-first, portless wrapping, identity registration, import boundaries) rather than a path-scoped ceremony exemption.",
+    "delete-package cannot name a closed, testable set of registration surfaces without a live inventory (the geometry schema must stay the single source of the prune list).",
+    "Zero-root-churn proves impossible for a shared surface with no glob/reconstructive mechanism and the fallback would be per-lab hand edits to shared config.",
+    "Either track would absorb unrelated create-package, architecture-command, or CI-topology redesign work.",
+    "Verification requires unnamed credentials, cost, destructive side effects outside the target lab, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "mergedPullRequest": 756
+}

@@ -7,7 +7,7 @@
 
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
-import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { Defect, NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Effect, Inspectable, Layer } from "effect";
 import { dual } from "effect/Function";
@@ -144,7 +144,8 @@ const sanitizeNGramResult = (
 /**
  * Typed failure for `wink-nlp-utils` string, token, and n-gram helpers.
  *
- * @example
+ * **Example** (Create error from cause)
+ *
  * ```ts
  * import { WinkUtilsError } from "@beep/wink"
  *
@@ -155,14 +156,14 @@ const sanitizeNGramResult = (
  * @category errors
  * @since 0.0.0
  */
-export class WinkUtilsError extends TaggedErrorClass<WinkUtilsError>($I`WinkUtilsError`)(
+export class WinkUtilsError extends S.TaggedError<WinkUtilsError>($I`WinkUtilsError`)(
   "WinkUtilsError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
     operation: S.String,
   },
-  $I.annote("WinkUtilsError", {
+  $I.annoteError<WinkUtilsError>("WinkUtilsError", {
     description: "Failure raised while calling wink-nlp-utils helpers.",
   })
 ) {
@@ -303,7 +304,8 @@ const makeWinkUtils = Effect.gen(function* () {
 /**
  * Service wrapping `wink-nlp-utils` string cleanup, phonetic, and n-gram helpers.
  *
- * @example
+ * **Example** (Remove HTML tags)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkUtils, WinkUtilsLive } from "@beep/wink"
@@ -324,7 +326,8 @@ export class WinkUtils extends Context.Service<WinkUtils, WinkUtilsShape>()($I`W
 /**
  * Live layer for the `wink-nlp-utils` wrappers.
  *
- * @example
+ * **Example** (Bag of n-grams)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkUtils, WinkUtilsLive } from "@beep/wink"

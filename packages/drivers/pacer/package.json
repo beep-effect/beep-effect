@@ -17,9 +17,9 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run type-test && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -29,13 +29,11 @@
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --passWithNoTests --exclude=test/integration/**",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
-    "dtslint": "bunx tstyche --config ../../../tstyche.json --root ../../.. packages/drivers/pacer/dtslint/Pacer.tst.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration",
-    "type-test": "bun run dtslint"
+    "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",

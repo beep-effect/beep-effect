@@ -1,9 +1,9 @@
 /**
  * App-side disconnected DMS mirror layers.
  *
- * Substituted for the Box-backed adapter when `CLOUD_BOX_TOKEN` is not
- * configured: every mirror verb fails with a typed, non-retryable
- * `DmsMirrorUnavailable` carrying setup guidance, and the availability probe
+ * Substituted for the Box-backed adapter when no Box credentials (neither the
+ * CCG trio nor `CLOUD_BOX_TOKEN`) are configured: every mirror verb fails with
+ * a typed, non-retryable `DmsMirrorUnavailable` carrying setup guidance, and the availability probe
  * reports the provider as disconnected so the sync status surface can render
  * an honest connection state.
  *
@@ -18,11 +18,12 @@ import {
   DmsMirrorUnavailable,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { Effect, Layer } from "effect";
+import * as O from "effect/Option";
 
 const disconnected = Effect.fail(
   DmsMirrorUnavailable.make({
     provider: "box",
-    reason: "Box is not connected. Set CLOUD_BOX_TOKEN and restart the app.",
+    reason: "Box is not connected. Configure CCG credentials or set CLOUD_BOX_TOKEN, then restart the app.",
     retryable: false,
   })
 );
@@ -33,11 +34,13 @@ const failDisconnected = () => disconnected;
  * `DmsMirror` layer whose every verb fails with a typed non-retryable
  * `DmsMirrorUnavailable` explaining how to connect Box.
  *
- * @example
+ * **Example** (Verifying disconnected layer)
+ *
  * ```ts
  * import { DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
+ * import { Layer } from "effect"
  *
- * console.log(DmsMirrorDisconnectedLayer)
+ * console.log(Layer.isLayer(DmsMirrorDisconnectedLayer)) // true
  * ```
  *
  * @category layers
@@ -55,14 +58,20 @@ export const DmsMirrorDisconnectedLayer: Layer.Layer<DmsMirror> = Layer.succeed(
   })
 );
 
+const disconnectedProbe = Effect.succeed(
+  DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("credentials-missing"), provider: "box" })
+);
+
 /**
  * `DmsMirrorAvailability` layer whose probe reports Box as disconnected.
  *
- * @example
+ * **Example** (Verifying availability layer)
+ *
  * ```ts
  * import { DmsMirrorAvailabilityDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
+ * import { Layer } from "effect"
  *
- * console.log(DmsMirrorAvailabilityDisconnectedLayer)
+ * console.log(Layer.isLayer(DmsMirrorAvailabilityDisconnectedLayer)) // true
  * ```
  *
  * @category layers
@@ -70,7 +79,5 @@ export const DmsMirrorDisconnectedLayer: Layer.Layer<DmsMirror> = Layer.succeed(
  */
 export const DmsMirrorAvailabilityDisconnectedLayer: Layer.Layer<DmsMirrorAvailability> = Layer.succeed(
   DmsMirrorAvailability,
-  DmsMirrorAvailability.of({
-    probe: Effect.succeed(DmsMirrorProbe.make({ connected: false, provider: "box" })),
-  })
+  DmsMirrorAvailability.of({ probe: disconnectedProbe, refresh: disconnectedProbe })
 );

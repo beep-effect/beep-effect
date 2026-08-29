@@ -37,11 +37,14 @@ class CorpusStatsParameters extends S.Class<CorpusStatsParameters>($I`CorpusStat
  * Defines the agent-facing tool contract for inspecting a learned corpus'
  * vocabulary and vector statistics.
  *
+ * **Details**
+ *
  * Use this tool for diagnostics, explainability, or retrieval tuning when a
  * caller needs IDF values, vocabulary size, and optional matrix details.
  *
- * @example
- * ```ts
+ * **Example** (Decode parameters schema)
+ *
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { CorpusStats } from "@beep/nlp-processing/Tools/CorpusStats"
  *

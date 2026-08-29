@@ -18,13 +18,14 @@ const $I = $SchemaId.create("UnitInterval");
 /**
  * Schema for a real number in the closed unit interval `[0, 1]` (inclusive).
  *
- * @example
- * ```ts
+ * **Example** (Decode unit interval value)
+ *
+ * ```ts import.meta.vitest name="Decode unit interval value"
  * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  *
  * const value = S.decodeUnknownSync(UnitInterval)(0.92)
- * console.log(value) // 0.92
+ * value // => 0.92
  * ```
  *
  * @category models
@@ -38,51 +39,43 @@ export const UnitInterval = S.Finite.check(
     description:
       "Schema for a real number in the closed unit interval [0, 1] (inclusive).\nThe canonical shape for probabilities, confidences, ratios, and normalized scores.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
  * {@inheritDoc UnitInterval}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { UnitInterval } from "@beep/schema/UnitInterval"
- *
- * const confidence: UnitInterval = S.decodeUnknownSync(UnitInterval)(0.5)
- * console.log(confidence) // 0.5
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type UnitInterval = typeof UnitInterval.Type;
 
 /**
  * Type guard for {@link UnitInterval}.
  *
- * @example
- * ```ts
+ * **Example** (Check unit interval bounds)
+ *
+ * ```ts import.meta.vitest name="Check unit interval bounds"
  * import { isUnitInterval } from "@beep/schema/UnitInterval"
  *
- * console.log(isUnitInterval(0.5)) // true
- * console.log(isUnitInterval(1.5)) // false
+ * isUnitInterval(0.5) // => true
+ * isUnitInterval(1.5) // => false
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const isUnitInterval = UnitInterval.is;
 
 /**
  * UnitInterval constant for `0` (the empty/none bound).
  *
- * @example
- * ```ts
+ * **Example** (Use ZERO with complement)
+ *
+ * ```ts import.meta.vitest name="Use ZERO with complement"
  * import { ZERO, complement, isUnitInterval } from "@beep/schema/UnitInterval"
  *
- * console.log(isUnitInterval(ZERO)) // true
- * console.log(complement(ZERO)) // 1
+ * isUnitInterval(ZERO) // => true
+ * complement(ZERO) // => 1
  * ```
  *
  * @category constants
@@ -93,12 +86,13 @@ export const ZERO: UnitInterval = UnitInterval.make(0);
 /**
  * UnitInterval constant for `1` (the full/certain bound).
  *
- * @example
- * ```ts
+ * **Example** (Use ONE with complement)
+ *
+ * ```ts import.meta.vitest name="Use ONE with complement"
  * import { ONE, complement, isUnitInterval } from "@beep/schema/UnitInterval"
  *
- * console.log(isUnitInterval(ONE)) // true
- * console.log(complement(ONE)) // 0
+ * isUnitInterval(ONE) // => true
+ * complement(ONE) // => 0
  * ```
  *
  * @category constants
@@ -109,14 +103,15 @@ export const ONE: UnitInterval = UnitInterval.make(1);
 /**
  * The complement of a unit-interval value (`1 - value`).
  *
- * @example
- * ```ts
+ * **Example** (Complement of ONE)
+ *
+ * ```ts import.meta.vitest name="Complement of ONE"
  * import { complement, ONE } from "@beep/schema/UnitInterval"
  *
- * console.log(complement(ONE)) // 0
+ * complement(ONE) // => 0
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const complement = (value: UnitInterval): UnitInterval => UnitInterval.make(1 - value);

@@ -1,5 +1,5 @@
 import { DuckDb } from "@beep/duckdb";
-import { aiMetricsDerivedDuckDbPath, DEFAULT_AI_METRICS_DATA_ROOT, withAiMetricsDuckDb } from "@beep/repo-ai-metrics";
+import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -26,9 +26,10 @@ const makeDerivedDuckDbPath = Effect.fn("makeDerivedDuckDbPath")(function* (tmpD
 
 describe("@beep/repo-ai-metrics duckdb helpers", () => {
   it("resolves the derived-store path under a data root", () => {
-    expect(DEFAULT_AI_METRICS_DATA_ROOT).toBe(".beep/ai-metrics");
-    expect(aiMetricsDerivedDuckDbPath(DEFAULT_AI_METRICS_DATA_ROOT)).toBe(".beep/ai-metrics/derived/ai-metrics.duckdb");
     expect(aiMetricsDerivedDuckDbPath("/srv/data/ai-metrics")).toBe("/srv/data/ai-metrics/derived/ai-metrics.duckdb");
+    expect(aiMetricsDerivedDuckDbPath("/home/dev/.local/state/beep/ai-metrics")).toBe(
+      "/home/dev/.local/state/beep/ai-metrics/derived/ai-metrics.duckdb"
+    );
   });
 
   it.effect("provides a scoped DuckDb connection to the wrapped effect (data-first)", () =>

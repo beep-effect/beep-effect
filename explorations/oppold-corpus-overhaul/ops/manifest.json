@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "oppold-corpus-overhaul",
+    "title": "Oppold Corpus Overhaul",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/oppold-corpus-salvage-restoration"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-17",
+    "updated": "2026-08-24"
+  }
+}

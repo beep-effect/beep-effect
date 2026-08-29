@@ -31,32 +31,38 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageModelLayer } from "@beep/anthropic";
-import { Box, BoxDeveloperTokenConfig } from "@beep/box";
+import { Box, BoxCcgConfig, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
-import {
-  FILING_DECISION_DEFAULT_MODEL,
-  FILING_DECISION_MODEL_ENV,
-  FilingDecisionLlmConfigLayer,
-} from "@beep/documents-server/aggregates/Document";
 import {
   BoxMirrorConfigLayer,
   DmsMirrorAvailabilityBoxLayer,
   DmsMirrorBoxLive,
-} from "@beep/documents-server/aggregates/Sync";
-import {
   DocumentsServerLive,
   DocumentsServerLlmLive,
   DocumentsSyncDrizzleLive,
   DocumentsSyncFixtureLive,
+  FILING_DECISION_DEFAULT_MODEL,
+  FILING_DECISION_MODEL_ENV,
+  FilingDecisionLlmConfigLayer,
 } from "@beep/documents-server/layer";
+import {
+  EpistemicServerDrizzleLive,
+  EpistemicServerDrizzleRpcLive,
+  EpistemicServerRpcLive,
+} from "@beep/epistemic-server/layer";
+import { ContradictionReviewer, ContradictionReviewScope } from "@beep/epistemic-use-cases/server";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
-import { Thread, Workspace } from "@beep/workspace-server";
+import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
+import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
+import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { SourceText, Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
+import { ContradictionQaSeedLive } from "@/contradiction/ContradictionQaSeed";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
 import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
@@ -66,7 +72,7 @@ import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
 import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
-import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server";
+import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/server";
 import type * as PlatformError from "effect/PlatformError";
 
 /**
@@ -75,7 +81,8 @@ import type * as PlatformError from "effect/PlatformError";
  * (`AgentTurnKernel | ThreadStore | UsageRecordSink`) are satisfied here, so the
  * remaining requirement is whatever rpc/http transport the sidecar adds on top.
  *
- * @example
+ * **Example** (Check handlers layer type)
+ *
  * ```ts
  * import type { DesktopHandlersLayer } from "@/runtime/Layer"
  * import type { RuntimeLive } from "@/runtime/Layer"
@@ -86,7 +93,7 @@ import type * as PlatformError from "effect/PlatformError";
  * @category models
  * @since 0.0.0
  */
-const DesktopHandlersLive = Layer.mergeAll(
+const DesktopHandlersBase = Layer.mergeAll(
   ChatHandlersLive,
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
@@ -95,10 +102,21 @@ const DesktopHandlersLive = Layer.mergeAll(
   OntologyHandlersLive
 );
 
+const ContradictionQaSeedDesktopLive = ContradictionQaSeedLive.pipe(
+  Layer.provide(EpistemicServerDrizzleLive),
+  Layer.provide(Workspace.WorkspaceVaultStoreDrizzleLayer)
+);
+
+const EpistemicServerDesktopLive = Layer.merge(EpistemicServerDrizzleRpcLive, ContradictionQaSeedDesktopLive);
+
+const DesktopHandlersLive = Layer.merge(DesktopHandlersBase, EpistemicServerDesktopLive);
+const DesktopHandlersTest = Layer.merge(DesktopHandlersBase, EpistemicServerRpcLive);
+
 /**
  * Typed startup failures preserved by the desktop runtime.
  *
- * @example
+ * **Example** (Extract startup error tag)
+ *
  * ```ts
  * import type { DesktopStartupError } from "@/runtime/Layer"
  *
@@ -114,7 +132,8 @@ export type DesktopStartupError = Config.ConfigError | PlatformError.PlatformErr
 /**
  * Fully-provided desktop handler layer with recoverable startup failures.
  *
- * @example
+ * **Example** (Confirm runtime handlers)
+ *
  * ```ts
  * import type { DesktopHandlersLayer } from "@/runtime/Layer"
  * import { RuntimeLive } from "@/runtime/Layer"
@@ -199,14 +218,88 @@ const DocumentsFilingLive = selectByChatAgent(
   })
 );
 
+const SourceTextResolverDrizzleLive = SourceText.WorkspaceSourceTextResolverLayer.pipe(
+  Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine])),
+  Layer.provide(Workspace.WorkspaceVaultStoreDrizzleLayer)
+);
+
+const SourceTextResolverInMemoryLive = SourceText.WorkspaceSourceTextResolverLayer.pipe(
+  Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine])),
+  Layer.provide(Workspace.WorkspaceVaultStoreInMemoryLayer)
+);
+
+const desktopOrganizationId = SharedIdentity.OrganizationId.make(1);
+const desktopReviewer = UserPrincipal.make({
+  userId: SharedIdentity.UserId.make(1),
+});
+const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
+const ContradictionRequestContextLive = Layer.merge(
+  Layer.succeed(ContradictionReviewer, ContradictionReviewer.of(desktopReviewer)),
+  Layer.succeed(
+    ContradictionReviewScope,
+    ContradictionReviewScope.of({
+      orgId: desktopOrganizationId,
+      sourceScopeRef: `workspace:${desktopWorkspaceId}`,
+    })
+  )
+);
+
+/**
+ * Resolve the Box driver auth layer for the live vault-sync engine. Prefers
+ * Client Credentials Grant (`DMS_BOX_CLIENT_ID` + `DMS_BOX_CLIENT_SECRET`
+ * plus a `DMS_BOX_ENTERPRISE_ID` or `DMS_BOX_USER_ID` subject): the SDK
+ * refreshes CCG tokens itself, so a long-lived sidecar does not decay into
+ * 401s the way the static ~60-minute `CLOUD_BOX_TOKEN` developer token does.
+ * Falls back to the developer token, and `none` selects the app-local
+ * disconnected mirror layers. Only the selected auth mode is logged — never
+ * secret values.
+ */
+const boxAuthLayer = Effect.gen(function* () {
+  const ccg = yield* Config.option(
+    Config.all({
+      clientId: Config.nonEmptyString("DMS_BOX_CLIENT_ID"),
+      clientSecret: Config.redacted("DMS_BOX_CLIENT_SECRET"),
+      enterpriseId: Config.option(Config.nonEmptyString("DMS_BOX_ENTERPRISE_ID")),
+      userId: Config.option(Config.nonEmptyString("DMS_BOX_USER_ID")),
+    })
+  );
+  if (O.isSome(ccg)) {
+    const candidate = ccg.value;
+    if (O.isSome(candidate.enterpriseId) || O.isSome(candidate.userId)) {
+      yield* Effect.logInfo("Box auth: client credentials grant (self-refreshing)").pipe(
+        Effect.annotateLogs({
+          "box.auth.mode": "ccg",
+          "box.auth.subject": O.isSome(candidate.enterpriseId) ? "enterprise" : "user",
+        })
+      );
+      // makeCcgLayer is Layer.succeed under the hood; its declared BoxError
+      // channel never fires, so orDie only aligns the layer types.
+      return O.some(Box.makeCcgLayer(BoxCcgConfig.make(candidate)).pipe(Layer.orDie));
+    }
+    yield* Effect.logWarning(
+      "DMS_BOX_CLIENT_ID/DMS_BOX_CLIENT_SECRET are set without DMS_BOX_ENTERPRISE_ID or DMS_BOX_USER_ID; ignoring the CCG config"
+    );
+  }
+  const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
+  if (O.isSome(token)) {
+    yield* Effect.logInfo("Box auth: developer token (CLOUD_BOX_TOKEN)").pipe(
+      Effect.annotateLogs({ "box.auth.mode": "developer-token" })
+    );
+    return O.some(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: token.value })));
+  }
+  return O.none<Layer.Layer<Box>>();
+});
+
 /**
  * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
  * fully deterministic keyless engine (in-memory repos + fixture mirror);
- * otherwise the Drizzle-backed engine runs against the Box mirror when
- * `CLOUD_BOX_TOKEN` is configured, or against the app-local disconnected
- * mirror layers (typed `DmsMirrorUnavailable` + probe `connected: false`)
- * when it is not — the honest not-connected state while the Box test tenant
- * is not provisioned.
+ * otherwise the Drizzle-backed engine runs against the Box mirror when Box
+ * credentials are configured — {@link boxAuthLayer} prefers the
+ * self-refreshing Client Credentials Grant over the static `CLOUD_BOX_TOKEN`
+ * developer token — or against the app-local disconnected mirror layers
+ * (typed `DmsMirrorUnavailable` + probe `connected: false`) when neither is
+ * set — the honest not-connected state while the Box test tenant is not
+ * provisioned.
  *
  * @category layers
  * @since 0.0.0
@@ -214,18 +307,18 @@ const DocumentsFilingLive = selectByChatAgent(
 const DocumentsSyncLive = selectByChatAgent(
   DocumentsSyncFixtureLive,
   Effect.gen(function* () {
-    const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
-    return O.match(token, {
+    const box = yield* boxAuthLayer;
+    return O.match(box, {
       onNone: () =>
         DocumentsSyncDrizzleLive.pipe(
           Layer.provide([DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer])
         ),
-      onSome: (boxToken) =>
+      onSome: (boxDriver) =>
         DocumentsSyncDrizzleLive.pipe(
           // The availability probe resolves the mirror root itself, so it needs
           // the Box driver and mirror config just like the mirror layer.
           Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer))]),
-          Layer.provide(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: boxToken })))
+          Layer.provide(boxDriver)
         ),
     });
   })
@@ -234,11 +327,13 @@ const DocumentsSyncLive = selectByChatAgent(
 /**
  * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
- * @example
+ * **Example** (Verify live layer)
+ *
  * ```ts
  * import { RuntimeLive } from "@/runtime/Layer"
+ * import { Layer } from "effect"
  *
- * console.log(RuntimeLive)
+ * console.log(Layer.isLayer(RuntimeLive)) // true
  * ```
  *
  * @category layers
@@ -249,6 +344,8 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     TurnKernelLive,
     Thread.ThreadStoreDrizzleLayer,
     Workspace.WorkspaceVaultStoreDrizzleLayer,
+    SourceTextResolverDrizzleLive,
+    ContradictionRequestContextLive,
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
     DocumentsSyncLive,
@@ -266,21 +363,25 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
 /**
  * App-local fixture runtime Layer for smoke/dev chat and ontology handlers.
  *
- * @example
+ * **Example** (Verify test layer)
+ *
  * ```ts
  * import { RuntimeTest } from "@/runtime/Layer"
+ * import { Layer } from "effect"
  *
- * console.log(RuntimeTest)
+ * console.log(Layer.isLayer(RuntimeTest)) // true
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersLive.pipe(
+export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersTest.pipe(
   Layer.provide([
     FixtureTurnKernel,
     Thread.ThreadStoreInMemoryLayer,
     Workspace.WorkspaceVaultStoreInMemoryLayer,
+    SourceTextResolverInMemoryLive,
+    ContradictionRequestContextLive,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
     DocumentsSyncFixtureLive,

@@ -1,5 +1,6 @@
 import * as SyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -7,7 +8,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -24,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const mappedDriftRow = {
-  ...baseEntityFixtureInput(SyncConflict.SyncConflictId.entityType, 1),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, 1),
   conflictKind: "remoteEdit",
   localRelPath: "matters/client-default/complaint.pdf",
   provider: "box",
@@ -38,11 +39,22 @@ const mappedDriftRow = {
 
 describe("SyncConflict entity", () => {
   it("wires SyncConflict to the documents identity", () => {
-    expect(SyncConflict.SyncConflict.definition.entityId.tableName).toBe("documents_sync_conflict");
-    expect(SyncConflict.SyncConflict.definition.entityId.entityType).toBe("DocumentsSyncConflict");
-    expect(SyncConflict.SyncConflict.definition.persisted.conflictKind.columnName).toBe("conflict_kind");
-    expect(SyncConflict.SyncConflict.definition.persisted.remotePayload.storageKind).toBe("jsonb");
-    expect(SyncConflict.SyncConflict.definition.persisted.resolutionStatus.columnName).toBe("resolution_status");
+    expect(SyncConflict.SyncConflict.sql.tableName).toBe(DocumentsIdentity.SyncConflictId.tableName);
+    expect(Object.keys(SyncConflict.SyncConflict.insert.fields)).not.toContain("id");
+    expect(Object.keys(SyncConflict.SyncConflict.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(SyncConflict.SyncConflict.update.fields)).toContain("id");
+    expect(Object.keys(SyncConflict.SyncConflict.update.fields)).toContain("rowVersion");
+    expect(Object.keys(SyncConflict.SyncConflict.jsonCreate.fields)).toEqual([
+      "conflictKind",
+      "localRelPath",
+      "provider",
+      "remoteEventId",
+      "remoteId",
+      "remotePayload",
+      "resolutionStatus",
+      "syncItemId",
+      "workspaceId",
+    ]);
   });
 
   it("decodes and encodes a locally mapped drift row", () => {

@@ -31,11 +31,12 @@ import type * as Crypto from "effect/Crypto";
 /**
  * Synthetic engine descriptor used by tests and proof fixtures.
  *
- * @example
- * ```ts
+ * **Example** (Verify PST format support)
+ *
+ * ```ts import.meta.vitest name="Verify PST format support"
  * import { TestFileProcessingEngineDescriptor } from "@beep/file-processing/test"
  *
- * console.log(TestFileProcessingEngineDescriptor.supportedFormats.includes("pst")) // true
+ * TestFileProcessingEngineDescriptor.supportedFormats.includes("pst") // => true
  * ```
  *
  * @category fixtures
@@ -55,8 +56,9 @@ const testIdentifierHex = "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d
  * Decode the canonical synthetic artifact, digest, and operation identifiers
  * shared by driver test fixtures.
  *
- * @example
- * ```ts
+ * **Example** (Decode synthetic identifiers)
+ *
+ * ```ts import.meta.vitest name="Decode synthetic identifiers"
  * import { decodeTestOperationIdentifiers } from "@beep/file-processing/test"
  * import { Effect } from "effect"
  *
@@ -65,7 +67,7 @@ const testIdentifierHex = "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d
  *   return identifiers.digest.startsWith("sha256:")
  * })
  *
- * Effect.runPromise(program).then(console.log) // true
+ * await Effect.runPromise(program) // => true
  * ```
  *
  * @effects Decodes the fixed synthetic identifiers through the exported schemas and can fail with `SchemaError` if the fixture constants drift.
@@ -77,18 +79,19 @@ export const decodeTestOperationIdentifiers = Effect.fn("FileProcessingTest.deco
     { readonly artifactId: ArtifactId; readonly digest: ContentDigest; readonly operationId: OperationId },
     S.SchemaError
   > {
-    const artifactId = yield* S.decodeUnknownEffect(ArtifactId)(`artifact:${testIdentifierHex}`);
-    const digest = yield* S.decodeUnknownEffect(ContentDigest)(`sha256:${testIdentifierHex}`);
-    const operationId = yield* S.decodeUnknownEffect(OperationId)(`operation:${testIdentifierHex}`);
+    const artifactId = yield* S.decodeEffect(ArtifactId)(`artifact:${testIdentifierHex}`);
+    const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${testIdentifierHex}`);
+    const operationId = yield* S.decodeEffect(OperationId)(`operation:${testIdentifierHex}`);
     return { artifactId, digest, operationId };
   }
 );
 
+// fallow-ignore-next-line code-duplication -- synthetic fixtures keep their own engine-specific error wording
 const decodeTestArtifactPath = (
   path: string,
   operation: ExportArchiveOperation
 ): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  S.decodeUnknownEffect(PosixPath)(path).pipe(
+  S.decodeEffect(PosixPath)(path).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {
         artifactId: operation.source.id,
@@ -117,11 +120,12 @@ const deriveTestChildArtifactId = (
 /**
  * Synthetic file-processing engine for generated fixtures.
  *
- * @example
- * ```ts
+ * **Example** (Log engine descriptor name)
+ *
+ * ```ts import.meta.vitest name="Log engine descriptor name"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  *
- * console.log(TestFileProcessingEngine.descriptor.engine) // "test"
+ * TestFileProcessingEngine.descriptor.engine // => "test"
  * ```
  *
  * @category fixtures

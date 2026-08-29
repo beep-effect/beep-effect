@@ -9,19 +9,20 @@ import { DuckDb } from "@beep/duckdb";
 import { Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { ResearchCommandError } from "../Research.errors.js";
-import { ResearchStatusSummary } from "../Research.schemas.js";
-import { CATALOG_DB_NAME, runWithResearchDb, singleCount } from "./Catalog.js";
-import { VAULT_DIRS } from "./Vault.js";
-import type { ResearchStatusOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { ResearchStatusSummary } from "../Research.schemas.ts";
+import { CATALOG_DB_NAME, runWithResearchDb, singleCount } from "./Catalog.ts";
+import { VAULT_DIRS } from "./Vault.ts";
+import type { ResearchStatusOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const decodeStatusSummary = S.decodeUnknownEffect(ResearchStatusSummary);
 
 /**
  * Report research catalog status counts.
  *
- * @example
+ * **Example** (Build research status effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { statusImpl } from "@beep/repo-cli/commands/Research/internal/Status"
@@ -31,6 +32,7 @@ const decodeStatusSummary = S.decodeUnknownEffect(ResearchStatusSummary);
  * const program = statusImpl(ResearchStatusOptions.make({ vaultRoot: "/repo/.research" }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */

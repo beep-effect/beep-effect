@@ -6,13 +6,18 @@
  * @since 0.0.0
  */
 
+import { SYNC_CONFLICT_TABLE_NAME } from "@beep/documents-tables/entities/SyncConflict";
+import { SYNC_CURSOR_TABLE_NAME } from "@beep/documents-tables/entities/SyncCursor";
+import { SYNC_ITEM_TABLE_NAME } from "@beep/documents-tables/entities/SyncItem";
+import { SYNC_OPERATION_TABLE_NAME } from "@beep/documents-tables/entities/SyncOperation";
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
-import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
+import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
  * Documents sync migration target used to prove DMS sync-state persistence.
  *
- * @example
+ * **Example** (Log migration target tables)
+ *
  * ```ts
  * import { DocumentsSyncMigrationTarget } from "@beep/db-admin/migrations/DocumentsSync"
  *
@@ -25,12 +30,7 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
 export const DocumentsSyncMigrationTarget: DbAdminMigrationTarget = DbAdminMigrationTarget.make({
   name: "documents-sync",
   schemaName: "documents",
-  tables: [
-    DocumentsDbSchema.syncItem.definition.tableName,
-    DocumentsDbSchema.syncOperation.definition.tableName,
-    DocumentsDbSchema.syncCursor.definition.tableName,
-    DocumentsDbSchema.syncConflict.definition.tableName,
-  ],
+  tables: [SYNC_ITEM_TABLE_NAME, SYNC_OPERATION_TABLE_NAME, SYNC_CURSOR_TABLE_NAME, SYNC_CONFLICT_TABLE_NAME],
   drizzleSchema: {
     syncConflict: DocumentsDbSchema.syncConflict,
     syncCursor: DocumentsDbSchema.syncCursor,

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "legal-position-relator-runtime",
+    "title": "Legal Position Relator Runtime",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/legal-position-relator-runtime"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-05",
+    "updated": "2026-08-06"
+  }
+}

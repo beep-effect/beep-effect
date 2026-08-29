@@ -1,12 +1,9 @@
 # Agent Guide
 
 Canonical rules for all coding agents. Claude Code loads this via the
-`CLAUDE.md` symlink; Codex reads it directly. Laws only — architecture lives
-in `standards/ARCHITECTURE.md`, workflows in skills.
-
-## Mission
-
-Ship reliable code with effect-first and schema-first patterns.
+`CLAUDE.md` symlink (edit `AGENTS.md`, never the symlink); Codex reads it
+directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
+workflows in skills.
 
 ## Code Laws
 
@@ -15,15 +12,18 @@ Ship reliable code with effect-first and schema-first patterns.
   keep root `effect` imports for core combinators.
 - Prefer match helpers over conditional chains; prefer service composition
   over global state; keep service boundaries explicit.
-- Prefer tersest equivalent helper forms when behavior is unchanged: direct
-  helper refs over trivial lambdas, `flow(...)` for passthrough `pipe(...)`
-  callbacks, shared thunk helpers when already in scope.
+- Prefer the tersest equivalent helper form when behavior is unchanged: direct
+  helper refs over trivial lambdas, `flow(...)` over passthrough `pipe(...)`
+  callbacks, shared thunks already in scope.
 - Prefer named schema building blocks, derived `S.is(...)` guards, and
   `LiteralKit` internal domains over ad-hoc predicate helpers. Do not add
   `as const` to inline arrays passed to `LiteralKit(...)` — it uses const
   type parameters already.
 - Apply schema defaults when safe. Keep changes focused and testable.
-- In `packages/**/{test,dtslint}/**/*.{ts,tsx}`, import package source through
+- JSDoc on exported symbols uses titled `**Example** (Title)` and
+  `**Details**`/`**Gotchas**` prose sections — never `@example` or `@remarks`
+  tags. Law: `.patterns/jsdoc-documentation.md`.
+- In `packages/**/test/**/*.{ts,tsx}`, import package source through
   `@beep/*` aliases instead of relative paths into any workspace `src/`;
   relatives only for local helpers, fixtures, snapshots, and other
   non-`src` test files.
@@ -31,78 +31,103 @@ Ship reliable code with effect-first and schema-first patterns.
 ## Discovery & Reuse
 
 - Before recreating a shared helper, schema, utility, model, or known symbol,
-  search live source and barrels first:
-  `rg -n "export (const|function|class|type|interface) .*<intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.*'`
-  and `rg -n "<intent>" packages --glob '**/src/index.ts'`. Use the
-  `repo-symbol-discovery` skill for broader lookups.
-- The old `standards/repo-exports.catalog.*` is retired; never look for it or
-  run repo-export catalog commands as a discovery or proof step.
+  search live source (`packages/**/src/**`) and package barrels
+  (`**/src/index.ts`) first with targeted ripgrep.
 
 ## Quality Operator
 
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
-  `... verify`, `... publish --message "..."`, `... monitor` for End-to-End
-  Green (repair, proof, commit, push, PR checks, closeout, merge readiness).
-  Keep repo quality commands green.
+  `... verify`, `... publish --message "..."`, `... monitor`. Keep those
+  commands green.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also
   server-side commitlint input; keep body lines wrapped under 100 characters.
-- Fast-plus-monitor is opt-in only (`publish --fast --monitor`, PR-branch
-  guarded). Default to plain `publish --message`. Keep
-  `bun run audit:github pre-push` as the explicit full local fallback for
-  secrets, security, SAST, or Nix lanes.
-- Docgen: prefer `bun run docgen:local` for edit loops (bounded,
-  `origin/main...HEAD` + dirty files); `bun run docgen` only for the full
-  repo proof.
+- Docgen: `bun run docgen:local` for edit loops (bounded to
+  `origin/main...HEAD` + dirty files); full `bun run docgen` only for the
+  repo-wide proof.
+- Attribute verification failures before repairing — introduced / inherited /
+  unrelated / environment-only; attribution decides fix vs rebase vs report,
+  not blind rerun.
+- PR closeout: run `bun run beep yeet monitor` until it reports
+  `merge-ready: yes`. Unresolved review threads are a hard merge gate —
+  answer and resolve every one via `bun run beep yeet reply` (drafts in
+  `.beep/yeet/reply-drafts.json`); never leave threads standing or ask the
+  operator to relay them.
 
-## Codegen
+## Touch → Skill / Command
 
-- Use `bun run beep architecture` for canonical slice, concept, role, and
-  architecture proof generation instead of hand-authoring boilerplate.
-- Architecture concepts use canonical `--domain-kind` archetypes:
-  `aggregates` (full slice concepts), `entities` (persisted domain entities),
-  `values` (domain-only value objects).
+If you touch this, load or run this first. Do not hand-author around it.
+
+| Touch | Load / run |
+| --- | --- |
+| New workspace package | `bun run beep create-package` (do not `mkdir`) |
+| New slice / concept / role file | `bun run beep architecture` |
+| `packages/*/domain` or schemas | schema-first-development skill |
+| Effect service / Layer | effect-first-development skill |
+| JSDoc on exports | `.patterns/jsdoc-documentation.md` |
+| Gesture-bearing UI | browser-qa-loop skill |
+| PR publish / checks | yeet skill |
+
+## Dev Servers
+
+- Dev servers run only through the portless-wrapped package scripts
+  (`http://<name>.beep.localhost:1355`). Never launch raw `vite`/`next`/
+  `storybook dev` or test numeric localhost ports; `PORTLESS=0` is
+  diagnostic-only.
+
+## Browser QA
+
+- Gesture-bearing UI milestones run the `browser-qa-loop` skill with recorded
+  evidence via `bun run beep qa` (record → extract → judge); judge inventories
+  are schema-validated (`qa-inventory/v1`).
 
 ## Docs & Knowledge
 
-- `docs/` is tracked authored documentation (see `docs/README.md`); docgen
-  aggregate lands in gitignored `docs/generated/`; `docs/_internal/` is
-  private and must never be committed (public repo).
-- `explorations/` is the fuzzy front end (capture → graduate), driven by the
-  `/explore` skill; crystallized work graduates into `goals/` packets and
-  `docs/product/` prose.
+- `docs/` is tracked authored documentation (`docs/README.md` has the layout);
+  `docs/_internal/` is private and must never be committed — this repo is
+  public.
+- Top-level `research/` is the nightly research routine's machine-generated
+  intel surface (laws in `research/README.md`): packets are immutable, truth
+  is per-packet `claims.jsonl` + single-writer `research/ledger/`, and the
+  machine proposes via `SUGGESTED_ACTIONS.md` — agents never auto-append to
+  `explorations/INBOX.md` or `goals/` from research output.
+- same-PR packet-state flips: flip goal manifest/lifecycle status and land the
+  closeout reflection in the same PR as the final work.
+- Friction is a first-class output: when work is slower, harder, or riskier
+  than it should be, record a receipt — what you were doing, the evidence
+  (command, error text, PR/file), what would have prevented it — in the
+  active packet's ledger (`research/OPPORTUNITIES.md`) at the moment it
+  happens, never saved for closeout. This repo is public: before recording,
+  redact secrets/tokens/credentials, replace absolute home paths with `~`,
+  drop session/machine ids, and quote only the minimal identifying error text.
 
 ## Agent Memory
 
-- Cognee (`beepintir` MCP + cognee-memory plugin hooks/skills) is the sole
-  always-on durable dev-memory (2026-07-08 decision,
-  `standards/memory-architecture/04-decision-log.md`). It is OPERATOR-LEVEL
-  config (user plugin + user MCP settings), not provisioned by this repo's
-  `.mcp.json` — checkouts without it fall back to file memory and repo docs,
-  by design. Bounded use only: embedded/local or all-Postgres profile;
-  semantic memory is a managed cache (TTL, pruning, consolidation, node-set
-  scoping) — never source of truth. No uncited LLM output crosses the
-  authority boundary.
-- File memory (this file via the `CLAUDE.md` symlink, auto-memory
-  `MEMORY.md`) remains Layer 1 for durable curated knowledge.
-- `graphiti-memory` is DEPRECATED: write-frozen, read-available for
-  historical context only until the `@beep/epistemic-tables` bitemporal port
-  lands, then decommissioned. Read helpers until then:
-  `bun run graphiti:proxy`, `bun run graphiti:proxy:ensure`; `group_ids`
-  must be a JSON array containing `beep_dev`.
+- basic-memory (project `beep-shared`) is the durable always-on dev-memory
+  shared by all coding agents; file memory (`CLAUDE.md` / `MEMORY.md`) remains
+  Layer 1. codegraph answers code-structure questions (symbols, callers,
+  blast radius) before grep. All memory decisions and operational detail
+  live in `standards/memory-architecture/`.
+- Fresh machine / clone / worktree: run `bash scripts/setup-agent-memory.sh`
+  once so the shared store and per-checkout `.codegraph/` index exist (see
+  `standards/memory-architecture/07-shared-memory-adoption.md` §Bootstrap).
 - If memory is unavailable in-session, fall back to repo-local docs, code
   search, and this file.
 
 ## Tool Routing
 
-- effect v3↔v4 differences: prefer the `effect-v4-imports` skill; reach for
-  Cognee recall (or read-frozen `graphiti-memory`) only for historical
-  context.
+- effect v3↔v4 differences: validate against the Effect reference checkout
+  (`.repos/effect`, a machine-local symlink provisioned by
+  `scripts/setup-agent-memory.sh`), never training-data priors.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
-- MUI: prefer `mui-mcp` — `useMuiDocs` first, then `fetchDocs` only with URLs
-  it returned.
+- UI motion evidence comes from `bun run beep qa` artifacts. There is no QA
+  MCP server; the `chrome-devtools` MCP is slim and default-disabled, for
+  perf-trace/computed-style introspection during QA sessions.
+- Codex Cloud security findings: export the CSV from the signed-in findings
+  view, then `bun run beep codex findings ingest --from <export.csv>`; prefer
+  the `codex-findings` skill. Never hand-build the packet.
 
 ## Context Economy
 
@@ -110,8 +135,8 @@ Ship reliable code with effect-first and schema-first patterns.
   enabled tools before working, not mid-task.
 - Always-loaded files (this file, skill frontmatter, settings) are the prompt
   cache prefix: batch edits to them, keep them lean; durable cross-session
-  knowledge belongs in file-memory or Cognee, not here.
-- Front-load stable context; let volatile per-task detail arrive later in the
-  conversation.
+  knowledge belongs in file-memory or the shared basic-memory store, not here.
 - Continue related follow-ups on an existing subagent (SendMessage) instead
-  of spawning fresh ones; avoid idle gaps over ~5 minutes (cache TTL).
+  of spawning fresh ones.
+- Durable on-disk handoffs: agent/session transitions exchange deliverables as
+  files on disk (packet `research/`, scratchpad), never chat-only summaries.

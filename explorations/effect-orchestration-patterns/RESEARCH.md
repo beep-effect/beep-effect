@@ -9,6 +9,66 @@ fully-sourced notes per subtopic live in research/<subtopic>.md — this file is
 the cited summary; follow the links for line-level provenance and Open/Unverified.
 -->
 
+## 2026-07-14 — Dossier Refresh (Superseding Inventory)
+
+This dated inventory supersedes the June claims that `RateLimiter` was unused
+and that the repo lacked a vendored durable-workflow surface. Older sections
+remain as research provenance, not as the current adoption premise.
+
+### Effect v4 workflow-module capability inventory
+
+The authoritative vendored surface is
+`.repos/effect-v4/packages/effect/src/unstable/workflow/`:
+
+- `Workflow.ts` defines typed workflows, execution/poll/resume operations,
+  deterministic execution ids derived from workflow identity and payload, and
+  encoded complete/suspended results.
+- `Activity.ts` defines named, encoded activities whose outcomes an engine can
+  persist/replay. It supports retry schedules and deterministic
+  `idempotencyKey` derivation.
+- `DurableDeferred.ts` provides externally completable, engine-backed durable
+  acknowledgments; `DurableClock.ts` delegates durable timers to the engine;
+  and `DurableQueue.ts` coordinates persisted background work with durable
+  completion tokens.
+- `WorkflowEngine.ts` exposes `WorkflowEngine.makeUnsafe`, a low-level pluggable
+  `Encoded` engine contract for register, execute, poll, interrupt, resume,
+  activity execution, deferred completion, and clock scheduling. The adapter
+  must persist, resume, and encode workflow state correctly. Its
+  `layerMemory` is explicitly for tests/local development and is not durability
+  evidence.
+- `WorkflowProxy.ts` and `WorkflowProxyServer.ts` derive RPC/HTTP execute,
+  discard, and resume surfaces.
+- `index.ts` exports the subsystem. None of these modules requires an Effect
+  cluster runtime.
+
+The inventory changes the build-vs-adopt order: first prove a persistence-backed
+encoded engine against the docketing contract. Only a demonstrated contract
+gap can justify bespoke checkpoint/replay/orchestration machinery. Because the
+surface is `unstable`, every Effect upgrade must rerun compile-time and
+behavioral compatibility proof.
+
+### Live HTTP resilience inventory
+
+- `packages/foundation/capability/api-transport/src/Transport.ts` already
+  composes authentication, `HttpClient.withRateLimiter`, native
+  `effect/unstable/persistence/RateLimiter`, and
+  `HttpClient.retryTransient` with a jittered exponential `Schedule`.
+- `packages/foundation/capability/api-transport/README.md` records that this
+  transport was incubated in GovInfo and promoted after a congruent eCFR
+  consumer. It names both live adopters.
+- `packages/drivers/govinfo/src/Govinfo.service.ts` and
+  `packages/drivers/ecfr/src/Ecfr.service.ts` import and apply
+  `makeApiTransport`; both supply the native in-memory limiter store in their
+  live layers.
+- `packages/drivers/uspto` currently has no `@beep/api-transport` import or
+  dependency. Its adoption belongs to the owning
+  `goals/uspto-prosecution-read` packet as a P0 spike and named P1 work item.
+
+Therefore HTTP resilience extends `@beep/api-transport`; it does not create a
+new retry home. LLM retry predicates remain at LLM driver boundaries,
+build-time provider selection remains app-local, and the June `Retry.ts` /
+schema-helper / generic-selector pre-draft is superseded.
+
 ## External Landscape
 
 The single most load-bearing external fact: **the repo compiles against `effect@4.0.0-beta.91`**

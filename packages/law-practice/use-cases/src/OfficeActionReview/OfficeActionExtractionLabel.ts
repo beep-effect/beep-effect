@@ -14,7 +14,8 @@ const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionExtract
  * Labels the office-action review loop requests from LangExtract and the
  * IR-to-law mapper consumes as required grounded extractions.
  *
- * @example
+ * **Example** (Log distinction enum value)
+ *
  * ```ts
  * import { OfficeActionExtractionLabel } from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -38,7 +39,8 @@ export const OfficeActionExtractionLabel = LiteralKit([
 /**
  * Type for {@link OfficeActionExtractionLabel}.
  *
- * @example
+ * **Example** (Type claim label value)
+ *
  * ```ts
  * import type { OfficeActionExtractionLabel } from "@beep/law-practice-use-cases/OfficeActionReview"
  *

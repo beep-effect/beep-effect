@@ -67,7 +67,7 @@ const hashCanonicalText = Effect.fn("SemanticWeb.hashCanonicalText")(function* (
       }),
   });
 
-  return yield* S.decodeUnknownEffect(Sha256Hex)(hex).pipe(
+  return yield* S.decodeEffect(Sha256Hex)(hex).pipe(
     Effect.mapError(() =>
       CanonicalizationError.make({
         reason: "fingerprintFailure",
@@ -142,7 +142,10 @@ const fromCanonizeObject = (object: CanonizeObject): ObjectTerm =>
     Match.discriminatorsExhaustive("termType")({
       NamedNode: (value) => makeNamedNode(value.value),
       BlankNode: (value) => makeBlankNode(value.value),
-      Literal: (value) => makeLiteral(value.value, value.datatype.value, { language: value.language }),
+      Literal: (value) =>
+        makeLiteral(value.value, value.datatype.value, {
+          ...O.getSomesStruct({ language: O.fromUndefinedOr(value.language) }),
+        }),
     })
   );
 
@@ -230,15 +233,16 @@ const getCanonicalDataset = (
 /**
  * Canonicalization service live layer.
  *
- * @example
+ * **Example** (Import live layer)
+ *
  * ```ts
  * import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization"
  *
  * console.log(CanonicalizationServiceLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const CanonicalizationServiceLive = Layer.succeed(
   CanonicalizationService,

@@ -9,14 +9,1831 @@
 // Current ACP schema release: v0.11.3
 
 import { $AcpId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $AcpId.create("_generated/schema.gen");
 
 /**
+ * Generated ACP schema for `LogoutCapabilities`.
+ *
+ * **Example** (Inspect the LogoutCapabilities schema)
+ *
+ * ```ts
+ * import { LogoutCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(LogoutCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LogoutCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("LogoutCapabilities", {
+    description: "Generated ACP schema for LogoutCapabilities.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nLogout capabilities supported by the agent.\n\nBy supplying `{}` it means that the agent supports the logout method.",
+    identifier: "LogoutCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link LogoutCapabilities}.
+ *
+ * **Example** (Reference the LogoutCapabilities type)
+ *
+ * ```ts
+ * import type { LogoutCapabilities } from "@beep/acp/schema"
+ *
+ * type LogoutCapabilitiesValue = LogoutCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LogoutCapabilities = typeof LogoutCapabilities.Type;
+
+/**
+ * Generated ACP schema for `McpCapabilities`.
+ *
+ * **Example** (Inspect the McpCapabilities schema)
+ *
+ * ```ts
+ * import { McpCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(McpCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const McpCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  http: S.optionalKey(
+    S.Boolean.annotateKey({
+      description: "Agent supports [`McpServer::Http`].",
+      default: false,
+    }),
+  ),
+  sse: S.optionalKey(
+    S.Boolean.annotateKey({
+      description: "Agent supports [`McpServer::Sse`].",
+      default: false,
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("McpCapabilities", {
+    description: "Generated ACP schema for McpCapabilities.",
+    documentation: "MCP capabilities supported by the agent",
+    identifier: "McpCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link McpCapabilities}.
+ *
+ * **Example** (Reference the McpCapabilities type)
+ *
+ * ```ts
+ * import type { McpCapabilities } from "@beep/acp/schema"
+ *
+ * type McpCapabilitiesValue = McpCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpCapabilities = typeof McpCapabilities.Type;
+
+/**
+ * Generated ACP schema for `PromptCapabilities`.
+ *
+ * **Example** (Inspect the PromptCapabilities schema)
+ *
+ * ```ts
+ * import { PromptCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(PromptCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PromptCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  audio: S.optionalKey(
+    S.Boolean.annotateKey({
+      description: "Agent supports [`ContentBlock::Audio`].",
+      default: false,
+    }),
+  ),
+  embeddedContext: S.optionalKey(
+    S.Boolean.annotateKey({
+      description:
+        "Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message.",
+      default: false,
+    }),
+  ),
+  image: S.optionalKey(
+    S.Boolean.annotateKey({
+      description: "Agent supports [`ContentBlock::Image`].",
+      default: false,
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("PromptCapabilities", {
+    description: "Generated ACP schema for PromptCapabilities.",
+    documentation:
+      "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
+    identifier: "PromptCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PromptCapabilities}.
+ *
+ * **Example** (Reference the PromptCapabilities type)
+ *
+ * ```ts
+ * import type { PromptCapabilities } from "@beep/acp/schema"
+ *
+ * type PromptCapabilitiesValue = PromptCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PromptCapabilities = typeof PromptCapabilities.Type;
+
+/**
+ * Generated ACP schema for `SessionCloseCapabilities`.
+ *
+ * **Example** (Inspect the SessionCloseCapabilities schema)
+ *
+ * ```ts
+ * import { SessionCloseCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(SessionCloseCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionCloseCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("SessionCloseCapabilities", {
+    description: "Generated ACP schema for SessionCloseCapabilities.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/close` method.\n\nBy supplying `{}` it means that the agent supports closing of sessions.",
+    identifier: "SessionCloseCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionCloseCapabilities}.
+ *
+ * **Example** (Reference the SessionCloseCapabilities type)
+ *
+ * ```ts
+ * import type { SessionCloseCapabilities } from "@beep/acp/schema"
+ *
+ * type SessionCloseCapabilitiesValue = SessionCloseCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionCloseCapabilities = typeof SessionCloseCapabilities.Type;
+
+/**
+ * Generated ACP schema for `SessionForkCapabilities`.
+ *
+ * **Example** (Inspect the SessionForkCapabilities schema)
+ *
+ * ```ts
+ * import { SessionForkCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(SessionForkCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionForkCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("SessionForkCapabilities", {
+    description: "Generated ACP schema for SessionForkCapabilities.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/fork` method.\n\nBy supplying `{}` it means that the agent supports forking of sessions.",
+    identifier: "SessionForkCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionForkCapabilities}.
+ *
+ * **Example** (Reference the SessionForkCapabilities type)
+ *
+ * ```ts
+ * import type { SessionForkCapabilities } from "@beep/acp/schema"
+ *
+ * type SessionForkCapabilitiesValue = SessionForkCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionForkCapabilities = typeof SessionForkCapabilities.Type;
+
+/**
+ * Generated ACP schema for `SessionListCapabilities`.
+ *
+ * **Example** (Inspect the SessionListCapabilities schema)
+ *
+ * ```ts
+ * import { SessionListCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(SessionListCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionListCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("SessionListCapabilities", {
+    description: "Generated ACP schema for SessionListCapabilities.",
+    documentation:
+      "Capabilities for the `session/list` method.\n\nBy supplying `{}` it means that the agent supports listing of sessions.",
+    identifier: "SessionListCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionListCapabilities}.
+ *
+ * **Example** (Reference the SessionListCapabilities type)
+ *
+ * ```ts
+ * import type { SessionListCapabilities } from "@beep/acp/schema"
+ *
+ * type SessionListCapabilitiesValue = SessionListCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionListCapabilities = typeof SessionListCapabilities.Type;
+
+/**
+ * Generated ACP schema for `SessionResumeCapabilities`.
+ *
+ * **Example** (Inspect the SessionResumeCapabilities schema)
+ *
+ * ```ts
+ * import { SessionResumeCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(SessionResumeCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionResumeCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("SessionResumeCapabilities", {
+    description: "Generated ACP schema for SessionResumeCapabilities.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/resume` method.\n\nBy supplying `{}` it means that the agent supports resuming of sessions.",
+    identifier: "SessionResumeCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionResumeCapabilities}.
+ *
+ * **Example** (Reference the SessionResumeCapabilities type)
+ *
+ * ```ts
+ * import type { SessionResumeCapabilities } from "@beep/acp/schema"
+ *
+ * type SessionResumeCapabilitiesValue = SessionResumeCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionResumeCapabilities = typeof SessionResumeCapabilities.Type;
+
+/**
+ * Generated ACP schema for `SessionId`.
+ *
+ * **Example** (Inspect the SessionId schema)
+ *
+ * ```ts
+ * import { SessionId } from "@beep/acp/schema"
+ *
+ * console.log(SessionId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionId = S.String.pipe(
+  $I.annoteSchema("SessionId", {
+    description: "Generated ACP schema for SessionId.",
+    documentation:
+      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
+    identifier: "SessionId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionId}.
+ *
+ * **Example** (Reference the SessionId type)
+ *
+ * ```ts
+ * import type { SessionId } from "@beep/acp/schema"
+ *
+ * type SessionIdValue = SessionId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionId = typeof SessionId.Type;
+
+/**
+ * Generated ACP schema for `Role`.
+ *
+ * **Example** (Inspect the Role schema)
+ *
+ * ```ts
+ * import { Role } from "@beep/acp/schema"
+ *
+ * console.log(Role.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Role = S.Literals(["assistant", "user"]).pipe(
+  $I.annoteSchema("Role", {
+    description: "Generated ACP schema for Role.",
+    documentation:
+      "The sender or recipient of messages and data in a conversation.",
+    identifier: "Role",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Role}.
+ *
+ * **Example** (Reference the Role type)
+ *
+ * ```ts
+ * import type { Role } from "@beep/acp/schema"
+ *
+ * type RoleValue = Role
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Role = typeof Role.Type;
+
+/**
+ * Generated ACP schema for `TextResourceContents`.
+ *
+ * **Example** (Inspect the TextResourceContents schema)
+ *
+ * ```ts
+ * import { TextResourceContents } from "@beep/acp/schema"
+ *
+ * console.log(TextResourceContents.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextResourceContents = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  mimeType: S.optionalKey(S.Union([S.String, S.Null])),
+  text: S.String,
+  uri: S.String,
+}).pipe(
+  $I.annoteSchema("TextResourceContents", {
+    description: "Generated ACP schema for TextResourceContents.",
+    documentation: "Text-based resource contents.",
+    identifier: "TextResourceContents",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link TextResourceContents}.
+ *
+ * **Example** (Reference the TextResourceContents type)
+ *
+ * ```ts
+ * import type { TextResourceContents } from "@beep/acp/schema"
+ *
+ * type TextResourceContentsValue = TextResourceContents
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TextResourceContents = typeof TextResourceContents.Type;
+
+/**
+ * Generated ACP schema for `BlobResourceContents`.
+ *
+ * **Example** (Inspect the BlobResourceContents schema)
+ *
+ * ```ts
+ * import { BlobResourceContents } from "@beep/acp/schema"
+ *
+ * console.log(BlobResourceContents.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BlobResourceContents = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  blob: S.String,
+  mimeType: S.optionalKey(S.Union([S.String, S.Null])),
+  uri: S.String,
+}).pipe(
+  $I.annoteSchema("BlobResourceContents", {
+    description: "Generated ACP schema for BlobResourceContents.",
+    documentation: "Binary resource contents.",
+    identifier: "BlobResourceContents",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link BlobResourceContents}.
+ *
+ * **Example** (Reference the BlobResourceContents type)
+ *
+ * ```ts
+ * import type { BlobResourceContents } from "@beep/acp/schema"
+ *
+ * type BlobResourceContentsValue = BlobResourceContents
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BlobResourceContents = typeof BlobResourceContents.Type;
+
+/**
+ * Generated ACP schema for `ToolKind`.
+ *
+ * **Example** (Inspect the ToolKind schema)
+ *
+ * ```ts
+ * import { ToolKind } from "@beep/acp/schema"
+ *
+ * console.log(ToolKind.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ToolKind = S.Union(
+  [
+    S.Literal("read").annotateKey({ description: "Reading files or data." }),
+    S.Literal("edit").annotateKey({
+      description: "Modifying files or content.",
+    }),
+    S.Literal("delete").annotateKey({ description: "Removing files or data." }),
+    S.Literal("move").annotateKey({ description: "Moving or renaming files." }),
+    S.Literal("search").annotateKey({
+      description: "Searching for information.",
+    }),
+    S.Literal("execute").annotateKey({
+      description: "Running commands or code.",
+    }),
+    S.Literal("think").annotateKey({
+      description: "Internal reasoning or planning.",
+    }),
+    S.Literal("fetch").annotateKey({
+      description: "Retrieving external data.",
+    }),
+    S.Literal("switch_mode").annotateKey({
+      description: "Switching the current session mode.",
+    }),
+    S.Literal("other").annotateKey({
+      description: "Other tool types (default).",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ToolKind", {
+    description: "Generated ACP schema for ToolKind.",
+    documentation:
+      "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
+    identifier: "ToolKind",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ToolKind}.
+ *
+ * **Example** (Reference the ToolKind type)
+ *
+ * ```ts
+ * import type { ToolKind } from "@beep/acp/schema"
+ *
+ * type ToolKindValue = ToolKind
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ToolKind = typeof ToolKind.Type;
+
+/**
+ * Generated ACP schema for `ToolCallLocation`.
+ *
+ * **Example** (Inspect the ToolCallLocation schema)
+ *
+ * ```ts
+ * import { ToolCallLocation } from "@beep/acp/schema"
+ *
+ * console.log(ToolCallLocation.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ToolCallLocation = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  line: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Optional line number within the file.",
+        format: "uint32",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  path: S.String.annotateKey({
+    description: "The file path being accessed or modified.",
+  }),
+}).pipe(
+  $I.annoteSchema("ToolCallLocation", {
+    description: "Generated ACP schema for ToolCallLocation.",
+    documentation:
+      'A file location being accessed or modified by a tool.\n\nEnables clients to implement "follow-along" features that track\nwhich files the agent is working with in real-time.\n\nSee protocol docs: [Following the Agent](https://agentclientprotocol.com/protocol/tool-calls#following-the-agent)',
+    identifier: "ToolCallLocation",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ToolCallLocation}.
+ *
+ * **Example** (Reference the ToolCallLocation type)
+ *
+ * ```ts
+ * import type { ToolCallLocation } from "@beep/acp/schema"
+ *
+ * type ToolCallLocationValue = ToolCallLocation
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ToolCallLocation = typeof ToolCallLocation.Type;
+
+/**
+ * Generated ACP schema for `ToolCallStatus`.
+ *
+ * **Example** (Inspect the ToolCallStatus schema)
+ *
+ * ```ts
+ * import { ToolCallStatus } from "@beep/acp/schema"
+ *
+ * console.log(ToolCallStatus.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ToolCallStatus = S.Union(
+  [
+    S.Literal("pending").annotateKey({
+      description:
+        "The tool call hasn't started running yet because the input is either\nstreaming or we're awaiting approval.",
+    }),
+    S.Literal("in_progress").annotateKey({
+      description: "The tool call is currently running.",
+    }),
+    S.Literal("completed").annotateKey({
+      description: "The tool call completed successfully.",
+    }),
+    S.Literal("failed").annotateKey({
+      description: "The tool call failed with an error.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ToolCallStatus", {
+    description: "Generated ACP schema for ToolCallStatus.",
+    documentation:
+      "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
+    identifier: "ToolCallStatus",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ToolCallStatus}.
+ *
+ * **Example** (Reference the ToolCallStatus type)
+ *
+ * ```ts
+ * import type { ToolCallStatus } from "@beep/acp/schema"
+ *
+ * type ToolCallStatusValue = ToolCallStatus
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ToolCallStatus = typeof ToolCallStatus.Type;
+
+/**
+ * Generated ACP schema for `ToolCallId`.
+ *
+ * **Example** (Inspect the ToolCallId schema)
+ *
+ * ```ts
+ * import { ToolCallId } from "@beep/acp/schema"
+ *
+ * console.log(ToolCallId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ToolCallId = S.String.pipe(
+  $I.annoteSchema("ToolCallId", {
+    description: "Generated ACP schema for ToolCallId.",
+    documentation: "Unique identifier for a tool call within a session.",
+    identifier: "ToolCallId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ToolCallId}.
+ *
+ * **Example** (Reference the ToolCallId type)
+ *
+ * ```ts
+ * import type { ToolCallId } from "@beep/acp/schema"
+ *
+ * type ToolCallIdValue = ToolCallId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ToolCallId = typeof ToolCallId.Type;
+
+/**
+ * Generated ACP schema for `PlanEntryPriority`.
+ *
+ * **Example** (Inspect the PlanEntryPriority schema)
+ *
+ * ```ts
+ * import { PlanEntryPriority } from "@beep/acp/schema"
+ *
+ * console.log(PlanEntryPriority.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PlanEntryPriority = S.Union(
+  [
+    S.Literal("high").annotateKey({
+      description: "High priority task - critical to the overall goal.",
+    }),
+    S.Literal("medium").annotateKey({
+      description: "Medium priority task - important but not critical.",
+    }),
+    S.Literal("low").annotateKey({
+      description: "Low priority task - nice to have but not essential.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("PlanEntryPriority", {
+    description: "Generated ACP schema for PlanEntryPriority.",
+    documentation:
+      "Priority levels for plan entries.\n\nUsed to indicate the relative importance or urgency of different\ntasks in the execution plan.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
+    identifier: "PlanEntryPriority",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PlanEntryPriority}.
+ *
+ * **Example** (Reference the PlanEntryPriority type)
+ *
+ * ```ts
+ * import type { PlanEntryPriority } from "@beep/acp/schema"
+ *
+ * type PlanEntryPriorityValue = PlanEntryPriority
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PlanEntryPriority = typeof PlanEntryPriority.Type;
+
+/**
+ * Generated ACP schema for `PlanEntryStatus`.
+ *
+ * **Example** (Inspect the PlanEntryStatus schema)
+ *
+ * ```ts
+ * import { PlanEntryStatus } from "@beep/acp/schema"
+ *
+ * console.log(PlanEntryStatus.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PlanEntryStatus = S.Union(
+  [
+    S.Literal("pending").annotateKey({
+      description: "The task has not started yet.",
+    }),
+    S.Literal("in_progress").annotateKey({
+      description: "The task is currently being worked on.",
+    }),
+    S.Literal("completed").annotateKey({
+      description: "The task has been successfully completed.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("PlanEntryStatus", {
+    description: "Generated ACP schema for PlanEntryStatus.",
+    documentation:
+      "Status of a plan entry in the execution flow.\n\nTracks the lifecycle of each task from planning through completion.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
+    identifier: "PlanEntryStatus",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PlanEntryStatus}.
+ *
+ * **Example** (Reference the PlanEntryStatus type)
+ *
+ * ```ts
+ * import type { PlanEntryStatus } from "@beep/acp/schema"
+ *
+ * type PlanEntryStatusValue = PlanEntryStatus
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PlanEntryStatus = typeof PlanEntryStatus.Type;
+
+/**
+ * Generated ACP schema for `UnstructuredCommandInput`.
+ *
+ * **Example** (Inspect the UnstructuredCommandInput schema)
+ *
+ * ```ts
+ * import { UnstructuredCommandInput } from "@beep/acp/schema"
+ *
+ * console.log(UnstructuredCommandInput.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UnstructuredCommandInput = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  hint: S.String.annotateKey({
+    description: "A hint to display when the input hasn't been provided yet",
+  }),
+}).pipe(
+  $I.annoteSchema("UnstructuredCommandInput", {
+    description: "Generated ACP schema for UnstructuredCommandInput.",
+    documentation:
+      "All text that was typed after the command name is provided as input.",
+    identifier: "UnstructuredCommandInput",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link UnstructuredCommandInput}.
+ *
+ * **Example** (Reference the UnstructuredCommandInput type)
+ *
+ * ```ts
+ * import type { UnstructuredCommandInput } from "@beep/acp/schema"
+ *
+ * type UnstructuredCommandInputValue = UnstructuredCommandInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnstructuredCommandInput = typeof UnstructuredCommandInput.Type;
+
+/**
+ * Generated ACP schema for `SessionModeId`.
+ *
+ * **Example** (Inspect the SessionModeId schema)
+ *
+ * ```ts
+ * import { SessionModeId } from "@beep/acp/schema"
+ *
+ * console.log(SessionModeId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionModeId = S.String.pipe(
+  $I.annoteSchema("SessionModeId", {
+    description: "Generated ACP schema for SessionModeId.",
+    documentation: "Unique identifier for a Session Mode.",
+    identifier: "SessionModeId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionModeId}.
+ *
+ * **Example** (Reference the SessionModeId type)
+ *
+ * ```ts
+ * import type { SessionModeId } from "@beep/acp/schema"
+ *
+ * type SessionModeIdValue = SessionModeId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionModeId = typeof SessionModeId.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigValueId`.
+ *
+ * **Example** (Inspect the SessionConfigValueId schema)
+ *
+ * ```ts
+ * import { SessionConfigValueId } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigValueId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigValueId = S.String.pipe(
+  $I.annoteSchema("SessionConfigValueId", {
+    description: "Generated ACP schema for SessionConfigValueId.",
+    documentation:
+      "Unique identifier for a session configuration option value.",
+    identifier: "SessionConfigValueId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigValueId}.
+ *
+ * **Example** (Reference the SessionConfigValueId type)
+ *
+ * ```ts
+ * import type { SessionConfigValueId } from "@beep/acp/schema"
+ *
+ * type SessionConfigValueIdValue = SessionConfigValueId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigValueId = typeof SessionConfigValueId.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigGroupId`.
+ *
+ * **Example** (Inspect the SessionConfigGroupId schema)
+ *
+ * ```ts
+ * import { SessionConfigGroupId } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigGroupId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigGroupId = S.String.pipe(
+  $I.annoteSchema("SessionConfigGroupId", {
+    description: "Generated ACP schema for SessionConfigGroupId.",
+    documentation:
+      "Unique identifier for a session configuration option value group.",
+    identifier: "SessionConfigGroupId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigGroupId}.
+ *
+ * **Example** (Reference the SessionConfigGroupId type)
+ *
+ * ```ts
+ * import type { SessionConfigGroupId } from "@beep/acp/schema"
+ *
+ * type SessionConfigGroupIdValue = SessionConfigGroupId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigGroupId = typeof SessionConfigGroupId.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigOptionCategory`.
+ *
+ * **Example** (Inspect the SessionConfigOptionCategory schema)
+ *
+ * ```ts
+ * import { SessionConfigOptionCategory } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigOptionCategory.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigOptionCategory = S.Union([
+  S.Literal("mode").annotateKey({ description: "Session mode selector." }),
+  S.Literal("model").annotateKey({ description: "Model selector." }),
+  S.Literal("thought_level").annotateKey({
+    description: "Thought/reasoning level selector.",
+  }),
+  S.String.annotateKey({
+    title: "other",
+    description: "Unknown / uncategorized selector.",
+  }),
+]).pipe(
+  $I.annoteSchema("SessionConfigOptionCategory", {
+    description: "Generated ACP schema for SessionConfigOptionCategory.",
+    documentation:
+      "Semantic category for a session configuration option.\n\nThis is intended to help Clients distinguish broadly common selectors (e.g. model selector vs\nsession mode selector vs thought/reasoning level) for UX purposes (keyboard shortcuts, icons,\nplacement). It MUST NOT be required for correctness. Clients MUST handle missing or unknown\ncategories gracefully.\n\nCategory names beginning with `_` are free for custom use, like other ACP extension methods.\nCategory names that do not begin with `_` are reserved for the ACP spec.",
+    identifier: "SessionConfigOptionCategory",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigOptionCategory}.
+ *
+ * **Example** (Reference the SessionConfigOptionCategory type)
+ *
+ * ```ts
+ * import type { SessionConfigOptionCategory } from "@beep/acp/schema"
+ *
+ * type SessionConfigOptionCategoryValue = SessionConfigOptionCategory
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigOptionCategory =
+  typeof SessionConfigOptionCategory.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigId`.
+ *
+ * **Example** (Inspect the SessionConfigId schema)
+ *
+ * ```ts
+ * import { SessionConfigId } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigId = S.String.pipe(
+  $I.annoteSchema("SessionConfigId", {
+    description: "Generated ACP schema for SessionConfigId.",
+    documentation: "Unique identifier for a session configuration option.",
+    identifier: "SessionConfigId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigId}.
+ *
+ * **Example** (Reference the SessionConfigId type)
+ *
+ * ```ts
+ * import type { SessionConfigId } from "@beep/acp/schema"
+ *
+ * type SessionConfigIdValue = SessionConfigId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigId = typeof SessionConfigId.Type;
+
+/**
+ * Generated ACP schema for `Cost`.
+ *
+ * **Example** (Inspect the Cost schema)
+ *
+ * ```ts
+ * import { Cost } from "@beep/acp/schema"
+ *
+ * console.log(Cost.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Cost = S.Struct({
+  amount: S.Finite.annotateKey({
+    description: "Total cumulative cost for session.",
+    format: "double",
+  }).check(S.isFinite().annotate({ expected: "a finite number" })),
+  currency: S.String.annotateKey({
+    description: 'ISO 4217 currency code (e.g., "USD", "EUR").',
+  }),
+}).pipe(
+  $I.annoteSchema("Cost", {
+    description: "Generated ACP schema for Cost.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCost information for a session.",
+    identifier: "Cost",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Cost}.
+ *
+ * **Example** (Reference the Cost type)
+ *
+ * ```ts
+ * import type { Cost } from "@beep/acp/schema"
+ *
+ * type CostValue = Cost
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Cost = typeof Cost.Type;
+
+/**
+ * Generated ACP schema for `ElicitationId`.
+ *
+ * **Example** (Inspect the ElicitationId schema)
+ *
+ * ```ts
+ * import { ElicitationId } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationId = S.String.pipe(
+  $I.annoteSchema("ElicitationId", {
+    description: "Generated ACP schema for ElicitationId.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
+    identifier: "ElicitationId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationId}.
+ *
+ * **Example** (Reference the ElicitationId type)
+ *
+ * ```ts
+ * import type { ElicitationId } from "@beep/acp/schema"
+ *
+ * type ElicitationIdValue = ElicitationId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationId = typeof ElicitationId.Type;
+
+/**
+ * Generated ACP schema for `ExtNotification`.
+ *
+ * **Example** (Inspect the ExtNotification schema)
+ *
+ * ```ts
+ * import { ExtNotification } from "@beep/acp/schema"
+ *
+ * console.log(ExtNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ExtNotification = S.Json.pipe(
+  $I.annoteSchema("ExtNotification", {
+    description: "Generated ACP schema for ExtNotification.",
+    expected: "JSON value",
+    documentation:
+      "Allows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+    identifier: "ExtNotification",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ExtNotification}.
+ *
+ * **Example** (Reference the ExtNotification type)
+ *
+ * ```ts
+ * import type { ExtNotification } from "@beep/acp/schema"
+ *
+ * type ExtNotificationValue = ExtNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ExtNotification = typeof ExtNotification.Type;
+
+/**
+ * Generated ACP schema for `RequestId`.
+ *
+ * **Example** (Inspect the RequestId schema)
+ *
+ * ```ts
+ * import { RequestId } from "@beep/acp/schema"
+ *
+ * console.log(RequestId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RequestId = S.Union([
+  S.Null.annotateKey({ title: "Null" }),
+  S.Int.annotateKey({ title: "Number", format: "int64" }),
+  S.String.annotateKey({ title: "Str" }),
+]).pipe(
+  $I.annoteSchema("RequestId", {
+    description: "Generated ACP schema for RequestId.",
+    documentation:
+      "JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.",
+    identifier: "RequestId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link RequestId}.
+ *
+ * **Example** (Reference the RequestId type)
+ *
+ * ```ts
+ * import type { RequestId } from "@beep/acp/schema"
+ *
+ * type RequestIdValue = RequestId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RequestId = typeof RequestId.Type;
+
+/**
+ * Generated ACP schema for `PermissionOptionKind`.
+ *
+ * **Example** (Inspect the PermissionOptionKind schema)
+ *
+ * ```ts
+ * import { PermissionOptionKind } from "@beep/acp/schema"
+ *
+ * console.log(PermissionOptionKind.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PermissionOptionKind = S.Union(
+  [
+    S.Literal("allow_once").annotateKey({
+      description: "Allow this operation only this time.",
+    }),
+    S.Literal("allow_always").annotateKey({
+      description: "Allow this operation and remember the choice.",
+    }),
+    S.Literal("reject_once").annotateKey({
+      description: "Reject this operation only this time.",
+    }),
+    S.Literal("reject_always").annotateKey({
+      description: "Reject this operation and remember the choice.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("PermissionOptionKind", {
+    description: "Generated ACP schema for PermissionOptionKind.",
+    documentation:
+      "The type of permission option being presented to the user.\n\nHelps clients choose appropriate icons and UI treatment.",
+    identifier: "PermissionOptionKind",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PermissionOptionKind}.
+ *
+ * **Example** (Reference the PermissionOptionKind type)
+ *
+ * ```ts
+ * import type { PermissionOptionKind } from "@beep/acp/schema"
+ *
+ * type PermissionOptionKindValue = PermissionOptionKind
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PermissionOptionKind = typeof PermissionOptionKind.Type;
+
+/**
+ * Generated ACP schema for `PermissionOptionId`.
+ *
+ * **Example** (Inspect the PermissionOptionId schema)
+ *
+ * ```ts
+ * import { PermissionOptionId } from "@beep/acp/schema"
+ *
+ * console.log(PermissionOptionId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PermissionOptionId = S.String.pipe(
+  $I.annoteSchema("PermissionOptionId", {
+    description: "Generated ACP schema for PermissionOptionId.",
+    documentation: "Unique identifier for a permission option.",
+    identifier: "PermissionOptionId",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PermissionOptionId}.
+ *
+ * **Example** (Reference the PermissionOptionId type)
+ *
+ * ```ts
+ * import type { PermissionOptionId } from "@beep/acp/schema"
+ *
+ * type PermissionOptionIdValue = PermissionOptionId
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PermissionOptionId = typeof PermissionOptionId.Type;
+
+/**
+ * Generated ACP schema for `EnvVariable`.
+ *
+ * **Example** (Inspect the EnvVariable schema)
+ *
+ * ```ts
+ * import { EnvVariable } from "@beep/acp/schema"
+ *
+ * console.log(EnvVariable.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EnvVariable = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  name: S.String.annotateKey({
+    description: "The name of the environment variable.",
+  }),
+  value: S.String.annotateKey({
+    description: "The value to set for the environment variable.",
+  }),
+}).pipe(
+  $I.annoteSchema("EnvVariable", {
+    description: "Generated ACP schema for EnvVariable.",
+    documentation:
+      "An environment variable to set when launching an MCP server.",
+    identifier: "EnvVariable",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link EnvVariable}.
+ *
+ * **Example** (Reference the EnvVariable type)
+ *
+ * ```ts
+ * import type { EnvVariable } from "@beep/acp/schema"
+ *
+ * type EnvVariableValue = EnvVariable
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EnvVariable = typeof EnvVariable.Type;
+
+/**
+ * Generated ACP schema for `StringFormat`.
+ *
+ * **Example** (Inspect the StringFormat schema)
+ *
+ * ```ts
+ * import { StringFormat } from "@beep/acp/schema"
+ *
+ * console.log(StringFormat.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StringFormat = S.Union(
+  [
+    S.Literal("email").annotateKey({ description: "Email address format." }),
+    S.Literal("uri").annotateKey({ description: "URI format." }),
+    S.Literal("date").annotateKey({ description: "Date format (YYYY-MM-DD)." }),
+    S.Literal("date-time").annotateKey({
+      description: "Date-time format (ISO 8601).",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("StringFormat", {
+    description: "Generated ACP schema for StringFormat.",
+    documentation:
+      "String format types for string properties in elicitation schemas.",
+    identifier: "StringFormat",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link StringFormat}.
+ *
+ * **Example** (Reference the StringFormat type)
+ *
+ * ```ts
+ * import type { StringFormat } from "@beep/acp/schema"
+ *
+ * type StringFormatValue = StringFormat
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StringFormat = typeof StringFormat.Type;
+
+/**
+ * Generated ACP schema for `EnumOption`.
+ *
+ * **Example** (Inspect the EnumOption schema)
+ *
+ * ```ts
+ * import { EnumOption } from "@beep/acp/schema"
+ *
+ * console.log(EnumOption.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EnumOption = S.Struct({
+  const: S.String.annotateKey({
+    description: "The constant value for this option.",
+  }),
+  title: S.String.annotateKey({
+    description: "Human-readable title for this option.",
+  }),
+}).pipe(
+  $I.annoteSchema("EnumOption", {
+    description: "Generated ACP schema for EnumOption.",
+    documentation:
+      "A titled enum option with a const value and human-readable title.",
+    identifier: "EnumOption",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link EnumOption}.
+ *
+ * **Example** (Reference the EnumOption type)
+ *
+ * ```ts
+ * import type { EnumOption } from "@beep/acp/schema"
+ *
+ * type EnumOptionValue = EnumOption
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EnumOption = typeof EnumOption.Type;
+
+/**
+ * Generated ACP schema for `ElicitationStringType`.
+ *
+ * **Example** (Inspect the ElicitationStringType schema)
+ *
+ * ```ts
+ * import { ElicitationStringType } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationStringType.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationStringType = S.Union(
+  [S.Literal("string").annotateKey({ description: "String schema type." })],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ElicitationStringType", {
+    description: "Generated ACP schema for ElicitationStringType.",
+    documentation:
+      "Items definition for untitled multi-select enum properties.",
+    identifier: "ElicitationStringType",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationStringType}.
+ *
+ * **Example** (Reference the ElicitationStringType type)
+ *
+ * ```ts
+ * import type { ElicitationStringType } from "@beep/acp/schema"
+ *
+ * type ElicitationStringTypeValue = ElicitationStringType
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationStringType = typeof ElicitationStringType.Type;
+
+/**
+ * Generated ACP schema for `ElicitationSchemaType`.
+ *
+ * **Example** (Inspect the ElicitationSchemaType schema)
+ *
+ * ```ts
+ * import { ElicitationSchemaType } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationSchemaType.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationSchemaType = S.Union(
+  [S.Literal("object").annotateKey({ description: "Object schema type." })],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ElicitationSchemaType", {
+    description: "Generated ACP schema for ElicitationSchemaType.",
+    documentation: "Type discriminator for elicitation schemas.",
+    identifier: "ElicitationSchemaType",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationSchemaType}.
+ *
+ * **Example** (Reference the ElicitationSchemaType type)
+ *
+ * ```ts
+ * import type { ElicitationSchemaType } from "@beep/acp/schema"
+ *
+ * type ElicitationSchemaTypeValue = ElicitationSchemaType
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationSchemaType = typeof ElicitationSchemaType.Type;
+
+/**
+ * Generated ACP schema for `ExtRequest`.
+ *
+ * **Example** (Inspect the ExtRequest schema)
+ *
+ * ```ts
+ * import { ExtRequest } from "@beep/acp/schema"
+ *
+ * console.log(ExtRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ExtRequest = S.Json.pipe(
+  $I.annoteSchema("ExtRequest", {
+    description: "Generated ACP schema for ExtRequest.",
+    expected: "JSON value",
+    documentation:
+      "Allows for sending an arbitrary request that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+    identifier: "ExtRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ExtRequest}.
+ *
+ * **Example** (Reference the ExtRequest type)
+ *
+ * ```ts
+ * import type { ExtRequest } from "@beep/acp/schema"
+ *
+ * type ExtRequestValue = ExtRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ExtRequest = typeof ExtRequest.Type;
+
+/**
+ * Generated ACP schema for `Implementation`.
+ *
+ * **Example** (Inspect the Implementation schema)
+ *
+ * ```ts
+ * import { Implementation } from "@beep/acp/schema"
+ *
+ * console.log(Implementation.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Implementation = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  name: S.String.annotateKey({
+    description:
+      "Intended for programmatic or logical use, but can be used as a display\nname fallback if title isn’t present.",
+  }),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "Intended for UI and end-user contexts — optimized to be human-readable\nand easily understood.\n\nIf not provided, the name should be used for display.",
+      }),
+      S.Null,
+    ]),
+  ),
+  version: S.String.annotateKey({
+    description:
+      'Version of the implementation. Can be displayed to the user or used\nfor debugging or metrics purposes. (e.g. "1.0.0").',
+  }),
+}).pipe(
+  $I.annoteSchema("Implementation", {
+    description: "Generated ACP schema for Implementation.",
+    documentation:
+      "Metadata about the implementation of the client or agent.\nDescribes the name and version of an MCP implementation, with an optional\ntitle for UI representation.",
+    identifier: "Implementation",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Implementation}.
+ *
+ * **Example** (Reference the Implementation type)
+ *
+ * ```ts
+ * import type { Implementation } from "@beep/acp/schema"
+ *
+ * type ImplementationValue = Implementation
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Implementation = typeof Implementation.Type;
+
+/**
  * Generated ACP schema for `AuthEnvVar`.
  *
- * @example
+ * **Example** (Inspect the AuthEnvVar schema)
+ *
  * ```ts
  * import { AuthEnvVar } from "@beep/acp/schema"
  *
@@ -29,7 +1846,10 @@ const $I = $AcpId.create("_generated/schema.gen");
 export const AuthEnvVar = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -66,13 +1886,16 @@ export const AuthEnvVar = S.Struct({
     description: "Generated ACP schema for AuthEnvVar.",
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nDescribes a single environment variable for an [`AuthMethodEnvVar`] authentication method.",
+    identifier: "AuthEnvVar",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link AuthEnvVar}.
  *
- * @example
+ * **Example** (Reference the AuthEnvVar type)
+ *
  * ```ts
  * import type { AuthEnvVar } from "@beep/acp/schema"
  *
@@ -85,5266 +1908,10 @@ export const AuthEnvVar = S.Struct({
 export type AuthEnvVar = typeof AuthEnvVar.Type;
 
 /**
- * Generated ACP schema for `AvailableCommandInput`.
- *
- * @example
- * ```ts
- * import { AvailableCommandInput } from "@beep/acp/schema"
- *
- * console.log(AvailableCommandInput.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AvailableCommandInput = S.Union([
-  S.Struct({
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    hint: S.String.annotateKey({
-      description: "A hint to display when the input hasn't been provided yet",
-    }),
-  }).annotateKey({
-    title: "unstructured",
-    description:
-      "All text that was typed after the command name is provided as input.",
-  }),
-]).pipe(
-  $I.annoteSchema("AvailableCommandInput", {
-    description: "Generated ACP schema for AvailableCommandInput.",
-    documentation: "The input specification for a command.",
-  }),
-);
-
-/**
- * Type for {@link AvailableCommandInput}.
- *
- * @example
- * ```ts
- * import type { AvailableCommandInput } from "@beep/acp/schema"
- *
- * type AvailableCommandInputValue = AvailableCommandInput
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AvailableCommandInput = typeof AvailableCommandInput.Type;
-
-/**
- * Generated ACP schema for `Cost`.
- *
- * @example
- * ```ts
- * import { Cost } from "@beep/acp/schema"
- *
- * console.log(Cost.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Cost = S.Struct({
-  amount: S.Finite.annotateKey({
-    description: "Total cumulative cost for session.",
-    format: "double",
-  }).check(S.isFinite()),
-  currency: S.String.annotateKey({
-    description: 'ISO 4217 currency code (e.g., "USD", "EUR").',
-  }),
-}).pipe(
-  $I.annoteSchema("Cost", {
-    description: "Generated ACP schema for Cost.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCost information for a session.",
-  }),
-);
-
-/**
- * Type for {@link Cost}.
- *
- * @example
- * ```ts
- * import type { Cost } from "@beep/acp/schema"
- *
- * type CostValue = Cost
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Cost = typeof Cost.Type;
-
-/**
- * Generated ACP schema for `ElicitationContentValue`.
- *
- * @example
- * ```ts
- * import { ElicitationContentValue } from "@beep/acp/schema"
- *
- * console.log(ElicitationContentValue.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationContentValue = S.Union([
-  S.String.annotateKey({ title: "String" }),
-  S.Finite.annotateKey({ title: "Integer", format: "int64" }).check(S.isInt()),
-  S.Finite.annotateKey({ title: "Number", format: "double" }).check(
-    S.isFinite(),
-  ),
-  S.Boolean.annotateKey({ title: "Boolean" }),
-  S.Array(S.String).annotateKey({ title: "StringArray" }),
-]).pipe(
-  $I.annoteSchema("ElicitationContentValue", {
-    description: "Generated ACP schema for ElicitationContentValue.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationContentValue}.
- *
- * @example
- * ```ts
- * import type { ElicitationContentValue } from "@beep/acp/schema"
- *
- * type ElicitationContentValueValue = ElicitationContentValue
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationContentValue = typeof ElicitationContentValue.Type;
-
-/**
- * Generated ACP schema for `ElicitationFormCapabilities`.
- *
- * @example
- * ```ts
- * import { ElicitationFormCapabilities } from "@beep/acp/schema"
- *
- * console.log(ElicitationFormCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationFormCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("ElicitationFormCapabilities", {
-    description: "Generated ACP schema for ElicitationFormCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForm-based elicitation capabilities.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationFormCapabilities}.
- *
- * @example
- * ```ts
- * import type { ElicitationFormCapabilities } from "@beep/acp/schema"
- *
- * type ElicitationFormCapabilitiesValue = ElicitationFormCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationFormCapabilities =
-  typeof ElicitationFormCapabilities.Type;
-
-/**
- * Generated ACP schema for `ElicitationUrlCapabilities`.
- *
- * @example
- * ```ts
- * import { ElicitationUrlCapabilities } from "@beep/acp/schema"
- *
- * console.log(ElicitationUrlCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationUrlCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("ElicitationUrlCapabilities", {
-    description: "Generated ACP schema for ElicitationUrlCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nURL-based elicitation capabilities.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationUrlCapabilities}.
- *
- * @example
- * ```ts
- * import type { ElicitationUrlCapabilities } from "@beep/acp/schema"
- *
- * type ElicitationUrlCapabilitiesValue = ElicitationUrlCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationUrlCapabilities = typeof ElicitationUrlCapabilities.Type;
-
-/**
- * Generated ACP schema for `EmbeddedResourceResource`.
- *
- * @example
- * ```ts
- * import { EmbeddedResourceResource } from "@beep/acp/schema"
- *
- * console.log(EmbeddedResourceResource.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const EmbeddedResourceResource = S.Union([
-  S.Struct({
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-    text: S.String,
-    uri: S.String,
-  }).annotateKey({
-    title: "TextResourceContents",
-    description: "Text-based resource contents.",
-  }),
-  S.Struct({
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    blob: S.String,
-    mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-    uri: S.String,
-  }).annotateKey({
-    title: "BlobResourceContents",
-    description: "Binary resource contents.",
-  }),
-]).pipe(
-  $I.annoteSchema("EmbeddedResourceResource", {
-    description: "Generated ACP schema for EmbeddedResourceResource.",
-    documentation: "Resource content that can be embedded in a message.",
-  }),
-);
-
-/**
- * Type for {@link EmbeddedResourceResource}.
- *
- * @example
- * ```ts
- * import type { EmbeddedResourceResource } from "@beep/acp/schema"
- *
- * type EmbeddedResourceResourceValue = EmbeddedResourceResource
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type EmbeddedResourceResource = typeof EmbeddedResourceResource.Type;
-
-/**
- * Generated ACP schema for `EnumOption`.
- *
- * @example
- * ```ts
- * import { EnumOption } from "@beep/acp/schema"
- *
- * console.log(EnumOption.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const EnumOption = S.Struct({
-  const: S.String.annotateKey({
-    description: "The constant value for this option.",
-  }),
-  title: S.String.annotateKey({
-    description: "Human-readable title for this option.",
-  }),
-}).pipe(
-  $I.annoteSchema("EnumOption", {
-    description: "Generated ACP schema for EnumOption.",
-    documentation:
-      "A titled enum option with a const value and human-readable title.",
-  }),
-);
-
-/**
- * Type for {@link EnumOption}.
- *
- * @example
- * ```ts
- * import type { EnumOption } from "@beep/acp/schema"
- *
- * type EnumOptionValue = EnumOption
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type EnumOption = typeof EnumOption.Type;
-
-/**
- * Generated ACP schema for `EnvVariable`.
- *
- * @example
- * ```ts
- * import { EnvVariable } from "@beep/acp/schema"
- *
- * console.log(EnvVariable.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const EnvVariable = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  name: S.String.annotateKey({
-    description: "The name of the environment variable.",
-  }),
-  value: S.String.annotateKey({
-    description: "The value to set for the environment variable.",
-  }),
-}).pipe(
-  $I.annoteSchema("EnvVariable", {
-    description: "Generated ACP schema for EnvVariable.",
-    documentation:
-      "An environment variable to set when launching an MCP server.",
-  }),
-);
-
-/**
- * Type for {@link EnvVariable}.
- *
- * @example
- * ```ts
- * import type { EnvVariable } from "@beep/acp/schema"
- *
- * type EnvVariableValue = EnvVariable
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type EnvVariable = typeof EnvVariable.Type;
-
-/**
- * Generated ACP schema for `Error`.
- *
- * @example
- * ```ts
- * import { Error } from "@beep/acp/schema"
- *
- * console.log(Error.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Error = S.Struct({
-  code: S.Union([
-    S.Literal(-32700).annotateKey({
-      title: "Parse error",
-      description:
-        "**Parse error**: Invalid JSON was received by the server.\nAn error occurred on the server while parsing the JSON text.",
-      format: "int32",
-    }),
-    S.Literal(-32600).annotateKey({
-      title: "Invalid request",
-      description:
-        "**Invalid request**: The JSON sent is not a valid Request object.",
-      format: "int32",
-    }),
-    S.Literal(-32601).annotateKey({
-      title: "Method not found",
-      description:
-        "**Method not found**: The method does not exist or is not available.",
-      format: "int32",
-    }),
-    S.Literal(-32602).annotateKey({
-      title: "Invalid params",
-      description: "**Invalid params**: Invalid method parameter(s).",
-      format: "int32",
-    }),
-    S.Literal(-32603).annotateKey({
-      title: "Internal error",
-      description:
-        "**Internal error**: Internal JSON-RPC error.\nReserved for implementation-defined server errors.",
-      format: "int32",
-    }),
-    S.Literal(-32800).annotateKey({
-      title: "Request cancelled",
-      description:
-        "**Request cancelled**: **UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nExecution of the method was aborted either due to a cancellation request from the caller or\nbecause of resource constraints or shutdown.",
-      format: "int32",
-    }),
-    S.Literal(-32000).annotateKey({
-      title: "Authentication required",
-      description:
-        "**Authentication required**: Authentication is required before this operation can be performed.",
-      format: "int32",
-    }),
-    S.Literal(-32002).annotateKey({
-      title: "Resource not found",
-      description:
-        "**Resource not found**: A given resource, such as a file, was not found.",
-      format: "int32",
-    }),
-    S.Literal(-32042).annotateKey({
-      title: "URL elicitation required",
-      description:
-        "**URL elicitation required**: **UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe agent requires user input via a URL-based elicitation before it can proceed.",
-      format: "int32",
-    }),
-    S.Finite.annotateKey({
-      title: "Other",
-      description: "Other undefined error code.",
-      format: "int32",
-    }).check(S.isInt()),
-  ]).annotateKey({
-    description:
-      "Predefined error codes for common JSON-RPC and ACP-specific errors.\n\nThese codes follow the JSON-RPC 2.0 specification for standard errors\nand use the reserved range (-32000 to -32099) for protocol-specific errors.",
-  }),
-  data: S.optionalKey(
-    S.Unknown.annotateKey({
-      description:
-        "Optional primitive or structured value that contains additional information about the error.\nThis may include debugging information or context-specific details.",
-    }),
-  ),
-  message: S.String.annotateKey({
-    description:
-      "A string providing a short description of the error.\nThe message should be limited to a concise single sentence.",
-  }),
-}).pipe(
-  $I.annoteSchema("Error", {
-    description: "Generated ACP schema for Error.",
-    documentation:
-      "JSON-RPC error object.\n\nRepresents an error that occurred during method execution, following the\nJSON-RPC 2.0 error object specification with optional additional data.\n\nSee protocol docs: [JSON-RPC Error Object](https://www.jsonrpc.org/specification#error_object)",
-  }),
-);
-
-/**
- * Type for {@link Error}.
- *
- * @example
- * ```ts
- * import type { Error } from "@beep/acp/schema"
- *
- * type ErrorValue = Error
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Error = typeof Error.Type;
-
-/**
- * Generated ACP schema for `HttpHeader`.
- *
- * @example
- * ```ts
- * import { HttpHeader } from "@beep/acp/schema"
- *
- * console.log(HttpHeader.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const HttpHeader = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  name: S.String.annotateKey({ description: "The name of the HTTP header." }),
-  value: S.String.annotateKey({
-    description: "The value to set for the HTTP header.",
-  }),
-}).pipe(
-  $I.annoteSchema("HttpHeader", {
-    description: "Generated ACP schema for HttpHeader.",
-    documentation:
-      "An HTTP header to set when making requests to the MCP server.",
-  }),
-);
-
-/**
- * Type for {@link HttpHeader}.
- *
- * @example
- * ```ts
- * import type { HttpHeader } from "@beep/acp/schema"
- *
- * type HttpHeaderValue = HttpHeader
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type HttpHeader = typeof HttpHeader.Type;
-
-/**
- * Generated ACP schema for `Implementation`.
- *
- * @example
- * ```ts
- * import { Implementation } from "@beep/acp/schema"
- *
- * console.log(Implementation.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Implementation = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  name: S.String.annotateKey({
-    description:
-      "Intended for programmatic or logical use, but can be used as a display\nname fallback if title isn’t present.",
-  }),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "Intended for UI and end-user contexts — optimized to be human-readable\nand easily understood.\n\nIf not provided, the name should be used for display.",
-      }),
-      S.Null,
-    ]),
-  ),
-  version: S.String.annotateKey({
-    description:
-      'Version of the implementation. Can be displayed to the user or used\nfor debugging or metrics purposes. (e.g. "1.0.0").',
-  }),
-}).pipe(
-  $I.annoteSchema("Implementation", {
-    description: "Generated ACP schema for Implementation.",
-    documentation:
-      "Metadata about the implementation of the client or agent.\nDescribes the name and version of an MCP implementation, with an optional\ntitle for UI representation.",
-  }),
-);
-
-/**
- * Type for {@link Implementation}.
- *
- * @example
- * ```ts
- * import type { Implementation } from "@beep/acp/schema"
- *
- * type ImplementationValue = Implementation
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Implementation = typeof Implementation.Type;
-
-/**
- * Generated ACP schema for `LogoutCapabilities`.
- *
- * @example
- * ```ts
- * import { LogoutCapabilities } from "@beep/acp/schema"
- *
- * console.log(LogoutCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const LogoutCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("LogoutCapabilities", {
-    description: "Generated ACP schema for LogoutCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nLogout capabilities supported by the agent.\n\nBy supplying `{}` it means that the agent supports the logout method.",
-  }),
-);
-
-/**
- * Type for {@link LogoutCapabilities}.
- *
- * @example
- * ```ts
- * import type { LogoutCapabilities } from "@beep/acp/schema"
- *
- * type LogoutCapabilitiesValue = LogoutCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type LogoutCapabilities = typeof LogoutCapabilities.Type;
-
-/**
- * Generated ACP schema for `ModelInfo`.
- *
- * @example
- * ```ts
- * import { ModelInfo } from "@beep/acp/schema"
- *
- * console.log(ModelInfo.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ModelInfo = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "Optional description of the model.",
-      }),
-      S.Null,
-    ]),
-  ),
-  modelId: S.String.annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable name of the model.",
-  }),
-}).pipe(
-  $I.annoteSchema("ModelInfo", {
-    description: "Generated ACP schema for ModelInfo.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInformation about a selectable model.",
-  }),
-);
-
-/**
- * Type for {@link ModelInfo}.
- *
- * @example
- * ```ts
- * import type { ModelInfo } from "@beep/acp/schema"
- *
- * type ModelInfoValue = ModelInfo
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ModelInfo = typeof ModelInfo.Type;
-
-/**
- * Generated ACP schema for `PermissionOption`.
- *
- * @example
- * ```ts
- * import { PermissionOption } from "@beep/acp/schema"
- *
- * console.log(PermissionOption.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PermissionOption = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  kind: S.Literals([
-    "allow_once",
-    "allow_always",
-    "reject_once",
-    "reject_always",
-  ]).annotateKey({
-    description:
-      "The type of permission option being presented to the user.\n\nHelps clients choose appropriate icons and UI treatment.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable label to display to the user.",
-  }),
-  optionId: S.String.annotateKey({
-    description: "Unique identifier for a permission option.",
-  }),
-}).pipe(
-  $I.annoteSchema("PermissionOption", {
-    description: "Generated ACP schema for PermissionOption.",
-    documentation:
-      "An option presented to the user when requesting permission.",
-  }),
-);
-
-/**
- * Type for {@link PermissionOption}.
- *
- * @example
- * ```ts
- * import type { PermissionOption } from "@beep/acp/schema"
- *
- * type PermissionOptionValue = PermissionOption
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PermissionOption = typeof PermissionOption.Type;
-
-/**
- * Generated ACP schema for `PlanEntry`.
- *
- * @example
- * ```ts
- * import { PlanEntry } from "@beep/acp/schema"
- *
- * console.log(PlanEntry.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PlanEntry = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  content: S.String.annotateKey({
-    description:
-      "Human-readable description of what this task aims to accomplish.",
-  }),
-  priority: S.Literals(["high", "medium", "low"]).annotateKey({
-    description:
-      "Priority levels for plan entries.\n\nUsed to indicate the relative importance or urgency of different\ntasks in the execution plan.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
-  }),
-  status: S.Literals(["pending", "in_progress", "completed"]).annotateKey({
-    description:
-      "Status of a plan entry in the execution flow.\n\nTracks the lifecycle of each task from planning through completion.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
-  }),
-}).pipe(
-  $I.annoteSchema("PlanEntry", {
-    description: "Generated ACP schema for PlanEntry.",
-    documentation:
-      "A single entry in the execution plan.\n\nRepresents a task or goal that the assistant intends to accomplish\nas part of fulfilling the user's request.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
-  }),
-);
-
-/**
- * Type for {@link PlanEntry}.
- *
- * @example
- * ```ts
- * import type { PlanEntry } from "@beep/acp/schema"
- *
- * type PlanEntryValue = PlanEntry
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PlanEntry = typeof PlanEntry.Type;
-
-/**
- * Generated ACP schema for `RequestId`.
- *
- * @example
- * ```ts
- * import { RequestId } from "@beep/acp/schema"
- *
- * console.log(RequestId.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const RequestId = S.Union([
-  S.Null.annotateKey({ title: "Null" }),
-  S.Finite.annotateKey({ title: "Number", format: "int64" }).check(S.isInt()),
-  S.String.annotateKey({ title: "Str" }),
-]).pipe(
-  $I.annoteSchema("RequestId", {
-    description: "Generated ACP schema for RequestId.",
-    documentation:
-      "JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.",
-  }),
-);
-
-/**
- * Type for {@link RequestId}.
- *
- * @example
- * ```ts
- * import type { RequestId } from "@beep/acp/schema"
- *
- * type RequestIdValue = RequestId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type RequestId = typeof RequestId.Type;
-
-/**
- * Generated ACP schema for `Role`.
- *
- * @example
- * ```ts
- * import { Role } from "@beep/acp/schema"
- *
- * console.log(Role.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Role = S.Literals(["assistant", "user"]).pipe(
-  $I.annoteSchema("Role", {
-    description: "Generated ACP schema for Role.",
-    documentation:
-      "The sender or recipient of messages and data in a conversation.",
-  }),
-);
-
-/**
- * Type for {@link Role}.
- *
- * @example
- * ```ts
- * import type { Role } from "@beep/acp/schema"
- *
- * type RoleValue = Role
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Role = typeof Role.Type;
-
-/**
- * Generated ACP schema for `SessionCloseCapabilities`.
- *
- * @example
- * ```ts
- * import { SessionCloseCapabilities } from "@beep/acp/schema"
- *
- * console.log(SessionCloseCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionCloseCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SessionCloseCapabilities", {
-    description: "Generated ACP schema for SessionCloseCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/close` method.\n\nBy supplying `{}` it means that the agent supports closing of sessions.",
-  }),
-);
-
-/**
- * Type for {@link SessionCloseCapabilities}.
- *
- * @example
- * ```ts
- * import type { SessionCloseCapabilities } from "@beep/acp/schema"
- *
- * type SessionCloseCapabilitiesValue = SessionCloseCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionCloseCapabilities = typeof SessionCloseCapabilities.Type;
-
-/**
- * Generated ACP schema for `SessionConfigOptionCategory`.
- *
- * @example
- * ```ts
- * import { SessionConfigOptionCategory } from "@beep/acp/schema"
- *
- * console.log(SessionConfigOptionCategory.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionConfigOptionCategory = S.Union([
-  S.Literal("mode").annotateKey({ description: "Session mode selector." }),
-  S.Literal("model").annotateKey({ description: "Model selector." }),
-  S.Literal("thought_level").annotateKey({
-    description: "Thought/reasoning level selector.",
-  }),
-  S.String.annotateKey({
-    title: "other",
-    description: "Unknown / uncategorized selector.",
-  }),
-]).pipe(
-  $I.annoteSchema("SessionConfigOptionCategory", {
-    description: "Generated ACP schema for SessionConfigOptionCategory.",
-    documentation:
-      "Semantic category for a session configuration option.\n\nThis is intended to help Clients distinguish broadly common selectors (e.g. model selector vs\nsession mode selector vs thought/reasoning level) for UX purposes (keyboard shortcuts, icons,\nplacement). It MUST NOT be required for correctness. Clients MUST handle missing or unknown\ncategories gracefully.\n\nCategory names beginning with `_` are free for custom use, like other ACP extension methods.\nCategory names that do not begin with `_` are reserved for the ACP spec.",
-  }),
-);
-
-/**
- * Type for {@link SessionConfigOptionCategory}.
- *
- * @example
- * ```ts
- * import type { SessionConfigOptionCategory } from "@beep/acp/schema"
- *
- * type SessionConfigOptionCategoryValue = SessionConfigOptionCategory
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionConfigOptionCategory =
-  typeof SessionConfigOptionCategory.Type;
-
-/**
- * Generated ACP schema for `SessionConfigSelectOption`.
- *
- * @example
- * ```ts
- * import { SessionConfigSelectOption } from "@beep/acp/schema"
- *
- * console.log(SessionConfigSelectOption.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionConfigSelectOption = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "Optional description for this option value.",
-      }),
-      S.Null,
-    ]),
-  ),
-  name: S.String.annotateKey({
-    description: "Human-readable label for this option value.",
-  }),
-  value: S.String.annotateKey({
-    description: "Unique identifier for a session configuration option value.",
-  }),
-}).pipe(
-  $I.annoteSchema("SessionConfigSelectOption", {
-    description: "Generated ACP schema for SessionConfigSelectOption.",
-    documentation: "A possible value for a session configuration option.",
-  }),
-);
-
-/**
- * Type for {@link SessionConfigSelectOption}.
- *
- * @example
- * ```ts
- * import type { SessionConfigSelectOption } from "@beep/acp/schema"
- *
- * type SessionConfigSelectOptionValue = SessionConfigSelectOption
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionConfigSelectOption = typeof SessionConfigSelectOption.Type;
-
-/**
- * Generated ACP schema for `SessionForkCapabilities`.
- *
- * @example
- * ```ts
- * import { SessionForkCapabilities } from "@beep/acp/schema"
- *
- * console.log(SessionForkCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionForkCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SessionForkCapabilities", {
-    description: "Generated ACP schema for SessionForkCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/fork` method.\n\nBy supplying `{}` it means that the agent supports forking of sessions.",
-  }),
-);
-
-/**
- * Type for {@link SessionForkCapabilities}.
- *
- * @example
- * ```ts
- * import type { SessionForkCapabilities } from "@beep/acp/schema"
- *
- * type SessionForkCapabilitiesValue = SessionForkCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionForkCapabilities = typeof SessionForkCapabilities.Type;
-
-/**
- * Generated ACP schema for `SessionInfo`.
- *
- * @example
- * ```ts
- * import { SessionInfo } from "@beep/acp/schema"
- *
- * console.log(SessionInfo.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionInfo = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  cwd: S.String.annotateKey({
-    description:
-      "The working directory for this session. Must be an absolute path.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "Human-readable title for the session",
-      }),
-      S.Null,
-    ]),
-  ),
-  updatedAt: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "ISO 8601 timestamp of last activity",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SessionInfo", {
-    description: "Generated ACP schema for SessionInfo.",
-    documentation: "Information about a session returned by session/list",
-  }),
-);
-
-/**
- * Type for {@link SessionInfo}.
- *
- * @example
- * ```ts
- * import type { SessionInfo } from "@beep/acp/schema"
- *
- * type SessionInfoValue = SessionInfo
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionInfo = typeof SessionInfo.Type;
-
-/**
- * Generated ACP schema for `SessionListCapabilities`.
- *
- * @example
- * ```ts
- * import { SessionListCapabilities } from "@beep/acp/schema"
- *
- * console.log(SessionListCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionListCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SessionListCapabilities", {
-    description: "Generated ACP schema for SessionListCapabilities.",
-    documentation:
-      "Capabilities for the `session/list` method.\n\nBy supplying `{}` it means that the agent supports listing of sessions.",
-  }),
-);
-
-/**
- * Type for {@link SessionListCapabilities}.
- *
- * @example
- * ```ts
- * import type { SessionListCapabilities } from "@beep/acp/schema"
- *
- * type SessionListCapabilitiesValue = SessionListCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionListCapabilities = typeof SessionListCapabilities.Type;
-
-/**
- * Generated ACP schema for `SessionModeId`.
- *
- * @example
- * ```ts
- * import { SessionModeId } from "@beep/acp/schema"
- *
- * console.log(SessionModeId.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionModeId = S.String.pipe(
-  $I.annoteSchema("SessionModeId", {
-    description: "Generated ACP schema for SessionModeId.",
-    documentation: "Unique identifier for a Session Mode.",
-  }),
-);
-
-/**
- * Type for {@link SessionModeId}.
- *
- * @example
- * ```ts
- * import type { SessionModeId } from "@beep/acp/schema"
- *
- * type SessionModeIdValue = SessionModeId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionModeId = typeof SessionModeId.Type;
-
-/**
- * Generated ACP schema for `SessionResumeCapabilities`.
- *
- * @example
- * ```ts
- * import { SessionResumeCapabilities } from "@beep/acp/schema"
- *
- * console.log(SessionResumeCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionResumeCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SessionResumeCapabilities", {
-    description: "Generated ACP schema for SessionResumeCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/resume` method.\n\nBy supplying `{}` it means that the agent supports resuming of sessions.",
-  }),
-);
-
-/**
- * Type for {@link SessionResumeCapabilities}.
- *
- * @example
- * ```ts
- * import type { SessionResumeCapabilities } from "@beep/acp/schema"
- *
- * type SessionResumeCapabilitiesValue = SessionResumeCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionResumeCapabilities = typeof SessionResumeCapabilities.Type;
-
-/**
- * Generated ACP schema for `StringFormat`.
- *
- * @example
- * ```ts
- * import { StringFormat } from "@beep/acp/schema"
- *
- * console.log(StringFormat.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const StringFormat = S.Literals([
-  "email",
-  "uri",
-  "date",
-  "date-time",
-]).pipe(
-  $I.annoteSchema("StringFormat", {
-    description: "Generated ACP schema for StringFormat.",
-    documentation:
-      "String format types for string properties in elicitation schemas.",
-  }),
-);
-
-/**
- * Type for {@link StringFormat}.
- *
- * @example
- * ```ts
- * import type { StringFormat } from "@beep/acp/schema"
- *
- * type StringFormatValue = StringFormat
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type StringFormat = typeof StringFormat.Type;
-
-/**
- * Generated ACP schema for `TerminalExitStatus`.
- *
- * @example
- * ```ts
- * import { TerminalExitStatus } from "@beep/acp/schema"
- *
- * console.log(TerminalExitStatus.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TerminalExitStatus = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  exitCode: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description:
-          "The process exit code (may be null if terminated by signal).",
-        format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  signal: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "The signal that terminated the process (may be null if exited normally).",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("TerminalExitStatus", {
-    description: "Generated ACP schema for TerminalExitStatus.",
-    documentation: "Exit status of a terminal command.",
-  }),
-);
-
-/**
- * Type for {@link TerminalExitStatus}.
- *
- * @example
- * ```ts
- * import type { TerminalExitStatus } from "@beep/acp/schema"
- *
- * type TerminalExitStatusValue = TerminalExitStatus
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TerminalExitStatus = typeof TerminalExitStatus.Type;
-
-/**
- * Generated ACP schema for `ToolCallLocation`.
- *
- * @example
- * ```ts
- * import { ToolCallLocation } from "@beep/acp/schema"
- *
- * console.log(ToolCallLocation.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ToolCallLocation = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  line: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Optional line number within the file.",
-        format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  path: S.String.annotateKey({
-    description: "The file path being accessed or modified.",
-  }),
-}).pipe(
-  $I.annoteSchema("ToolCallLocation", {
-    description: "Generated ACP schema for ToolCallLocation.",
-    documentation:
-      'A file location being accessed or modified by a tool.\n\nEnables clients to implement "follow-along" features that track\nwhich files the agent is working with in real-time.\n\nSee protocol docs: [Following the Agent](https://agentclientprotocol.com/protocol/tool-calls#following-the-agent)',
-  }),
-);
-
-/**
- * Type for {@link ToolCallLocation}.
- *
- * @example
- * ```ts
- * import type { ToolCallLocation } from "@beep/acp/schema"
- *
- * type ToolCallLocationValue = ToolCallLocation
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ToolCallLocation = typeof ToolCallLocation.Type;
-
-/**
- * Generated ACP schema for `ToolCallStatus`.
- *
- * @example
- * ```ts
- * import { ToolCallStatus } from "@beep/acp/schema"
- *
- * console.log(ToolCallStatus.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ToolCallStatus = S.Literals([
-  "pending",
-  "in_progress",
-  "completed",
-  "failed",
-]).pipe(
-  $I.annoteSchema("ToolCallStatus", {
-    description: "Generated ACP schema for ToolCallStatus.",
-    documentation:
-      "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
-  }),
-);
-
-/**
- * Type for {@link ToolCallStatus}.
- *
- * @example
- * ```ts
- * import type { ToolCallStatus } from "@beep/acp/schema"
- *
- * type ToolCallStatusValue = ToolCallStatus
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ToolCallStatus = typeof ToolCallStatus.Type;
-
-/**
- * Generated ACP schema for `ToolKind`.
- *
- * @example
- * ```ts
- * import { ToolKind } from "@beep/acp/schema"
- *
- * console.log(ToolKind.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ToolKind = S.Literals([
-  "read",
-  "edit",
-  "delete",
-  "move",
-  "search",
-  "execute",
-  "think",
-  "fetch",
-  "switch_mode",
-  "other",
-]).pipe(
-  $I.annoteSchema("ToolKind", {
-    description: "Generated ACP schema for ToolKind.",
-    documentation:
-      "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
-  }),
-);
-
-/**
- * Type for {@link ToolKind}.
- *
- * @example
- * ```ts
- * import type { ToolKind } from "@beep/acp/schema"
- *
- * type ToolKindValue = ToolKind
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ToolKind = typeof ToolKind.Type;
-
-/**
- * Generated ACP schema for `Usage`.
- *
- * @example
- * ```ts
- * import { Usage } from "@beep/acp/schema"
- *
- * console.log(Usage.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Usage = S.Struct({
-  cachedReadTokens: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Total cache read tokens.",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  cachedWriteTokens: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Total cache write tokens.",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  inputTokens: S.Finite.annotateKey({
-    description: "Total input tokens across all turns.",
-    format: "uint64",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0)),
-  outputTokens: S.Finite.annotateKey({
-    description: "Total output tokens across all turns.",
-    format: "uint64",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0)),
-  thoughtTokens: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Total thought/reasoning tokens",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  totalTokens: S.Finite.annotateKey({
-    description: "Sum of all token types across session.",
-    format: "uint64",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0)),
-}).pipe(
-  $I.annoteSchema("Usage", {
-    description: "Generated ACP schema for Usage.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nToken usage information for a prompt turn.",
-  }),
-);
-
-/**
- * Type for {@link Usage}.
- *
- * @example
- * ```ts
- * import type { Usage } from "@beep/acp/schema"
- *
- * type UsageValue = Usage
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Usage = typeof Usage.Type;
-
-/**
- * Generated ACP schema for `AuthMethod`.
- *
- * @example
- * ```ts
- * import { AuthMethod } from "@beep/acp/schema"
- *
- * console.log(AuthMethod.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AuthMethod = S.Union([
-  S.Struct({
-    type: S.Literal("env_var"),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    description: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({
-          description:
-            "Optional description providing more details about this authentication method.",
-        }),
-        S.Null,
-      ]),
-    ),
-    id: S.String.annotateKey({
-      description: "Unique identifier for this authentication method.",
-    }),
-    link: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({
-          description:
-            "Optional link to a page where the user can obtain their credentials.",
-        }),
-        S.Null,
-      ]),
-    ),
-    name: S.String.annotateKey({
-      description: "Human-readable name of the authentication method.",
-    }),
-    vars: S.Array(AuthEnvVar).annotateKey({
-      description: "The environment variables the client should set.",
-    }),
-  }).annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nEnvironment variable authentication method.\n\nThe user provides credentials that the client passes to the agent as environment variables.",
-  }),
-  S.Struct({
-    type: S.Literal("terminal"),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    args: S.optionalKey(
-      S.Array(S.String).annotateKey({
-        description:
-          "Additional arguments to pass when running the agent binary for terminal auth.",
-      }),
-    ),
-    description: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({
-          description:
-            "Optional description providing more details about this authentication method.",
-        }),
-        S.Null,
-      ]),
-    ),
-    env: S.optionalKey(
-      S.Record(S.String, S.String).annotateKey({
-        description:
-          "Additional environment variables to set when running the agent binary for terminal auth.",
-      }),
-    ),
-    id: S.String.annotateKey({
-      description: "Unique identifier for this authentication method.",
-    }),
-    name: S.String.annotateKey({
-      description: "Human-readable name of the authentication method.",
-    }),
-  }).annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nTerminal-based authentication method.\n\nThe client runs an interactive terminal for the user to authenticate via a TUI.",
-  }),
-  S.Struct({
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    description: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({
-          description:
-            "Optional description providing more details about this authentication method.",
-        }),
-        S.Null,
-      ]),
-    ),
-    id: S.String.annotateKey({
-      description: "Unique identifier for this authentication method.",
-    }),
-    name: S.String.annotateKey({
-      description: "Human-readable name of the authentication method.",
-    }),
-  }).annotateKey({
-    title: "agent",
-    description:
-      "Agent handles authentication itself.\n\nThis is the default authentication method type.",
-  }),
-]).pipe(
-  $I.annoteSchema("AuthMethod", {
-    description: "Generated ACP schema for AuthMethod.",
-    documentation:
-      "Describes an available authentication method.\n\nThe `type` field acts as the discriminator in the serialized JSON form.\nWhen no `type` is present, the method is treated as `agent`.",
-  }),
-);
-
-/**
- * Type for {@link AuthMethod}.
- *
- * @example
- * ```ts
- * import type { AuthMethod } from "@beep/acp/schema"
- *
- * type AuthMethodValue = AuthMethod
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AuthMethod = typeof AuthMethod.Type;
-
-/**
- * Generated ACP schema for `AvailableCommand`.
- *
- * @example
- * ```ts
- * import { AvailableCommand } from "@beep/acp/schema"
- *
- * console.log(AvailableCommand.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AvailableCommand = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  description: S.String.annotateKey({
-    description: "Human-readable description of what the command does.",
-  }),
-  input: S.optionalKey(
-    S.Union([AvailableCommandInput, S.Null]).annotateKey({
-      description: "Input for the command if required",
-    }),
-  ),
-  name: S.String.annotateKey({
-    description: "Command name (e.g., `create_plan`, `research_codebase`).",
-  }),
-}).pipe(
-  $I.annoteSchema("AvailableCommand", {
-    description: "Generated ACP schema for AvailableCommand.",
-    documentation: "Information about a command.",
-  }),
-);
-
-/**
- * Type for {@link AvailableCommand}.
- *
- * @example
- * ```ts
- * import type { AvailableCommand } from "@beep/acp/schema"
- *
- * type AvailableCommandValue = AvailableCommand
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AvailableCommand = typeof AvailableCommand.Type;
-
-/**
- * Generated ACP schema for `ElicitationCapabilities`.
- *
- * @example
- * ```ts
- * import { ElicitationCapabilities } from "@beep/acp/schema"
- *
- * console.log(ElicitationCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  form: S.optionalKey(
-    S.Union([ElicitationFormCapabilities, S.Null]).annotateKey({
-      description: "Whether the client supports form-based elicitation.",
-    }),
-  ),
-  url: S.optionalKey(
-    S.Union([ElicitationUrlCapabilities, S.Null]).annotateKey({
-      description: "Whether the client supports URL-based elicitation.",
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("ElicitationCapabilities", {
-    description: "Generated ACP schema for ElicitationCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationCapabilities}.
- *
- * @example
- * ```ts
- * import type { ElicitationCapabilities } from "@beep/acp/schema"
- *
- * type ElicitationCapabilitiesValue = ElicitationCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationCapabilities = typeof ElicitationCapabilities.Type;
-
-/**
- * Generated ACP schema for `McpServer`.
- *
- * @example
- * ```ts
- * import { McpServer } from "@beep/acp/schema"
- *
- * console.log(McpServer.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const McpServer = S.Union([
-  S.Struct({
-    type: S.Literal("http"),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    headers: S.Array(HttpHeader).annotateKey({
-      description:
-        "HTTP headers to set when making requests to the MCP server.",
-    }),
-    name: S.String.annotateKey({
-      description: "Human-readable name identifying this MCP server.",
-    }),
-    url: S.String.annotateKey({ description: "URL to the MCP server." }),
-  }).annotateKey({ description: "HTTP transport configuration for MCP." }),
-  S.Struct({
-    type: S.Literal("sse"),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    headers: S.Array(HttpHeader).annotateKey({
-      description:
-        "HTTP headers to set when making requests to the MCP server.",
-    }),
-    name: S.String.annotateKey({
-      description: "Human-readable name identifying this MCP server.",
-    }),
-    url: S.String.annotateKey({ description: "URL to the MCP server." }),
-  }).annotateKey({ description: "SSE transport configuration for MCP." }),
-  S.Struct({
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    args: S.Array(S.String).annotateKey({
-      description: "Command-line arguments to pass to the MCP server.",
-    }),
-    command: S.String.annotateKey({
-      description: "Path to the MCP server executable.",
-    }),
-    env: S.Array(EnvVariable).annotateKey({
-      description:
-        "Environment variables to set when launching the MCP server.",
-    }),
-    name: S.String.annotateKey({
-      description: "Human-readable name identifying this MCP server.",
-    }),
-  }).annotateKey({
-    title: "stdio",
-    description: "Stdio transport configuration for MCP.",
-  }),
-]).pipe(
-  $I.annoteSchema("McpServer", {
-    description: "Generated ACP schema for McpServer.",
-    documentation:
-      "Configuration for connecting to an MCP (Model Context Protocol) server.\n\nMCP servers provide tools and context that the agent can use when\nprocessing prompts.\n\nSee protocol docs: [MCP Servers](https://agentclientprotocol.com/protocol/session-setup#mcp-servers)",
-  }),
-);
-
-/**
- * Type for {@link McpServer}.
- *
- * @example
- * ```ts
- * import type { McpServer } from "@beep/acp/schema"
- *
- * type McpServerValue = McpServer
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type McpServer = typeof McpServer.Type;
-
-/**
- * Generated ACP schema for `SessionModelState`.
- *
- * @example
- * ```ts
- * import { SessionModelState } from "@beep/acp/schema"
- *
- * console.log(SessionModelState.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionModelState = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  availableModels: S.Array(ModelInfo).annotateKey({
-    description: "The set of models that the Agent can use",
-  }),
-  currentModelId: S.String.annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
-  }),
-}).pipe(
-  $I.annoteSchema("SessionModelState", {
-    description: "Generated ACP schema for SessionModelState.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe set of models and the one currently active.",
-  }),
-);
-
-/**
- * Type for {@link SessionModelState}.
- *
- * @example
- * ```ts
- * import type { SessionModelState } from "@beep/acp/schema"
- *
- * type SessionModelStateValue = SessionModelState
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionModelState = typeof SessionModelState.Type;
-
-/**
- * Generated ACP schema for `Annotations`.
- *
- * @example
- * ```ts
- * import { Annotations } from "@beep/acp/schema"
- *
- * console.log(Annotations.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Annotations = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  audience: S.optionalKey(S.Union([S.Array(Role), S.Null])),
-  lastModified: S.optionalKey(S.Union([S.String, S.Null])),
-  priority: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({ format: "double" }).check(S.isFinite()),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("Annotations", {
-    description: "Generated ACP schema for Annotations.",
-    documentation:
-      "Optional annotations for the client. The client can use annotations to inform how objects are used or displayed",
-  }),
-);
-
-/**
- * Type for {@link Annotations}.
- *
- * @example
- * ```ts
- * import type { Annotations } from "@beep/acp/schema"
- *
- * type AnnotationsValue = Annotations
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Annotations = typeof Annotations.Type;
-
-/**
- * Generated ACP schema for `SessionConfigSelectGroup`.
- *
- * @example
- * ```ts
- * import { SessionConfigSelectGroup } from "@beep/acp/schema"
- *
- * console.log(SessionConfigSelectGroup.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionConfigSelectGroup = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  group: S.String.annotateKey({
-    description:
-      "Unique identifier for a session configuration option value group.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable label for this group.",
-  }),
-  options: S.Array(SessionConfigSelectOption).annotateKey({
-    description: "The set of option values in this group.",
-  }),
-}).pipe(
-  $I.annoteSchema("SessionConfigSelectGroup", {
-    description: "Generated ACP schema for SessionConfigSelectGroup.",
-    documentation:
-      "A group of possible values for a session configuration option.",
-  }),
-);
-
-/**
- * Type for {@link SessionConfigSelectGroup}.
- *
- * @example
- * ```ts
- * import type { SessionConfigSelectGroup } from "@beep/acp/schema"
- *
- * type SessionConfigSelectGroupValue = SessionConfigSelectGroup
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionConfigSelectGroup = typeof SessionConfigSelectGroup.Type;
-
-/**
- * Generated ACP schema for `SessionMode`.
- *
- * @example
- * ```ts
- * import { SessionMode } from "@beep/acp/schema"
- *
- * console.log(SessionMode.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionMode = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  description: S.optionalKey(S.Union([S.String, S.Null])),
-  id: SessionModeId,
-  name: S.String,
-}).pipe(
-  $I.annoteSchema("SessionMode", {
-    description: "Generated ACP schema for SessionMode.",
-    documentation:
-      "A mode the agent can operate in.\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-  }),
-);
-
-/**
- * Type for {@link SessionMode}.
- *
- * @example
- * ```ts
- * import type { SessionMode } from "@beep/acp/schema"
- *
- * type SessionModeValue = SessionMode
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionMode = typeof SessionMode.Type;
-
-/**
- * Generated ACP schema for `ElicitationPropertySchema`.
- *
- * @example
- * ```ts
- * import { ElicitationPropertySchema } from "@beep/acp/schema"
- *
- * console.log(ElicitationPropertySchema.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationPropertySchema = S.Union(
-  [
-    S.Struct({
-      type: S.Literal("string"),
-      default: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Default value." }),
-          S.Null,
-        ]),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Human-readable description." }),
-          S.Null,
-        ]),
-      ),
-      enum: S.optionalKey(
-        S.Union([
-          S.Array(S.String).annotateKey({
-            description: "Enum values for untitled single-select enums.",
-          }),
-          S.Null,
-        ]),
-      ),
-      format: S.optionalKey(
-        S.Union([StringFormat, S.Null]).annotateKey({
-          description: "String format.",
-        }),
-      ),
-      maxLength: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Maximum string length.",
-            format: "uint32",
-          })
-            .check(S.isInt())
-            .check(S.isGreaterThanOrEqualTo(0)),
-          S.Null,
-        ]),
-      ),
-      minLength: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Minimum string length.",
-            format: "uint32",
-          })
-            .check(S.isInt())
-            .check(S.isGreaterThanOrEqualTo(0)),
-          S.Null,
-        ]),
-      ),
-      oneOf: S.optionalKey(
-        S.Union([
-          S.Array(EnumOption).annotateKey({
-            description: "Titled enum options for titled single-select enums.",
-          }),
-          S.Null,
-        ]),
-      ),
-      pattern: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Pattern the string must match.",
-          }),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Optional title for the property.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description:
-        'Schema for string properties in an elicitation form.\n\nWhen `enum` or `oneOf` is set, this represents a single-select enum\nwith `"type": "string"`.',
-    }),
-    S.Struct({
-      type: S.Literal("number"),
-      default: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Default value.",
-            format: "double",
-          }).check(S.isFinite()),
-          S.Null,
-        ]),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Human-readable description." }),
-          S.Null,
-        ]),
-      ),
-      maximum: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Maximum value (inclusive).",
-            format: "double",
-          }).check(S.isFinite()),
-          S.Null,
-        ]),
-      ),
-      minimum: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Minimum value (inclusive).",
-            format: "double",
-          }).check(S.isFinite()),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Optional title for the property.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description:
-        "Schema for number (floating-point) properties in an elicitation form.",
-    }),
-    S.Struct({
-      type: S.Literal("integer"),
-      default: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Default value.",
-            format: "int64",
-          }).check(S.isInt()),
-          S.Null,
-        ]),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Human-readable description." }),
-          S.Null,
-        ]),
-      ),
-      maximum: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Maximum value (inclusive).",
-            format: "int64",
-          }).check(S.isInt()),
-          S.Null,
-        ]),
-      ),
-      minimum: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Minimum value (inclusive).",
-            format: "int64",
-          }).check(S.isInt()),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Optional title for the property.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description: "Schema for integer properties in an elicitation form.",
-    }),
-    S.Struct({
-      type: S.Literal("boolean"),
-      default: S.optionalKey(
-        S.Union([
-          S.Boolean.annotateKey({ description: "Default value." }),
-          S.Null,
-        ]),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Human-readable description." }),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Optional title for the property.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description: "Schema for boolean properties in an elicitation form.",
-    }),
-    S.Struct({
-      type: S.Literal("array"),
-      default: S.optionalKey(
-        S.Union([
-          S.Array(S.String).annotateKey({
-            description: "Default selected values.",
-          }),
-          S.Null,
-        ]),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({ description: "Human-readable description." }),
-          S.Null,
-        ]),
-      ),
-      items: S.Union([
-        S.Struct({
-          enum: S.Array(S.String).annotateKey({
-            description: "Allowed enum values.",
-          }),
-          type: S.Literal("string").annotateKey({
-            description:
-              "Items definition for untitled multi-select enum properties.",
-          }),
-        }).annotateKey({
-          title: "Untitled",
-          description:
-            "Items definition for untitled multi-select enum properties.",
-        }),
-        S.Struct({
-          anyOf: S.Array(EnumOption).annotateKey({
-            description: "Titled enum options.",
-          }),
-        }).annotateKey({
-          title: "Titled",
-          description:
-            "Items definition for titled multi-select enum properties.",
-        }),
-      ]).annotateKey({
-        description: "Items for a multi-select (array) property schema.",
-      }),
-      maxItems: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Maximum number of items to select.",
-            format: "uint64",
-          })
-            .check(S.isInt())
-            .check(S.isGreaterThanOrEqualTo(0)),
-          S.Null,
-        ]),
-      ),
-      minItems: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({
-            description: "Minimum number of items to select.",
-            format: "uint64",
-          })
-            .check(S.isInt())
-            .check(S.isGreaterThanOrEqualTo(0)),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Optional title for the property.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description:
-        "Schema for multi-select (array) properties in an elicitation form.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("ElicitationPropertySchema", {
-    description: "Generated ACP schema for ElicitationPropertySchema.",
-    documentation:
-      'Property schema for elicitation form fields.\n\nEach variant corresponds to a JSON Schema `"type"` value.\nSingle-select enums use the `String` variant with `enum` or `oneOf` set.\nMulti-select enums use the `Array` variant.',
-  }),
-);
-
-/**
- * Type for {@link ElicitationPropertySchema}.
- *
- * @example
- * ```ts
- * import type { ElicitationPropertySchema } from "@beep/acp/schema"
- *
- * type ElicitationPropertySchemaValue = ElicitationPropertySchema
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationPropertySchema = typeof ElicitationPropertySchema.Type;
-
-/**
- * Generated ACP schema for `ContentBlock`.
- *
- * @example
- * ```ts
- * import { ContentBlock } from "@beep/acp/schema"
- *
- * console.log(ContentBlock.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ContentBlock = S.Union(
-  [
-    S.Struct({
-      type: S.Literal("text"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-      text: S.String,
-    }).annotateKey({ description: "Text provided to or from an LLM." }),
-    S.Struct({
-      type: S.Literal("image"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-      data: S.String,
-      mimeType: S.String,
-      uri: S.optionalKey(S.Union([S.String, S.Null])),
-    }).annotateKey({ description: "An image provided to or from an LLM." }),
-    S.Struct({
-      type: S.Literal("audio"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-      data: S.String,
-      mimeType: S.String,
-    }).annotateKey({ description: "Audio provided to or from an LLM." }),
-    S.Struct({
-      type: S.Literal("resource_link"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-      description: S.optionalKey(S.Union([S.String, S.Null])),
-      mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-      name: S.String,
-      size: S.optionalKey(
-        S.Union([
-          S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(S.Union([S.String, S.Null])),
-      uri: S.String,
-    }).annotateKey({
-      description:
-        "A resource that the server is capable of reading, included in a prompt or tool call result.",
-    }),
-    S.Struct({
-      type: S.Literal("resource"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-      resource: EmbeddedResourceResource,
-    }).annotateKey({
-      description:
-        "The contents of a resource, embedded into a prompt or tool call result.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("ContentBlock", {
-    description: "Generated ACP schema for ContentBlock.",
-    documentation:
-      "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-  }),
-);
-
-/**
- * Type for {@link ContentBlock}.
- *
- * @example
- * ```ts
- * import type { ContentBlock } from "@beep/acp/schema"
- *
- * type ContentBlockValue = ContentBlock
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ContentBlock = typeof ContentBlock.Type;
-
-/**
- * Generated ACP schema for `ToolCallContent`.
- *
- * @example
- * ```ts
- * import { ToolCallContent } from "@beep/acp/schema"
- *
- * console.log(ToolCallContent.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ToolCallContent = S.Union(
-  [
-    S.Struct({
-      type: S.Literal("content"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.Union(
-        [
-          S.Struct({
-            type: S.Literal("text"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            text: S.String,
-          }).annotateKey({ description: "Text provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("image"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-            uri: S.optionalKey(S.Union([S.String, S.Null])),
-          }).annotateKey({
-            description: "An image provided to or from an LLM.",
-          }),
-          S.Struct({
-            type: S.Literal("audio"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-          }).annotateKey({ description: "Audio provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("resource_link"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            description: S.optionalKey(S.Union([S.String, S.Null])),
-            mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-            name: S.String,
-            size: S.optionalKey(
-              S.Union([
-                S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                S.Null,
-              ]),
-            ),
-            title: S.optionalKey(S.Union([S.String, S.Null])),
-            uri: S.String,
-          }).annotateKey({
-            description:
-              "A resource that the server is capable of reading, included in a prompt or tool call result.",
-          }),
-          S.Struct({
-            type: S.Literal("resource"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            resource: EmbeddedResourceResource,
-          }).annotateKey({
-            description:
-              "The contents of a resource, embedded into a prompt or tool call result.",
-          }),
-        ],
-        { mode: "oneOf" },
-      ).annotateKey({
-        description:
-          "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-      }),
-    }).annotateKey({
-      description: "Standard content block (text, images, resources).",
-    }),
-    S.Struct({
-      type: S.Literal("diff"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      newText: S.String.annotateKey({
-        description: "The new content after modification.",
-      }),
-      oldText: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "The original content (None for new files).",
-          }),
-          S.Null,
-        ]),
-      ),
-      path: S.String.annotateKey({
-        description: "The file path being modified.",
-      }),
-    }).annotateKey({
-      description:
-        "A diff representing file modifications.\n\nShows changes to files in a format suitable for display in the client UI.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
-    }),
-    S.Struct({
-      type: S.Literal("terminal"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      terminalId: S.String,
-    }).annotateKey({
-      description:
-        "Embed a terminal created with `terminal/create` by its id.\n\nThe terminal must be added before calling `terminal/release`.\n\nSee protocol docs: [Terminal](https://agentclientprotocol.com/protocol/terminals)",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("ToolCallContent", {
-    description: "Generated ACP schema for ToolCallContent.",
-    documentation:
-      "Content produced by a tool call.\n\nTool calls can produce different types of content including\nstandard content blocks (text, images) or file diffs.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
-  }),
-);
-
-/**
- * Type for {@link ToolCallContent}.
- *
- * @example
- * ```ts
- * import type { ToolCallContent } from "@beep/acp/schema"
- *
- * type ToolCallContentValue = ToolCallContent
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ToolCallContent = typeof ToolCallContent.Type;
-
-/**
- * Generated ACP schema for `SessionConfigOption`.
- *
- * @example
- * ```ts
- * import { SessionConfigOption } from "@beep/acp/schema"
- *
- * console.log(SessionConfigOption.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionConfigOption = S.Union(
-  [
-    S.Struct({
-      type: S.Literal("select"),
-      currentValue: S.String.annotateKey({
-        description:
-          "Unique identifier for a session configuration option value.",
-      }),
-      options: S.Union([
-        S.Array(SessionConfigSelectOption).annotateKey({
-          title: "Ungrouped",
-          description: "A flat list of options with no grouping.",
-        }),
-        S.Array(SessionConfigSelectGroup).annotateKey({
-          title: "Grouped",
-          description: "A list of options grouped under headers.",
-        }),
-      ]).annotateKey({
-        description: "Possible values for a session configuration option.",
-      }),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      category: S.optionalKey(
-        S.Union([SessionConfigOptionCategory, S.Null]).annotateKey({
-          description: "Optional semantic category for this option (UX only).",
-        }),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "Optional description for the Client to display to the user.",
-          }),
-          S.Null,
-        ]),
-      ),
-      id: S.String.annotateKey({
-        description: "Unique identifier for a session configuration option.",
-      }),
-      name: S.String.annotateKey({
-        description: "Human-readable label for the option.",
-      }),
-    }).annotateKey({
-      description:
-        "A session configuration option selector and its current state.",
-    }),
-    S.Struct({
-      type: S.Literal("boolean"),
-      currentValue: S.Boolean.annotateKey({
-        description: "The current value of the boolean option.",
-      }),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      category: S.optionalKey(
-        S.Union([SessionConfigOptionCategory, S.Null]).annotateKey({
-          description: "Optional semantic category for this option (UX only).",
-        }),
-      ),
-      description: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "Optional description for the Client to display to the user.",
-          }),
-          S.Null,
-        ]),
-      ),
-      id: S.String.annotateKey({
-        description: "Unique identifier for a session configuration option.",
-      }),
-      name: S.String.annotateKey({
-        description: "Human-readable label for the option.",
-      }),
-    }).annotateKey({
-      description:
-        "A session configuration option selector and its current state.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("SessionConfigOption", {
-    description: "Generated ACP schema for SessionConfigOption.",
-  }),
-);
-
-/**
- * Type for {@link SessionConfigOption}.
- *
- * @example
- * ```ts
- * import type { SessionConfigOption } from "@beep/acp/schema"
- *
- * type SessionConfigOptionValue = SessionConfigOption
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionConfigOption = typeof SessionConfigOption.Type;
-
-/**
- * Generated ACP schema for `SessionModeState`.
- *
- * @example
- * ```ts
- * import { SessionModeState } from "@beep/acp/schema"
- *
- * console.log(SessionModeState.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionModeState = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  availableModes: S.Array(SessionMode).annotateKey({
-    description: "The set of modes that the Agent can operate in",
-  }),
-  currentModeId: S.String.annotateKey({
-    description: "Unique identifier for a Session Mode.",
-  }),
-}).pipe(
-  $I.annoteSchema("SessionModeState", {
-    description: "Generated ACP schema for SessionModeState.",
-    documentation: "The set of modes and the one currently active.",
-  }),
-);
-
-/**
- * Type for {@link SessionModeState}.
- *
- * @example
- * ```ts
- * import type { SessionModeState } from "@beep/acp/schema"
- *
- * type SessionModeStateValue = SessionModeState
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionModeState = typeof SessionModeState.Type;
-
-/**
- * Generated ACP schema for `AgentAuthCapabilities`.
- *
- * @example
- * ```ts
- * import { AgentAuthCapabilities } from "@beep/acp/schema"
- *
- * console.log(AgentAuthCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AgentAuthCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  logout: S.optionalKey(
-    S.Union([LogoutCapabilities, S.Null]).annotateKey({
-      description:
-        "Whether the agent supports the logout method.\n\nBy supplying `{}` it means that the agent supports the logout method.",
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("AgentAuthCapabilities", {
-    description: "Generated ACP schema for AgentAuthCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
-  }),
-);
-
-/**
- * Type for {@link AgentAuthCapabilities}.
- *
- * @example
- * ```ts
- * import type { AgentAuthCapabilities } from "@beep/acp/schema"
- *
- * type AgentAuthCapabilitiesValue = AgentAuthCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AgentAuthCapabilities = typeof AgentAuthCapabilities.Type;
-
-/**
- * Generated ACP schema for `AgentCapabilities`.
- *
- * @example
- * ```ts
- * import { AgentCapabilities } from "@beep/acp/schema"
- *
- * console.log(AgentCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AgentCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  auth: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      logout: S.optionalKey(
-        S.Union([LogoutCapabilities, S.Null]).annotateKey({
-          description:
-            "Whether the agent supports the logout method.\n\nBy supplying `{}` it means that the agent supports the logout method.",
-        }),
-      ),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
-      default: {},
-    }),
-  ),
-  loadSession: S.optionalKey(
-    S.Boolean.annotateKey({
-      description: "Whether the agent supports `session/load`.",
-      default: false,
-    }),
-  ),
-  mcpCapabilities: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      http: S.optionalKey(
-        S.Boolean.annotateKey({
-          description: "Agent supports [`McpServer::Http`].",
-          default: false,
-        }),
-      ),
-      sse: S.optionalKey(
-        S.Boolean.annotateKey({
-          description: "Agent supports [`McpServer::Sse`].",
-          default: false,
-        }),
-      ),
-    }).annotateKey({
-      description: "MCP capabilities supported by the agent",
-      default: { http: false, sse: false },
-    }),
-  ),
-  promptCapabilities: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      audio: S.optionalKey(
-        S.Boolean.annotateKey({
-          description: "Agent supports [`ContentBlock::Audio`].",
-          default: false,
-        }),
-      ),
-      embeddedContext: S.optionalKey(
-        S.Boolean.annotateKey({
-          description:
-            "Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message.",
-          default: false,
-        }),
-      ),
-      image: S.optionalKey(
-        S.Boolean.annotateKey({
-          description: "Agent supports [`ContentBlock::Image`].",
-          default: false,
-        }),
-      ),
-    }).annotateKey({
-      description:
-        "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
-      default: { audio: false, embeddedContext: false, image: false },
-    }),
-  ),
-  sessionCapabilities: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      close: S.optionalKey(
-        S.Union([SessionCloseCapabilities, S.Null]).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/close`.",
-        }),
-      ),
-      fork: S.optionalKey(
-        S.Union([SessionForkCapabilities, S.Null]).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/fork`.",
-        }),
-      ),
-      list: S.optionalKey(
-        S.Union([SessionListCapabilities, S.Null]).annotateKey({
-          description: "Whether the agent supports `session/list`.",
-        }),
-      ),
-      resume: S.optionalKey(
-        S.Union([SessionResumeCapabilities, S.Null]).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/resume`.",
-        }),
-      ),
-    }).annotateKey({
-      default: {},
-      description:
-        "Session capabilities supported by the agent.\n\nAs a baseline, all Agents **MUST** support `session/new`, `session/prompt`, `session/cancel`, and `session/update`.\n\nOptionally, they **MAY** support other session methods and notifications by specifying additional capabilities.\n\nNote: `session/load` is still handled by the top-level `load_session` capability. This will be unified in future versions of the protocol.\n\nSee protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)",
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("AgentCapabilities", {
-    description: "Generated ACP schema for AgentCapabilities.",
-    documentation:
-      "Capabilities supported by the agent.\n\nAdvertised during initialization to inform the client about\navailable features and content types.\n\nSee protocol docs: [Agent Capabilities](https://agentclientprotocol.com/protocol/initialization#agent-capabilities)",
-  }),
-);
-
-/**
- * Type for {@link AgentCapabilities}.
- *
- * @example
- * ```ts
- * import type { AgentCapabilities } from "@beep/acp/schema"
- *
- * type AgentCapabilitiesValue = AgentCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AgentCapabilities = typeof AgentCapabilities.Type;
-
-/**
- * Generated ACP schema for `AgentNotification`.
- *
- * @example
- * ```ts
- * import { AgentNotification } from "@beep/acp/schema"
- *
- * console.log(AgentNotification.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AgentNotification = S.Struct({
-  method: S.String,
-  params: S.optionalKey(
-    S.Union([
-      S.Union([
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-          update: S.Union(
-            [
-              S.Struct({
-                sessionUpdate: S.Literal("user_message_chunk"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                content: S.Union(
-                  [
-                    S.Struct({
-                      type: S.Literal("text"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      text: S.String,
-                    }).annotateKey({
-                      description: "Text provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("image"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      data: S.String,
-                      mimeType: S.String,
-                      uri: S.optionalKey(S.Union([S.String, S.Null])),
-                    }).annotateKey({
-                      description: "An image provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("audio"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      data: S.String,
-                      mimeType: S.String,
-                    }).annotateKey({
-                      description: "Audio provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("resource_link"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      description: S.optionalKey(S.Union([S.String, S.Null])),
-                      mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-                      name: S.String,
-                      size: S.optionalKey(
-                        S.Union([
-                          S.Finite.annotateKey({ format: "int64" }).check(
-                            S.isInt(),
-                          ),
-                          S.Null,
-                        ]),
-                      ),
-                      title: S.optionalKey(S.Union([S.String, S.Null])),
-                      uri: S.String,
-                    }).annotateKey({
-                      description:
-                        "A resource that the server is capable of reading, included in a prompt or tool call result.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("resource"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      resource: EmbeddedResourceResource,
-                    }).annotateKey({
-                      description:
-                        "The contents of a resource, embedded into a prompt or tool call result.",
-                    }),
-                  ],
-                  { mode: "oneOf" },
-                ).annotateKey({
-                  description:
-                    "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-                }),
-                messageId: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description:
-                        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-              }).annotateKey({ description: "A streamed item of content" }),
-              S.Struct({
-                sessionUpdate: S.Literal("agent_message_chunk"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                content: S.Union(
-                  [
-                    S.Struct({
-                      type: S.Literal("text"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      text: S.String,
-                    }).annotateKey({
-                      description: "Text provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("image"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      data: S.String,
-                      mimeType: S.String,
-                      uri: S.optionalKey(S.Union([S.String, S.Null])),
-                    }).annotateKey({
-                      description: "An image provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("audio"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      data: S.String,
-                      mimeType: S.String,
-                    }).annotateKey({
-                      description: "Audio provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("resource_link"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      description: S.optionalKey(S.Union([S.String, S.Null])),
-                      mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-                      name: S.String,
-                      size: S.optionalKey(
-                        S.Union([
-                          S.Finite.annotateKey({ format: "int64" }).check(
-                            S.isInt(),
-                          ),
-                          S.Null,
-                        ]),
-                      ),
-                      title: S.optionalKey(S.Union([S.String, S.Null])),
-                      uri: S.String,
-                    }).annotateKey({
-                      description:
-                        "A resource that the server is capable of reading, included in a prompt or tool call result.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("resource"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      resource: EmbeddedResourceResource,
-                    }).annotateKey({
-                      description:
-                        "The contents of a resource, embedded into a prompt or tool call result.",
-                    }),
-                  ],
-                  { mode: "oneOf" },
-                ).annotateKey({
-                  description:
-                    "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-                }),
-                messageId: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description:
-                        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-              }).annotateKey({ description: "A streamed item of content" }),
-              S.Struct({
-                sessionUpdate: S.Literal("agent_thought_chunk"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                content: S.Union(
-                  [
-                    S.Struct({
-                      type: S.Literal("text"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      text: S.String,
-                    }).annotateKey({
-                      description: "Text provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("image"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      data: S.String,
-                      mimeType: S.String,
-                      uri: S.optionalKey(S.Union([S.String, S.Null])),
-                    }).annotateKey({
-                      description: "An image provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("audio"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      data: S.String,
-                      mimeType: S.String,
-                    }).annotateKey({
-                      description: "Audio provided to or from an LLM.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("resource_link"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      description: S.optionalKey(S.Union([S.String, S.Null])),
-                      mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-                      name: S.String,
-                      size: S.optionalKey(
-                        S.Union([
-                          S.Finite.annotateKey({ format: "int64" }).check(
-                            S.isInt(),
-                          ),
-                          S.Null,
-                        ]),
-                      ),
-                      title: S.optionalKey(S.Union([S.String, S.Null])),
-                      uri: S.String,
-                    }).annotateKey({
-                      description:
-                        "A resource that the server is capable of reading, included in a prompt or tool call result.",
-                    }),
-                    S.Struct({
-                      type: S.Literal("resource"),
-                      _meta: S.optionalKey(
-                        S.Union([
-                          S.Record(S.String, S.Unknown).annotateKey({
-                            description:
-                              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                          }),
-                          S.Null,
-                        ]),
-                      ),
-                      annotations: S.optionalKey(
-                        S.Union([Annotations, S.Null]),
-                      ),
-                      resource: EmbeddedResourceResource,
-                    }).annotateKey({
-                      description:
-                        "The contents of a resource, embedded into a prompt or tool call result.",
-                    }),
-                  ],
-                  { mode: "oneOf" },
-                ).annotateKey({
-                  description:
-                    "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-                }),
-                messageId: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description:
-                        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-              }).annotateKey({ description: "A streamed item of content" }),
-              S.Struct({
-                sessionUpdate: S.Literal("tool_call"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                content: S.optionalKey(
-                  S.Array(ToolCallContent).annotateKey({
-                    description: "Content produced by the tool call.",
-                  }),
-                ),
-                kind: S.optionalKey(
-                  S.Literals([
-                    "read",
-                    "edit",
-                    "delete",
-                    "move",
-                    "search",
-                    "execute",
-                    "think",
-                    "fetch",
-                    "switch_mode",
-                    "other",
-                  ]).annotateKey({
-                    description:
-                      "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
-                  }),
-                ),
-                locations: S.optionalKey(
-                  S.Array(ToolCallLocation).annotateKey({
-                    description:
-                      'File locations affected by this tool call.\nEnables "follow-along" features in clients.',
-                  }),
-                ),
-                rawInput: S.optionalKey(
-                  S.Unknown.annotateKey({
-                    description: "Raw input parameters sent to the tool.",
-                  }),
-                ),
-                rawOutput: S.optionalKey(
-                  S.Unknown.annotateKey({
-                    description: "Raw output returned by the tool.",
-                  }),
-                ),
-                status: S.optionalKey(
-                  S.Literals([
-                    "pending",
-                    "in_progress",
-                    "completed",
-                    "failed",
-                  ]).annotateKey({
-                    description:
-                      "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
-                  }),
-                ),
-                title: S.String.annotateKey({
-                  description:
-                    "Human-readable title describing what the tool is doing.",
-                }),
-                toolCallId: S.String.annotateKey({
-                  description:
-                    "Unique identifier for a tool call within a session.",
-                }),
-              }).annotateKey({
-                description:
-                  "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("tool_call_update"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                content: S.optionalKey(
-                  S.Union([
-                    S.Array(ToolCallContent).annotateKey({
-                      description: "Replace the content collection.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                kind: S.optionalKey(
-                  S.Union([ToolKind, S.Null]).annotateKey({
-                    description: "Update the tool kind.",
-                  }),
-                ),
-                locations: S.optionalKey(
-                  S.Union([
-                    S.Array(ToolCallLocation).annotateKey({
-                      description: "Replace the locations collection.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                rawInput: S.optionalKey(
-                  S.Unknown.annotateKey({
-                    description: "Update the raw input.",
-                  }),
-                ),
-                rawOutput: S.optionalKey(
-                  S.Unknown.annotateKey({
-                    description: "Update the raw output.",
-                  }),
-                ),
-                status: S.optionalKey(
-                  S.Union([ToolCallStatus, S.Null]).annotateKey({
-                    description: "Update the execution status.",
-                  }),
-                ),
-                title: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description: "Update the human-readable title.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                toolCallId: S.String.annotateKey({
-                  description:
-                    "Unique identifier for a tool call within a session.",
-                }),
-              }).annotateKey({
-                description:
-                  "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("plan"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                entries: S.Array(PlanEntry).annotateKey({
-                  description:
-                    "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
-                }),
-              }).annotateKey({
-                description:
-                  "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("available_commands_update"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                availableCommands: S.Array(AvailableCommand).annotateKey({
-                  description: "Commands the agent can execute",
-                }),
-              }).annotateKey({
-                description: "Available commands are ready or have changed",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("current_mode_update"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                currentModeId: S.String.annotateKey({
-                  description: "Unique identifier for a Session Mode.",
-                }),
-              }).annotateKey({
-                description:
-                  "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("config_option_update"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                configOptions: S.Array(SessionConfigOption).annotateKey({
-                  description:
-                    "The full set of configuration options and their current values.",
-                }),
-              }).annotateKey({
-                description: "Session configuration options have been updated.",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("session_info_update"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                title: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description:
-                        "Human-readable title for the session. Set to null to clear.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                updatedAt: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description:
-                        "ISO 8601 timestamp of last activity. Set to null to clear.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-              }).annotateKey({
-                description:
-                  "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
-              }),
-              S.Struct({
-                sessionUpdate: S.Literal("usage_update"),
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                cost: S.optionalKey(
-                  S.Union([Cost, S.Null]).annotateKey({
-                    description: "Cumulative session cost (optional).",
-                  }),
-                ),
-                size: S.Finite.annotateKey({
-                  description: "Total context window size in tokens.",
-                  format: "uint64",
-                })
-                  .check(S.isInt())
-                  .check(S.isGreaterThanOrEqualTo(0)),
-                used: S.Finite.annotateKey({
-                  description: "Tokens currently in context.",
-                  format: "uint64",
-                })
-                  .check(S.isInt())
-                  .check(S.isGreaterThanOrEqualTo(0)),
-              }).annotateKey({
-                description:
-                  "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for a session.",
-              }),
-            ],
-            { mode: "oneOf" },
-          ).annotateKey({
-            description:
-              "Different types of updates that can be sent during session processing.\n\nThese updates provide real-time feedback about the agent's progress.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
-          }),
-        }).annotateKey({
-          title: "SessionNotification",
-          description:
-            "Notification containing a session update from the agent.\n\nUsed to stream real-time progress and results during prompt processing.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          elicitationId: S.String.annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
-          }),
-        }).annotateKey({
-          title: "ElicitationCompleteNotification",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification sent by the agent when a URL-based elicitation is complete.",
-        }),
-        S.Unknown.annotateKey({
-          title: "ExtNotification",
-          description:
-            "Allows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-      ]).annotateKey({
-        description:
-          "All possible notifications that an agent can send to a client.\n\nThis enum is used internally for routing RPC notifications. You typically won't need\nto use this directly - use the notification methods on the [`Client`] trait instead.\n\nNotifications do not expect a response.",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("AgentNotification", {
-    description: "Generated ACP schema for AgentNotification.",
-  }),
-);
-
-/**
- * Type for {@link AgentNotification}.
- *
- * @example
- * ```ts
- * import type { AgentNotification } from "@beep/acp/schema"
- *
- * type AgentNotificationValue = AgentNotification
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AgentNotification = typeof AgentNotification.Type;
-
-/**
- * Generated ACP schema for `AgentRequest`.
- *
- * @example
- * ```ts
- * import { AgentRequest } from "@beep/acp/schema"
- *
- * console.log(AgentRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AgentRequest = S.Struct({
-  id: RequestId,
-  method: S.String,
-  params: S.optionalKey(
-    S.Union([
-      S.Union([
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          content: S.String.annotateKey({
-            description: "The text content to write to the file.",
-          }),
-          path: S.String.annotateKey({
-            description: "Absolute path to the file to write.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "WriteTextFileRequest",
-          description:
-            "Request to write content to a text file.\n\nOnly available if the client supports the `fs.writeTextFile` capability.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          limit: S.optionalKey(
-            S.Union([
-              S.Finite.annotateKey({
-                description: "Maximum number of lines to read.",
-                format: "uint32",
-              })
-                .check(S.isInt())
-                .check(S.isGreaterThanOrEqualTo(0)),
-              S.Null,
-            ]),
-          ),
-          line: S.optionalKey(
-            S.Union([
-              S.Finite.annotateKey({
-                description: "Line number to start reading from (1-based).",
-                format: "uint32",
-              })
-                .check(S.isInt())
-                .check(S.isGreaterThanOrEqualTo(0)),
-              S.Null,
-            ]),
-          ),
-          path: S.String.annotateKey({
-            description: "Absolute path to the file to read.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "ReadTextFileRequest",
-          description:
-            "Request to read content from a text file.\n\nOnly available if the client supports the `fs.readTextFile` capability.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          options: S.Array(PermissionOption).annotateKey({
-            description:
-              "Available permission options for the user to choose from.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-          toolCall: S.Struct({
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            content: S.optionalKey(
-              S.Union([
-                S.Array(ToolCallContent).annotateKey({
-                  description: "Replace the content collection.",
-                }),
-                S.Null,
-              ]),
-            ),
-            kind: S.optionalKey(
-              S.Union([ToolKind, S.Null]).annotateKey({
-                description: "Update the tool kind.",
-              }),
-            ),
-            locations: S.optionalKey(
-              S.Union([
-                S.Array(ToolCallLocation).annotateKey({
-                  description: "Replace the locations collection.",
-                }),
-                S.Null,
-              ]),
-            ),
-            rawInput: S.optionalKey(
-              S.Unknown.annotateKey({ description: "Update the raw input." }),
-            ),
-            rawOutput: S.optionalKey(
-              S.Unknown.annotateKey({ description: "Update the raw output." }),
-            ),
-            status: S.optionalKey(
-              S.Union([ToolCallStatus, S.Null]).annotateKey({
-                description: "Update the execution status.",
-              }),
-            ),
-            title: S.optionalKey(
-              S.Union([
-                S.String.annotateKey({
-                  description: "Update the human-readable title.",
-                }),
-                S.Null,
-              ]),
-            ),
-            toolCallId: S.String.annotateKey({
-              description:
-                "Unique identifier for a tool call within a session.",
-            }),
-          }).annotateKey({
-            description:
-              "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
-          }),
-        }).annotateKey({
-          title: "RequestPermissionRequest",
-          description:
-            "Request for user permission to execute a tool call.\n\nSent when the agent needs authorization before performing a sensitive operation.\n\nSee protocol docs: [Requesting Permission](https://agentclientprotocol.com/protocol/tool-calls#requesting-permission)",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          args: S.optionalKey(
-            S.Array(S.String).annotateKey({
-              description: "Array of command arguments.",
-            }),
-          ),
-          command: S.String.annotateKey({
-            description: "The command to execute.",
-          }),
-          cwd: S.optionalKey(
-            S.Union([
-              S.String.annotateKey({
-                description:
-                  "Working directory for the command (absolute path).",
-              }),
-              S.Null,
-            ]),
-          ),
-          env: S.optionalKey(
-            S.Array(EnvVariable).annotateKey({
-              description: "Environment variables for the command.",
-            }),
-          ),
-          outputByteLimit: S.optionalKey(
-            S.Union([
-              S.Finite.annotateKey({
-                description:
-                  "Maximum number of output bytes to retain.\n\nWhen the limit is exceeded, the Client truncates from the beginning of the output\nto stay within the limit.\n\nThe Client MUST ensure truncation happens at a character boundary to maintain valid\nstring output, even if this means the retained output is slightly less than the\nspecified limit.",
-                format: "uint64",
-              })
-                .check(S.isInt())
-                .check(S.isGreaterThanOrEqualTo(0)),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "CreateTerminalRequest",
-          description:
-            "Request to create a new terminal and execute a command.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-          terminalId: S.String.annotateKey({
-            description: "The ID of the terminal to get output from.",
-          }),
-        }).annotateKey({
-          title: "TerminalOutputRequest",
-          description:
-            "Request to get the current output and status of a terminal.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-          terminalId: S.String.annotateKey({
-            description: "The ID of the terminal to release.",
-          }),
-        }).annotateKey({
-          title: "ReleaseTerminalRequest",
-          description: "Request to release a terminal and free its resources.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-          terminalId: S.String.annotateKey({
-            description: "The ID of the terminal to wait for.",
-          }),
-        }).annotateKey({
-          title: "WaitForTerminalExitRequest",
-          description: "Request to wait for a terminal command to exit.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-          terminalId: S.String.annotateKey({
-            description: "The ID of the terminal to kill.",
-          }),
-        }).annotateKey({
-          title: "KillTerminalRequest",
-          description: "Request to kill a terminal without releasing it.",
-        }),
-        S.Union(
-          [
-            S.Struct({
-              mode: S.Literal("form"),
-              requestedSchema: S.Struct({
-                description: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description:
-                        "Optional description of what this schema represents.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                properties: S.optionalKey(
-                  S.Record(S.String, ElicitationPropertySchema).annotateKey({
-                    description:
-                      "Property definitions (must be primitive types).",
-                    default: {},
-                  }),
-                ),
-                required: S.optionalKey(
-                  S.Union([
-                    S.Array(S.String).annotateKey({
-                      description: "List of required property names.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                title: S.optionalKey(
-                  S.Union([
-                    S.String.annotateKey({
-                      description: "Optional title for the schema.",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                type: S.optionalKey(
-                  S.Literal("object").annotateKey({
-                    description: "Type discriminator for elicitation schemas.",
-                    default: "object",
-                  }),
-                ),
-              }).annotateKey({
-                description:
-                  "Type-safe elicitation schema for requesting structured user input.\n\nThis represents a JSON Schema object with primitive-typed properties,\nas required by the elicitation specification.",
-              }),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              message: S.String.annotateKey({
-                description:
-                  "A human-readable message describing what input is needed.",
-              }),
-              sessionId: S.String.annotateKey({
-                description:
-                  "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-              }),
-            }).annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
-            }),
-            S.Struct({
-              mode: S.Literal("url"),
-              elicitationId: S.String.annotateKey({
-                description:
-                  "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
-              }),
-              url: S.String.annotateKey({
-                description: "The URL to direct the user to.",
-                format: "uri",
-              }),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              message: S.String.annotateKey({
-                description:
-                  "A human-readable message describing what input is needed.",
-              }),
-              sessionId: S.String.annotateKey({
-                description:
-                  "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-              }),
-            }).annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
-            }),
-          ],
-          { mode: "oneOf" },
-        ).annotateKey({
-          title: "ElicitationRequest",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequests structured user input via a form or URL.",
-        }),
-        S.Unknown.annotateKey({
-          title: "ExtMethodRequest",
-          description:
-            "Allows for sending an arbitrary request that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-      ]).annotateKey({
-        description:
-          "All possible requests that an agent can send to a client.\n\nThis enum is used internally for routing RPC requests. You typically won't need\nto use this directly - instead, use the methods on the [`Client`] trait.\n\nThis enum encompasses all method calls from agent to client.",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("AgentRequest", {
-    description: "Generated ACP schema for AgentRequest.",
-  }),
-);
-
-/**
- * Type for {@link AgentRequest}.
- *
- * @example
- * ```ts
- * import type { AgentRequest } from "@beep/acp/schema"
- *
- * type AgentRequestValue = AgentRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AgentRequest = typeof AgentRequest.Type;
-
-/**
- * Generated ACP schema for `AgentResponse`.
- *
- * @example
- * ```ts
- * import { AgentResponse } from "@beep/acp/schema"
- *
- * console.log(AgentResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AgentResponse = S.Union([
-  S.Struct({
-    id: RequestId,
-    result: S.Union([
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        agentCapabilities: S.optionalKey(
-          S.Struct({
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            auth: S.optionalKey(
-              S.Struct({
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                logout: S.optionalKey(
-                  S.Union([LogoutCapabilities, S.Null]).annotateKey({
-                    description:
-                      "Whether the agent supports the logout method.\n\nBy supplying `{}` it means that the agent supports the logout method.",
-                  }),
-                ),
-              }).annotateKey({
-                description:
-                  "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
-                default: {},
-              }),
-            ),
-            loadSession: S.optionalKey(
-              S.Boolean.annotateKey({
-                description: "Whether the agent supports `session/load`.",
-                default: false,
-              }),
-            ),
-            mcpCapabilities: S.optionalKey(
-              S.Struct({
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                http: S.optionalKey(
-                  S.Boolean.annotateKey({
-                    description: "Agent supports [`McpServer::Http`].",
-                    default: false,
-                  }),
-                ),
-                sse: S.optionalKey(
-                  S.Boolean.annotateKey({
-                    description: "Agent supports [`McpServer::Sse`].",
-                    default: false,
-                  }),
-                ),
-              }).annotateKey({
-                description: "MCP capabilities supported by the agent",
-                default: { http: false, sse: false },
-              }),
-            ),
-            promptCapabilities: S.optionalKey(
-              S.Struct({
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                audio: S.optionalKey(
-                  S.Boolean.annotateKey({
-                    description: "Agent supports [`ContentBlock::Audio`].",
-                    default: false,
-                  }),
-                ),
-                embeddedContext: S.optionalKey(
-                  S.Boolean.annotateKey({
-                    description:
-                      "Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message.",
-                    default: false,
-                  }),
-                ),
-                image: S.optionalKey(
-                  S.Boolean.annotateKey({
-                    description: "Agent supports [`ContentBlock::Image`].",
-                    default: false,
-                  }),
-                ),
-              }).annotateKey({
-                description:
-                  "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
-                default: { audio: false, embeddedContext: false, image: false },
-              }),
-            ),
-            sessionCapabilities: S.optionalKey(
-              S.Struct({
-                _meta: S.optionalKey(
-                  S.Union([
-                    S.Record(S.String, S.Unknown).annotateKey({
-                      description:
-                        "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                    }),
-                    S.Null,
-                  ]),
-                ),
-                close: S.optionalKey(
-                  S.Union([SessionCloseCapabilities, S.Null]).annotateKey({
-                    description:
-                      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/close`.",
-                  }),
-                ),
-                fork: S.optionalKey(
-                  S.Union([SessionForkCapabilities, S.Null]).annotateKey({
-                    description:
-                      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/fork`.",
-                  }),
-                ),
-                list: S.optionalKey(
-                  S.Union([SessionListCapabilities, S.Null]).annotateKey({
-                    description: "Whether the agent supports `session/list`.",
-                  }),
-                ),
-                resume: S.optionalKey(
-                  S.Union([SessionResumeCapabilities, S.Null]).annotateKey({
-                    description:
-                      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/resume`.",
-                  }),
-                ),
-              }).annotateKey({
-                default: {},
-                description:
-                  "Session capabilities supported by the agent.\n\nAs a baseline, all Agents **MUST** support `session/new`, `session/prompt`, `session/cancel`, and `session/update`.\n\nOptionally, they **MAY** support other session methods and notifications by specifying additional capabilities.\n\nNote: `session/load` is still handled by the top-level `load_session` capability. This will be unified in future versions of the protocol.\n\nSee protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)",
-              }),
-            ),
-          }).annotateKey({
-            description:
-              "Capabilities supported by the agent.\n\nAdvertised during initialization to inform the client about\navailable features and content types.\n\nSee protocol docs: [Agent Capabilities](https://agentclientprotocol.com/protocol/initialization#agent-capabilities)",
-            default: {
-              auth: {},
-              loadSession: false,
-              mcpCapabilities: { http: false, sse: false },
-              promptCapabilities: {
-                audio: false,
-                embeddedContext: false,
-                image: false,
-              },
-              sessionCapabilities: {},
-            },
-          }),
-        ),
-        agentInfo: S.optionalKey(
-          S.Union([Implementation, S.Null]).annotateKey({
-            description:
-              "Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required.",
-          }),
-        ),
-        authMethods: S.optionalKey(
-          S.Array(AuthMethod).annotateKey({
-            description: "Authentication methods supported by the agent.",
-            default: [],
-          }),
-        ),
-        protocolVersion: S.Finite.annotateKey({
-          description:
-            "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
-          format: "uint16",
-        })
-          .check(S.isInt())
-          .check(S.isGreaterThanOrEqualTo(0))
-          .check(S.isLessThanOrEqualTo(65535)),
-      }).annotateKey({
-        title: "InitializeResponse",
-        description:
-          "Response to the `initialize` method.\n\nContains the negotiated protocol version and agent capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "AuthenticateResponse",
-        description: "Response to the `authenticate` method.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "LogoutResponse",
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to the `logout` method.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        configOptions: S.optionalKey(
-          S.Union([
-            S.Array(SessionConfigOption).annotateKey({
-              description:
-                "Initial session configuration options if supported by the Agent.",
-            }),
-            S.Null,
-          ]),
-        ),
-        models: S.optionalKey(
-          S.Union([SessionModelState, S.Null]).annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-          }),
-        ),
-        modes: S.optionalKey(
-          S.Union([SessionModeState, S.Null]).annotateKey({
-            description:
-              "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-          }),
-        ),
-        sessionId: S.String.annotateKey({
-          description:
-            "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-        }),
-      }).annotateKey({
-        title: "NewSessionResponse",
-        description:
-          "Response from creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        configOptions: S.optionalKey(
-          S.Union([
-            S.Array(SessionConfigOption).annotateKey({
-              description:
-                "Initial session configuration options if supported by the Agent.",
-            }),
-            S.Null,
-          ]),
-        ),
-        models: S.optionalKey(
-          S.Union([SessionModelState, S.Null]).annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-          }),
-        ),
-        modes: S.optionalKey(
-          S.Union([SessionModeState, S.Null]).annotateKey({
-            description:
-              "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-          }),
-        ),
-      }).annotateKey({
-        title: "LoadSessionResponse",
-        description: "Response from loading an existing session.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        nextCursor: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "Opaque cursor token. If present, pass this in the next request's cursor parameter\nto fetch the next page. If absent, there are no more results.",
-            }),
-            S.Null,
-          ]),
-        ),
-        sessions: S.Array(SessionInfo).annotateKey({
-          description: "Array of session information objects",
-        }),
-      }).annotateKey({
-        title: "ListSessionsResponse",
-        description: "Response from listing sessions.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        configOptions: S.optionalKey(
-          S.Union([
-            S.Array(SessionConfigOption).annotateKey({
-              description:
-                "Initial session configuration options if supported by the Agent.",
-            }),
-            S.Null,
-          ]),
-        ),
-        models: S.optionalKey(
-          S.Union([SessionModelState, S.Null]).annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-          }),
-        ),
-        modes: S.optionalKey(
-          S.Union([SessionModeState, S.Null]).annotateKey({
-            description:
-              "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-          }),
-        ),
-        sessionId: S.String.annotateKey({
-          description:
-            "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-        }),
-      }).annotateKey({
-        title: "ForkSessionResponse",
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from forking an existing session.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        configOptions: S.optionalKey(
-          S.Union([
-            S.Array(SessionConfigOption).annotateKey({
-              description:
-                "Initial session configuration options if supported by the Agent.",
-            }),
-            S.Null,
-          ]),
-        ),
-        models: S.optionalKey(
-          S.Union([SessionModelState, S.Null]).annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-          }),
-        ),
-        modes: S.optionalKey(
-          S.Union([SessionModeState, S.Null]).annotateKey({
-            description:
-              "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-          }),
-        ),
-      }).annotateKey({
-        title: "ResumeSessionResponse",
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from resuming an existing session.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "CloseSessionResponse",
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from closing a session.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "SetSessionModeResponse",
-        description: "Response to `session/set_mode` method.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        configOptions: S.Array(SessionConfigOption).annotateKey({
-          description:
-            "The full set of configuration options and their current values.",
-        }),
-      }).annotateKey({
-        title: "SetSessionConfigOptionResponse",
-        description: "Response to `session/set_config_option` method.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        stopReason: S.Literals([
-          "end_turn",
-          "max_tokens",
-          "max_turn_requests",
-          "refusal",
-          "cancelled",
-        ]).annotateKey({
-          description:
-            "Reasons why an agent stops processing a prompt turn.\n\nSee protocol docs: [Stop Reasons](https://agentclientprotocol.com/protocol/prompt-turn#stop-reasons)",
-        }),
-        usage: S.optionalKey(
-          S.Union([Usage, S.Null]).annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nToken usage for this turn (optional).",
-          }),
-        ),
-        userMessageId: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe acknowledged user message ID.\n\nIf the client provided a `messageId` in the [`PromptRequest`], the agent echoes it here\nto confirm it was recorded. If the client did not provide one, the agent MAY assign one\nand return it here. Absence of this field indicates the agent did not record a message ID.",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "PromptResponse",
-        description:
-          "Response from processing a user prompt.\n\nSee protocol docs: [Check for Completion](https://agentclientprotocol.com/protocol/prompt-turn#4-check-for-completion)",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "SetSessionModelResponse",
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to `session/set_model` method.",
-      }),
-      S.Unknown.annotateKey({
-        title: "ExtMethodResponse",
-        description:
-          "Allows for sending an arbitrary response to an [`ExtRequest`] that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-    ]).annotateKey({
-      description:
-        "All possible responses that an agent can send to a client.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `ClientRequest` variants.",
-    }),
-  }).annotateKey({ title: "Result" }),
-  S.Struct({ error: Error, id: RequestId }).annotateKey({ title: "Error" }),
-]).pipe(
-  $I.annoteSchema("AgentResponse", {
-    description: "Generated ACP schema for AgentResponse.",
-  }),
-);
-
-/**
- * Type for {@link AgentResponse}.
- *
- * @example
- * ```ts
- * import type { AgentResponse } from "@beep/acp/schema"
- *
- * type AgentResponseValue = AgentResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AgentResponse = typeof AgentResponse.Type;
-
-/**
- * Generated ACP schema for `AudioContent`.
- *
- * @example
- * ```ts
- * import { AudioContent } from "@beep/acp/schema"
- *
- * console.log(AudioContent.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AudioContent = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-  data: S.String,
-  mimeType: S.String,
-}).pipe(
-  $I.annoteSchema("AudioContent", {
-    description: "Generated ACP schema for AudioContent.",
-    documentation: "Audio provided to or from an LLM.",
-  }),
-);
-
-/**
- * Type for {@link AudioContent}.
- *
- * @example
- * ```ts
- * import type { AudioContent } from "@beep/acp/schema"
- *
- * type AudioContentValue = AudioContent
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AudioContent = typeof AudioContent.Type;
-
-/**
- * Generated ACP schema for `AuthCapabilities`.
- *
- * @example
- * ```ts
- * import { AuthCapabilities } from "@beep/acp/schema"
- *
- * console.log(AuthCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AuthCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  terminal: S.optionalKey(
-    S.Boolean.annotateKey({
-      description:
-        "Whether the client supports `terminal` authentication methods.\n\nWhen `true`, the agent may include `terminal` entries in its authentication methods.",
-      default: false,
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("AuthCapabilities", {
-    description: "Generated ACP schema for AuthCapabilities.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\n\nAdvertised during initialization to inform the agent which authentication\nmethod types the client can handle. This governs opt-in types that require\nadditional client-side support.",
-  }),
-);
-
-/**
- * Type for {@link AuthCapabilities}.
- *
- * @example
- * ```ts
- * import type { AuthCapabilities } from "@beep/acp/schema"
- *
- * type AuthCapabilitiesValue = AuthCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AuthCapabilities = typeof AuthCapabilities.Type;
-
-/**
- * Generated ACP schema for `AuthenticateRequest`.
- *
- * @example
- * ```ts
- * import { AuthenticateRequest } from "@beep/acp/schema"
- *
- * console.log(AuthenticateRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AuthenticateRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  methodId: S.String.annotateKey({
-    description:
-      "The ID of the authentication method to use.\nMust be one of the methods advertised in the initialize response.",
-  }),
-}).pipe(
-  $I.annoteSchema("AuthenticateRequest", {
-    description: "Generated ACP schema for AuthenticateRequest.",
-    documentation:
-      "Request parameters for the authenticate method.\n\nSpecifies which authentication method to use.",
-  }),
-);
-
-/**
- * Type for {@link AuthenticateRequest}.
- *
- * @example
- * ```ts
- * import type { AuthenticateRequest } from "@beep/acp/schema"
- *
- * type AuthenticateRequestValue = AuthenticateRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AuthenticateRequest = typeof AuthenticateRequest.Type;
-
-/**
- * Generated ACP schema for `AuthenticateResponse`.
- *
- * @example
- * ```ts
- * import { AuthenticateResponse } from "@beep/acp/schema"
- *
- * console.log(AuthenticateResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AuthenticateResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("AuthenticateResponse", {
-    description: "Generated ACP schema for AuthenticateResponse.",
-    documentation: "Response to the `authenticate` method.",
-  }),
-);
-
-/**
- * Type for {@link AuthenticateResponse}.
- *
- * @example
- * ```ts
- * import type { AuthenticateResponse } from "@beep/acp/schema"
- *
- * type AuthenticateResponseValue = AuthenticateResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AuthenticateResponse = typeof AuthenticateResponse.Type;
-
-/**
  * Generated ACP schema for `AuthMethodAgent`.
  *
- * @example
+ * **Example** (Inspect the AuthMethodAgent schema)
+ *
  * ```ts
  * import { AuthMethodAgent } from "@beep/acp/schema"
  *
@@ -5357,7 +1924,10 @@ export type AuthenticateResponse = typeof AuthenticateResponse.Type;
 export const AuthMethodAgent = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -5384,13 +1954,16 @@ export const AuthMethodAgent = S.Struct({
     description: "Generated ACP schema for AuthMethodAgent.",
     documentation:
       "Agent handles authentication itself.\n\nThis is the default authentication method type.",
+    identifier: "AuthMethodAgent",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link AuthMethodAgent}.
  *
- * @example
+ * **Example** (Reference the AuthMethodAgent type)
+ *
  * ```ts
  * import type { AuthMethodAgent } from "@beep/acp/schema"
  *
@@ -5403,1400 +1976,206 @@ export const AuthMethodAgent = S.Struct({
 export type AuthMethodAgent = typeof AuthMethodAgent.Type;
 
 /**
- * Generated ACP schema for `AuthMethodEnvVar`.
+ * Generated ACP schema for `ProtocolVersion`.
  *
- * @example
+ * **Example** (Inspect the ProtocolVersion schema)
+ *
  * ```ts
- * import { AuthMethodEnvVar } from "@beep/acp/schema"
+ * import { ProtocolVersion } from "@beep/acp/schema"
  *
- * console.log(AuthMethodEnvVar.ast)
+ * console.log(ProtocolVersion.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const AuthMethodEnvVar = S.Struct({
+export const ProtocolVersion = S.Int.check(
+  S.isGreaterThanOrEqualTo(0).annotate({
+    expected: "a value greater than or equal to 0",
+  }),
+)
+  .check(
+    S.isLessThanOrEqualTo(65535).annotate({
+      expected: "a value less than or equal to 65535",
+      identifier: "ProtocolVersion",
+    }),
+  )
+  .pipe(
+    $I.annoteSchema("ProtocolVersion", {
+      description: "Generated ACP schema for ProtocolVersion.",
+      documentation:
+        "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
+      format: "uint16",
+    }),
+    SchemaUtils.withCodecStatics,
+  );
+
+/**
+ * Type for {@link ProtocolVersion}.
+ *
+ * **Example** (Reference the ProtocolVersion type)
+ *
+ * ```ts
+ * import type { ProtocolVersion } from "@beep/acp/schema"
+ *
+ * type ProtocolVersionValue = ProtocolVersion
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProtocolVersion = typeof ProtocolVersion.Type;
+
+/**
+ * Generated ACP schema for `AuthenticateResponse`.
+ *
+ * **Example** (Inspect the AuthenticateResponse schema)
+ *
+ * ```ts
+ * import { AuthenticateResponse } from "@beep/acp/schema"
+ *
+ * console.log(AuthenticateResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AuthenticateResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "Optional description providing more details about this authentication method.",
-      }),
-      S.Null,
-    ]),
-  ),
-  id: S.String.annotateKey({
-    description: "Unique identifier for this authentication method.",
-  }),
-  link: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "Optional link to a page where the user can obtain their credentials.",
-      }),
-      S.Null,
-    ]),
-  ),
-  name: S.String.annotateKey({
-    description: "Human-readable name of the authentication method.",
-  }),
-  vars: S.Array(AuthEnvVar).annotateKey({
-    description: "The environment variables the client should set.",
-  }),
 }).pipe(
-  $I.annoteSchema("AuthMethodEnvVar", {
-    description: "Generated ACP schema for AuthMethodEnvVar.",
+  $I.annoteSchema("AuthenticateResponse", {
+    description: "Generated ACP schema for AuthenticateResponse.",
+    documentation: "Response to the `authenticate` method.",
+    identifier: "AuthenticateResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AuthenticateResponse}.
+ *
+ * **Example** (Reference the AuthenticateResponse type)
+ *
+ * ```ts
+ * import type { AuthenticateResponse } from "@beep/acp/schema"
+ *
+ * type AuthenticateResponseValue = AuthenticateResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AuthenticateResponse = typeof AuthenticateResponse.Type;
+
+/**
+ * Generated ACP schema for `LogoutResponse`.
+ *
+ * **Example** (Inspect the LogoutResponse schema)
+ *
+ * ```ts
+ * import { LogoutResponse } from "@beep/acp/schema"
+ *
+ * console.log(LogoutResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LogoutResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("LogoutResponse", {
+    description: "Generated ACP schema for LogoutResponse.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nEnvironment variable authentication method.\n\nThe user provides credentials that the client passes to the agent as environment variables.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to the `logout` method.",
+    identifier: "LogoutResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link AuthMethodEnvVar}.
+ * Type for {@link LogoutResponse}.
  *
- * @example
+ * **Example** (Reference the LogoutResponse type)
+ *
  * ```ts
- * import type { AuthMethodEnvVar } from "@beep/acp/schema"
+ * import type { LogoutResponse } from "@beep/acp/schema"
  *
- * type AuthMethodEnvVarValue = AuthMethodEnvVar
+ * type LogoutResponseValue = LogoutResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type AuthMethodEnvVar = typeof AuthMethodEnvVar.Type;
+export type LogoutResponse = typeof LogoutResponse.Type;
 
 /**
- * Generated ACP schema for `AuthMethodTerminal`.
+ * Generated ACP schema for `ModelId`.
  *
- * @example
+ * **Example** (Inspect the ModelId schema)
+ *
  * ```ts
- * import { AuthMethodTerminal } from "@beep/acp/schema"
+ * import { ModelId } from "@beep/acp/schema"
  *
- * console.log(AuthMethodTerminal.ast)
+ * console.log(ModelId.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const AuthMethodTerminal = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  args: S.optionalKey(
-    S.Array(S.String).annotateKey({
-      description:
-        "Additional arguments to pass when running the agent binary for terminal auth.",
-    }),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "Optional description providing more details about this authentication method.",
-      }),
-      S.Null,
-    ]),
-  ),
-  env: S.optionalKey(
-    S.Record(S.String, S.String).annotateKey({
-      description:
-        "Additional environment variables to set when running the agent binary for terminal auth.",
-    }),
-  ),
-  id: S.String.annotateKey({
-    description: "Unique identifier for this authentication method.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable name of the authentication method.",
-  }),
-}).pipe(
-  $I.annoteSchema("AuthMethodTerminal", {
-    description: "Generated ACP schema for AuthMethodTerminal.",
+export const ModelId = S.String.pipe(
+  $I.annoteSchema("ModelId", {
+    description: "Generated ACP schema for ModelId.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nTerminal-based authentication method.\n\nThe client runs an interactive terminal for the user to authenticate via a TUI.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
+    identifier: "ModelId",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link AuthMethodTerminal}.
+ * Type for {@link ModelId}.
  *
- * @example
+ * **Example** (Reference the ModelId type)
+ *
  * ```ts
- * import type { AuthMethodTerminal } from "@beep/acp/schema"
+ * import type { ModelId } from "@beep/acp/schema"
  *
- * type AuthMethodTerminalValue = AuthMethodTerminal
+ * type ModelIdValue = ModelId
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type AuthMethodTerminal = typeof AuthMethodTerminal.Type;
-
-/**
- * Generated ACP schema for `AvailableCommandsUpdate`.
- *
- * @example
- * ```ts
- * import { AvailableCommandsUpdate } from "@beep/acp/schema"
- *
- * console.log(AvailableCommandsUpdate.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AvailableCommandsUpdate = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  availableCommands: S.Array(AvailableCommand).annotateKey({
-    description: "Commands the agent can execute",
-  }),
-}).pipe(
-  $I.annoteSchema("AvailableCommandsUpdate", {
-    description: "Generated ACP schema for AvailableCommandsUpdate.",
-    documentation: "Available commands are ready or have changed",
-  }),
-);
-
-/**
- * Type for {@link AvailableCommandsUpdate}.
- *
- * @example
- * ```ts
- * import type { AvailableCommandsUpdate } from "@beep/acp/schema"
- *
- * type AvailableCommandsUpdateValue = AvailableCommandsUpdate
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type AvailableCommandsUpdate = typeof AvailableCommandsUpdate.Type;
-
-/**
- * Generated ACP schema for `BlobResourceContents`.
- *
- * @example
- * ```ts
- * import { BlobResourceContents } from "@beep/acp/schema"
- *
- * console.log(BlobResourceContents.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const BlobResourceContents = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  blob: S.String,
-  mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-  uri: S.String,
-}).pipe(
-  $I.annoteSchema("BlobResourceContents", {
-    description: "Generated ACP schema for BlobResourceContents.",
-    documentation: "Binary resource contents.",
-  }),
-);
-
-/**
- * Type for {@link BlobResourceContents}.
- *
- * @example
- * ```ts
- * import type { BlobResourceContents } from "@beep/acp/schema"
- *
- * type BlobResourceContentsValue = BlobResourceContents
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type BlobResourceContents = typeof BlobResourceContents.Type;
-
-/**
- * Generated ACP schema for `BooleanPropertySchema`.
- *
- * @example
- * ```ts
- * import { BooleanPropertySchema } from "@beep/acp/schema"
- *
- * console.log(BooleanPropertySchema.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const BooleanPropertySchema = S.Struct({
-  default: S.optionalKey(
-    S.Union([S.Boolean.annotateKey({ description: "Default value." }), S.Null]),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Human-readable description." }),
-      S.Null,
-    ]),
-  ),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Optional title for the property." }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("BooleanPropertySchema", {
-    description: "Generated ACP schema for BooleanPropertySchema.",
-    documentation: "Schema for boolean properties in an elicitation form.",
-  }),
-);
-
-/**
- * Type for {@link BooleanPropertySchema}.
- *
- * @example
- * ```ts
- * import type { BooleanPropertySchema } from "@beep/acp/schema"
- *
- * type BooleanPropertySchemaValue = BooleanPropertySchema
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type BooleanPropertySchema = typeof BooleanPropertySchema.Type;
-
-/**
- * Generated ACP schema for `CancelNotification`.
- *
- * @example
- * ```ts
- * import { CancelNotification } from "@beep/acp/schema"
- *
- * console.log(CancelNotification.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const CancelNotification = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("CancelNotification", {
-    description: "Generated ACP schema for CancelNotification.",
-    documentation:
-      "Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
-  }),
-);
-
-/**
- * Type for {@link CancelNotification}.
- *
- * @example
- * ```ts
- * import type { CancelNotification } from "@beep/acp/schema"
- *
- * type CancelNotificationValue = CancelNotification
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CancelNotification = typeof CancelNotification.Type;
-
-/**
- * Generated ACP schema for `CancelRequestNotification`.
- *
- * @example
- * ```ts
- * import { CancelRequestNotification } from "@beep/acp/schema"
- *
- * console.log(CancelRequestNotification.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const CancelRequestNotification = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  requestId: S.Union([
-    S.Null.annotateKey({ title: "Null" }),
-    S.Finite.annotateKey({ title: "Number", format: "int64" }).check(S.isInt()),
-    S.String.annotateKey({ title: "Str" }),
-  ]).annotateKey({
-    description:
-      "JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.",
-  }),
-}).pipe(
-  $I.annoteSchema("CancelRequestNotification", {
-    description: "Generated ACP schema for CancelRequestNotification.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification to cancel an ongoing request.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/cancellation)",
-  }),
-);
-
-/**
- * Type for {@link CancelRequestNotification}.
- *
- * @example
- * ```ts
- * import type { CancelRequestNotification } from "@beep/acp/schema"
- *
- * type CancelRequestNotificationValue = CancelRequestNotification
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CancelRequestNotification = typeof CancelRequestNotification.Type;
-
-/**
- * Generated ACP schema for `ClientCapabilities`.
- *
- * @example
- * ```ts
- * import { ClientCapabilities } from "@beep/acp/schema"
- *
- * console.log(ClientCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ClientCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  auth: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      terminal: S.optionalKey(
-        S.Boolean.annotateKey({
-          description:
-            "Whether the client supports `terminal` authentication methods.\n\nWhen `true`, the agent may include `terminal` entries in its authentication methods.",
-          default: false,
-        }),
-      ),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\n\nAdvertised during initialization to inform the agent which authentication\nmethod types the client can handle. This governs opt-in types that require\nadditional client-side support.",
-      default: { terminal: false },
-    }),
-  ),
-  elicitation: S.optionalKey(
-    S.Union([ElicitationCapabilities, S.Null]).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.\nDetermines which elicitation modes the agent may use.",
-    }),
-  ),
-  fs: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      readTextFile: S.optionalKey(
-        S.Boolean.annotateKey({
-          description:
-            "Whether the Client supports `fs/read_text_file` requests.",
-          default: false,
-        }),
-      ),
-      writeTextFile: S.optionalKey(
-        S.Boolean.annotateKey({
-          description:
-            "Whether the Client supports `fs/write_text_file` requests.",
-          default: false,
-        }),
-      ),
-    }).annotateKey({
-      description:
-        "File system capabilities that a client may support.\n\nSee protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)",
-      default: { readTextFile: false, writeTextFile: false },
-    }),
-  ),
-  terminal: S.optionalKey(
-    S.Boolean.annotateKey({
-      description: "Whether the Client support all `terminal/*` methods.",
-      default: false,
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("ClientCapabilities", {
-    description: "Generated ACP schema for ClientCapabilities.",
-    documentation:
-      "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
-  }),
-);
-
-/**
- * Type for {@link ClientCapabilities}.
- *
- * @example
- * ```ts
- * import type { ClientCapabilities } from "@beep/acp/schema"
- *
- * type ClientCapabilitiesValue = ClientCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ClientCapabilities = typeof ClientCapabilities.Type;
-
-/**
- * Generated ACP schema for `ClientNotification`.
- *
- * @example
- * ```ts
- * import { ClientNotification } from "@beep/acp/schema"
- *
- * console.log(ClientNotification.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ClientNotification = S.Struct({
-  method: S.String,
-  params: S.optionalKey(
-    S.Union([
-      S.Union([
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "CancelNotification",
-          description:
-            "Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
-        }),
-        S.Unknown.annotateKey({
-          title: "ExtNotification",
-          description:
-            "Allows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-      ]).annotateKey({
-        description:
-          "All possible notifications that a client can send to an agent.\n\nThis enum is used internally for routing RPC notifications. You typically won't need\nto use this directly - use the notification methods on the [`Agent`] trait instead.\n\nNotifications do not expect a response.",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("ClientNotification", {
-    description: "Generated ACP schema for ClientNotification.",
-  }),
-);
-
-/**
- * Type for {@link ClientNotification}.
- *
- * @example
- * ```ts
- * import type { ClientNotification } from "@beep/acp/schema"
- *
- * type ClientNotificationValue = ClientNotification
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ClientNotification = typeof ClientNotification.Type;
-
-/**
- * Generated ACP schema for `ClientRequest`.
- *
- * @example
- * ```ts
- * import { ClientRequest } from "@beep/acp/schema"
- *
- * console.log(ClientRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ClientRequest = S.Struct({
-  id: RequestId,
-  method: S.String,
-  params: S.optionalKey(
-    S.Union([
-      S.Union([
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          clientCapabilities: S.optionalKey(
-            S.Struct({
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              auth: S.optionalKey(
-                S.Struct({
-                  _meta: S.optionalKey(
-                    S.Union([
-                      S.Record(S.String, S.Unknown).annotateKey({
-                        description:
-                          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                      }),
-                      S.Null,
-                    ]),
-                  ),
-                  terminal: S.optionalKey(
-                    S.Boolean.annotateKey({
-                      description:
-                        "Whether the client supports `terminal` authentication methods.\n\nWhen `true`, the agent may include `terminal` entries in its authentication methods.",
-                      default: false,
-                    }),
-                  ),
-                }).annotateKey({
-                  description:
-                    "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\n\nAdvertised during initialization to inform the agent which authentication\nmethod types the client can handle. This governs opt-in types that require\nadditional client-side support.",
-                  default: { terminal: false },
-                }),
-              ),
-              elicitation: S.optionalKey(
-                S.Union([ElicitationCapabilities, S.Null]).annotateKey({
-                  description:
-                    "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.\nDetermines which elicitation modes the agent may use.",
-                }),
-              ),
-              fs: S.optionalKey(
-                S.Struct({
-                  _meta: S.optionalKey(
-                    S.Union([
-                      S.Record(S.String, S.Unknown).annotateKey({
-                        description:
-                          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                      }),
-                      S.Null,
-                    ]),
-                  ),
-                  readTextFile: S.optionalKey(
-                    S.Boolean.annotateKey({
-                      description:
-                        "Whether the Client supports `fs/read_text_file` requests.",
-                      default: false,
-                    }),
-                  ),
-                  writeTextFile: S.optionalKey(
-                    S.Boolean.annotateKey({
-                      description:
-                        "Whether the Client supports `fs/write_text_file` requests.",
-                      default: false,
-                    }),
-                  ),
-                }).annotateKey({
-                  description:
-                    "File system capabilities that a client may support.\n\nSee protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)",
-                  default: { readTextFile: false, writeTextFile: false },
-                }),
-              ),
-              terminal: S.optionalKey(
-                S.Boolean.annotateKey({
-                  description:
-                    "Whether the Client support all `terminal/*` methods.",
-                  default: false,
-                }),
-              ),
-            }).annotateKey({
-              description:
-                "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
-              default: {
-                auth: { terminal: false },
-                fs: { readTextFile: false, writeTextFile: false },
-                terminal: false,
-              },
-            }),
-          ),
-          clientInfo: S.optionalKey(
-            S.Union([Implementation, S.Null]).annotateKey({
-              description:
-                "Information about the Client name and version sent to the Agent.\n\nNote: in future versions of the protocol, this will be required.",
-            }),
-          ),
-          protocolVersion: S.Finite.annotateKey({
-            description:
-              "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
-            format: "uint16",
-          })
-            .check(S.isInt())
-            .check(S.isGreaterThanOrEqualTo(0))
-            .check(S.isLessThanOrEqualTo(65535)),
-        }).annotateKey({
-          title: "InitializeRequest",
-          description:
-            "Request parameters for the initialize method.\n\nSent by the client to establish connection and negotiate capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          methodId: S.String.annotateKey({
-            description:
-              "The ID of the authentication method to use.\nMust be one of the methods advertised in the initialize response.",
-          }),
-        }).annotateKey({
-          title: "AuthenticateRequest",
-          description:
-            "Request parameters for the authenticate method.\n\nSpecifies which authentication method to use.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-        }).annotateKey({
-          title: "LogoutRequest",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for the logout method.\n\nTerminates the current authenticated session.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          cwd: S.String.annotateKey({
-            description:
-              "The working directory for this session. Must be an absolute path.",
-          }),
-          mcpServers: S.Array(McpServer).annotateKey({
-            description:
-              "List of MCP (Model Context Protocol) servers the agent should connect to.",
-          }),
-        }).annotateKey({
-          title: "NewSessionRequest",
-          description:
-            "Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          cwd: S.String.annotateKey({
-            description: "The working directory for this session.",
-          }),
-          mcpServers: S.Array(McpServer).annotateKey({
-            description: "List of MCP servers to connect to for this session.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "LoadSessionRequest",
-          description:
-            "Request parameters for loading an existing session.\n\nOnly available if the Agent supports the `loadSession` capability.\n\nSee protocol docs: [Loading Sessions](https://agentclientprotocol.com/protocol/session-setup#loading-sessions)",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          cursor: S.optionalKey(
-            S.Union([
-              S.String.annotateKey({
-                description:
-                  "Opaque cursor token from a previous response's nextCursor field for cursor-based pagination",
-              }),
-              S.Null,
-            ]),
-          ),
-          cwd: S.optionalKey(
-            S.Union([
-              S.String.annotateKey({
-                description:
-                  "Filter sessions by working directory. Must be an absolute path.",
-              }),
-              S.Null,
-            ]),
-          ),
-        }).annotateKey({
-          title: "ListSessionsRequest",
-          description:
-            "Request parameters for listing existing sessions.\n\nOnly available if the Agent supports the `sessionCapabilities.list` capability.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          cwd: S.String.annotateKey({
-            description: "The working directory for this session.",
-          }),
-          mcpServers: S.optionalKey(
-            S.Array(McpServer).annotateKey({
-              description:
-                "List of MCP servers to connect to for this session.",
-            }),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "ForkSessionRequest",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for forking an existing session.\n\nCreates a new session based on the context of an existing one, allowing\noperations like generating summaries without affecting the original session's history.\n\nOnly available if the Agent supports the `session.fork` capability.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          cwd: S.String.annotateKey({
-            description: "The working directory for this session.",
-          }),
-          mcpServers: S.optionalKey(
-            S.Array(McpServer).annotateKey({
-              description:
-                "List of MCP servers to connect to for this session.",
-            }),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "ResumeSessionRequest",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for resuming an existing session.\n\nResumes an existing session without returning previous messages (unlike `session/load`).\nThis is useful for agents that can resume sessions but don't implement full session loading.\n\nOnly available if the Agent supports the `session.resume` capability.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "CloseSessionRequest",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for closing an active session.\n\nIf supported, the agent **must** cancel any ongoing work related to the session\n(treat it as if `session/cancel` was called) and then free up any resources\nassociated with the session.\n\nOnly available if the Agent supports the `session.close` capability.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          modeId: S.String.annotateKey({
-            description: "Unique identifier for a Session Mode.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "SetSessionModeRequest",
-          description: "Request parameters for setting a session mode.",
-        }),
-        S.Union([
-          S.Struct({
-            type: S.Literal("boolean"),
-            value: S.Boolean.annotateKey({ description: "The boolean value." }),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            configId: S.String.annotateKey({
-              description:
-                "Unique identifier for a session configuration option.",
-            }),
-            sessionId: S.String.annotateKey({
-              description:
-                "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-            }),
-          }).annotateKey({
-            description:
-              "Request parameters for setting a session configuration option.",
-          }),
-          S.Struct({
-            value: S.String.annotateKey({
-              description:
-                "Unique identifier for a session configuration option value.",
-            }),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            configId: S.String.annotateKey({
-              description:
-                "Unique identifier for a session configuration option.",
-            }),
-            sessionId: S.String.annotateKey({
-              description:
-                "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-            }),
-          }).annotateKey({
-            title: "value_id",
-            description:
-              "Request parameters for setting a session configuration option.",
-          }),
-        ]).annotateKey({
-          title: "SetSessionConfigOptionRequest",
-          description:
-            "Sets the current value for a session configuration option.",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          messageId: S.optionalKey(
-            S.Union([
-              S.String.annotateKey({
-                description:
-                  "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA client-generated unique identifier for this user message.\n\nIf provided, the Agent SHOULD echo this value as `userMessageId` in the\n[`PromptResponse`] to confirm it was recorded.\nBoth clients and agents MUST use UUID format for message IDs.",
-              }),
-              S.Null,
-            ]),
-          ),
-          prompt: S.Array(ContentBlock).annotateKey({
-            description:
-              "The blocks of content that compose the user's message.\n\nAs a baseline, the Agent MUST support [`ContentBlock::Text`] and [`ContentBlock::ResourceLink`],\nwhile other variants are optionally enabled via [`PromptCapabilities`].\n\nThe Client MUST adapt its interface according to [`PromptCapabilities`].\n\nThe client MAY include referenced pieces of context as either\n[`ContentBlock::Resource`] or [`ContentBlock::ResourceLink`].\n\nWhen available, [`ContentBlock::Resource`] is preferred\nas it avoids extra round-trips and allows the message to include\npieces of context from sources the agent may not have access to.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "PromptRequest",
-          description:
-            "Request parameters for sending a user prompt to the agent.\n\nContains the user's message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/prompt-turn#1-user-message)",
-        }),
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          modelId: S.String.annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
-          }),
-          sessionId: S.String.annotateKey({
-            description:
-              "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-          }),
-        }).annotateKey({
-          title: "SetSessionModelRequest",
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for setting a session model.",
-        }),
-        S.Unknown.annotateKey({
-          title: "ExtMethodRequest",
-          description:
-            "Allows for sending an arbitrary request that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-      ]).annotateKey({
-        description:
-          "All possible requests that a client can send to an agent.\n\nThis enum is used internally for routing RPC requests. You typically won't need\nto use this directly - instead, use the methods on the [`Agent`] trait.\n\nThis enum encompasses all method calls from client to agent.",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("ClientRequest", {
-    description: "Generated ACP schema for ClientRequest.",
-  }),
-);
-
-/**
- * Type for {@link ClientRequest}.
- *
- * @example
- * ```ts
- * import type { ClientRequest } from "@beep/acp/schema"
- *
- * type ClientRequestValue = ClientRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ClientRequest = typeof ClientRequest.Type;
-
-/**
- * Generated ACP schema for `ClientResponse`.
- *
- * @example
- * ```ts
- * import { ClientResponse } from "@beep/acp/schema"
- *
- * console.log(ClientResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ClientResponse = S.Union([
-  S.Struct({
-    id: RequestId,
-    result: S.Union([
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "WriteTextFileResponse",
-        description: "Response to `fs/write_text_file`",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        content: S.String,
-      }).annotateKey({
-        title: "ReadTextFileResponse",
-        description: "Response containing the contents of a text file.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        outcome: S.Union(
-          [
-            S.Struct({ outcome: S.Literal("cancelled") }).annotateKey({
-              description:
-                "The prompt turn was cancelled before the user responded.\n\nWhen a client sends a `session/cancel` notification to cancel an ongoing\nprompt turn, it MUST respond to all pending `session/request_permission`\nrequests with this `Cancelled` outcome.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
-            }),
-            S.Struct({
-              outcome: S.Literal("selected"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              optionId: S.String.annotateKey({
-                description: "Unique identifier for a permission option.",
-              }),
-            }).annotateKey({
-              description: "The user selected one of the provided options.",
-            }),
-          ],
-          { mode: "oneOf" },
-        ).annotateKey({ description: "The outcome of a permission request." }),
-      }).annotateKey({
-        title: "RequestPermissionResponse",
-        description: "Response to a permission request.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        terminalId: S.String.annotateKey({
-          description: "The unique identifier for the created terminal.",
-        }),
-      }).annotateKey({
-        title: "CreateTerminalResponse",
-        description: "Response containing the ID of the created terminal.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        exitStatus: S.optionalKey(
-          S.Union([TerminalExitStatus, S.Null]).annotateKey({
-            description: "Exit status if the command has completed.",
-          }),
-        ),
-        output: S.String.annotateKey({
-          description: "The terminal output captured so far.",
-        }),
-        truncated: S.Boolean.annotateKey({
-          description: "Whether the output was truncated due to byte limits.",
-        }),
-      }).annotateKey({
-        title: "TerminalOutputResponse",
-        description: "Response containing the terminal output and exit status.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "ReleaseTerminalResponse",
-        description: "Response to terminal/release method",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        exitCode: S.optionalKey(
-          S.Union([
-            S.Finite.annotateKey({
-              description:
-                "The process exit code (may be null if terminated by signal).",
-              format: "uint32",
-            })
-              .check(S.isInt())
-              .check(S.isGreaterThanOrEqualTo(0)),
-            S.Null,
-          ]),
-        ),
-        signal: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "The signal that terminated the process (may be null if exited normally).",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "WaitForTerminalExitResponse",
-        description:
-          "Response containing the exit status of a terminal command.",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        title: "KillTerminalResponse",
-        description: "Response to `terminal/kill` method",
-      }),
-      S.Struct({
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        action: S.Union(
-          [
-            S.Struct({
-              action: S.Literal("accept"),
-              content: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, ElicitationContentValue).annotateKey({
-                    description:
-                      "The user-provided content, if any, as an object matching the requested schema.",
-                  }),
-                  S.Null,
-                ]),
-              ),
-            }).annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
-            }),
-            S.Struct({ action: S.Literal("decline") }).annotateKey({
-              description: "The user declined the elicitation.",
-            }),
-            S.Struct({ action: S.Literal("cancel") }).annotateKey({
-              description: "The elicitation was cancelled.",
-            }),
-          ],
-          { mode: "oneOf" },
-        ).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user's action in response to an elicitation.",
-        }),
-      }).annotateKey({
-        title: "ElicitationResponse",
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from the client to an elicitation request.",
-      }),
-      S.Unknown.annotateKey({
-        title: "ExtMethodResponse",
-        description:
-          "Allows for sending an arbitrary response to an [`ExtRequest`] that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-    ]).annotateKey({
-      description:
-        "All possible responses that a client can send to an agent.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `AgentRequest` variants.",
-    }),
-  }).annotateKey({ title: "Result" }),
-  S.Struct({ error: Error, id: RequestId }).annotateKey({ title: "Error" }),
-]).pipe(
-  $I.annoteSchema("ClientResponse", {
-    description: "Generated ACP schema for ClientResponse.",
-  }),
-);
-
-/**
- * Type for {@link ClientResponse}.
- *
- * @example
- * ```ts
- * import type { ClientResponse } from "@beep/acp/schema"
- *
- * type ClientResponseValue = ClientResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ClientResponse = typeof ClientResponse.Type;
-
-/**
- * Generated ACP schema for `CloseSessionRequest`.
- *
- * @example
- * ```ts
- * import { CloseSessionRequest } from "@beep/acp/schema"
- *
- * console.log(CloseSessionRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const CloseSessionRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("CloseSessionRequest", {
-    description: "Generated ACP schema for CloseSessionRequest.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for closing an active session.\n\nIf supported, the agent **must** cancel any ongoing work related to the session\n(treat it as if `session/cancel` was called) and then free up any resources\nassociated with the session.\n\nOnly available if the Agent supports the `session.close` capability.",
-  }),
-);
-
-/**
- * Type for {@link CloseSessionRequest}.
- *
- * @example
- * ```ts
- * import type { CloseSessionRequest } from "@beep/acp/schema"
- *
- * type CloseSessionRequestValue = CloseSessionRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CloseSessionRequest = typeof CloseSessionRequest.Type;
+export type ModelId = typeof ModelId.Type;
 
 /**
  * Generated ACP schema for `CloseSessionResponse`.
  *
- * @example
+ * **Example** (Inspect the CloseSessionResponse schema)
+ *
  * ```ts
  * import { CloseSessionResponse } from "@beep/acp/schema"
  *
@@ -6809,7 +2188,10 @@ export type CloseSessionRequest = typeof CloseSessionRequest.Type;
 export const CloseSessionResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -6821,13 +2203,16 @@ export const CloseSessionResponse = S.Struct({
     description: "Generated ACP schema for CloseSessionResponse.",
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from closing a session.",
+    identifier: "CloseSessionResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link CloseSessionResponse}.
  *
- * @example
+ * **Example** (Reference the CloseSessionResponse type)
+ *
  * ```ts
  * import type { CloseSessionResponse } from "@beep/acp/schema"
  *
@@ -6840,1300 +2225,323 @@ export const CloseSessionResponse = S.Struct({
 export type CloseSessionResponse = typeof CloseSessionResponse.Type;
 
 /**
- * Generated ACP schema for `ConfigOptionUpdate`.
+ * Generated ACP schema for `SetSessionModeResponse`.
  *
- * @example
+ * **Example** (Inspect the SetSessionModeResponse schema)
+ *
  * ```ts
- * import { ConfigOptionUpdate } from "@beep/acp/schema"
+ * import { SetSessionModeResponse } from "@beep/acp/schema"
  *
- * console.log(ConfigOptionUpdate.ast)
+ * console.log(SetSessionModeResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ConfigOptionUpdate = S.Struct({
+export const SetSessionModeResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  configOptions: S.Array(SessionConfigOption).annotateKey({
-    description:
-      "The full set of configuration options and their current values.",
-  }),
-}).pipe(
-  $I.annoteSchema("ConfigOptionUpdate", {
-    description: "Generated ACP schema for ConfigOptionUpdate.",
-    documentation: "Session configuration options have been updated.",
-  }),
-);
-
-/**
- * Type for {@link ConfigOptionUpdate}.
- *
- * @example
- * ```ts
- * import type { ConfigOptionUpdate } from "@beep/acp/schema"
- *
- * type ConfigOptionUpdateValue = ConfigOptionUpdate
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ConfigOptionUpdate = typeof ConfigOptionUpdate.Type;
-
-/**
- * Generated ACP schema for `Content`.
- *
- * @example
- * ```ts
- * import { Content } from "@beep/acp/schema"
- *
- * console.log(Content.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Content = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  content: S.Union(
-    [
-      S.Struct({
-        type: S.Literal("text"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        text: S.String,
-      }).annotateKey({ description: "Text provided to or from an LLM." }),
-      S.Struct({
-        type: S.Literal("image"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        data: S.String,
-        mimeType: S.String,
-        uri: S.optionalKey(S.Union([S.String, S.Null])),
-      }).annotateKey({ description: "An image provided to or from an LLM." }),
-      S.Struct({
-        type: S.Literal("audio"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        data: S.String,
-        mimeType: S.String,
-      }).annotateKey({ description: "Audio provided to or from an LLM." }),
-      S.Struct({
-        type: S.Literal("resource_link"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        description: S.optionalKey(S.Union([S.String, S.Null])),
-        mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-        name: S.String,
-        size: S.optionalKey(
-          S.Union([
-            S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-            S.Null,
-          ]),
-        ),
-        title: S.optionalKey(S.Union([S.String, S.Null])),
-        uri: S.String,
-      }).annotateKey({
-        description:
-          "A resource that the server is capable of reading, included in a prompt or tool call result.",
-      }),
-      S.Struct({
-        type: S.Literal("resource"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        resource: EmbeddedResourceResource,
-      }).annotateKey({
-        description:
-          "The contents of a resource, embedded into a prompt or tool call result.",
-      }),
-    ],
-    { mode: "oneOf" },
-  ).annotateKey({
-    description:
-      "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-  }),
-}).pipe(
-  $I.annoteSchema("Content", {
-    description: "Generated ACP schema for Content.",
-    documentation: "Standard content block (text, images, resources).",
-  }),
-);
-
-/**
- * Type for {@link Content}.
- *
- * @example
- * ```ts
- * import type { Content } from "@beep/acp/schema"
- *
- * type ContentValue = Content
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Content = typeof Content.Type;
-
-/**
- * Generated ACP schema for `ContentChunk`.
- *
- * @example
- * ```ts
- * import { ContentChunk } from "@beep/acp/schema"
- *
- * console.log(ContentChunk.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ContentChunk = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  content: S.Union(
-    [
-      S.Struct({
-        type: S.Literal("text"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        text: S.String,
-      }).annotateKey({ description: "Text provided to or from an LLM." }),
-      S.Struct({
-        type: S.Literal("image"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        data: S.String,
-        mimeType: S.String,
-        uri: S.optionalKey(S.Union([S.String, S.Null])),
-      }).annotateKey({ description: "An image provided to or from an LLM." }),
-      S.Struct({
-        type: S.Literal("audio"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        data: S.String,
-        mimeType: S.String,
-      }).annotateKey({ description: "Audio provided to or from an LLM." }),
-      S.Struct({
-        type: S.Literal("resource_link"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        description: S.optionalKey(S.Union([S.String, S.Null])),
-        mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-        name: S.String,
-        size: S.optionalKey(
-          S.Union([
-            S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-            S.Null,
-          ]),
-        ),
-        title: S.optionalKey(S.Union([S.String, S.Null])),
-        uri: S.String,
-      }).annotateKey({
-        description:
-          "A resource that the server is capable of reading, included in a prompt or tool call result.",
-      }),
-      S.Struct({
-        type: S.Literal("resource"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-        resource: EmbeddedResourceResource,
-      }).annotateKey({
-        description:
-          "The contents of a resource, embedded into a prompt or tool call result.",
-      }),
-    ],
-    { mode: "oneOf" },
-  ).annotateKey({
-    description:
-      "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-  }),
-  messageId: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
       }),
       S.Null,
     ]),
   ),
 }).pipe(
-  $I.annoteSchema("ContentChunk", {
-    description: "Generated ACP schema for ContentChunk.",
-    documentation: "A streamed item of content",
+  $I.annoteSchema("SetSessionModeResponse", {
+    description: "Generated ACP schema for SetSessionModeResponse.",
+    documentation: "Response to `session/set_mode` method.",
+    identifier: "SetSessionModeResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ContentChunk}.
+ * Type for {@link SetSessionModeResponse}.
  *
- * @example
+ * **Example** (Reference the SetSessionModeResponse type)
+ *
  * ```ts
- * import type { ContentChunk } from "@beep/acp/schema"
+ * import type { SetSessionModeResponse } from "@beep/acp/schema"
  *
- * type ContentChunkValue = ContentChunk
+ * type SetSessionModeResponseValue = SetSessionModeResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ContentChunk = typeof ContentChunk.Type;
+export type SetSessionModeResponse = typeof SetSessionModeResponse.Type;
 
 /**
- * Generated ACP schema for `CreateTerminalRequest`.
+ * Generated ACP schema for `StopReason`.
  *
- * @example
+ * **Example** (Inspect the StopReason schema)
+ *
  * ```ts
- * import { CreateTerminalRequest } from "@beep/acp/schema"
+ * import { StopReason } from "@beep/acp/schema"
  *
- * console.log(CreateTerminalRequest.ast)
+ * console.log(StopReason.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const CreateTerminalRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  args: S.optionalKey(
-    S.Array(S.String).annotateKey({
-      description: "Array of command arguments.",
+export const StopReason = S.Union(
+  [
+    S.Literal("end_turn").annotateKey({
+      description: "The turn ended successfully.",
     }),
-  ),
-  command: S.String.annotateKey({ description: "The command to execute." }),
-  cwd: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "Working directory for the command (absolute path).",
-      }),
-      S.Null,
-    ]),
-  ),
-  env: S.optionalKey(
-    S.Array(EnvVariable).annotateKey({
-      description: "Environment variables for the command.",
+    S.Literal("max_tokens").annotateKey({
+      description:
+        "The turn ended because the agent reached the maximum number of tokens.",
     }),
-  ),
-  outputByteLimit: S.optionalKey(
+    S.Literal("max_turn_requests").annotateKey({
+      description:
+        "The turn ended because the agent reached the maximum number of allowed\nagent requests between user turns.",
+    }),
+    S.Literal("refusal").annotateKey({
+      description:
+        "The turn ended because the agent refused to continue. The user prompt\nand everything that comes after it won't be included in the next\nprompt, so this should be reflected in the UI.",
+    }),
+    S.Literal("cancelled").annotateKey({
+      description:
+        "The turn was cancelled by the client via `session/cancel`.\n\nThis stop reason MUST be returned when the client sends a `session/cancel`\nnotification, even if the cancellation causes exceptions in underlying operations.\nAgents should catch these exceptions and return this semantically meaningful\nresponse to confirm successful cancellation.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("StopReason", {
+    description: "Generated ACP schema for StopReason.",
+    documentation:
+      "Reasons why an agent stops processing a prompt turn.\n\nSee protocol docs: [Stop Reasons](https://agentclientprotocol.com/protocol/prompt-turn#stop-reasons)",
+    identifier: "StopReason",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link StopReason}.
+ *
+ * **Example** (Reference the StopReason type)
+ *
+ * ```ts
+ * import type { StopReason } from "@beep/acp/schema"
+ *
+ * type StopReasonValue = StopReason
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StopReason = typeof StopReason.Type;
+
+/**
+ * Generated ACP schema for `Usage`.
+ *
+ * **Example** (Inspect the Usage schema)
+ *
+ * ```ts
+ * import { Usage } from "@beep/acp/schema"
+ *
+ * console.log(Usage.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Usage = S.Struct({
+  cachedReadTokens: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
-        description:
-          "Maximum number of output bytes to retain.\n\nWhen the limit is exceeded, the Client truncates from the beginning of the output\nto stay within the limit.\n\nThe Client MUST ensure truncation happens at a character boundary to maintain valid\nstring output, even if this means the retained output is slightly less than the\nspecified limit.",
+      S.Int.annotateKey({
+        description: "Total cache read tokens.",
         format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("CreateTerminalRequest", {
-    description: "Generated ACP schema for CreateTerminalRequest.",
-    documentation: "Request to create a new terminal and execute a command.",
-  }),
-);
-
-/**
- * Type for {@link CreateTerminalRequest}.
- *
- * @example
- * ```ts
- * import type { CreateTerminalRequest } from "@beep/acp/schema"
- *
- * type CreateTerminalRequestValue = CreateTerminalRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CreateTerminalRequest = typeof CreateTerminalRequest.Type;
-
-/**
- * Generated ACP schema for `CreateTerminalResponse`.
- *
- * @example
- * ```ts
- * import { CreateTerminalResponse } from "@beep/acp/schema"
- *
- * console.log(CreateTerminalResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const CreateTerminalResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  terminalId: S.String.annotateKey({
-    description: "The unique identifier for the created terminal.",
-  }),
-}).pipe(
-  $I.annoteSchema("CreateTerminalResponse", {
-    description: "Generated ACP schema for CreateTerminalResponse.",
-    documentation: "Response containing the ID of the created terminal.",
-  }),
-);
-
-/**
- * Type for {@link CreateTerminalResponse}.
- *
- * @example
- * ```ts
- * import type { CreateTerminalResponse } from "@beep/acp/schema"
- *
- * type CreateTerminalResponseValue = CreateTerminalResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CreateTerminalResponse = typeof CreateTerminalResponse.Type;
-
-/**
- * Generated ACP schema for `CurrentModeUpdate`.
- *
- * @example
- * ```ts
- * import { CurrentModeUpdate } from "@beep/acp/schema"
- *
- * console.log(CurrentModeUpdate.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const CurrentModeUpdate = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  currentModeId: S.String.annotateKey({
-    description: "Unique identifier for a Session Mode.",
-  }),
-}).pipe(
-  $I.annoteSchema("CurrentModeUpdate", {
-    description: "Generated ACP schema for CurrentModeUpdate.",
-    documentation:
-      "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-  }),
-);
-
-/**
- * Type for {@link CurrentModeUpdate}.
- *
- * @example
- * ```ts
- * import type { CurrentModeUpdate } from "@beep/acp/schema"
- *
- * type CurrentModeUpdateValue = CurrentModeUpdate
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CurrentModeUpdate = typeof CurrentModeUpdate.Type;
-
-/**
- * Generated ACP schema for `Diff`.
- *
- * @example
- * ```ts
- * import { Diff } from "@beep/acp/schema"
- *
- * console.log(Diff.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Diff = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  newText: S.String.annotateKey({
-    description: "The new content after modification.",
-  }),
-  oldText: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "The original content (None for new files).",
-      }),
-      S.Null,
-    ]),
-  ),
-  path: S.String.annotateKey({ description: "The file path being modified." }),
-}).pipe(
-  $I.annoteSchema("Diff", {
-    description: "Generated ACP schema for Diff.",
-    documentation:
-      "A diff representing file modifications.\n\nShows changes to files in a format suitable for display in the client UI.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
-  }),
-);
-
-/**
- * Type for {@link Diff}.
- *
- * @example
- * ```ts
- * import type { Diff } from "@beep/acp/schema"
- *
- * type DiffValue = Diff
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Diff = typeof Diff.Type;
-
-/**
- * Generated ACP schema for `ElicitationAcceptAction`.
- *
- * @example
- * ```ts
- * import { ElicitationAcceptAction } from "@beep/acp/schema"
- *
- * console.log(ElicitationAcceptAction.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationAcceptAction = S.Struct({
-  content: S.optionalKey(
-    S.Union([
-      S.Record(S.String, ElicitationContentValue).annotateKey({
-        description:
-          "The user-provided content, if any, as an object matching the requested schema.",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("ElicitationAcceptAction", {
-    description: "Generated ACP schema for ElicitationAcceptAction.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationAcceptAction}.
- *
- * @example
- * ```ts
- * import type { ElicitationAcceptAction } from "@beep/acp/schema"
- *
- * type ElicitationAcceptActionValue = ElicitationAcceptAction
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationAcceptAction = typeof ElicitationAcceptAction.Type;
-
-/**
- * Generated ACP schema for `ElicitationAction`.
- *
- * @example
- * ```ts
- * import { ElicitationAction } from "@beep/acp/schema"
- *
- * console.log(ElicitationAction.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationAction = S.Union(
-  [
-    S.Struct({
-      action: S.Literal("accept"),
-      content: S.optionalKey(
-        S.Union([
-          S.Record(S.String, ElicitationContentValue).annotateKey({
-            description:
-              "The user-provided content, if any, as an object matching the requested schema.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
-    }),
-    S.Struct({ action: S.Literal("decline") }).annotateKey({
-      description: "The user declined the elicitation.",
-    }),
-    S.Struct({ action: S.Literal("cancel") }).annotateKey({
-      description: "The elicitation was cancelled.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("ElicitationAction", {
-    description: "Generated ACP schema for ElicitationAction.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user's action in response to an elicitation.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationAction}.
- *
- * @example
- * ```ts
- * import type { ElicitationAction } from "@beep/acp/schema"
- *
- * type ElicitationActionValue = ElicitationAction
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationAction = typeof ElicitationAction.Type;
-
-/**
- * Generated ACP schema for `ElicitationCompleteNotification`.
- *
- * @example
- * ```ts
- * import { ElicitationCompleteNotification } from "@beep/acp/schema"
- *
- * console.log(ElicitationCompleteNotification.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationCompleteNotification = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  elicitationId: S.String.annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
-  }),
-}).pipe(
-  $I.annoteSchema("ElicitationCompleteNotification", {
-    description: "Generated ACP schema for ElicitationCompleteNotification.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification sent by the agent when a URL-based elicitation is complete.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationCompleteNotification}.
- *
- * @example
- * ```ts
- * import type { ElicitationCompleteNotification } from "@beep/acp/schema"
- *
- * type ElicitationCompleteNotificationValue = ElicitationCompleteNotification
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationCompleteNotification =
-  typeof ElicitationCompleteNotification.Type;
-
-/**
- * Generated ACP schema for `ElicitationFormMode`.
- *
- * @example
- * ```ts
- * import { ElicitationFormMode } from "@beep/acp/schema"
- *
- * console.log(ElicitationFormMode.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationFormMode = S.Struct({
-  requestedSchema: S.Struct({
-    description: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({
-          description: "Optional description of what this schema represents.",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
         }),
-        S.Null,
-      ]),
-    ),
-    properties: S.optionalKey(
-      S.Record(S.String, ElicitationPropertySchema).annotateKey({
-        description: "Property definitions (must be primitive types).",
-        default: {},
-      }),
-    ),
-    required: S.optionalKey(
-      S.Union([
-        S.Array(S.String).annotateKey({
-          description: "List of required property names.",
+      ),
+      S.Null,
+    ]),
+  ),
+  cachedWriteTokens: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Total cache write tokens.",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
         }),
-        S.Null,
-      ]),
-    ),
-    title: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({ description: "Optional title for the schema." }),
-        S.Null,
-      ]),
-    ),
-    type: S.optionalKey(
-      S.Literal("object").annotateKey({
-        description: "Type discriminator for elicitation schemas.",
-        default: "object",
-      }),
-    ),
-  }).annotateKey({
-    description:
-      "Type-safe elicitation schema for requesting structured user input.\n\nThis represents a JSON Schema object with primitive-typed properties,\nas required by the elicitation specification.",
-  }),
+      ),
+      S.Null,
+    ]),
+  ),
+  inputTokens: S.Int.annotateKey({
+    description: "Total input tokens across all turns.",
+    format: "uint64",
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
+  outputTokens: S.Int.annotateKey({
+    description: "Total output tokens across all turns.",
+    format: "uint64",
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
+  thoughtTokens: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Total thought/reasoning tokens",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  totalTokens: S.Int.annotateKey({
+    description: "Sum of all token types across session.",
+    format: "uint64",
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
 }).pipe(
-  $I.annoteSchema("ElicitationFormMode", {
-    description: "Generated ACP schema for ElicitationFormMode.",
+  $I.annoteSchema("Usage", {
+    description: "Generated ACP schema for Usage.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForm-based elicitation mode where the client renders a form from the provided schema.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nToken usage information for a prompt turn.",
+    identifier: "Usage",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ElicitationFormMode}.
+ * Type for {@link Usage}.
  *
- * @example
+ * **Example** (Reference the Usage type)
+ *
  * ```ts
- * import type { ElicitationFormMode } from "@beep/acp/schema"
+ * import type { Usage } from "@beep/acp/schema"
  *
- * type ElicitationFormModeValue = ElicitationFormMode
+ * type UsageValue = Usage
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ElicitationFormMode = typeof ElicitationFormMode.Type;
+export type Usage = typeof Usage.Type;
 
 /**
- * Generated ACP schema for `ElicitationId`.
+ * Generated ACP schema for `SetSessionModelResponse`.
  *
- * @example
+ * **Example** (Inspect the SetSessionModelResponse schema)
+ *
  * ```ts
- * import { ElicitationId } from "@beep/acp/schema"
+ * import { SetSessionModelResponse } from "@beep/acp/schema"
  *
- * console.log(ElicitationId.ast)
+ * console.log(SetSessionModelResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ElicitationId = S.String.pipe(
-  $I.annoteSchema("ElicitationId", {
-    description: "Generated ACP schema for ElicitationId.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationId}.
- *
- * @example
- * ```ts
- * import type { ElicitationId } from "@beep/acp/schema"
- *
- * type ElicitationIdValue = ElicitationId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationId = typeof ElicitationId.Type;
-
-/**
- * Generated ACP schema for `ElicitationRequest`.
- *
- * @example
- * ```ts
- * import { ElicitationRequest } from "@beep/acp/schema"
- *
- * console.log(ElicitationRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationRequest = S.Union(
-  [
-    S.Struct({
-      mode: S.Literal("form"),
-      requestedSchema: S.Struct({
-        description: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "Optional description of what this schema represents.",
-            }),
-            S.Null,
-          ]),
-        ),
-        properties: S.optionalKey(
-          S.Record(S.String, ElicitationPropertySchema).annotateKey({
-            description: "Property definitions (must be primitive types).",
-            default: {},
-          }),
-        ),
-        required: S.optionalKey(
-          S.Union([
-            S.Array(S.String).annotateKey({
-              description: "List of required property names.",
-            }),
-            S.Null,
-          ]),
-        ),
-        title: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description: "Optional title for the schema.",
-            }),
-            S.Null,
-          ]),
-        ),
-        type: S.optionalKey(
-          S.Literal("object").annotateKey({
-            description: "Type discriminator for elicitation schemas.",
-            default: "object",
-          }),
-        ),
-      }).annotateKey({
-        description:
-          "Type-safe elicitation schema for requesting structured user input.\n\nThis represents a JSON Schema object with primitive-typed properties,\nas required by the elicitation specification.",
-      }),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      message: S.String.annotateKey({
-        description:
-          "A human-readable message describing what input is needed.",
-      }),
-      sessionId: S.String.annotateKey({
-        description:
-          "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-      }),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
-    }),
-    S.Struct({
-      mode: S.Literal("url"),
-      elicitationId: S.String.annotateKey({
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
-      }),
-      url: S.String.annotateKey({
-        description: "The URL to direct the user to.",
-        format: "uri",
-      }),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      message: S.String.annotateKey({
-        description:
-          "A human-readable message describing what input is needed.",
-      }),
-      sessionId: S.String.annotateKey({
-        description:
-          "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-      }),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("ElicitationRequest", {
-    description: "Generated ACP schema for ElicitationRequest.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationRequest}.
- *
- * @example
- * ```ts
- * import type { ElicitationRequest } from "@beep/acp/schema"
- *
- * type ElicitationRequestValue = ElicitationRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationRequest = typeof ElicitationRequest.Type;
-
-/**
- * Generated ACP schema for `ElicitationResponse`.
- *
- * @example
- * ```ts
- * import { ElicitationResponse } from "@beep/acp/schema"
- *
- * console.log(ElicitationResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationResponse = S.Struct({
+export const SetSessionModelResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  action: S.Union(
-    [
-      S.Struct({
-        action: S.Literal("accept"),
-        content: S.optionalKey(
-          S.Union([
-            S.Record(S.String, ElicitationContentValue).annotateKey({
-              description:
-                "The user-provided content, if any, as an object matching the requested schema.",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
-      }),
-      S.Struct({ action: S.Literal("decline") }).annotateKey({
-        description: "The user declined the elicitation.",
-      }),
-      S.Struct({ action: S.Literal("cancel") }).annotateKey({
-        description: "The elicitation was cancelled.",
-      }),
-    ],
-    { mode: "oneOf" },
-  ).annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user's action in response to an elicitation.",
-  }),
 }).pipe(
-  $I.annoteSchema("ElicitationResponse", {
-    description: "Generated ACP schema for ElicitationResponse.",
+  $I.annoteSchema("SetSessionModelResponse", {
+    description: "Generated ACP schema for SetSessionModelResponse.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from the client to an elicitation request.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to `session/set_model` method.",
+    identifier: "SetSessionModelResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ElicitationResponse}.
+ * Type for {@link SetSessionModelResponse}.
  *
- * @example
+ * **Example** (Reference the SetSessionModelResponse type)
+ *
  * ```ts
- * import type { ElicitationResponse } from "@beep/acp/schema"
+ * import type { SetSessionModelResponse } from "@beep/acp/schema"
  *
- * type ElicitationResponseValue = ElicitationResponse
+ * type SetSessionModelResponseValue = SetSessionModelResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ElicitationResponse = typeof ElicitationResponse.Type;
+export type SetSessionModelResponse = typeof SetSessionModelResponse.Type;
 
 /**
- * Generated ACP schema for `ElicitationSchema`.
+ * Generated ACP schema for `ExtResponse`.
  *
- * @example
+ * **Example** (Inspect the ExtResponse schema)
+ *
  * ```ts
- * import { ElicitationSchema } from "@beep/acp/schema"
+ * import { ExtResponse } from "@beep/acp/schema"
  *
- * console.log(ElicitationSchema.ast)
+ * console.log(ExtResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ElicitationSchema = S.Struct({
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description: "Optional description of what this schema represents.",
-      }),
-      S.Null,
-    ]),
-  ),
-  properties: S.optionalKey(
-    S.Record(S.String, ElicitationPropertySchema).annotateKey({
-      description: "Property definitions (must be primitive types).",
-      default: {},
-    }),
-  ),
-  required: S.optionalKey(
-    S.Union([
-      S.Array(S.String).annotateKey({
-        description: "List of required property names.",
-      }),
-      S.Null,
-    ]),
-  ),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Optional title for the schema." }),
-      S.Null,
-    ]),
-  ),
-  type: S.optionalKey(
-    S.Literal("object").annotateKey({
-      description: "Type discriminator for elicitation schemas.",
-      default: "object",
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("ElicitationSchema", {
-    description: "Generated ACP schema for ElicitationSchema.",
+export const ExtResponse = S.Json.pipe(
+  $I.annoteSchema("ExtResponse", {
+    description: "Generated ACP schema for ExtResponse.",
+    expected: "JSON value",
     documentation:
-      "Type-safe elicitation schema for requesting structured user input.\n\nThis represents a JSON Schema object with primitive-typed properties,\nas required by the elicitation specification.",
+      "Allows for sending an arbitrary response to an [`ExtRequest`] that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+    identifier: "ExtResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ElicitationSchema}.
+ * Type for {@link ExtResponse}.
  *
- * @example
+ * **Example** (Reference the ExtResponse type)
+ *
  * ```ts
- * import type { ElicitationSchema } from "@beep/acp/schema"
+ * import type { ExtResponse } from "@beep/acp/schema"
  *
- * type ElicitationSchemaValue = ElicitationSchema
+ * type ExtResponseValue = ExtResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ElicitationSchema = typeof ElicitationSchema.Type;
-
-/**
- * Generated ACP schema for `ElicitationSchemaType`.
- *
- * @example
- * ```ts
- * import { ElicitationSchemaType } from "@beep/acp/schema"
- *
- * console.log(ElicitationSchemaType.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationSchemaType = S.Literal("object").pipe(
-  $I.annoteSchema("ElicitationSchemaType", {
-    description: "Generated ACP schema for ElicitationSchemaType.",
-    documentation: "Type discriminator for elicitation schemas.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationSchemaType}.
- *
- * @example
- * ```ts
- * import type { ElicitationSchemaType } from "@beep/acp/schema"
- *
- * type ElicitationSchemaTypeValue = ElicitationSchemaType
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationSchemaType = typeof ElicitationSchemaType.Type;
-
-/**
- * Generated ACP schema for `ElicitationStringType`.
- *
- * @example
- * ```ts
- * import { ElicitationStringType } from "@beep/acp/schema"
- *
- * console.log(ElicitationStringType.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationStringType = S.Literal("string").pipe(
-  $I.annoteSchema("ElicitationStringType", {
-    description: "Generated ACP schema for ElicitationStringType.",
-    documentation:
-      "Items definition for untitled multi-select enum properties.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationStringType}.
- *
- * @example
- * ```ts
- * import type { ElicitationStringType } from "@beep/acp/schema"
- *
- * type ElicitationStringTypeValue = ElicitationStringType
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationStringType = typeof ElicitationStringType.Type;
-
-/**
- * Generated ACP schema for `ElicitationUrlMode`.
- *
- * @example
- * ```ts
- * import { ElicitationUrlMode } from "@beep/acp/schema"
- *
- * console.log(ElicitationUrlMode.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ElicitationUrlMode = S.Struct({
-  elicitationId: S.String.annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
-  }),
-  url: S.String.annotateKey({
-    description: "The URL to direct the user to.",
-    format: "uri",
-  }),
-}).pipe(
-  $I.annoteSchema("ElicitationUrlMode", {
-    description: "Generated ACP schema for ElicitationUrlMode.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nURL-based elicitation mode where the client directs the user to a URL.",
-  }),
-);
-
-/**
- * Type for {@link ElicitationUrlMode}.
- *
- * @example
- * ```ts
- * import type { ElicitationUrlMode } from "@beep/acp/schema"
- *
- * type ElicitationUrlModeValue = ElicitationUrlMode
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ElicitationUrlMode = typeof ElicitationUrlMode.Type;
-
-/**
- * Generated ACP schema for `EmbeddedResource`.
- *
- * @example
- * ```ts
- * import { EmbeddedResource } from "@beep/acp/schema"
- *
- * console.log(EmbeddedResource.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const EmbeddedResource = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-  resource: EmbeddedResourceResource,
-}).pipe(
-  $I.annoteSchema("EmbeddedResource", {
-    description: "Generated ACP schema for EmbeddedResource.",
-    documentation:
-      "The contents of a resource, embedded into a prompt or tool call result.",
-  }),
-);
-
-/**
- * Type for {@link EmbeddedResource}.
- *
- * @example
- * ```ts
- * import type { EmbeddedResource } from "@beep/acp/schema"
- *
- * type EmbeddedResourceValue = EmbeddedResource
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type EmbeddedResource = typeof EmbeddedResource.Type;
+export type ExtResponse = typeof ExtResponse.Type;
 
 /**
  * Generated ACP schema for `ErrorCode`.
  *
- * @example
+ * **Example** (Inspect the ErrorCode schema)
+ *
  * ```ts
  * import { ErrorCode } from "@beep/acp/schema"
  *
@@ -8197,23 +2605,26 @@ export const ErrorCode = S.Union([
       "**URL elicitation required**: **UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe agent requires user input via a URL-based elicitation before it can proceed.",
     format: "int32",
   }),
-  S.Finite.annotateKey({
+  S.Int.annotateKey({
     title: "Other",
     description: "Other undefined error code.",
     format: "int32",
-  }).check(S.isInt()),
+  }),
 ]).pipe(
   $I.annoteSchema("ErrorCode", {
     description: "Generated ACP schema for ErrorCode.",
     documentation:
       "Predefined error codes for common JSON-RPC and ACP-specific errors.\n\nThese codes follow the JSON-RPC 2.0 specification for standard errors\nand use the reserved range (-32000 to -32099) for protocol-specific errors.",
+    identifier: "ErrorCode",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link ErrorCode}.
  *
- * @example
+ * **Example** (Reference the ErrorCode type)
+ *
  * ```ts
  * import type { ErrorCode } from "@beep/acp/schema"
  *
@@ -8226,117 +2637,177 @@ export const ErrorCode = S.Union([
 export type ErrorCode = typeof ErrorCode.Type;
 
 /**
- * Generated ACP schema for `ExtNotification`.
+ * Generated ACP schema for `AuthCapabilities`.
  *
- * @example
+ * **Example** (Inspect the AuthCapabilities schema)
+ *
  * ```ts
- * import { ExtNotification } from "@beep/acp/schema"
+ * import { AuthCapabilities } from "@beep/acp/schema"
  *
- * console.log(ExtNotification.ast)
+ * console.log(AuthCapabilities.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ExtNotification = S.Unknown.pipe(
-  $I.annoteSchema("ExtNotification", {
-    description: "Generated ACP schema for ExtNotification.",
+export const AuthCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  terminal: S.optionalKey(
+    S.Boolean.annotateKey({
+      description:
+        "Whether the client supports `terminal` authentication methods.\n\nWhen `true`, the agent may include `terminal` entries in its authentication methods.",
+      default: false,
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("AuthCapabilities", {
+    description: "Generated ACP schema for AuthCapabilities.",
     documentation:
-      "Allows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\n\nAdvertised during initialization to inform the agent which authentication\nmethod types the client can handle. This governs opt-in types that require\nadditional client-side support.",
+    identifier: "AuthCapabilities",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ExtNotification}.
+ * Type for {@link AuthCapabilities}.
  *
- * @example
+ * **Example** (Reference the AuthCapabilities type)
+ *
  * ```ts
- * import type { ExtNotification } from "@beep/acp/schema"
+ * import type { AuthCapabilities } from "@beep/acp/schema"
  *
- * type ExtNotificationValue = ExtNotification
+ * type AuthCapabilitiesValue = AuthCapabilities
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ExtNotification = typeof ExtNotification.Type;
+export type AuthCapabilities = typeof AuthCapabilities.Type;
 
 /**
- * Generated ACP schema for `ExtRequest`.
+ * Generated ACP schema for `ElicitationFormCapabilities`.
  *
- * @example
+ * **Example** (Inspect the ElicitationFormCapabilities schema)
+ *
  * ```ts
- * import { ExtRequest } from "@beep/acp/schema"
+ * import { ElicitationFormCapabilities } from "@beep/acp/schema"
  *
- * console.log(ExtRequest.ast)
+ * console.log(ElicitationFormCapabilities.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ExtRequest = S.Unknown.pipe(
-  $I.annoteSchema("ExtRequest", {
-    description: "Generated ACP schema for ExtRequest.",
+export const ElicitationFormCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("ElicitationFormCapabilities", {
+    description: "Generated ACP schema for ElicitationFormCapabilities.",
     documentation:
-      "Allows for sending an arbitrary request that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForm-based elicitation capabilities.",
+    identifier: "ElicitationFormCapabilities",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ExtRequest}.
+ * Type for {@link ElicitationFormCapabilities}.
  *
- * @example
+ * **Example** (Reference the ElicitationFormCapabilities type)
+ *
  * ```ts
- * import type { ExtRequest } from "@beep/acp/schema"
+ * import type { ElicitationFormCapabilities } from "@beep/acp/schema"
  *
- * type ExtRequestValue = ExtRequest
+ * type ElicitationFormCapabilitiesValue = ElicitationFormCapabilities
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ExtRequest = typeof ExtRequest.Type;
+export type ElicitationFormCapabilities =
+  typeof ElicitationFormCapabilities.Type;
 
 /**
- * Generated ACP schema for `ExtResponse`.
+ * Generated ACP schema for `ElicitationUrlCapabilities`.
  *
- * @example
+ * **Example** (Inspect the ElicitationUrlCapabilities schema)
+ *
  * ```ts
- * import { ExtResponse } from "@beep/acp/schema"
+ * import { ElicitationUrlCapabilities } from "@beep/acp/schema"
  *
- * console.log(ExtResponse.ast)
+ * console.log(ElicitationUrlCapabilities.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ExtResponse = S.Unknown.pipe(
-  $I.annoteSchema("ExtResponse", {
-    description: "Generated ACP schema for ExtResponse.",
+export const ElicitationUrlCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("ElicitationUrlCapabilities", {
+    description: "Generated ACP schema for ElicitationUrlCapabilities.",
     documentation:
-      "Allows for sending an arbitrary response to an [`ExtRequest`] that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nURL-based elicitation capabilities.",
+    identifier: "ElicitationUrlCapabilities",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ExtResponse}.
+ * Type for {@link ElicitationUrlCapabilities}.
  *
- * @example
+ * **Example** (Reference the ElicitationUrlCapabilities type)
+ *
  * ```ts
- * import type { ExtResponse } from "@beep/acp/schema"
+ * import type { ElicitationUrlCapabilities } from "@beep/acp/schema"
  *
- * type ExtResponseValue = ExtResponse
+ * type ElicitationUrlCapabilitiesValue = ElicitationUrlCapabilities
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ExtResponse = typeof ExtResponse.Type;
+export type ElicitationUrlCapabilities = typeof ElicitationUrlCapabilities.Type;
 
 /**
  * Generated ACP schema for `FileSystemCapabilities`.
  *
- * @example
+ * **Example** (Inspect the FileSystemCapabilities schema)
+ *
  * ```ts
  * import { FileSystemCapabilities } from "@beep/acp/schema"
  *
@@ -8349,7 +2820,10 @@ export type ExtResponse = typeof ExtResponse.Type;
 export const FileSystemCapabilities = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -8373,13 +2847,16 @@ export const FileSystemCapabilities = S.Struct({
     description: "Generated ACP schema for FileSystemCapabilities.",
     documentation:
       "File system capabilities that a client may support.\n\nSee protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)",
+    identifier: "FileSystemCapabilities",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link FileSystemCapabilities}.
  *
- * @example
+ * **Example** (Reference the FileSystemCapabilities type)
+ *
  * ```ts
  * import type { FileSystemCapabilities } from "@beep/acp/schema"
  *
@@ -8392,733 +2869,177 @@ export const FileSystemCapabilities = S.Struct({
 export type FileSystemCapabilities = typeof FileSystemCapabilities.Type;
 
 /**
- * Generated ACP schema for `ForkSessionRequest`.
+ * Generated ACP schema for `AuthenticateRequest`.
  *
- * @example
+ * **Example** (Inspect the AuthenticateRequest schema)
+ *
  * ```ts
- * import { ForkSessionRequest } from "@beep/acp/schema"
+ * import { AuthenticateRequest } from "@beep/acp/schema"
  *
- * console.log(ForkSessionRequest.ast)
+ * console.log(AuthenticateRequest.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ForkSessionRequest = S.Struct({
+export const AuthenticateRequest = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  cwd: S.String.annotateKey({
-    description: "The working directory for this session.",
-  }),
-  mcpServers: S.optionalKey(
-    S.Array(McpServer).annotateKey({
-      description: "List of MCP servers to connect to for this session.",
-    }),
-  ),
-  sessionId: S.String.annotateKey({
+  methodId: S.String.annotateKey({
     description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
+      "The ID of the authentication method to use.\nMust be one of the methods advertised in the initialize response.",
   }),
 }).pipe(
-  $I.annoteSchema("ForkSessionRequest", {
-    description: "Generated ACP schema for ForkSessionRequest.",
+  $I.annoteSchema("AuthenticateRequest", {
+    description: "Generated ACP schema for AuthenticateRequest.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for forking an existing session.\n\nCreates a new session based on the context of an existing one, allowing\noperations like generating summaries without affecting the original session's history.\n\nOnly available if the Agent supports the `session.fork` capability.",
+      "Request parameters for the authenticate method.\n\nSpecifies which authentication method to use.",
+    identifier: "AuthenticateRequest",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ForkSessionRequest}.
+ * Type for {@link AuthenticateRequest}.
  *
- * @example
+ * **Example** (Reference the AuthenticateRequest type)
+ *
  * ```ts
- * import type { ForkSessionRequest } from "@beep/acp/schema"
+ * import type { AuthenticateRequest } from "@beep/acp/schema"
  *
- * type ForkSessionRequestValue = ForkSessionRequest
+ * type AuthenticateRequestValue = AuthenticateRequest
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ForkSessionRequest = typeof ForkSessionRequest.Type;
+export type AuthenticateRequest = typeof AuthenticateRequest.Type;
 
 /**
- * Generated ACP schema for `ForkSessionResponse`.
+ * Generated ACP schema for `LogoutRequest`.
  *
- * @example
+ * **Example** (Inspect the LogoutRequest schema)
+ *
  * ```ts
- * import { ForkSessionResponse } from "@beep/acp/schema"
+ * import { LogoutRequest } from "@beep/acp/schema"
  *
- * console.log(ForkSessionResponse.ast)
+ * console.log(LogoutRequest.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ForkSessionResponse = S.Struct({
+export const LogoutRequest = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  configOptions: S.optionalKey(
-    S.Union([
-      S.Array(SessionConfigOption).annotateKey({
-        description:
-          "Initial session configuration options if supported by the Agent.",
-      }),
-      S.Null,
-    ]),
-  ),
-  models: S.optionalKey(
-    S.Union([SessionModelState, S.Null]).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-    }),
-  ),
-  modes: S.optionalKey(
-    S.Union([SessionModeState, S.Null]).annotateKey({
-      description:
-        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-    }),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
 }).pipe(
-  $I.annoteSchema("ForkSessionResponse", {
-    description: "Generated ACP schema for ForkSessionResponse.",
+  $I.annoteSchema("LogoutRequest", {
+    description: "Generated ACP schema for LogoutRequest.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from forking an existing session.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for the logout method.\n\nTerminates the current authenticated session.",
+    identifier: "LogoutRequest",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ForkSessionResponse}.
+ * Type for {@link LogoutRequest}.
  *
- * @example
+ * **Example** (Reference the LogoutRequest type)
+ *
  * ```ts
- * import type { ForkSessionResponse } from "@beep/acp/schema"
+ * import type { LogoutRequest } from "@beep/acp/schema"
  *
- * type ForkSessionResponseValue = ForkSessionResponse
+ * type LogoutRequestValue = LogoutRequest
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ForkSessionResponse = typeof ForkSessionResponse.Type;
+export type LogoutRequest = typeof LogoutRequest.Type;
 
 /**
- * Generated ACP schema for `ImageContent`.
+ * Generated ACP schema for `HttpHeader`.
  *
- * @example
+ * **Example** (Inspect the HttpHeader schema)
+ *
  * ```ts
- * import { ImageContent } from "@beep/acp/schema"
+ * import { HttpHeader } from "@beep/acp/schema"
  *
- * console.log(ImageContent.ast)
+ * console.log(HttpHeader.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ImageContent = S.Struct({
+export const HttpHeader = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-  data: S.String,
-  mimeType: S.String,
-  uri: S.optionalKey(S.Union([S.String, S.Null])),
-}).pipe(
-  $I.annoteSchema("ImageContent", {
-    description: "Generated ACP schema for ImageContent.",
-    documentation: "An image provided to or from an LLM.",
+  name: S.String.annotateKey({ description: "The name of the HTTP header." }),
+  value: S.String.annotateKey({
+    description: "The value to set for the HTTP header.",
   }),
-);
-
-/**
- * Type for {@link ImageContent}.
- *
- * @example
- * ```ts
- * import type { ImageContent } from "@beep/acp/schema"
- *
- * type ImageContentValue = ImageContent
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ImageContent = typeof ImageContent.Type;
-
-/**
- * Generated ACP schema for `InitializeRequest`.
- *
- * @example
- * ```ts
- * import { InitializeRequest } from "@beep/acp/schema"
- *
- * console.log(InitializeRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const InitializeRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  clientCapabilities: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      auth: S.optionalKey(
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          terminal: S.optionalKey(
-            S.Boolean.annotateKey({
-              description:
-                "Whether the client supports `terminal` authentication methods.\n\nWhen `true`, the agent may include `terminal` entries in its authentication methods.",
-              default: false,
-            }),
-          ),
-        }).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\n\nAdvertised during initialization to inform the agent which authentication\nmethod types the client can handle. This governs opt-in types that require\nadditional client-side support.",
-          default: { terminal: false },
-        }),
-      ),
-      elicitation: S.optionalKey(
-        S.Union([ElicitationCapabilities, S.Null]).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.\nDetermines which elicitation modes the agent may use.",
-        }),
-      ),
-      fs: S.optionalKey(
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          readTextFile: S.optionalKey(
-            S.Boolean.annotateKey({
-              description:
-                "Whether the Client supports `fs/read_text_file` requests.",
-              default: false,
-            }),
-          ),
-          writeTextFile: S.optionalKey(
-            S.Boolean.annotateKey({
-              description:
-                "Whether the Client supports `fs/write_text_file` requests.",
-              default: false,
-            }),
-          ),
-        }).annotateKey({
-          description:
-            "File system capabilities that a client may support.\n\nSee protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)",
-          default: { readTextFile: false, writeTextFile: false },
-        }),
-      ),
-      terminal: S.optionalKey(
-        S.Boolean.annotateKey({
-          description: "Whether the Client support all `terminal/*` methods.",
-          default: false,
-        }),
-      ),
-    }).annotateKey({
-      description:
-        "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
-      default: {
-        auth: { terminal: false },
-        fs: { readTextFile: false, writeTextFile: false },
-        terminal: false,
-      },
-    }),
-  ),
-  clientInfo: S.optionalKey(
-    S.Union([Implementation, S.Null]).annotateKey({
-      description:
-        "Information about the Client name and version sent to the Agent.\n\nNote: in future versions of the protocol, this will be required.",
-    }),
-  ),
-  protocolVersion: S.Finite.annotateKey({
-    description:
-      "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
-    format: "uint16",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0))
-    .check(S.isLessThanOrEqualTo(65535)),
 }).pipe(
-  $I.annoteSchema("InitializeRequest", {
-    description: "Generated ACP schema for InitializeRequest.",
+  $I.annoteSchema("HttpHeader", {
+    description: "Generated ACP schema for HttpHeader.",
     documentation:
-      "Request parameters for the initialize method.\n\nSent by the client to establish connection and negotiate capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
+      "An HTTP header to set when making requests to the MCP server.",
+    identifier: "HttpHeader",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link InitializeRequest}.
+ * Type for {@link HttpHeader}.
  *
- * @example
+ * **Example** (Reference the HttpHeader type)
+ *
  * ```ts
- * import type { InitializeRequest } from "@beep/acp/schema"
+ * import type { HttpHeader } from "@beep/acp/schema"
  *
- * type InitializeRequestValue = InitializeRequest
+ * type HttpHeaderValue = HttpHeader
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type InitializeRequest = typeof InitializeRequest.Type;
-
-/**
- * Generated ACP schema for `InitializeResponse`.
- *
- * @example
- * ```ts
- * import { InitializeResponse } from "@beep/acp/schema"
- *
- * console.log(InitializeResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const InitializeResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  agentCapabilities: S.optionalKey(
-    S.Struct({
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      auth: S.optionalKey(
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          logout: S.optionalKey(
-            S.Union([LogoutCapabilities, S.Null]).annotateKey({
-              description:
-                "Whether the agent supports the logout method.\n\nBy supplying `{}` it means that the agent supports the logout method.",
-            }),
-          ),
-        }).annotateKey({
-          description:
-            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
-          default: {},
-        }),
-      ),
-      loadSession: S.optionalKey(
-        S.Boolean.annotateKey({
-          description: "Whether the agent supports `session/load`.",
-          default: false,
-        }),
-      ),
-      mcpCapabilities: S.optionalKey(
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          http: S.optionalKey(
-            S.Boolean.annotateKey({
-              description: "Agent supports [`McpServer::Http`].",
-              default: false,
-            }),
-          ),
-          sse: S.optionalKey(
-            S.Boolean.annotateKey({
-              description: "Agent supports [`McpServer::Sse`].",
-              default: false,
-            }),
-          ),
-        }).annotateKey({
-          description: "MCP capabilities supported by the agent",
-          default: { http: false, sse: false },
-        }),
-      ),
-      promptCapabilities: S.optionalKey(
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          audio: S.optionalKey(
-            S.Boolean.annotateKey({
-              description: "Agent supports [`ContentBlock::Audio`].",
-              default: false,
-            }),
-          ),
-          embeddedContext: S.optionalKey(
-            S.Boolean.annotateKey({
-              description:
-                "Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message.",
-              default: false,
-            }),
-          ),
-          image: S.optionalKey(
-            S.Boolean.annotateKey({
-              description: "Agent supports [`ContentBlock::Image`].",
-              default: false,
-            }),
-          ),
-        }).annotateKey({
-          description:
-            "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
-          default: { audio: false, embeddedContext: false, image: false },
-        }),
-      ),
-      sessionCapabilities: S.optionalKey(
-        S.Struct({
-          _meta: S.optionalKey(
-            S.Union([
-              S.Record(S.String, S.Unknown).annotateKey({
-                description:
-                  "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-              }),
-              S.Null,
-            ]),
-          ),
-          close: S.optionalKey(
-            S.Union([SessionCloseCapabilities, S.Null]).annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/close`.",
-            }),
-          ),
-          fork: S.optionalKey(
-            S.Union([SessionForkCapabilities, S.Null]).annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/fork`.",
-            }),
-          ),
-          list: S.optionalKey(
-            S.Union([SessionListCapabilities, S.Null]).annotateKey({
-              description: "Whether the agent supports `session/list`.",
-            }),
-          ),
-          resume: S.optionalKey(
-            S.Union([SessionResumeCapabilities, S.Null]).annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nWhether the agent supports `session/resume`.",
-            }),
-          ),
-        }).annotateKey({
-          default: {},
-          description:
-            "Session capabilities supported by the agent.\n\nAs a baseline, all Agents **MUST** support `session/new`, `session/prompt`, `session/cancel`, and `session/update`.\n\nOptionally, they **MAY** support other session methods and notifications by specifying additional capabilities.\n\nNote: `session/load` is still handled by the top-level `load_session` capability. This will be unified in future versions of the protocol.\n\nSee protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)",
-        }),
-      ),
-    }).annotateKey({
-      description:
-        "Capabilities supported by the agent.\n\nAdvertised during initialization to inform the client about\navailable features and content types.\n\nSee protocol docs: [Agent Capabilities](https://agentclientprotocol.com/protocol/initialization#agent-capabilities)",
-      default: {
-        auth: {},
-        loadSession: false,
-        mcpCapabilities: { http: false, sse: false },
-        promptCapabilities: {
-          audio: false,
-          embeddedContext: false,
-          image: false,
-        },
-        sessionCapabilities: {},
-      },
-    }),
-  ),
-  agentInfo: S.optionalKey(
-    S.Union([Implementation, S.Null]).annotateKey({
-      description:
-        "Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required.",
-    }),
-  ),
-  authMethods: S.optionalKey(
-    S.Array(AuthMethod).annotateKey({
-      description: "Authentication methods supported by the agent.",
-      default: [],
-    }),
-  ),
-  protocolVersion: S.Finite.annotateKey({
-    description:
-      "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
-    format: "uint16",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0))
-    .check(S.isLessThanOrEqualTo(65535)),
-}).pipe(
-  $I.annoteSchema("InitializeResponse", {
-    description: "Generated ACP schema for InitializeResponse.",
-    documentation:
-      "Response to the `initialize` method.\n\nContains the negotiated protocol version and agent capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
-  }),
-);
-
-/**
- * Type for {@link InitializeResponse}.
- *
- * @example
- * ```ts
- * import type { InitializeResponse } from "@beep/acp/schema"
- *
- * type InitializeResponseValue = InitializeResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type InitializeResponse = typeof InitializeResponse.Type;
-
-/**
- * Generated ACP schema for `IntegerPropertySchema`.
- *
- * @example
- * ```ts
- * import { IntegerPropertySchema } from "@beep/acp/schema"
- *
- * console.log(IntegerPropertySchema.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const IntegerPropertySchema = S.Struct({
-  default: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Default value.",
-        format: "int64",
-      }).check(S.isInt()),
-      S.Null,
-    ]),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Human-readable description." }),
-      S.Null,
-    ]),
-  ),
-  maximum: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Maximum value (inclusive).",
-        format: "int64",
-      }).check(S.isInt()),
-      S.Null,
-    ]),
-  ),
-  minimum: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Minimum value (inclusive).",
-        format: "int64",
-      }).check(S.isInt()),
-      S.Null,
-    ]),
-  ),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Optional title for the property." }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("IntegerPropertySchema", {
-    description: "Generated ACP schema for IntegerPropertySchema.",
-    documentation: "Schema for integer properties in an elicitation form.",
-  }),
-);
-
-/**
- * Type for {@link IntegerPropertySchema}.
- *
- * @example
- * ```ts
- * import type { IntegerPropertySchema } from "@beep/acp/schema"
- *
- * type IntegerPropertySchemaValue = IntegerPropertySchema
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type IntegerPropertySchema = typeof IntegerPropertySchema.Type;
-
-/**
- * Generated ACP schema for `KillTerminalRequest`.
- *
- * @example
- * ```ts
- * import { KillTerminalRequest } from "@beep/acp/schema"
- *
- * console.log(KillTerminalRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const KillTerminalRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-  terminalId: S.String.annotateKey({
-    description: "The ID of the terminal to kill.",
-  }),
-}).pipe(
-  $I.annoteSchema("KillTerminalRequest", {
-    description: "Generated ACP schema for KillTerminalRequest.",
-    documentation: "Request to kill a terminal without releasing it.",
-  }),
-);
-
-/**
- * Type for {@link KillTerminalRequest}.
- *
- * @example
- * ```ts
- * import type { KillTerminalRequest } from "@beep/acp/schema"
- *
- * type KillTerminalRequestValue = KillTerminalRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type KillTerminalRequest = typeof KillTerminalRequest.Type;
-
-/**
- * Generated ACP schema for `KillTerminalResponse`.
- *
- * @example
- * ```ts
- * import { KillTerminalResponse } from "@beep/acp/schema"
- *
- * console.log(KillTerminalResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const KillTerminalResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("KillTerminalResponse", {
-    description: "Generated ACP schema for KillTerminalResponse.",
-    documentation: "Response to `terminal/kill` method",
-  }),
-);
-
-/**
- * Type for {@link KillTerminalResponse}.
- *
- * @example
- * ```ts
- * import type { KillTerminalResponse } from "@beep/acp/schema"
- *
- * type KillTerminalResponseValue = KillTerminalResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type KillTerminalResponse = typeof KillTerminalResponse.Type;
+export type HttpHeader = typeof HttpHeader.Type;
 
 /**
  * Generated ACP schema for `ListSessionsRequest`.
  *
- * @example
+ * **Example** (Inspect the ListSessionsRequest schema)
+ *
  * ```ts
  * import { ListSessionsRequest } from "@beep/acp/schema"
  *
@@ -9131,7 +3052,10 @@ export type KillTerminalResponse = typeof KillTerminalResponse.Type;
 export const ListSessionsRequest = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -9161,13 +3085,16 @@ export const ListSessionsRequest = S.Struct({
     description: "Generated ACP schema for ListSessionsRequest.",
     documentation:
       "Request parameters for listing existing sessions.\n\nOnly available if the Agent supports the `sessionCapabilities.list` capability.",
+    identifier: "ListSessionsRequest",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link ListSessionsRequest}.
  *
- * @example
+ * **Example** (Reference the ListSessionsRequest type)
+ *
  * ```ts
  * import type { ListSessionsRequest } from "@beep/acp/schema"
  *
@@ -9180,201 +3107,26 @@ export const ListSessionsRequest = S.Struct({
 export type ListSessionsRequest = typeof ListSessionsRequest.Type;
 
 /**
- * Generated ACP schema for `ListSessionsResponse`.
+ * Generated ACP schema for `WriteTextFileResponse`.
  *
- * @example
+ * **Example** (Inspect the WriteTextFileResponse schema)
+ *
  * ```ts
- * import { ListSessionsResponse } from "@beep/acp/schema"
+ * import { WriteTextFileResponse } from "@beep/acp/schema"
  *
- * console.log(ListSessionsResponse.ast)
+ * console.log(WriteTextFileResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ListSessionsResponse = S.Struct({
+export const WriteTextFileResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  nextCursor: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "Opaque cursor token. If present, pass this in the next request's cursor parameter\nto fetch the next page. If absent, there are no more results.",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessions: S.Array(SessionInfo).annotateKey({
-    description: "Array of session information objects",
-  }),
-}).pipe(
-  $I.annoteSchema("ListSessionsResponse", {
-    description: "Generated ACP schema for ListSessionsResponse.",
-    documentation: "Response from listing sessions.",
-  }),
-);
-
-/**
- * Type for {@link ListSessionsResponse}.
- *
- * @example
- * ```ts
- * import type { ListSessionsResponse } from "@beep/acp/schema"
- *
- * type ListSessionsResponseValue = ListSessionsResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ListSessionsResponse = typeof ListSessionsResponse.Type;
-
-/**
- * Generated ACP schema for `LoadSessionRequest`.
- *
- * @example
- * ```ts
- * import { LoadSessionRequest } from "@beep/acp/schema"
- *
- * console.log(LoadSessionRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const LoadSessionRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  cwd: S.String.annotateKey({
-    description: "The working directory for this session.",
-  }),
-  mcpServers: S.Array(McpServer).annotateKey({
-    description: "List of MCP servers to connect to for this session.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("LoadSessionRequest", {
-    description: "Generated ACP schema for LoadSessionRequest.",
-    documentation:
-      "Request parameters for loading an existing session.\n\nOnly available if the Agent supports the `loadSession` capability.\n\nSee protocol docs: [Loading Sessions](https://agentclientprotocol.com/protocol/session-setup#loading-sessions)",
-  }),
-);
-
-/**
- * Type for {@link LoadSessionRequest}.
- *
- * @example
- * ```ts
- * import type { LoadSessionRequest } from "@beep/acp/schema"
- *
- * type LoadSessionRequestValue = LoadSessionRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type LoadSessionRequest = typeof LoadSessionRequest.Type;
-
-/**
- * Generated ACP schema for `LoadSessionResponse`.
- *
- * @example
- * ```ts
- * import { LoadSessionResponse } from "@beep/acp/schema"
- *
- * console.log(LoadSessionResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const LoadSessionResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  configOptions: S.optionalKey(
-    S.Union([
-      S.Array(SessionConfigOption).annotateKey({
-        description:
-          "Initial session configuration options if supported by the Agent.",
-      }),
-      S.Null,
-    ]),
-  ),
-  models: S.optionalKey(
-    S.Union([SessionModelState, S.Null]).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-    }),
-  ),
-  modes: S.optionalKey(
-    S.Union([SessionModeState, S.Null]).annotateKey({
-      description:
-        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("LoadSessionResponse", {
-    description: "Generated ACP schema for LoadSessionResponse.",
-    documentation: "Response from loading an existing session.",
-  }),
-);
-
-/**
- * Type for {@link LoadSessionResponse}.
- *
- * @example
- * ```ts
- * import type { LoadSessionResponse } from "@beep/acp/schema"
- *
- * type LoadSessionResponseValue = LoadSessionResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type LoadSessionResponse = typeof LoadSessionResponse.Type;
-
-/**
- * Generated ACP schema for `LogoutRequest`.
- *
- * @example
- * ```ts
- * import { LogoutRequest } from "@beep/acp/schema"
- *
- * console.log(LogoutRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const LogoutRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -9382,1209 +3134,35 @@ export const LogoutRequest = S.Struct({
     ]),
   ),
 }).pipe(
-  $I.annoteSchema("LogoutRequest", {
-    description: "Generated ACP schema for LogoutRequest.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for the logout method.\n\nTerminates the current authenticated session.",
+  $I.annoteSchema("WriteTextFileResponse", {
+    description: "Generated ACP schema for WriteTextFileResponse.",
+    documentation: "Response to `fs/write_text_file`",
+    identifier: "WriteTextFileResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link LogoutRequest}.
+ * Type for {@link WriteTextFileResponse}.
  *
- * @example
+ * **Example** (Reference the WriteTextFileResponse type)
+ *
  * ```ts
- * import type { LogoutRequest } from "@beep/acp/schema"
+ * import type { WriteTextFileResponse } from "@beep/acp/schema"
  *
- * type LogoutRequestValue = LogoutRequest
+ * type WriteTextFileResponseValue = WriteTextFileResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type LogoutRequest = typeof LogoutRequest.Type;
-
-/**
- * Generated ACP schema for `LogoutResponse`.
- *
- * @example
- * ```ts
- * import { LogoutResponse } from "@beep/acp/schema"
- *
- * console.log(LogoutResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const LogoutResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("LogoutResponse", {
-    description: "Generated ACP schema for LogoutResponse.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to the `logout` method.",
-  }),
-);
-
-/**
- * Type for {@link LogoutResponse}.
- *
- * @example
- * ```ts
- * import type { LogoutResponse } from "@beep/acp/schema"
- *
- * type LogoutResponseValue = LogoutResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type LogoutResponse = typeof LogoutResponse.Type;
-
-/**
- * Generated ACP schema for `McpCapabilities`.
- *
- * @example
- * ```ts
- * import { McpCapabilities } from "@beep/acp/schema"
- *
- * console.log(McpCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const McpCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  http: S.optionalKey(
-    S.Boolean.annotateKey({
-      description: "Agent supports [`McpServer::Http`].",
-      default: false,
-    }),
-  ),
-  sse: S.optionalKey(
-    S.Boolean.annotateKey({
-      description: "Agent supports [`McpServer::Sse`].",
-      default: false,
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("McpCapabilities", {
-    description: "Generated ACP schema for McpCapabilities.",
-    documentation: "MCP capabilities supported by the agent",
-  }),
-);
-
-/**
- * Type for {@link McpCapabilities}.
- *
- * @example
- * ```ts
- * import type { McpCapabilities } from "@beep/acp/schema"
- *
- * type McpCapabilitiesValue = McpCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type McpCapabilities = typeof McpCapabilities.Type;
-
-/**
- * Generated ACP schema for `McpServerHttp`.
- *
- * @example
- * ```ts
- * import { McpServerHttp } from "@beep/acp/schema"
- *
- * console.log(McpServerHttp.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const McpServerHttp = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  headers: S.Array(HttpHeader).annotateKey({
-    description: "HTTP headers to set when making requests to the MCP server.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable name identifying this MCP server.",
-  }),
-  url: S.String.annotateKey({ description: "URL to the MCP server." }),
-}).pipe(
-  $I.annoteSchema("McpServerHttp", {
-    description: "Generated ACP schema for McpServerHttp.",
-    documentation: "HTTP transport configuration for MCP.",
-  }),
-);
-
-/**
- * Type for {@link McpServerHttp}.
- *
- * @example
- * ```ts
- * import type { McpServerHttp } from "@beep/acp/schema"
- *
- * type McpServerHttpValue = McpServerHttp
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type McpServerHttp = typeof McpServerHttp.Type;
-
-/**
- * Generated ACP schema for `McpServerSse`.
- *
- * @example
- * ```ts
- * import { McpServerSse } from "@beep/acp/schema"
- *
- * console.log(McpServerSse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const McpServerSse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  headers: S.Array(HttpHeader).annotateKey({
-    description: "HTTP headers to set when making requests to the MCP server.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable name identifying this MCP server.",
-  }),
-  url: S.String.annotateKey({ description: "URL to the MCP server." }),
-}).pipe(
-  $I.annoteSchema("McpServerSse", {
-    description: "Generated ACP schema for McpServerSse.",
-    documentation: "SSE transport configuration for MCP.",
-  }),
-);
-
-/**
- * Type for {@link McpServerSse}.
- *
- * @example
- * ```ts
- * import type { McpServerSse } from "@beep/acp/schema"
- *
- * type McpServerSseValue = McpServerSse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type McpServerSse = typeof McpServerSse.Type;
-
-/**
- * Generated ACP schema for `McpServerStdio`.
- *
- * @example
- * ```ts
- * import { McpServerStdio } from "@beep/acp/schema"
- *
- * console.log(McpServerStdio.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const McpServerStdio = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  args: S.Array(S.String).annotateKey({
-    description: "Command-line arguments to pass to the MCP server.",
-  }),
-  command: S.String.annotateKey({
-    description: "Path to the MCP server executable.",
-  }),
-  env: S.Array(EnvVariable).annotateKey({
-    description: "Environment variables to set when launching the MCP server.",
-  }),
-  name: S.String.annotateKey({
-    description: "Human-readable name identifying this MCP server.",
-  }),
-}).pipe(
-  $I.annoteSchema("McpServerStdio", {
-    description: "Generated ACP schema for McpServerStdio.",
-    documentation: "Stdio transport configuration for MCP.",
-  }),
-);
-
-/**
- * Type for {@link McpServerStdio}.
- *
- * @example
- * ```ts
- * import type { McpServerStdio } from "@beep/acp/schema"
- *
- * type McpServerStdioValue = McpServerStdio
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type McpServerStdio = typeof McpServerStdio.Type;
-
-/**
- * Generated ACP schema for `ModelId`.
- *
- * @example
- * ```ts
- * import { ModelId } from "@beep/acp/schema"
- *
- * console.log(ModelId.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ModelId = S.String.pipe(
-  $I.annoteSchema("ModelId", {
-    description: "Generated ACP schema for ModelId.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
-  }),
-);
-
-/**
- * Type for {@link ModelId}.
- *
- * @example
- * ```ts
- * import type { ModelId } from "@beep/acp/schema"
- *
- * type ModelIdValue = ModelId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ModelId = typeof ModelId.Type;
-
-/**
- * Generated ACP schema for `MultiSelectItems`.
- *
- * @example
- * ```ts
- * import { MultiSelectItems } from "@beep/acp/schema"
- *
- * console.log(MultiSelectItems.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const MultiSelectItems = S.Union([
-  S.Struct({
-    enum: S.Array(S.String).annotateKey({
-      description: "Allowed enum values.",
-    }),
-    type: S.Literal("string").annotateKey({
-      description:
-        "Items definition for untitled multi-select enum properties.",
-    }),
-  }).annotateKey({
-    title: "Untitled",
-    description: "Items definition for untitled multi-select enum properties.",
-  }),
-  S.Struct({
-    anyOf: S.Array(EnumOption).annotateKey({
-      description: "Titled enum options.",
-    }),
-  }).annotateKey({
-    title: "Titled",
-    description: "Items definition for titled multi-select enum properties.",
-  }),
-]).pipe(
-  $I.annoteSchema("MultiSelectItems", {
-    description: "Generated ACP schema for MultiSelectItems.",
-    documentation: "Items for a multi-select (array) property schema.",
-  }),
-);
-
-/**
- * Type for {@link MultiSelectItems}.
- *
- * @example
- * ```ts
- * import type { MultiSelectItems } from "@beep/acp/schema"
- *
- * type MultiSelectItemsValue = MultiSelectItems
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type MultiSelectItems = typeof MultiSelectItems.Type;
-
-/**
- * Generated ACP schema for `MultiSelectPropertySchema`.
- *
- * @example
- * ```ts
- * import { MultiSelectPropertySchema } from "@beep/acp/schema"
- *
- * console.log(MultiSelectPropertySchema.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const MultiSelectPropertySchema = S.Struct({
-  default: S.optionalKey(
-    S.Union([
-      S.Array(S.String).annotateKey({
-        description: "Default selected values.",
-      }),
-      S.Null,
-    ]),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Human-readable description." }),
-      S.Null,
-    ]),
-  ),
-  items: S.Union([
-    S.Struct({
-      enum: S.Array(S.String).annotateKey({
-        description: "Allowed enum values.",
-      }),
-      type: S.Literal("string").annotateKey({
-        description:
-          "Items definition for untitled multi-select enum properties.",
-      }),
-    }).annotateKey({
-      title: "Untitled",
-      description:
-        "Items definition for untitled multi-select enum properties.",
-    }),
-    S.Struct({
-      anyOf: S.Array(EnumOption).annotateKey({
-        description: "Titled enum options.",
-      }),
-    }).annotateKey({
-      title: "Titled",
-      description: "Items definition for titled multi-select enum properties.",
-    }),
-  ]).annotateKey({
-    description: "Items for a multi-select (array) property schema.",
-  }),
-  maxItems: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Maximum number of items to select.",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  minItems: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Minimum number of items to select.",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Optional title for the property." }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("MultiSelectPropertySchema", {
-    description: "Generated ACP schema for MultiSelectPropertySchema.",
-    documentation:
-      "Schema for multi-select (array) properties in an elicitation form.",
-  }),
-);
-
-/**
- * Type for {@link MultiSelectPropertySchema}.
- *
- * @example
- * ```ts
- * import type { MultiSelectPropertySchema } from "@beep/acp/schema"
- *
- * type MultiSelectPropertySchemaValue = MultiSelectPropertySchema
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type MultiSelectPropertySchema = typeof MultiSelectPropertySchema.Type;
-
-/**
- * Generated ACP schema for `NewSessionRequest`.
- *
- * @example
- * ```ts
- * import { NewSessionRequest } from "@beep/acp/schema"
- *
- * console.log(NewSessionRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const NewSessionRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  cwd: S.String.annotateKey({
-    description:
-      "The working directory for this session. Must be an absolute path.",
-  }),
-  mcpServers: S.Array(McpServer).annotateKey({
-    description:
-      "List of MCP (Model Context Protocol) servers the agent should connect to.",
-  }),
-}).pipe(
-  $I.annoteSchema("NewSessionRequest", {
-    description: "Generated ACP schema for NewSessionRequest.",
-    documentation:
-      "Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
-  }),
-);
-
-/**
- * Type for {@link NewSessionRequest}.
- *
- * @example
- * ```ts
- * import type { NewSessionRequest } from "@beep/acp/schema"
- *
- * type NewSessionRequestValue = NewSessionRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type NewSessionRequest = typeof NewSessionRequest.Type;
-
-/**
- * Generated ACP schema for `NewSessionResponse`.
- *
- * @example
- * ```ts
- * import { NewSessionResponse } from "@beep/acp/schema"
- *
- * console.log(NewSessionResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const NewSessionResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  configOptions: S.optionalKey(
-    S.Union([
-      S.Array(SessionConfigOption).annotateKey({
-        description:
-          "Initial session configuration options if supported by the Agent.",
-      }),
-      S.Null,
-    ]),
-  ),
-  models: S.optionalKey(
-    S.Union([SessionModelState, S.Null]).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-    }),
-  ),
-  modes: S.optionalKey(
-    S.Union([SessionModeState, S.Null]).annotateKey({
-      description:
-        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-    }),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("NewSessionResponse", {
-    description: "Generated ACP schema for NewSessionResponse.",
-    documentation:
-      "Response from creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
-  }),
-);
-
-/**
- * Type for {@link NewSessionResponse}.
- *
- * @example
- * ```ts
- * import type { NewSessionResponse } from "@beep/acp/schema"
- *
- * type NewSessionResponseValue = NewSessionResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type NewSessionResponse = typeof NewSessionResponse.Type;
-
-/**
- * Generated ACP schema for `NumberPropertySchema`.
- *
- * @example
- * ```ts
- * import { NumberPropertySchema } from "@beep/acp/schema"
- *
- * console.log(NumberPropertySchema.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const NumberPropertySchema = S.Struct({
-  default: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Default value.",
-        format: "double",
-      }).check(S.isFinite()),
-      S.Null,
-    ]),
-  ),
-  description: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Human-readable description." }),
-      S.Null,
-    ]),
-  ),
-  maximum: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Maximum value (inclusive).",
-        format: "double",
-      }).check(S.isFinite()),
-      S.Null,
-    ]),
-  ),
-  minimum: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Minimum value (inclusive).",
-        format: "double",
-      }).check(S.isFinite()),
-      S.Null,
-    ]),
-  ),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Optional title for the property." }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("NumberPropertySchema", {
-    description: "Generated ACP schema for NumberPropertySchema.",
-    documentation:
-      "Schema for number (floating-point) properties in an elicitation form.",
-  }),
-);
-
-/**
- * Type for {@link NumberPropertySchema}.
- *
- * @example
- * ```ts
- * import type { NumberPropertySchema } from "@beep/acp/schema"
- *
- * type NumberPropertySchemaValue = NumberPropertySchema
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type NumberPropertySchema = typeof NumberPropertySchema.Type;
-
-/**
- * Generated ACP schema for `PermissionOptionId`.
- *
- * @example
- * ```ts
- * import { PermissionOptionId } from "@beep/acp/schema"
- *
- * console.log(PermissionOptionId.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PermissionOptionId = S.String.pipe(
-  $I.annoteSchema("PermissionOptionId", {
-    description: "Generated ACP schema for PermissionOptionId.",
-    documentation: "Unique identifier for a permission option.",
-  }),
-);
-
-/**
- * Type for {@link PermissionOptionId}.
- *
- * @example
- * ```ts
- * import type { PermissionOptionId } from "@beep/acp/schema"
- *
- * type PermissionOptionIdValue = PermissionOptionId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PermissionOptionId = typeof PermissionOptionId.Type;
-
-/**
- * Generated ACP schema for `PermissionOptionKind`.
- *
- * @example
- * ```ts
- * import { PermissionOptionKind } from "@beep/acp/schema"
- *
- * console.log(PermissionOptionKind.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PermissionOptionKind = S.Literals([
-  "allow_once",
-  "allow_always",
-  "reject_once",
-  "reject_always",
-]).pipe(
-  $I.annoteSchema("PermissionOptionKind", {
-    description: "Generated ACP schema for PermissionOptionKind.",
-    documentation:
-      "The type of permission option being presented to the user.\n\nHelps clients choose appropriate icons and UI treatment.",
-  }),
-);
-
-/**
- * Type for {@link PermissionOptionKind}.
- *
- * @example
- * ```ts
- * import type { PermissionOptionKind } from "@beep/acp/schema"
- *
- * type PermissionOptionKindValue = PermissionOptionKind
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PermissionOptionKind = typeof PermissionOptionKind.Type;
-
-/**
- * Generated ACP schema for `Plan`.
- *
- * @example
- * ```ts
- * import { Plan } from "@beep/acp/schema"
- *
- * console.log(Plan.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Plan = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  entries: S.Array(PlanEntry).annotateKey({
-    description:
-      "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
-  }),
-}).pipe(
-  $I.annoteSchema("Plan", {
-    description: "Generated ACP schema for Plan.",
-    documentation:
-      "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
-  }),
-);
-
-/**
- * Type for {@link Plan}.
- *
- * @example
- * ```ts
- * import type { Plan } from "@beep/acp/schema"
- *
- * type PlanValue = Plan
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Plan = typeof Plan.Type;
-
-/**
- * Generated ACP schema for `PlanEntryPriority`.
- *
- * @example
- * ```ts
- * import { PlanEntryPriority } from "@beep/acp/schema"
- *
- * console.log(PlanEntryPriority.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PlanEntryPriority = S.Literals(["high", "medium", "low"]).pipe(
-  $I.annoteSchema("PlanEntryPriority", {
-    description: "Generated ACP schema for PlanEntryPriority.",
-    documentation:
-      "Priority levels for plan entries.\n\nUsed to indicate the relative importance or urgency of different\ntasks in the execution plan.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
-  }),
-);
-
-/**
- * Type for {@link PlanEntryPriority}.
- *
- * @example
- * ```ts
- * import type { PlanEntryPriority } from "@beep/acp/schema"
- *
- * type PlanEntryPriorityValue = PlanEntryPriority
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PlanEntryPriority = typeof PlanEntryPriority.Type;
-
-/**
- * Generated ACP schema for `PlanEntryStatus`.
- *
- * @example
- * ```ts
- * import { PlanEntryStatus } from "@beep/acp/schema"
- *
- * console.log(PlanEntryStatus.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PlanEntryStatus = S.Literals([
-  "pending",
-  "in_progress",
-  "completed",
-]).pipe(
-  $I.annoteSchema("PlanEntryStatus", {
-    description: "Generated ACP schema for PlanEntryStatus.",
-    documentation:
-      "Status of a plan entry in the execution flow.\n\nTracks the lifecycle of each task from planning through completion.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
-  }),
-);
-
-/**
- * Type for {@link PlanEntryStatus}.
- *
- * @example
- * ```ts
- * import type { PlanEntryStatus } from "@beep/acp/schema"
- *
- * type PlanEntryStatusValue = PlanEntryStatus
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PlanEntryStatus = typeof PlanEntryStatus.Type;
-
-/**
- * Generated ACP schema for `PromptCapabilities`.
- *
- * @example
- * ```ts
- * import { PromptCapabilities } from "@beep/acp/schema"
- *
- * console.log(PromptCapabilities.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PromptCapabilities = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  audio: S.optionalKey(
-    S.Boolean.annotateKey({
-      description: "Agent supports [`ContentBlock::Audio`].",
-      default: false,
-    }),
-  ),
-  embeddedContext: S.optionalKey(
-    S.Boolean.annotateKey({
-      description:
-        "Agent supports embedded context in `session/prompt` requests.\n\nWhen enabled, the Client is allowed to include [`ContentBlock::Resource`]\nin prompt requests for pieces of context that are referenced in the message.",
-      default: false,
-    }),
-  ),
-  image: S.optionalKey(
-    S.Boolean.annotateKey({
-      description: "Agent supports [`ContentBlock::Image`].",
-      default: false,
-    }),
-  ),
-}).pipe(
-  $I.annoteSchema("PromptCapabilities", {
-    description: "Generated ACP schema for PromptCapabilities.",
-    documentation:
-      "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
-  }),
-);
-
-/**
- * Type for {@link PromptCapabilities}.
- *
- * @example
- * ```ts
- * import type { PromptCapabilities } from "@beep/acp/schema"
- *
- * type PromptCapabilitiesValue = PromptCapabilities
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PromptCapabilities = typeof PromptCapabilities.Type;
-
-/**
- * Generated ACP schema for `PromptRequest`.
- *
- * @example
- * ```ts
- * import { PromptRequest } from "@beep/acp/schema"
- *
- * console.log(PromptRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PromptRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  messageId: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA client-generated unique identifier for this user message.\n\nIf provided, the Agent SHOULD echo this value as `userMessageId` in the\n[`PromptResponse`] to confirm it was recorded.\nBoth clients and agents MUST use UUID format for message IDs.",
-      }),
-      S.Null,
-    ]),
-  ),
-  prompt: S.Array(ContentBlock).annotateKey({
-    description:
-      "The blocks of content that compose the user's message.\n\nAs a baseline, the Agent MUST support [`ContentBlock::Text`] and [`ContentBlock::ResourceLink`],\nwhile other variants are optionally enabled via [`PromptCapabilities`].\n\nThe Client MUST adapt its interface according to [`PromptCapabilities`].\n\nThe client MAY include referenced pieces of context as either\n[`ContentBlock::Resource`] or [`ContentBlock::ResourceLink`].\n\nWhen available, [`ContentBlock::Resource`] is preferred\nas it avoids extra round-trips and allows the message to include\npieces of context from sources the agent may not have access to.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("PromptRequest", {
-    description: "Generated ACP schema for PromptRequest.",
-    documentation:
-      "Request parameters for sending a user prompt to the agent.\n\nContains the user's message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/prompt-turn#1-user-message)",
-  }),
-);
-
-/**
- * Type for {@link PromptRequest}.
- *
- * @example
- * ```ts
- * import type { PromptRequest } from "@beep/acp/schema"
- *
- * type PromptRequestValue = PromptRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PromptRequest = typeof PromptRequest.Type;
-
-/**
- * Generated ACP schema for `PromptResponse`.
- *
- * @example
- * ```ts
- * import { PromptResponse } from "@beep/acp/schema"
- *
- * console.log(PromptResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PromptResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  stopReason: S.Literals([
-    "end_turn",
-    "max_tokens",
-    "max_turn_requests",
-    "refusal",
-    "cancelled",
-  ]).annotateKey({
-    description:
-      "Reasons why an agent stops processing a prompt turn.\n\nSee protocol docs: [Stop Reasons](https://agentclientprotocol.com/protocol/prompt-turn#stop-reasons)",
-  }),
-  usage: S.optionalKey(
-    S.Union([Usage, S.Null]).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nToken usage for this turn (optional).",
-    }),
-  ),
-  userMessageId: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe acknowledged user message ID.\n\nIf the client provided a `messageId` in the [`PromptRequest`], the agent echoes it here\nto confirm it was recorded. If the client did not provide one, the agent MAY assign one\nand return it here. Absence of this field indicates the agent did not record a message ID.",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("PromptResponse", {
-    description: "Generated ACP schema for PromptResponse.",
-    documentation:
-      "Response from processing a user prompt.\n\nSee protocol docs: [Check for Completion](https://agentclientprotocol.com/protocol/prompt-turn#4-check-for-completion)",
-  }),
-);
-
-/**
- * Type for {@link PromptResponse}.
- *
- * @example
- * ```ts
- * import type { PromptResponse } from "@beep/acp/schema"
- *
- * type PromptResponseValue = PromptResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type PromptResponse = typeof PromptResponse.Type;
-
-/**
- * Generated ACP schema for `ProtocolVersion`.
- *
- * @example
- * ```ts
- * import { ProtocolVersion } from "@beep/acp/schema"
- *
- * console.log(ProtocolVersion.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ProtocolVersion = S.Finite.check(S.isInt())
-  .check(S.isGreaterThanOrEqualTo(0))
-  .check(S.isLessThanOrEqualTo(65535))
-  .pipe(
-    $I.annoteSchema("ProtocolVersion", {
-      description: "Generated ACP schema for ProtocolVersion.",
-      documentation:
-        "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
-      format: "uint16",
-    }),
-  );
-
-/**
- * Type for {@link ProtocolVersion}.
- *
- * @example
- * ```ts
- * import type { ProtocolVersion } from "@beep/acp/schema"
- *
- * type ProtocolVersionValue = ProtocolVersion
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ProtocolVersion = typeof ProtocolVersion.Type;
-
-/**
- * Generated ACP schema for `ReadTextFileRequest`.
- *
- * @example
- * ```ts
- * import { ReadTextFileRequest } from "@beep/acp/schema"
- *
- * console.log(ReadTextFileRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ReadTextFileRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  limit: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Maximum number of lines to read.",
-        format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  line: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description: "Line number to start reading from (1-based).",
-        format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  path: S.String.annotateKey({
-    description: "Absolute path to the file to read.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("ReadTextFileRequest", {
-    description: "Generated ACP schema for ReadTextFileRequest.",
-    documentation:
-      "Request to read content from a text file.\n\nOnly available if the client supports the `fs.readTextFile` capability.",
-  }),
-);
-
-/**
- * Type for {@link ReadTextFileRequest}.
- *
- * @example
- * ```ts
- * import type { ReadTextFileRequest } from "@beep/acp/schema"
- *
- * type ReadTextFileRequestValue = ReadTextFileRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ReadTextFileRequest = typeof ReadTextFileRequest.Type;
+export type WriteTextFileResponse = typeof WriteTextFileResponse.Type;
 
 /**
  * Generated ACP schema for `ReadTextFileResponse`.
  *
- * @example
+ * **Example** (Inspect the ReadTextFileResponse schema)
+ *
  * ```ts
  * import { ReadTextFileResponse } from "@beep/acp/schema"
  *
@@ -10597,7 +3175,10 @@ export type ReadTextFileRequest = typeof ReadTextFileRequest.Type;
 export const ReadTextFileResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -10609,13 +3190,16 @@ export const ReadTextFileResponse = S.Struct({
   $I.annoteSchema("ReadTextFileResponse", {
     description: "Generated ACP schema for ReadTextFileResponse.",
     documentation: "Response containing the contents of a text file.",
+    identifier: "ReadTextFileResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link ReadTextFileResponse}.
  *
- * @example
+ * **Example** (Reference the ReadTextFileResponse type)
+ *
  * ```ts
  * import type { ReadTextFileResponse } from "@beep/acp/schema"
  *
@@ -10628,61 +3212,140 @@ export const ReadTextFileResponse = S.Struct({
 export type ReadTextFileResponse = typeof ReadTextFileResponse.Type;
 
 /**
- * Generated ACP schema for `ReleaseTerminalRequest`.
+ * Generated ACP schema for `CreateTerminalResponse`.
  *
- * @example
+ * **Example** (Inspect the CreateTerminalResponse schema)
+ *
  * ```ts
- * import { ReleaseTerminalRequest } from "@beep/acp/schema"
+ * import { CreateTerminalResponse } from "@beep/acp/schema"
  *
- * console.log(ReleaseTerminalRequest.ast)
+ * console.log(CreateTerminalResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ReleaseTerminalRequest = S.Struct({
+export const CreateTerminalResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
   terminalId: S.String.annotateKey({
-    description: "The ID of the terminal to release.",
+    description: "The unique identifier for the created terminal.",
   }),
 }).pipe(
-  $I.annoteSchema("ReleaseTerminalRequest", {
-    description: "Generated ACP schema for ReleaseTerminalRequest.",
-    documentation: "Request to release a terminal and free its resources.",
+  $I.annoteSchema("CreateTerminalResponse", {
+    description: "Generated ACP schema for CreateTerminalResponse.",
+    documentation: "Response containing the ID of the created terminal.",
+    identifier: "CreateTerminalResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ReleaseTerminalRequest}.
+ * Type for {@link CreateTerminalResponse}.
  *
- * @example
+ * **Example** (Reference the CreateTerminalResponse type)
+ *
  * ```ts
- * import type { ReleaseTerminalRequest } from "@beep/acp/schema"
+ * import type { CreateTerminalResponse } from "@beep/acp/schema"
  *
- * type ReleaseTerminalRequestValue = ReleaseTerminalRequest
+ * type CreateTerminalResponseValue = CreateTerminalResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ReleaseTerminalRequest = typeof ReleaseTerminalRequest.Type;
+export type CreateTerminalResponse = typeof CreateTerminalResponse.Type;
+
+/**
+ * Generated ACP schema for `TerminalExitStatus`.
+ *
+ * **Example** (Inspect the TerminalExitStatus schema)
+ *
+ * ```ts
+ * import { TerminalExitStatus } from "@beep/acp/schema"
+ *
+ * console.log(TerminalExitStatus.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TerminalExitStatus = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  exitCode: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description:
+          "The process exit code (may be null if terminated by signal).",
+        format: "uint32",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  signal: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "The signal that terminated the process (may be null if exited normally).",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("TerminalExitStatus", {
+    description: "Generated ACP schema for TerminalExitStatus.",
+    documentation: "Exit status of a terminal command.",
+    identifier: "TerminalExitStatus",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link TerminalExitStatus}.
+ *
+ * **Example** (Reference the TerminalExitStatus type)
+ *
+ * ```ts
+ * import type { TerminalExitStatus } from "@beep/acp/schema"
+ *
+ * type TerminalExitStatusValue = TerminalExitStatus
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TerminalExitStatus = typeof TerminalExitStatus.Type;
 
 /**
  * Generated ACP schema for `ReleaseTerminalResponse`.
  *
- * @example
+ * **Example** (Inspect the ReleaseTerminalResponse schema)
+ *
  * ```ts
  * import { ReleaseTerminalResponse } from "@beep/acp/schema"
  *
@@ -10695,7 +3358,10 @@ export type ReleaseTerminalRequest = typeof ReleaseTerminalRequest.Type;
 export const ReleaseTerminalResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -10706,13 +3372,16 @@ export const ReleaseTerminalResponse = S.Struct({
   $I.annoteSchema("ReleaseTerminalResponse", {
     description: "Generated ACP schema for ReleaseTerminalResponse.",
     documentation: "Response to terminal/release method",
+    identifier: "ReleaseTerminalResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link ReleaseTerminalResponse}.
  *
- * @example
+ * **Example** (Reference the ReleaseTerminalResponse type)
+ *
  * ```ts
  * import type { ReleaseTerminalResponse } from "@beep/acp/schema"
  *
@@ -10725,481 +3394,243 @@ export const ReleaseTerminalResponse = S.Struct({
 export type ReleaseTerminalResponse = typeof ReleaseTerminalResponse.Type;
 
 /**
- * Generated ACP schema for `RequestPermissionOutcome`.
+ * Generated ACP schema for `WaitForTerminalExitResponse`.
  *
- * @example
+ * **Example** (Inspect the WaitForTerminalExitResponse schema)
+ *
  * ```ts
- * import { RequestPermissionOutcome } from "@beep/acp/schema"
+ * import { WaitForTerminalExitResponse } from "@beep/acp/schema"
  *
- * console.log(RequestPermissionOutcome.ast)
+ * console.log(WaitForTerminalExitResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const RequestPermissionOutcome = S.Union(
-  [
-    S.Struct({ outcome: S.Literal("cancelled") }).annotateKey({
-      description:
-        "The prompt turn was cancelled before the user responded.\n\nWhen a client sends a `session/cancel` notification to cancel an ongoing\nprompt turn, it MUST respond to all pending `session/request_permission`\nrequests with this `Cancelled` outcome.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
-    }),
-    S.Struct({
-      outcome: S.Literal("selected"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
+export const WaitForTerminalExitResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  exitCode: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description:
+          "The process exit code (may be null if terminated by signal).",
+        format: "uint32",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
       ),
-      optionId: S.String.annotateKey({
-        description: "Unique identifier for a permission option.",
-      }),
-    }).annotateKey({
-      description: "The user selected one of the provided options.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("RequestPermissionOutcome", {
-    description: "Generated ACP schema for RequestPermissionOutcome.",
-    documentation: "The outcome of a permission request.",
-  }),
-);
-
-/**
- * Type for {@link RequestPermissionOutcome}.
- *
- * @example
- * ```ts
- * import type { RequestPermissionOutcome } from "@beep/acp/schema"
- *
- * type RequestPermissionOutcomeValue = RequestPermissionOutcome
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type RequestPermissionOutcome = typeof RequestPermissionOutcome.Type;
-
-/**
- * Generated ACP schema for `RequestPermissionRequest`.
- *
- * @example
- * ```ts
- * import { RequestPermissionRequest } from "@beep/acp/schema"
- *
- * console.log(RequestPermissionRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const RequestPermissionRequest = S.Struct({
-  _meta: S.optionalKey(
+      S.Null,
+    ]),
+  ),
+  signal: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.String.annotateKey({
         description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          "The signal that terminated the process (may be null if exited normally).",
       }),
       S.Null,
     ]),
   ),
-  options: S.Array(PermissionOption).annotateKey({
-    description: "Available permission options for the user to choose from.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-  toolCall: S.Struct({
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    content: S.optionalKey(
-      S.Union([
-        S.Array(ToolCallContent).annotateKey({
-          description: "Replace the content collection.",
-        }),
-        S.Null,
-      ]),
-    ),
-    kind: S.optionalKey(
-      S.Union([ToolKind, S.Null]).annotateKey({
-        description: "Update the tool kind.",
-      }),
-    ),
-    locations: S.optionalKey(
-      S.Union([
-        S.Array(ToolCallLocation).annotateKey({
-          description: "Replace the locations collection.",
-        }),
-        S.Null,
-      ]),
-    ),
-    rawInput: S.optionalKey(
-      S.Unknown.annotateKey({ description: "Update the raw input." }),
-    ),
-    rawOutput: S.optionalKey(
-      S.Unknown.annotateKey({ description: "Update the raw output." }),
-    ),
-    status: S.optionalKey(
-      S.Union([ToolCallStatus, S.Null]).annotateKey({
-        description: "Update the execution status.",
-      }),
-    ),
-    title: S.optionalKey(
-      S.Union([
-        S.String.annotateKey({
-          description: "Update the human-readable title.",
-        }),
-        S.Null,
-      ]),
-    ),
-    toolCallId: S.String.annotateKey({
-      description: "Unique identifier for a tool call within a session.",
-    }),
-  }).annotateKey({
-    description:
-      "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
-  }),
 }).pipe(
-  $I.annoteSchema("RequestPermissionRequest", {
-    description: "Generated ACP schema for RequestPermissionRequest.",
-    documentation:
-      "Request for user permission to execute a tool call.\n\nSent when the agent needs authorization before performing a sensitive operation.\n\nSee protocol docs: [Requesting Permission](https://agentclientprotocol.com/protocol/tool-calls#requesting-permission)",
+  $I.annoteSchema("WaitForTerminalExitResponse", {
+    description: "Generated ACP schema for WaitForTerminalExitResponse.",
+    documentation: "Response containing the exit status of a terminal command.",
+    identifier: "WaitForTerminalExitResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link RequestPermissionRequest}.
+ * Type for {@link WaitForTerminalExitResponse}.
  *
- * @example
+ * **Example** (Reference the WaitForTerminalExitResponse type)
+ *
  * ```ts
- * import type { RequestPermissionRequest } from "@beep/acp/schema"
+ * import type { WaitForTerminalExitResponse } from "@beep/acp/schema"
  *
- * type RequestPermissionRequestValue = RequestPermissionRequest
+ * type WaitForTerminalExitResponseValue = WaitForTerminalExitResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type RequestPermissionRequest = typeof RequestPermissionRequest.Type;
+export type WaitForTerminalExitResponse =
+  typeof WaitForTerminalExitResponse.Type;
 
 /**
- * Generated ACP schema for `RequestPermissionResponse`.
+ * Generated ACP schema for `KillTerminalResponse`.
  *
- * @example
+ * **Example** (Inspect the KillTerminalResponse schema)
+ *
  * ```ts
- * import { RequestPermissionResponse } from "@beep/acp/schema"
+ * import { KillTerminalResponse } from "@beep/acp/schema"
  *
- * console.log(RequestPermissionResponse.ast)
+ * console.log(KillTerminalResponse.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const RequestPermissionResponse = S.Struct({
+export const KillTerminalResponse = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  outcome: S.Union(
-    [
-      S.Struct({ outcome: S.Literal("cancelled") }).annotateKey({
-        description:
-          "The prompt turn was cancelled before the user responded.\n\nWhen a client sends a `session/cancel` notification to cancel an ongoing\nprompt turn, it MUST respond to all pending `session/request_permission`\nrequests with this `Cancelled` outcome.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
-      }),
-      S.Struct({
-        outcome: S.Literal("selected"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        optionId: S.String.annotateKey({
-          description: "Unique identifier for a permission option.",
-        }),
-      }).annotateKey({
-        description: "The user selected one of the provided options.",
-      }),
-    ],
-    { mode: "oneOf" },
-  ).annotateKey({ description: "The outcome of a permission request." }),
 }).pipe(
-  $I.annoteSchema("RequestPermissionResponse", {
-    description: "Generated ACP schema for RequestPermissionResponse.",
-    documentation: "Response to a permission request.",
+  $I.annoteSchema("KillTerminalResponse", {
+    description: "Generated ACP schema for KillTerminalResponse.",
+    documentation: "Response to `terminal/kill` method",
+    identifier: "KillTerminalResponse",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link RequestPermissionResponse}.
+ * Type for {@link KillTerminalResponse}.
  *
- * @example
+ * **Example** (Reference the KillTerminalResponse type)
+ *
  * ```ts
- * import type { RequestPermissionResponse } from "@beep/acp/schema"
+ * import type { KillTerminalResponse } from "@beep/acp/schema"
  *
- * type RequestPermissionResponseValue = RequestPermissionResponse
+ * type KillTerminalResponseValue = KillTerminalResponse
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type RequestPermissionResponse = typeof RequestPermissionResponse.Type;
+export type KillTerminalResponse = typeof KillTerminalResponse.Type;
 
 /**
- * Generated ACP schema for `ResourceLink`.
+ * Generated ACP schema for `ElicitationContentValue`.
  *
- * @example
+ * **Example** (Inspect the ElicitationContentValue schema)
+ *
  * ```ts
- * import { ResourceLink } from "@beep/acp/schema"
+ * import { ElicitationContentValue } from "@beep/acp/schema"
  *
- * console.log(ResourceLink.ast)
+ * console.log(ElicitationContentValue.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ResourceLink = S.Struct({
+export const ElicitationContentValue = S.Union([
+  S.String.annotateKey({ title: "String" }),
+  S.Int.annotateKey({ title: "Integer", format: "int64" }),
+  S.Finite.annotateKey({ title: "Number", format: "double" }).check(
+    S.isFinite().annotate({ expected: "a finite number" }),
+  ),
+  S.Boolean.annotateKey({ title: "Boolean" }),
+  S.Array(S.String).annotateKey({ title: "StringArray" }),
+]).pipe(
+  $I.annoteSchema("ElicitationContentValue", {
+    description: "Generated ACP schema for ElicitationContentValue.",
+    identifier: "ElicitationContentValue",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationContentValue}.
+ *
+ * **Example** (Reference the ElicitationContentValue type)
+ *
+ * ```ts
+ * import type { ElicitationContentValue } from "@beep/acp/schema"
+ *
+ * type ElicitationContentValueValue = ElicitationContentValue
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationContentValue = typeof ElicitationContentValue.Type;
+
+/**
+ * Generated ACP schema for `AgentAuthCapabilities`.
+ *
+ * **Example** (Inspect the AgentAuthCapabilities schema)
+ *
+ * ```ts
+ * import { AgentAuthCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(AgentAuthCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentAuthCapabilities = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
       S.Null,
     ]),
   ),
-  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-  description: S.optionalKey(S.Union([S.String, S.Null])),
-  mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-  name: S.String,
-  size: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-      S.Null,
-    ]),
-  ),
-  title: S.optionalKey(S.Union([S.String, S.Null])),
-  uri: S.String,
-}).pipe(
-  $I.annoteSchema("ResourceLink", {
-    description: "Generated ACP schema for ResourceLink.",
-    documentation:
-      "A resource that the server is capable of reading, included in a prompt or tool call result.",
-  }),
-);
-
-/**
- * Type for {@link ResourceLink}.
- *
- * @example
- * ```ts
- * import type { ResourceLink } from "@beep/acp/schema"
- *
- * type ResourceLinkValue = ResourceLink
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ResourceLink = typeof ResourceLink.Type;
-
-/**
- * Generated ACP schema for `ResumeSessionRequest`.
- *
- * @example
- * ```ts
- * import { ResumeSessionRequest } from "@beep/acp/schema"
- *
- * console.log(ResumeSessionRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ResumeSessionRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  cwd: S.String.annotateKey({
-    description: "The working directory for this session.",
-  }),
-  mcpServers: S.optionalKey(
-    S.Array(McpServer).annotateKey({
-      description: "List of MCP servers to connect to for this session.",
-    }),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("ResumeSessionRequest", {
-    description: "Generated ACP schema for ResumeSessionRequest.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for resuming an existing session.\n\nResumes an existing session without returning previous messages (unlike `session/load`).\nThis is useful for agents that can resume sessions but don't implement full session loading.\n\nOnly available if the Agent supports the `session.resume` capability.",
-  }),
-);
-
-/**
- * Type for {@link ResumeSessionRequest}.
- *
- * @example
- * ```ts
- * import type { ResumeSessionRequest } from "@beep/acp/schema"
- *
- * type ResumeSessionRequestValue = ResumeSessionRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ResumeSessionRequest = typeof ResumeSessionRequest.Type;
-
-/**
- * Generated ACP schema for `ResumeSessionResponse`.
- *
- * @example
- * ```ts
- * import { ResumeSessionResponse } from "@beep/acp/schema"
- *
- * console.log(ResumeSessionResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ResumeSessionResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  configOptions: S.optionalKey(
-    S.Union([
-      S.Array(SessionConfigOption).annotateKey({
-        description:
-          "Initial session configuration options if supported by the Agent.",
-      }),
-      S.Null,
-    ]),
-  ),
-  models: S.optionalKey(
-    S.Union([SessionModelState, S.Null]).annotateKey({
+  logout: S.optionalKey(
+    S.Union([LogoutCapabilities, S.Null]).annotateKey({
       description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
-    }),
-  ),
-  modes: S.optionalKey(
-    S.Union([SessionModeState, S.Null]).annotateKey({
-      description:
-        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+        "Whether the agent supports the logout method.\n\nBy supplying `{}` it means that the agent supports the logout method.",
     }),
   ),
 }).pipe(
-  $I.annoteSchema("ResumeSessionResponse", {
-    description: "Generated ACP schema for ResumeSessionResponse.",
+  $I.annoteSchema("AgentAuthCapabilities", {
+    description: "Generated ACP schema for AgentAuthCapabilities.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from resuming an existing session.",
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
+    identifier: "AgentAuthCapabilities",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link ResumeSessionResponse}.
+ * Type for {@link AgentAuthCapabilities}.
  *
- * @example
+ * **Example** (Reference the AgentAuthCapabilities type)
+ *
  * ```ts
- * import type { ResumeSessionResponse } from "@beep/acp/schema"
+ * import type { AgentAuthCapabilities } from "@beep/acp/schema"
  *
- * type ResumeSessionResponseValue = ResumeSessionResponse
+ * type AgentAuthCapabilitiesValue = AgentAuthCapabilities
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ResumeSessionResponse = typeof ResumeSessionResponse.Type;
-
-/**
- * Generated ACP schema for `SelectedPermissionOutcome`.
- *
- * @example
- * ```ts
- * import { SelectedPermissionOutcome } from "@beep/acp/schema"
- *
- * console.log(SelectedPermissionOutcome.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SelectedPermissionOutcome = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  optionId: S.String.annotateKey({
-    description: "Unique identifier for a permission option.",
-  }),
-}).pipe(
-  $I.annoteSchema("SelectedPermissionOutcome", {
-    description: "Generated ACP schema for SelectedPermissionOutcome.",
-    documentation: "The user selected one of the provided options.",
-  }),
-);
-
-/**
- * Type for {@link SelectedPermissionOutcome}.
- *
- * @example
- * ```ts
- * import type { SelectedPermissionOutcome } from "@beep/acp/schema"
- *
- * type SelectedPermissionOutcomeValue = SelectedPermissionOutcome
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SelectedPermissionOutcome = typeof SelectedPermissionOutcome.Type;
+export type AgentAuthCapabilities = typeof AgentAuthCapabilities.Type;
 
 /**
  * Generated ACP schema for `SessionCapabilities`.
  *
- * @example
+ * **Example** (Inspect the SessionCapabilities schema)
+ *
  * ```ts
  * import { SessionCapabilities } from "@beep/acp/schema"
  *
@@ -11212,7 +3643,10 @@ export type SelectedPermissionOutcome = typeof SelectedPermissionOutcome.Type;
 export const SessionCapabilities = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -11247,13 +3681,16 @@ export const SessionCapabilities = S.Struct({
     description: "Generated ACP schema for SessionCapabilities.",
     documentation:
       "Session capabilities supported by the agent.\n\nAs a baseline, all Agents **MUST** support `session/new`, `session/prompt`, `session/cancel`, and `session/update`.\n\nOptionally, they **MAY** support other session methods and notifications by specifying additional capabilities.\n\nNote: `session/load` is still handled by the top-level `load_session` capability. This will be unified in future versions of the protocol.\n\nSee protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)",
+    identifier: "SessionCapabilities",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link SessionCapabilities}.
  *
- * @example
+ * **Example** (Reference the SessionCapabilities type)
+ *
  * ```ts
  * import type { SessionCapabilities } from "@beep/acp/schema"
  *
@@ -11266,172 +3703,3244 @@ export const SessionCapabilities = S.Struct({
 export type SessionCapabilities = typeof SessionCapabilities.Type;
 
 /**
- * Generated ACP schema for `SessionConfigBoolean`.
+ * Generated ACP schema for `WriteTextFileRequest`.
  *
- * @example
+ * **Example** (Inspect the WriteTextFileRequest schema)
+ *
  * ```ts
- * import { SessionConfigBoolean } from "@beep/acp/schema"
+ * import { WriteTextFileRequest } from "@beep/acp/schema"
  *
- * console.log(SessionConfigBoolean.ast)
+ * console.log(WriteTextFileRequest.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const SessionConfigBoolean = S.Struct({
-  currentValue: S.Boolean.annotateKey({
-    description: "The current value of the boolean option.",
+export const WriteTextFileRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  content: S.String.annotateKey({
+    description: "The text content to write to the file.",
+  }),
+  path: S.String.annotateKey({
+    description: "Absolute path to the file to write.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
   }),
 }).pipe(
-  $I.annoteSchema("SessionConfigBoolean", {
-    description: "Generated ACP schema for SessionConfigBoolean.",
+  $I.annoteSchema("WriteTextFileRequest", {
+    description: "Generated ACP schema for WriteTextFileRequest.",
     documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA boolean on/off toggle session configuration option payload.",
+      "Request to write content to a text file.\n\nOnly available if the client supports the `fs.writeTextFile` capability.",
+    identifier: "WriteTextFileRequest",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link SessionConfigBoolean}.
+ * Type for {@link WriteTextFileRequest}.
  *
- * @example
+ * **Example** (Reference the WriteTextFileRequest type)
+ *
  * ```ts
- * import type { SessionConfigBoolean } from "@beep/acp/schema"
+ * import type { WriteTextFileRequest } from "@beep/acp/schema"
  *
- * type SessionConfigBooleanValue = SessionConfigBoolean
+ * type WriteTextFileRequestValue = WriteTextFileRequest
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type SessionConfigBoolean = typeof SessionConfigBoolean.Type;
+export type WriteTextFileRequest = typeof WriteTextFileRequest.Type;
 
 /**
- * Generated ACP schema for `SessionConfigGroupId`.
+ * Generated ACP schema for `ReadTextFileRequest`.
  *
- * @example
+ * **Example** (Inspect the ReadTextFileRequest schema)
+ *
  * ```ts
- * import { SessionConfigGroupId } from "@beep/acp/schema"
+ * import { ReadTextFileRequest } from "@beep/acp/schema"
  *
- * console.log(SessionConfigGroupId.ast)
+ * console.log(ReadTextFileRequest.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const SessionConfigGroupId = S.String.pipe(
-  $I.annoteSchema("SessionConfigGroupId", {
-    description: "Generated ACP schema for SessionConfigGroupId.",
-    documentation:
-      "Unique identifier for a session configuration option value group.",
+export const ReadTextFileRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  limit: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Maximum number of lines to read.",
+        format: "uint32",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  line: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Line number to start reading from (1-based).",
+        format: "uint32",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  path: S.String.annotateKey({
+    description: "Absolute path to the file to read.",
   }),
-);
-
-/**
- * Type for {@link SessionConfigGroupId}.
- *
- * @example
- * ```ts
- * import type { SessionConfigGroupId } from "@beep/acp/schema"
- *
- * type SessionConfigGroupIdValue = SessionConfigGroupId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionConfigGroupId = typeof SessionConfigGroupId.Type;
-
-/**
- * Generated ACP schema for `SessionConfigId`.
- *
- * @example
- * ```ts
- * import { SessionConfigId } from "@beep/acp/schema"
- *
- * console.log(SessionConfigId.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionConfigId = S.String.pipe(
-  $I.annoteSchema("SessionConfigId", {
-    description: "Generated ACP schema for SessionConfigId.",
-    documentation: "Unique identifier for a session configuration option.",
-  }),
-);
-
-/**
- * Type for {@link SessionConfigId}.
- *
- * @example
- * ```ts
- * import type { SessionConfigId } from "@beep/acp/schema"
- *
- * type SessionConfigIdValue = SessionConfigId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionConfigId = typeof SessionConfigId.Type;
-
-/**
- * Generated ACP schema for `SessionConfigSelect`.
- *
- * @example
- * ```ts
- * import { SessionConfigSelect } from "@beep/acp/schema"
- *
- * console.log(SessionConfigSelect.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionConfigSelect = S.Struct({
-  currentValue: S.String.annotateKey({
-    description: "Unique identifier for a session configuration option value.",
-  }),
-  options: S.Union([
-    S.Array(SessionConfigSelectOption).annotateKey({
-      title: "Ungrouped",
-      description: "A flat list of options with no grouping.",
-    }),
-    S.Array(SessionConfigSelectGroup).annotateKey({
-      title: "Grouped",
-      description: "A list of options grouped under headers.",
-    }),
-  ]).annotateKey({
-    description: "Possible values for a session configuration option.",
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
   }),
 }).pipe(
-  $I.annoteSchema("SessionConfigSelect", {
-    description: "Generated ACP schema for SessionConfigSelect.",
+  $I.annoteSchema("ReadTextFileRequest", {
+    description: "Generated ACP schema for ReadTextFileRequest.",
     documentation:
-      "A single-value selector (dropdown) session configuration option payload.",
+      "Request to read content from a text file.\n\nOnly available if the client supports the `fs.readTextFile` capability.",
+    identifier: "ReadTextFileRequest",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link SessionConfigSelect}.
+ * Type for {@link ReadTextFileRequest}.
  *
- * @example
+ * **Example** (Reference the ReadTextFileRequest type)
+ *
  * ```ts
- * import type { SessionConfigSelect } from "@beep/acp/schema"
+ * import type { ReadTextFileRequest } from "@beep/acp/schema"
  *
- * type SessionConfigSelectValue = SessionConfigSelect
+ * type ReadTextFileRequestValue = ReadTextFileRequest
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type SessionConfigSelect = typeof SessionConfigSelect.Type;
+export type ReadTextFileRequest = typeof ReadTextFileRequest.Type;
+
+/**
+ * Generated ACP schema for `TerminalOutputRequest`.
+ *
+ * **Example** (Inspect the TerminalOutputRequest schema)
+ *
+ * ```ts
+ * import { TerminalOutputRequest } from "@beep/acp/schema"
+ *
+ * console.log(TerminalOutputRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TerminalOutputRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
+  }),
+  terminalId: S.String.annotateKey({
+    description: "The ID of the terminal to get output from.",
+  }),
+}).pipe(
+  $I.annoteSchema("TerminalOutputRequest", {
+    description: "Generated ACP schema for TerminalOutputRequest.",
+    documentation:
+      "Request to get the current output and status of a terminal.",
+    identifier: "TerminalOutputRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link TerminalOutputRequest}.
+ *
+ * **Example** (Reference the TerminalOutputRequest type)
+ *
+ * ```ts
+ * import type { TerminalOutputRequest } from "@beep/acp/schema"
+ *
+ * type TerminalOutputRequestValue = TerminalOutputRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TerminalOutputRequest = typeof TerminalOutputRequest.Type;
+
+/**
+ * Generated ACP schema for `ReleaseTerminalRequest`.
+ *
+ * **Example** (Inspect the ReleaseTerminalRequest schema)
+ *
+ * ```ts
+ * import { ReleaseTerminalRequest } from "@beep/acp/schema"
+ *
+ * console.log(ReleaseTerminalRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ReleaseTerminalRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
+  }),
+  terminalId: S.String.annotateKey({
+    description: "The ID of the terminal to release.",
+  }),
+}).pipe(
+  $I.annoteSchema("ReleaseTerminalRequest", {
+    description: "Generated ACP schema for ReleaseTerminalRequest.",
+    documentation: "Request to release a terminal and free its resources.",
+    identifier: "ReleaseTerminalRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ReleaseTerminalRequest}.
+ *
+ * **Example** (Reference the ReleaseTerminalRequest type)
+ *
+ * ```ts
+ * import type { ReleaseTerminalRequest } from "@beep/acp/schema"
+ *
+ * type ReleaseTerminalRequestValue = ReleaseTerminalRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReleaseTerminalRequest = typeof ReleaseTerminalRequest.Type;
+
+/**
+ * Generated ACP schema for `WaitForTerminalExitRequest`.
+ *
+ * **Example** (Inspect the WaitForTerminalExitRequest schema)
+ *
+ * ```ts
+ * import { WaitForTerminalExitRequest } from "@beep/acp/schema"
+ *
+ * console.log(WaitForTerminalExitRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WaitForTerminalExitRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
+  }),
+  terminalId: S.String.annotateKey({
+    description: "The ID of the terminal to wait for.",
+  }),
+}).pipe(
+  $I.annoteSchema("WaitForTerminalExitRequest", {
+    description: "Generated ACP schema for WaitForTerminalExitRequest.",
+    documentation: "Request to wait for a terminal command to exit.",
+    identifier: "WaitForTerminalExitRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link WaitForTerminalExitRequest}.
+ *
+ * **Example** (Reference the WaitForTerminalExitRequest type)
+ *
+ * ```ts
+ * import type { WaitForTerminalExitRequest } from "@beep/acp/schema"
+ *
+ * type WaitForTerminalExitRequestValue = WaitForTerminalExitRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WaitForTerminalExitRequest = typeof WaitForTerminalExitRequest.Type;
+
+/**
+ * Generated ACP schema for `KillTerminalRequest`.
+ *
+ * **Example** (Inspect the KillTerminalRequest schema)
+ *
+ * ```ts
+ * import { KillTerminalRequest } from "@beep/acp/schema"
+ *
+ * console.log(KillTerminalRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const KillTerminalRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
+  }),
+  terminalId: S.String.annotateKey({
+    description: "The ID of the terminal to kill.",
+  }),
+}).pipe(
+  $I.annoteSchema("KillTerminalRequest", {
+    description: "Generated ACP schema for KillTerminalRequest.",
+    documentation: "Request to kill a terminal without releasing it.",
+    identifier: "KillTerminalRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link KillTerminalRequest}.
+ *
+ * **Example** (Reference the KillTerminalRequest type)
+ *
+ * ```ts
+ * import type { KillTerminalRequest } from "@beep/acp/schema"
+ *
+ * type KillTerminalRequestValue = KillTerminalRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type KillTerminalRequest = typeof KillTerminalRequest.Type;
+
+/**
+ * Generated ACP schema for `SessionInfo`.
+ *
+ * **Example** (Inspect the SessionInfo schema)
+ *
+ * ```ts
+ * import { SessionInfo } from "@beep/acp/schema"
+ *
+ * console.log(SessionInfo.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionInfo = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  cwd: S.String.annotateKey({
+    description:
+      "The working directory for this session. Must be an absolute path.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "Unique identifier for the session",
+  }),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "Human-readable title for the session",
+      }),
+      S.Null,
+    ]),
+  ),
+  updatedAt: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "ISO 8601 timestamp of last activity",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("SessionInfo", {
+    description: "Generated ACP schema for SessionInfo.",
+    documentation: "Information about a session returned by session/list",
+    identifier: "SessionInfo",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionInfo}.
+ *
+ * **Example** (Reference the SessionInfo type)
+ *
+ * ```ts
+ * import type { SessionInfo } from "@beep/acp/schema"
+ *
+ * type SessionInfoValue = SessionInfo
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionInfo = typeof SessionInfo.Type;
+
+/**
+ * Generated ACP schema for `CancelNotification`.
+ *
+ * **Example** (Inspect the CancelNotification schema)
+ *
+ * ```ts
+ * import { CancelNotification } from "@beep/acp/schema"
+ *
+ * console.log(CancelNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CancelNotification = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to cancel operations for.",
+  }),
+}).pipe(
+  $I.annoteSchema("CancelNotification", {
+    description: "Generated ACP schema for CancelNotification.",
+    documentation:
+      "Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
+    identifier: "CancelNotification",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link CancelNotification}.
+ *
+ * **Example** (Reference the CancelNotification type)
+ *
+ * ```ts
+ * import type { CancelNotification } from "@beep/acp/schema"
+ *
+ * type CancelNotificationValue = CancelNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CancelNotification = typeof CancelNotification.Type;
+
+/**
+ * Generated ACP schema for `CloseSessionRequest`.
+ *
+ * **Example** (Inspect the CloseSessionRequest schema)
+ *
+ * ```ts
+ * import { CloseSessionRequest } from "@beep/acp/schema"
+ *
+ * console.log(CloseSessionRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CloseSessionRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to close.",
+  }),
+}).pipe(
+  $I.annoteSchema("CloseSessionRequest", {
+    description: "Generated ACP schema for CloseSessionRequest.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for closing an active session.\n\nIf supported, the agent **must** cancel any ongoing work related to the session\n(treat it as if `session/cancel` was called) and then free up any resources\nassociated with the session.\n\nOnly available if the Agent supports the `session.close` capability.",
+    identifier: "CloseSessionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link CloseSessionRequest}.
+ *
+ * **Example** (Reference the CloseSessionRequest type)
+ *
+ * ```ts
+ * import type { CloseSessionRequest } from "@beep/acp/schema"
+ *
+ * type CloseSessionRequestValue = CloseSessionRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CloseSessionRequest = typeof CloseSessionRequest.Type;
+
+/**
+ * Generated ACP schema for `Annotations`.
+ *
+ * **Example** (Inspect the Annotations schema)
+ *
+ * ```ts
+ * import { Annotations } from "@beep/acp/schema"
+ *
+ * console.log(Annotations.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Annotations = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  audience: S.optionalKey(S.Union([S.Array(Role), S.Null])),
+  lastModified: S.optionalKey(S.Union([S.String, S.Null])),
+  priority: S.optionalKey(
+    S.Union([
+      S.Finite.annotateKey({ format: "double" }).check(
+        S.isFinite().annotate({ expected: "a finite number" }),
+      ),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("Annotations", {
+    description: "Generated ACP schema for Annotations.",
+    documentation:
+      "Optional annotations for the client. The client can use annotations to inform how objects are used or displayed",
+    identifier: "Annotations",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Annotations}.
+ *
+ * **Example** (Reference the Annotations type)
+ *
+ * ```ts
+ * import type { Annotations } from "@beep/acp/schema"
+ *
+ * type AnnotationsValue = Annotations
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Annotations = typeof Annotations.Type;
+
+/**
+ * Generated ACP schema for `EmbeddedResourceResource`.
+ *
+ * **Example** (Inspect the EmbeddedResourceResource schema)
+ *
+ * ```ts
+ * import { EmbeddedResourceResource } from "@beep/acp/schema"
+ *
+ * console.log(EmbeddedResourceResource.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EmbeddedResourceResource = S.Union([
+  S.suspend(
+    (): S.Codec<TextResourceContents> => TextResourceContents,
+  ).annotateKey({ title: "TextResourceContents" }),
+  S.suspend(
+    (): S.Codec<BlobResourceContents> => BlobResourceContents,
+  ).annotateKey({ title: "BlobResourceContents" }),
+]).pipe(
+  $I.annoteSchema("EmbeddedResourceResource", {
+    description: "Generated ACP schema for EmbeddedResourceResource.",
+    documentation: "Resource content that can be embedded in a message.",
+    identifier: "EmbeddedResourceResource",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link EmbeddedResourceResource}.
+ *
+ * **Example** (Reference the EmbeddedResourceResource type)
+ *
+ * ```ts
+ * import type { EmbeddedResourceResource } from "@beep/acp/schema"
+ *
+ * type EmbeddedResourceResourceValue = EmbeddedResourceResource
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EmbeddedResourceResource = typeof EmbeddedResourceResource.Type;
+
+/**
+ * Generated ACP schema for `PlanEntry`.
+ *
+ * **Example** (Inspect the PlanEntry schema)
+ *
+ * ```ts
+ * import { PlanEntry } from "@beep/acp/schema"
+ *
+ * console.log(PlanEntry.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PlanEntry = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  content: S.String.annotateKey({
+    description:
+      "Human-readable description of what this task aims to accomplish.",
+  }),
+  priority: S.suspend(
+    (): S.Codec<PlanEntryPriority> => PlanEntryPriority,
+  ).annotateKey({
+    description:
+      "The relative importance of this task.\nUsed to indicate which tasks are most critical to the overall goal.",
+  }),
+  status: S.suspend(
+    (): S.Codec<PlanEntryStatus> => PlanEntryStatus,
+  ).annotateKey({ description: "Current execution status of this task." }),
+}).pipe(
+  $I.annoteSchema("PlanEntry", {
+    description: "Generated ACP schema for PlanEntry.",
+    documentation:
+      "A single entry in the execution plan.\n\nRepresents a task or goal that the assistant intends to accomplish\nas part of fulfilling the user's request.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
+    identifier: "PlanEntry",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PlanEntry}.
+ *
+ * **Example** (Reference the PlanEntry type)
+ *
+ * ```ts
+ * import type { PlanEntry } from "@beep/acp/schema"
+ *
+ * type PlanEntryValue = PlanEntry
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PlanEntry = typeof PlanEntry.Type;
+
+/**
+ * Generated ACP schema for `AvailableCommandInput`.
+ *
+ * **Example** (Inspect the AvailableCommandInput schema)
+ *
+ * ```ts
+ * import { AvailableCommandInput } from "@beep/acp/schema"
+ *
+ * console.log(AvailableCommandInput.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AvailableCommandInput = S.Union([
+  S.suspend(
+    (): S.Codec<UnstructuredCommandInput> => UnstructuredCommandInput,
+  ).annotateKey({
+    title: "unstructured",
+    description:
+      "All text that was typed after the command name is provided as input.",
+  }),
+]).pipe(
+  $I.annoteSchema("AvailableCommandInput", {
+    description: "Generated ACP schema for AvailableCommandInput.",
+    documentation: "The input specification for a command.",
+    identifier: "AvailableCommandInput",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AvailableCommandInput}.
+ *
+ * **Example** (Reference the AvailableCommandInput type)
+ *
+ * ```ts
+ * import type { AvailableCommandInput } from "@beep/acp/schema"
+ *
+ * type AvailableCommandInputValue = AvailableCommandInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AvailableCommandInput = typeof AvailableCommandInput.Type;
+
+/**
+ * Generated ACP schema for `SessionMode`.
+ *
+ * **Example** (Inspect the SessionMode schema)
+ *
+ * ```ts
+ * import { SessionMode } from "@beep/acp/schema"
+ *
+ * console.log(SessionMode.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionMode = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(S.Union([S.String, S.Null])),
+  id: SessionModeId,
+  name: S.String,
+}).pipe(
+  $I.annoteSchema("SessionMode", {
+    description: "Generated ACP schema for SessionMode.",
+    documentation:
+      "A mode the agent can operate in.\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+    identifier: "SessionMode",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionMode}.
+ *
+ * **Example** (Reference the SessionMode type)
+ *
+ * ```ts
+ * import type { SessionMode } from "@beep/acp/schema"
+ *
+ * type SessionModeValue = SessionMode
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionMode = typeof SessionMode.Type;
+
+/**
+ * Generated ACP schema for `SetSessionModeRequest`.
+ *
+ * **Example** (Inspect the SetSessionModeRequest schema)
+ *
+ * ```ts
+ * import { SetSessionModeRequest } from "@beep/acp/schema"
+ *
+ * console.log(SetSessionModeRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SetSessionModeRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  modeId: S.suspend((): S.Codec<SessionModeId> => SessionModeId).annotateKey({
+    description: "The ID of the mode to set.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to set the mode for.",
+  }),
+}).pipe(
+  $I.annoteSchema("SetSessionModeRequest", {
+    description: "Generated ACP schema for SetSessionModeRequest.",
+    documentation: "Request parameters for setting a session mode.",
+    identifier: "SetSessionModeRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SetSessionModeRequest}.
+ *
+ * **Example** (Reference the SetSessionModeRequest type)
+ *
+ * ```ts
+ * import type { SetSessionModeRequest } from "@beep/acp/schema"
+ *
+ * type SetSessionModeRequestValue = SetSessionModeRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SetSessionModeRequest = typeof SetSessionModeRequest.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigSelectOption`.
+ *
+ * **Example** (Inspect the SessionConfigSelectOption schema)
+ *
+ * ```ts
+ * import { SessionConfigSelectOption } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigSelectOption.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigSelectOption = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "Optional description for this option value.",
+      }),
+      S.Null,
+    ]),
+  ),
+  name: S.String.annotateKey({
+    description: "Human-readable label for this option value.",
+  }),
+  value: S.suspend(
+    (): S.Codec<SessionConfigValueId> => SessionConfigValueId,
+  ).annotateKey({ description: "Unique identifier for this option value." }),
+}).pipe(
+  $I.annoteSchema("SessionConfigSelectOption", {
+    description: "Generated ACP schema for SessionConfigSelectOption.",
+    documentation: "A possible value for a session configuration option.",
+    identifier: "SessionConfigSelectOption",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigSelectOption}.
+ *
+ * **Example** (Reference the SessionConfigSelectOption type)
+ *
+ * ```ts
+ * import type { SessionConfigSelectOption } from "@beep/acp/schema"
+ *
+ * type SessionConfigSelectOptionValue = SessionConfigSelectOption
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigSelectOption = typeof SessionConfigSelectOption.Type;
+
+/**
+ * Generated ACP schema for `SetSessionConfigOptionRequest`.
+ *
+ * **Example** (Inspect the SetSessionConfigOptionRequest schema)
+ *
+ * ```ts
+ * import { SetSessionConfigOptionRequest } from "@beep/acp/schema"
+ *
+ * console.log(SetSessionConfigOptionRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SetSessionConfigOptionRequest = S.Union([
+  S.Struct({
+    type: S.Literal("boolean"),
+    value: S.Boolean.annotateKey({ description: "The boolean value." }),
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    configId: S.suspend(
+      (): S.Codec<SessionConfigId> => SessionConfigId,
+    ).annotateKey({
+      description: "The ID of the configuration option to set.",
+    }),
+    sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+      description: "The ID of the session to set the configuration option for.",
+    }),
+  }).annotateKey({ description: 'A boolean value (`type: "boolean"`).' }),
+  S.Struct({
+    value: S.suspend(
+      (): S.Codec<SessionConfigValueId> => SessionConfigValueId,
+    ).annotateKey({ description: "The value ID." }),
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    configId: S.suspend(
+      (): S.Codec<SessionConfigId> => SessionConfigId,
+    ).annotateKey({
+      description: "The ID of the configuration option to set.",
+    }),
+    sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+      description: "The ID of the session to set the configuration option for.",
+    }),
+  }).annotateKey({
+    title: "value_id",
+    description:
+      "A [`SessionConfigValueId`] string value.\n\nThis is the default when `type` is absent on the wire. Unknown `type`\nvalues with string payloads also gracefully deserialize into this\nvariant.",
+  }),
+]).pipe(
+  $I.annoteSchema("SetSessionConfigOptionRequest", {
+    description: "Generated ACP schema for SetSessionConfigOptionRequest.",
+    documentation:
+      "Request parameters for setting a session configuration option.",
+    identifier: "SetSessionConfigOptionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SetSessionConfigOptionRequest}.
+ *
+ * **Example** (Reference the SetSessionConfigOptionRequest type)
+ *
+ * ```ts
+ * import type { SetSessionConfigOptionRequest } from "@beep/acp/schema"
+ *
+ * type SetSessionConfigOptionRequestValue = SetSessionConfigOptionRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SetSessionConfigOptionRequest =
+  typeof SetSessionConfigOptionRequest.Type;
+
+/**
+ * Generated ACP schema for `ElicitationCompleteNotification`.
+ *
+ * **Example** (Inspect the ElicitationCompleteNotification schema)
+ *
+ * ```ts
+ * import { ElicitationCompleteNotification } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationCompleteNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationCompleteNotification = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  elicitationId: S.suspend(
+    (): S.Codec<ElicitationId> => ElicitationId,
+  ).annotateKey({ description: "The ID of the elicitation that completed." }),
+}).pipe(
+  $I.annoteSchema("ElicitationCompleteNotification", {
+    description: "Generated ACP schema for ElicitationCompleteNotification.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification sent by the agent when a URL-based elicitation is complete.",
+    identifier: "ElicitationCompleteNotification",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationCompleteNotification}.
+ *
+ * **Example** (Reference the ElicitationCompleteNotification type)
+ *
+ * ```ts
+ * import type { ElicitationCompleteNotification } from "@beep/acp/schema"
+ *
+ * type ElicitationCompleteNotificationValue = ElicitationCompleteNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationCompleteNotification =
+  typeof ElicitationCompleteNotification.Type;
+
+/**
+ * Generated ACP schema for `PermissionOption`.
+ *
+ * **Example** (Inspect the PermissionOption schema)
+ *
+ * ```ts
+ * import { PermissionOption } from "@beep/acp/schema"
+ *
+ * console.log(PermissionOption.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PermissionOption = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  kind: S.suspend(
+    (): S.Codec<PermissionOptionKind> => PermissionOptionKind,
+  ).annotateKey({
+    description: "Hint about the nature of this permission option.",
+  }),
+  name: S.String.annotateKey({
+    description: "Human-readable label to display to the user.",
+  }),
+  optionId: S.suspend(
+    (): S.Codec<PermissionOptionId> => PermissionOptionId,
+  ).annotateKey({
+    description: "Unique identifier for this permission option.",
+  }),
+}).pipe(
+  $I.annoteSchema("PermissionOption", {
+    description: "Generated ACP schema for PermissionOption.",
+    documentation:
+      "An option presented to the user when requesting permission.",
+    identifier: "PermissionOption",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PermissionOption}.
+ *
+ * **Example** (Reference the PermissionOption type)
+ *
+ * ```ts
+ * import type { PermissionOption } from "@beep/acp/schema"
+ *
+ * type PermissionOptionValue = PermissionOption
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PermissionOption = typeof PermissionOption.Type;
+
+/**
+ * Generated ACP schema for `RequestPermissionOutcome`.
+ *
+ * **Example** (Inspect the RequestPermissionOutcome schema)
+ *
+ * ```ts
+ * import { RequestPermissionOutcome } from "@beep/acp/schema"
+ *
+ * console.log(RequestPermissionOutcome.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RequestPermissionOutcome = S.Union(
+  [
+    S.Struct({ outcome: S.Literal("cancelled") }).annotateKey({
+      description:
+        "The prompt turn was cancelled before the user responded.\n\nWhen a client sends a `session/cancel` notification to cancel an ongoing\nprompt turn, it MUST respond to all pending `session/request_permission`\nrequests with this `Cancelled` outcome.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      optionId: S.suspend(
+        (): S.Codec<PermissionOptionId> => PermissionOptionId,
+      ).annotateKey({ description: "The ID of the option the user selected." }),
+      outcome: S.Literal("selected"),
+    }).annotateKey({
+      description: "The user selected one of the provided options.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("RequestPermissionOutcome", {
+    description: "Generated ACP schema for RequestPermissionOutcome.",
+    documentation: "The outcome of a permission request.",
+    identifier: "RequestPermissionOutcome",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link RequestPermissionOutcome}.
+ *
+ * **Example** (Reference the RequestPermissionOutcome type)
+ *
+ * ```ts
+ * import type { RequestPermissionOutcome } from "@beep/acp/schema"
+ *
+ * type RequestPermissionOutcomeValue = RequestPermissionOutcome
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RequestPermissionOutcome = typeof RequestPermissionOutcome.Type;
+
+/**
+ * Generated ACP schema for `CreateTerminalRequest`.
+ *
+ * **Example** (Inspect the CreateTerminalRequest schema)
+ *
+ * ```ts
+ * import { CreateTerminalRequest } from "@beep/acp/schema"
+ *
+ * console.log(CreateTerminalRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CreateTerminalRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  args: S.optionalKey(
+    S.Array(S.String).annotateKey({
+      description: "Array of command arguments.",
+    }),
+  ),
+  command: S.String.annotateKey({ description: "The command to execute." }),
+  cwd: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "Working directory for the command (absolute path).",
+      }),
+      S.Null,
+    ]),
+  ),
+  env: S.optionalKey(
+    S.Array(EnvVariable).annotateKey({
+      description: "Environment variables for the command.",
+    }),
+  ),
+  outputByteLimit: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description:
+          "Maximum number of output bytes to retain.\n\nWhen the limit is exceeded, the Client truncates from the beginning of the output\nto stay within the limit.\n\nThe Client MUST ensure truncation happens at a character boundary to maintain valid\nstring output, even if this means the retained output is slightly less than the\nspecified limit.",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
+  }),
+}).pipe(
+  $I.annoteSchema("CreateTerminalRequest", {
+    description: "Generated ACP schema for CreateTerminalRequest.",
+    documentation: "Request to create a new terminal and execute a command.",
+    identifier: "CreateTerminalRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link CreateTerminalRequest}.
+ *
+ * **Example** (Reference the CreateTerminalRequest type)
+ *
+ * ```ts
+ * import type { CreateTerminalRequest } from "@beep/acp/schema"
+ *
+ * type CreateTerminalRequestValue = CreateTerminalRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateTerminalRequest = typeof CreateTerminalRequest.Type;
+
+/**
+ * Generated ACP schema for `McpServerStdio`.
+ *
+ * **Example** (Inspect the McpServerStdio schema)
+ *
+ * ```ts
+ * import { McpServerStdio } from "@beep/acp/schema"
+ *
+ * console.log(McpServerStdio.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const McpServerStdio = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  args: S.Array(S.String).annotateKey({
+    description: "Command-line arguments to pass to the MCP server.",
+  }),
+  command: S.String.annotateKey({
+    description: "Path to the MCP server executable.",
+  }),
+  env: S.Array(EnvVariable).annotateKey({
+    description: "Environment variables to set when launching the MCP server.",
+  }),
+  name: S.String.annotateKey({
+    description: "Human-readable name identifying this MCP server.",
+  }),
+}).pipe(
+  $I.annoteSchema("McpServerStdio", {
+    description: "Generated ACP schema for McpServerStdio.",
+    documentation: "Stdio transport configuration for MCP.",
+    identifier: "McpServerStdio",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link McpServerStdio}.
+ *
+ * **Example** (Reference the McpServerStdio type)
+ *
+ * ```ts
+ * import type { McpServerStdio } from "@beep/acp/schema"
+ *
+ * type McpServerStdioValue = McpServerStdio
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpServerStdio = typeof McpServerStdio.Type;
+
+/**
+ * Generated ACP schema for `TitledMultiSelectItems`.
+ *
+ * **Example** (Inspect the TitledMultiSelectItems schema)
+ *
+ * ```ts
+ * import { TitledMultiSelectItems } from "@beep/acp/schema"
+ *
+ * console.log(TitledMultiSelectItems.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TitledMultiSelectItems = S.Struct({
+  anyOf: S.Array(EnumOption).annotateKey({
+    description: "Titled enum options.",
+  }),
+}).pipe(
+  $I.annoteSchema("TitledMultiSelectItems", {
+    description: "Generated ACP schema for TitledMultiSelectItems.",
+    documentation: "Items definition for titled multi-select enum properties.",
+    identifier: "TitledMultiSelectItems",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link TitledMultiSelectItems}.
+ *
+ * **Example** (Reference the TitledMultiSelectItems type)
+ *
+ * ```ts
+ * import type { TitledMultiSelectItems } from "@beep/acp/schema"
+ *
+ * type TitledMultiSelectItemsValue = TitledMultiSelectItems
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TitledMultiSelectItems = typeof TitledMultiSelectItems.Type;
+
+/**
+ * Generated ACP schema for `UntitledMultiSelectItems`.
+ *
+ * **Example** (Inspect the UntitledMultiSelectItems schema)
+ *
+ * ```ts
+ * import { UntitledMultiSelectItems } from "@beep/acp/schema"
+ *
+ * console.log(UntitledMultiSelectItems.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UntitledMultiSelectItems = S.Struct({
+  enum: S.Array(S.String).annotateKey({ description: "Allowed enum values." }),
+  type: S.suspend(
+    (): S.Codec<ElicitationStringType> => ElicitationStringType,
+  ).annotateKey({
+    description: 'Item type discriminator. Must be `"string"`.',
+  }),
+}).pipe(
+  $I.annoteSchema("UntitledMultiSelectItems", {
+    description: "Generated ACP schema for UntitledMultiSelectItems.",
+    documentation:
+      "Items definition for untitled multi-select enum properties.",
+    identifier: "UntitledMultiSelectItems",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link UntitledMultiSelectItems}.
+ *
+ * **Example** (Reference the UntitledMultiSelectItems type)
+ *
+ * ```ts
+ * import type { UntitledMultiSelectItems } from "@beep/acp/schema"
+ *
+ * type UntitledMultiSelectItemsValue = UntitledMultiSelectItems
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UntitledMultiSelectItems = typeof UntitledMultiSelectItems.Type;
+
+/**
+ * Generated ACP schema for `AuthMethod`.
+ *
+ * **Example** (Inspect the AuthMethod schema)
+ *
+ * ```ts
+ * import { AuthMethod } from "@beep/acp/schema"
+ *
+ * console.log(AuthMethod.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AuthMethod = S.Union([
+  S.Struct({
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    description: S.optionalKey(
+      S.Union([
+        S.String.annotateKey({
+          description:
+            "Optional description providing more details about this authentication method.",
+        }),
+        S.Null,
+      ]),
+    ),
+    id: S.String.annotateKey({
+      description: "Unique identifier for this authentication method.",
+    }),
+    link: S.optionalKey(
+      S.Union([
+        S.String.annotateKey({
+          description:
+            "Optional link to a page where the user can obtain their credentials.",
+        }),
+        S.Null,
+      ]),
+    ),
+    name: S.String.annotateKey({
+      description: "Human-readable name of the authentication method.",
+    }),
+    vars: S.Array(AuthEnvVar).annotateKey({
+      description: "The environment variables the client should set.",
+    }),
+    type: S.Literal("env_var"),
+  }).annotateKey({
+    description:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUser provides a key that the client passes to the agent as an environment variable.",
+  }),
+  S.Struct({
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    args: S.optionalKey(
+      S.Array(S.String).annotateKey({
+        description:
+          "Additional arguments to pass when running the agent binary for terminal auth.",
+      }),
+    ),
+    description: S.optionalKey(
+      S.Union([
+        S.String.annotateKey({
+          description:
+            "Optional description providing more details about this authentication method.",
+        }),
+        S.Null,
+      ]),
+    ),
+    env: S.optionalKey(
+      S.Record(S.String, S.String).annotateKey({
+        description:
+          "Additional environment variables to set when running the agent binary for terminal auth.",
+      }),
+    ),
+    id: S.String.annotateKey({
+      description: "Unique identifier for this authentication method.",
+    }),
+    name: S.String.annotateKey({
+      description: "Human-readable name of the authentication method.",
+    }),
+    type: S.Literal("terminal"),
+  }).annotateKey({
+    description:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nClient runs an interactive terminal for the user to authenticate via a TUI.",
+  }),
+  S.suspend((): S.Codec<AuthMethodAgent> => AuthMethodAgent).annotateKey({
+    title: "agent",
+    description:
+      "Agent handles authentication itself.\n\nThis is the default when no `type` is specified.",
+  }),
+]).pipe(
+  $I.annoteSchema("AuthMethod", {
+    description: "Generated ACP schema for AuthMethod.",
+    documentation:
+      "Describes an available authentication method.\n\nThe `type` field acts as the discriminator in the serialized JSON form.\nWhen no `type` is present, the method is treated as `agent`.",
+    identifier: "AuthMethod",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AuthMethod}.
+ *
+ * **Example** (Reference the AuthMethod type)
+ *
+ * ```ts
+ * import type { AuthMethod } from "@beep/acp/schema"
+ *
+ * type AuthMethodValue = AuthMethod
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AuthMethod = typeof AuthMethod.Type;
+
+/**
+ * Generated ACP schema for `ModelInfo`.
+ *
+ * **Example** (Inspect the ModelInfo schema)
+ *
+ * ```ts
+ * import { ModelInfo } from "@beep/acp/schema"
+ *
+ * console.log(ModelInfo.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ModelInfo = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "Optional description of the model.",
+      }),
+      S.Null,
+    ]),
+  ),
+  modelId: S.suspend((): S.Codec<ModelId> => ModelId).annotateKey({
+    description: "Unique identifier for the model.",
+  }),
+  name: S.String.annotateKey({
+    description: "Human-readable name of the model.",
+  }),
+}).pipe(
+  $I.annoteSchema("ModelInfo", {
+    description: "Generated ACP schema for ModelInfo.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInformation about a selectable model.",
+    identifier: "ModelInfo",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ModelInfo}.
+ *
+ * **Example** (Reference the ModelInfo type)
+ *
+ * ```ts
+ * import type { ModelInfo } from "@beep/acp/schema"
+ *
+ * type ModelInfoValue = ModelInfo
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ModelInfo = typeof ModelInfo.Type;
+
+/**
+ * Generated ACP schema for `SetSessionModelRequest`.
+ *
+ * **Example** (Inspect the SetSessionModelRequest schema)
+ *
+ * ```ts
+ * import { SetSessionModelRequest } from "@beep/acp/schema"
+ *
+ * console.log(SetSessionModelRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SetSessionModelRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  modelId: S.suspend((): S.Codec<ModelId> => ModelId).annotateKey({
+    description: "The ID of the model to set.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to set the model for.",
+  }),
+}).pipe(
+  $I.annoteSchema("SetSessionModelRequest", {
+    description: "Generated ACP schema for SetSessionModelRequest.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for setting a session model.",
+    identifier: "SetSessionModelRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SetSessionModelRequest}.
+ *
+ * **Example** (Reference the SetSessionModelRequest type)
+ *
+ * ```ts
+ * import type { SetSessionModelRequest } from "@beep/acp/schema"
+ *
+ * type SetSessionModelRequestValue = SetSessionModelRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SetSessionModelRequest = typeof SetSessionModelRequest.Type;
+
+/**
+ * Generated ACP schema for `PromptResponse`.
+ *
+ * **Example** (Inspect the PromptResponse schema)
+ *
+ * ```ts
+ * import { PromptResponse } from "@beep/acp/schema"
+ *
+ * console.log(PromptResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PromptResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  stopReason: S.suspend((): S.Codec<StopReason> => StopReason).annotateKey({
+    description: "Indicates why the agent stopped processing the turn.",
+  }),
+  usage: S.optionalKey(
+    S.Union([Usage, S.Null]).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nToken usage for this turn (optional).",
+    }),
+  ),
+  userMessageId: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe acknowledged user message ID.\n\nIf the client provided a `messageId` in the [`PromptRequest`], the agent echoes it here\nto confirm it was recorded. If the client did not provide one, the agent MAY assign one\nand return it here. Absence of this field indicates the agent did not record a message ID.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("PromptResponse", {
+    description: "Generated ACP schema for PromptResponse.",
+    documentation:
+      "Response from processing a user prompt.\n\nSee protocol docs: [Check for Completion](https://agentclientprotocol.com/protocol/prompt-turn#4-check-for-completion)",
+    identifier: "PromptResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PromptResponse}.
+ *
+ * **Example** (Reference the PromptResponse type)
+ *
+ * ```ts
+ * import type { PromptResponse } from "@beep/acp/schema"
+ *
+ * type PromptResponseValue = PromptResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PromptResponse = typeof PromptResponse.Type;
+
+/**
+ * Generated ACP schema for `Error`.
+ *
+ * **Example** (Inspect the Error schema)
+ *
+ * ```ts
+ * import { Error } from "@beep/acp/schema"
+ *
+ * console.log(Error.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Error = S.Struct({
+  code: S.suspend((): S.Codec<ErrorCode> => ErrorCode).annotateKey({
+    description:
+      "A number indicating the error type that occurred.\nThis must be an integer as defined in the JSON-RPC specification.",
+  }),
+  data: S.optionalKey(
+    S.Json.annotateKey({
+      expected: "JSON value",
+      description:
+        "Optional primitive or structured value that contains additional information about the error.\nThis may include debugging information or context-specific details.",
+    }),
+  ),
+  message: S.String.annotateKey({
+    description:
+      "A string providing a short description of the error.\nThe message should be limited to a concise single sentence.",
+  }),
+}).pipe(
+  $I.annoteSchema("Error", {
+    description: "Generated ACP schema for Error.",
+    documentation:
+      "JSON-RPC error object.\n\nRepresents an error that occurred during method execution, following the\nJSON-RPC 2.0 error object specification with optional additional data.\n\nSee protocol docs: [JSON-RPC Error Object](https://www.jsonrpc.org/specification#error_object)",
+    identifier: "Error",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Error}.
+ *
+ * **Example** (Reference the Error type)
+ *
+ * ```ts
+ * import type { Error } from "@beep/acp/schema"
+ *
+ * type ErrorValue = Error
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Error = typeof Error.Type;
+
+/**
+ * Generated ACP schema for `ElicitationCapabilities`.
+ *
+ * **Example** (Inspect the ElicitationCapabilities schema)
+ *
+ * ```ts
+ * import { ElicitationCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  form: S.optionalKey(
+    S.Union([ElicitationFormCapabilities, S.Null]).annotateKey({
+      description: "Whether the client supports form-based elicitation.",
+    }),
+  ),
+  url: S.optionalKey(
+    S.Union([ElicitationUrlCapabilities, S.Null]).annotateKey({
+      description: "Whether the client supports URL-based elicitation.",
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("ElicitationCapabilities", {
+    description: "Generated ACP schema for ElicitationCapabilities.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.",
+    identifier: "ElicitationCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationCapabilities}.
+ *
+ * **Example** (Reference the ElicitationCapabilities type)
+ *
+ * ```ts
+ * import type { ElicitationCapabilities } from "@beep/acp/schema"
+ *
+ * type ElicitationCapabilitiesValue = ElicitationCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationCapabilities = typeof ElicitationCapabilities.Type;
+
+/**
+ * Generated ACP schema for `TerminalOutputResponse`.
+ *
+ * **Example** (Inspect the TerminalOutputResponse schema)
+ *
+ * ```ts
+ * import { TerminalOutputResponse } from "@beep/acp/schema"
+ *
+ * console.log(TerminalOutputResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TerminalOutputResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  exitStatus: S.optionalKey(
+    S.Union([TerminalExitStatus, S.Null]).annotateKey({
+      description: "Exit status if the command has completed.",
+    }),
+  ),
+  output: S.String.annotateKey({
+    description: "The terminal output captured so far.",
+  }),
+  truncated: S.Boolean.annotateKey({
+    description: "Whether the output was truncated due to byte limits.",
+  }),
+}).pipe(
+  $I.annoteSchema("TerminalOutputResponse", {
+    description: "Generated ACP schema for TerminalOutputResponse.",
+    documentation: "Response containing the terminal output and exit status.",
+    identifier: "TerminalOutputResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link TerminalOutputResponse}.
+ *
+ * **Example** (Reference the TerminalOutputResponse type)
+ *
+ * ```ts
+ * import type { TerminalOutputResponse } from "@beep/acp/schema"
+ *
+ * type TerminalOutputResponseValue = TerminalOutputResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TerminalOutputResponse = typeof TerminalOutputResponse.Type;
+
+/**
+ * Generated ACP schema for `ElicitationAction`.
+ *
+ * **Example** (Inspect the ElicitationAction schema)
+ *
+ * ```ts
+ * import { ElicitationAction } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationAction.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationAction = S.Union(
+  [
+    S.Struct({
+      content: S.optionalKey(
+        S.Union([
+          S.Record(S.String, ElicitationContentValue).annotateKey({
+            description:
+              "The user-provided content, if any, as an object matching the requested schema.",
+          }),
+          S.Null,
+        ]),
+      ),
+      action: S.Literal("accept"),
+    }).annotateKey({ description: "The user accepted and provided content." }),
+    S.Struct({ action: S.Literal("decline") }).annotateKey({
+      description: "The user declined the elicitation.",
+    }),
+    S.Struct({ action: S.Literal("cancel") }).annotateKey({
+      description: "The elicitation was cancelled.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ElicitationAction", {
+    description: "Generated ACP schema for ElicitationAction.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user's action in response to an elicitation.",
+    identifier: "ElicitationAction",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationAction}.
+ *
+ * **Example** (Reference the ElicitationAction type)
+ *
+ * ```ts
+ * import type { ElicitationAction } from "@beep/acp/schema"
+ *
+ * type ElicitationActionValue = ElicitationAction
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationAction = typeof ElicitationAction.Type;
+
+/**
+ * Generated ACP schema for `AgentCapabilities`.
+ *
+ * **Example** (Inspect the AgentCapabilities schema)
+ *
+ * ```ts
+ * import { AgentCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(AgentCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  auth: S.optionalKey(
+    S.suspend(
+      (): S.Codec<AgentAuthCapabilities> => AgentAuthCapabilities,
+    ).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
+      default: {},
+    }),
+  ),
+  loadSession: S.optionalKey(
+    S.Boolean.annotateKey({
+      description: "Whether the agent supports `session/load`.",
+      default: false,
+    }),
+  ),
+  mcpCapabilities: S.optionalKey(
+    S.suspend((): S.Codec<McpCapabilities> => McpCapabilities).annotateKey({
+      description: "MCP capabilities supported by the agent.",
+      default: { http: false, sse: false },
+    }),
+  ),
+  promptCapabilities: S.optionalKey(
+    S.suspend(
+      (): S.Codec<PromptCapabilities> => PromptCapabilities,
+    ).annotateKey({
+      description: "Prompt capabilities supported by the agent.",
+      default: { audio: false, embeddedContext: false, image: false },
+    }),
+  ),
+  sessionCapabilities: S.optionalKey(
+    S.suspend(
+      (): S.Codec<SessionCapabilities> => SessionCapabilities,
+    ).annotateKey({ default: {} }),
+  ),
+}).pipe(
+  $I.annoteSchema("AgentCapabilities", {
+    description: "Generated ACP schema for AgentCapabilities.",
+    documentation:
+      "Capabilities supported by the agent.\n\nAdvertised during initialization to inform the client about\navailable features and content types.\n\nSee protocol docs: [Agent Capabilities](https://agentclientprotocol.com/protocol/initialization#agent-capabilities)",
+    identifier: "AgentCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AgentCapabilities}.
+ *
+ * **Example** (Reference the AgentCapabilities type)
+ *
+ * ```ts
+ * import type { AgentCapabilities } from "@beep/acp/schema"
+ *
+ * type AgentCapabilitiesValue = AgentCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentCapabilities = typeof AgentCapabilities.Type;
+
+/**
+ * Generated ACP schema for `ListSessionsResponse`.
+ *
+ * **Example** (Inspect the ListSessionsResponse schema)
+ *
+ * ```ts
+ * import { ListSessionsResponse } from "@beep/acp/schema"
+ *
+ * console.log(ListSessionsResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ListSessionsResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  nextCursor: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "Opaque cursor token. If present, pass this in the next request's cursor parameter\nto fetch the next page. If absent, there are no more results.",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessions: S.Array(SessionInfo).annotateKey({
+    description: "Array of session information objects",
+  }),
+}).pipe(
+  $I.annoteSchema("ListSessionsResponse", {
+    description: "Generated ACP schema for ListSessionsResponse.",
+    documentation: "Response from listing sessions.",
+    identifier: "ListSessionsResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ListSessionsResponse}.
+ *
+ * **Example** (Reference the ListSessionsResponse type)
+ *
+ * ```ts
+ * import type { ListSessionsResponse } from "@beep/acp/schema"
+ *
+ * type ListSessionsResponseValue = ListSessionsResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListSessionsResponse = typeof ListSessionsResponse.Type;
+
+/**
+ * Generated ACP schema for `ContentBlock`.
+ *
+ * **Example** (Inspect the ContentBlock schema)
+ *
+ * ```ts
+ * import { ContentBlock } from "@beep/acp/schema"
+ *
+ * console.log(ContentBlock.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ContentBlock = S.Union(
+  [
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+      text: S.String,
+      type: S.Literal("text"),
+    }).annotateKey({
+      description:
+        "Text content. May be plain text or formatted with Markdown.\n\nAll agents MUST support text content blocks in prompts.\nClients SHOULD render this text as Markdown.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+      data: S.String,
+      mimeType: S.String,
+      uri: S.optionalKey(S.Union([S.String, S.Null])),
+      type: S.Literal("image"),
+    }).annotateKey({
+      description:
+        "Images for visual context or analysis.\n\nRequires the `image` prompt capability when included in prompts.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+      data: S.String,
+      mimeType: S.String,
+      type: S.Literal("audio"),
+    }).annotateKey({
+      description:
+        "Audio data for transcription or analysis.\n\nRequires the `audio` prompt capability when included in prompts.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+      description: S.optionalKey(S.Union([S.String, S.Null])),
+      mimeType: S.optionalKey(S.Union([S.String, S.Null])),
+      name: S.String,
+      size: S.optionalKey(
+        S.Union([S.Int.annotateKey({ format: "int64" }), S.Null]),
+      ),
+      title: S.optionalKey(S.Union([S.String, S.Null])),
+      uri: S.String,
+      type: S.Literal("resource_link"),
+    }).annotateKey({
+      description:
+        "References to resources that the agent can access.\n\nAll agents MUST support resource links in prompts.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+      resource: EmbeddedResourceResource,
+      type: S.Literal("resource"),
+    }).annotateKey({
+      description:
+        "Complete resource contents embedded directly in the message.\n\nPreferred for including context as it avoids extra round-trips.\n\nRequires the `embeddedContext` prompt capability when included in prompts.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ContentBlock", {
+    description: "Generated ACP schema for ContentBlock.",
+    documentation:
+      "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
+    identifier: "ContentBlock",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ContentBlock}.
+ *
+ * **Example** (Reference the ContentBlock type)
+ *
+ * ```ts
+ * import type { ContentBlock } from "@beep/acp/schema"
+ *
+ * type ContentBlockValue = ContentBlock
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ContentBlock = typeof ContentBlock.Type;
+
+/**
+ * Generated ACP schema for `AvailableCommand`.
+ *
+ * **Example** (Inspect the AvailableCommand schema)
+ *
+ * ```ts
+ * import { AvailableCommand } from "@beep/acp/schema"
+ *
+ * console.log(AvailableCommand.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AvailableCommand = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  description: S.String.annotateKey({
+    description: "Human-readable description of what the command does.",
+  }),
+  input: S.optionalKey(
+    S.Union([AvailableCommandInput, S.Null]).annotateKey({
+      description: "Input for the command if required",
+    }),
+  ),
+  name: S.String.annotateKey({
+    description: "Command name (e.g., `create_plan`, `research_codebase`).",
+  }),
+}).pipe(
+  $I.annoteSchema("AvailableCommand", {
+    description: "Generated ACP schema for AvailableCommand.",
+    documentation: "Information about a command.",
+    identifier: "AvailableCommand",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AvailableCommand}.
+ *
+ * **Example** (Reference the AvailableCommand type)
+ *
+ * ```ts
+ * import type { AvailableCommand } from "@beep/acp/schema"
+ *
+ * type AvailableCommandValue = AvailableCommand
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AvailableCommand = typeof AvailableCommand.Type;
+
+/**
+ * Generated ACP schema for `SessionModeState`.
+ *
+ * **Example** (Inspect the SessionModeState schema)
+ *
+ * ```ts
+ * import { SessionModeState } from "@beep/acp/schema"
+ *
+ * console.log(SessionModeState.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionModeState = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  availableModes: S.Array(SessionMode).annotateKey({
+    description: "The set of modes that the Agent can operate in",
+  }),
+  currentModeId: S.suspend(
+    (): S.Codec<SessionModeId> => SessionModeId,
+  ).annotateKey({ description: "The current mode the Agent is in." }),
+}).pipe(
+  $I.annoteSchema("SessionModeState", {
+    description: "Generated ACP schema for SessionModeState.",
+    documentation: "The set of modes and the one currently active.",
+    identifier: "SessionModeState",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionModeState}.
+ *
+ * **Example** (Reference the SessionModeState type)
+ *
+ * ```ts
+ * import type { SessionModeState } from "@beep/acp/schema"
+ *
+ * type SessionModeStateValue = SessionModeState
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionModeState = typeof SessionModeState.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigSelectGroup`.
+ *
+ * **Example** (Inspect the SessionConfigSelectGroup schema)
+ *
+ * ```ts
+ * import { SessionConfigSelectGroup } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigSelectGroup.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigSelectGroup = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  group: S.suspend(
+    (): S.Codec<SessionConfigGroupId> => SessionConfigGroupId,
+  ).annotateKey({ description: "Unique identifier for this group." }),
+  name: S.String.annotateKey({
+    description: "Human-readable label for this group.",
+  }),
+  options: S.Array(SessionConfigSelectOption).annotateKey({
+    description: "The set of option values in this group.",
+  }),
+}).pipe(
+  $I.annoteSchema("SessionConfigSelectGroup", {
+    description: "Generated ACP schema for SessionConfigSelectGroup.",
+    documentation:
+      "A group of possible values for a session configuration option.",
+    identifier: "SessionConfigSelectGroup",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigSelectGroup}.
+ *
+ * **Example** (Reference the SessionConfigSelectGroup type)
+ *
+ * ```ts
+ * import type { SessionConfigSelectGroup } from "@beep/acp/schema"
+ *
+ * type SessionConfigSelectGroupValue = SessionConfigSelectGroup
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigSelectGroup = typeof SessionConfigSelectGroup.Type;
+
+/**
+ * Generated ACP schema for `RequestPermissionResponse`.
+ *
+ * **Example** (Inspect the RequestPermissionResponse schema)
+ *
+ * ```ts
+ * import { RequestPermissionResponse } from "@beep/acp/schema"
+ *
+ * console.log(RequestPermissionResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RequestPermissionResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  outcome: S.suspend(
+    (): S.Codec<RequestPermissionOutcome> => RequestPermissionOutcome,
+  ).annotateKey({
+    description: "The user's decision on the permission request.",
+  }),
+}).pipe(
+  $I.annoteSchema("RequestPermissionResponse", {
+    description: "Generated ACP schema for RequestPermissionResponse.",
+    documentation: "Response to a permission request.",
+    identifier: "RequestPermissionResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link RequestPermissionResponse}.
+ *
+ * **Example** (Reference the RequestPermissionResponse type)
+ *
+ * ```ts
+ * import type { RequestPermissionResponse } from "@beep/acp/schema"
+ *
+ * type RequestPermissionResponseValue = RequestPermissionResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RequestPermissionResponse = typeof RequestPermissionResponse.Type;
+
+/**
+ * Generated ACP schema for `McpServer`.
+ *
+ * **Example** (Inspect the McpServer schema)
+ *
+ * ```ts
+ * import { McpServer } from "@beep/acp/schema"
+ *
+ * console.log(McpServer.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const McpServer = S.Union([
+  S.Struct({
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    headers: S.Array(HttpHeader).annotateKey({
+      description:
+        "HTTP headers to set when making requests to the MCP server.",
+    }),
+    name: S.String.annotateKey({
+      description: "Human-readable name identifying this MCP server.",
+    }),
+    url: S.String.annotateKey({ description: "URL to the MCP server." }),
+    type: S.Literal("http"),
+  }).annotateKey({
+    description:
+      "HTTP transport configuration\n\nOnly available when the Agent capabilities indicate `mcp_capabilities.http` is `true`.",
+  }),
+  S.Struct({
+    _meta: S.optionalKey(
+      S.Union([
+        S.Record(
+          S.String,
+          S.Json.annotate({ expected: "JSON value" }),
+        ).annotateKey({
+          description:
+            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+        S.Null,
+      ]),
+    ),
+    headers: S.Array(HttpHeader).annotateKey({
+      description:
+        "HTTP headers to set when making requests to the MCP server.",
+    }),
+    name: S.String.annotateKey({
+      description: "Human-readable name identifying this MCP server.",
+    }),
+    url: S.String.annotateKey({ description: "URL to the MCP server." }),
+    type: S.Literal("sse"),
+  }).annotateKey({
+    description:
+      "SSE transport configuration\n\nOnly available when the Agent capabilities indicate `mcp_capabilities.sse` is `true`.",
+  }),
+  S.suspend((): S.Codec<McpServerStdio> => McpServerStdio).annotateKey({
+    title: "stdio",
+    description:
+      "Stdio transport configuration\n\nAll Agents MUST support this transport.",
+  }),
+]).pipe(
+  $I.annoteSchema("McpServer", {
+    description: "Generated ACP schema for McpServer.",
+    documentation:
+      "Configuration for connecting to an MCP (Model Context Protocol) server.\n\nMCP servers provide tools and context that the agent can use when\nprocessing prompts.\n\nSee protocol docs: [MCP Servers](https://agentclientprotocol.com/protocol/session-setup#mcp-servers)",
+    identifier: "McpServer",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link McpServer}.
+ *
+ * **Example** (Reference the McpServer type)
+ *
+ * ```ts
+ * import type { McpServer } from "@beep/acp/schema"
+ *
+ * type McpServerValue = McpServer
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpServer = typeof McpServer.Type;
+
+/**
+ * Generated ACP schema for `MultiSelectItems`.
+ *
+ * **Example** (Inspect the MultiSelectItems schema)
+ *
+ * ```ts
+ * import { MultiSelectItems } from "@beep/acp/schema"
+ *
+ * console.log(MultiSelectItems.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MultiSelectItems = S.Union([
+  S.suspend(
+    (): S.Codec<UntitledMultiSelectItems> => UntitledMultiSelectItems,
+  ).annotateKey({
+    title: "Untitled",
+    description: "Untitled multi-select items with plain string values.",
+  }),
+  S.suspend(
+    (): S.Codec<TitledMultiSelectItems> => TitledMultiSelectItems,
+  ).annotateKey({
+    title: "Titled",
+    description: "Titled multi-select items with human-readable labels.",
+  }),
+]).pipe(
+  $I.annoteSchema("MultiSelectItems", {
+    description: "Generated ACP schema for MultiSelectItems.",
+    documentation: "Items for a multi-select (array) property schema.",
+    identifier: "MultiSelectItems",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link MultiSelectItems}.
+ *
+ * **Example** (Reference the MultiSelectItems type)
+ *
+ * ```ts
+ * import type { MultiSelectItems } from "@beep/acp/schema"
+ *
+ * type MultiSelectItemsValue = MultiSelectItems
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MultiSelectItems = typeof MultiSelectItems.Type;
+
+/**
+ * Generated ACP schema for `SessionModelState`.
+ *
+ * **Example** (Inspect the SessionModelState schema)
+ *
+ * ```ts
+ * import { SessionModelState } from "@beep/acp/schema"
+ *
+ * console.log(SessionModelState.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionModelState = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  availableModels: S.Array(ModelInfo).annotateKey({
+    description: "The set of models that the Agent can use",
+  }),
+  currentModelId: S.suspend((): S.Codec<ModelId> => ModelId).annotateKey({
+    description: "The current model the Agent is in.",
+  }),
+}).pipe(
+  $I.annoteSchema("SessionModelState", {
+    description: "Generated ACP schema for SessionModelState.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe set of models and the one currently active.",
+    identifier: "SessionModelState",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionModelState}.
+ *
+ * **Example** (Reference the SessionModelState type)
+ *
+ * ```ts
+ * import type { SessionModelState } from "@beep/acp/schema"
+ *
+ * type SessionModelStateValue = SessionModelState
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionModelState = typeof SessionModelState.Type;
+
+/**
+ * Generated ACP schema for `ClientCapabilities`.
+ *
+ * **Example** (Inspect the ClientCapabilities schema)
+ *
+ * ```ts
+ * import { ClientCapabilities } from "@beep/acp/schema"
+ *
+ * console.log(ClientCapabilities.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ClientCapabilities = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  auth: S.optionalKey(
+    S.suspend((): S.Codec<AuthCapabilities> => AuthCapabilities).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\nDetermines which authentication method types the agent may include\nin its `InitializeResponse`.",
+      default: { terminal: false },
+    }),
+  ),
+  elicitation: S.optionalKey(
+    S.Union([ElicitationCapabilities, S.Null]).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.\nDetermines which elicitation modes the agent may use.",
+    }),
+  ),
+  fs: S.optionalKey(
+    S.suspend(
+      (): S.Codec<FileSystemCapabilities> => FileSystemCapabilities,
+    ).annotateKey({
+      description:
+        "File system capabilities supported by the client.\nDetermines which file operations the agent can request.",
+      default: { readTextFile: false, writeTextFile: false },
+    }),
+  ),
+  terminal: S.optionalKey(
+    S.Boolean.annotateKey({
+      description: "Whether the Client support all `terminal/*` methods.",
+      default: false,
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("ClientCapabilities", {
+    description: "Generated ACP schema for ClientCapabilities.",
+    documentation:
+      "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
+    identifier: "ClientCapabilities",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ClientCapabilities}.
+ *
+ * **Example** (Reference the ClientCapabilities type)
+ *
+ * ```ts
+ * import type { ClientCapabilities } from "@beep/acp/schema"
+ *
+ * type ClientCapabilitiesValue = ClientCapabilities
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ClientCapabilities = typeof ClientCapabilities.Type;
+
+/**
+ * Generated ACP schema for `ElicitationResponse`.
+ *
+ * **Example** (Inspect the ElicitationResponse schema)
+ *
+ * ```ts
+ * import { ElicitationResponse } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  action: S.suspend(
+    (): S.Codec<ElicitationAction> => ElicitationAction,
+  ).annotateKey({
+    description: "The user's action in response to the elicitation.",
+  }),
+}).pipe(
+  $I.annoteSchema("ElicitationResponse", {
+    description: "Generated ACP schema for ElicitationResponse.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from the client to an elicitation request.",
+    identifier: "ElicitationResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationResponse}.
+ *
+ * **Example** (Reference the ElicitationResponse type)
+ *
+ * ```ts
+ * import type { ElicitationResponse } from "@beep/acp/schema"
+ *
+ * type ElicitationResponseValue = ElicitationResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationResponse = typeof ElicitationResponse.Type;
+
+/**
+ * Generated ACP schema for `InitializeResponse`.
+ *
+ * **Example** (Inspect the InitializeResponse schema)
+ *
+ * ```ts
+ * import { InitializeResponse } from "@beep/acp/schema"
+ *
+ * console.log(InitializeResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const InitializeResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  agentCapabilities: S.optionalKey(
+    S.suspend((): S.Codec<AgentCapabilities> => AgentCapabilities).annotateKey({
+      description: "Capabilities supported by the agent.",
+      default: {
+        auth: {},
+        loadSession: false,
+        mcpCapabilities: { http: false, sse: false },
+        promptCapabilities: {
+          audio: false,
+          embeddedContext: false,
+          image: false,
+        },
+        sessionCapabilities: {},
+      },
+    }),
+  ),
+  agentInfo: S.optionalKey(
+    S.Union([Implementation, S.Null]).annotateKey({
+      description:
+        "Information about the Agent name and version sent to the Client.\n\nNote: in future versions of the protocol, this will be required.",
+    }),
+  ),
+  authMethods: S.optionalKey(
+    S.Array(AuthMethod).annotateKey({
+      description: "Authentication methods supported by the agent.",
+      default: [],
+    }),
+  ),
+  protocolVersion: S.suspend(
+    (): S.Codec<ProtocolVersion> => ProtocolVersion,
+  ).annotateKey({
+    description:
+      "The protocol version the client specified if supported by the agent,\nor the latest protocol version supported by the agent.\n\nThe client should disconnect, if it doesn't support this version.",
+  }),
+}).pipe(
+  $I.annoteSchema("InitializeResponse", {
+    description: "Generated ACP schema for InitializeResponse.",
+    documentation:
+      "Response to the `initialize` method.\n\nContains the negotiated protocol version and agent capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
+    identifier: "InitializeResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link InitializeResponse}.
+ *
+ * **Example** (Reference the InitializeResponse type)
+ *
+ * ```ts
+ * import type { InitializeResponse } from "@beep/acp/schema"
+ *
+ * type InitializeResponseValue = InitializeResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InitializeResponse = typeof InitializeResponse.Type;
+
+/**
+ * Generated ACP schema for `ToolCallContent`.
+ *
+ * **Example** (Inspect the ToolCallContent schema)
+ *
+ * ```ts
+ * import { ToolCallContent } from "@beep/acp/schema"
+ *
+ * console.log(ToolCallContent.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ToolCallContent = S.Union(
+  [
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
+        { description: "The actual content block." },
+      ),
+      type: S.Literal("content"),
+    }).annotateKey({
+      description: "Standard content block (text, images, resources).",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      newText: S.String.annotateKey({
+        description: "The new content after modification.",
+      }),
+      oldText: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "The original content (None for new files).",
+          }),
+          S.Null,
+        ]),
+      ),
+      path: S.String.annotateKey({
+        description: "The file path being modified.",
+      }),
+      type: S.Literal("diff"),
+    }).annotateKey({ description: "File modification shown as a diff." }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      terminalId: S.String,
+      type: S.Literal("terminal"),
+    }).annotateKey({
+      description:
+        "Embed a terminal created with `terminal/create` by its id.\n\nThe terminal must be added before calling `terminal/release`.\n\nSee protocol docs: [Terminal](https://agentclientprotocol.com/protocol/terminals)",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ToolCallContent", {
+    description: "Generated ACP schema for ToolCallContent.",
+    documentation:
+      "Content produced by a tool call.\n\nTool calls can produce different types of content including\nstandard content blocks (text, images) or file diffs.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
+    identifier: "ToolCallContent",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ToolCallContent}.
+ *
+ * **Example** (Reference the ToolCallContent type)
+ *
+ * ```ts
+ * import type { ToolCallContent } from "@beep/acp/schema"
+ *
+ * type ToolCallContentValue = ToolCallContent
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ToolCallContent = typeof ToolCallContent.Type;
+
+/**
+ * Generated ACP schema for `PromptRequest`.
+ *
+ * **Example** (Inspect the PromptRequest schema)
+ *
+ * ```ts
+ * import { PromptRequest } from "@beep/acp/schema"
+ *
+ * console.log(PromptRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PromptRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  messageId: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA client-generated unique identifier for this user message.\n\nIf provided, the Agent SHOULD echo this value as `userMessageId` in the\n[`PromptResponse`] to confirm it was recorded.\nBoth clients and agents MUST use UUID format for message IDs.",
+      }),
+      S.Null,
+    ]),
+  ),
+  prompt: S.Array(ContentBlock).annotateKey({
+    description:
+      "The blocks of content that compose the user's message.\n\nAs a baseline, the Agent MUST support [`ContentBlock::Text`] and [`ContentBlock::ResourceLink`],\nwhile other variants are optionally enabled via [`PromptCapabilities`].\n\nThe Client MUST adapt its interface according to [`PromptCapabilities`].\n\nThe client MAY include referenced pieces of context as either\n[`ContentBlock::Resource`] or [`ContentBlock::ResourceLink`].\n\nWhen available, [`ContentBlock::Resource`] is preferred\nas it avoids extra round-trips and allows the message to include\npieces of context from sources the agent may not have access to.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to send this user message to",
+  }),
+}).pipe(
+  $I.annoteSchema("PromptRequest", {
+    description: "Generated ACP schema for PromptRequest.",
+    documentation:
+      "Request parameters for sending a user prompt to the agent.\n\nContains the user's message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/prompt-turn#1-user-message)",
+    identifier: "PromptRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link PromptRequest}.
+ *
+ * **Example** (Reference the PromptRequest type)
+ *
+ * ```ts
+ * import type { PromptRequest } from "@beep/acp/schema"
+ *
+ * type PromptRequestValue = PromptRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PromptRequest = typeof PromptRequest.Type;
 
 /**
  * Generated ACP schema for `SessionConfigSelectOptions`.
  *
- * @example
+ * **Example** (Inspect the SessionConfigSelectOptions schema)
+ *
  * ```ts
  * import { SessionConfigSelectOptions } from "@beep/acp/schema"
  *
@@ -11454,13 +6963,16 @@ export const SessionConfigSelectOptions = S.Union([
   $I.annoteSchema("SessionConfigSelectOptions", {
     description: "Generated ACP schema for SessionConfigSelectOptions.",
     documentation: "Possible values for a session configuration option.",
+    identifier: "SessionConfigSelectOptions",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link SessionConfigSelectOptions}.
  *
- * @example
+ * **Example** (Reference the SessionConfigSelectOptions type)
+ *
  * ```ts
  * import type { SessionConfigSelectOptions } from "@beep/acp/schema"
  *
@@ -11473,81 +6985,4033 @@ export const SessionConfigSelectOptions = S.Union([
 export type SessionConfigSelectOptions = typeof SessionConfigSelectOptions.Type;
 
 /**
- * Generated ACP schema for `SessionConfigValueId`.
+ * Generated ACP schema for `NewSessionRequest`.
  *
- * @example
+ * **Example** (Inspect the NewSessionRequest schema)
+ *
  * ```ts
- * import { SessionConfigValueId } from "@beep/acp/schema"
+ * import { NewSessionRequest } from "@beep/acp/schema"
  *
- * console.log(SessionConfigValueId.ast)
+ * console.log(NewSessionRequest.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const SessionConfigValueId = S.String.pipe(
-  $I.annoteSchema("SessionConfigValueId", {
-    description: "Generated ACP schema for SessionConfigValueId.",
-    documentation:
-      "Unique identifier for a session configuration option value.",
+export const NewSessionRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  cwd: S.String.annotateKey({
+    description:
+      "The working directory for this session. Must be an absolute path.",
   }),
+  mcpServers: S.Array(McpServer).annotateKey({
+    description:
+      "List of MCP (Model Context Protocol) servers the agent should connect to.",
+  }),
+}).pipe(
+  $I.annoteSchema("NewSessionRequest", {
+    description: "Generated ACP schema for NewSessionRequest.",
+    documentation:
+      "Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
+    identifier: "NewSessionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link SessionConfigValueId}.
+ * Type for {@link NewSessionRequest}.
  *
- * @example
+ * **Example** (Reference the NewSessionRequest type)
+ *
  * ```ts
- * import type { SessionConfigValueId } from "@beep/acp/schema"
+ * import type { NewSessionRequest } from "@beep/acp/schema"
  *
- * type SessionConfigValueIdValue = SessionConfigValueId
+ * type NewSessionRequestValue = NewSessionRequest
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type SessionConfigValueId = typeof SessionConfigValueId.Type;
+export type NewSessionRequest = typeof NewSessionRequest.Type;
 
 /**
- * Generated ACP schema for `SessionId`.
+ * Generated ACP schema for `LoadSessionRequest`.
  *
- * @example
+ * **Example** (Inspect the LoadSessionRequest schema)
+ *
  * ```ts
- * import { SessionId } from "@beep/acp/schema"
+ * import { LoadSessionRequest } from "@beep/acp/schema"
  *
- * console.log(SessionId.ast)
+ * console.log(LoadSessionRequest.ast)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const SessionId = S.String.pipe(
-  $I.annoteSchema("SessionId", {
-    description: "Generated ACP schema for SessionId.",
-    documentation:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
+export const LoadSessionRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  cwd: S.String.annotateKey({
+    description: "The working directory for this session.",
   }),
+  mcpServers: S.Array(McpServer).annotateKey({
+    description: "List of MCP servers to connect to for this session.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to load.",
+  }),
+}).pipe(
+  $I.annoteSchema("LoadSessionRequest", {
+    description: "Generated ACP schema for LoadSessionRequest.",
+    documentation:
+      "Request parameters for loading an existing session.\n\nOnly available if the Agent supports the `loadSession` capability.\n\nSee protocol docs: [Loading Sessions](https://agentclientprotocol.com/protocol/session-setup#loading-sessions)",
+    identifier: "LoadSessionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
- * Type for {@link SessionId}.
+ * Type for {@link LoadSessionRequest}.
  *
- * @example
+ * **Example** (Reference the LoadSessionRequest type)
+ *
  * ```ts
- * import type { SessionId } from "@beep/acp/schema"
+ * import type { LoadSessionRequest } from "@beep/acp/schema"
  *
- * type SessionIdValue = SessionId
+ * type LoadSessionRequestValue = LoadSessionRequest
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type SessionId = typeof SessionId.Type;
+export type LoadSessionRequest = typeof LoadSessionRequest.Type;
+
+/**
+ * Generated ACP schema for `ForkSessionRequest`.
+ *
+ * **Example** (Inspect the ForkSessionRequest schema)
+ *
+ * ```ts
+ * import { ForkSessionRequest } from "@beep/acp/schema"
+ *
+ * console.log(ForkSessionRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ForkSessionRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  cwd: S.String.annotateKey({
+    description: "The working directory for this session.",
+  }),
+  mcpServers: S.optionalKey(
+    S.Array(McpServer).annotateKey({
+      description: "List of MCP servers to connect to for this session.",
+    }),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to fork.",
+  }),
+}).pipe(
+  $I.annoteSchema("ForkSessionRequest", {
+    description: "Generated ACP schema for ForkSessionRequest.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for forking an existing session.\n\nCreates a new session based on the context of an existing one, allowing\noperations like generating summaries without affecting the original session's history.\n\nOnly available if the Agent supports the `session.fork` capability.",
+    identifier: "ForkSessionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ForkSessionRequest}.
+ *
+ * **Example** (Reference the ForkSessionRequest type)
+ *
+ * ```ts
+ * import type { ForkSessionRequest } from "@beep/acp/schema"
+ *
+ * type ForkSessionRequestValue = ForkSessionRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ForkSessionRequest = typeof ForkSessionRequest.Type;
+
+/**
+ * Generated ACP schema for `ResumeSessionRequest`.
+ *
+ * **Example** (Inspect the ResumeSessionRequest schema)
+ *
+ * ```ts
+ * import { ResumeSessionRequest } from "@beep/acp/schema"
+ *
+ * console.log(ResumeSessionRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ResumeSessionRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  cwd: S.String.annotateKey({
+    description: "The working directory for this session.",
+  }),
+  mcpServers: S.optionalKey(
+    S.Array(McpServer).annotateKey({
+      description: "List of MCP servers to connect to for this session.",
+    }),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session to resume.",
+  }),
+}).pipe(
+  $I.annoteSchema("ResumeSessionRequest", {
+    description: "Generated ACP schema for ResumeSessionRequest.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for resuming an existing session.\n\nResumes an existing session without returning previous messages (unlike `session/load`).\nThis is useful for agents that can resume sessions but don't implement full session loading.\n\nOnly available if the Agent supports the `session.resume` capability.",
+    identifier: "ResumeSessionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ResumeSessionRequest}.
+ *
+ * **Example** (Reference the ResumeSessionRequest type)
+ *
+ * ```ts
+ * import type { ResumeSessionRequest } from "@beep/acp/schema"
+ *
+ * type ResumeSessionRequestValue = ResumeSessionRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ResumeSessionRequest = typeof ResumeSessionRequest.Type;
+
+/**
+ * Generated ACP schema for `ElicitationPropertySchema`.
+ *
+ * **Example** (Inspect the ElicitationPropertySchema schema)
+ *
+ * ```ts
+ * import { ElicitationPropertySchema } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationPropertySchema.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationPropertySchema = S.Union(
+  [
+    S.Struct({
+      default: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Default value." }),
+          S.Null,
+        ]),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Human-readable description." }),
+          S.Null,
+        ]),
+      ),
+      enum: S.optionalKey(
+        S.Union([
+          S.Array(S.String).annotateKey({
+            description: "Enum values for untitled single-select enums.",
+          }),
+          S.Null,
+        ]),
+      ),
+      format: S.optionalKey(
+        S.Union([StringFormat, S.Null]).annotateKey({
+          description: "String format.",
+        }),
+      ),
+      maxLength: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({
+            description: "Maximum string length.",
+            format: "uint32",
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
+          S.Null,
+        ]),
+      ),
+      minLength: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({
+            description: "Minimum string length.",
+            format: "uint32",
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
+          S.Null,
+        ]),
+      ),
+      oneOf: S.optionalKey(
+        S.Union([
+          S.Array(EnumOption).annotateKey({
+            description: "Titled enum options for titled single-select enums.",
+          }),
+          S.Null,
+        ]),
+      ),
+      pattern: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Pattern the string must match.",
+          }),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Optional title for the property.",
+          }),
+          S.Null,
+        ]),
+      ),
+      type: S.Literal("string"),
+    }).annotateKey({
+      description:
+        "String property (or single-select enum when `enum`/`oneOf` is set).",
+    }),
+    S.Struct({
+      default: S.optionalKey(
+        S.Union([
+          S.Finite.annotateKey({
+            description: "Default value.",
+            format: "double",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          S.Null,
+        ]),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Human-readable description." }),
+          S.Null,
+        ]),
+      ),
+      maximum: S.optionalKey(
+        S.Union([
+          S.Finite.annotateKey({
+            description: "Maximum value (inclusive).",
+            format: "double",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          S.Null,
+        ]),
+      ),
+      minimum: S.optionalKey(
+        S.Union([
+          S.Finite.annotateKey({
+            description: "Minimum value (inclusive).",
+            format: "double",
+          }).check(S.isFinite().annotate({ expected: "a finite number" })),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Optional title for the property.",
+          }),
+          S.Null,
+        ]),
+      ),
+      type: S.Literal("number"),
+    }).annotateKey({ description: "Number (floating-point) property." }),
+    S.Struct({
+      default: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({ description: "Default value.", format: "int64" }),
+          S.Null,
+        ]),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Human-readable description." }),
+          S.Null,
+        ]),
+      ),
+      maximum: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({
+            description: "Maximum value (inclusive).",
+            format: "int64",
+          }),
+          S.Null,
+        ]),
+      ),
+      minimum: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({
+            description: "Minimum value (inclusive).",
+            format: "int64",
+          }),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Optional title for the property.",
+          }),
+          S.Null,
+        ]),
+      ),
+      type: S.Literal("integer"),
+    }).annotateKey({ description: "Integer property." }),
+    S.Struct({
+      default: S.optionalKey(
+        S.Union([
+          S.Boolean.annotateKey({ description: "Default value." }),
+          S.Null,
+        ]),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Human-readable description." }),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Optional title for the property.",
+          }),
+          S.Null,
+        ]),
+      ),
+      type: S.Literal("boolean"),
+    }).annotateKey({ description: "Boolean property." }),
+    S.Struct({
+      default: S.optionalKey(
+        S.Union([
+          S.Array(S.String).annotateKey({
+            description: "Default selected values.",
+          }),
+          S.Null,
+        ]),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({ description: "Human-readable description." }),
+          S.Null,
+        ]),
+      ),
+      items: S.suspend(
+        (): S.Codec<MultiSelectItems> => MultiSelectItems,
+      ).annotateKey({
+        description: "The items definition describing allowed values.",
+      }),
+      maxItems: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({
+            description: "Maximum number of items to select.",
+            format: "uint64",
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
+          S.Null,
+        ]),
+      ),
+      minItems: S.optionalKey(
+        S.Union([
+          S.Int.annotateKey({
+            description: "Minimum number of items to select.",
+            format: "uint64",
+          }).check(
+            S.isGreaterThanOrEqualTo(0).annotate({
+              expected: "a value greater than or equal to 0",
+            }),
+          ),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Optional title for the property.",
+          }),
+          S.Null,
+        ]),
+      ),
+      type: S.Literal("array"),
+    }).annotateKey({ description: "Multi-select array property." }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ElicitationPropertySchema", {
+    description: "Generated ACP schema for ElicitationPropertySchema.",
+    documentation:
+      'Property schema for elicitation form fields.\n\nEach variant corresponds to a JSON Schema `"type"` value.\nSingle-select enums use the `String` variant with `enum` or `oneOf` set.\nMulti-select enums use the `Array` variant.',
+    identifier: "ElicitationPropertySchema",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationPropertySchema}.
+ *
+ * **Example** (Reference the ElicitationPropertySchema type)
+ *
+ * ```ts
+ * import type { ElicitationPropertySchema } from "@beep/acp/schema"
+ *
+ * type ElicitationPropertySchemaValue = ElicitationPropertySchema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationPropertySchema = typeof ElicitationPropertySchema.Type;
+
+/**
+ * Generated ACP schema for `InitializeRequest`.
+ *
+ * **Example** (Inspect the InitializeRequest schema)
+ *
+ * ```ts
+ * import { InitializeRequest } from "@beep/acp/schema"
+ *
+ * console.log(InitializeRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const InitializeRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  clientCapabilities: S.optionalKey(
+    S.suspend(
+      (): S.Codec<ClientCapabilities> => ClientCapabilities,
+    ).annotateKey({
+      description: "Capabilities supported by the client.",
+      default: {
+        auth: { terminal: false },
+        fs: { readTextFile: false, writeTextFile: false },
+        terminal: false,
+      },
+    }),
+  ),
+  clientInfo: S.optionalKey(
+    S.Union([Implementation, S.Null]).annotateKey({
+      description:
+        "Information about the Client name and version sent to the Agent.\n\nNote: in future versions of the protocol, this will be required.",
+    }),
+  ),
+  protocolVersion: S.suspend(
+    (): S.Codec<ProtocolVersion> => ProtocolVersion,
+  ).annotateKey({
+    description: "The latest protocol version supported by the client.",
+  }),
+}).pipe(
+  $I.annoteSchema("InitializeRequest", {
+    description: "Generated ACP schema for InitializeRequest.",
+    documentation:
+      "Request parameters for the initialize method.\n\nSent by the client to establish connection and negotiate capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
+    identifier: "InitializeRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link InitializeRequest}.
+ *
+ * **Example** (Reference the InitializeRequest type)
+ *
+ * ```ts
+ * import type { InitializeRequest } from "@beep/acp/schema"
+ *
+ * type InitializeRequestValue = InitializeRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InitializeRequest = typeof InitializeRequest.Type;
+
+/**
+ * Generated ACP schema for `ToolCallUpdate`.
+ *
+ * **Example** (Inspect the ToolCallUpdate schema)
+ *
+ * ```ts
+ * import { ToolCallUpdate } from "@beep/acp/schema"
+ *
+ * console.log(ToolCallUpdate.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ToolCallUpdate = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  content: S.optionalKey(
+    S.Union([
+      S.Array(ToolCallContent).annotateKey({
+        description: "Replace the content collection.",
+      }),
+      S.Null,
+    ]),
+  ),
+  kind: S.optionalKey(
+    S.Union([ToolKind, S.Null]).annotateKey({
+      description: "Update the tool kind.",
+    }),
+  ),
+  locations: S.optionalKey(
+    S.Union([
+      S.Array(ToolCallLocation).annotateKey({
+        description: "Replace the locations collection.",
+      }),
+      S.Null,
+    ]),
+  ),
+  rawInput: S.optionalKey(
+    S.Json.annotateKey({
+      expected: "JSON value",
+      description: "Update the raw input.",
+    }),
+  ),
+  rawOutput: S.optionalKey(
+    S.Json.annotateKey({
+      expected: "JSON value",
+      description: "Update the raw output.",
+    }),
+  ),
+  status: S.optionalKey(
+    S.Union([ToolCallStatus, S.Null]).annotateKey({
+      description: "Update the execution status.",
+    }),
+  ),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Update the human-readable title." }),
+      S.Null,
+    ]),
+  ),
+  toolCallId: S.suspend((): S.Codec<ToolCallId> => ToolCallId).annotateKey({
+    description: "The ID of the tool call being updated.",
+  }),
+}).pipe(
+  $I.annoteSchema("ToolCallUpdate", {
+    description: "Generated ACP schema for ToolCallUpdate.",
+    documentation:
+      "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
+    identifier: "ToolCallUpdate",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ToolCallUpdate}.
+ *
+ * **Example** (Reference the ToolCallUpdate type)
+ *
+ * ```ts
+ * import type { ToolCallUpdate } from "@beep/acp/schema"
+ *
+ * type ToolCallUpdateValue = ToolCallUpdate
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ToolCallUpdate = typeof ToolCallUpdate.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigOption`.
+ *
+ * **Example** (Inspect the SessionConfigOption schema)
+ *
+ * ```ts
+ * import { SessionConfigOption } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigOption.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigOption = S.Union(
+  [
+    S.Struct({
+      currentValue: S.suspend(
+        (): S.Codec<SessionConfigValueId> => SessionConfigValueId,
+      ).annotateKey({ description: "The currently selected value." }),
+      options: S.suspend(
+        (): S.Codec<SessionConfigSelectOptions> => SessionConfigSelectOptions,
+      ).annotateKey({ description: "The set of selectable options." }),
+      type: S.Literal("select"),
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      category: S.optionalKey(
+        S.Union([SessionConfigOptionCategory, S.Null]).annotateKey({
+          description: "Optional semantic category for this option (UX only).",
+        }),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "Optional description for the Client to display to the user.",
+          }),
+          S.Null,
+        ]),
+      ),
+      id: S.suspend(
+        (): S.Codec<SessionConfigId> => SessionConfigId,
+      ).annotateKey({
+        description: "Unique identifier for the configuration option.",
+      }),
+      name: S.String.annotateKey({
+        description: "Human-readable label for the option.",
+      }),
+    }).annotateKey({ description: "Single-value selector (dropdown)." }),
+    S.Struct({
+      currentValue: S.Boolean.annotateKey({
+        description: "The current value of the boolean option.",
+      }),
+      type: S.Literal("boolean"),
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      category: S.optionalKey(
+        S.Union([SessionConfigOptionCategory, S.Null]).annotateKey({
+          description: "Optional semantic category for this option (UX only).",
+        }),
+      ),
+      description: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "Optional description for the Client to display to the user.",
+          }),
+          S.Null,
+        ]),
+      ),
+      id: S.suspend(
+        (): S.Codec<SessionConfigId> => SessionConfigId,
+      ).annotateKey({
+        description: "Unique identifier for the configuration option.",
+      }),
+      name: S.String.annotateKey({
+        description: "Human-readable label for the option.",
+      }),
+    }).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nBoolean on/off toggle.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("SessionConfigOption", {
+    description: "Generated ACP schema for SessionConfigOption.",
+    documentation:
+      "A session configuration option selector and its current state.",
+    identifier: "SessionConfigOption",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigOption}.
+ *
+ * **Example** (Reference the SessionConfigOption type)
+ *
+ * ```ts
+ * import type { SessionConfigOption } from "@beep/acp/schema"
+ *
+ * type SessionConfigOptionValue = SessionConfigOption
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigOption = typeof SessionConfigOption.Type;
+
+/**
+ * Generated ACP schema for `ElicitationSchema`.
+ *
+ * **Example** (Inspect the ElicitationSchema schema)
+ *
+ * ```ts
+ * import { ElicitationSchema } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationSchema.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationSchema = S.Struct({
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "Optional description of what this schema represents.",
+      }),
+      S.Null,
+    ]),
+  ),
+  properties: S.optionalKey(
+    S.Record(S.String, ElicitationPropertySchema).annotateKey({
+      description: "Property definitions (must be primitive types).",
+      default: {},
+    }),
+  ),
+  required: S.optionalKey(
+    S.Union([
+      S.Array(S.String).annotateKey({
+        description: "List of required property names.",
+      }),
+      S.Null,
+    ]),
+  ),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Optional title for the schema." }),
+      S.Null,
+    ]),
+  ),
+  type: S.optionalKey(
+    S.suspend(
+      (): S.Codec<ElicitationSchemaType> => ElicitationSchemaType,
+    ).annotateKey({
+      description: 'Type discriminator. Always `"object"`.',
+      default: "object",
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("ElicitationSchema", {
+    description: "Generated ACP schema for ElicitationSchema.",
+    documentation:
+      "Type-safe elicitation schema for requesting structured user input.\n\nThis represents a JSON Schema object with primitive-typed properties,\nas required by the elicitation specification.",
+    identifier: "ElicitationSchema",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationSchema}.
+ *
+ * **Example** (Reference the ElicitationSchema type)
+ *
+ * ```ts
+ * import type { ElicitationSchema } from "@beep/acp/schema"
+ *
+ * type ElicitationSchemaValue = ElicitationSchema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationSchema = typeof ElicitationSchema.Type;
+
+/**
+ * Generated ACP schema for `RequestPermissionRequest`.
+ *
+ * **Example** (Inspect the RequestPermissionRequest schema)
+ *
+ * ```ts
+ * import { RequestPermissionRequest } from "@beep/acp/schema"
+ *
+ * console.log(RequestPermissionRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RequestPermissionRequest = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  options: S.Array(PermissionOption).annotateKey({
+    description: "Available permission options for the user to choose from.",
+  }),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The session ID for this request.",
+  }),
+  toolCall: S.suspend(
+    (): S.Codec<ToolCallUpdate> => ToolCallUpdate,
+  ).annotateKey({
+    description: "Details about the tool call requiring permission.",
+  }),
+}).pipe(
+  $I.annoteSchema("RequestPermissionRequest", {
+    description: "Generated ACP schema for RequestPermissionRequest.",
+    documentation:
+      "Request for user permission to execute a tool call.\n\nSent when the agent needs authorization before performing a sensitive operation.\n\nSee protocol docs: [Requesting Permission](https://agentclientprotocol.com/protocol/tool-calls#requesting-permission)",
+    identifier: "RequestPermissionRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link RequestPermissionRequest}.
+ *
+ * **Example** (Reference the RequestPermissionRequest type)
+ *
+ * ```ts
+ * import type { RequestPermissionRequest } from "@beep/acp/schema"
+ *
+ * type RequestPermissionRequestValue = RequestPermissionRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RequestPermissionRequest = typeof RequestPermissionRequest.Type;
+
+/**
+ * Generated ACP schema for `SessionUpdate`.
+ *
+ * **Example** (Inspect the SessionUpdate schema)
+ *
+ * ```ts
+ * import { SessionUpdate } from "@beep/acp/schema"
+ *
+ * console.log(SessionUpdate.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionUpdate = S.Union(
+  [
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
+        { description: "A single item of content" },
+      ),
+      messageId: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
+          }),
+          S.Null,
+        ]),
+      ),
+      sessionUpdate: S.Literal("user_message_chunk"),
+    }).annotateKey({
+      description: "A chunk of the user's message being streamed.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
+        { description: "A single item of content" },
+      ),
+      messageId: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
+          }),
+          S.Null,
+        ]),
+      ),
+      sessionUpdate: S.Literal("agent_message_chunk"),
+    }).annotateKey({
+      description: "A chunk of the agent's response being streamed.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey(
+        { description: "A single item of content" },
+      ),
+      messageId: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
+          }),
+          S.Null,
+        ]),
+      ),
+      sessionUpdate: S.Literal("agent_thought_chunk"),
+    }).annotateKey({
+      description: "A chunk of the agent's internal reasoning being streamed.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.optionalKey(
+        S.Array(ToolCallContent).annotateKey({
+          description: "Content produced by the tool call.",
+        }),
+      ),
+      kind: S.optionalKey(
+        S.suspend((): S.Codec<ToolKind> => ToolKind).annotateKey({
+          description:
+            "The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment.",
+        }),
+      ),
+      locations: S.optionalKey(
+        S.Array(ToolCallLocation).annotateKey({
+          description:
+            'File locations affected by this tool call.\nEnables "follow-along" features in clients.',
+        }),
+      ),
+      rawInput: S.optionalKey(
+        S.Json.annotateKey({
+          expected: "JSON value",
+          description: "Raw input parameters sent to the tool.",
+        }),
+      ),
+      rawOutput: S.optionalKey(
+        S.Json.annotateKey({
+          expected: "JSON value",
+          description: "Raw output returned by the tool.",
+        }),
+      ),
+      status: S.optionalKey(
+        S.suspend((): S.Codec<ToolCallStatus> => ToolCallStatus).annotateKey({
+          description: "Current execution status of the tool call.",
+        }),
+      ),
+      title: S.String.annotateKey({
+        description: "Human-readable title describing what the tool is doing.",
+      }),
+      toolCallId: S.suspend((): S.Codec<ToolCallId> => ToolCallId).annotateKey({
+        description: "Unique identifier for this tool call within the session.",
+      }),
+      sessionUpdate: S.Literal("tool_call"),
+    }).annotateKey({
+      description: "Notification that a new tool call has been initiated.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      content: S.optionalKey(
+        S.Union([
+          S.Array(ToolCallContent).annotateKey({
+            description: "Replace the content collection.",
+          }),
+          S.Null,
+        ]),
+      ),
+      kind: S.optionalKey(
+        S.Union([ToolKind, S.Null]).annotateKey({
+          description: "Update the tool kind.",
+        }),
+      ),
+      locations: S.optionalKey(
+        S.Union([
+          S.Array(ToolCallLocation).annotateKey({
+            description: "Replace the locations collection.",
+          }),
+          S.Null,
+        ]),
+      ),
+      rawInput: S.optionalKey(
+        S.Json.annotateKey({
+          expected: "JSON value",
+          description: "Update the raw input.",
+        }),
+      ),
+      rawOutput: S.optionalKey(
+        S.Json.annotateKey({
+          expected: "JSON value",
+          description: "Update the raw output.",
+        }),
+      ),
+      status: S.optionalKey(
+        S.Union([ToolCallStatus, S.Null]).annotateKey({
+          description: "Update the execution status.",
+        }),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description: "Update the human-readable title.",
+          }),
+          S.Null,
+        ]),
+      ),
+      toolCallId: S.suspend((): S.Codec<ToolCallId> => ToolCallId).annotateKey({
+        description: "The ID of the tool call being updated.",
+      }),
+      sessionUpdate: S.Literal("tool_call_update"),
+    }).annotateKey({
+      description: "Update on the status or results of a tool call.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      entries: S.Array(PlanEntry).annotateKey({
+        description:
+          "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
+      }),
+      sessionUpdate: S.Literal("plan"),
+    }).annotateKey({
+      description:
+        "The agent's execution plan for complex tasks.\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      availableCommands: S.Array(AvailableCommand).annotateKey({
+        description: "Commands the agent can execute",
+      }),
+      sessionUpdate: S.Literal("available_commands_update"),
+    }).annotateKey({
+      description: "Available commands are ready or have changed",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      currentModeId: S.suspend(
+        (): S.Codec<SessionModeId> => SessionModeId,
+      ).annotateKey({ description: "The ID of the current mode" }),
+      sessionUpdate: S.Literal("current_mode_update"),
+    }).annotateKey({
+      description:
+        "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      configOptions: S.Array(SessionConfigOption).annotateKey({
+        description:
+          "The full set of configuration options and their current values.",
+      }),
+      sessionUpdate: S.Literal("config_option_update"),
+    }).annotateKey({
+      description: "Session configuration options have been updated.",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      title: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "Human-readable title for the session. Set to null to clear.",
+          }),
+          S.Null,
+        ]),
+      ),
+      updatedAt: S.optionalKey(
+        S.Union([
+          S.String.annotateKey({
+            description:
+              "ISO 8601 timestamp of last activity. Set to null to clear.",
+          }),
+          S.Null,
+        ]),
+      ),
+      sessionUpdate: S.Literal("session_info_update"),
+    }).annotateKey({
+      description:
+        "Session metadata has been updated (title, timestamps, custom metadata)",
+    }),
+    S.Struct({
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      cost: S.optionalKey(
+        S.Union([Cost, S.Null]).annotateKey({
+          description: "Cumulative session cost (optional).",
+        }),
+      ),
+      size: S.Int.annotateKey({
+        description: "Total context window size in tokens.",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      used: S.Int.annotateKey({
+        description: "Tokens currently in context.",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      sessionUpdate: S.Literal("usage_update"),
+    }).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for the session.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("SessionUpdate", {
+    description: "Generated ACP schema for SessionUpdate.",
+    documentation:
+      "Different types of updates that can be sent during session processing.\n\nThese updates provide real-time feedback about the agent's progress.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
+    identifier: "SessionUpdate",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionUpdate}.
+ *
+ * **Example** (Reference the SessionUpdate type)
+ *
+ * ```ts
+ * import type { SessionUpdate } from "@beep/acp/schema"
+ *
+ * type SessionUpdateValue = SessionUpdate
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionUpdate = typeof SessionUpdate.Type;
+
+/**
+ * Generated ACP schema for `NewSessionResponse`.
+ *
+ * **Example** (Inspect the NewSessionResponse schema)
+ *
+ * ```ts
+ * import { NewSessionResponse } from "@beep/acp/schema"
+ *
+ * console.log(NewSessionResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NewSessionResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  configOptions: S.optionalKey(
+    S.Union([
+      S.Array(SessionConfigOption).annotateKey({
+        description:
+          "Initial session configuration options if supported by the Agent.",
+      }),
+      S.Null,
+    ]),
+  ),
+  models: S.optionalKey(
+    S.Union([SessionModelState, S.Null]).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
+    }),
+  ),
+  modes: S.optionalKey(
+    S.Union([SessionModeState, S.Null]).annotateKey({
+      description:
+        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+    }),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description:
+      "Unique identifier for the created session.\n\nUsed in all subsequent requests for this conversation.",
+  }),
+}).pipe(
+  $I.annoteSchema("NewSessionResponse", {
+    description: "Generated ACP schema for NewSessionResponse.",
+    documentation:
+      "Response from creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
+    identifier: "NewSessionResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link NewSessionResponse}.
+ *
+ * **Example** (Reference the NewSessionResponse type)
+ *
+ * ```ts
+ * import type { NewSessionResponse } from "@beep/acp/schema"
+ *
+ * type NewSessionResponseValue = NewSessionResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NewSessionResponse = typeof NewSessionResponse.Type;
+
+/**
+ * Generated ACP schema for `LoadSessionResponse`.
+ *
+ * **Example** (Inspect the LoadSessionResponse schema)
+ *
+ * ```ts
+ * import { LoadSessionResponse } from "@beep/acp/schema"
+ *
+ * console.log(LoadSessionResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LoadSessionResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  configOptions: S.optionalKey(
+    S.Union([
+      S.Array(SessionConfigOption).annotateKey({
+        description:
+          "Initial session configuration options if supported by the Agent.",
+      }),
+      S.Null,
+    ]),
+  ),
+  models: S.optionalKey(
+    S.Union([SessionModelState, S.Null]).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
+    }),
+  ),
+  modes: S.optionalKey(
+    S.Union([SessionModeState, S.Null]).annotateKey({
+      description:
+        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("LoadSessionResponse", {
+    description: "Generated ACP schema for LoadSessionResponse.",
+    documentation: "Response from loading an existing session.",
+    identifier: "LoadSessionResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link LoadSessionResponse}.
+ *
+ * **Example** (Reference the LoadSessionResponse type)
+ *
+ * ```ts
+ * import type { LoadSessionResponse } from "@beep/acp/schema"
+ *
+ * type LoadSessionResponseValue = LoadSessionResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LoadSessionResponse = typeof LoadSessionResponse.Type;
+
+/**
+ * Generated ACP schema for `ForkSessionResponse`.
+ *
+ * **Example** (Inspect the ForkSessionResponse schema)
+ *
+ * ```ts
+ * import { ForkSessionResponse } from "@beep/acp/schema"
+ *
+ * console.log(ForkSessionResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ForkSessionResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  configOptions: S.optionalKey(
+    S.Union([
+      S.Array(SessionConfigOption).annotateKey({
+        description:
+          "Initial session configuration options if supported by the Agent.",
+      }),
+      S.Null,
+    ]),
+  ),
+  models: S.optionalKey(
+    S.Union([SessionModelState, S.Null]).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
+    }),
+  ),
+  modes: S.optionalKey(
+    S.Union([SessionModeState, S.Null]).annotateKey({
+      description:
+        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+    }),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "Unique identifier for the newly created forked session.",
+  }),
+}).pipe(
+  $I.annoteSchema("ForkSessionResponse", {
+    description: "Generated ACP schema for ForkSessionResponse.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from forking an existing session.",
+    identifier: "ForkSessionResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ForkSessionResponse}.
+ *
+ * **Example** (Reference the ForkSessionResponse type)
+ *
+ * ```ts
+ * import type { ForkSessionResponse } from "@beep/acp/schema"
+ *
+ * type ForkSessionResponseValue = ForkSessionResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ForkSessionResponse = typeof ForkSessionResponse.Type;
+
+/**
+ * Generated ACP schema for `ResumeSessionResponse`.
+ *
+ * **Example** (Inspect the ResumeSessionResponse schema)
+ *
+ * ```ts
+ * import { ResumeSessionResponse } from "@beep/acp/schema"
+ *
+ * console.log(ResumeSessionResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ResumeSessionResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  configOptions: S.optionalKey(
+    S.Union([
+      S.Array(SessionConfigOption).annotateKey({
+        description:
+          "Initial session configuration options if supported by the Agent.",
+      }),
+      S.Null,
+    ]),
+  ),
+  models: S.optionalKey(
+    S.Union([SessionModelState, S.Null]).annotateKey({
+      description:
+        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInitial model state if supported by the Agent",
+    }),
+  ),
+  modes: S.optionalKey(
+    S.Union([SessionModeState, S.Null]).annotateKey({
+      description:
+        "Initial mode state if supported by the Agent\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+    }),
+  ),
+}).pipe(
+  $I.annoteSchema("ResumeSessionResponse", {
+    description: "Generated ACP schema for ResumeSessionResponse.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from resuming an existing session.",
+    identifier: "ResumeSessionResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ResumeSessionResponse}.
+ *
+ * **Example** (Reference the ResumeSessionResponse type)
+ *
+ * ```ts
+ * import type { ResumeSessionResponse } from "@beep/acp/schema"
+ *
+ * type ResumeSessionResponseValue = ResumeSessionResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ResumeSessionResponse = typeof ResumeSessionResponse.Type;
+
+/**
+ * Generated ACP schema for `SetSessionConfigOptionResponse`.
+ *
+ * **Example** (Inspect the SetSessionConfigOptionResponse schema)
+ *
+ * ```ts
+ * import { SetSessionConfigOptionResponse } from "@beep/acp/schema"
+ *
+ * console.log(SetSessionConfigOptionResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SetSessionConfigOptionResponse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  configOptions: S.Array(SessionConfigOption).annotateKey({
+    description:
+      "The full set of configuration options and their current values.",
+  }),
+}).pipe(
+  $I.annoteSchema("SetSessionConfigOptionResponse", {
+    description: "Generated ACP schema for SetSessionConfigOptionResponse.",
+    documentation: "Response to `session/set_config_option` method.",
+    identifier: "SetSessionConfigOptionResponse",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SetSessionConfigOptionResponse}.
+ *
+ * **Example** (Reference the SetSessionConfigOptionResponse type)
+ *
+ * ```ts
+ * import type { SetSessionConfigOptionResponse } from "@beep/acp/schema"
+ *
+ * type SetSessionConfigOptionResponseValue = SetSessionConfigOptionResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SetSessionConfigOptionResponse =
+  typeof SetSessionConfigOptionResponse.Type;
+
+/**
+ * Generated ACP schema for `ElicitationRequest`.
+ *
+ * **Example** (Inspect the ElicitationRequest schema)
+ *
+ * ```ts
+ * import { ElicitationRequest } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationRequest = S.Union(
+  [
+    S.Struct({
+      requestedSchema: S.suspend(
+        (): S.Codec<ElicitationSchema> => ElicitationSchema,
+      ).annotateKey({
+        description:
+          "A JSON Schema describing the form fields to present to the user.",
+      }),
+      mode: S.Literal("form"),
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      message: S.String.annotateKey({
+        description:
+          "A human-readable message describing what input is needed.",
+      }),
+      sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+        description: "The session ID for this request.",
+      }),
+    }).annotateKey({
+      description:
+        "Form-based elicitation where the client renders a form from the provided schema.",
+    }),
+    S.Struct({
+      elicitationId: S.suspend(
+        (): S.Codec<ElicitationId> => ElicitationId,
+      ).annotateKey({
+        description: "The unique identifier for this elicitation.",
+      }),
+      url: S.String.annotateKey({
+        description: "The URL to direct the user to.",
+        format: "uri",
+      }),
+      mode: S.Literal("url"),
+      _meta: S.optionalKey(
+        S.Union([
+          S.Record(
+            S.String,
+            S.Json.annotate({ expected: "JSON value" }),
+          ).annotateKey({
+            description:
+              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+          }),
+          S.Null,
+        ]),
+      ),
+      message: S.String.annotateKey({
+        description:
+          "A human-readable message describing what input is needed.",
+      }),
+      sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+        description: "The session ID for this request.",
+      }),
+    }).annotateKey({
+      description:
+        "URL-based elicitation where the client directs the user to a URL.",
+    }),
+  ],
+  { mode: "oneOf" },
+).pipe(
+  $I.annoteSchema("ElicitationRequest", {
+    description: "Generated ACP schema for ElicitationRequest.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
+    identifier: "ElicitationRequest",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationRequest}.
+ *
+ * **Example** (Reference the ElicitationRequest type)
+ *
+ * ```ts
+ * import type { ElicitationRequest } from "@beep/acp/schema"
+ *
+ * type ElicitationRequestValue = ElicitationRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationRequest = typeof ElicitationRequest.Type;
+
+/**
+ * Generated ACP schema for `SessionNotification`.
+ *
+ * **Example** (Inspect the SessionNotification schema)
+ *
+ * ```ts
+ * import { SessionNotification } from "@beep/acp/schema"
+ *
+ * console.log(SessionNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionNotification = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
+    description: "The ID of the session this update pertains to.",
+  }),
+  update: S.suspend((): S.Codec<SessionUpdate> => SessionUpdate).annotateKey({
+    description: "The actual update content.",
+  }),
+}).pipe(
+  $I.annoteSchema("SessionNotification", {
+    description: "Generated ACP schema for SessionNotification.",
+    documentation:
+      "Notification containing a session update from the agent.\n\nUsed to stream real-time progress and results during prompt processing.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
+    identifier: "SessionNotification",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionNotification}.
+ *
+ * **Example** (Reference the SessionNotification type)
+ *
+ * ```ts
+ * import type { SessionNotification } from "@beep/acp/schema"
+ *
+ * type SessionNotificationValue = SessionNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionNotification = typeof SessionNotification.Type;
+
+/**
+ * Generated ACP schema for `AgentNotification`.
+ *
+ * **Example** (Inspect the AgentNotification schema)
+ *
+ * ```ts
+ * import { AgentNotification } from "@beep/acp/schema"
+ *
+ * console.log(AgentNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentNotification = S.Struct({
+  method: S.String,
+  params: S.optionalKey(
+    S.Union([
+      S.Union([
+        S.suspend(
+          (): S.Codec<SessionNotification> => SessionNotification,
+        ).annotateKey({
+          title: "SessionNotification",
+          description:
+            "Handles session update notifications from the agent.\n\nThis is a notification endpoint (no response expected) that receives\nreal-time updates about session progress, including message chunks,\ntool calls, and execution plans.\n\nNote: Clients SHOULD continue accepting tool call updates even after\nsending a `session/cancel` notification, as the agent may send final\nupdates before responding with the cancelled stop reason.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
+        }),
+        S.suspend(
+          (): S.Codec<ElicitationCompleteNotification> =>
+            ElicitationCompleteNotification,
+        ).annotateKey({
+          title: "ElicitationCompleteNotification",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification that a URL-based elicitation has completed.",
+        }),
+        S.suspend((): S.Codec<ExtNotification> => ExtNotification).annotateKey({
+          title: "ExtNotification",
+          description:
+            "Handles extension notifications from the agent.\n\nAllows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+      ]).annotateKey({
+        description:
+          "All possible notifications that an agent can send to a client.\n\nThis enum is used internally for routing RPC notifications. You typically won't need\nto use this directly - use the notification methods on the [`Client`] trait instead.\n\nNotifications do not expect a response.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("AgentNotification", {
+    description: "Generated ACP schema for AgentNotification.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AgentNotification}.
+ *
+ * **Example** (Reference the AgentNotification type)
+ *
+ * ```ts
+ * import type { AgentNotification } from "@beep/acp/schema"
+ *
+ * type AgentNotificationValue = AgentNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentNotification = typeof AgentNotification.Type;
+
+/**
+ * Generated ACP schema for `AgentRequest`.
+ *
+ * **Example** (Inspect the AgentRequest schema)
+ *
+ * ```ts
+ * import { AgentRequest } from "@beep/acp/schema"
+ *
+ * console.log(AgentRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentRequest = S.Struct({
+  id: RequestId,
+  method: S.String,
+  params: S.optionalKey(
+    S.Union([
+      S.Union([
+        S.suspend(
+          (): S.Codec<WriteTextFileRequest> => WriteTextFileRequest,
+        ).annotateKey({
+          title: "WriteTextFileRequest",
+          description:
+            "Writes content to a text file in the client's file system.\n\nOnly available if the client advertises the `fs.writeTextFile` capability.\nAllows the agent to create or modify files within the client's environment.\n\nSee protocol docs: [Client](https://agentclientprotocol.com/protocol/overview#client)",
+        }),
+        S.suspend(
+          (): S.Codec<ReadTextFileRequest> => ReadTextFileRequest,
+        ).annotateKey({
+          title: "ReadTextFileRequest",
+          description:
+            "Reads content from a text file in the client's file system.\n\nOnly available if the client advertises the `fs.readTextFile` capability.\nAllows the agent to access file contents within the client's environment.\n\nSee protocol docs: [Client](https://agentclientprotocol.com/protocol/overview#client)",
+        }),
+        S.suspend(
+          (): S.Codec<RequestPermissionRequest> => RequestPermissionRequest,
+        ).annotateKey({
+          title: "RequestPermissionRequest",
+          description:
+            "Requests permission from the user for a tool call operation.\n\nCalled by the agent when it needs user authorization before executing\na potentially sensitive operation. The client should present the options\nto the user and return their decision.\n\nIf the client cancels the prompt turn via `session/cancel`, it MUST\nrespond to this request with `RequestPermissionOutcome::Cancelled`.\n\nSee protocol docs: [Requesting Permission](https://agentclientprotocol.com/protocol/tool-calls#requesting-permission)",
+        }),
+        S.suspend(
+          (): S.Codec<CreateTerminalRequest> => CreateTerminalRequest,
+        ).annotateKey({
+          title: "CreateTerminalRequest",
+          description:
+            "Executes a command in a new terminal\n\nOnly available if the `terminal` Client capability is set to `true`.\n\nReturns a `TerminalId` that can be used with other terminal methods\nto get the current output, wait for exit, and kill the command.\n\nThe `TerminalId` can also be used to embed the terminal in a tool call\nby using the `ToolCallContent::Terminal` variant.\n\nThe Agent is responsible for releasing the terminal by using the `terminal/release`\nmethod.\n\nSee protocol docs: [Terminals](https://agentclientprotocol.com/protocol/terminals)",
+        }),
+        S.suspend(
+          (): S.Codec<TerminalOutputRequest> => TerminalOutputRequest,
+        ).annotateKey({
+          title: "TerminalOutputRequest",
+          description:
+            "Gets the terminal output and exit status\n\nReturns the current content in the terminal without waiting for the command to exit.\nIf the command has already exited, the exit status is included.\n\nSee protocol docs: [Terminals](https://agentclientprotocol.com/protocol/terminals)",
+        }),
+        S.suspend(
+          (): S.Codec<ReleaseTerminalRequest> => ReleaseTerminalRequest,
+        ).annotateKey({
+          title: "ReleaseTerminalRequest",
+          description:
+            "Releases a terminal\n\nThe command is killed if it hasn't exited yet. Use `terminal/wait_for_exit`\nto wait for the command to exit before releasing the terminal.\n\nAfter release, the `TerminalId` can no longer be used with other `terminal/*` methods,\nbut tool calls that already contain it, continue to display its output.\n\nThe `terminal/kill` method can be used to terminate the command without releasing\nthe terminal, allowing the Agent to call `terminal/output` and other methods.\n\nSee protocol docs: [Terminals](https://agentclientprotocol.com/protocol/terminals)",
+        }),
+        S.suspend(
+          (): S.Codec<WaitForTerminalExitRequest> => WaitForTerminalExitRequest,
+        ).annotateKey({
+          title: "WaitForTerminalExitRequest",
+          description:
+            "Waits for the terminal command to exit and return its exit status\n\nSee protocol docs: [Terminals](https://agentclientprotocol.com/protocol/terminals)",
+        }),
+        S.suspend(
+          (): S.Codec<KillTerminalRequest> => KillTerminalRequest,
+        ).annotateKey({
+          title: "KillTerminalRequest",
+          description:
+            "Kills the terminal command without releasing the terminal\n\nWhile `terminal/release` will also kill the command, this method will keep\nthe `TerminalId` valid so it can be used with other methods.\n\nThis method can be helpful when implementing command timeouts which terminate\nthe command as soon as elapsed, and then get the final output so it can be sent\nto the model.\n\nNote: Call `terminal/release` when `TerminalId` is no longer needed.\n\nSee protocol docs: [Terminals](https://agentclientprotocol.com/protocol/terminals)",
+        }),
+        S.suspend(
+          (): S.Codec<ElicitationRequest> => ElicitationRequest,
+        ).annotateKey({
+          title: "ElicitationRequest",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequests structured user input via a form or URL.",
+        }),
+        S.suspend((): S.Codec<ExtRequest> => ExtRequest).annotateKey({
+          title: "ExtMethodRequest",
+          description:
+            "Handles extension method requests from the agent.\n\nAllows the Agent to send an arbitrary request that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+      ]).annotateKey({
+        description:
+          "All possible requests that an agent can send to a client.\n\nThis enum is used internally for routing RPC requests. You typically won't need\nto use this directly - instead, use the methods on the [`Client`] trait.\n\nThis enum encompasses all method calls from agent to client.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("AgentRequest", {
+    description: "Generated ACP schema for AgentRequest.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AgentRequest}.
+ *
+ * **Example** (Reference the AgentRequest type)
+ *
+ * ```ts
+ * import type { AgentRequest } from "@beep/acp/schema"
+ *
+ * type AgentRequestValue = AgentRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentRequest = typeof AgentRequest.Type;
+
+/**
+ * Generated ACP schema for `AgentResponse`.
+ *
+ * **Example** (Inspect the AgentResponse schema)
+ *
+ * ```ts
+ * import { AgentResponse } from "@beep/acp/schema"
+ *
+ * console.log(AgentResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentResponse = S.Union([
+  S.Struct({
+    id: RequestId,
+    result: S.Union([
+      S.suspend(
+        (): S.Codec<InitializeResponse> => InitializeResponse,
+      ).annotateKey({ title: "InitializeResponse" }),
+      S.suspend(
+        (): S.Codec<AuthenticateResponse> => AuthenticateResponse,
+      ).annotateKey({ title: "AuthenticateResponse" }),
+      S.suspend((): S.Codec<LogoutResponse> => LogoutResponse).annotateKey({
+        title: "LogoutResponse",
+      }),
+      S.suspend(
+        (): S.Codec<NewSessionResponse> => NewSessionResponse,
+      ).annotateKey({ title: "NewSessionResponse" }),
+      S.suspend(
+        (): S.Codec<LoadSessionResponse> => LoadSessionResponse,
+      ).annotateKey({ title: "LoadSessionResponse" }),
+      S.suspend(
+        (): S.Codec<ListSessionsResponse> => ListSessionsResponse,
+      ).annotateKey({ title: "ListSessionsResponse" }),
+      S.suspend(
+        (): S.Codec<ForkSessionResponse> => ForkSessionResponse,
+      ).annotateKey({ title: "ForkSessionResponse" }),
+      S.suspend(
+        (): S.Codec<ResumeSessionResponse> => ResumeSessionResponse,
+      ).annotateKey({ title: "ResumeSessionResponse" }),
+      S.suspend(
+        (): S.Codec<CloseSessionResponse> => CloseSessionResponse,
+      ).annotateKey({ title: "CloseSessionResponse" }),
+      S.suspend(
+        (): S.Codec<SetSessionModeResponse> => SetSessionModeResponse,
+      ).annotateKey({ title: "SetSessionModeResponse" }),
+      S.suspend(
+        (): S.Codec<SetSessionConfigOptionResponse> =>
+          SetSessionConfigOptionResponse,
+      ).annotateKey({ title: "SetSessionConfigOptionResponse" }),
+      S.suspend((): S.Codec<PromptResponse> => PromptResponse).annotateKey({
+        title: "PromptResponse",
+      }),
+      S.suspend(
+        (): S.Codec<SetSessionModelResponse> => SetSessionModelResponse,
+      ).annotateKey({ title: "SetSessionModelResponse" }),
+      S.suspend((): S.Codec<ExtResponse> => ExtResponse).annotateKey({
+        title: "ExtMethodResponse",
+      }),
+    ]).annotateKey({
+      description:
+        "All possible responses that an agent can send to a client.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `ClientRequest` variants.",
+    }),
+  }).annotateKey({ title: "Result" }),
+  S.Struct({ error: Error, id: RequestId }).annotateKey({ title: "Error" }),
+]).pipe(
+  $I.annoteSchema("AgentResponse", {
+    description: "Generated ACP schema for AgentResponse.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AgentResponse}.
+ *
+ * **Example** (Reference the AgentResponse type)
+ *
+ * ```ts
+ * import type { AgentResponse } from "@beep/acp/schema"
+ *
+ * type AgentResponseValue = AgentResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AgentResponse = typeof AgentResponse.Type;
+
+/**
+ * Generated ACP schema for `AudioContent`.
+ *
+ * **Example** (Inspect the AudioContent schema)
+ *
+ * ```ts
+ * import { AudioContent } from "@beep/acp/schema"
+ *
+ * console.log(AudioContent.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AudioContent = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+  data: S.String,
+  mimeType: S.String,
+}).pipe(
+  $I.annoteSchema("AudioContent", {
+    description: "Generated ACP schema for AudioContent.",
+    documentation: "Audio provided to or from an LLM.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AudioContent}.
+ *
+ * **Example** (Reference the AudioContent type)
+ *
+ * ```ts
+ * import type { AudioContent } from "@beep/acp/schema"
+ *
+ * type AudioContentValue = AudioContent
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AudioContent = typeof AudioContent.Type;
+
+/**
+ * Generated ACP schema for `AuthMethodEnvVar`.
+ *
+ * **Example** (Inspect the AuthMethodEnvVar schema)
+ *
+ * ```ts
+ * import { AuthMethodEnvVar } from "@beep/acp/schema"
+ *
+ * console.log(AuthMethodEnvVar.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AuthMethodEnvVar = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "Optional description providing more details about this authentication method.",
+      }),
+      S.Null,
+    ]),
+  ),
+  id: S.String.annotateKey({
+    description: "Unique identifier for this authentication method.",
+  }),
+  link: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "Optional link to a page where the user can obtain their credentials.",
+      }),
+      S.Null,
+    ]),
+  ),
+  name: S.String.annotateKey({
+    description: "Human-readable name of the authentication method.",
+  }),
+  vars: S.Array(AuthEnvVar).annotateKey({
+    description: "The environment variables the client should set.",
+  }),
+}).pipe(
+  $I.annoteSchema("AuthMethodEnvVar", {
+    description: "Generated ACP schema for AuthMethodEnvVar.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nEnvironment variable authentication method.\n\nThe user provides credentials that the client passes to the agent as environment variables.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AuthMethodEnvVar}.
+ *
+ * **Example** (Reference the AuthMethodEnvVar type)
+ *
+ * ```ts
+ * import type { AuthMethodEnvVar } from "@beep/acp/schema"
+ *
+ * type AuthMethodEnvVarValue = AuthMethodEnvVar
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AuthMethodEnvVar = typeof AuthMethodEnvVar.Type;
+
+/**
+ * Generated ACP schema for `AuthMethodTerminal`.
+ *
+ * **Example** (Inspect the AuthMethodTerminal schema)
+ *
+ * ```ts
+ * import { AuthMethodTerminal } from "@beep/acp/schema"
+ *
+ * console.log(AuthMethodTerminal.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AuthMethodTerminal = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  args: S.optionalKey(
+    S.Array(S.String).annotateKey({
+      description:
+        "Additional arguments to pass when running the agent binary for terminal auth.",
+    }),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "Optional description providing more details about this authentication method.",
+      }),
+      S.Null,
+    ]),
+  ),
+  env: S.optionalKey(
+    S.Record(S.String, S.String).annotateKey({
+      description:
+        "Additional environment variables to set when running the agent binary for terminal auth.",
+    }),
+  ),
+  id: S.String.annotateKey({
+    description: "Unique identifier for this authentication method.",
+  }),
+  name: S.String.annotateKey({
+    description: "Human-readable name of the authentication method.",
+  }),
+}).pipe(
+  $I.annoteSchema("AuthMethodTerminal", {
+    description: "Generated ACP schema for AuthMethodTerminal.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nTerminal-based authentication method.\n\nThe client runs an interactive terminal for the user to authenticate via a TUI.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AuthMethodTerminal}.
+ *
+ * **Example** (Reference the AuthMethodTerminal type)
+ *
+ * ```ts
+ * import type { AuthMethodTerminal } from "@beep/acp/schema"
+ *
+ * type AuthMethodTerminalValue = AuthMethodTerminal
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AuthMethodTerminal = typeof AuthMethodTerminal.Type;
+
+/**
+ * Generated ACP schema for `AvailableCommandsUpdate`.
+ *
+ * **Example** (Inspect the AvailableCommandsUpdate schema)
+ *
+ * ```ts
+ * import { AvailableCommandsUpdate } from "@beep/acp/schema"
+ *
+ * console.log(AvailableCommandsUpdate.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AvailableCommandsUpdate = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  availableCommands: S.Array(AvailableCommand).annotateKey({
+    description: "Commands the agent can execute",
+  }),
+}).pipe(
+  $I.annoteSchema("AvailableCommandsUpdate", {
+    description: "Generated ACP schema for AvailableCommandsUpdate.",
+    documentation: "Available commands are ready or have changed",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link AvailableCommandsUpdate}.
+ *
+ * **Example** (Reference the AvailableCommandsUpdate type)
+ *
+ * ```ts
+ * import type { AvailableCommandsUpdate } from "@beep/acp/schema"
+ *
+ * type AvailableCommandsUpdateValue = AvailableCommandsUpdate
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AvailableCommandsUpdate = typeof AvailableCommandsUpdate.Type;
+
+/**
+ * Generated ACP schema for `BooleanPropertySchema`.
+ *
+ * **Example** (Inspect the BooleanPropertySchema schema)
+ *
+ * ```ts
+ * import { BooleanPropertySchema } from "@beep/acp/schema"
+ *
+ * console.log(BooleanPropertySchema.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BooleanPropertySchema = S.Struct({
+  default: S.optionalKey(
+    S.Union([S.Boolean.annotateKey({ description: "Default value." }), S.Null]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Human-readable description." }),
+      S.Null,
+    ]),
+  ),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Optional title for the property." }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("BooleanPropertySchema", {
+    description: "Generated ACP schema for BooleanPropertySchema.",
+    documentation: "Schema for boolean properties in an elicitation form.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link BooleanPropertySchema}.
+ *
+ * **Example** (Reference the BooleanPropertySchema type)
+ *
+ * ```ts
+ * import type { BooleanPropertySchema } from "@beep/acp/schema"
+ *
+ * type BooleanPropertySchemaValue = BooleanPropertySchema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BooleanPropertySchema = typeof BooleanPropertySchema.Type;
+
+/**
+ * Generated ACP schema for `CancelRequestNotification`.
+ *
+ * **Example** (Inspect the CancelRequestNotification schema)
+ *
+ * ```ts
+ * import { CancelRequestNotification } from "@beep/acp/schema"
+ *
+ * console.log(CancelRequestNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CancelRequestNotification = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  requestId: S.suspend((): S.Codec<RequestId> => RequestId).annotateKey({
+    description: "The ID of the request to cancel.",
+  }),
+}).pipe(
+  $I.annoteSchema("CancelRequestNotification", {
+    description: "Generated ACP schema for CancelRequestNotification.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification to cancel an ongoing request.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/cancellation)",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link CancelRequestNotification}.
+ *
+ * **Example** (Reference the CancelRequestNotification type)
+ *
+ * ```ts
+ * import type { CancelRequestNotification } from "@beep/acp/schema"
+ *
+ * type CancelRequestNotificationValue = CancelRequestNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CancelRequestNotification = typeof CancelRequestNotification.Type;
+
+/**
+ * Generated ACP schema for `ClientNotification`.
+ *
+ * **Example** (Inspect the ClientNotification schema)
+ *
+ * ```ts
+ * import { ClientNotification } from "@beep/acp/schema"
+ *
+ * console.log(ClientNotification.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ClientNotification = S.Struct({
+  method: S.String,
+  params: S.optionalKey(
+    S.Union([
+      S.Union([
+        S.suspend(
+          (): S.Codec<CancelNotification> => CancelNotification,
+        ).annotateKey({
+          title: "CancelNotification",
+          description:
+            "Cancels ongoing operations for a session.\n\nThis is a notification sent by the client to cancel an ongoing prompt turn.\n\nUpon receiving this notification, the Agent SHOULD:\n- Stop all language model requests as soon as possible\n- Abort all tool call invocations in progress\n- Send any pending `session/update` notifications\n- Respond to the original `session/prompt` request with `StopReason::Cancelled`\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
+        }),
+        S.suspend((): S.Codec<ExtNotification> => ExtNotification).annotateKey({
+          title: "ExtNotification",
+          description:
+            "Handles extension notifications from the client.\n\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+      ]).annotateKey({
+        description:
+          "All possible notifications that a client can send to an agent.\n\nThis enum is used internally for routing RPC notifications. You typically won't need\nto use this directly - use the notification methods on the [`Agent`] trait instead.\n\nNotifications do not expect a response.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("ClientNotification", {
+    description: "Generated ACP schema for ClientNotification.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ClientNotification}.
+ *
+ * **Example** (Reference the ClientNotification type)
+ *
+ * ```ts
+ * import type { ClientNotification } from "@beep/acp/schema"
+ *
+ * type ClientNotificationValue = ClientNotification
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ClientNotification = typeof ClientNotification.Type;
+
+/**
+ * Generated ACP schema for `ClientRequest`.
+ *
+ * **Example** (Inspect the ClientRequest schema)
+ *
+ * ```ts
+ * import { ClientRequest } from "@beep/acp/schema"
+ *
+ * console.log(ClientRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ClientRequest = S.Struct({
+  id: RequestId,
+  method: S.String,
+  params: S.optionalKey(
+    S.Union([
+      S.Union([
+        S.suspend(
+          (): S.Codec<InitializeRequest> => InitializeRequest,
+        ).annotateKey({
+          title: "InitializeRequest",
+          description:
+            "Establishes the connection with a client and negotiates protocol capabilities.\n\nThis method is called once at the beginning of the connection to:\n- Negotiate the protocol version to use\n- Exchange capability information between client and agent\n- Determine available authentication methods\n\nThe agent should respond with its supported protocol version and capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
+        }),
+        S.suspend(
+          (): S.Codec<AuthenticateRequest> => AuthenticateRequest,
+        ).annotateKey({
+          title: "AuthenticateRequest",
+          description:
+            "Authenticates the client using the specified authentication method.\n\nCalled when the agent requires authentication before allowing session creation.\nThe client provides the authentication method ID that was advertised during initialization.\n\nAfter successful authentication, the client can proceed to create sessions with\n`new_session` without receiving an `auth_required` error.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
+        }),
+        S.suspend((): S.Codec<LogoutRequest> => LogoutRequest).annotateKey({
+          title: "LogoutRequest",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nLogs out of the current authenticated state.\n\nAfter a successful logout, all new sessions will require authentication.\nThere is no guarantee about the behavior of already running sessions.",
+        }),
+        S.suspend(
+          (): S.Codec<NewSessionRequest> => NewSessionRequest,
+        ).annotateKey({
+          title: "NewSessionRequest",
+          description:
+            "Creates a new conversation session with the agent.\n\nSessions represent independent conversation contexts with their own history and state.\n\nThe agent should:\n- Create a new session context\n- Connect to any specified MCP servers\n- Return a unique session ID for future requests\n\nMay return an `auth_required` error if the agent requires authentication.\n\nSee protocol docs: [Session Setup](https://agentclientprotocol.com/protocol/session-setup)",
+        }),
+        S.suspend(
+          (): S.Codec<LoadSessionRequest> => LoadSessionRequest,
+        ).annotateKey({
+          title: "LoadSessionRequest",
+          description:
+            "Loads an existing session to resume a previous conversation.\n\nThis method is only available if the agent advertises the `loadSession` capability.\n\nThe agent should:\n- Restore the session context and conversation history\n- Connect to the specified MCP servers\n- Stream the entire conversation history back to the client via notifications\n\nSee protocol docs: [Loading Sessions](https://agentclientprotocol.com/protocol/session-setup#loading-sessions)",
+        }),
+        S.suspend(
+          (): S.Codec<ListSessionsRequest> => ListSessionsRequest,
+        ).annotateKey({
+          title: "ListSessionsRequest",
+          description:
+            "Lists existing sessions known to the agent.\n\nThis method is only available if the agent advertises the `sessionCapabilities.list` capability.\n\nThe agent should return metadata about sessions with optional filtering and pagination support.",
+        }),
+        S.suspend(
+          (): S.Codec<ForkSessionRequest> => ForkSessionRequest,
+        ).annotateKey({
+          title: "ForkSessionRequest",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForks an existing session to create a new independent session.\n\nThis method is only available if the agent advertises the `session.fork` capability.\n\nThe agent should create a new session with the same conversation context as the\noriginal, allowing operations like generating summaries without affecting the\noriginal session's history.",
+        }),
+        S.suspend(
+          (): S.Codec<ResumeSessionRequest> => ResumeSessionRequest,
+        ).annotateKey({
+          title: "ResumeSessionRequest",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResumes an existing session without returning previous messages.\n\nThis method is only available if the agent advertises the `session.resume` capability.\n\nThe agent should resume the session context, allowing the conversation to continue\nwithout replaying the message history (unlike `session/load`).",
+        }),
+        S.suspend(
+          (): S.Codec<CloseSessionRequest> => CloseSessionRequest,
+        ).annotateKey({
+          title: "CloseSessionRequest",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCloses an active session and frees up any resources associated with it.\n\nThis method is only available if the agent advertises the `session.close` capability.\n\nThe agent must cancel any ongoing work (as if `session/cancel` was called)\nand then free up any resources associated with the session.",
+        }),
+        S.suspend(
+          (): S.Codec<SetSessionModeRequest> => SetSessionModeRequest,
+        ).annotateKey({
+          title: "SetSessionModeRequest",
+          description:
+            'Sets the current mode for a session.\n\nAllows switching between different agent modes (e.g., "ask", "architect", "code")\nthat affect system prompts, tool availability, and permission behaviors.\n\nThe mode must be one of the modes advertised in `availableModes` during session\ncreation or loading. Agents may also change modes autonomously and notify the\nclient via `current_mode_update` notifications.\n\nThis method can be called at any time during a session, whether the Agent is\nidle or actively generating a response.\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)',
+        }),
+        S.suspend(
+          (): S.Codec<SetSessionConfigOptionRequest> =>
+            SetSessionConfigOptionRequest,
+        ).annotateKey({
+          title: "SetSessionConfigOptionRequest",
+          description:
+            "Sets the current value for a session configuration option.",
+        }),
+        S.suspend((): S.Codec<PromptRequest> => PromptRequest).annotateKey({
+          title: "PromptRequest",
+          description:
+            "Processes a user prompt within a session.\n\nThis method handles the whole lifecycle of a prompt:\n- Receives user messages with optional context (files, images, etc.)\n- Processes the prompt using language models\n- Reports language model content and tool calls to the Clients\n- Requests permission to run tools\n- Executes any requested tool calls\n- Returns when the turn is complete with a stop reason\n\nSee protocol docs: [Prompt Turn](https://agentclientprotocol.com/protocol/prompt-turn)",
+        }),
+        S.suspend(
+          (): S.Codec<SetSessionModelRequest> => SetSessionModelRequest,
+        ).annotateKey({
+          title: "SetSessionModelRequest",
+          description:
+            "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nSelect a model for a given session.",
+        }),
+        S.suspend((): S.Codec<ExtRequest> => ExtRequest).annotateKey({
+          title: "ExtMethodRequest",
+          description:
+            "Handles extension method requests from the client.\n\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+        }),
+      ]).annotateKey({
+        description:
+          "All possible requests that a client can send to an agent.\n\nThis enum is used internally for routing RPC requests. You typically won't need\nto use this directly - instead, use the methods on the [`Agent`] trait.\n\nThis enum encompasses all method calls from client to agent.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("ClientRequest", {
+    description: "Generated ACP schema for ClientRequest.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ClientRequest}.
+ *
+ * **Example** (Reference the ClientRequest type)
+ *
+ * ```ts
+ * import type { ClientRequest } from "@beep/acp/schema"
+ *
+ * type ClientRequestValue = ClientRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ClientRequest = typeof ClientRequest.Type;
+
+/**
+ * Generated ACP schema for `ClientResponse`.
+ *
+ * **Example** (Inspect the ClientResponse schema)
+ *
+ * ```ts
+ * import { ClientResponse } from "@beep/acp/schema"
+ *
+ * console.log(ClientResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ClientResponse = S.Union([
+  S.Struct({
+    id: RequestId,
+    result: S.Union([
+      S.suspend(
+        (): S.Codec<WriteTextFileResponse> => WriteTextFileResponse,
+      ).annotateKey({ title: "WriteTextFileResponse" }),
+      S.suspend(
+        (): S.Codec<ReadTextFileResponse> => ReadTextFileResponse,
+      ).annotateKey({ title: "ReadTextFileResponse" }),
+      S.suspend(
+        (): S.Codec<RequestPermissionResponse> => RequestPermissionResponse,
+      ).annotateKey({ title: "RequestPermissionResponse" }),
+      S.suspend(
+        (): S.Codec<CreateTerminalResponse> => CreateTerminalResponse,
+      ).annotateKey({ title: "CreateTerminalResponse" }),
+      S.suspend(
+        (): S.Codec<TerminalOutputResponse> => TerminalOutputResponse,
+      ).annotateKey({ title: "TerminalOutputResponse" }),
+      S.suspend(
+        (): S.Codec<ReleaseTerminalResponse> => ReleaseTerminalResponse,
+      ).annotateKey({ title: "ReleaseTerminalResponse" }),
+      S.suspend(
+        (): S.Codec<WaitForTerminalExitResponse> => WaitForTerminalExitResponse,
+      ).annotateKey({ title: "WaitForTerminalExitResponse" }),
+      S.suspend(
+        (): S.Codec<KillTerminalResponse> => KillTerminalResponse,
+      ).annotateKey({ title: "KillTerminalResponse" }),
+      S.suspend(
+        (): S.Codec<ElicitationResponse> => ElicitationResponse,
+      ).annotateKey({ title: "ElicitationResponse" }),
+      S.suspend((): S.Codec<ExtResponse> => ExtResponse).annotateKey({
+        title: "ExtMethodResponse",
+      }),
+    ]).annotateKey({
+      description:
+        "All possible responses that a client can send to an agent.\n\nThis enum is used internally for routing RPC responses. You typically won't need\nto use this directly - the responses are handled automatically by the connection.\n\nThese are responses to the corresponding `AgentRequest` variants.",
+    }),
+  }).annotateKey({ title: "Result" }),
+  S.Struct({ error: Error, id: RequestId }).annotateKey({ title: "Error" }),
+]).pipe(
+  $I.annoteSchema("ClientResponse", {
+    description: "Generated ACP schema for ClientResponse.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ClientResponse}.
+ *
+ * **Example** (Reference the ClientResponse type)
+ *
+ * ```ts
+ * import type { ClientResponse } from "@beep/acp/schema"
+ *
+ * type ClientResponseValue = ClientResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ClientResponse = typeof ClientResponse.Type;
+
+/**
+ * Generated ACP schema for `ConfigOptionUpdate`.
+ *
+ * **Example** (Inspect the ConfigOptionUpdate schema)
+ *
+ * ```ts
+ * import { ConfigOptionUpdate } from "@beep/acp/schema"
+ *
+ * console.log(ConfigOptionUpdate.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConfigOptionUpdate = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  configOptions: S.Array(SessionConfigOption).annotateKey({
+    description:
+      "The full set of configuration options and their current values.",
+  }),
+}).pipe(
+  $I.annoteSchema("ConfigOptionUpdate", {
+    description: "Generated ACP schema for ConfigOptionUpdate.",
+    documentation: "Session configuration options have been updated.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ConfigOptionUpdate}.
+ *
+ * **Example** (Reference the ConfigOptionUpdate type)
+ *
+ * ```ts
+ * import type { ConfigOptionUpdate } from "@beep/acp/schema"
+ *
+ * type ConfigOptionUpdateValue = ConfigOptionUpdate
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ConfigOptionUpdate = typeof ConfigOptionUpdate.Type;
+
+/**
+ * Generated ACP schema for `Content`.
+ *
+ * **Example** (Inspect the Content schema)
+ *
+ * ```ts
+ * import { Content } from "@beep/acp/schema"
+ *
+ * console.log(Content.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Content = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey({
+    description: "The actual content block.",
+  }),
+}).pipe(
+  $I.annoteSchema("Content", {
+    description: "Generated ACP schema for Content.",
+    documentation: "Standard content block (text, images, resources).",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Content}.
+ *
+ * **Example** (Reference the Content type)
+ *
+ * ```ts
+ * import type { Content } from "@beep/acp/schema"
+ *
+ * type ContentValue = Content
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Content = typeof Content.Type;
+
+/**
+ * Generated ACP schema for `ContentChunk`.
+ *
+ * **Example** (Inspect the ContentChunk schema)
+ *
+ * ```ts
+ * import { ContentChunk } from "@beep/acp/schema"
+ *
+ * console.log(ContentChunk.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ContentChunk = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  content: S.suspend((): S.Codec<ContentBlock> => ContentBlock).annotateKey({
+    description: "A single item of content",
+  }),
+  messageId: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description:
+          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("ContentChunk", {
+    description: "Generated ACP schema for ContentChunk.",
+    documentation: "A streamed item of content",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ContentChunk}.
+ *
+ * **Example** (Reference the ContentChunk type)
+ *
+ * ```ts
+ * import type { ContentChunk } from "@beep/acp/schema"
+ *
+ * type ContentChunkValue = ContentChunk
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ContentChunk = typeof ContentChunk.Type;
+
+/**
+ * Generated ACP schema for `CurrentModeUpdate`.
+ *
+ * **Example** (Inspect the CurrentModeUpdate schema)
+ *
+ * ```ts
+ * import { CurrentModeUpdate } from "@beep/acp/schema"
+ *
+ * console.log(CurrentModeUpdate.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CurrentModeUpdate = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  currentModeId: S.suspend(
+    (): S.Codec<SessionModeId> => SessionModeId,
+  ).annotateKey({ description: "The ID of the current mode" }),
+}).pipe(
+  $I.annoteSchema("CurrentModeUpdate", {
+    description: "Generated ACP schema for CurrentModeUpdate.",
+    documentation:
+      "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link CurrentModeUpdate}.
+ *
+ * **Example** (Reference the CurrentModeUpdate type)
+ *
+ * ```ts
+ * import type { CurrentModeUpdate } from "@beep/acp/schema"
+ *
+ * type CurrentModeUpdateValue = CurrentModeUpdate
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CurrentModeUpdate = typeof CurrentModeUpdate.Type;
+
+/**
+ * Generated ACP schema for `Diff`.
+ *
+ * **Example** (Inspect the Diff schema)
+ *
+ * ```ts
+ * import { Diff } from "@beep/acp/schema"
+ *
+ * console.log(Diff.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Diff = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  newText: S.String.annotateKey({
+    description: "The new content after modification.",
+  }),
+  oldText: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({
+        description: "The original content (None for new files).",
+      }),
+      S.Null,
+    ]),
+  ),
+  path: S.String.annotateKey({ description: "The file path being modified." }),
+}).pipe(
+  $I.annoteSchema("Diff", {
+    description: "Generated ACP schema for Diff.",
+    documentation:
+      "A diff representing file modifications.\n\nShows changes to files in a format suitable for display in the client UI.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Diff}.
+ *
+ * **Example** (Reference the Diff type)
+ *
+ * ```ts
+ * import type { Diff } from "@beep/acp/schema"
+ *
+ * type DiffValue = Diff
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Diff = typeof Diff.Type;
+
+/**
+ * Generated ACP schema for `ElicitationAcceptAction`.
+ *
+ * **Example** (Inspect the ElicitationAcceptAction schema)
+ *
+ * ```ts
+ * import { ElicitationAcceptAction } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationAcceptAction.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationAcceptAction = S.Struct({
+  content: S.optionalKey(
+    S.Union([
+      S.Record(S.String, ElicitationContentValue).annotateKey({
+        description:
+          "The user-provided content, if any, as an object matching the requested schema.",
+      }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("ElicitationAcceptAction", {
+    description: "Generated ACP schema for ElicitationAcceptAction.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationAcceptAction}.
+ *
+ * **Example** (Reference the ElicitationAcceptAction type)
+ *
+ * ```ts
+ * import type { ElicitationAcceptAction } from "@beep/acp/schema"
+ *
+ * type ElicitationAcceptActionValue = ElicitationAcceptAction
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationAcceptAction = typeof ElicitationAcceptAction.Type;
+
+/**
+ * Generated ACP schema for `ElicitationFormMode`.
+ *
+ * **Example** (Inspect the ElicitationFormMode schema)
+ *
+ * ```ts
+ * import { ElicitationFormMode } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationFormMode.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationFormMode = S.Struct({
+  requestedSchema: S.suspend(
+    (): S.Codec<ElicitationSchema> => ElicitationSchema,
+  ).annotateKey({
+    description:
+      "A JSON Schema describing the form fields to present to the user.",
+  }),
+}).pipe(
+  $I.annoteSchema("ElicitationFormMode", {
+    description: "Generated ACP schema for ElicitationFormMode.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForm-based elicitation mode where the client renders a form from the provided schema.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationFormMode}.
+ *
+ * **Example** (Reference the ElicitationFormMode type)
+ *
+ * ```ts
+ * import type { ElicitationFormMode } from "@beep/acp/schema"
+ *
+ * type ElicitationFormModeValue = ElicitationFormMode
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationFormMode = typeof ElicitationFormMode.Type;
+
+/**
+ * Generated ACP schema for `ElicitationUrlMode`.
+ *
+ * **Example** (Inspect the ElicitationUrlMode schema)
+ *
+ * ```ts
+ * import { ElicitationUrlMode } from "@beep/acp/schema"
+ *
+ * console.log(ElicitationUrlMode.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ElicitationUrlMode = S.Struct({
+  elicitationId: S.suspend(
+    (): S.Codec<ElicitationId> => ElicitationId,
+  ).annotateKey({ description: "The unique identifier for this elicitation." }),
+  url: S.String.annotateKey({
+    description: "The URL to direct the user to.",
+    format: "uri",
+  }),
+}).pipe(
+  $I.annoteSchema("ElicitationUrlMode", {
+    description: "Generated ACP schema for ElicitationUrlMode.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nURL-based elicitation mode where the client directs the user to a URL.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ElicitationUrlMode}.
+ *
+ * **Example** (Reference the ElicitationUrlMode type)
+ *
+ * ```ts
+ * import type { ElicitationUrlMode } from "@beep/acp/schema"
+ *
+ * type ElicitationUrlModeValue = ElicitationUrlMode
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ElicitationUrlMode = typeof ElicitationUrlMode.Type;
+
+/**
+ * Generated ACP schema for `EmbeddedResource`.
+ *
+ * **Example** (Inspect the EmbeddedResource schema)
+ *
+ * ```ts
+ * import { EmbeddedResource } from "@beep/acp/schema"
+ *
+ * console.log(EmbeddedResource.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EmbeddedResource = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+  resource: EmbeddedResourceResource,
+}).pipe(
+  $I.annoteSchema("EmbeddedResource", {
+    description: "Generated ACP schema for EmbeddedResource.",
+    documentation:
+      "The contents of a resource, embedded into a prompt or tool call result.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link EmbeddedResource}.
+ *
+ * **Example** (Reference the EmbeddedResource type)
+ *
+ * ```ts
+ * import type { EmbeddedResource } from "@beep/acp/schema"
+ *
+ * type EmbeddedResourceValue = EmbeddedResource
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EmbeddedResource = typeof EmbeddedResource.Type;
+
+/**
+ * Generated ACP schema for `ImageContent`.
+ *
+ * **Example** (Inspect the ImageContent schema)
+ *
+ * ```ts
+ * import { ImageContent } from "@beep/acp/schema"
+ *
+ * console.log(ImageContent.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ImageContent = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+  data: S.String,
+  mimeType: S.String,
+  uri: S.optionalKey(S.Union([S.String, S.Null])),
+}).pipe(
+  $I.annoteSchema("ImageContent", {
+    description: "Generated ACP schema for ImageContent.",
+    documentation: "An image provided to or from an LLM.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ImageContent}.
+ *
+ * **Example** (Reference the ImageContent type)
+ *
+ * ```ts
+ * import type { ImageContent } from "@beep/acp/schema"
+ *
+ * type ImageContentValue = ImageContent
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ImageContent = typeof ImageContent.Type;
+
+/**
+ * Generated ACP schema for `IntegerPropertySchema`.
+ *
+ * **Example** (Inspect the IntegerPropertySchema schema)
+ *
+ * ```ts
+ * import { IntegerPropertySchema } from "@beep/acp/schema"
+ *
+ * console.log(IntegerPropertySchema.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const IntegerPropertySchema = S.Struct({
+  default: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({ description: "Default value.", format: "int64" }),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Human-readable description." }),
+      S.Null,
+    ]),
+  ),
+  maximum: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Maximum value (inclusive).",
+        format: "int64",
+      }),
+      S.Null,
+    ]),
+  ),
+  minimum: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Minimum value (inclusive).",
+        format: "int64",
+      }),
+      S.Null,
+    ]),
+  ),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Optional title for the property." }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("IntegerPropertySchema", {
+    description: "Generated ACP schema for IntegerPropertySchema.",
+    documentation: "Schema for integer properties in an elicitation form.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link IntegerPropertySchema}.
+ *
+ * **Example** (Reference the IntegerPropertySchema type)
+ *
+ * ```ts
+ * import type { IntegerPropertySchema } from "@beep/acp/schema"
+ *
+ * type IntegerPropertySchemaValue = IntegerPropertySchema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type IntegerPropertySchema = typeof IntegerPropertySchema.Type;
+
+/**
+ * Generated ACP schema for `McpServerHttp`.
+ *
+ * **Example** (Inspect the McpServerHttp schema)
+ *
+ * ```ts
+ * import { McpServerHttp } from "@beep/acp/schema"
+ *
+ * console.log(McpServerHttp.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const McpServerHttp = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  headers: S.Array(HttpHeader).annotateKey({
+    description: "HTTP headers to set when making requests to the MCP server.",
+  }),
+  name: S.String.annotateKey({
+    description: "Human-readable name identifying this MCP server.",
+  }),
+  url: S.String.annotateKey({ description: "URL to the MCP server." }),
+}).pipe(
+  $I.annoteSchema("McpServerHttp", {
+    description: "Generated ACP schema for McpServerHttp.",
+    documentation: "HTTP transport configuration for MCP.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link McpServerHttp}.
+ *
+ * **Example** (Reference the McpServerHttp type)
+ *
+ * ```ts
+ * import type { McpServerHttp } from "@beep/acp/schema"
+ *
+ * type McpServerHttpValue = McpServerHttp
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpServerHttp = typeof McpServerHttp.Type;
+
+/**
+ * Generated ACP schema for `McpServerSse`.
+ *
+ * **Example** (Inspect the McpServerSse schema)
+ *
+ * ```ts
+ * import { McpServerSse } from "@beep/acp/schema"
+ *
+ * console.log(McpServerSse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const McpServerSse = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  headers: S.Array(HttpHeader).annotateKey({
+    description: "HTTP headers to set when making requests to the MCP server.",
+  }),
+  name: S.String.annotateKey({
+    description: "Human-readable name identifying this MCP server.",
+  }),
+  url: S.String.annotateKey({ description: "URL to the MCP server." }),
+}).pipe(
+  $I.annoteSchema("McpServerSse", {
+    description: "Generated ACP schema for McpServerSse.",
+    documentation: "SSE transport configuration for MCP.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link McpServerSse}.
+ *
+ * **Example** (Reference the McpServerSse type)
+ *
+ * ```ts
+ * import type { McpServerSse } from "@beep/acp/schema"
+ *
+ * type McpServerSseValue = McpServerSse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpServerSse = typeof McpServerSse.Type;
+
+/**
+ * Generated ACP schema for `MultiSelectPropertySchema`.
+ *
+ * **Example** (Inspect the MultiSelectPropertySchema schema)
+ *
+ * ```ts
+ * import { MultiSelectPropertySchema } from "@beep/acp/schema"
+ *
+ * console.log(MultiSelectPropertySchema.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MultiSelectPropertySchema = S.Struct({
+  default: S.optionalKey(
+    S.Union([
+      S.Array(S.String).annotateKey({
+        description: "Default selected values.",
+      }),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Human-readable description." }),
+      S.Null,
+    ]),
+  ),
+  items: S.suspend(
+    (): S.Codec<MultiSelectItems> => MultiSelectItems,
+  ).annotateKey({
+    description: "The items definition describing allowed values.",
+  }),
+  maxItems: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Maximum number of items to select.",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  minItems: S.optionalKey(
+    S.Union([
+      S.Int.annotateKey({
+        description: "Minimum number of items to select.",
+        format: "uint64",
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
+      S.Null,
+    ]),
+  ),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Optional title for the property." }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("MultiSelectPropertySchema", {
+    description: "Generated ACP schema for MultiSelectPropertySchema.",
+    documentation:
+      "Schema for multi-select (array) properties in an elicitation form.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link MultiSelectPropertySchema}.
+ *
+ * **Example** (Reference the MultiSelectPropertySchema type)
+ *
+ * ```ts
+ * import type { MultiSelectPropertySchema } from "@beep/acp/schema"
+ *
+ * type MultiSelectPropertySchemaValue = MultiSelectPropertySchema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MultiSelectPropertySchema = typeof MultiSelectPropertySchema.Type;
+
+/**
+ * Generated ACP schema for `NumberPropertySchema`.
+ *
+ * **Example** (Inspect the NumberPropertySchema schema)
+ *
+ * ```ts
+ * import { NumberPropertySchema } from "@beep/acp/schema"
+ *
+ * console.log(NumberPropertySchema.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NumberPropertySchema = S.Struct({
+  default: S.optionalKey(
+    S.Union([
+      S.Finite.annotateKey({
+        description: "Default value.",
+        format: "double",
+      }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      S.Null,
+    ]),
+  ),
+  description: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Human-readable description." }),
+      S.Null,
+    ]),
+  ),
+  maximum: S.optionalKey(
+    S.Union([
+      S.Finite.annotateKey({
+        description: "Maximum value (inclusive).",
+        format: "double",
+      }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      S.Null,
+    ]),
+  ),
+  minimum: S.optionalKey(
+    S.Union([
+      S.Finite.annotateKey({
+        description: "Minimum value (inclusive).",
+        format: "double",
+      }).check(S.isFinite().annotate({ expected: "a finite number" })),
+      S.Null,
+    ]),
+  ),
+  title: S.optionalKey(
+    S.Union([
+      S.String.annotateKey({ description: "Optional title for the property." }),
+      S.Null,
+    ]),
+  ),
+}).pipe(
+  $I.annoteSchema("NumberPropertySchema", {
+    description: "Generated ACP schema for NumberPropertySchema.",
+    documentation:
+      "Schema for number (floating-point) properties in an elicitation form.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link NumberPropertySchema}.
+ *
+ * **Example** (Reference the NumberPropertySchema type)
+ *
+ * ```ts
+ * import type { NumberPropertySchema } from "@beep/acp/schema"
+ *
+ * type NumberPropertySchemaValue = NumberPropertySchema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NumberPropertySchema = typeof NumberPropertySchema.Type;
+
+/**
+ * Generated ACP schema for `Plan`.
+ *
+ * **Example** (Inspect the Plan schema)
+ *
+ * ```ts
+ * import { Plan } from "@beep/acp/schema"
+ *
+ * console.log(Plan.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Plan = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  entries: S.Array(PlanEntry).annotateKey({
+    description:
+      "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
+  }),
+}).pipe(
+  $I.annoteSchema("Plan", {
+    description: "Generated ACP schema for Plan.",
+    documentation:
+      "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link Plan}.
+ *
+ * **Example** (Reference the Plan type)
+ *
+ * ```ts
+ * import type { Plan } from "@beep/acp/schema"
+ *
+ * type PlanValue = Plan
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Plan = typeof Plan.Type;
+
+/**
+ * Generated ACP schema for `ResourceLink`.
+ *
+ * **Example** (Inspect the ResourceLink schema)
+ *
+ * ```ts
+ * import { ResourceLink } from "@beep/acp/schema"
+ *
+ * console.log(ResourceLink.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ResourceLink = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  annotations: S.optionalKey(S.Union([Annotations, S.Null])),
+  description: S.optionalKey(S.Union([S.String, S.Null])),
+  mimeType: S.optionalKey(S.Union([S.String, S.Null])),
+  name: S.String,
+  size: S.optionalKey(
+    S.Union([S.Int.annotateKey({ format: "int64" }), S.Null]),
+  ),
+  title: S.optionalKey(S.Union([S.String, S.Null])),
+  uri: S.String,
+}).pipe(
+  $I.annoteSchema("ResourceLink", {
+    description: "Generated ACP schema for ResourceLink.",
+    documentation:
+      "A resource that the server is capable of reading, included in a prompt or tool call result.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link ResourceLink}.
+ *
+ * **Example** (Reference the ResourceLink type)
+ *
+ * ```ts
+ * import type { ResourceLink } from "@beep/acp/schema"
+ *
+ * type ResourceLinkValue = ResourceLink
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ResourceLink = typeof ResourceLink.Type;
+
+/**
+ * Generated ACP schema for `SelectedPermissionOutcome`.
+ *
+ * **Example** (Inspect the SelectedPermissionOutcome schema)
+ *
+ * ```ts
+ * import { SelectedPermissionOutcome } from "@beep/acp/schema"
+ *
+ * console.log(SelectedPermissionOutcome.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SelectedPermissionOutcome = S.Struct({
+  _meta: S.optionalKey(
+    S.Union([
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
+        description:
+          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
+      }),
+      S.Null,
+    ]),
+  ),
+  optionId: S.suspend(
+    (): S.Codec<PermissionOptionId> => PermissionOptionId,
+  ).annotateKey({ description: "The ID of the option the user selected." }),
+}).pipe(
+  $I.annoteSchema("SelectedPermissionOutcome", {
+    description: "Generated ACP schema for SelectedPermissionOutcome.",
+    documentation: "The user selected one of the provided options.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SelectedPermissionOutcome}.
+ *
+ * **Example** (Reference the SelectedPermissionOutcome type)
+ *
+ * ```ts
+ * import type { SelectedPermissionOutcome } from "@beep/acp/schema"
+ *
+ * type SelectedPermissionOutcomeValue = SelectedPermissionOutcome
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SelectedPermissionOutcome = typeof SelectedPermissionOutcome.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigBoolean`.
+ *
+ * **Example** (Inspect the SessionConfigBoolean schema)
+ *
+ * ```ts
+ * import { SessionConfigBoolean } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigBoolean.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigBoolean = S.Struct({
+  currentValue: S.Boolean.annotateKey({
+    description: "The current value of the boolean option.",
+  }),
+}).pipe(
+  $I.annoteSchema("SessionConfigBoolean", {
+    description: "Generated ACP schema for SessionConfigBoolean.",
+    documentation:
+      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA boolean on/off toggle session configuration option payload.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigBoolean}.
+ *
+ * **Example** (Reference the SessionConfigBoolean type)
+ *
+ * ```ts
+ * import type { SessionConfigBoolean } from "@beep/acp/schema"
+ *
+ * type SessionConfigBooleanValue = SessionConfigBoolean
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigBoolean = typeof SessionConfigBoolean.Type;
+
+/**
+ * Generated ACP schema for `SessionConfigSelect`.
+ *
+ * **Example** (Inspect the SessionConfigSelect schema)
+ *
+ * ```ts
+ * import { SessionConfigSelect } from "@beep/acp/schema"
+ *
+ * console.log(SessionConfigSelect.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionConfigSelect = S.Struct({
+  currentValue: S.suspend(
+    (): S.Codec<SessionConfigValueId> => SessionConfigValueId,
+  ).annotateKey({ description: "The currently selected value." }),
+  options: S.suspend(
+    (): S.Codec<SessionConfigSelectOptions> => SessionConfigSelectOptions,
+  ).annotateKey({ description: "The set of selectable options." }),
+}).pipe(
+  $I.annoteSchema("SessionConfigSelect", {
+    description: "Generated ACP schema for SessionConfigSelect.",
+    documentation:
+      "A single-value selector (dropdown) session configuration option payload.",
+  }),
+  SchemaUtils.withCodecStatics,
+);
+
+/**
+ * Type for {@link SessionConfigSelect}.
+ *
+ * **Example** (Reference the SessionConfigSelect type)
+ *
+ * ```ts
+ * import type { SessionConfigSelect } from "@beep/acp/schema"
+ *
+ * type SessionConfigSelectValue = SessionConfigSelect
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionConfigSelect = typeof SessionConfigSelect.Type;
 
 /**
  * Generated ACP schema for `SessionInfoUpdate`.
  *
- * @example
+ * **Example** (Inspect the SessionInfoUpdate schema)
+ *
  * ```ts
  * import { SessionInfoUpdate } from "@beep/acp/schema"
  *
@@ -11560,7 +11024,10 @@ export type SessionId = typeof SessionId.Type;
 export const SessionInfoUpdate = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -11591,12 +11058,14 @@ export const SessionInfoUpdate = S.Struct({
     documentation:
       "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link SessionInfoUpdate}.
  *
- * @example
+ * **Example** (Reference the SessionInfoUpdate type)
+ *
  * ```ts
  * import type { SessionInfoUpdate } from "@beep/acp/schema"
  *
@@ -11609,1738 +11078,10 @@ export const SessionInfoUpdate = S.Struct({
 export type SessionInfoUpdate = typeof SessionInfoUpdate.Type;
 
 /**
- * Generated ACP schema for `SessionNotification`.
- *
- * @example
- * ```ts
- * import { SessionNotification } from "@beep/acp/schema"
- *
- * console.log(SessionNotification.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionNotification = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-  update: S.Union(
-    [
-      S.Struct({
-        sessionUpdate: S.Literal("user_message_chunk"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        content: S.Union(
-          [
-            S.Struct({
-              type: S.Literal("text"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              text: S.String,
-            }).annotateKey({ description: "Text provided to or from an LLM." }),
-            S.Struct({
-              type: S.Literal("image"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              data: S.String,
-              mimeType: S.String,
-              uri: S.optionalKey(S.Union([S.String, S.Null])),
-            }).annotateKey({
-              description: "An image provided to or from an LLM.",
-            }),
-            S.Struct({
-              type: S.Literal("audio"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              data: S.String,
-              mimeType: S.String,
-            }).annotateKey({
-              description: "Audio provided to or from an LLM.",
-            }),
-            S.Struct({
-              type: S.Literal("resource_link"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              description: S.optionalKey(S.Union([S.String, S.Null])),
-              mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-              name: S.String,
-              size: S.optionalKey(
-                S.Union([
-                  S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                  S.Null,
-                ]),
-              ),
-              title: S.optionalKey(S.Union([S.String, S.Null])),
-              uri: S.String,
-            }).annotateKey({
-              description:
-                "A resource that the server is capable of reading, included in a prompt or tool call result.",
-            }),
-            S.Struct({
-              type: S.Literal("resource"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              resource: EmbeddedResourceResource,
-            }).annotateKey({
-              description:
-                "The contents of a resource, embedded into a prompt or tool call result.",
-            }),
-          ],
-          { mode: "oneOf" },
-        ).annotateKey({
-          description:
-            "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-        }),
-        messageId: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({ description: "A streamed item of content" }),
-      S.Struct({
-        sessionUpdate: S.Literal("agent_message_chunk"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        content: S.Union(
-          [
-            S.Struct({
-              type: S.Literal("text"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              text: S.String,
-            }).annotateKey({ description: "Text provided to or from an LLM." }),
-            S.Struct({
-              type: S.Literal("image"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              data: S.String,
-              mimeType: S.String,
-              uri: S.optionalKey(S.Union([S.String, S.Null])),
-            }).annotateKey({
-              description: "An image provided to or from an LLM.",
-            }),
-            S.Struct({
-              type: S.Literal("audio"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              data: S.String,
-              mimeType: S.String,
-            }).annotateKey({
-              description: "Audio provided to or from an LLM.",
-            }),
-            S.Struct({
-              type: S.Literal("resource_link"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              description: S.optionalKey(S.Union([S.String, S.Null])),
-              mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-              name: S.String,
-              size: S.optionalKey(
-                S.Union([
-                  S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                  S.Null,
-                ]),
-              ),
-              title: S.optionalKey(S.Union([S.String, S.Null])),
-              uri: S.String,
-            }).annotateKey({
-              description:
-                "A resource that the server is capable of reading, included in a prompt or tool call result.",
-            }),
-            S.Struct({
-              type: S.Literal("resource"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              resource: EmbeddedResourceResource,
-            }).annotateKey({
-              description:
-                "The contents of a resource, embedded into a prompt or tool call result.",
-            }),
-          ],
-          { mode: "oneOf" },
-        ).annotateKey({
-          description:
-            "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-        }),
-        messageId: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({ description: "A streamed item of content" }),
-      S.Struct({
-        sessionUpdate: S.Literal("agent_thought_chunk"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        content: S.Union(
-          [
-            S.Struct({
-              type: S.Literal("text"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              text: S.String,
-            }).annotateKey({ description: "Text provided to or from an LLM." }),
-            S.Struct({
-              type: S.Literal("image"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              data: S.String,
-              mimeType: S.String,
-              uri: S.optionalKey(S.Union([S.String, S.Null])),
-            }).annotateKey({
-              description: "An image provided to or from an LLM.",
-            }),
-            S.Struct({
-              type: S.Literal("audio"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              data: S.String,
-              mimeType: S.String,
-            }).annotateKey({
-              description: "Audio provided to or from an LLM.",
-            }),
-            S.Struct({
-              type: S.Literal("resource_link"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              description: S.optionalKey(S.Union([S.String, S.Null])),
-              mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-              name: S.String,
-              size: S.optionalKey(
-                S.Union([
-                  S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                  S.Null,
-                ]),
-              ),
-              title: S.optionalKey(S.Union([S.String, S.Null])),
-              uri: S.String,
-            }).annotateKey({
-              description:
-                "A resource that the server is capable of reading, included in a prompt or tool call result.",
-            }),
-            S.Struct({
-              type: S.Literal("resource"),
-              _meta: S.optionalKey(
-                S.Union([
-                  S.Record(S.String, S.Unknown).annotateKey({
-                    description:
-                      "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                  }),
-                  S.Null,
-                ]),
-              ),
-              annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-              resource: EmbeddedResourceResource,
-            }).annotateKey({
-              description:
-                "The contents of a resource, embedded into a prompt or tool call result.",
-            }),
-          ],
-          { mode: "oneOf" },
-        ).annotateKey({
-          description:
-            "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-        }),
-        messageId: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({ description: "A streamed item of content" }),
-      S.Struct({
-        sessionUpdate: S.Literal("tool_call"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        content: S.optionalKey(
-          S.Array(ToolCallContent).annotateKey({
-            description: "Content produced by the tool call.",
-          }),
-        ),
-        kind: S.optionalKey(
-          S.Literals([
-            "read",
-            "edit",
-            "delete",
-            "move",
-            "search",
-            "execute",
-            "think",
-            "fetch",
-            "switch_mode",
-            "other",
-          ]).annotateKey({
-            description:
-              "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
-          }),
-        ),
-        locations: S.optionalKey(
-          S.Array(ToolCallLocation).annotateKey({
-            description:
-              'File locations affected by this tool call.\nEnables "follow-along" features in clients.',
-          }),
-        ),
-        rawInput: S.optionalKey(
-          S.Unknown.annotateKey({
-            description: "Raw input parameters sent to the tool.",
-          }),
-        ),
-        rawOutput: S.optionalKey(
-          S.Unknown.annotateKey({
-            description: "Raw output returned by the tool.",
-          }),
-        ),
-        status: S.optionalKey(
-          S.Literals([
-            "pending",
-            "in_progress",
-            "completed",
-            "failed",
-          ]).annotateKey({
-            description:
-              "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
-          }),
-        ),
-        title: S.String.annotateKey({
-          description:
-            "Human-readable title describing what the tool is doing.",
-        }),
-        toolCallId: S.String.annotateKey({
-          description: "Unique identifier for a tool call within a session.",
-        }),
-      }).annotateKey({
-        description:
-          "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("tool_call_update"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        content: S.optionalKey(
-          S.Union([
-            S.Array(ToolCallContent).annotateKey({
-              description: "Replace the content collection.",
-            }),
-            S.Null,
-          ]),
-        ),
-        kind: S.optionalKey(
-          S.Union([ToolKind, S.Null]).annotateKey({
-            description: "Update the tool kind.",
-          }),
-        ),
-        locations: S.optionalKey(
-          S.Union([
-            S.Array(ToolCallLocation).annotateKey({
-              description: "Replace the locations collection.",
-            }),
-            S.Null,
-          ]),
-        ),
-        rawInput: S.optionalKey(
-          S.Unknown.annotateKey({ description: "Update the raw input." }),
-        ),
-        rawOutput: S.optionalKey(
-          S.Unknown.annotateKey({ description: "Update the raw output." }),
-        ),
-        status: S.optionalKey(
-          S.Union([ToolCallStatus, S.Null]).annotateKey({
-            description: "Update the execution status.",
-          }),
-        ),
-        title: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description: "Update the human-readable title.",
-            }),
-            S.Null,
-          ]),
-        ),
-        toolCallId: S.String.annotateKey({
-          description: "Unique identifier for a tool call within a session.",
-        }),
-      }).annotateKey({
-        description:
-          "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("plan"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        entries: S.Array(PlanEntry).annotateKey({
-          description:
-            "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
-        }),
-      }).annotateKey({
-        description:
-          "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("available_commands_update"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        availableCommands: S.Array(AvailableCommand).annotateKey({
-          description: "Commands the agent can execute",
-        }),
-      }).annotateKey({
-        description: "Available commands are ready or have changed",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("current_mode_update"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        currentModeId: S.String.annotateKey({
-          description: "Unique identifier for a Session Mode.",
-        }),
-      }).annotateKey({
-        description:
-          "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("config_option_update"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        configOptions: S.Array(SessionConfigOption).annotateKey({
-          description:
-            "The full set of configuration options and their current values.",
-        }),
-      }).annotateKey({
-        description: "Session configuration options have been updated.",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("session_info_update"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        title: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "Human-readable title for the session. Set to null to clear.",
-            }),
-            S.Null,
-          ]),
-        ),
-        updatedAt: S.optionalKey(
-          S.Union([
-            S.String.annotateKey({
-              description:
-                "ISO 8601 timestamp of last activity. Set to null to clear.",
-            }),
-            S.Null,
-          ]),
-        ),
-      }).annotateKey({
-        description:
-          "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
-      }),
-      S.Struct({
-        sessionUpdate: S.Literal("usage_update"),
-        _meta: S.optionalKey(
-          S.Union([
-            S.Record(S.String, S.Unknown).annotateKey({
-              description:
-                "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-            }),
-            S.Null,
-          ]),
-        ),
-        cost: S.optionalKey(
-          S.Union([Cost, S.Null]).annotateKey({
-            description: "Cumulative session cost (optional).",
-          }),
-        ),
-        size: S.Finite.annotateKey({
-          description: "Total context window size in tokens.",
-          format: "uint64",
-        })
-          .check(S.isInt())
-          .check(S.isGreaterThanOrEqualTo(0)),
-        used: S.Finite.annotateKey({
-          description: "Tokens currently in context.",
-          format: "uint64",
-        })
-          .check(S.isInt())
-          .check(S.isGreaterThanOrEqualTo(0)),
-      }).annotateKey({
-        description:
-          "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for a session.",
-      }),
-    ],
-    { mode: "oneOf" },
-  ).annotateKey({
-    description:
-      "Different types of updates that can be sent during session processing.\n\nThese updates provide real-time feedback about the agent's progress.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
-  }),
-}).pipe(
-  $I.annoteSchema("SessionNotification", {
-    description: "Generated ACP schema for SessionNotification.",
-    documentation:
-      "Notification containing a session update from the agent.\n\nUsed to stream real-time progress and results during prompt processing.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
-  }),
-);
-
-/**
- * Type for {@link SessionNotification}.
- *
- * @example
- * ```ts
- * import type { SessionNotification } from "@beep/acp/schema"
- *
- * type SessionNotificationValue = SessionNotification
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionNotification = typeof SessionNotification.Type;
-
-/**
- * Generated ACP schema for `SessionUpdate`.
- *
- * @example
- * ```ts
- * import { SessionUpdate } from "@beep/acp/schema"
- *
- * console.log(SessionUpdate.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SessionUpdate = S.Union(
-  [
-    S.Struct({
-      sessionUpdate: S.Literal("user_message_chunk"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.Union(
-        [
-          S.Struct({
-            type: S.Literal("text"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            text: S.String,
-          }).annotateKey({ description: "Text provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("image"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-            uri: S.optionalKey(S.Union([S.String, S.Null])),
-          }).annotateKey({
-            description: "An image provided to or from an LLM.",
-          }),
-          S.Struct({
-            type: S.Literal("audio"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-          }).annotateKey({ description: "Audio provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("resource_link"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            description: S.optionalKey(S.Union([S.String, S.Null])),
-            mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-            name: S.String,
-            size: S.optionalKey(
-              S.Union([
-                S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                S.Null,
-              ]),
-            ),
-            title: S.optionalKey(S.Union([S.String, S.Null])),
-            uri: S.String,
-          }).annotateKey({
-            description:
-              "A resource that the server is capable of reading, included in a prompt or tool call result.",
-          }),
-          S.Struct({
-            type: S.Literal("resource"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            resource: EmbeddedResourceResource,
-          }).annotateKey({
-            description:
-              "The contents of a resource, embedded into a prompt or tool call result.",
-          }),
-        ],
-        { mode: "oneOf" },
-      ).annotateKey({
-        description:
-          "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-      }),
-      messageId: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({ description: "A streamed item of content" }),
-    S.Struct({
-      sessionUpdate: S.Literal("agent_message_chunk"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.Union(
-        [
-          S.Struct({
-            type: S.Literal("text"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            text: S.String,
-          }).annotateKey({ description: "Text provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("image"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-            uri: S.optionalKey(S.Union([S.String, S.Null])),
-          }).annotateKey({
-            description: "An image provided to or from an LLM.",
-          }),
-          S.Struct({
-            type: S.Literal("audio"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-          }).annotateKey({ description: "Audio provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("resource_link"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            description: S.optionalKey(S.Union([S.String, S.Null])),
-            mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-            name: S.String,
-            size: S.optionalKey(
-              S.Union([
-                S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                S.Null,
-              ]),
-            ),
-            title: S.optionalKey(S.Union([S.String, S.Null])),
-            uri: S.String,
-          }).annotateKey({
-            description:
-              "A resource that the server is capable of reading, included in a prompt or tool call result.",
-          }),
-          S.Struct({
-            type: S.Literal("resource"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            resource: EmbeddedResourceResource,
-          }).annotateKey({
-            description:
-              "The contents of a resource, embedded into a prompt or tool call result.",
-          }),
-        ],
-        { mode: "oneOf" },
-      ).annotateKey({
-        description:
-          "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-      }),
-      messageId: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({ description: "A streamed item of content" }),
-    S.Struct({
-      sessionUpdate: S.Literal("agent_thought_chunk"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.Union(
-        [
-          S.Struct({
-            type: S.Literal("text"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            text: S.String,
-          }).annotateKey({ description: "Text provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("image"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-            uri: S.optionalKey(S.Union([S.String, S.Null])),
-          }).annotateKey({
-            description: "An image provided to or from an LLM.",
-          }),
-          S.Struct({
-            type: S.Literal("audio"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            data: S.String,
-            mimeType: S.String,
-          }).annotateKey({ description: "Audio provided to or from an LLM." }),
-          S.Struct({
-            type: S.Literal("resource_link"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            description: S.optionalKey(S.Union([S.String, S.Null])),
-            mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-            name: S.String,
-            size: S.optionalKey(
-              S.Union([
-                S.Finite.annotateKey({ format: "int64" }).check(S.isInt()),
-                S.Null,
-              ]),
-            ),
-            title: S.optionalKey(S.Union([S.String, S.Null])),
-            uri: S.String,
-          }).annotateKey({
-            description:
-              "A resource that the server is capable of reading, included in a prompt or tool call result.",
-          }),
-          S.Struct({
-            type: S.Literal("resource"),
-            _meta: S.optionalKey(
-              S.Union([
-                S.Record(S.String, S.Unknown).annotateKey({
-                  description:
-                    "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-                }),
-                S.Null,
-              ]),
-            ),
-            annotations: S.optionalKey(S.Union([Annotations, S.Null])),
-            resource: EmbeddedResourceResource,
-          }).annotateKey({
-            description:
-              "The contents of a resource, embedded into a prompt or tool call result.",
-          }),
-        ],
-        { mode: "oneOf" },
-      ).annotateKey({
-        description:
-          "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
-      }),
-      messageId: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for the message this chunk belongs to.\n\nAll chunks belonging to the same message share the same `messageId`.\nA change in `messageId` indicates a new message has started.\nBoth clients and agents MUST use UUID format for message IDs.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({ description: "A streamed item of content" }),
-    S.Struct({
-      sessionUpdate: S.Literal("tool_call"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.optionalKey(
-        S.Array(ToolCallContent).annotateKey({
-          description: "Content produced by the tool call.",
-        }),
-      ),
-      kind: S.optionalKey(
-        S.Literals([
-          "read",
-          "edit",
-          "delete",
-          "move",
-          "search",
-          "execute",
-          "think",
-          "fetch",
-          "switch_mode",
-          "other",
-        ]).annotateKey({
-          description:
-            "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
-        }),
-      ),
-      locations: S.optionalKey(
-        S.Array(ToolCallLocation).annotateKey({
-          description:
-            'File locations affected by this tool call.\nEnables "follow-along" features in clients.',
-        }),
-      ),
-      rawInput: S.optionalKey(
-        S.Unknown.annotateKey({
-          description: "Raw input parameters sent to the tool.",
-        }),
-      ),
-      rawOutput: S.optionalKey(
-        S.Unknown.annotateKey({
-          description: "Raw output returned by the tool.",
-        }),
-      ),
-      status: S.optionalKey(
-        S.Literals([
-          "pending",
-          "in_progress",
-          "completed",
-          "failed",
-        ]).annotateKey({
-          description:
-            "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
-        }),
-      ),
-      title: S.String.annotateKey({
-        description: "Human-readable title describing what the tool is doing.",
-      }),
-      toolCallId: S.String.annotateKey({
-        description: "Unique identifier for a tool call within a session.",
-      }),
-    }).annotateKey({
-      description:
-        "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("tool_call_update"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      content: S.optionalKey(
-        S.Union([
-          S.Array(ToolCallContent).annotateKey({
-            description: "Replace the content collection.",
-          }),
-          S.Null,
-        ]),
-      ),
-      kind: S.optionalKey(
-        S.Union([ToolKind, S.Null]).annotateKey({
-          description: "Update the tool kind.",
-        }),
-      ),
-      locations: S.optionalKey(
-        S.Union([
-          S.Array(ToolCallLocation).annotateKey({
-            description: "Replace the locations collection.",
-          }),
-          S.Null,
-        ]),
-      ),
-      rawInput: S.optionalKey(
-        S.Unknown.annotateKey({ description: "Update the raw input." }),
-      ),
-      rawOutput: S.optionalKey(
-        S.Unknown.annotateKey({ description: "Update the raw output." }),
-      ),
-      status: S.optionalKey(
-        S.Union([ToolCallStatus, S.Null]).annotateKey({
-          description: "Update the execution status.",
-        }),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description: "Update the human-readable title.",
-          }),
-          S.Null,
-        ]),
-      ),
-      toolCallId: S.String.annotateKey({
-        description: "Unique identifier for a tool call within a session.",
-      }),
-    }).annotateKey({
-      description:
-        "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("plan"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      entries: S.Array(PlanEntry).annotateKey({
-        description:
-          "The list of tasks to be accomplished.\n\nWhen updating a plan, the agent must send a complete list of all entries\nwith their current status. The client replaces the entire plan with each update.",
-      }),
-    }).annotateKey({
-      description:
-        "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("available_commands_update"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      availableCommands: S.Array(AvailableCommand).annotateKey({
-        description: "Commands the agent can execute",
-      }),
-    }).annotateKey({
-      description: "Available commands are ready or have changed",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("current_mode_update"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      currentModeId: S.String.annotateKey({
-        description: "Unique identifier for a Session Mode.",
-      }),
-    }).annotateKey({
-      description:
-        "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("config_option_update"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      configOptions: S.Array(SessionConfigOption).annotateKey({
-        description:
-          "The full set of configuration options and their current values.",
-      }),
-    }).annotateKey({
-      description: "Session configuration options have been updated.",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("session_info_update"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      title: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "Human-readable title for the session. Set to null to clear.",
-          }),
-          S.Null,
-        ]),
-      ),
-      updatedAt: S.optionalKey(
-        S.Union([
-          S.String.annotateKey({
-            description:
-              "ISO 8601 timestamp of last activity. Set to null to clear.",
-          }),
-          S.Null,
-        ]),
-      ),
-    }).annotateKey({
-      description:
-        "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
-    }),
-    S.Struct({
-      sessionUpdate: S.Literal("usage_update"),
-      _meta: S.optionalKey(
-        S.Union([
-          S.Record(S.String, S.Unknown).annotateKey({
-            description:
-              "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-          }),
-          S.Null,
-        ]),
-      ),
-      cost: S.optionalKey(
-        S.Union([Cost, S.Null]).annotateKey({
-          description: "Cumulative session cost (optional).",
-        }),
-      ),
-      size: S.Finite.annotateKey({
-        description: "Total context window size in tokens.",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      used: S.Finite.annotateKey({
-        description: "Tokens currently in context.",
-        format: "uint64",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-    }).annotateKey({
-      description:
-        "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for a session.",
-    }),
-  ],
-  { mode: "oneOf" },
-).pipe(
-  $I.annoteSchema("SessionUpdate", {
-    description: "Generated ACP schema for SessionUpdate.",
-    documentation:
-      "Different types of updates that can be sent during session processing.\n\nThese updates provide real-time feedback about the agent's progress.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
-  }),
-);
-
-/**
- * Type for {@link SessionUpdate}.
- *
- * @example
- * ```ts
- * import type { SessionUpdate } from "@beep/acp/schema"
- *
- * type SessionUpdateValue = SessionUpdate
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionUpdate = typeof SessionUpdate.Type;
-
-/**
- * Generated ACP schema for `SetSessionConfigOptionRequest`.
- *
- * @example
- * ```ts
- * import { SetSessionConfigOptionRequest } from "@beep/acp/schema"
- *
- * console.log(SetSessionConfigOptionRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SetSessionConfigOptionRequest = S.Union([
-  S.Struct({
-    type: S.Literal("boolean"),
-    value: S.Boolean.annotateKey({ description: "The boolean value." }),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    configId: S.String.annotateKey({
-      description: "Unique identifier for a session configuration option.",
-    }),
-    sessionId: S.String.annotateKey({
-      description:
-        "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-    }),
-  }).annotateKey({
-    description:
-      "Request parameters for setting a session configuration option.",
-  }),
-  S.Struct({
-    value: S.String.annotateKey({
-      description:
-        "Unique identifier for a session configuration option value.",
-    }),
-    _meta: S.optionalKey(
-      S.Union([
-        S.Record(S.String, S.Unknown).annotateKey({
-          description:
-            "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-        }),
-        S.Null,
-      ]),
-    ),
-    configId: S.String.annotateKey({
-      description: "Unique identifier for a session configuration option.",
-    }),
-    sessionId: S.String.annotateKey({
-      description:
-        "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-    }),
-  }).annotateKey({
-    title: "value_id",
-    description:
-      "Request parameters for setting a session configuration option.",
-  }),
-]).pipe(
-  $I.annoteSchema("SetSessionConfigOptionRequest", {
-    description: "Generated ACP schema for SetSessionConfigOptionRequest.",
-  }),
-);
-
-/**
- * Type for {@link SetSessionConfigOptionRequest}.
- *
- * @example
- * ```ts
- * import type { SetSessionConfigOptionRequest } from "@beep/acp/schema"
- *
- * type SetSessionConfigOptionRequestValue = SetSessionConfigOptionRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SetSessionConfigOptionRequest =
-  typeof SetSessionConfigOptionRequest.Type;
-
-/**
- * Generated ACP schema for `SetSessionConfigOptionResponse`.
- *
- * @example
- * ```ts
- * import { SetSessionConfigOptionResponse } from "@beep/acp/schema"
- *
- * console.log(SetSessionConfigOptionResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SetSessionConfigOptionResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  configOptions: S.Array(SessionConfigOption).annotateKey({
-    description:
-      "The full set of configuration options and their current values.",
-  }),
-}).pipe(
-  $I.annoteSchema("SetSessionConfigOptionResponse", {
-    description: "Generated ACP schema for SetSessionConfigOptionResponse.",
-    documentation: "Response to `session/set_config_option` method.",
-  }),
-);
-
-/**
- * Type for {@link SetSessionConfigOptionResponse}.
- *
- * @example
- * ```ts
- * import type { SetSessionConfigOptionResponse } from "@beep/acp/schema"
- *
- * type SetSessionConfigOptionResponseValue = SetSessionConfigOptionResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SetSessionConfigOptionResponse =
-  typeof SetSessionConfigOptionResponse.Type;
-
-/**
- * Generated ACP schema for `SetSessionModelRequest`.
- *
- * @example
- * ```ts
- * import { SetSessionModelRequest } from "@beep/acp/schema"
- *
- * console.log(SetSessionModelRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SetSessionModelRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  modelId: S.String.annotateKey({
-    description:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("SetSessionModelRequest", {
-    description: "Generated ACP schema for SetSessionModelRequest.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for setting a session model.",
-  }),
-);
-
-/**
- * Type for {@link SetSessionModelRequest}.
- *
- * @example
- * ```ts
- * import type { SetSessionModelRequest } from "@beep/acp/schema"
- *
- * type SetSessionModelRequestValue = SetSessionModelRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SetSessionModelRequest = typeof SetSessionModelRequest.Type;
-
-/**
- * Generated ACP schema for `SetSessionModelResponse`.
- *
- * @example
- * ```ts
- * import { SetSessionModelResponse } from "@beep/acp/schema"
- *
- * console.log(SetSessionModelResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SetSessionModelResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SetSessionModelResponse", {
-    description: "Generated ACP schema for SetSessionModelResponse.",
-    documentation:
-      "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to `session/set_model` method.",
-  }),
-);
-
-/**
- * Type for {@link SetSessionModelResponse}.
- *
- * @example
- * ```ts
- * import type { SetSessionModelResponse } from "@beep/acp/schema"
- *
- * type SetSessionModelResponseValue = SetSessionModelResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SetSessionModelResponse = typeof SetSessionModelResponse.Type;
-
-/**
- * Generated ACP schema for `SetSessionModeRequest`.
- *
- * @example
- * ```ts
- * import { SetSessionModeRequest } from "@beep/acp/schema"
- *
- * console.log(SetSessionModeRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SetSessionModeRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  modeId: S.String.annotateKey({
-    description: "Unique identifier for a Session Mode.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("SetSessionModeRequest", {
-    description: "Generated ACP schema for SetSessionModeRequest.",
-    documentation: "Request parameters for setting a session mode.",
-  }),
-);
-
-/**
- * Type for {@link SetSessionModeRequest}.
- *
- * @example
- * ```ts
- * import type { SetSessionModeRequest } from "@beep/acp/schema"
- *
- * type SetSessionModeRequestValue = SetSessionModeRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SetSessionModeRequest = typeof SetSessionModeRequest.Type;
-
-/**
- * Generated ACP schema for `SetSessionModeResponse`.
- *
- * @example
- * ```ts
- * import { SetSessionModeResponse } from "@beep/acp/schema"
- *
- * console.log(SetSessionModeResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SetSessionModeResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("SetSessionModeResponse", {
-    description: "Generated ACP schema for SetSessionModeResponse.",
-    documentation: "Response to `session/set_mode` method.",
-  }),
-);
-
-/**
- * Type for {@link SetSessionModeResponse}.
- *
- * @example
- * ```ts
- * import type { SetSessionModeResponse } from "@beep/acp/schema"
- *
- * type SetSessionModeResponseValue = SetSessionModeResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SetSessionModeResponse = typeof SetSessionModeResponse.Type;
-
-/**
- * Generated ACP schema for `StopReason`.
- *
- * @example
- * ```ts
- * import { StopReason } from "@beep/acp/schema"
- *
- * console.log(StopReason.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const StopReason = S.Literals([
-  "end_turn",
-  "max_tokens",
-  "max_turn_requests",
-  "refusal",
-  "cancelled",
-]).pipe(
-  $I.annoteSchema("StopReason", {
-    description: "Generated ACP schema for StopReason.",
-    documentation:
-      "Reasons why an agent stops processing a prompt turn.\n\nSee protocol docs: [Stop Reasons](https://agentclientprotocol.com/protocol/prompt-turn#stop-reasons)",
-  }),
-);
-
-/**
- * Type for {@link StopReason}.
- *
- * @example
- * ```ts
- * import type { StopReason } from "@beep/acp/schema"
- *
- * type StopReasonValue = StopReason
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type StopReason = typeof StopReason.Type;
-
-/**
  * Generated ACP schema for `StringPropertySchema`.
  *
- * @example
+ * **Example** (Inspect the StringPropertySchema schema)
+ *
  * ```ts
  * import { StringPropertySchema } from "@beep/acp/schema"
  *
@@ -13375,23 +11116,27 @@ export const StringPropertySchema = S.Struct({
   ),
   maxLength: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Maximum string length.",
         format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
   minLength: S.optionalKey(
     S.Union([
-      S.Finite.annotateKey({
+      S.Int.annotateKey({
         description: "Minimum string length.",
         format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
+      }).check(
+        S.isGreaterThanOrEqualTo(0).annotate({
+          expected: "a value greater than or equal to 0",
+        }),
+      ),
       S.Null,
     ]),
   ),
@@ -13421,12 +11166,14 @@ export const StringPropertySchema = S.Struct({
     documentation:
       'Schema for string properties in an elicitation form.\n\nWhen `enum` or `oneOf` is set, this represents a single-select enum\nwith `"type": "string"`.',
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link StringPropertySchema}.
  *
- * @example
+ * **Example** (Reference the StringPropertySchema type)
+ *
  * ```ts
  * import type { StringPropertySchema } from "@beep/acp/schema"
  *
@@ -13441,7 +11188,8 @@ export type StringPropertySchema = typeof StringPropertySchema.Type;
 /**
  * Generated ACP schema for `Terminal`.
  *
- * @example
+ * **Example** (Inspect the Terminal schema)
+ *
  * ```ts
  * import { Terminal } from "@beep/acp/schema"
  *
@@ -13454,7 +11202,10 @@ export type StringPropertySchema = typeof StringPropertySchema.Type;
 export const Terminal = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -13468,12 +11219,14 @@ export const Terminal = S.Struct({
     documentation:
       "Embed a terminal created with `terminal/create` by its id.\n\nThe terminal must be added before calling `terminal/release`.\n\nSee protocol docs: [Terminal](https://agentclientprotocol.com/protocol/terminals)",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link Terminal}.
  *
- * @example
+ * **Example** (Reference the Terminal type)
+ *
  * ```ts
  * import type { Terminal } from "@beep/acp/schema"
  *
@@ -13486,118 +11239,10 @@ export const Terminal = S.Struct({
 export type Terminal = typeof Terminal.Type;
 
 /**
- * Generated ACP schema for `TerminalOutputRequest`.
- *
- * @example
- * ```ts
- * import { TerminalOutputRequest } from "@beep/acp/schema"
- *
- * console.log(TerminalOutputRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TerminalOutputRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-  terminalId: S.String.annotateKey({
-    description: "The ID of the terminal to get output from.",
-  }),
-}).pipe(
-  $I.annoteSchema("TerminalOutputRequest", {
-    description: "Generated ACP schema for TerminalOutputRequest.",
-    documentation:
-      "Request to get the current output and status of a terminal.",
-  }),
-);
-
-/**
- * Type for {@link TerminalOutputRequest}.
- *
- * @example
- * ```ts
- * import type { TerminalOutputRequest } from "@beep/acp/schema"
- *
- * type TerminalOutputRequestValue = TerminalOutputRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TerminalOutputRequest = typeof TerminalOutputRequest.Type;
-
-/**
- * Generated ACP schema for `TerminalOutputResponse`.
- *
- * @example
- * ```ts
- * import { TerminalOutputResponse } from "@beep/acp/schema"
- *
- * console.log(TerminalOutputResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TerminalOutputResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  exitStatus: S.optionalKey(
-    S.Union([TerminalExitStatus, S.Null]).annotateKey({
-      description: "Exit status if the command has completed.",
-    }),
-  ),
-  output: S.String.annotateKey({
-    description: "The terminal output captured so far.",
-  }),
-  truncated: S.Boolean.annotateKey({
-    description: "Whether the output was truncated due to byte limits.",
-  }),
-}).pipe(
-  $I.annoteSchema("TerminalOutputResponse", {
-    description: "Generated ACP schema for TerminalOutputResponse.",
-    documentation: "Response containing the terminal output and exit status.",
-  }),
-);
-
-/**
- * Type for {@link TerminalOutputResponse}.
- *
- * @example
- * ```ts
- * import type { TerminalOutputResponse } from "@beep/acp/schema"
- *
- * type TerminalOutputResponseValue = TerminalOutputResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TerminalOutputResponse = typeof TerminalOutputResponse.Type;
-
-/**
  * Generated ACP schema for `TextContent`.
  *
- * @example
+ * **Example** (Inspect the TextContent schema)
+ *
  * ```ts
  * import { TextContent } from "@beep/acp/schema"
  *
@@ -13610,7 +11255,10 @@ export type TerminalOutputResponse = typeof TerminalOutputResponse.Type;
 export const TextContent = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -13624,12 +11272,14 @@ export const TextContent = S.Struct({
     description: "Generated ACP schema for TextContent.",
     documentation: "Text provided to or from an LLM.",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link TextContent}.
  *
- * @example
+ * **Example** (Reference the TextContent type)
+ *
  * ```ts
  * import type { TextContent } from "@beep/acp/schema"
  *
@@ -13642,96 +11292,10 @@ export const TextContent = S.Struct({
 export type TextContent = typeof TextContent.Type;
 
 /**
- * Generated ACP schema for `TextResourceContents`.
- *
- * @example
- * ```ts
- * import { TextResourceContents } from "@beep/acp/schema"
- *
- * console.log(TextResourceContents.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TextResourceContents = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  mimeType: S.optionalKey(S.Union([S.String, S.Null])),
-  text: S.String,
-  uri: S.String,
-}).pipe(
-  $I.annoteSchema("TextResourceContents", {
-    description: "Generated ACP schema for TextResourceContents.",
-    documentation: "Text-based resource contents.",
-  }),
-);
-
-/**
- * Type for {@link TextResourceContents}.
- *
- * @example
- * ```ts
- * import type { TextResourceContents } from "@beep/acp/schema"
- *
- * type TextResourceContentsValue = TextResourceContents
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TextResourceContents = typeof TextResourceContents.Type;
-
-/**
- * Generated ACP schema for `TitledMultiSelectItems`.
- *
- * @example
- * ```ts
- * import { TitledMultiSelectItems } from "@beep/acp/schema"
- *
- * console.log(TitledMultiSelectItems.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TitledMultiSelectItems = S.Struct({
-  anyOf: S.Array(EnumOption).annotateKey({
-    description: "Titled enum options.",
-  }),
-}).pipe(
-  $I.annoteSchema("TitledMultiSelectItems", {
-    description: "Generated ACP schema for TitledMultiSelectItems.",
-    documentation: "Items definition for titled multi-select enum properties.",
-  }),
-);
-
-/**
- * Type for {@link TitledMultiSelectItems}.
- *
- * @example
- * ```ts
- * import type { TitledMultiSelectItems } from "@beep/acp/schema"
- *
- * type TitledMultiSelectItemsValue = TitledMultiSelectItems
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TitledMultiSelectItems = typeof TitledMultiSelectItems.Type;
-
-/**
  * Generated ACP schema for `ToolCall`.
  *
- * @example
+ * **Example** (Inspect the ToolCall schema)
+ *
  * ```ts
  * import { ToolCall } from "@beep/acp/schema"
  *
@@ -13744,7 +11308,10 @@ export type TitledMultiSelectItems = typeof TitledMultiSelectItems.Type;
 export const ToolCall = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -13757,20 +11324,9 @@ export const ToolCall = S.Struct({
     }),
   ),
   kind: S.optionalKey(
-    S.Literals([
-      "read",
-      "edit",
-      "delete",
-      "move",
-      "search",
-      "execute",
-      "think",
-      "fetch",
-      "switch_mode",
-      "other",
-    ]).annotateKey({
+    S.suspend((): S.Codec<ToolKind> => ToolKind).annotateKey({
       description:
-        "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
+        "The category of tool being invoked.\nHelps clients choose appropriate icons and UI treatment.",
     }),
   ),
   locations: S.optionalKey(
@@ -13780,24 +11336,27 @@ export const ToolCall = S.Struct({
     }),
   ),
   rawInput: S.optionalKey(
-    S.Unknown.annotateKey({
+    S.Json.annotateKey({
+      expected: "JSON value",
       description: "Raw input parameters sent to the tool.",
     }),
   ),
   rawOutput: S.optionalKey(
-    S.Unknown.annotateKey({ description: "Raw output returned by the tool." }),
+    S.Json.annotateKey({
+      expected: "JSON value",
+      description: "Raw output returned by the tool.",
+    }),
   ),
   status: S.optionalKey(
-    S.Literals(["pending", "in_progress", "completed", "failed"]).annotateKey({
-      description:
-        "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
+    S.suspend((): S.Codec<ToolCallStatus> => ToolCallStatus).annotateKey({
+      description: "Current execution status of the tool call.",
     }),
   ),
   title: S.String.annotateKey({
     description: "Human-readable title describing what the tool is doing.",
   }),
-  toolCallId: S.String.annotateKey({
-    description: "Unique identifier for a tool call within a session.",
+  toolCallId: S.suspend((): S.Codec<ToolCallId> => ToolCallId).annotateKey({
+    description: "Unique identifier for this tool call within the session.",
   }),
 }).pipe(
   $I.annoteSchema("ToolCall", {
@@ -13805,12 +11364,14 @@ export const ToolCall = S.Struct({
     documentation:
       "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link ToolCall}.
  *
- * @example
+ * **Example** (Reference the ToolCall type)
+ *
  * ```ts
  * import type { ToolCall } from "@beep/acp/schema"
  *
@@ -13823,221 +11384,10 @@ export const ToolCall = S.Struct({
 export type ToolCall = typeof ToolCall.Type;
 
 /**
- * Generated ACP schema for `ToolCallId`.
- *
- * @example
- * ```ts
- * import { ToolCallId } from "@beep/acp/schema"
- *
- * console.log(ToolCallId.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ToolCallId = S.String.pipe(
-  $I.annoteSchema("ToolCallId", {
-    description: "Generated ACP schema for ToolCallId.",
-    documentation: "Unique identifier for a tool call within a session.",
-  }),
-);
-
-/**
- * Type for {@link ToolCallId}.
- *
- * @example
- * ```ts
- * import type { ToolCallId } from "@beep/acp/schema"
- *
- * type ToolCallIdValue = ToolCallId
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ToolCallId = typeof ToolCallId.Type;
-
-/**
- * Generated ACP schema for `ToolCallUpdate`.
- *
- * @example
- * ```ts
- * import { ToolCallUpdate } from "@beep/acp/schema"
- *
- * console.log(ToolCallUpdate.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ToolCallUpdate = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  content: S.optionalKey(
-    S.Union([
-      S.Array(ToolCallContent).annotateKey({
-        description: "Replace the content collection.",
-      }),
-      S.Null,
-    ]),
-  ),
-  kind: S.optionalKey(
-    S.Union([ToolKind, S.Null]).annotateKey({
-      description: "Update the tool kind.",
-    }),
-  ),
-  locations: S.optionalKey(
-    S.Union([
-      S.Array(ToolCallLocation).annotateKey({
-        description: "Replace the locations collection.",
-      }),
-      S.Null,
-    ]),
-  ),
-  rawInput: S.optionalKey(
-    S.Unknown.annotateKey({ description: "Update the raw input." }),
-  ),
-  rawOutput: S.optionalKey(
-    S.Unknown.annotateKey({ description: "Update the raw output." }),
-  ),
-  status: S.optionalKey(
-    S.Union([ToolCallStatus, S.Null]).annotateKey({
-      description: "Update the execution status.",
-    }),
-  ),
-  title: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({ description: "Update the human-readable title." }),
-      S.Null,
-    ]),
-  ),
-  toolCallId: S.String.annotateKey({
-    description: "Unique identifier for a tool call within a session.",
-  }),
-}).pipe(
-  $I.annoteSchema("ToolCallUpdate", {
-    description: "Generated ACP schema for ToolCallUpdate.",
-    documentation:
-      "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
-  }),
-);
-
-/**
- * Type for {@link ToolCallUpdate}.
- *
- * @example
- * ```ts
- * import type { ToolCallUpdate } from "@beep/acp/schema"
- *
- * type ToolCallUpdateValue = ToolCallUpdate
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ToolCallUpdate = typeof ToolCallUpdate.Type;
-
-/**
- * Generated ACP schema for `UnstructuredCommandInput`.
- *
- * @example
- * ```ts
- * import { UnstructuredCommandInput } from "@beep/acp/schema"
- *
- * console.log(UnstructuredCommandInput.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const UnstructuredCommandInput = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  hint: S.String.annotateKey({
-    description: "A hint to display when the input hasn't been provided yet",
-  }),
-}).pipe(
-  $I.annoteSchema("UnstructuredCommandInput", {
-    description: "Generated ACP schema for UnstructuredCommandInput.",
-    documentation:
-      "All text that was typed after the command name is provided as input.",
-  }),
-);
-
-/**
- * Type for {@link UnstructuredCommandInput}.
- *
- * @example
- * ```ts
- * import type { UnstructuredCommandInput } from "@beep/acp/schema"
- *
- * type UnstructuredCommandInputValue = UnstructuredCommandInput
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type UnstructuredCommandInput = typeof UnstructuredCommandInput.Type;
-
-/**
- * Generated ACP schema for `UntitledMultiSelectItems`.
- *
- * @example
- * ```ts
- * import { UntitledMultiSelectItems } from "@beep/acp/schema"
- *
- * console.log(UntitledMultiSelectItems.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const UntitledMultiSelectItems = S.Struct({
-  enum: S.Array(S.String).annotateKey({ description: "Allowed enum values." }),
-  type: S.Literal("string").annotateKey({
-    description: "Items definition for untitled multi-select enum properties.",
-  }),
-}).pipe(
-  $I.annoteSchema("UntitledMultiSelectItems", {
-    description: "Generated ACP schema for UntitledMultiSelectItems.",
-    documentation:
-      "Items definition for untitled multi-select enum properties.",
-  }),
-);
-
-/**
- * Type for {@link UntitledMultiSelectItems}.
- *
- * @example
- * ```ts
- * import type { UntitledMultiSelectItems } from "@beep/acp/schema"
- *
- * type UntitledMultiSelectItemsValue = UntitledMultiSelectItems
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type UntitledMultiSelectItems = typeof UntitledMultiSelectItems.Type;
-
-/**
  * Generated ACP schema for `UsageUpdate`.
  *
- * @example
+ * **Example** (Inspect the UsageUpdate schema)
+ *
  * ```ts
  * import { UsageUpdate } from "@beep/acp/schema"
  *
@@ -14050,7 +11400,10 @@ export type UntitledMultiSelectItems = typeof UntitledMultiSelectItems.Type;
 export const UsageUpdate = S.Struct({
   _meta: S.optionalKey(
     S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
+      S.Record(
+        S.String,
+        S.Json.annotate({ expected: "JSON value" }),
+      ).annotateKey({
         description:
           "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
       }),
@@ -14062,30 +11415,36 @@ export const UsageUpdate = S.Struct({
       description: "Cumulative session cost (optional).",
     }),
   ),
-  size: S.Finite.annotateKey({
+  size: S.Int.annotateKey({
     description: "Total context window size in tokens.",
     format: "uint64",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0)),
-  used: S.Finite.annotateKey({
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
+  used: S.Int.annotateKey({
     description: "Tokens currently in context.",
     format: "uint64",
-  })
-    .check(S.isInt())
-    .check(S.isGreaterThanOrEqualTo(0)),
+  }).check(
+    S.isGreaterThanOrEqualTo(0).annotate({
+      expected: "a value greater than or equal to 0",
+    }),
+  ),
 }).pipe(
   $I.annoteSchema("UsageUpdate", {
     description: "Generated ACP schema for UsageUpdate.",
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for a session.",
   }),
+  SchemaUtils.withCodecStatics,
 );
 
 /**
  * Type for {@link UsageUpdate}.
  *
- * @example
+ * **Example** (Reference the UsageUpdate type)
+ *
  * ```ts
  * import type { UsageUpdate } from "@beep/acp/schema"
  *
@@ -14096,223 +11455,3 @@ export const UsageUpdate = S.Struct({
  * @since 0.0.0
  */
 export type UsageUpdate = typeof UsageUpdate.Type;
-
-/**
- * Generated ACP schema for `WaitForTerminalExitRequest`.
- *
- * @example
- * ```ts
- * import { WaitForTerminalExitRequest } from "@beep/acp/schema"
- *
- * console.log(WaitForTerminalExitRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const WaitForTerminalExitRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-  terminalId: S.String.annotateKey({
-    description: "The ID of the terminal to wait for.",
-  }),
-}).pipe(
-  $I.annoteSchema("WaitForTerminalExitRequest", {
-    description: "Generated ACP schema for WaitForTerminalExitRequest.",
-    documentation: "Request to wait for a terminal command to exit.",
-  }),
-);
-
-/**
- * Type for {@link WaitForTerminalExitRequest}.
- *
- * @example
- * ```ts
- * import type { WaitForTerminalExitRequest } from "@beep/acp/schema"
- *
- * type WaitForTerminalExitRequestValue = WaitForTerminalExitRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type WaitForTerminalExitRequest = typeof WaitForTerminalExitRequest.Type;
-
-/**
- * Generated ACP schema for `WaitForTerminalExitResponse`.
- *
- * @example
- * ```ts
- * import { WaitForTerminalExitResponse } from "@beep/acp/schema"
- *
- * console.log(WaitForTerminalExitResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const WaitForTerminalExitResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  exitCode: S.optionalKey(
-    S.Union([
-      S.Finite.annotateKey({
-        description:
-          "The process exit code (may be null if terminated by signal).",
-        format: "uint32",
-      })
-        .check(S.isInt())
-        .check(S.isGreaterThanOrEqualTo(0)),
-      S.Null,
-    ]),
-  ),
-  signal: S.optionalKey(
-    S.Union([
-      S.String.annotateKey({
-        description:
-          "The signal that terminated the process (may be null if exited normally).",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("WaitForTerminalExitResponse", {
-    description: "Generated ACP schema for WaitForTerminalExitResponse.",
-    documentation: "Response containing the exit status of a terminal command.",
-  }),
-);
-
-/**
- * Type for {@link WaitForTerminalExitResponse}.
- *
- * @example
- * ```ts
- * import type { WaitForTerminalExitResponse } from "@beep/acp/schema"
- *
- * type WaitForTerminalExitResponseValue = WaitForTerminalExitResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type WaitForTerminalExitResponse =
-  typeof WaitForTerminalExitResponse.Type;
-
-/**
- * Generated ACP schema for `WriteTextFileRequest`.
- *
- * @example
- * ```ts
- * import { WriteTextFileRequest } from "@beep/acp/schema"
- *
- * console.log(WriteTextFileRequest.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const WriteTextFileRequest = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-  content: S.String.annotateKey({
-    description: "The text content to write to the file.",
-  }),
-  path: S.String.annotateKey({
-    description: "Absolute path to the file to write.",
-  }),
-  sessionId: S.String.annotateKey({
-    description:
-      "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
-  }),
-}).pipe(
-  $I.annoteSchema("WriteTextFileRequest", {
-    description: "Generated ACP schema for WriteTextFileRequest.",
-    documentation:
-      "Request to write content to a text file.\n\nOnly available if the client supports the `fs.writeTextFile` capability.",
-  }),
-);
-
-/**
- * Type for {@link WriteTextFileRequest}.
- *
- * @example
- * ```ts
- * import type { WriteTextFileRequest } from "@beep/acp/schema"
- *
- * type WriteTextFileRequestValue = WriteTextFileRequest
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type WriteTextFileRequest = typeof WriteTextFileRequest.Type;
-
-/**
- * Generated ACP schema for `WriteTextFileResponse`.
- *
- * @example
- * ```ts
- * import { WriteTextFileResponse } from "@beep/acp/schema"
- *
- * console.log(WriteTextFileResponse.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const WriteTextFileResponse = S.Struct({
-  _meta: S.optionalKey(
-    S.Union([
-      S.Record(S.String, S.Unknown).annotateKey({
-        description:
-          "The _meta property is reserved by ACP to allow clients and agents to attach additional\nmetadata to their interactions. Implementations MUST NOT make assumptions about values at\nthese keys.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
-      }),
-      S.Null,
-    ]),
-  ),
-}).pipe(
-  $I.annoteSchema("WriteTextFileResponse", {
-    description: "Generated ACP schema for WriteTextFileResponse.",
-    documentation: "Response to `fs/write_text_file`",
-  }),
-);
-
-/**
- * Type for {@link WriteTextFileResponse}.
- *
- * @example
- * ```ts
- * import type { WriteTextFileResponse } from "@beep/acp/schema"
- *
- * type WriteTextFileResponseValue = WriteTextFileResponse
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type WriteTextFileResponse = typeof WriteTextFileResponse.Type;

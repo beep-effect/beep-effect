@@ -6,16 +6,16 @@
  */
 
 /**
- * Workspace vault use-case contract exports.
- *
- * @category use-cases
- * @since 0.0.0
- */
-export * from "./WorkspaceVault.js";
-/**
  * Workspace vault RPC exports.
  *
  * @category protocols
  * @since 0.0.0
  */
-export * from "./WorkspaceVault.rpc.js";
+export * from "./WorkspaceVault.rpc.ts";
+/**
+ * Workspace vault use-case contract exports.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./WorkspaceVault.ts";

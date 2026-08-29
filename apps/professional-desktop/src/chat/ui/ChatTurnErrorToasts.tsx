@@ -11,15 +11,35 @@
 import { turnErrorAtom } from "@beep/agents-client/Chat.atoms";
 import { toast } from "@beep/ui/components/sonner";
 import { O } from "@beep/utils";
-import { useAtomSet, useAtomSubscribe } from "@effect/atom-react";
+import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { Effect } from "effect";
+import { Atom } from "effect/unstable/reactivity";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import type { ChatActionError } from "@beep/agents-use-cases/public";
 import type { JSX } from "react";
+
+const presentChatTurnErrorAtoms = Atom.family((failure: ChatActionError) =>
+  professionalBrowserRuntime.atom((get) =>
+    Effect.sync(() => {
+      toast.error(failure.message);
+      get.set(turnErrorAtom, O.none());
+    })
+  )
+);
+
+function PresentChatTurnError({ failure }: { readonly failure: ChatActionError }): null {
+  failure.pipe(presentChatTurnErrorAtoms, useAtomMount);
+
+  return null;
+}
 
 /**
  * Subscribes to failed assistant turns and surfaces them through the app's
  * existing toast system. The agents client only exposes atom state; the UI
  * package stays at this app boundary.
  *
- * @example
+ * **Example** (Import and log name)
+ *
  * ```tsx
  * import { ChatTurnErrorToasts } from "@/chat/ui/ChatTurnErrorToasts"
  *
@@ -30,18 +50,8 @@ import type { JSX } from "react";
  * @since 0.0.0
  */
 export function ChatTurnErrorToasts(): JSX.Element | null {
-  const setTurnError = useAtomSet(turnErrorAtom);
-
-  useAtomSubscribe(
-    turnErrorAtom,
-    (error) => {
-      if (O.isSome(error)) {
-        toast.error(error.value.message);
-        setTurnError(O.none());
-      }
-    },
-    { immediate: true }
+  return useAtomValue(turnErrorAtom).pipe(
+    O.map((failure) => <PresentChatTurnError failure={failure} />),
+    O.getOrNull
   );
-
-  return null;
 }

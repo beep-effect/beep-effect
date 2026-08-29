@@ -16,15 +16,16 @@ import { $I } from "./HttpStatus.shared.ts";
 /**
  * 200 “OK” – The response for a successful HTTP request. The result will depend on the type of request.
  *
- * @example
+ * **Example** (Log Ok literal value)
+ *
  * ```ts
  * import { Ok } from "@beep/schema/HttpStatus"
  *
  * console.log(Ok.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Ok = S.Literal(200).pipe(
   $I.annoteSchema("Ok", {
@@ -36,32 +37,24 @@ export const Ok = S.Literal(200).pipe(
 
 /**
  * {@inheritDoc Ok}
- *
- * @example
- * ```ts
- * import type { Ok } from "@beep/schema/HttpStatus"
- *
- * const status: Ok = 200
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Ok = typeof Ok.Type;
 
 /**
  * 201 “Created” – The request was fulfilled, and the server created a new resource.
  *
- * @example
+ * **Example** (Log Created literal value)
+ *
  * ```ts
  * import { Created } from "@beep/schema/HttpStatus"
  *
  * console.log(Created.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Created = S.Literal(201).pipe(
   $I.annoteSchema("Created", {
@@ -72,17 +65,8 @@ export const Created = S.Literal(201).pipe(
 
 /**
  * {@inheritDoc Created}
- *
- * @example
- * ```ts
- * import type { Created } from "@beep/schema/HttpStatus"
- *
- * const status: Created = 201
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Created = typeof Created.Type;
 
@@ -91,15 +75,16 @@ export type Created = typeof Created.Type;
  * processing it. The request might be fulfilled or rejected, but the outcome
  * is still undetermined.
  *
- * @example
+ * **Example** (Log Accepted literal value)
+ *
  * ```ts
  * import { Accepted } from "@beep/schema/HttpStatus"
  *
  * console.log(Accepted.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Accepted = S.Literal(202).pipe(
   $I.annoteSchema("Accepted", {
@@ -111,17 +96,8 @@ export const Accepted = S.Literal(202).pipe(
 
 /**
  * {@inheritDoc Accepted}
- *
- * @example
- * ```ts
- * import type { Accepted } from "@beep/schema/HttpStatus"
- *
- * const status: Accepted = 202
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type Accepted = typeof Accepted.Type;
 
@@ -131,15 +107,16 @@ export type Accepted = typeof Accepted.Type;
  * from the origin server and returns a modified version of the origin’s
  * response.
  *
- * @example
+ * **Example** (Log NonAuthoritativeInformation literal)
+ *
  * ```ts
  * import { NonAuthoritativeInformation } from "@beep/schema/HttpStatus"
  *
  * console.log(NonAuthoritativeInformation.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NonAuthoritativeInformation = S.Literal(203).pipe(
   $I.annoteSchema("NonAuthoritativeInformation", {
@@ -151,17 +128,8 @@ export const NonAuthoritativeInformation = S.Literal(203).pipe(
 
 /**
  * {@inheritDoc NonAuthoritativeInformation}
- *
- * @example
- * ```ts
- * import type { NonAuthoritativeInformation } from "@beep/schema/HttpStatus"
- *
- * const status: NonAuthoritativeInformation = 203
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NonAuthoritativeInformation = typeof NonAuthoritativeInformation.Type;
 
@@ -169,15 +137,16 @@ export type NonAuthoritativeInformation = typeof NonAuthoritativeInformation.Typ
  * 204 “No Content” – The server fulfilled the request but won’t return any
  * content.
  *
- * @example
+ * **Example** (Log NoContent literal value)
+ *
  * ```ts
  * import { NoContent } from "@beep/schema/HttpStatus"
  *
  * console.log(NoContent.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const NoContent = S.Literal(204).pipe(
   $I.annoteSchema("NoContent", {
@@ -188,17 +157,8 @@ export const NoContent = S.Literal(204).pipe(
 
 /**
  * {@inheritDoc NoContent}
- *
- * @example
- * ```ts
- * import type { NoContent } from "@beep/schema/HttpStatus"
- *
- * const status: NoContent = 204
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type NoContent = typeof NoContent.Type;
 
@@ -206,15 +166,16 @@ export type NoContent = typeof NoContent.Type;
  * 205 “Reset Content” – The server fulfilled the request, and it won’t return
  * any content but asks the client (browser) to reset the document view.
  *
- * @example
+ * **Example** (Log ResetContent literal value)
+ *
  * ```ts
  * import { ResetContent } from "@beep/schema/HttpStatus"
  *
  * console.log(ResetContent.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ResetContent = S.Literal(205).pipe(
   $I.annoteSchema("ResetContent", {
@@ -226,17 +187,8 @@ export const ResetContent = S.Literal(205).pipe(
 
 /**
  * {@inheritDoc ResetContent}
- *
- * @example
- * ```ts
- * import type { ResetContent } from "@beep/schema/HttpStatus"
- *
- * const status: ResetContent = 205
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ResetContent = typeof ResetContent.Type;
 
@@ -246,15 +198,16 @@ export type ResetContent = typeof ResetContent.Type;
  * browsers to resume downloads or split downloads into multiple simultaneous
  * streams.
  *
- * @example
+ * **Example** (Log PartialContent literal value)
+ *
  * ```ts
  * import { PartialContent } from "@beep/schema/HttpStatus"
  *
  * console.log(PartialContent.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PartialContent = S.Literal(206).pipe(
   $I.annoteSchema("PartialContent", {
@@ -266,17 +219,8 @@ export const PartialContent = S.Literal(206).pipe(
 
 /**
  * {@inheritDoc PartialContent}
- *
- * @example
- * ```ts
- * import type { PartialContent } from "@beep/schema/HttpStatus"
- *
- * const status: PartialContent = 206
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type PartialContent = typeof PartialContent.Type;
 
@@ -285,15 +229,16 @@ export type PartialContent = typeof PartialContent.Type;
  * is made. The server returns a message containing an array of response codes
  * for all sub-requests.
  *
- * @example
+ * **Example** (Log MultiStatus literal value)
+ *
  * ```ts
  * import { MultiStatus } from "@beep/schema/HttpStatus"
  *
  * console.log(MultiStatus.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const MultiStatus = S.Literal(207).pipe(
   $I.annoteSchema("MultiStatus", {
@@ -305,17 +250,8 @@ export const MultiStatus = S.Literal(207).pipe(
 
 /**
  * {@inheritDoc MultiStatus}
- *
- * @example
- * ```ts
- * import type { MultiStatus } from "@beep/schema/HttpStatus"
- *
- * const status: MultiStatus = 207
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type MultiStatus = typeof MultiStatus.Type;
 
@@ -324,15 +260,16 @@ export type MultiStatus = typeof MultiStatus.Type;
  * members of a DAV binding were already enumerated in a previous part of the
  * response and will not be enumerated again.
  *
- * @example
+ * **Example** (Log AlreadyReported literal value)
+ *
  * ```ts
  * import { AlreadyReported } from "@beep/schema/HttpStatus"
  *
  * console.log(AlreadyReported.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const AlreadyReported = S.Literal(208).pipe(
   $I.annoteSchema("AlreadyReported", {
@@ -344,17 +281,8 @@ export const AlreadyReported = S.Literal(208).pipe(
 
 /**
  * {@inheritDoc AlreadyReported}
- *
- * @example
- * ```ts
- * import type { AlreadyReported } from "@beep/schema/HttpStatus"
- *
- * const status: AlreadyReported = 208
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type AlreadyReported = typeof AlreadyReported.Type;
 
@@ -363,15 +291,16 @@ export type AlreadyReported = typeof AlreadyReported.Type;
  * representation of the result of one or more instance manipulations applied
  * to the current instance.
  *
- * @example
+ * **Example** (Log ImUsed literal value)
+ *
  * ```ts
  * import { ImUsed } from "@beep/schema/HttpStatus"
  *
  * console.log(ImUsed.literal)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ImUsed = S.Literal(226).pipe(
   $I.annoteSchema("ImUsed", {
@@ -383,17 +312,8 @@ export const ImUsed = S.Literal(226).pipe(
 
 /**
  * {@inheritDoc ImUsed}
- *
- * @example
- * ```ts
- * import type { ImUsed } from "@beep/schema/HttpStatus"
- *
- * const status: ImUsed = 226
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type ImUsed = typeof ImUsed.Type;
 
@@ -401,15 +321,16 @@ export type ImUsed = typeof ImUsed.Type;
  * The 2XX codes are the best responses you can receive. They indicate that the
  * request was recognized by the server, was accepted, and is being processed.
  *
- * @example
+ * **Example** (Count HttpStatus2XX pairs)
+ *
  * ```ts
  * import { HttpStatus2XX } from "@beep/schema/HttpStatus"
  *
  * console.log(HttpStatus2XX.Pairs.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HttpStatus2XX = MappedLiteralKit([
   ["Ok", Ok.literal],
@@ -432,14 +353,15 @@ export const HttpStatus2XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus2XX} to contain the Encoded type
  *
- * @example
- * ```ts
+ * **Example** (Decode encoded Ok status)
+ *
+ * ```ts import.meta.vitest name="Decode encoded Ok status"
  * import * as S from "effect/Schema"
  * import { HttpStatus2XX } from "@beep/schema/HttpStatus"
  *
  * const encoded: HttpStatus2XX.Encoded = "Ok"
  * const status = S.decodeUnknownSync(HttpStatus2XX)(encoded)
- * console.log(status) // 200
+ * status // => 200
  * ```
  *
  * @category validation
@@ -457,16 +379,7 @@ export declare namespace HttpStatus2XX {
 
 /**
  * {@inheritDoc HttpStatus2XX}
- *
- * @example
- * ```ts
- * import type { HttpStatus2XX } from "@beep/schema/HttpStatus"
- *
- * const status: HttpStatus2XX = 200
- * console.log(status)
- * ```
- *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export type HttpStatus2XX = typeof HttpStatus2XX.Type;

@@ -1,0 +1,31 @@
+d	755	0:0	5235336	.	
+d	755	0:0	5235338	./fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966	
+d	755	0:0	5235347	./f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7	
+f	644	0:0	5235337	./.beep-p0-spike1	
+f	644	0:0	5235339	./fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966/openclaw.json	
+f	644	0:0	5235348	./f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7/openclaw.json	
+l	777	0:0	5235349	./current	f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7
+310700074020c2330dd021bebc1c84f228fdc71cca79441e7b346a29c64e36d8  ./.beep-p0-spike1
+f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7  ./f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7/openclaw.json
+fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966  ./fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966/openclaw.json
+-- state --
+d	700	1000:1000	49528548	./state	
+d	700	1000:1000	49528571	./identity	
+d	755	1000:1000	49528487	.	
+d	755	1000:1000	49528488	./log	
+f	600	1000:1000	49528549	./state/openclaw.sqlite	
+f	600	1000:1000	49528570	./log/openclaw.log	
+f	600	1000:1000	49528572	./identity/device.json	
+f	600	1000:1000	49528583	./state/openclaw.sqlite-wal	
+f	600	1000:1000	49528584	./state/openclaw.sqlite-shm	
+81d93f57fd238ea2c0292dce2426c6062c856cc6b059b422bd9297c2e60f778e  ./identity/device.json
+a98b263b4811b8d2e107b44b2e863910b73159914d25f6d4903f77dc4aa91615  ./state/openclaw.sqlite [logical SQLite dump + user_version; observation volatility normalized]
+-- home --
+d	755	1000:1000	49528489	.	
+-- workspace --
+d	755	1000:1000	49528490	.	
+-- unit files --
+f	644	1000:1000	49528498	./openclaw-spike.service	
+a62189dc2ee896689bf221c18ef9435be360360d89ead861767e7c2bc8df1e6f  ./openclaw-spike.service
+-- pointer --
+target=f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7 resolved=/etc/beep/openclaw-spike/f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7

@@ -37,8 +37,8 @@ Keep `Schema` as the source of truth for pure data models.
 - Real repository examples: `references/examples.md`
 
 3. Check local Effect v4 source for nontrivial Schema API choices.
-- Start with `.repos/effect-v4/packages/effect/SCHEMA.md`.
-- Confirm behavior in `.repos/effect-v4/packages/effect/src/Schema.ts` or the
+- Start with `.repos/effect/packages/effect/SCHEMA.md`.
+- Confirm behavior in `.repos/effect/packages/effect/src/Schema.ts` or the
   specialized module (`SchemaAST`, `SchemaGetter`, `SchemaIssue`,
   `SchemaRepresentation`, `SchemaTransformation`) when using advanced APIs.
 - Prefer exact upstream or repo-local helpers over memory and ad-hoc plumbing.
@@ -121,7 +121,5 @@ Keep `Schema` as the source of truth for pure data models.
 
 ## Escalation
 
-- Use `effect-first-development` when the task is broader than schema work.
-- Use `effect-services` or `effect-v4-services` for service and layer wiring.
-- Use `effect-error-handling` or `effect-v4-errors` for recovery strategy and
-  typed error flow outside schema modeling.
+- Use `effect-first-development` when the task is broader than schema work,
+  including service/layer wiring and typed error flow outside schema modeling.

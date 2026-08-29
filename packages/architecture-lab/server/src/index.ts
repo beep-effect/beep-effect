@@ -9,7 +9,8 @@
 /**
  * Package version for the architecture lab server role.
  *
- * @example
+ * **Example** (Importing and checking VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-server"
  *
@@ -29,18 +30,18 @@ export const VERSION = "0.0.0" as const;
  * @category handlers
  * @since 0.0.0
  */
-export * as WorkItem from "./aggregates/WorkItem/index.js";
+export * as WorkItem from "./aggregates/WorkItem/index.ts";
 /**
  * Direct Worker server namespace export.
  *
  * @category handlers
  * @since 0.0.0
  */
-export * as Worker from "./entities/Worker/index.js";
+export * as Worker from "./entities/Worker/index.ts";
 /**
  * Architecture lab server layer export.
  *
  * @category layers
  * @since 0.0.0
  */
-export * from "./Layer.js";
+export * from "./Layer.ts";

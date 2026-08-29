@@ -167,9 +167,9 @@ The `@beep/*` bricks this packet composes:
 | Capability | Package path | Status |
 | --- | --- | --- |
 | eCFR driver (keyless exemplar: config/errors/service + bespoke `scripts/generate.ts` + committed spec + `src/_generated/*`) | `packages/drivers/ecfr` | **extend** — 2→15 operations + Stream helpers (P1) |
-| Federal Register driver | `packages/drivers/federal-register` | **extend** — skeleton→finished (P2) |
-| DOL driver | `packages/drivers/dol` | **extend** — skeleton→finished (P3, gated) |
-| CourtListener driver | `packages/drivers/courtlistener` | **extend** — skeleton→finished (P4–P5, gated) |
+| Federal Register driver | deleted `packages/drivers/federal-register` (2026-08-13) | **recreate** when a product feature pulls — `goals/honest-repo-signal/research/FOLLOW-UPS.md` |
+| DOL driver | deleted `packages/drivers/dol` (2026-08-13) | **recreate** when a product feature pulls — FOLLOW-UPS |
+| CourtListener driver | deleted `packages/drivers/courtlistener` (2026-08-13) | **recreate** when a product feature pulls — FOLLOW-UPS |
 | Shared transport (auth/retry/cache/rate-limit; `makeApiTransport`, `ApiAuth` union) | `packages/foundation/capability/api-transport` | **reuse** — all four `ApiAuth` branches (`NoAuth`, `ApiKeyQueryAuth`, `TokenHeaderAuth`, `ApiKeyHeaderAuth`) already implemented per predecessor Q5; wire + exercise offline; extend only on P0 evidence |
 | Keyed-driver patterns (redacted Option config, `mapClientError`, cache) | `packages/drivers/govinfo` | **reuse** — pattern source only |
 | Identity composers (`$EcfrId`, `$FederalRegisterId`, `$DolId`, `$CourtlistenerId`) | `packages/foundation/modeling/identity/src/packages.ts` | **reuse** — already exist |

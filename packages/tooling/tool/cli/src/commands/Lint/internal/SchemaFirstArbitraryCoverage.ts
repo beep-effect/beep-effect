@@ -9,8 +9,8 @@ import { A, Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
-import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.js";
-import { SchemaFirstInventoryEntry } from "../Lint.schemas.js";
+import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
+import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 
 const SCHEMA_CODEC_HELPERS = [
   // Effect-returning codecs.
@@ -45,7 +45,7 @@ const SCHEMA_CODEC_HELPERS = [
   "encodeSync",
 ] as const;
 const SCHEMA_ARBITRARY_NAMESPACE_NAMES = ["S", "Schema"] as const;
-const SCHEMA_ARBITRARY_HELPERS = ["toArbitrary", "toArbitraryLazy"] as const;
+const SCHEMA_ARBITRARY_HELPERS = ["toArbitrary"] as const;
 const REPO_SCHEMA_ARBITRARY_HELPERS = ["assertSchemaArbitraryDecodesToSelf"] as const;
 // Schema-derived property coverage requires deriving the arbitrary from the
 // schema itself and using it in a property, or through repo-owned helpers that
@@ -61,7 +61,6 @@ const TEST_FILE_EXCLUDED_SEGMENTS = [
   "/docs/",
   "/_generated/",
   "/generated/",
-  "/dtslint/",
 ] as const;
 
 const isSchemaFirstTestFile = (filePath: string): boolean =>
@@ -89,13 +88,15 @@ const isSchemaCodecCallExpression = (callExpression: import("ts-morph").CallExpr
 /**
  * True when the candidate equals one of the literal member names.
  *
- * @example
+ * **Example** (Inspect schema arbitrary coverage)
+ *
  * ```ts
  * import { literalMemberEquals } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(literalMemberEquals(["is", "make"], "is")) // true
  * console.log(literalMemberEquals("is")(["is", "make"])) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -108,6 +109,9 @@ export const literalMemberEquals: {
 
 const isSchemaArbitraryCallExpression = (callExpression: import("ts-morph").CallExpression): boolean => {
   const expression = callExpression.getExpression();
+  if (Node.isCallExpression(expression)) {
+    return isSchemaArbitraryCallExpression(expression);
+  }
   return (
     Node.isPropertyAccessExpression(expression) &&
     Node.isIdentifier(expression.getExpression()) &&
@@ -209,14 +213,16 @@ const sourceHasSchemaArbitraryPropertyCoverage = (sourceFile: import("ts-morph")
 /**
  * Test whether source text contains schema-derived arbitrary coverage.
  *
- * @param sourceText - TypeScript source text to inspect.
- * @returns Whether the text contains schema-derived arbitrary coverage.
- * @example
+ * **Example** (Inspect schema arbitrary coverage)
+ *
  * ```ts
  * import { sourceTextHasSchemaArbitraryPropertyCoverage } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(sourceTextHasSchemaArbitraryPropertyCoverage("fc.property(S.toArbitrary(Worker), (worker) => true)"))
+ * console.log(sourceTextHasSchemaArbitraryPropertyCoverage("fc.property(S.toArbitrary(Worker)(fc), (worker) => true)"))
  * ```
+ *
+ * @param sourceText - TypeScript source text to inspect.
+ * @returns Whether the text contains schema-derived arbitrary coverage.
  * @category utilities
  * @since 0.0.0
  */
@@ -261,7 +267,8 @@ const arbitraryTestsEntryFromSourceFile = (
 /**
  * Grouped helpers for schema-derived arbitrary coverage detection.
  *
- * @example
+ * **Example** (Inspect schema arbitrary coverage)
+ *
  * ```ts
  * import { SchemaFirstArbitraryCoverage } from "@beep/repo-cli/test/Lint"
  * import * as O from "effect/Option"
@@ -272,6 +279,7 @@ const arbitraryTestsEntryFromSourceFile = (
  * const entry = SchemaFirstArbitraryCoverage.arbitraryTestsEntryFromSourceFile(sourceFile, "fixture.ts", "@beep/test")
  * console.log(O.isOption(entry)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -10,7 +10,7 @@
  */
 
 import { $PretextId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PretextId.create("Pretext.errors");
@@ -18,7 +18,8 @@ const $I = $PretextId.create("Pretext.errors");
 /**
  * Reason a runtime cannot capture font metrics.
  *
- * @example
+ * **Example** (Schema-decode unavailable reason)
+ *
  * ```ts
  * import { PretextMeasurementUnavailableReason } from "@beep/pretext"
  * import * as S from "effect/Schema"
@@ -28,8 +29,8 @@ const $I = $PretextId.create("Pretext.errors");
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const PretextMeasurementUnavailableReason = LiteralKit(["missingCanvas2d", "missingIntlSegmenter"]).pipe(
   $I.annoteSchema("PretextMeasurementUnavailableReason", {
@@ -40,7 +41,8 @@ export const PretextMeasurementUnavailableReason = LiteralKit(["missingCanvas2d"
 /**
  * Type for {@link PretextMeasurementUnavailableReason}.
  *
- * @example
+ * **Example** (Typed reason assignment)
+ *
  * ```ts
  * import { PretextMeasurementUnavailableReason } from "@beep/pretext"
  *
@@ -49,8 +51,8 @@ export const PretextMeasurementUnavailableReason = LiteralKit(["missingCanvas2d"
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type PretextMeasurementUnavailableReason = typeof PretextMeasurementUnavailableReason.Type;
 
@@ -59,7 +61,8 @@ export type PretextMeasurementUnavailableReason = typeof PretextMeasurementUnava
  * `Intl.Segmenter` and a Canvas 2D context (`OffscreenCanvas` or a DOM
  * canvas); absence is this typed failure, never a crash.
  *
- * @example
+ * **Example** (Create unavailable measurement error)
+ *
  * ```ts
  * import { PretextMeasurementUnavailableError } from "@beep/pretext"
  *
@@ -71,10 +74,10 @@ export type PretextMeasurementUnavailableReason = typeof PretextMeasurementUnava
  * console.log(error.reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class PretextMeasurementUnavailableError extends TaggedErrorClass<PretextMeasurementUnavailableError>(
+export class PretextMeasurementUnavailableError extends S.TaggedError<PretextMeasurementUnavailableError>(
   $I`PretextMeasurementUnavailableError`
 )(
   "PretextMeasurementUnavailableError",
@@ -82,7 +85,7 @@ export class PretextMeasurementUnavailableError extends TaggedErrorClass<Pretext
     reason: PretextMeasurementUnavailableReason,
     message: S.String,
   },
-  $I.annote("PretextMeasurementUnavailableError", {
+  $I.annoteError<PretextMeasurementUnavailableError>("PretextMeasurementUnavailableError", {
     description: "The runtime lacks a capability the pretext capture surface requires.",
   })
 ) {}
@@ -92,7 +95,8 @@ export class PretextMeasurementUnavailableError extends TaggedErrorClass<Pretext
  * canonical case: upstream pretext documents canvas/DOM divergence for it on
  * macOS, so the driver refuses to silently mis-measure.
  *
- * @example
+ * **Example** (Create unsupported font error)
+ *
  * ```ts
  * import { PretextUnsupportedFontError } from "@beep/pretext"
  *
@@ -104,10 +108,10 @@ export class PretextMeasurementUnavailableError extends TaggedErrorClass<Pretext
  * console.log(error.font)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class PretextUnsupportedFontError extends TaggedErrorClass<PretextUnsupportedFontError>(
+export class PretextUnsupportedFontError extends S.TaggedError<PretextUnsupportedFontError>(
   $I`PretextUnsupportedFontError`
 )(
   "PretextUnsupportedFontError",
@@ -115,7 +119,7 @@ export class PretextUnsupportedFontError extends TaggedErrorClass<PretextUnsuppo
     font: S.String,
     message: S.String,
   },
-  $I.annote("PretextUnsupportedFontError", {
+  $I.annoteError<PretextUnsupportedFontError>("PretextUnsupportedFontError", {
     description: "The requested font is rejected for measurement accuracy.",
   })
 ) {}
@@ -123,7 +127,8 @@ export class PretextUnsupportedFontError extends TaggedErrorClass<PretextUnsuppo
 /**
  * Font-metrics snapshot codec operation.
  *
- * @example
+ * **Example** (Schema-decode codec operation)
+ *
  * ```ts
  * import { PretextSnapshotCodecOperation } from "@beep/pretext"
  * import * as S from "effect/Schema"
@@ -133,8 +138,8 @@ export class PretextUnsupportedFontError extends TaggedErrorClass<PretextUnsuppo
  * console.log(operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const PretextSnapshotCodecOperation = LiteralKit(["decode", "encode"]).pipe(
   $I.annoteSchema("PretextSnapshotCodecOperation", {
@@ -145,7 +150,8 @@ export const PretextSnapshotCodecOperation = LiteralKit(["decode", "encode"]).pi
 /**
  * Type for {@link PretextSnapshotCodecOperation}.
  *
- * @example
+ * **Example** (Typed codec operation)
+ *
  * ```ts
  * import { PretextSnapshotCodecOperation } from "@beep/pretext"
  *
@@ -154,8 +160,8 @@ export const PretextSnapshotCodecOperation = LiteralKit(["decode", "encode"]).pi
  * console.log(operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type PretextSnapshotCodecOperation = typeof PretextSnapshotCodecOperation.Type;
 
@@ -163,7 +169,8 @@ export type PretextSnapshotCodecOperation = typeof PretextSnapshotCodecOperation
  * A font-metrics snapshot failed to decode or encode against the versioned
  * contract.
  *
- * @example
+ * **Example** (Create snapshot codec error)
+ *
  * ```ts
  * import { PretextSnapshotCodecError } from "@beep/pretext"
  *
@@ -175,18 +182,16 @@ export type PretextSnapshotCodecOperation = typeof PretextSnapshotCodecOperation
  * console.log(error.operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class PretextSnapshotCodecError extends TaggedErrorClass<PretextSnapshotCodecError>(
-  $I`PretextSnapshotCodecError`
-)(
+export class PretextSnapshotCodecError extends S.TaggedError<PretextSnapshotCodecError>($I`PretextSnapshotCodecError`)(
   "PretextSnapshotCodecError",
   {
     operation: PretextSnapshotCodecOperation,
     message: S.String,
   },
-  $I.annote("PretextSnapshotCodecError", {
+  $I.annoteError<PretextSnapshotCodecError>("PretextSnapshotCodecError", {
     description: "A font-metrics snapshot failed to decode or encode against the versioned contract.",
   })
 ) {}
@@ -194,7 +199,8 @@ export class PretextSnapshotCodecError extends TaggedErrorClass<PretextSnapshotC
 /**
  * Measurement operation that can fail.
  *
- * @example
+ * **Example** (Schema-decode measurement operation)
+ *
  * ```ts
  * import { PretextMeasurementOperation } from "@beep/pretext"
  * import * as S from "effect/Schema"
@@ -204,8 +210,8 @@ export class PretextSnapshotCodecError extends TaggedErrorClass<PretextSnapshotC
  * console.log(operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const PretextMeasurementOperation = LiteralKit(["measureText", "fixtureCapture"]).pipe(
   $I.annoteSchema("PretextMeasurementOperation", {
@@ -216,7 +222,8 @@ export const PretextMeasurementOperation = LiteralKit(["measureText", "fixtureCa
 /**
  * Type for {@link PretextMeasurementOperation}.
  *
- * @example
+ * **Example** (Typed measurement operation)
+ *
  * ```ts
  * import { PretextMeasurementOperation } from "@beep/pretext"
  *
@@ -225,8 +232,8 @@ export const PretextMeasurementOperation = LiteralKit(["measureText", "fixtureCa
  * console.log(operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type PretextMeasurementOperation = typeof PretextMeasurementOperation.Type;
 
@@ -234,7 +241,8 @@ export type PretextMeasurementOperation = typeof PretextMeasurementOperation.Typ
  * A measurement operation failed: an unmeasured word was requested from a
  * fixture, or the underlying pretext engine rejected an input.
  *
- * @example
+ * **Example** (Create measurement error)
+ *
  * ```ts
  * import { PretextMeasurementError } from "@beep/pretext"
  *
@@ -246,16 +254,16 @@ export type PretextMeasurementOperation = typeof PretextMeasurementOperation.Typ
  * console.log(error.operation)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class PretextMeasurementError extends TaggedErrorClass<PretextMeasurementError>($I`PretextMeasurementError`)(
+export class PretextMeasurementError extends S.TaggedError<PretextMeasurementError>($I`PretextMeasurementError`)(
   "PretextMeasurementError",
   {
     operation: PretextMeasurementOperation,
     message: S.String,
   },
-  $I.annote("PretextMeasurementError", {
+  $I.annoteError<PretextMeasurementError>("PretextMeasurementError", {
     description: "A pretext measurement operation failed.",
   })
 ) {}

@@ -10,10 +10,10 @@ import { A, Str, thunk0, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, flow, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import { runCaptured } from "../../../internal/process/StepExec.js";
-import { DocgenGenerationResult, isDocgenWorkspacePackage } from "../Docgen.schemas.js";
+import { runCaptured } from "../../../internal/process/StepExec.ts";
+import { DocgenGenerationResult, isDocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
-import type { DocgenWorkspacePackage } from "../Docgen.schemas.js";
+import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
 const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
 
@@ -122,10 +122,8 @@ const runDocgenForPackageEffect = Effect.fn("DocgenOperations.runDocgenForPackag
 /**
  * Runs the repo-local `@beep/repo-docgen` implementation for one workspace package.
  *
- * @param targetPackage - Workspace package to run through docgen.
- * @param options - Optional focused include globs forwarded to repo-docgen.
- * @returns Generation result including command output and module count.
- * @example
+ * **Example** (Run package docgen with includes)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { runDocgenForPackage } from "@beep/repo-cli/commands/Docgen/internal/RunDocgen"
@@ -144,23 +142,27 @@ const runDocgenForPackageEffect = Effect.fn("DocgenOperations.runDocgenForPackag
  * const effect = runDocgenForPackage(target, { include: ["src/index.ts"] })
  * console.log(Effect.isEffect(effect))
  * ```
+ *
+ * @param targetPackage - Workspace package to run through docgen.
+ * @param options - Optional focused include globs forwarded to repo-docgen.
+ * @returns Generation result including command output and module count.
  * @category utilities
  * @since 0.0.0
  */
 export const runDocgenForPackage: {
   (
-    targetPackage: DocgenWorkspacePackage,
     options?: RunDocgenForPackageOptions
-  ): Effect.Effect<
+  ): (
+    targetPackage: DocgenWorkspacePackage
+  ) => Effect.Effect<
     DocgenGenerationResult,
     DocgenGenerationResult,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner
   >;
   (
-    options: RunDocgenForPackageOptions
-  ): (
-    targetPackage: DocgenWorkspacePackage
-  ) => Effect.Effect<
+    targetPackage: DocgenWorkspacePackage,
+    options?: RunDocgenForPackageOptions
+  ): Effect.Effect<
     DocgenGenerationResult,
     DocgenGenerationResult,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner

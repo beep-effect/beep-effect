@@ -1,6 +1,6 @@
 # Gold Intake — Handoff Runbook
 
-> **For a Claude Code / Codex session rooted at `~/YeeBois/projects/beep-effect`.**
+> **For a Claude Code / Codex session rooted at this repository's checkout root.**
 > This staging folder is the bridge from an external research effort into this repo's
 > `explorations/` → `goals/` pipeline. Read this file first, then drive the phases below.
 
@@ -58,7 +58,7 @@ create net-new only for genuine gaps.** The Phase-1 routing matrix enforces this
   - **Proposed new-exploration slugs from the seed** (verify before scaffolding): `gov-legal-data-driver-codegen` (P1), `mcp-auth-gated-registration` (P1), `citation-grounding-hallucination-guard` (P2), `court-vocabulary-resolver` (P2), `agent-memory-tiers-bitemporal-edges` (P2), `effect-orchestration-patterns` (P2), `rag-retrieval-projection` (P2). Clean extend-goal: `file-processing-capability` (OCR concretization). Mixed-extend: `packages/drivers/uspto` (already on ODP — add query-DSL/EPO/BigQuery) and `langextract-capability` (add anti-inference + doc-structure).
 - **Phase 2 — Backlog scaffolding:** for each `new-exploration` wedge run `/explore new <slug>`, seed CAPTURE, then a Workflow fans out deep-research + synthesizes RESEARCH + codex gate-1 + pre-drafts DECISIONS. For `attach-existing`/`extend-goal`, append into the target packet's `CAPTURE.md` / `research/`. End every packet at research-complete; sync manifests + `ATLAS.md`.
 - **Phase 3 — Wave 1 graduation:** per P1 wedge: `/grill-with-docs <slug>` → `BRIEF.md` → `MAP.md` → graduate → codex gate 2. Output: execute-ready `goals/<slug>/` launchable via `/goal follow the instructions in goals/<slug>/GOAL.md`.
-- **Phase 4 — Consistency + memory:** `/quality-review-fix-loop` over the Wave-1 set; log durable decisions + gold→packet provenance to Graphiti (`mcp-graphiti-memory`); confirm `ATLAS.md`.
+- **Phase 4 — Consistency + memory:** `/quality-review-fix-loop` over the Wave-1 set; log durable decisions + gold→packet provenance to Cognee (the always-on dev-memory) and file memory (`MEMORY.md`); confirm `ATLAS.md`. (Edited 2026-08-01: Graphiti retired 2026-07-25 — see `standards/memory-architecture/04-decision-log.md`.)
 
 ## Conventions (non-negotiable)
 
@@ -91,4 +91,4 @@ Re-ground, then start Phase 1:
 2. Re-confirm the seed against the current tree, route the remaining/long-tail nuggets, and produce `ROUTING.md` + `routing.json`; bring the matrix back for approval before opening any packet.
 3. On approval, scaffold the approved P1 wedges and run the per-wedge pipeline (Phase 2 → 3).
 
-_Source provenance: mined at `~/YeeBois/research/law_stuff/repos` (2026-06-29). This folder retains the full source for traceability._
+_Source provenance: mined from the machine-local `law_stuff/repos` research shelf (2026-06-29). This folder retains the full source for traceability._

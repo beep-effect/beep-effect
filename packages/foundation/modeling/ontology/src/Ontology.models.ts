@@ -10,23 +10,31 @@ import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type { FastCheck } from "effect/testing";
 
 const $I = $OntologyId.create("Ontology.models");
 
 const decodeUrlStringOption = S.decodeUnknownOption(S.URLFromString);
+const makeHttpUrlArbitrary = (fc: typeof FastCheck) =>
+  fc
+    .tuple(fc.boolean(), fc.uuid())
+    .map(([secure, id]: readonly [boolean, string]) => `${secure ? "https" : "http"}://example.test/resource/${id}`);
 
-const HttpUrlFormatCheck = S.makeFilter<string>((value) => O.isSome(decodeUrlStringOption(value)), {
-  identifier: $I`HttpUrlFormatCheck`,
-  title: "HTTP URL Format",
-  description: "HTTP URL values must be valid absolute URL strings.",
-  message: "HTTP URL must be a valid URL string.",
-  arbitrary: {
-    candidate: {
-      weight: 32,
-      make: (fc) => fc.webUrl(),
+const HttpUrlFormatCheck = S.makeFilter<string>(
+  (value) => O.exists(decodeUrlStringOption(value), (url) => url.protocol === "http:" || url.protocol === "https:"),
+  {
+    identifier: $I`HttpUrlFormatCheck`,
+    title: "HTTP URL Format",
+    description: "HTTP URL values must be valid absolute URL strings using the http or https scheme.",
+    message: "HTTP URL must be a valid absolute URL using the http or https scheme.",
+    arbitrary: {
+      candidate: {
+        weight: 32,
+        make: makeHttpUrlArbitrary,
+      },
     },
-  },
-});
+  }
+);
 
 const FolioIriToken = S.NonEmptyString.pipe(
   $I.annoteSchema("FolioIriToken", {
@@ -37,7 +45,8 @@ const FolioIriToken = S.NonEmptyString.pipe(
 /**
  * Source type of the loaded FOLIO ontology.
  *
- * @example
+ * **Example** (Checking github source type)
+ *
  * ```ts
  * import { SourceType } from "@beep/ontology/Ontology.models"
  *
@@ -56,7 +65,8 @@ export const SourceType = LiteralKit(["http", "github"]).pipe(
 /**
  * Runtime type for {@link SourceType}.
  *
- * @example
+ * **Example** (Assigning github source type)
+ *
  * ```ts
  * import type { SourceType } from "@beep/ontology/Ontology.models"
  *
@@ -69,20 +79,7 @@ export const SourceType = LiteralKit(["http", "github"]).pipe(
  */
 export type SourceType = typeof SourceType.Type;
 
-/**
- * HTTP URL string metadata shape from the OpenAPI document.
- *
- * @example
- * ```ts
- * import { HttpUrl } from "@beep/ontology/Ontology.models"
- *
- * console.log(HttpUrl.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const HttpUrl = S.String.check(
+const HttpUrlDefinition = S.String.check(
   HttpUrlFormatCheck,
   S.isMinLength(1, {
     identifier: $I`HttpUrlMinLengthCheck`,
@@ -94,17 +91,36 @@ export const HttpUrl = S.String.check(
     title: "HTTP URL Max Length",
     description: "HTTP URL values must not exceed 2083 characters.",
   })
-).pipe(
+);
+
+/**
+ * HTTP or HTTPS URL string metadata shape from the OpenAPI document.
+ *
+ * **Example** (Inspecting HttpUrl schema AST)
+ *
+ * ```ts
+ * import { HttpUrl } from "@beep/ontology/Ontology.models"
+ *
+ * console.log(HttpUrl.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HttpUrl = HttpUrlDefinition.pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpUrl", {
     description: "HTTP URL of the ontology source when the source type is http.",
     format: "uri",
+    toArbitrary: () => makeHttpUrlArbitrary,
   })
 );
 
 /**
  * Runtime type for {@link HttpUrl}.
  *
- * @example
+ * **Example** (Assigning ontology HTTP URL)
+ *
  * ```ts
  * import type { HttpUrl } from "@beep/ontology/Ontology.models"
  *
@@ -120,7 +136,8 @@ export type HttpUrl = typeof HttpUrl.Type;
 /**
  * Information about the loaded FOLIO ontology graph.
  *
- * @example
+ * **Example** (Inspecting GraphInfo schema AST)
+ *
  * ```ts
  * import { GraphInfo } from "@beep/ontology/Ontology.models"
  *
@@ -214,7 +231,8 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
 /**
  * Health status of the FOLIO API.
  *
- * @example
+ * **Example** (Checking healthy status value)
+ *
  * ```ts
  * import { HealthStatus } from "@beep/ontology/Ontology.models"
  *
@@ -233,7 +251,8 @@ export const HealthStatus = LiteralKit(["healthy", "unhealthy"]).pipe(
 /**
  * Runtime type for {@link HealthStatus}.
  *
- * @example
+ * **Example** (Assigning healthy status value)
+ *
  * ```ts
  * import type { HealthStatus } from "@beep/ontology/Ontology.models"
  *
@@ -249,7 +268,8 @@ export type HealthStatus = typeof HealthStatus.Type;
 /**
  * Response model for the health check endpoint.
  *
- * @example
+ * **Example** (Inspecting HealthResponse schema AST)
+ *
  * ```ts
  * import { HealthResponse } from "@beep/ontology/Ontology.models"
  *
@@ -279,7 +299,8 @@ export class HealthResponse extends S.Class<HealthResponse>($I`HealthResponse`)(
 /**
  * OWL class model for the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLClass schema AST)
+ *
  * ```ts
  * import { OWLClass } from "@beep/ontology/Ontology.models"
  *
@@ -293,82 +314,81 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
   {
     iri: FolioIriToken.annotateKey({
       title: "Iri",
-      identifier: "https://www.w3.org/2002/07/owl#Class",
     }),
     label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:label",
         title: "Label",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#label",
       })
     ),
     sub_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:subClassOf",
         title: "Sub Class Of",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#subClassOf",
       })
     ),
     parent_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "^rdfs:subClassOf",
         title: "Parent Class Of",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#subClassOf",
       })
     ),
     is_defined_by: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:isDefinedBy",
         title: "Is Defined By",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#isDefinedBy",
       })
     ),
     see_also: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:seeAlso",
         title: "See Also",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#seeAlso",
       })
     ),
     comment: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:comment",
         title: "Comment",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#comment",
       })
     ),
     deprecated: S.Boolean.pipe(
       SchemaUtils.withKeyDefaults(false),
-      S.annotateKey({
+      $I.key({
+        term: "owl:deprecated",
         title: "Deprecated",
-        identifier: "https://www.w3.org/2002/07/owl#deprecated",
         default: false,
       })
     ),
     preferred_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:prefLabel",
         title: "Preferred Label",
-        identifier: "https://www.w3.org/2004/02/skos/core#prefLabel",
       })
     ),
     alternative_labels: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:altLabel",
         title: "Alternative Labels",
-        identifier: "https://www.w3.org/2004/02/skos/core#altLabel",
       })
     ),
     translations: S.Record(S.String, S.String).pipe(
@@ -382,83 +402,83 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     hidden_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:hiddenLabel",
         title: "Hidden Label",
-        identifier: "https://www.w3.org/2004/02/skos/core#hiddenLabel",
       })
     ),
     definition: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:definition",
         title: "Definition",
-        identifier: "https://www.w3.org/2004/02/skos/core#definition",
       })
     ),
     examples: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:example",
         title: "Examples",
-        identifier: "https://www.w3.org/2004/02/skos/core#example",
       })
     ),
     notes: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:note",
         title: "Notes",
-        identifier: "https://www.w3.org/2004/02/skos/core#note",
       })
     ),
     history_note: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:historyNote",
         title: "History Note",
-        identifier: "https://www.w3.org/2004/02/skos/core#historyNote",
       })
     ),
     editorial_note: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:editorialNote",
         title: "Editorial Note",
-        identifier: "https://www.w3.org/2004/02/skos/core#editorialNote",
       })
     ),
     in_scheme: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:inScheme",
         title: "In Scheme",
-        identifier: "https://www.w3.org/2004/02/skos/core#inScheme",
       })
     ),
     identifier: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "dcterms:identifier",
         title: "Identifier",
-        identifier: "https://purl.org/dc/elements/1.1/identifier",
       })
     ),
     description: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "dcterms:description",
         title: "Description",
-        identifier: "https://purl.org/dc/elements/1.1/description",
       })
     ),
     source: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "dcterms:source",
         title: "Source",
-        identifier: "https://purl.org/dc/elements/1.1/source",
       })
     ),
     country: S.String.pipe(
@@ -466,7 +486,6 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         title: "Country",
-        identifier: "https://www.loc.gov/mads/rdf/v1#country",
         documentation: "https://www.loc.gov/standards/mads/mads-outline-2-1.html#country",
       })
     ),
@@ -480,7 +499,8 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
 /**
  * OWL object property model for the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLObjectProperty schema AST)
+ *
  * ```ts
  * import { OWLObjectProperty } from "@beep/ontology/Ontology.models"
  *
@@ -494,83 +514,82 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
   {
     iri: FolioIriToken.annotateKey({
       title: "Iri",
-      identifier: "https://www.w3.org/2002/07/owl#ObjectProperty",
     }),
     label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:label",
         title: "Label",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#label",
       })
     ),
     sub_property_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:subPropertyOf",
         title: "Sub Property Of",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#subPropertyOf",
       })
     ),
     domain: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:domain",
         title: "Domain",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#domain",
       })
     ),
     range: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "rdfs:range",
         title: "Range",
-        identifier: "https://www.w3.org/2000/01/rdf-schema#range",
       })
     ),
     inverse_of: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "owl:inverseOf",
         title: "Inverse Of",
-        identifier: "https://www.w3.org/2002/07/owl#inverseOf",
       })
     ),
     preferred_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:prefLabel",
         title: "Preferred Label",
-        identifier: "https://www.w3.org/2004/02/skos/core#prefLabel",
       })
     ),
     alternative_labels: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:altLabel",
         title: "Alternative Labels",
-        identifier: "https://www.w3.org/2004/02/skos/core#altLabel",
       })
     ),
     definition: S.String.pipe(
       S.OptionFromOptionalNullOr,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:definition",
         title: "Definition",
-        identifier: "https://www.w3.org/2004/02/skos/core#definition",
       })
     ),
     examples: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
-      S.annotateKey({
+      $I.key({
+        term: "skos:example",
         title: "Examples",
-        identifier: "https://www.w3.org/2004/02/skos/core#example",
       })
     ),
   },
@@ -583,7 +602,8 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
 /**
  * A collection of OWL class objects from the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLClassList schema AST)
+ *
  * ```ts
  * import { OWLClassList } from "@beep/ontology/Ontology.models"
  *
@@ -627,7 +647,8 @@ export class OWLClassList extends S.Class<OWLClassList>($I`OWLClassList`)(
 /**
  * A collection of OWL object properties from the FOLIO ontology.
  *
- * @example
+ * **Example** (Inspecting OWLObjectPropertyList schema AST)
+ *
  * ```ts
  * import { OWLObjectPropertyList } from "@beep/ontology/Ontology.models"
  *
@@ -662,7 +683,8 @@ export class OWLObjectPropertyList extends S.Class<OWLObjectPropertyList>($I`OWL
 /**
  * Relevance score attached to an OWL search result.
  *
- * @example
+ * **Example** (Inspecting OWLSearchScore schema AST)
+ *
  * ```ts
  * import { OWLSearchScore } from "@beep/ontology/Ontology.models"
  *
@@ -681,7 +703,8 @@ export const OWLSearchScore = S.Finite.pipe(
 /**
  * Runtime type for {@link OWLSearchScore}.
  *
- * @example
+ * **Example** (Assigning search relevance score)
+ *
  * ```ts
  * import type { OWLSearchScore } from "@beep/ontology/Ontology.models"
  *
@@ -697,7 +720,8 @@ export type OWLSearchScore = typeof OWLSearchScore.Type;
 /**
  * Tuple containing an OWL class and its relevance score.
  *
- * @example
+ * **Example** (Inspecting OWLSearchResult schema AST)
+ *
  * ```ts
  * import { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
@@ -716,8 +740,9 @@ export const OWLSearchResult = S.Tuple([OWLClass, OWLSearchScore]).pipe(
 /**
  * Runtime type for {@link OWLSearchResult}.
  *
- * @example
- * ```ts
+ * **Example** (Referencing OWLSearchResult type)
+ *
+ * ```ts import.meta.vitest name="Referencing OWLSearchResult type"
  * import type { OWLSearchResult } from "@beep/ontology/Ontology.models"
  *
  * type Result = OWLSearchResult
@@ -731,7 +756,8 @@ export type OWLSearchResult = typeof OWLSearchResult.Type;
 /**
  * Search results containing FOLIO ontology classes with relevance scores.
  *
- * @example
+ * **Example** (Inspecting OWLSearchResults schema AST)
+ *
  * ```ts
  * import { OWLSearchResults } from "@beep/ontology/Ontology.models"
  *
@@ -769,7 +795,8 @@ export class OWLSearchResults extends S.Class<OWLSearchResults>($I`OWLSearchResu
 /**
  * Location segment in a validation error.
  *
- * @example
+ * **Example** (Inspecting location segment schema AST)
+ *
  * ```ts
  * import { ValidationErrorLocationSegment } from "@beep/ontology/Ontology.models"
  *
@@ -788,7 +815,8 @@ export const ValidationErrorLocationSegment = S.Union([S.String, S.Int]).pipe(
 /**
  * Runtime type for {@link ValidationErrorLocationSegment}.
  *
- * @example
+ * **Example** (Assigning body location segment)
+ *
  * ```ts
  * import type { ValidationErrorLocationSegment } from "@beep/ontology/Ontology.models"
  *
@@ -804,7 +832,8 @@ export type ValidationErrorLocationSegment = typeof ValidationErrorLocationSegme
 /**
  * Validation error detail emitted by the API.
  *
- * @example
+ * **Example** (Inspecting ValidationError schema AST)
+ *
  * ```ts
  * import { ValidationError } from "@beep/ontology/Ontology.models"
  *
@@ -848,7 +877,8 @@ export class ValidationError extends S.Class<ValidationError>($I`ValidationError
 /**
  * HTTP validation error response emitted by the API.
  *
- * @example
+ * **Example** (Inspecting HTTPValidationError schema AST)
+ *
  * ```ts
  * import { HTTPValidationError } from "@beep/ontology/Ontology.models"
  *

@@ -1,5 +1,4 @@
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
   ListQueuedSyncOperationsForItemInput,
@@ -11,8 +10,10 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { NonNegativeInt } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -22,7 +23,7 @@ import { FastCheck as fc } from "effect/testing";
 import type { SyncOperationRepositoryShape } from "@beep/documents-use-cases/entities/SyncOperation/server";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -38,9 +39,9 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   );
 };
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(2);
-const syncItemId = S.decodeUnknownSync(Documents.SyncItemId)(1);
-const zero = S.decodeUnknownSync(NonNegativeInt)(0);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const syncItemId = S.decodeSync(Documents.SyncItemId)(1);
+const zero = S.decodeSync(NonNegativeInt)(0);
 const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
 const encodeSyncOperation = S.encodeSync(DomainSyncOperation.SyncOperation);
 
@@ -54,12 +55,12 @@ const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
     status: "queued",
     syncItemId,
     targetName: "complaint.pdf",
-    targetRelPath: S.decodeUnknownSync(VaultRelPath)(targetRelPath),
+    targetRelPath: S.decodeSync(VaultRelPath)(targetRelPath),
     workspaceId,
   });
 
 const syncOperationRow = (seed: SyncOperationSeed, id: number) => ({
-  ...baseEntityFixtureInput(DomainSyncOperation.SyncOperationId.entityType, id),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, id),
   attemptCount: seed.attemptCount,
   idempotencyKey: seed.idempotencyKey,
   inputContentDigest: O.getOrNull(seed.inputContentDigest),

@@ -6,7 +6,7 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -17,7 +17,8 @@ const $I = $AcpId.create("errors");
 /**
  * Failure raised when an ACP child process cannot be spawned.
  *
- * @example
+ * **Example** (Make spawn error)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AcpSpawnError } from "@beep/acp/errors"
@@ -29,10 +30,10 @@ const $I = $AcpId.create("errors");
  * @category errors
  * @since 0.0.0
  */
-export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnError`)(
+export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError`)(
   "AcpSpawnError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original spawn failure cause, when one was available.",
@@ -41,7 +42,7 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
       description: "ACP command that failed to spawn, when available.",
     }),
   },
-  $I.annote("AcpSpawnError", {
+  $I.annoteError<AcpSpawnError>("AcpSpawnError", {
     description: "Failure raised when an ACP child process cannot be spawned.",
   })
 ) {
@@ -56,7 +57,8 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
 /**
  * Failure raised when an ACP process exits before the protocol completes.
  *
- * @example
+ * **Example** (Make process exited error)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { AcpProcessExitedError } from "@beep/acp/errors"
@@ -68,10 +70,10 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
  * @category errors
  * @since 0.0.0
  */
-export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedError>($I`AcpProcessExitedError`)(
+export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>($I`AcpProcessExitedError`)(
   "AcpProcessExitedError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original process-exit cause, when one was available.",
@@ -82,7 +84,7 @@ export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedErro
         description: "Non-negative ACP process exit code, when the process returned one.",
       }),
   },
-  $I.annote("AcpProcessExitedError", {
+  $I.annoteError<AcpProcessExitedError>("AcpProcessExitedError", {
     description: "Failure raised when an ACP process exits before the protocol completes.",
   })
 ) {
@@ -97,7 +99,8 @@ export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedErro
 /**
  * Failure raised when ACP wire data cannot be encoded or decoded.
  *
- * @example
+ * **Example** (Make protocol parse error)
+ *
  * ```ts
  * import { AcpProtocolParseError } from "@beep/acp/errors"
  *
@@ -108,10 +111,10 @@ export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedErro
  * @category errors
  * @since 0.0.0
  */
-export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseError>($I`AcpProtocolParseError`)(
+export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>($I`AcpProtocolParseError`)(
   "AcpProtocolParseError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original parse failure cause, when one was available.",
@@ -120,7 +123,7 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
       description: "Human-readable parse failure detail.",
     }),
   },
-  $I.annote("AcpProtocolParseError", {
+  $I.annoteError<AcpProtocolParseError>("AcpProtocolParseError", {
     description: "Failure raised when ACP wire data cannot be encoded or decoded.",
   })
 ) {
@@ -144,7 +147,8 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
 /**
  * Failure raised by the ACP transport boundary.
  *
- * @example
+ * **Example** (Make transport error)
+ *
  * ```ts
  * import { AcpTransportError } from "@beep/acp/errors"
  *
@@ -155,10 +159,10 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
  * @category errors
  * @since 0.0.0
  */
-export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`AcpTransportError`)(
+export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTransportError`)(
   "AcpTransportError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original transport failure cause, when one was available.",
@@ -167,7 +171,7 @@ export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`Ac
       description: "Human-readable transport failure detail.",
     }),
   },
-  $I.annote("AcpTransportError", {
+  $I.annoteError<AcpTransportError>("AcpTransportError", {
     description: "Failure raised by the ACP transport boundary.",
   })
 ) {}
@@ -175,7 +179,8 @@ export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`Ac
 /**
  * JSON-RPC request failure returned by an ACP peer.
  *
- * @example
+ * **Example** (Method not found error)
+ *
  * ```ts
  * import { AcpRequestError } from "@beep/acp/errors"
  *
@@ -186,20 +191,20 @@ export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`Ac
  * @category errors
  * @since 0.0.0
  */
-export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpRequestError`)(
+export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpRequestError`)(
   "AcpRequestError",
   {
     code: AcpSchema.ErrorCode.annotateKey({
       description: "JSON-RPC error code returned by the ACP peer.",
     }),
-    data: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional JSON-RPC error data returned by the ACP peer.",
+    data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
     }),
     errorMessage: S.String.annotateKey({
       description: "JSON-RPC error message returned by the ACP peer.",
     }),
   },
-  $I.annote("AcpRequestError", {
+  $I.annoteError<AcpRequestError>("AcpRequestError", {
     description: "JSON-RPC request failure returned by an ACP peer.",
   })
 ) {
@@ -212,7 +217,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Convert an ACP protocol error payload into a typed driver error.
    *
-   * @example
+   * **Example** (From protocol error payload)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -237,7 +243,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC parse error.
    *
-   * @example
+   * **Example** (Create parse error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -248,7 +255,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static parseError(message = "Parse error", data?: unknown) {
+  static parseError(message = "Parse error", data?: S.Json) {
     return AcpRequestError.make({
       code: -32700,
       errorMessage: message,
@@ -259,7 +266,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC invalid request error.
    *
-   * @example
+   * **Example** (Create invalid request error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -270,7 +278,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static invalidRequest(message = "Invalid request", data?: unknown) {
+  static invalidRequest(message = "Invalid request", data?: S.Json) {
     return AcpRequestError.make({
       code: -32600,
       errorMessage: message,
@@ -281,7 +289,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC method-not-found error.
    *
-   * @example
+   * **Example** (Create method not found)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -302,7 +311,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC invalid params error.
    *
-   * @example
+   * **Example** (Create invalid params error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -313,7 +323,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static invalidParams(message = "Invalid params", data?: unknown) {
+  static invalidParams(message = "Invalid params", data?: S.Json) {
     return AcpRequestError.make({
       code: -32602,
       errorMessage: message,
@@ -324,7 +334,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create a JSON-RPC internal error.
    *
-   * @example
+   * **Example** (Create internal error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -335,7 +346,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static internalError(message = "Internal error", data?: unknown) {
+  static internalError(message = "Internal error", data?: S.Json) {
     return AcpRequestError.make({
       code: -32603,
       errorMessage: message,
@@ -346,7 +357,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create an ACP authentication-required request error.
    *
-   * @example
+   * **Example** (Create auth required error)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -357,7 +369,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static authRequired(message = "Authentication required", data?: unknown) {
+  static authRequired(message = "Authentication required", data?: S.Json) {
     return AcpRequestError.make({
       code: -32000,
       errorMessage: message,
@@ -368,7 +380,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Create an ACP resource-not-found request error.
    *
-   * @example
+   * **Example** (Create resource not found)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -379,7 +392,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
    * @category constructors
    * @since 0.0.0
    */
-  static resourceNotFound(message = "Resource not found", data?: unknown) {
+  static resourceNotFound(message = "Resource not found", data?: S.Json) {
     return AcpRequestError.make({
       code: -32002,
       errorMessage: message,
@@ -390,7 +403,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   /**
    * Convert this driver error to the ACP protocol error payload.
    *
-   * @example
+   * **Example** (Convert to protocol payload)
+   *
    * ```ts
    * import { AcpRequestError } from "@beep/acp/errors"
    *
@@ -415,7 +429,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
 /**
  * Union of typed technical failures emitted by the ACP driver.
  *
- * @example
+ * **Example** (Check AcpError membership)
+ *
  * ```ts
  * import { AcpError, AcpRequestError } from "@beep/acp/errors"
  *
@@ -442,7 +457,8 @@ export const AcpError = S.Union([
 /**
  * Type for {@link AcpError}.
  *
- * @example
+ * **Example** (Inspect AcpError tag)
+ *
  * ```ts
  * import type { AcpError } from "@beep/acp/errors"
  *

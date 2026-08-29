@@ -1,9 +1,11 @@
 import {
+  CommandJsonOutput,
   DEFAULT_JSON_FORMATTING_OPTIONS,
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   formatDurationSeconds,
   logTaggedSummary,
   makeTaggedLogger,
+  printCommandJson,
   renderPrettyCommandJson,
 } from "@beep/repo-cli/test/Cli";
 import { describe, expect, it } from "@effect/vitest";
@@ -59,6 +61,44 @@ describe("internal/cli/Json renderPrettyCommandJson", () => {
   });
 });
 
+describe("internal/cli/Json printCommandJson", () => {
+  it.effect(
+    "routes output through an injected writer",
+    Effect.fnUntraced(function* () {
+      const chunks: Array<string> = [];
+
+      yield* printCommandJson({ ok: true }).pipe(
+        Effect.provideService(CommandJsonOutput, (text) =>
+          Effect.sync(() => {
+            chunks.push(text);
+          })
+        )
+      );
+
+      expect(chunks).toEqual(['{"ok":true}\n']);
+    })
+  );
+
+  it("emits payloads larger than 64 KiB intact across a process boundary", () => {
+    const payload = { value: "x".repeat(70_000) };
+    const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
+    const program = [
+      `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
+      'import { Effect } from "effect";',
+      'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
+    ].join("\n");
+    const result = Bun.spawnSync(["bun", "--eval", program], {
+      stderr: "pipe",
+      stdout: "pipe",
+    });
+    const output = result.stdout.toString();
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.byteLength).toBeGreaterThan(65_536);
+    expect(output).toBe(`${JSON.stringify(payload)}\n`);
+  });
+});
+
 describe("internal/cli/Printer formatDurationSeconds", () => {
   it("renders two-decimal seconds (data-first)", () => {
     expect(formatDurationSeconds(1234, 2)).toBe("1.23s");
@@ -89,8 +129,9 @@ describe("internal/cli/Printer formatDurationSeconds", () => {
 });
 
 describe("internal/cli/Printer tagged logging", () => {
-  it.effect("prefixes messages with the tag", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "prefixes messages with the tag",
+    Effect.fnUntraced(function* () {
       const lines = yield* collectLines(
         Effect.gen(function* () {
           const log = makeTaggedLogger("ci");
@@ -101,8 +142,9 @@ describe("internal/cli/Printer tagged logging", () => {
     })
   );
 
-  it.effect("logs record entries as [tag] key=value in insertion order", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "logs record entries as [tag] key=value in insertion order",
+    Effect.fnUntraced(function* () {
       const lines = yield* collectLines(logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 }));
       expect(lines).toEqual(["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]);
     })

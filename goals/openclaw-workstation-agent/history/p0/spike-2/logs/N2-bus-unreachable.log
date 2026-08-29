@@ -1,0 +1,30 @@
+### LANE N2-bus-unreachable (2026-07-26T04:38:18Z)
+### COMMAND: setsid -w env -i HOME=/home/elpresidank USER=elpresidank LOGNAME=elpresidank PATH=/usr/bin:/bin SPIKE_TARGET_USER=elpresidank SPIKE_EXPECTED_IDENTITY=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity.json SPIKE_STATE_DIR=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state SPIKE_RUNTIME_UID_OVERRIDE=99999 bash /tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/applicator.sh
+
+
+=== step 0: non-interactive context probe ===
+[04:38:18Z] pid=1465763 ppid=1465755 sid=1465763
+[04:38:18Z] tty(stdin)=not a tty
+[04:38:18Z] no fd is a tty: confirmed
+[04:38:18Z] inherited env var count=11; names: HOME LOGNAME PATH PWD SHLVL SPIKE_EXPECTED_IDENTITY SPIKE_RUNTIME_UID_OVERRIDE SPIKE_STATE_DIR SPIKE_TARGET_USER USER _ 
+[04:38:18Z] XDG_RUNTIME_DIR inherited? <unset>
+[04:38:18Z] DBUS_SESSION_BUS_ADDRESS inherited? <unset>
+
+=== step 1: resolve target identity from the OS (not from env) ===
+[04:38:18Z] user=elpresidank uid=1000 home=/home/elpresidank
+[04:38:18Z] hostname=DankStation machine_id_sha256=90bdffbb<sha256-redacted>
+
+=== step 2: linger ownership check ===
+[04:38:18Z] loginctl show-user elpresidank --property=Linger --value -> yes
+[04:38:18Z] linger enabled: OK
+
+=== step 3: derive runtime dir and bus address from UID ===
+[04:38:18Z] NOTE: runtime derivation overridden to uid=99999 (negative-lane injection)
+[04:38:18Z] derived XDG_RUNTIME_DIR=/run/user/99999
+[04:38:18Z] derived DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/99999/bus
+
+=== step 4: user bus reachability (read-only probes) ===
+
+FAIL(20): PREFLIGHT_FAIL_BUS: runtime dir /run/user/99999 does not exist. No mutation performed.
+
+### EXIT CODE: 20

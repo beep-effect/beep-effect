@@ -73,17 +73,18 @@ const countryCodeToEmojiFlag: (code: string) => string = flow(
 /**
  * Country code schema backed by generated CLDR territory codes.
  *
- * @example
- * ```ts
+ * **Example** (Decode country code value)
+ *
+ * ```ts import.meta.vitest name="Decode country code value"
  * import * as S from "effect/Schema"
  * import { CountryCode } from "@beep/schema/CountryCode"
  *
  * const code = S.decodeUnknownSync(CountryCode)("US")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountryCode: CountryCodeWithStatics = TerritoryCodeSchema.pipe(
   SchemaUtils.withStatics(() => ({
@@ -96,35 +97,26 @@ export const CountryCode: CountryCodeWithStatics = TerritoryCodeSchema.pipe(
 
 /**
  * {@inheritDoc CountryCode}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { CountryCode } from "@beep/schema/CountryCode"
- *
- * const code: CountryCode = S.decodeUnknownSync(CountryCode)("US")
- * console.log(code) // "US"
- * ```
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type CountryCode = TerritoryCodeType;
 
 /**
  * Reverse codec from country display name to country code.
  *
- * @example
- * ```ts
+ * **Example** (Decode code from name)
+ *
+ * ```ts import.meta.vitest name="Decode code from name"
  * import * as S from "effect/Schema"
  * import { CountryCodeFromName } from "@beep/schema/CountryCode"
  *
  * const code = S.decodeUnknownSync(CountryCodeFromName)("United States")
- * console.log(code) // "US"
+ * code // => "US"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = TerritoryCodeFromNameSchema.pipe(
   SchemaUtils.withStatics(() => ({
@@ -138,17 +130,18 @@ export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = Territory
 /**
  * Reversible country code/name codec.
  *
- * @example
- * ```ts
+ * **Example** (Decode name from code)
+ *
+ * ```ts import.meta.vitest name="Decode name from code"
  * import * as S from "effect/Schema"
  * import { CountryNameFromCode } from "@beep/schema/CountryCode"
  *
  * const name = S.decodeUnknownSync(CountryNameFromCode)("US")
- * console.log(name) // "United States"
+ * name // => "United States"
  * ```
  *
- * @since 0.0.0
  * @category schemas
+ * @since 0.0.0
  */
 export const CountryNameFromCode: typeof TerritoryNameFromCodeSchema = TerritoryNameFromCodeSchema.pipe(
   SchemaUtils.withStatics(() => ({

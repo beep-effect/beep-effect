@@ -6,16 +6,17 @@
  */
 
 /**
- * export of effect/Function's dual helper for data first + data last strategies
+ * Core `effect/Function` combinators for data flow and argument-order adaptation.
  *
  * @category utilities
  * @since 0.0.0
  */
-export { dual, flow, identity, pipe } from "effect/Function";
+export { dual, flip, flow, identity, pipe } from "effect/Function";
 /**
  * Array utilities extending `effect/Array` with non-empty variants.
  *
- * @example
+ * **Example** (Make readonly non-empty array)
+ *
  * ```ts
  * import { A } from "@beep/utils"
  *
@@ -30,7 +31,8 @@ export * as A from "./Array.ts";
 /**
  * Boolean utilities re-exported from `effect/Boolean`.
  *
- * @example
+ * **Example** (Import Boolean utilities)
+ *
  * ```ts
  * import { Bool } from "@beep/utils"
  *
@@ -44,7 +46,8 @@ export * as Bool from "./Bool.ts";
 /**
  * DateTime utilities extending `effect/DateTime`.
  *
- * @example
+ * **Example** (Import DateTime utilities)
+ *
  * ```ts
  * import { DateTime } from "@beep/utils"
  *
@@ -70,7 +73,8 @@ export * from "./DrainableWorker.ts";
 /**
  * Equality utilities extending `effect/Equal`.
  *
- * @example
+ * **Example** (Compare values for equality)
+ *
  * ```ts
  * import { Eq } from "@beep/utils"
  *
@@ -85,7 +89,8 @@ export * as Eq from "./Equal.ts";
 /**
  * Error combinators for dual `Effect.mapError` wrappers.
  *
- * @example
+ * **Example** (Map failure to custom error)
+ *
  * ```ts
  * import { Err } from "@beep/utils"
  * import { Effect } from "effect"
@@ -113,7 +118,8 @@ export * as Err from "./Errors.ts";
  * `node:fs` (`appendFileSync`, `existsSync`, `rmSync`, `renameSync`,
  * `readdirSync`, `statSync`) plus the async watch helper `makeWaitForFile`.
  *
- * @example
+ * **Example** (Check path exists sync)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { FileSystem } from "@beep/utils"
@@ -135,7 +141,8 @@ export * from "./GlobalValue.ts";
 /**
  * HTML escaping helpers.
  *
- * @example
+ * **Example** (Escape HTML special characters)
+ *
  * ```ts
  * import { Html } from "@beep/utils"
  *
@@ -150,7 +157,8 @@ export * as Html from "./Html.ts";
 /**
  * Number utilities extending `effect/Number`.
  *
- * @example
+ * **Example** (Check integer number)
+ *
  * ```ts
  * import { N } from "@beep/utils"
  *
@@ -165,7 +173,8 @@ export * as N from "./Number.ts";
 /**
  * Option utilities extending `effect/Option`.
  *
- * @example
+ * **Example** (Create Option some value)
+ *
  * ```ts
  * import { O } from "@beep/utils"
  *
@@ -180,7 +189,8 @@ export * as O from "./Option.ts";
 /**
  * Path utilities wrapping `node:path`, mirroring effect's `Path` service.
  *
- * @example
+ * **Example** (Join path segments)
+ *
  * ```ts
  * import { Path } from "@beep/utils"
  *
@@ -194,7 +204,8 @@ export * as Path from "./Path.ts";
 /**
  * Predicate utilities extending `effect/Predicate`.
  *
- * @example
+ * **Example** (Test object predicate)
+ *
  * ```ts
  * import { P } from "@beep/utils"
  *
@@ -209,7 +220,8 @@ export * as P from "./Predicate.ts";
 /**
  * Random value service helpers.
  *
- * @example
+ * **Example** (Access default RandomValues)
+ *
  * ```ts
  * import { RandomValues } from "@beep/utils"
  *
@@ -223,7 +235,8 @@ export * from "./Random.ts";
 /**
  * Record utilities extending `effect/Record` with dot-path access.
  *
- * @example
+ * **Example** (Convert record to entries)
+ *
  * ```ts
  * import { R } from "@beep/utils"
  *
@@ -238,7 +251,8 @@ export * as R from "./Record.ts";
 /**
  * String utilities extending `effect/String` with typed case conversions.
  *
- * @example
+ * **Example** (Convert string to slug)
+ *
  * ```ts
  * import { Str } from "@beep/utils"
  *
@@ -253,7 +267,8 @@ export * as Str from "./Str.ts";
 /**
  * Stream utilities extending `effect/Stream`.
  *
- * @example
+ * **Example** (Import Stream utilities)
+ *
  * ```ts
  * import { Stream } from "@beep/utils"
  *
@@ -267,7 +282,8 @@ export * as Stream from "./Stream.ts";
 /**
  * Struct utilities extending `effect/Struct` with dot-path access.
  *
- * @example
+ * **Example** (List struct object keys)
+ *
  * ```ts
  * import { Struct } from "@beep/utils"
  *
@@ -282,7 +298,8 @@ export * as Struct from "./Struct.ts";
 /**
  * Plain-text formatting helpers.
  *
- * @example
+ * **Example** (Join lines of text)
+ *
  * ```ts
  * import { Text } from "@beep/utils"
  *
@@ -297,7 +314,8 @@ export * as Text from "./Text.ts";
 /**
  * thunk constants (`thunkTrue`, `thunkNull`, etc.).
  *
- * @example
+ * **Example** (Call thunkTrue constant)
+ *
  * ```ts
  * import { thunkTrue } from "@beep/utils"
  *

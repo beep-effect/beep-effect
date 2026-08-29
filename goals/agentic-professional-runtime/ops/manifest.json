@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "agentic-professional-runtime",
     "title": "Agentic Professional Runtime",
     "status": "active",
     "created": "2026-05-01",
-    "updated": "2026-06-18",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "productProofs": [
@@ -27,7 +27,7 @@
   "runtimeSlices": ["tenancy", "workspace", "agents", "epistemic"],
   "verticalSlices": ["law-practice", "wealth-management"],
   "documents": {
-    "root": ["README.md", "SPEC.md", "PLAN.md"],
+    "root": ["README.md", "SPEC.md", "PLAN.md", "GOAL.md"],
     "product": [
       "docs/product-vision-law-practice.md",
       "docs/product-vision-todox.md",
@@ -74,8 +74,8 @@
     "implementation": {
       "sdkContractPackage": "packages/agents/use-cases",
       "fixtureRunnerSubpath": "@beep/agents-use-cases/test",
-      "proofHarness": "apps/professional-runtime-proof",
-      "testCommand": "bun run --cwd apps/professional-runtime-proof test",
+      "proofHarness": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "testCommand": "bun run --filter=@beep/agents-use-cases test",
       "storage": "in-memory-test-only",
       "tables": "deferred"
     },
@@ -109,7 +109,7 @@
       "document connector execution",
       "multi-machine sync",
       "direct authoritative agent writes",
-      "real LLM extraction",
+      "real LLM extraction in the paired deterministic runtime fixture",
       "MCP as canonical contract",
       "full governance dashboard"
     ]
@@ -120,7 +120,27 @@
       "status": "merged",
       "date": "2026-06-18",
       "evidence": "PR #262 merged the synthetic/public office-action loop through @beep/file-processing, @beep/tika, span-bearing GroundedExtraction[], law entities, and the epistemic gate/projection public surface.",
-      "nextRung": "Replace the fixed OfficeActionReviewSpikeCandidates list with langextract-service/LLM extraction while preserving deterministic tests and the privilege wall."
+      "nextRung": "Add multi-reference section 103 plus section 101/112 extraction, mapping, and review handling while preserving deterministic tests and the privilege wall."
+    }
+  ],
+  "implementationRungs": [
+    {
+      "id": "law-office-action-service-extraction",
+      "status": "complete",
+      "target": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+      "summary": "Replace the fixed OfficeActionReviewSpikeCandidates workflow input with provider-neutral @beep/langextract extraction over an injected LLM while preserving grounded spans."
+    },
+    {
+      "id": "law-office-action-non-happy-paths",
+      "status": "complete",
+      "target": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "summary": "Reject missing and unaligned required extraction output before epistemic admission."
+    },
+    {
+      "id": "law-office-action-doctrine-breadth",
+      "status": "pending",
+      "target": "packages/law-practice/use-cases/src/OfficeActionReview",
+      "summary": "Add multi-reference section 103 plus section 101/112 extraction, mapping, and review behavior with deterministic fixtures and non-happy-path coverage."
     }
   ],
   "phases": [
@@ -172,8 +192,7 @@
         "packages/agents/domain",
         "packages/agents/use-cases",
         "packages/law-practice/domain",
-        "packages/wealth-management/domain",
-        "apps/professional-runtime-proof"
+        "packages/agents/use-cases/test/ProfessionalRuntime.test.ts"
       ]
     },
     {
@@ -192,9 +211,18 @@
     "The first proof has one Law fixture and one Wealth fixture with expected snapshots.",
     "Expected snapshots cite stable source spans from fixture bodies.",
     "The SDK contract is context packets plus candidate writes, not authoritative agent writes.",
-    "The P3 proof runs both scenarios through an app-level package contract test."
+    "The P3 proof runs both scenarios through the agents use-cases package contract test."
   ],
   "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agentic-professional-runtime/GOAL.md"
+    }
+  ],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -202,5 +230,7 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "mission": "Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slices:"
+  "mission": "Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slices:",
+  "lifecycle": "active",
+  "packetPath": "goals/agentic-professional-runtime"
 }

@@ -13,17 +13,18 @@ const $I = $SchemaId.create("PascalStr");
 /**
  * Branded PascalCase string schema.
  *
- * @example
- * ```ts
+ * **Example** (Decode PascalCase string)
+ *
+ * ```ts import.meta.vitest name="Decode PascalCase string"
  * import * as S from "effect/Schema"
  * import { PascalCaseStr } from "@beep/schema"
  *
  * const value = S.decodeUnknownSync(PascalCaseStr)("WorkflowStatus")
- * console.log(value) // "WorkflowStatus"
+ * value // => "WorkflowStatus"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const PascalCaseStr = NonEmptyTrimmedStr.pipe(
   S.check(
@@ -46,7 +47,8 @@ export const PascalCaseStr = NonEmptyTrimmedStr.pipe(
 /**
  * Type for {@link PascalCaseStr}.
  *
- * @example
+ * **Example** (Type-annotated PascalCase decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { PascalCaseStr } from "@beep/schema"
@@ -56,7 +58,7 @@ export const PascalCaseStr = NonEmptyTrimmedStr.pipe(
  * console.log(name)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PascalCaseStr = typeof PascalCaseStr.Type;

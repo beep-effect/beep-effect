@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -23,13 +23,13 @@ import {
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("ingest");
-
 const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
 
 /**
  * Error raised by AI metrics ingest helpers.
  *
- * @example
+ * **Example** (Make ingest error)
+ *
  * ```ts
  * import { AiMetricsIngestError } from "@beep/repo-ai-metrics"
  *
@@ -39,16 +39,17 @@ const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsIngestError extends TaggedErrorClass<AiMetricsIngestError>($I`AiMetricsIngestError`)(
+export class AiMetricsIngestError extends S.TaggedError<AiMetricsIngestError>($I`AiMetricsIngestError`)(
   "AiMetricsIngestError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsIngestError", {
+  $I.annoteError<AiMetricsIngestError>("AiMetricsIngestError", {
     description: "Typed failure raised by AI metrics transcript ingest helpers.",
   })
 ) {}
@@ -56,7 +57,8 @@ export class AiMetricsIngestError extends TaggedErrorClass<AiMetricsIngestError>
 /**
  * Input contract for summarizing one transcript text blob.
  *
- * @example
+ * **Example** (Make transcript text input)
+ *
  * ```ts
  * import { AiMetricsTranscriptTextSummaryInput } from "@beep/repo-ai-metrics"
  *
@@ -67,6 +69,7 @@ export class AiMetricsIngestError extends TaggedErrorClass<AiMetricsIngestError>
  * })
  * console.log(input.sourceKind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -181,7 +184,8 @@ const summaryTimestampFields = (
 /**
  * Summarize JSONL transcript text into a stable ingest summary.
  *
- * @example
+ * **Example** (Summarize transcript with Effect)
+ *
  * ```ts
  * import { summarizeTranscriptText } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -195,6 +199,7 @@ const summaryTimestampFields = (
  * )
  * console.log(result)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -233,8 +238,8 @@ export const summarizeTranscriptText: (
 /**
  * Render a transcript ingest summary as JSON.
  *
- * @effects Performs schema JSON encoding only; fails with `AiMetricsIngestError` if the summary cannot be encoded.
- * @example
+ * **Example** (Encode summary to JSON)
+ *
  * ```ts
  * import { TranscriptIngestSummary, summaryToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -252,6 +257,8 @@ export const summarizeTranscriptText: (
  * )
  * console.log(json)
  * ```
+ *
+ * @effects Performs schema JSON encoding only; fails with `AiMetricsIngestError` if the summary cannot be encoded.
  * @category services
  * @since 0.0.0
  */

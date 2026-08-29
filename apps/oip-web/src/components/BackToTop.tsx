@@ -10,6 +10,7 @@
 import { thunkUndefined } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import { Atom } from "effect/unstable/reactivity";
 
 const REVEAL_OFFSET_PX = 560;
@@ -24,12 +25,17 @@ const backToTopVisibleAtom = Atom.make((get) => {
     return false;
   }
 
-  const update = () => get.setSelf(window.scrollY > REVEAL_OFFSET_PX);
+  const browserWindow = window;
+  const update = () => get.setSelf(browserWindow.scrollY > REVEAL_OFFSET_PX);
 
-  window.addEventListener("scroll", update, { passive: true });
-  get.addFinalizer(() => window.removeEventListener("scroll", update));
+  browserWindow.addEventListener("scroll", update, { passive: true });
+  // Teardown-safe: under the coverage runtime the registry can finalize after
+  // jsdom has already stripped the window's methods.
+  get.addFinalizer(
+    () => P.isFunction(browserWindow.removeEventListener) && browserWindow.removeEventListener("scroll", update)
+  );
 
-  return window.scrollY > REVEAL_OFFSET_PX;
+  return browserWindow.scrollY > REVEAL_OFFSET_PX;
 });
 
 const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
@@ -45,6 +51,8 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * Fixed bottom-right button that fades in once the visitor has scrolled past the
  * hero, then smooth-scrolls back to the top of the page when clicked.
  *
+ * **Details**
+ *
  * Visibility is driven by an Atom-managed passive scroll listener that flips
  * once the page has scrolled past `REVEAL_OFFSET_PX`, so the control stays
  * hidden on the first viewport. The scroll itself honours
@@ -53,7 +61,8 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * a gold glyph that reads on both the light paper and dark soil sections it
  * floats over.
  *
- * @example
+ * **Example** (Rendering BackToTop button)
+ *
  * ```tsx
  * import { BackToTop } from "@beep/oip-web/components/BackToTop"
  *

@@ -6,9 +6,9 @@ import { describe, expect, it } from "vitest";
 import { BiomeReport } from "./harness.ts";
 import { OxlintReport } from "./oxlint-harness.ts";
 
-const ImportBindingArbitrary = S.toArbitrary(ImportBinding);
-const BiomeReportArbitrary = S.toArbitrary(BiomeReport);
-const OxlintReportArbitrary = S.toArbitrary(OxlintReport);
+const ImportBindingArbitrary = S.toArbitrary(ImportBinding)(fc);
+const BiomeReportArbitrary = S.toArbitrary(BiomeReport)(fc);
+const OxlintReportArbitrary = S.toArbitrary(OxlintReport)(fc);
 
 const decodeImportBinding = S.decodeUnknownSync(ImportBinding);
 const encodeImportBinding = S.encodeSync(ImportBinding);

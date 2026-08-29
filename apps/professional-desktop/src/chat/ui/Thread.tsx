@@ -5,15 +5,15 @@
  * {@link threadTimelineAtoms} and renders each {@link TimelineTurn}: message
  * items through {@link MessageView}, tool-call items as a placeholder chip, and
  * a cost-rollup line derived from `costMicros`. User turns carry an Edit control
- * that seeds {@link editTargetAtom}; edited turns (those with sibling branches)
+ * that seeds {@link editTargetAtom}; turns participating in an edit branch point
  * expose a degenerate version-selector affordance.
  *
  * The in-flight {@link streamingTurnAtom} renders optimistically: a "Thinking…"
- * indicator until the first block arrives, then {@link StreamingBlocks}, with a
- * Stop control that cancels the turn fiber via an `Atom.Interrupt` write. During
- * an edit turn the rewritten-away tail is hidden optimistically. The turn fiber
- * is kept subscribed with `useAtomMount(runTurnAtom)`, and scroll-to-bottom is
- * driven by `useAtomSubscribe` rather than effects.
+ * indicator until the first block arrives, then {@link StreamingBlocks}. The
+ * composer owns the canonical Stop control. During an edit turn the
+ * rewritten-away tail is hidden optimistically. The turn fiber is kept
+ * subscribed with `useAtomMount(runTurnAtom)`. Transcript DOM refs,
+ * reconciliation, and scroll effects are owned by runtime atom actions.
  *
  * @packageDocumentation
  * @category components
@@ -22,7 +22,6 @@
 "use client";
 
 import {
-  editTargetAtom,
   runTurnAtom,
   streamingTurnAtom,
   threadTimelineAtoms,
@@ -30,13 +29,22 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, N, O, thunkNull } from "@beep/utils";
+import { A, O, thunkNull } from "@beep/utils";
+import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { useRef } from "react";
+import { HashSet } from "effect";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
+import {
+  editThreadTurnAtom,
+  reconcileThreadTimelineAtoms,
+  scrollThreadAtoms,
+  setThreadBottomAtoms,
+  setThreadViewportAtoms,
+  visibleThreadTurnsAtoms,
+} from "./Thread.atoms.ts";
+import type { StreamingTurn } from "@beep/agents-client/Chat.atoms";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
 import type { JSX } from "react";
@@ -45,46 +53,6 @@ type ThreadId = WorkspaceIdentity.ThreadId;
 type TimelineTurn = ThreadUseCases.TimelineTurn;
 type TimelineItem = ThreadUseCases.TimelineItem;
 
-// How far from the bottom still counts as "following along". A couple of lines of
-// slack keeps sub-pixel scroll rounding and the tail padding from reading as
-// "the reader scrolled away".
-const PINNED_SLACK_PX = 64;
-
-const useThreadScroll = (
-  timelineAtom: ReturnType<typeof threadTimelineAtoms>,
-  unreconciledAtom: ReturnType<typeof unreconciledTurnAtoms>
-) => {
-  const unreconciled = useAtomValue(unreconciledAtom);
-  const setUnreconciled = useAtomSet(unreconciledAtom);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Follow the stream only while the reader is already at the bottom. Scrolling
-  // unconditionally dragged anyone who had scrolled up to re-read an earlier
-  // answer back down again on every single streamed block.
-  const scrollToBottom = (): void => {
-    const viewport = scrollRef.current;
-    if (viewport !== null && viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > PINNED_SLACK_PX) {
-      return;
-    }
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-  useAtomSubscribe(
-    timelineAtom,
-    (result) => {
-      scrollToBottom();
-      if (AsyncResult.isSuccess(result) && A.some(unreconciled, (turn) => turn.reconciliation === "timeline")) {
-        setUnreconciled(A.filter(unreconciled, (turn) => turn.reconciliation === "receipt"));
-      }
-    },
-    { immediate: true }
-  );
-  useAtomSubscribe(streamingTurnAtom, scrollToBottom);
-  useAtomSubscribe(unreconciledAtom, scrollToBottom);
-
-  return { bottomRef, scrollRef, unreconciled };
-};
-
 const ToolCallChip = ({ name }: { readonly name: string }): JSX.Element => (
   <span className="inline-flex items-center rounded-full border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
     tool: {name}
@@ -92,15 +60,16 @@ const ToolCallChip = ({ name }: { readonly name: string }): JSX.Element => (
 );
 
 const TimelineItemRow = ({ item }: { readonly item: TimelineItem }): JSX.Element =>
-  item.kind === "message" ? <MessageView content={item.content} /> : <ToolCallChip name={item.name} />;
-
-const turnRole = (turn: TimelineTurn): string => {
-  const first = A.findFirst(turn.items, (item) => item.kind === "message");
-  return O.match(first, {
-    onNone: () => "assistant",
-    onSome: (item) => (item.kind === "message" ? item.role : "assistant"),
+  ThreadProjections.TimelineItem.match(item, {
+    message: (message) => <MessageView content={message.content} />,
+    tool_call: (toolCall) => <ToolCallChip name={toolCall.name} />,
   });
-};
+
+const turnRole = (turn: TimelineTurn): MessageRole =>
+  O.match(A.findFirst(turn.items, ThreadProjections.TimelineItem.guards.message), {
+    onNone: () => MessageRole.Enum.assistant,
+    onSome: (item) => item.role,
+  });
 
 const CostRollup = ({ costMicros }: { readonly costMicros: number }): JSX.Element | null =>
   costMicros > 0 ? (
@@ -116,13 +85,22 @@ const TurnRow = ({
   readonly turn: TimelineTurn;
   readonly hasSiblings: boolean;
 }): JSX.Element => {
-  const setEditTarget = useAtomSet(editTargetAtom);
+  const editTurn = useAtomSet(editThreadTurnAtom);
   const role = turnRole(turn);
-  const userMessage = A.findFirst(turn.items, (item) => item.kind === "message" && item.role === "user");
+  const userMessage = A.findFirst(
+    turn.items,
+    (item): item is ThreadUseCases.TimelineMessageItem =>
+      ThreadProjections.TimelineItem.guards.message(item) && MessageRole.is.user(item.role)
+  );
 
   return (
-    <div className={`mb-4 flex flex-col ${role === "user" ? "items-end" : "items-start"}`} data-testid={`turn-${role}`}>
-      <div className={`max-w-[80%] rounded-lg px-3 py-2 ${role === "user" ? "bg-primary/10" : "bg-muted/50"}`}>
+    <div
+      className={`mb-4 flex flex-col ${MessageRole.is.user(role) ? "items-end" : "items-start"}`}
+      data-testid={`turn-${role}`}
+    >
+      <div
+        className={`max-w-[80%] rounded-lg px-3 py-2 ${MessageRole.is.user(role) ? "bg-primary/10" : "bg-muted/50"}`}
+      >
         {A.map(turn.items, (item, i) => (
           <TimelineItemRow key={i} item={item} />
         ))}
@@ -130,22 +108,26 @@ const TurnRow = ({
         <div className="mt-1 flex items-center gap-2">
           {O.match(userMessage, {
             onNone: thunkNull,
-            onSome: (item) =>
-              item.kind === "message" ? (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  title="Edit — rewrites the thread from here"
-                  onClick={() => setEditTarget(O.some({ threadId, turnId: turn.turnId, content: item.content }))}
-                  data-testid="turn-edit"
-                >
-                  Edit
-                </Button>
-              ) : null,
+            onSome: (item) => (
+              <Button
+                variant="ghost"
+                size="xs"
+                title="Edit — rewrites the thread from here"
+                onClick={() =>
+                  editTurn({
+                    threadId,
+                    turnId: turn.turnId,
+                    content: item.content,
+                  })
+                }
+                data-testid="turn-edit"
+              >
+                Edit
+              </Button>
+            ),
           })}
-          {/* version selector affordance — only when this turn has sibling
-              branches (an earlier edit forked the thread). v1 renders nothing
-              for single-branch turns. */}
+          {/* version selector affordance — only when this turn participates in
+              a branch point created by an edit. */}
           {hasSiblings ? (
             <span className="text-xs text-muted-foreground" data-testid="turn-versions">
               versions
@@ -157,18 +139,89 @@ const TurnRow = ({
   );
 };
 
-// a turn has sibling branches when another turn shares its parent — the marker
-// that an edit forked this point in the thread.
-const turnHasSiblings = (allTurns: ReadonlyArray<TimelineTurn>, turn: TimelineTurn): boolean =>
-  O.match(turn.parentTurnId, {
-    onNone: () => false,
-    onSome: (parentId) => A.filter(allTurns, (t) => O.exists(t.parentTurnId, (p) => p === parentId)).length > 1,
+const ThreadLoadState = ({ failed, loading }: { readonly failed: boolean; readonly loading: boolean }): JSX.Element => (
+  <>
+    {loading ? (
+      <div className="text-sm text-muted-foreground" data-testid="thread-loading">
+        Loading thread…
+      </div>
+    ) : null}
+    {failed ? (
+      <div className="text-sm text-destructive" data-testid="thread-error">
+        Failed to load the thread — is the sidecar running?
+      </div>
+    ) : null}
+  </>
+);
+
+const EmptyThread = ({ visible }: { readonly visible: boolean }): JSX.Element | null =>
+  visible ? (
+    <div className="flex h-full flex-col items-center justify-center text-center" data-testid="thread-empty">
+      <h2 className="text-lg font-semibold">Start the conversation</h2>
+      <p className="text-sm text-muted-foreground">Ask anything. Responses stream in as structured rich text.</p>
+    </div>
+  ) : null;
+
+const UnreconciledTurns = ({ turns }: { readonly turns: ReadonlyArray<StreamingTurn> }): JSX.Element => (
+  <>
+    {A.map(turns, (turn, index) => (
+      <div key={`unreconciled-${index}`}>
+        <div className="mb-4 flex flex-col items-end" data-testid="turn-unreconciled-user">
+          <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
+            <MessageView content={turn.userContent} />
+          </div>
+        </div>
+        <div className="mb-4 flex flex-col items-start" data-testid="turn-unreconciled">
+          <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
+            {A.isReadonlyArrayEmpty(turn.blocks) ? (
+              <div className="text-sm text-muted-foreground">Reply completed; waiting for the thread to refresh…</div>
+            ) : (
+              <StreamingBlocks blocks={turn.blocks} />
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </>
+);
+
+const StreamingTurnView = ({
+  streaming,
+  turnActive,
+}: {
+  readonly streaming: O.Option<StreamingTurn>;
+  readonly turnActive: boolean;
+}): JSX.Element | null =>
+  O.match(streaming, {
+    onNone: thunkNull,
+    onSome: (turn) => (
+      <>
+        {/* The message you just sent, shown while the reply streams. */}
+        <div className="mb-4 flex flex-col items-end" data-testid="turn-streaming-user">
+          <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
+            <MessageView content={turn.userContent} />
+          </div>
+        </div>
+        <div className="mb-4 flex flex-col items-start" data-testid="turn-streaming">
+          <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
+            {A.isReadonlyArrayEmpty(turn.blocks) ? (
+              <div className="text-sm text-muted-foreground" data-testid="thinking">
+                {turnActive ? "Thinking…" : "Reply completed; waiting for the thread to refresh…"}
+              </div>
+            ) : (
+              <StreamingBlocks blocks={turn.blocks} />
+            )}
+          </div>
+        </div>
+      </>
+    ),
   });
 
 /**
  * Renders the selected thread's timeline and in-flight streaming turn.
  *
- * @example
+ * **Example** (Log component name)
+ *
  * ```tsx
  * import { Thread } from "@/chat/ui/Thread"
  *
@@ -179,146 +232,36 @@ const turnHasSiblings = (allTurns: ReadonlyArray<TimelineTurn>, turn: TimelineTu
  * @since 0.0.0
  */
 export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Element {
-  const timelineAtom = threadTimelineAtoms(threadId);
-  const timeline = useAtomValue(timelineAtom);
-  const streaming = useAtomValue(streamingTurnAtom);
-  const unreconciledAtom = unreconciledTurnAtoms(threadId);
+  const view = useAtomValue(visibleThreadTurnsAtoms(threadId));
   const turnActive = useAtomValue(turnActiveAtom);
-  const runTurn = useAtomSet(runTurnAtom);
+  const reconcileTimeline = useAtomSet(reconcileThreadTimelineAtoms(threadId));
+  const scrollThread = useAtomSet(scrollThreadAtoms(threadId));
+  const setBottom = useAtomSet(setThreadBottomAtoms(threadId));
+  const setViewport = useAtomSet(setThreadViewportAtoms(threadId));
   // the turn fiber must stay subscribed for the lifetime of the thread view,
   // otherwise the registry releases the fn atom and interrupts the stream.
   useAtomMount(runTurnAtom);
-  const { bottomRef, scrollRef, unreconciled } = useThreadScroll(timelineAtom, unreconciledAtom);
-
-  // a turn keeps streaming in its own thread when the user navigates away.
-  const streamingHere = O.filter(streaming, (turn) => turn.threadId === threadId);
-  // A success is authoritative for timeline fallbacks, but it cannot identify
-  // an exact request whose receipt RPC stayed unavailable. Keep those prompts
-  // visible and non-sendable until exact persistence evidence resolves.
-  const displayedUnreconciled = AsyncResult.isSuccess(timeline)
-    ? A.filter(unreconciled, (turn) => turn.reconciliation === "receipt")
-    : unreconciled;
-
-  // The conversation as it now stands: an edited turn and the exchange it
-  // produced are gone for good, not merely hidden while the replacement streams.
-  // (The transcript used to fall back to every turn once streaming finished, so
-  // the tail the rewrite banner promised to discard came straight back.)
-  const allTurns = O.match(AsyncResult.value(timeline), {
-    onNone: () => [],
-    onSome: (value) => ThreadProjections.activeBranchTurns(value.turns),
-  });
-  // While the replacement streams, its predecessor is already on its way out.
-  const localTurns = A.appendAll(displayedUnreconciled, O.toArray(streamingHere));
-  const truncateIndex = A.reduce(localTurns, O.none<number>(), (earliest, localTurn) =>
-    O.match(
-      O.flatMap(localTurn.truncateFrom, (truncateFrom) =>
-        A.findFirstIndex(allTurns, (turn) => turn.turnId === truncateFrom)
-      ),
-      {
-        onNone: () => earliest,
-        onSome: (index) =>
-          O.some(
-            earliest.pipe(
-              O.map((current) => N.min(current, index)),
-              O.getOrElse(() => index)
-            )
-          ),
-      }
-    )
-  );
-  const turns = truncateIndex.pipe(
-    O.map((index) => A.take(allTurns, index)),
-    O.getOrElse(() => allTurns)
-  );
+  useAtomSubscribe(threadTimelineAtoms(threadId), reconcileTimeline, { immediate: true });
+  useAtomSubscribe(streamingTurnAtom, scrollThread);
+  useAtomSubscribe(unreconciledTurnAtoms(threadId), scrollThread);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4" data-testid="thread">
-      {AsyncResult.isInitial(timeline) && timeline.waiting ? (
-        <div className="text-sm text-muted-foreground" data-testid="thread-loading">
-          Loading thread…
-        </div>
-      ) : null}
-      {AsyncResult.isFailure(timeline) ? (
-        <div className="text-sm text-destructive" data-testid="thread-error">
-          Failed to load the thread — is the sidecar running?
-        </div>
-      ) : null}
-      {A.isReadonlyArrayEmpty(turns) &&
-      A.isReadonlyArrayEmpty(displayedUnreconciled) &&
-      AsyncResult.isSuccess(timeline) &&
-      O.isNone(streamingHere) ? (
-        <div className="flex h-full flex-col items-center justify-center text-center" data-testid="thread-empty">
-          <h2 className="text-lg font-semibold">Start the conversation</h2>
-          <p className="text-sm text-muted-foreground">Ask anything. Responses stream in as structured rich text.</p>
-        </div>
-      ) : null}
+    <div ref={setViewport} className="min-h-0 flex-1 overflow-y-auto p-4" data-testid="thread">
+      <ThreadLoadState failed={view.failed} loading={view.loading} />
+      <EmptyThread visible={view.empty} />
 
-      {A.map(turns, (turn) => (
-        <TurnRow key={turn.turnId} threadId={threadId} turn={turn} hasSiblings={turnHasSiblings(allTurns, turn)} />
+      {A.map(view.turns, (turn) => (
+        <TurnRow
+          key={turn.turnId}
+          threadId={threadId}
+          turn={turn}
+          hasSiblings={HashSet.has(view.siblingTurnIds, turn.turnId)}
+        />
       ))}
 
-      {A.map(displayedUnreconciled, (turn, index) => (
-        <div key={`unreconciled-${index}`}>
-          <div className="mb-4 flex flex-col items-end" data-testid="turn-unreconciled-user">
-            <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
-              <MessageView content={turn.userContent} />
-            </div>
-          </div>
-          <div className="mb-4 flex flex-col items-start" data-testid="turn-unreconciled">
-            <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
-              {A.isReadonlyArrayEmpty(turn.blocks) ? (
-                <div className="text-sm text-muted-foreground">Reply completed; waiting for the thread to refresh…</div>
-              ) : (
-                <StreamingBlocks blocks={turn.blocks} />
-              )}
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {O.match(streamingHere, {
-        onNone: thunkNull,
-        onSome: (turn) => (
-          <>
-            {/* The message you just sent, shown while the reply streams. The streaming
-                turn has always CARRIED this ("optimistic rendering of the just-sent user
-                message") and the transcript threw it away — so between pressing Enter
-                and the answer landing, your own words were nowhere on screen, and an
-                edit-regenerate hid the turn it was replacing without showing what it was
-                replacing it with. */}
-            <div className="mb-4 flex flex-col items-end" data-testid="turn-streaming-user">
-              <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
-                <MessageView content={turn.userContent} />
-              </div>
-            </div>
-            <div className="mb-4 flex flex-col items-start" data-testid="turn-streaming">
-              <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
-                {A.isReadonlyArrayEmpty(turn.blocks) ? (
-                  <div className="text-sm text-muted-foreground" data-testid="thinking">
-                    {turnActive ? "Thinking…" : "Reply completed; waiting for the thread to refresh…"}
-                  </div>
-                ) : (
-                  <StreamingBlocks blocks={turn.blocks} />
-                )}
-                {turnActive ? (
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      title="Stop generating"
-                      onClick={() => runTurn(Atom.Interrupt)}
-                      data-testid="turn-stop"
-                    >
-                      Stop
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </>
-        ),
-      })}
-      <div ref={bottomRef} />
+      <UnreconciledTurns turns={view.unreconciled} />
+      <StreamingTurnView streaming={view.streaming} turnActive={turnActive} />
+      <div ref={setBottom} />
     </div>
   );
 }

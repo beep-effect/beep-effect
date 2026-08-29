@@ -8,22 +8,23 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { PublicLawComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { PublicLawComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/PublicLawCitation/PublicLawCitation.model");
 
 /**
  * A parsed public law citation (type: `publicLaw`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `publicLaw`
  * discriminant plus the enacting `congress` and `lawNumber`, an optional bill
  * `title`, and the optional component `spans` locating each sub-part within the
  * source text.
  *
- * **Example**
+ * **Example** (Make a public-law citation)
  *
- * @example
  * ```ts
  * import { PublicLawCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -83,7 +84,8 @@ export class PublicLawCitation extends S.Class<PublicLawCitation>($I`PublicLawCi
 /**
  * Companion namespace for `PublicLawCitation`.
  *
- * @example
+ * **Example** (Alias the Encoded type)
+ *
  * ```ts
  * import type { PublicLawCitation } from "@beep/law-practice-domain"
  *
@@ -97,9 +99,8 @@ export declare namespace PublicLawCitation {
   /**
    * Wire-encoded representation of a decoded {@link PublicLawCitation}.
    *
-   * **Example**
+   * **Example** (Reference Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { PublicLawCitation } from "@beep/law-practice-domain"
    *

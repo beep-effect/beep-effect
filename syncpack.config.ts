@@ -7,11 +7,13 @@ const config = {
     "scratchpad/package.json",
     "tools/tsgo-shim/package.json",
     "packages/_internal/*/package.json",
+    "packages/ecosystem/*/package.json",
     "packages/foundation/capability/*/package.json",
     "packages/foundation/modeling/*/package.json",
     "packages/foundation/primitive/*/package.json",
     "packages/foundation/ui-system/*/package.json",
     "packages/shared/domain/package.json",
+    "packages/shared/use-cases/package.json",
     "packages/shared/tables/package.json",
     "packages/tooling/library/*/package.json",
     "packages/tooling/policy-pack/*/package.json",
@@ -20,18 +22,23 @@ const config = {
     "apps/oip-web/package.json",
     "apps/professional-desktop/package.json",
     "apps/storybook/package.json",
+    "apps/labs/*/package.json",
     "packages/agents/domain/package.json",
     "packages/agents/use-cases/package.json",
     "packages/agents/client/package.json",
     "packages/agents/server/package.json",
     "packages/agents/tables/package.json",
+    "packages/epistemic/config/package.json",
+    "packages/epistemic/client/package.json",
     "packages/epistemic/domain/package.json",
     "packages/epistemic/tables/package.json",
+    "packages/epistemic/ui/package.json",
     "packages/epistemic/use-cases/package.json",
     "packages/epistemic/server/package.json",
     "packages/law-practice/domain/package.json",
     "packages/law-practice/use-cases/package.json",
     "packages/law-practice/server/package.json",
+    "packages/law-practice/tables/package.json",
     "packages/documents/domain/package.json",
     "packages/documents/use-cases/package.json",
     "packages/documents/server/package.json",
@@ -64,6 +71,7 @@ const config = {
     "packages/architecture-lab/client/package.json",
     "packages/architecture-lab/ui/package.json",
     "apps/architecture-lab-proof/package.json",
+    "apps/practice-kg-mcp/package.json",
     "packages/drivers/runpod/package.json",
     "packages/drivers/onepassword-cli/package.json",
     "packages/drivers/discord/package.json",
@@ -88,15 +96,17 @@ const config = {
     "packages/drivers/m365/package.json",
     "packages/drivers/m365-mcp/package.json",
     "packages/drivers/govinfo/package.json",
-    "packages/drivers/federal-register/package.json",
     "packages/drivers/ecfr/package.json",
-    "packages/drivers/dol/package.json",
-    "packages/drivers/courtlistener/package.json",
     "packages/drivers/uspto-mcp/package.json",
     "packages/drivers/pacer/package.json",
-    "packages/drivers/protobuf/package.json",
     "packages/drivers/tailscale/package.json",
     "packages/drivers/pretext/package.json",
+    "packages/drivers/graph-3d/package.json",
+    "packages/drivers/openclaw/package.json",
+    "packages/drivers/obs/package.json",
+    "packages/drivers/exiftool/package.json",
+    "packages/drivers/gov-legal-mcp/package.json",
+    "packages/drivers/openai/package.json",
   ],
   customTypes: {
     catalog: {
@@ -104,6 +114,49 @@ const config = {
       strategy: "versionsByName",
     },
   },
+  updateGroups: [
+    {
+      // Held back from `deps:update`. Classic typescript stays ^6 for JS
+      // compiler API consumers such as typescript-eslint, while
+      // @typescript/native provides the TS7 compiler. Microsoft's
+      // @typescript/typescript6 bridge is blocked by oven-sh/bun#33834.
+      // fast-xml-validator 1.3+ / detailed-xml-validator 2.2+ pull
+      // @nodable/flexible-xml-parser, which references Buffer at module
+      // scope and breaks every browser bundle.
+      // @effect/tsgo and its seven platform binaries move together and stay
+      // held back. The binaries are not cosmetic: `effect-tsgo patch` copies
+      // one over @typescript/typescript-<platform>/lib/tsc, so the platform pin
+      // *is* the compiler `bun run check` runs. Letting deps:update move them
+      // alone swaps the compiler silently, which is how 0.24.3 ended up nine
+      // minors ahead of a 0.19.0 wrapper.
+      // A bump also arms every rule absent from tsconfig.base.json's
+      // diagnosticSeverity map, because omitted rules run at their upstream
+      // default rather than off. 0.33.0 is adopted with eleven such rules
+      // parked at "off" pending a one-rule-per-PR ratchet; moving off 0.33.0
+      // without clearing that queue lands them all at once.
+      // @biomejs/biome 2.5.7 stops formatting JSON piped through
+      // `biome format --stdin-file-path`, so `renderBiomeJson` — the writer
+      // behind `beep tsconfig-sync` for docgen.json/tsconfig.json — emits
+      // compact JSON instead of formatted. Pinned exactly (no caret) because a
+      // range would resolve straight back to the broken release.
+      label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
+      dependencies: [
+        "typescript",
+        "fast-xml-validator",
+        "detailed-xml-validator",
+        "@biomejs/biome",
+        "@effect/tsgo",
+        "@effect/tsgo-darwin-arm64",
+        "@effect/tsgo-darwin-x64",
+        "@effect/tsgo-linux-arm",
+        "@effect/tsgo-linux-arm64",
+        "@effect/tsgo-linux-x64",
+        "@effect/tsgo-win32-arm64",
+        "@effect/tsgo-win32-x64",
+      ],
+      isIgnored: true,
+    },
+  ],
   versionGroups: [
     {
       label: "Catalog (Pinned)",

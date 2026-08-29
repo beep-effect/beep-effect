@@ -1,4 +1,3 @@
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as Membership from "@beep/shared-domain/entities/Membership";
 import * as User from "@beep/shared-domain/entities/User";
 import * as Shared from "@beep/shared-domain/identity/Shared";
@@ -37,11 +36,10 @@ describe("User and Membership", () => {
         displayName: "Jordan Miles",
       });
 
-      expect(User.Model.definition.entityId).toBe(Shared.UserId);
-      expect(User.Model.definition.entityId.tableName).toBe("shared_user");
-      expect(EntitySchema.columnNameFor("displayName", User.Model.definition.persisted.displayName)).toBe(
-        "display_name"
-      );
+      expect(User.Model.sql.tableName).toBe(Shared.UserId.tableName);
+      expect(Object.keys(User.Model.insert.fields)).not.toContain("id");
+      expect(Object.keys(User.Model.update.fields)).toContain("id");
+      expect(Object.keys(User.Model.jsonCreate.fields)).toEqual(["displayName"]);
       expect(user.displayName).toBe("Jordan Miles");
     })
   );
@@ -56,12 +54,12 @@ describe("User and Membership", () => {
         userId: 2,
       });
 
-      expect(Membership.Model.definition.entityId).toBe(Shared.MembershipId);
-      expect(Membership.Model.definition.entityId.tableName).toBe("shared_membership");
+      expect(Membership.Model.sql.tableName).toBe(Shared.MembershipId.tableName);
       expect(Membership.Role.is.owner(membership.role)).toBe(true);
       expect(Membership.Status.is.active(membership.status)).toBe(true);
-      expect(Membership.Model.definition.persisted.userId.storageKind).toBe("entityId");
-      expect(EntitySchema.columnNameFor("userId", Membership.Model.definition.persisted.userId)).toBe("user_id");
+      expect(Object.keys(Membership.Model.insert.fields)).not.toContain("id");
+      expect(Object.keys(Membership.Model.update.fields)).toContain("rowVersion");
+      expect(Object.keys(Membership.Model.jsonCreate.fields)).toEqual(["role", "status", "userId"]);
       expect(membership.orgId).toBe(1);
       expect(membership.userId).toBe(2);
     })

@@ -8,13 +8,27 @@
   "regeneration_command": "bun run beep quality jsdoc-inventory",
   "snapshot_command": "bun run beep quality jsdoc-ratchet --write-baseline",
   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
-  "generated_at": "2026-07-08T11:32:58.606Z",
+  "generated_at": "2026-08-27T18:01:48.999Z",
   "tracked_totals": {
-    "packagesNeedingRemediation": 0,
-    "missingExportExamples": 0,
+    "packagesNeedingRemediation": 59,
+    "missingExportExamples": 4,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "unsafeExampleFindings": 0,
-    "schemaAnnotationFindings": 0
+    "schemaAnnotationFindings": 0,
+    "undescribed-see": 12,
+    "multiple-description-paragraphs": 514,
+    "leading-blank": 0,
+    "trailing-blank": 1,
+    "invalid-heading": 1,
+    "section-out-of-order": 0,
+    "duplicate-section": 0,
+    "empty-section": 0,
+    "section-after-example": 0,
+    "invalid-when-to-use-prefix": 4,
+    "malformed-example": 0,
+    "duplicate-example": 0,
+    "loose-ts-fence": 0,
+    "forbidden-remarks": 0
   }
 }

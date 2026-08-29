@@ -1,7 +1,8 @@
 /**
  * AT Protocol AT URI schemas for Lexicon record references.
  *
- * @remarks
+ * **Details**
+ *
  * This module models the current AT Protocol Lexicon `at-uri` subset from the
  * official {@link https://atproto.com/specs/at-uri-scheme | AT URI scheme}
  * specification: `at://AUTHORITY[/COLLECTION[/RKEY]]`.
@@ -15,8 +16,8 @@
  * syntax because AT URIs identify repository content inside the AT Protocol
  * network.
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $SchemaId } from "@beep/identity/packages";
@@ -176,7 +177,8 @@ const AtUriChecks = S.makeFilterGroup(
 /**
  * Branded schema for normalized AT Protocol Lexicon AT URI strings.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `AtUri` validates the current Lexicon reference subset of the official
  * {@link https://atproto.com/specs/at-uri-scheme | AT URI scheme}. It accepts
  * repository authorities expressed as normalized handles or AT Protocol DIDs,
@@ -189,8 +191,9 @@ const AtUriChecks = S.makeFilterGroup(
  * must already be lowercase; record keys remain case-sensitive as required by
  * {@link https://atproto.com/specs/record-key | Record Key Syntax}.
  *
- * @example
- * ```ts
+ * **Example** (Decode DID AT URI)
+ *
+ * ```ts import.meta.vitest name="Decode DID AT URI"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
@@ -201,26 +204,27 @@ const AtUriChecks = S.makeFilterGroup(
  *   )
  * )
  *
- * console.log(uri) // "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3jui7kd54zh2y"
+ * uri // => "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3jui7kd54zh2y"
  * ```
  *
- * @example
- * ```ts
+ * **Example** (Reject uppercase handles)
+ *
+ * ```ts import.meta.vitest name="Reject uppercase handles"
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
  *
  * const isAtUri = S.is(AtUri)
  *
- * console.log(isAtUri("at://alice.example.com/app.bsky.feed.post/self")) // true
- * console.log(isAtUri("at://Alice.example.com/app.bsky.feed.post/self")) // false
+ * isAtUri("at://alice.example.com/app.bsky.feed.post/self") // => true
+ * isAtUri("at://Alice.example.com/app.bsky.feed.post/self") // => false
  * ```
  *
- * @see {@link https://atproto.com/specs/at-uri-scheme | AT Protocol AT URI scheme}
- * @see {@link https://atproto.com/specs/did | AT Protocol DID Identifier Syntax}
- * @see {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID syntax}
- * @see {@link https://atproto.com/specs/handle | AT Protocol Handle Identifier Syntax}
- * @see {@link https://atproto.com/specs/nsid | AT Protocol NSID Syntax}
- * @see {@link https://atproto.com/specs/record-key | AT Protocol Record Key Syntax}
+ * @see {@link https://atproto.com/specs/at-uri-scheme | AT Protocol AT URI scheme} for the AT URI scheme.
+ * @see {@link https://atproto.com/specs/did | AT Protocol DID Identifier Syntax} for AT Protocol DID syntax.
+ * @see {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID syntax} for W3C DID Core syntax.
+ * @see {@link https://atproto.com/specs/handle | AT Protocol Handle Identifier Syntax} for handle identifier syntax.
+ * @see {@link https://atproto.com/specs/nsid | AT Protocol NSID Syntax} for NSID syntax.
+ * @see {@link https://atproto.com/specs/record-key | AT Protocol Record Key Syntax} for record key syntax.
  * @category validation
  * @since 0.0.0
  */
@@ -270,8 +274,9 @@ export const AtUri = S.String.check(AtUriChecks)
 /**
  * Type for {@link AtUri}.
  *
- * @example
- * ```ts
+ * **Example** (Type decoded AT URI)
+ *
+ * ```ts import.meta.vitest name="Type decoded AT URI"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { AtUri, type AtUri as AtUriValue } from "@beep/schema/AtURI"
@@ -280,7 +285,7 @@ export const AtUri = S.String.check(AtUriChecks)
  *   S.decodeUnknownEffect(AtUri)("at://alice.example.com/app.bsky.feed.post/self")
  * )
  *
- * console.log(uri) // "at://alice.example.com/app.bsky.feed.post/self"
+ * uri // => "at://alice.example.com/app.bsky.feed.post/self"
  * ```
  *
  * @category models
@@ -291,8 +296,9 @@ export type AtUri = typeof AtUri.Type;
 /**
  * Companion namespace for encoded AT URI type surfaces.
  *
- * @example
- * ```ts
+ * **Example** (Encode decoded AT URI)
+ *
+ * ```ts import.meta.vitest name="Encode decoded AT URI"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
@@ -302,7 +308,7 @@ export type AtUri = typeof AtUri.Type;
  * )
  * const encoded: AtUri.Encoded = Effect.runSync(S.encodeEffect(AtUri)(uri))
  *
- * console.log(encoded) // "at://did:web:example.com/app.bsky.feed.post/self"
+ * encoded // => "at://did:web:example.com/app.bsky.feed.post/self"
  * ```
  *
  * @category type-level
@@ -312,8 +318,9 @@ export declare namespace AtUri {
   /**
    * Encoded string type for {@link AtUri}.
    *
-   * @example
-   * ```ts
+   * **Example** (Round-trip encode AT URI)
+   *
+   * ```ts import.meta.vitest name="Round-trip encode AT URI"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { AtUri } from "@beep/schema/AtURI"
@@ -323,7 +330,7 @@ export declare namespace AtUri {
    * )
    * const encoded: AtUri.Encoded = Effect.runSync(S.encodeEffect(AtUri)(decoded))
    *
-   * console.log(encoded) // "at://alice.example.com/app.bsky.feed.post/self"
+   * encoded // => "at://alice.example.com/app.bsky.feed.post/self"
    * ```
    *
    * @category models

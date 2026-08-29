@@ -1,5 +1,6 @@
-import { editorNodes } from "@beep/editor";
-import { typeaheadOptionId } from "@beep/editor/chat";
+import { typeaheadOptionId } from "@beep/editor/chat/atoms";
+import { typeaheadMenuId } from "@beep/editor/chat/typeahead";
+import { editorNodes } from "@beep/editor/nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { createHeadlessEditor } from "@lexical/headless";
 
@@ -12,7 +13,7 @@ const makeEditor = () =>
     },
   });
 
-describe("typeahead option ids", () => {
+describe("typeahead ids", () => {
   it("does not collide across composers", () => {
     // Lexical points the editor root's `aria-activedescendant` at a hardcoded
     // `typeahead-item-${index}`, so two composers on one page emitted the same ids for
@@ -29,5 +30,14 @@ describe("typeahead option ids", () => {
     const editor = makeEditor();
 
     expect(typeaheadOptionId(editor, 0)).not.toBe(typeaheadOptionId(editor, 1));
+    expect(typeaheadOptionId(editor, 0)).not.toBe("typeahead-item-0");
+  });
+
+  it("keeps menu ids stable within one editor and distinct across composers", () => {
+    const first = makeEditor();
+    const second = makeEditor();
+
+    expect(typeaheadMenuId(first)).toBe(typeaheadMenuId(first));
+    expect(typeaheadMenuId(first)).not.toBe(typeaheadMenuId(second));
   });
 });

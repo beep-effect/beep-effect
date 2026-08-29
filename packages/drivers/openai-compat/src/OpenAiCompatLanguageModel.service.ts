@@ -14,6 +14,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Layer, Match, pipe, Stream, Tuple } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -76,7 +77,8 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
 /**
  * Request-time tuning options shared by OpenAI-compatible language-model adapters.
  *
- * @example
+ * **Example** (Set max tokens and temperature)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PosInt } from "@beep/schema/Int"
@@ -124,7 +126,8 @@ export class OpenAiCompatLanguageModelConfig extends S.Class<OpenAiCompatLanguag
 /**
  * Provider callbacks used by the OpenAI-compatible language-model factory.
  *
- * @example
+ * **Example** (Implement a stub provider)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { OpenAiCompatChatCompletionResponse, type OpenAiCompatProvider } from "@beep/openai-compat"
@@ -145,7 +148,8 @@ export type OpenAiCompatProvider = OpenAiCompatClientShape;
 /**
  * Options accepted by {@link makeFromProvider}.
  *
- * @example
+ * **Example** (Assemble provider-backed factory options)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { OpenAiCompatChatCompletionResponse, type OpenAiCompatLanguageModelOptions } from "@beep/openai-compat"
@@ -176,7 +180,8 @@ export type OpenAiCompatLanguageModelOptions = OpenAiCompatLanguageModelClientOp
 /**
  * Options accepted by the default OpenAI-compatible language-model constructor.
  *
- * @example
+ * **Example** (Select a model by name)
+ *
  * ```ts
  * import type { OpenAiCompatLanguageModelClientOptions } from "@beep/openai-compat"
  *
@@ -652,7 +657,7 @@ const makeRequest = Effect.fn("OpenAiCompatLanguageModel.makeRequest")(function*
         ? O.some<Readonly<Record<string, unknown>>>({ include_usage: true })
         : O.none<Readonly<Record<string, unknown>>>(),
       temperature: config.temperature,
-      tool_choice: prepareToolChoice(toolNameMapper, options.toolChoice),
+      tool_choice: O.isSome(tools) ? prepareToolChoice(toolNameMapper, options.toolChoice) : O.none(),
       tools,
       top_p: config.topP,
       user: config.user,
@@ -698,13 +703,18 @@ const streamToolCallName = (
     ? (activeToolCall?.name ?? toolNameMapper.getCustomName("unknown_tool"))
     : toolNameMapper.getCustomName(toolCall.function.name);
 
+type ToolCallDeltaAccumulator = readonly [
+  Readonly<Record<string, ActiveToolCall>>,
+  ReadonlyArray<Response.StreamPartEncoded>,
+];
+
 const makeToolCallDeltaParts = (
   toolNameMapper: Tool.NameMapper<ReadonlyArray<Tool.Any>>,
   chunk: OpenAiCompatChatCompletionChunk,
   activeToolCalls: Readonly<Record<string, ActiveToolCall>>,
   toolCall: OpenAiCompatToolCallDelta,
   indexInChunk: number
-): readonly [Readonly<Record<string, ActiveToolCall>>, ReadonlyArray<Response.StreamPartEncoded>] => {
+): ToolCallDeltaAccumulator => {
   const toolIndex = streamToolCallIndex(toolCall, indexInChunk);
   const activeToolCall = activeToolCalls[toolIndex];
   const id = streamToolCallId(chunk, toolIndex, activeToolCall, toolCall);
@@ -837,13 +847,17 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
             ],
           })
         );
+        const toolCallDeltaSeed: ToolCallDeltaAccumulator = Tuple.make(
+          activeToolCalls,
+          A.empty<Response.StreamPartEncoded>()
+        );
         const [nextActiveToolCalls, toolDeltaParts] = pipe(
           choice.delta,
           O.flatMap((delta) => delta.tool_calls),
           O.getOrElse(A.empty<OpenAiCompatToolCallDelta>),
           A.reduce(
-            Tuple.make(activeToolCalls, A.empty<Response.StreamPartEncoded>()),
-            ([currentActiveToolCalls, currentParts], toolCall, indexInChunk) => {
+            toolCallDeltaSeed,
+            ([currentActiveToolCalls, currentParts], toolCall, indexInChunk): ToolCallDeltaAccumulator => {
               const [updatedActiveToolCalls, deltaParts] = makeToolCallDeltaParts(
                 toolNameMapper,
                 chunk,
@@ -925,7 +939,8 @@ const makeStreamResponse = (
 /**
  * Builds an Effect AI language-model service from OpenAI-compatible provider callbacks.
  *
- * @example
+ * **Example** (Build a model from provider callbacks)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { makeFromProvider, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat"
@@ -973,7 +988,8 @@ export const makeFromProvider: (options: OpenAiCompatLanguageModelOptions) => Ef
 /**
  * Builds a layer for an OpenAI-compatible language model from provider callbacks.
  *
- * @example
+ * **Example** (Build a layer from provider callbacks)
+ *
  * ```ts
  * import { Effect, Stream } from "effect"
  * import { layerFromProvider, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat"
@@ -1000,7 +1016,8 @@ export const layerFromProvider = (
 /**
  * Builds an OpenAI-compatible language-model service backed by {@link OpenAiCompatClient}.
  *
- * @example
+ * **Example** (Build a client-backed model)
+ *
  * ```ts
  * import { make } from "@beep/openai-compat"
  *
@@ -1032,7 +1049,8 @@ export const make: (
 /**
  * Builds a language-model layer backed by {@link OpenAiCompatClient}.
  *
- * @example
+ * **Example** (Build a client-backed layer)
+ *
  * ```ts
  * import { layer } from "@beep/openai-compat"
  *
@@ -1052,7 +1070,8 @@ export const layer = (
 /**
  * Builds an Effect AI model value for a generic OpenAI-compatible provider.
  *
- * @example
+ * **Example** (Build an AI model value by name)
+ *
  * ```ts
  * import { model } from "@beep/openai-compat"
  *
@@ -1064,19 +1083,30 @@ export const layer = (
  * @category constructors
  * @since 0.0.0
  */
-export const model = (
-  modelName: string,
-  config?: OpenAiCompatLanguageModelConfig | undefined
-): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient> =>
-  AiModel.make(
-    "openai-compat",
-    modelName,
-    layer(
-      config === undefined
-        ? { model: modelName }
-        : {
-            config,
-            model: modelName,
-          }
+export const model: {
+  (
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): (modelName: string) => AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient>;
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    modelName: string,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"openai-compat", LanguageModel.LanguageModel, OpenAiCompatClient> =>
+    AiModel.make(
+      "openai-compat",
+      modelName,
+      layer(
+        config === undefined
+          ? { model: modelName }
+          : {
+              config,
+              model: modelName,
+            }
+      )
     )
-  );
+);

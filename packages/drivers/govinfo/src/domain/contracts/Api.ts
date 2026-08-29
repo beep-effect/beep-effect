@@ -10,13 +10,14 @@
  * @since 0.0.0
  */
 
-import { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiGroup, OpenApi } from "effect/unstable/httpapi";
 import * as Search from "./Search/index.ts";
 
 /**
  * Top-level GovInfo API group carrying the search endpoint.
  *
- * @example
+ * **Example** (Logging group identifier)
+ *
  * ```ts
  * import { GovinfoApiGroup } from "@beep/govinfo"
  *
@@ -31,7 +32,8 @@ export const GovinfoApiGroup = HttpApiGroup.make("govinfo", { topLevel: true }).
 /**
  * The assembled GovInfo `HttpApi`.
  *
- * @example
+ * **Example** (Logging API identifier)
+ *
  * ```ts
  * import { GovinfoApi } from "@beep/govinfo"
  *
@@ -41,4 +43,8 @@ export const GovinfoApiGroup = HttpApiGroup.make("govinfo", { topLevel: true }).
  * @category protocols
  * @since 0.0.0
  */
-export const GovinfoApi = HttpApi.make("govinfo").add(GovinfoApiGroup);
+export const GovinfoApi = HttpApi.make("govinfo")
+  .annotate(OpenApi.Title, "GovInfo API (search contract)")
+  .annotate(OpenApi.Version, "2.0")
+  .annotate(OpenApi.Description, "Hand-written subset of the GovInfo API contract covering only document search.")
+  .add(GovinfoApiGroup);

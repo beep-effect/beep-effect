@@ -1,11 +1,18 @@
 # Citation Grounding & Hallucination Guard — Decisions
 
+## 2026-08-13 — Packet graduation and guard re-entry
+
+**Decision:** Close the packet as `graduated`. `citation-ground-before-cite`
+reopens this packet at `decompose` only after both
+`citation-verified-span-substrate` and `citation-extraction-engine` land. The
+reopened shape gate decides align Q7: qualifier-aware stance-layer placement
+and the minimum qualifiers for claim comparison, using
+[`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md).
+
 <!--
-Stage 2 (ALIGN) seed, pre-drafted 2026-06-29 from RESEARCH.md + CAPTURE.md.
-Each block poses ONE branch-closing question with a RECOMMENDED answer and
-rationale. NONE are resolved here — the user resolves them one at a time via
-`/grill-with-docs citation-grounding-hallucination-guard`, logging each
-resolution and syncing `ops/manifest.json` openQuestions as they close.
+Historical Stage 2 (ALIGN) seed, pre-drafted 2026-06-29 from RESEARCH.md +
+CAPTURE.md. These open recommendations are preserved as the pre-align record;
+the ratified 2026-07-14 LOCKED entries appended below are authoritative.
 -->
 
 ## Q1: Build-vs-buy — clean-room TS/Effect reimplementation of the eyecite parser, a vendored port of `eyecite-js`, or wrap the hosted CourtListener lookup as the engine?
@@ -38,7 +45,6 @@ ReDoS wrapper is mandatory because source documents are **untrusted data**
 worst-case guarantee on malicious input.
 
 **Status:** open (for /grill-with-docs)
-
 ## Q2: Scope boundary — does this packet ship the full guard (parser + lifecycle + verbatim gate + straddle + matter carrier + fence enforcement + court vocab), or own only the grounding core and compose/defer the rest?
 
 **Recommended:** Own the **four genuine gaps + the matter-tag-on-span
@@ -106,11 +112,11 @@ today is `isWellOrdered`).
 
 ## Q4: Vendor/auth — depend on the hosted CourtListener Citation Lookup API in v1, or ship local-only?
 
-**Recommended:** **Local-only for v1** on the privilege-safe path; the hosted
-CourtListener lookup is an **opt-in, non-privileged enrichment/verification
-lane** gated behind an explicit privilege flag and deferred past the local
-slices. Run the BSD-data + clean-room TS parser **locally** so privileged
-document text never leaves the box. When the hosted lane is enabled, the token
+**Recommended:** **Own parser for v1** on the grounding path; the hosted
+CourtListener lookup is an **opt-in enrichment/verification lane**, deferred
+past the exact-slice grounding step. Run the BSD-data + clean-room TS parser in
+process so grounding resolves against the document actually in hand — a remote
+lookup cannot supply an exact slice. When the hosted lane is enabled, the token
 is a managed secret (`Authorization: Token <token>` — literal Token, **NOT**
 Bearer) via `Config.redacted`, and the factual rate/cost constraints (60 valid
 cites/min, 250/request, char cap = **min(client cap, 64k)** given the
@@ -120,9 +126,9 @@ field behind a **`wait_until` / `wait_util` compatibility codec** and confirm
 against a real 429 before trusting either spelling.
 
 **Rationale:** RESEARCH is explicit that the hosted lookup **leaks document text
-off-box** ("unacceptable for privileged legal text") and was **membership-gated
-as of 2026-05-07**, and that it only matches **full case citations** (not
-statutes/journals/id/supra) — so it cannot be the privilege-safe primary engine.
+off-box** and was **membership-gated as of 2026-05-07**, and that it only
+matches **full case citations** (not statutes/journals/id/supra) — so it cannot
+be the primary engine.
 The factual rate/cost limits are non-copyrightable and safe to encode, but the
 field spelling and per-citation status wire type (int vs string) are **open
 verification items**, so the decoder must tolerate both spellings. The local
@@ -145,8 +151,9 @@ grounding verifies *any* quote against *any* source and is not legal-specific.
 (`packages/law-practice/*`), sibling to `law-practice-office-action-spike` /
 `ip-law-knowledge-graph`, keeping citation/IP vocab out of epistemic/shared.
 (3) The **hosted lookup wrap** (if/when Q4's lane is built) lands in the existing
-`@beep/courtlistener` driver skeleton (`packages/drivers/courtlistener`, MIT,
-currently `VERSION`-only). All three **compose** `@beep/epistemic-domain`
+`@beep/courtlistener` driver (deleted 2026-08-13; recreate from
+`goals/honest-repo-signal/research/FOLLOW-UPS.md` if the hosted lookup
+lane is pulled). All three **compose** `@beep/epistemic-domain`
 `EvidenceSpan` + `@beep/provenance` `TextAnchor` via public surface, never by
 forking.
 
@@ -220,3 +227,244 @@ must be encoded as packet policy. Extending the MIT/Apache-clean in-repo
 doc-haus `normalizeWithMap`.
 
 **Status:** open (for /grill-with-docs)
+
+
+---
+
+# Ratified decisions — 2026-07-14
+
+The align gate closed on 2026-07-14. The entries below supersede the
+pre-drafted recommendations above wherever they differ.
+
+## Q1 LOCKED: Build or adopt the citation extraction engine?
+
+**Question:** Should the program adopt `eyecite-js`, call a hosted parser, or
+port/reimplement the eyecite extraction pipeline in Effect?
+
+**Answer:** **PORT/REIMPLEMENT NOW.** Build an Effect-native port of the
+BSD-2-Clause eyecite extraction pipeline, retain attribution, and target the
+existing law-practice citation values as its output contract. Do not add
+`eyecite-js` as a dependency. Use the eyecite and eyecite-js corpora as parity
+tests. This is a **user override** of the pre-draft recommendation, grounded in
+code that the 2026-06-29 research predates: the model layer already exists under
+`packages/law-practice/domain/src/values/`, including
+`CitationBase/CitationBase.model.ts`, `Citation/Citation.models.ts`, the
+per-form citation directories, and the span/resolution values. Those models
+landed through PRs #326 and #391.
+
+**Rationale:** The repo already owns the schema-first output taxonomy—roughly 56
+value-object modules, including eyecite-shaped `matchedText`, `confidence`,
+`patternsChecked`, full/short/Id./supra forms, resolution bookkeeping, and
+normalized/original spans. The missing capability is the extraction engine,
+not a citation model or JavaScript dependency. The sibling
+`explorations/deterministic-doc-structure-extraction` packet therefore consumes
+this port; its pre-draft eyecite-js adoption recommendation is overridden and
+its align gate inherits this decision.
+
+**Rejected:** Adopt `eyecite-js`; wrap CourtListener as the parser; create a
+second citation model hierarchy; postpone implementation behind a dependency
+adoption gate.
+
+**Status:** LOCKED — 2026-07-14 (USER OVERRIDE)
+
+## Q2 LOCKED: What is the program boundary?
+
+**Question:** Which capabilities belong to this packet, and which remain
+separate?
+
+**Answer:** Shape a coordinated three-lane program: (a) a generic
+verified-span/straddle substrate, (b) legal citation extraction and resolution
+over the existing law-practice values, and (c) law-practice ground-before-cite
+integration. Consume the versioned, stable-ID artifacts produced by
+`explorations/court-vocabulary-resolver`; never privately reinterpret its
+datasets. Feed the existing epistemic claim lifecycle without redefining it.
+This packet also owns the reusable extraction brick, which
+`deterministic-doc-structure-extraction` consumes.
+
+**Rationale:** The lanes separate generic provenance mechanics from legal
+parsing and product enforcement while keeping a single output contract. The
+matter-scoped evidence carrier is shaped here; matter-wall enforcement is a
+separate gated goal.
+
+**Rejected:** A single package owning every concern; court-data ingestion or
+taxonomy; claim-admission vocabulary changes; matter-wall enforcement; general
+prompt-injection defense; citator/“good law” computation; rich-text annotation;
+hosted enrichment in v1.
+
+**Status:** LOCKED — 2026-07-14
+
+## Q3 LOCKED: What is the first vertical slice?
+
+**Question:** What is the smallest end-to-end proof of the firewall?
+
+**Answer:** **Verified-span-first.** Accept source text plus a span/quote-bearing
+candidate, deterministically normalize with a source-offset map, and emit a
+verified `TextAnchor` only when the final raw slice exactly equals the emitted
+quote. Carry the result into one law-practice candidate or epistemic admission
+seam and fail closed when the anchor is absent, ambiguous, stale, or
+cross-matter. Consume `GroundedExtraction[]` directly: the current
+`packages/foundation/capability/langextract/src/Handoff/index.ts`
+`toAnnotatedDocument` path drops extraction spans while constructing entities
+and emits no `Mention` collection.
+
+**Rationale:** This proves the universal trust boundary before coupling it to
+the larger parser. It also avoids a currently span-lossy handoff at the exact
+point where span fidelity is the acceptance criterion.
+
+**Rejected:** Parser-first; hosted-lookup-first; use `AnnotatedDocument` as the
+first-slice input without repairing its lossy handoff; allow unverifiable
+candidates through for later cleanup.
+
+**Status:** LOCKED — 2026-07-14
+
+## Q4 LOCKED: May v1 send text to CourtListener?
+
+**Question:** Is CourtListener a v1 parsing or verification dependency?
+
+**Answer:** No. V1 does its own extraction. A later opt-in
+`@beep/courtlistener` enrichment lane may call out using managed `Token` auth,
+a 60-citations/minute rate bound, a 250-citations/request bound, and audit
+metadata. It verifies or enriches; it is never the parser or grounding truth.
+
+**Rationale:** Hosted results cannot replace raw-source equality — grounding
+must resolve to an exact slice of the document actually in hand, which no
+remote lookup can supply. This is a correctness constraint on *grounding*, not
+a restriction on provider use elsewhere.
+
+**Language revised 2026-08-17:** the original wording framed this as a
+confidentiality rule ("local-only", "privileged text never leaves the box").
+That framing was over-broad and was being read as a repo-wide ban on hosted
+providers. The technical decision is unchanged; the confidentiality framing is
+withdrawn.
+
+**Rejected:** Hosted lookup as parser, automatic fallback, or privileged-text
+processor; Bearer auth; treating a hosted match as grounding proof.
+
+**Status:** LOCKED — 2026-07-14
+
+## Q5 LOCKED: Where do the capabilities live?
+
+**Question:** Which package layers own modeling, mechanics, legal parsing,
+integration, and hosted codecs?
+
+**Answer:** `foundation/modeling/provenance` owns the generic verified-
+`TextAnchor` construction contract and half-open span conversions;
+`foundation/capability/langextract` owns deterministic normalization-to-source
+offset mapping and straddle; `law-practice/domain` owns the existing citation
+values and pure extraction engine; `law-practice/use-cases` owns extraction and
+resolution ports plus the ground-before-cite guard contract;
+`law-practice/server` owns composition, persistence, and court-vocabulary
+integration; `@beep/courtlistener` owns optional hosted wire schemas only. The
+epistemic slice remains unchanged.
+
+**Rationale:** This follows the repo’s domain/use-case/server boundaries,
+prevents legal vocabulary from leaking into foundation, and prevents a
+law-practice→epistemic domain import. Application/server composition bridges
+the public contracts.
+
+**Rejected:** A new citation package; parser logic in the CourtListener driver;
+legal citation values in foundation or epistemic; direct cross-slice domain
+imports.
+
+**Status:** LOCKED — 2026-07-14
+
+## Q6 LOCKED: How are durable and transient resolution states modeled?
+
+**Question:** Should resolution bookkeeping and CourtListener wire statuses be
+one vocabulary, and does `NO_CITATION` create a durable entity?
+
+**Answer:** Keep two vocabularies. Extend and reuse the existing
+`packages/law-practice/domain/src/values/ResolutionResult/ResolutionResult.model.ts`
+and `CitationWarning/CitationWarning.models.ts` for durable law-practice
+bookkeeping. Define a separate driver codec for transient 200/300/400/404/429
+wire statuses and an explicit adapter at the boundary. Do not change
+`ClaimLifecycle`. Fixture-shaped answer: **`NO_CITATION` produces no citation
+entity**; persist the extraction attempt and its negative result instead.
+
+**Rationale:** An absence is not a domain entity, but retaining the attempt,
+source digest, normalization version, and outcome supports audit and later
+recomputation. Wire transport semantics remain isolated from durable domain
+semantics.
+
+**Rejected:** One status enum; a new replacement lifecycle; mutating
+`ClaimLifecycle`; materializing a citation entity for `NO_CITATION`; dropping
+all negative-attempt history.
+
+**Status:** LOCKED — 2026-07-14
+
+## Q7 LOCKED: What counts as verbatim grounding?
+
+**Question:** Which normalization and offset rules may authorize a quote or
+citation?
+
+**Answer:** Normalization of whitespace and typographic quotes is a locator
+only. Do not case-fold and do not fuzzy-match. Replace the emitted quote with
+the exact raw source slice and require `source.slice(start, end) === quote`.
+Retain source identity plus digest/version. Ambiguous occurrences fail unless
+context disambiguates deterministically. Canonical offsets are half-open UTF-16
+code units; every boundary adapter converts explicitly. Reuse the clean/original
+mapping carried by `packages/law-practice/domain/src/values/Span/Span.model.ts`.
+
+**Rationale:** Locator normalization may find a candidate, but only equality
+against immutable source identity proves what the user can quote. Explicit
+offset units prevent JavaScript/Python and Unicode boundary drift.
+
+**Rejected:** Case folding; fuzzy or “lesser” matches; normalized text as the
+emitted quote; trusting foreign offsets; first-match wins for duplicates.
+
+**Status:** LOCKED — 2026-07-14
+
+## Q8 LOCKED: Which citation forms are v1?
+
+**Question:** What minimum extraction surface must the parity corpus prove?
+
+**Answer:** V1 includes full and short case citations plus Id. and supra forms,
+and `StatuteCitation`/`RegulationCitation` patterns for 35 U.S.C. and 37 C.F.R.
+The eyecite/eyecite-js corpus proves parity for the engine. MPEP § patterns are
+a named NET-NEW fast-follow because eyecite does not supply them.
+
+**Rationale:** Case parity proves the port while patent office-action product
+pull requires the statute and regulation forms already modeled in
+`law-practice/domain`.
+
+**Rejected:** Case-only v1; every modeled citation form in v1; MPEP patterns
+hidden inside the parity claim; CourtListener’s supported forms as the scope.
+
+**Status:** LOCKED — 2026-07-14
+
+## DEFERRED: Unicode/source-drift fixture spike
+
+**Question:** What exact conversion and failure semantics survive hostile text
+fixtures?
+
+**Answer:** DEFER to P0 of the first goal,
+`citation-verified-span-substrate`. The spike must cover surrogate pairs,
+combining marks, ligatures, curly quotes, collapsed whitespace, duplicate
+occurrences, page boundaries, and source drift before implementation proceeds.
+
+**Rationale:** The strict policy is locked, but executable fixtures—not more
+align prose—must settle adapter mechanics and expose false assumptions.
+
+**Rejected:** Decide conversion behavior without fixtures; postpone the spike
+until after the substrate implementation.
+
+**Status:** DEFERRED — first goal P0
+
+## DEFERRED: Optional hosted-enrichment contract spike
+
+**Question:** What exact CourtListener wire codec, throttle compatibility, and
+audit contract should the opt-in enrichment lane expose?
+
+**Answer:** DEFER to its own gated hosted-enrichment goal after local v1 is
+proven. Share the root `THIRD_PARTY_NOTICES.md` convention proposed by
+`court-vocabulary-resolver` for Free Law Project BSD-2 attribution; do not
+create duplicate notices.
+
+**Rationale:** Hosted enrichment is explicitly outside v1 and should not block
+the local trust boundary. Its live wire details require a separately authorized
+integration spike.
+
+**Rejected:** Block local v1 on API verification; invent wire details in this
+packet; create package-local duplicate notices.
+
+**Status:** DEFERRED — gated follow-on goal

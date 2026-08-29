@@ -76,7 +76,8 @@ const SymlinkTargetPath = RelativePlanPath.pipe(
 /**
  * A file write operation.
  *
- * @example
+ * **Example** (Validate PlannedFile candidate)
+ *
  * ```ts
  * import { PlannedFile } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -84,6 +85,7 @@ const SymlinkTargetPath = RelativePlanPath.pipe(
  * const candidate = { content: "export {}\n", path: "packages/example/src/index.ts" }
  * console.log(S.is(PlannedFile)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,9 +100,42 @@ export class PlannedFile extends S.Class<PlannedFile>($I`PlannedFile`)(
 ) {}
 
 /**
+ * A verbatim asset copy operation.
+ *
+ * **Details**
+ *
+ * `sourcePath` points outside the output directory, at the template asset on
+ * disk; only `relativePath` is constrained to the generated tree. Assets exist
+ * because not every generated file is text — see `StaticAssetSpec`.
+ *
+ * **Example** (Validate PlannedAsset candidate)
+ *
+ * ```ts
+ * import { PlannedAsset } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { relativePath: "src-tauri/icons/icon.png", sourcePath: "/tmp/templates/assets/tauri-icon.png" }
+ * console.log(S.is(PlannedAsset)(candidate)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PlannedAsset extends S.Class<PlannedAsset>($I`PlannedAsset`)(
+  {
+    relativePath: RelativePlanPath,
+    sourcePath: S.String,
+  },
+  $I.annote("PlannedAsset", {
+    description: "A verbatim asset copy operation.",
+  })
+) {}
+
+/**
  * A symlink operation.
  *
- * @example
+ * **Example** (Validate PlannedSymlink candidate)
+ *
  * ```ts
  * import { PlannedSymlink } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -108,6 +143,7 @@ export class PlannedFile extends S.Class<PlannedFile>($I`PlannedFile`)(
  * const candidate = { linkPath: "packages/example/AGENTS.md", targetPath: "../../AGENTS.md" }
  * console.log(S.is(PlannedSymlink)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +160,8 @@ export class PlannedSymlink extends S.Class<PlannedSymlink>($I`PlannedSymlink`)(
 /**
  * Input payload used to create a generation pla.
  *
- * @example
+ * **Example** (Validate plan input payload)
+ *
  * ```ts
  * import { FileGenerationPlanInput } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -132,6 +169,7 @@ export class PlannedSymlink extends S.Class<PlannedSymlink>($I`PlannedSymlink`)(
  * const candidate = { packageName: "@beep/example", packagePath: "packages/example", templateDir: "templates/package" }
  * console.log(S.is(FileGenerationPlanInput)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -140,6 +178,7 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
     outputDir: S.String,
     directories: S.Array(RelativePlanPath),
     files: S.Array(PlannedFile),
+    assets: PlannedAsset.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<PlannedAsset>())),
     symlinks: PlannedSymlink.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<PlannedSymlink>())),
   },
   $I.annote("FileGenerationPlanInput", {
@@ -150,7 +189,8 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
 /**
  * Planned action kinds.
  *
- * @example
+ * **Example** (Check mkdir action kind)
+ *
  * ```ts
  * import { GenerationActionKind } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -158,10 +198,11 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
  * const value = "mkdir"
  * console.log(S.is(GenerationActionKind)(value)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export const GenerationActionKind = LiteralKit(["mkdir", "write-file", "symlink"]).pipe(
+export const GenerationActionKind = LiteralKit(["mkdir", "write-file", "copy-asset", "symlink"]).pipe(
   $I.annoteSchema("GenerationActionKind", {
     description: "Planned action kinds for deterministic generation.",
   })
@@ -195,6 +236,17 @@ class GenerationActionWriteFile extends S.Class<GenerationActionWriteFile>($I`Ge
   })
 ) {}
 
+class GenerationActionCopyAsset extends S.Class<GenerationActionCopyAsset>($I`GenerationActionCopyAsset`)(
+  {
+    kind: S.tag("copy-asset"),
+    relativePath: RelativePlanPath,
+    sourcePath: S.String,
+  },
+  $I.annote("GenerationActionCopyAsset", {
+    description: "Verbatim asset copy action.",
+  })
+) {}
+
 class GenerationActionSymlink extends S.Class<GenerationActionSymlink>($I`GenerationActionSymlink`)(
   {
     kind: S.tag("symlink"),
@@ -209,8 +261,8 @@ class GenerationActionSymlink extends S.Class<GenerationActionSymlink>($I`Genera
 /**
  * Planned generation action schema.
  *
- * @returns Tagged union schema keyed by `kind`.
- * @example
+ * **Example** (Validate generation action value)
+ *
  * ```ts
  * import { GenerationAction } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -218,12 +270,15 @@ class GenerationActionSymlink extends S.Class<GenerationActionSymlink>($I`Genera
  * const value = "mkdir"
  * console.log(S.is(GenerationAction)(value)) // true
  * ```
+ *
+ * @returns Tagged union schema keyed by `kind`.
  * @category models
  * @since 0.0.0
  */
 export const GenerationAction = S.Union([
   GenerationActionMkdir,
   GenerationActionWriteFile,
+  GenerationActionCopyAsset,
   GenerationActionSymlink,
 ]).pipe(
   $I.annoteSchema("GenerationAction", {
@@ -235,6 +290,7 @@ export const GenerationAction = S.Union([
       schema.match({
         mkdir: (action) => `mkdir ${action.relativePath}`,
         "write-file": (action) => `write ${action.relativePath}`,
+        "copy-asset": (action) => `copy ${action.relativePath}`,
         symlink: (action) => `symlink ${action.relativePath} -> ${action.target}`,
       })
     ),
@@ -251,7 +307,8 @@ export type GenerationAction = typeof GenerationAction.Type;
 /**
  * Deterministic generation plan.
  *
- * @example
+ * **Example** (Validate empty generation plan)
+ *
  * ```ts
  * import { FileGenerationPlan } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -259,6 +316,7 @@ export type GenerationAction = typeof GenerationAction.Type;
  * const candidate = { actions: [], files: [], symlinks: [] }
  * console.log(S.is(FileGenerationPlan)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -275,7 +333,8 @@ export class FileGenerationPlan extends S.Class<FileGenerationPlan>($I`FileGener
 /**
  * Execution report for a plan run.
  *
- * @example
+ * **Example** (Validate empty execution result)
+ *
  * ```ts
  * import { FileGenerationExecutionResult } from "@beep/repo-cli/commands/CreatePackage"
  * import * as S from "effect/Schema"
@@ -283,6 +342,7 @@ export class FileGenerationPlan extends S.Class<FileGenerationPlan>($I`FileGener
  * const candidate = { createdDirectories: [], createdFiles: [], createdSymlinks: [] }
  * console.log(S.is(FileGenerationExecutionResult)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -304,12 +364,14 @@ export class FileGenerationExecutionResult extends S.Class<FileGenerationExecuti
 /**
  * Service contract for deterministic generation plan orchestration.
  *
- * @example
+ * **Example** (Type service shape value)
+ *
  * ```ts
  * import type { FileGenerationPlanServiceShape } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as FileGenerationPlanServiceShape
  * console.log(value) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -324,7 +386,8 @@ export type FileGenerationPlanServiceShape = {
 /**
  * Service tag for deterministic file-generation planning and execution.
  *
- * @example
+ * **Example** (Access plan service Effect)
+ *
  * ```ts
  * import { FileGenerationPlanService } from "@beep/repo-cli/commands/CreatePackage"
  * import { Effect } from "effect"
@@ -332,6 +395,7 @@ export type FileGenerationPlanServiceShape = {
  * const program = Effect.service(FileGenerationPlanService)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category ports
  * @since 0.0.0
  */
@@ -529,14 +593,16 @@ const resolveContainedSymlinkDestinationPath: {
 /**
  * Construct the default generation plan service implementation.
  *
- * @returns Deterministic plan preview and execution helpers.
- * @example
+ * **Example** (Create default plan service)
+ *
  * ```ts
  * import { createFileGenerationPlanService } from "@beep/repo-cli/commands/CreatePackage"
  *
  * const service = createFileGenerationPlanService()
  * console.log("createPlan" in service) // true
  * ```
+ *
+ * @returns Deterministic plan preview and execution helpers.
  * @category models
  * @since 0.0.0
  */
@@ -548,6 +614,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       A.make(
         A.map(input.directories, toPosixPath),
         parentDirectoriesForEntries(input.files),
+        parentDirectoriesForEntries(input.assets),
         parentDirectoriesForEntries(symlinks)
       ),
       A.flatten,
@@ -572,6 +639,17 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       )
     );
 
+    const copyAssetActions = pipe(
+      input.assets,
+      sortedByRelativePath,
+      A.map((asset) =>
+        GenerationAction.cases["copy-asset"].make({
+          relativePath: toPosixPath(asset.relativePath),
+          sourcePath: asset.sourcePath,
+        })
+      )
+    );
+
     const symlinkActions = pipe(
       symlinks,
       sortedByRelativePath,
@@ -586,6 +664,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
     const actions: ReadonlyArray<GenerationAction> = pipe(
       mkdirActions,
       A.appendAll(writeActions),
+      A.appendAll(copyAssetActions),
       A.appendAll(symlinkActions)
     );
 
@@ -659,6 +738,19 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
             O.map(() => countSkippedFileWrite),
             O.getOrElse(() => writeFile(absolutePath, content))
           )
+        )
+      );
+
+    // Copied unconditionally rather than skipped-if-present. `create-package`
+    // refuses to run against an existing directory, so a destination-exists
+    // branch here is one no test can reach — the shape that reads as lost
+    // coverage the moment anything else in this file moves.
+    const copyAsset = (absolutePath: string, sourcePath: string) =>
+      ensureDirectoryFor(absolutePath).pipe(
+        Effect.andThen(() =>
+          fs
+            .copyFile(sourcePath, absolutePath)
+            .pipe(mapFsError(`Failed to copy asset "${sourcePath}" to "${absolutePath}"`), Effect.tap(countWrittenFile))
         )
       );
 
@@ -739,6 +831,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       GenerationAction.match(action, {
         mkdir: () => createDirectory(absolutePath),
         "write-file": (writeAction) => writeFileIfChanged(absolutePath, writeAction.content),
+        "copy-asset": (copyAction) => copyAsset(absolutePath, copyAction.sourcePath),
         symlink: (linkAction) => ensureSymlink(absolutePath, linkAction.target),
       })
     );
@@ -758,12 +851,16 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       const absolutePath = yield* GenerationAction.match(action, {
         mkdir: () => resolveContainedPath(plan.outputDir, action.relativePath),
         "write-file": () => resolveContainedPath(plan.outputDir, action.relativePath),
+        "copy-asset": () => resolveContainedPath(plan.outputDir, action.relativePath),
         symlink: () => resolveContainedSymlinkDestinationPath(plan.outputDir, action.relativePath),
       });
 
       yield* GenerationAction.match(action, {
         mkdir: thunkEffectVoid,
         "write-file": thunkEffectVoid,
+        // Only the destination is constrained; `sourcePath` deliberately points
+        // at the template asset outside the generated tree.
+        "copy-asset": thunkEffectVoid,
         symlink: ({ target }) => validateSymlinkTarget(absolutePath, target),
       });
 

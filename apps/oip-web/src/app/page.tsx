@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Clock, Effect } from "effect";
-import * as S from "effect/Schema";
 import { headers } from "next/headers";
 import { connection } from "next/server";
 import { ContactSubmissionStatus } from "@/contact";
@@ -21,16 +21,19 @@ type HomeProps = {
 
 // TODO(effect-native-migration): model schema
 const safeJsonScript = (value: unknown) =>
-  Str.replaceAll("<", "\\u003c")(S.encodeUnknownSync(S.UnknownFromJsonString)(value));
+  Str.replaceAll("<", "\\u003c")(Unknown.encodeUnknownSyncFromJsonString(value));
 
 /**
  * Allows the search-param aware home route to block during the first render.
+ *
+ * **Details**
  *
  * Next.js framework config export: opts the route out of blocking-prerender
  * errors (`blocking-prerender-dynamic`). Consumed by the framework, not by
  * application imports.
  *
- * @example
+ * **Example** (Logging the instant value)
+ *
  * ```ts
  * import { instant } from "@beep/oip-web/app/page"
  *
@@ -46,7 +49,8 @@ export const instant = false;
 /**
  * Generates page metadata from runtime OIP content.
  *
- * @example
+ * **Example** (Awaiting generateMetadata result)
+ *
  * ```ts
  * import { generateMetadata } from "@beep/oip-web/app/page"
  *
@@ -96,7 +100,8 @@ export function generateMetadata(): Promise<Metadata> {
 /**
  * Renders the OIP public home page.
  *
- * @example
+ * **Example** (Awaiting Home component render)
+ *
  * ```tsx
  * import Home from "@beep/oip-web/app/page"
  *

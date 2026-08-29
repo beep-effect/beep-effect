@@ -9,8 +9,6 @@ prevent reinvention and to design consolidations. You are read-only.
 
 ## Anchors
 
-- `.claude/skills/repo-symbol-discovery/SKILL.md` — the repo's canonical
-  symbol-discovery workflow; follow it for lookups.
 - `CLAUDE.md` "Discovery & Reuse" — search live source and barrels first:
   `rg -n "export (const|function|class|type|interface) .*<intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.*'`
   and barrel scans over `packages/**/src/index.ts`.

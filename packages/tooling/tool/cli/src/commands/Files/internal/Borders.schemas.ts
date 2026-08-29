@@ -6,22 +6,27 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { NonNegativePixelOffset, PositiveMediaDimension, RgbChannel } from "./Media.schemas.js";
+import { NonNegativePixelOffset, PositiveMediaDimension, RgbChannel } from "./Media.schemas.ts";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/Borders.schemas");
 
 /**
  * Side of an image edge scanned for a solid border.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BorderSide } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(BorderSide)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -42,13 +47,15 @@ export type BorderSide = typeof BorderSide.Type;
 /**
  * Classified border layout for an analyzed image.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BorderDetectionKind } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(BorderDetectionKind)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -69,13 +76,15 @@ export type BorderDetectionKind = typeof BorderDetectionKind.Type;
 /**
  * Reason a direct directory entry was skipped by `files detect-borders`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBordersSkippedReason } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBordersSkippedReason)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -104,13 +113,15 @@ export type DetectBordersSkippedReason = typeof DetectBordersSkippedReason.Type;
 /**
  * Percentage threshold used by border detection options.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BorderDetectionPercentage } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(BorderDetectionPercentage)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -153,13 +164,15 @@ export type BorderDetectionPercentage = typeof BorderDetectionPercentage.Type;
 /**
  * Maximum scan percentage accepted by border detection.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BorderDetectionMaxScanPercentage } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(BorderDetectionMaxScanPercentage)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -202,13 +215,15 @@ export type BorderDetectionMaxScanPercentage = typeof BorderDetectionMaxScanPerc
 /**
  * RGB channel tolerance accepted by border detection.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { BorderDetectionTolerance } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(BorderDetectionTolerance)(undefined)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -251,13 +266,15 @@ export type BorderDetectionTolerance = typeof BorderDetectionTolerance.Type;
 /**
  * Options used by the image border detection operation.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBordersOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBordersOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -278,13 +295,15 @@ export class DetectBordersOptions extends S.Class<DetectBordersOptions>($I`Detec
 /**
  * Options used by the image border cropping operation.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CropBordersOptions } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CropBordersOptions)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -305,13 +324,15 @@ export class CropBordersOptions extends S.Class<CropBordersOptions>($I`CropBorde
 /**
  * RGB color sampled from a detected image border.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { RgbColor } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(RgbColor)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -329,13 +350,15 @@ export class RgbColor extends S.Class<RgbColor>($I`RgbColor`)(
 /**
  * Measurement for one scanned image side.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBorderSideMeasurement } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBorderSideMeasurement)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -357,13 +380,15 @@ export class DetectBorderSideMeasurement extends S.Class<DetectBorderSideMeasure
 /**
  * Image entry analyzed by `files detect-borders`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBordersEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBordersEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -387,13 +412,15 @@ export class DetectBordersEntry extends S.Class<DetectBordersEntry>($I`DetectBor
 /**
  * Source entry skipped by image border detection.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBordersSkippedEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBordersSkippedEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -413,13 +440,15 @@ export class DetectBordersSkippedEntry extends S.Class<DetectBordersSkippedEntry
 /**
  * Summary counts for an image border detection run.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBordersSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBordersSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -439,13 +468,15 @@ export class DetectBordersSummary extends S.Class<DetectBordersSummary>($I`Detec
 /**
  * JSON report emitted by an image border detection run.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { DetectBordersReport } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(DetectBordersReport)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -466,13 +497,15 @@ export class DetectBordersReport extends S.Class<DetectBordersReport>($I`DetectB
 /**
  * Planned crop for an image with detected solid borders.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CropBordersPlanEntry } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CropBordersPlanEntry)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -499,13 +532,15 @@ export class CropBordersPlanEntry extends S.Class<CropBordersPlanEntry>($I`CropB
 /**
  * Planned border crop entries plus skipped file counts.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CropBordersPlan } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CropBordersPlan)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -525,13 +560,15 @@ export class CropBordersPlan extends S.Class<CropBordersPlan>($I`CropBordersPlan
 /**
  * Summary returned by `cropBordersFiles`.
  *
- * @example
+ * **Example** (Schema accepts undefined)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { CropBordersSummary } from "@beep/repo-cli/commands/Files"
  *
  * const acceptsUndefined = S.is(CropBordersSummary)(undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -553,41 +590,56 @@ export class CropBordersSummary extends S.Class<CropBordersSummary>($I`CropBorde
 /**
  * Decode unknown border detection options.
  *
- * @example
+ * **Example** (Decode undefined options)
+ *
  * ```ts
  * import { decodeDetectBordersOptions } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeDetectBordersOptions(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
-export const decodeDetectBordersOptions = S.decodeUnknownEffect(DetectBordersOptions);
+export const decodeDetectBordersOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<DetectBordersOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<DetectBordersOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(DetectBordersOptions));
 
 /**
  * Decode unknown border cropping options.
  *
- * @example
+ * **Example** (Decode undefined options)
+ *
  * ```ts
  * import { decodeCropBordersOptions } from "@beep/repo-cli/commands/Files"
  *
  * const program = decodeCropBordersOptions(undefined)
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
-export const decodeCropBordersOptions = S.decodeUnknownEffect(CropBordersOptions);
+export const decodeCropBordersOptions: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CropBordersOptions, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<CropBordersOptions, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CropBordersOptions));
 
 /**
  * Encode a detect-borders report into its JSON-safe shape.
  *
- * @example
+ * **Example** (Assign encode function)
+ *
  * ```ts
  * import { encodeDetectBordersReport } from "@beep/repo-cli/commands/Files"
  *
  * const encode: typeof encodeDetectBordersReport = encodeDetectBordersReport
  * ```
+ *
  * @category encoding
  * @since 0.0.0
  */
-export const encodeDetectBordersReport = S.encodeUnknownEffect(DetectBordersReport);
+export const encodeDetectBordersReport: {
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof DetectBordersReport.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof DetectBordersReport.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(DetectBordersReport));

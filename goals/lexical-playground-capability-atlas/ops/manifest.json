@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lexical-playground-capability-atlas",
+    "title": "Lexical Playground Capability Atlas",
+    "status": "completed-retained",
+    "created": "2026-08-04",
+    "updated": "2026-08-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lexical-playground-capability-atlas",
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed 2026-08-25: the atlas is versioned and reconciled (12 user-approved waivers), @beep/editor ships the schema-backed capability contract and resolver, Storybook and the synthetic editor-proof desktop panel prove the minimal and document-proof profiles, and the recorded browser QA loop closed on round 4 with requiredCount 0; the closeout PR carries the reflection and the Goal B handoff.",
+  "mission": "Version the complete Lexical Playground capability atlas and prove the minimal schema-backed editor profile resolver in Storybook and a synthetic Professional Desktop dock panel.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/full-document-editor",
+    "graduated": "2026-08-04"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --message -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/full-document-editor/DECISIONS.md",
+    "goals/lexical-playground-capability-atlas/README.md",
+    "goals/lexical-playground-capability-atlas/SPEC.md",
+    "goals/lexical-playground-capability-atlas/PLAN.md",
+    "goals/lexical-playground-capability-atlas/GOAL.md",
+    "goals/lexical-playground-capability-atlas/research/SOURCES.md",
+    "goals/lexical-playground-capability-atlas/research/capability-atlas.json",
+    "goals/lexical-playground-capability-atlas/research/p0-evidence-gaps.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/capability-atlas.json",
+    "research/p0-evidence-gaps.md"
+  ],
+  "plannedArtifacts": [
+    {
+      "path": "research/capability-atlas.json",
+      "schemaVersion": "editor-capability-atlas/v1",
+      "ownership": "authored",
+      "schemaPath": "ops/CapabilityAtlas.schemas.ts",
+      "verificationCommand": "bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts"
+    },
+    {
+      "path": "ops/CapabilityAtlas.schemas.ts",
+      "ownership": "authored",
+      "purpose": "Effect v4 schema-first contract for editor-capability-atlas/v1"
+    },
+    {
+      "path": "ops/verify-capability-atlas.ts",
+      "ownership": "authored",
+      "purpose": "Exact atlas decoder, stable-ID and evidence reconciliation verifier"
+    },
+    {
+      "path": "research/p0-evidence-gaps.md",
+      "ownership": "authored",
+      "purpose": "Complete unverified-entry browser exercise and waiver ledger"
+    }
+  ],
+  "stakeholderSurfaces": [
+    {
+      "kind": "notion",
+      "url": "https://app.notion.com/p/3b269573788d8096b876ed2ad31d151d",
+      "sync": "P0 evidence lock and P4 closeout"
+    }
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lexical-playground-capability-atlas/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lexical-playground-capability-atlas/GOAL.md)\" -le 4000",
+    "jq . goals/lexical-playground-capability-atlas/ops/manifest.json",
+    "rg -n \"lexical-playground-capability-atlas|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lexical-playground-capability-atlas",
+    "git diff --check -- goals/lexical-playground-capability-atlas explorations/full-document-editor",
+    "bun run goals/lexical-playground-capability-atlas/ops/verify-capability-atlas.ts",
+    "bun run --cwd packages/foundation/ui-system/editor check",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "A source feature cannot be classified without a new product or security decision.",
+    "The implementation would require new canonical document semantics, persistence, network egress, collaboration, or a new dependency.",
+    "Existing consumer behavior cannot be preserved within named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

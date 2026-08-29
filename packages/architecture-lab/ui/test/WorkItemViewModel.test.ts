@@ -1,11 +1,11 @@
 import { defaultWorkItemPublicConfig } from "@beep/architecture-lab-config/public";
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import {
   toWorkItemSummaryViewModel,
   WorkItemSummaryViewModel,
   WorkItemVisibleAction,
 } from "@beep/architecture-lab-ui/aggregates/WorkItem";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
@@ -14,10 +14,10 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
-const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
-const WorkItemVisibleActionArbitrary = S.toArbitrary(WorkItemVisibleAction);
-const WorkItemSummaryViewModelArbitrary = S.toArbitrary(WorkItemSummaryViewModel);
-const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem);
+const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
+const WorkItemVisibleActionArbitrary = S.toArbitrary(WorkItemVisibleAction)(fc);
+const WorkItemSummaryViewModelArbitrary = S.toArbitrary(WorkItemSummaryViewModel)(fc);
+const WorkItemArbitrary = S.toArbitrary(DomainWorkItem.WorkItem)(fc);
 
 describe("WorkItem UI view model", () => {
   it.effect(
@@ -111,7 +111,7 @@ describe("WorkItem UI view model", () => {
     fc.assert(
       fc.property(WorkItemVisibleActionArbitrary, (value) => {
         expect(
-          Equal.equals(S.decodeUnknownSync(WorkItemVisibleAction)(S.encodeSync(WorkItemVisibleAction)(value)), value)
+          Equal.equals(S.decodeSync(WorkItemVisibleAction)(S.encodeSync(WorkItemVisibleAction)(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)
@@ -120,10 +120,7 @@ describe("WorkItem UI view model", () => {
     fc.assert(
       fc.property(WorkItemSummaryViewModelArbitrary, (value) => {
         expect(
-          Equal.equals(
-            S.decodeUnknownSync(WorkItemSummaryViewModel)(S.encodeSync(WorkItemSummaryViewModel)(value)),
-            value
-          )
+          Equal.equals(S.decodeSync(WorkItemSummaryViewModel)(S.encodeSync(WorkItemSummaryViewModel)(value)), value)
         ).toBe(true);
       }),
       fcRuns(20)

@@ -7,7 +7,7 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
@@ -41,7 +41,26 @@ type OipContentLoadErrorOptions = {
   readonly status?: number;
 };
 
-class OipContentLoadError extends TaggedErrorClass<OipContentLoadError>($I`OipContentLoadError`)(
+/**
+ * Typed server-side failure raised while loading OIP site content.
+ *
+ * **Example** (Create a provider content failure)
+ *
+ * ```ts
+ * import { OipContentLoadError } from "@/content/OipContent.runtime"
+ *
+ * const error = OipContentLoadError.fromReason("provider", {
+ *   provider: "sanity",
+ *   providerReason: "unavailable",
+ *   status: 503
+ * })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class OipContentLoadError extends S.TaggedError<OipContentLoadError>($I`OipContentLoadError`)(
   "OipContentLoadError",
   {
     provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -49,7 +68,7 @@ class OipContentLoadError extends TaggedErrorClass<OipContentLoadError>($I`OipCo
     reason: OipContentLoadErrorReason,
     status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
   },
-  $I.annote("OipContentLoadError", {
+  $I.annoteError<OipContentLoadError>("OipContentLoadError", {
     description: "Typed server-side OIP content loading failure.",
   })
 ) {
@@ -146,7 +165,8 @@ const loadOipSiteContent = Effect.gen(function* () {
 /**
  * Promise boundary for Next.js server components.
  *
- * @example
+ * **Example** (Logging site metadata)
+ *
  * ```ts
  * import { getOipSiteContent } from "@beep/oip-web/content"
  *

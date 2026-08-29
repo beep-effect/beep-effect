@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "harness-otel-adoption",
+    "title": "Harness OTel Adoption",
+    "status": "completed-retained",
+    "created": "2026-07-14",
+    "updated": "2026-07-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/harness-otel-adoption",
+  "lifecycle": "completed-retained",
+  "mission": "Native Claude Code + Codex OTLP into dankserver's monitoring collector (traces to Phoenix, metrics to Prometheus/Grafana) with a beep-owned attribution attribute schema; content capture off.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-effectiveness-pulse",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/harness-otel-adoption/README.md",
+    "goals/harness-otel-adoption/SPEC.md",
+    "goals/harness-otel-adoption/PLAN.md",
+    "goals/harness-otel-adoption/GOAL.md",
+    "goals/harness-otel-adoption/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/harness-otel-adoption/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable + Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/harness-otel-adoption/GOAL.md)\" -le 4000",
+    "jq . goals/harness-otel-adoption/ops/manifest.json",
+    "rg -n \"harness-otel-adoption|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-otel-adoption",
+    "git diff --check -- goals/harness-otel-adoption",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "Dankserver operator actions are needed but unconfirmed.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

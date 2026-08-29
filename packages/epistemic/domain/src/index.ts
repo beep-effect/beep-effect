@@ -8,21 +8,23 @@
 /**
  * Epistemic entity model exports.
  *
- * @example
+ * **Example** (Import Activity table name)
+ *
  * ```ts
  * import { Activity } from "@beep/epistemic-domain"
  *
- * console.log(Activity.definition.entityId.tableName)
+ * console.log(Activity.sql.tableName)
  * ```
-
+ *
  * @category entities
  * @since 0.0.0
  */
-export * from "./entities/index.js";
+export * from "./entities/index.ts";
 /**
  * Epistemic value model exports.
  *
- * @example
+ * **Example** (Decode ClaimGateSeverity warning value)
+ *
  * ```ts
  * import { ClaimGateSeverity } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -30,8 +32,8 @@ export * from "./entities/index.js";
  * const severity = S.decodeUnknownSync(ClaimGateSeverity)("warning")
  * console.log(severity)
  * ```
-
+ *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./values/index.js";
+export * from "./values/index.ts";

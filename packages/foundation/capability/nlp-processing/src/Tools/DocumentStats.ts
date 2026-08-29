@@ -28,12 +28,15 @@ class DocumentStatsParameters extends S.Class<DocumentStatsParameters>($I`Docume
  * Defines the agent-facing tool contract for computing document-level text
  * statistics.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs quick counts for characters, words,
  * sentences, or average sentence length before deciding how to chunk or route
  * a document.
  *
- * @example
- * ```ts
+ * **Example** (Decode parameters schema)
+ *
+ * ```ts import.meta.vitest name="Decode parameters schema"
  * import * as S from "effect/Schema"
  * import { DocumentStats } from "@beep/nlp-processing/Tools/DocumentStats"
  *

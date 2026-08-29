@@ -9,7 +9,8 @@
 /**
  * Package version marker for the architecture lab config role.
  *
- * @example
+ * **Example** (Check initial proof version)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-config"
  *
@@ -26,7 +27,8 @@ export const VERSION = "0.0.0" as const;
 /**
  * Browser-safe WorkItem public configuration exports.
  *
- * @example
+ * **Example** (Make WorkItem public config)
+ *
  * ```ts
  * import {
  *   defaultWorkItemPublicConfig,
@@ -44,4 +46,4 @@ export const VERSION = "0.0.0" as const;
  * @category configuration
  * @since 0.0.0
  */
-export { defaultWorkItemPublicConfig, WorkItemPublicConfig } from "./public.js";
+export { defaultWorkItemPublicConfig, WorkItemPublicConfig } from "./public.ts";

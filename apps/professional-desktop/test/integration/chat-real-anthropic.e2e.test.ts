@@ -27,6 +27,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -42,13 +43,17 @@ import type * as Md from "@beep/md/Md.model";
 const realAnthropicChatTimeoutMillis = 300_000;
 const shouldRunRealAnthropic = Bun.env.BEEP_TEST_REAL_ANTHROPIC_CHAT === "1";
 const anthropicApiKeyEnv = "AI_ANTHROPIC_API_KEY";
-const makeInProcessPgliteLayer = () => Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" }));
+// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
+// database has to register the bundled extension exactly as the sidecar's
+// `makeBundledPgliteLayer` does.
+const makeInProcessPgliteLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const prompt = [
   "Return exactly these three rich blocks and no prose:",
   "1. A mermaid diagram code block with language mermaid. Use: graph TD\\n  A[Client] --> B[Sidecar] --> C[Persisted @beep/md]",
   "2. A table block with headerRow true, columns Feature and Status, and one row Rich blocks / Ready.",
-  "3. A youtube block with videoId dQw4w9WgXcQ.",
+  "3. A youtube block with videoId M7lc1UVf-VE.",
 ].join("\n");
 
 const migrateAll = Effect.fnUntraced(function* () {
@@ -70,7 +75,7 @@ const hasStreamedTable = (blocks: ReadonlyArray<unknown>): boolean =>
   A.some(blocks, (block) => P.isObject(block) && block.type === "table");
 
 const hasStreamedYouTube = (blocks: ReadonlyArray<unknown>): boolean =>
-  A.some(blocks, (block) => P.isObject(block) && block.type === "youtube" && block.videoId === "dQw4w9WgXcQ");
+  A.some(blocks, (block) => P.isObject(block) && block.type === "youtube" && block.videoId === "M7lc1UVf-VE");
 
 const persistedAssistantDocuments = (timeline: Thread.ThreadTimeline): ReadonlyArray<Md.Document.Type> =>
   pipe(
@@ -95,7 +100,7 @@ const hasPersistedTable = (document: Md.Document.Type): boolean =>
   A.some(document.children, (block) => block._tag === "table");
 
 const hasPersistedYouTube = (document: Md.Document.Type): boolean =>
-  A.some(document.children, (block) => block._tag === "youtube" && block.videoId === "dQw4w9WgXcQ");
+  A.some(document.children, (block) => block._tag === "youtube" && block.videoId === "M7lc1UVf-VE");
 
 const RealAnthropicChatLayer = Layer.mergeAll(
   ThreadLayers.ThreadStoreDrizzleLayer,
@@ -132,7 +137,7 @@ if (!shouldRunRealAnthropic) {
           const store = yield* Thread.ThreadStore;
           const kernel = yield* AgentTurnKernel;
           const usage = yield* UsageRecordSink;
-          const ops = makeChatOperations(store, kernel, usage);
+          const ops = yield* makeChatOperations(store, kernel, usage);
 
           const workspaceId = decodeWorkspaceId(3);
           const thread = yield* ops.createThread(workspaceId, "Real Anthropic rich blocks");

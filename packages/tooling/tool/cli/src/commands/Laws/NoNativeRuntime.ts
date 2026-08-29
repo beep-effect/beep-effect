@@ -15,7 +15,7 @@ import {
   isNoNativeRuntimeErrorFile,
   isNoNativeRuntimeExtraCheckHotspot,
 } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots";
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, HashSet, Inspectable, Match, Order, Path, pipe } from "effect";
@@ -24,7 +24,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
-import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.js";
+import { isEcosystemMemberSourcePath, isExcludedLawScanPath } from "./internal/LawScan.ts";
+import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
   BinaryExpression,
   CallExpression,
@@ -36,7 +37,12 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/NoNativeRuntime");
 
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+const INCLUDED_GLOBS = [
+  "apps/**/*.{ts,tsx}",
+  "packages/**/*.{ts,tsx}",
+  "infra/**/*.ts",
+  "scratchpad/effect-ontology/**/*.{ts,tsx}",
+] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 const ALLOWLIST_PATH = "standards/effect-laws.allowlist.jsonc";
 const NO_NATIVE_RUNTIME_RULE_ID = "beep-laws/no-native-runtime";
@@ -89,10 +95,11 @@ const TYPEOF_RUNTIME_LITERALS = HashSet.fromIterable([
 /**
  * Runtime options for repo-local native runtime checks.
  *
- * @example
+ * **Example** (Configure native-runtime scanning)
  * ```ts
  * console.log("NoNativeRuntimeRulesOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -106,6 +113,7 @@ export class NoNativeRuntimeRulesOptions extends S.Class<NoNativeRuntimeRulesOpt
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    includePaths: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("NoNativeRuntimeRulesOptions", {
     description: "Runtime options for repo-local native runtime checks.",
@@ -117,10 +125,12 @@ const NoNativeRuntimeSeverity = LiteralKit(["warn", "error"]);
 /**
  * Single repo-local native runtime diagnostic.
  *
- * @example
+ * **Example** (Reference the native-runtime diagnostic)
+ *
  * ```ts
  * console.log("NoNativeRuntimeDiagnostic")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -141,10 +151,12 @@ export class NoNativeRuntimeDiagnostic extends S.Class<NoNativeRuntimeDiagnostic
 /**
  * Namespace for {@link NoNativeRuntimeDiagnostic} companion types.
  *
- * @example
+ * **Example** (Reference the native-runtime diagnostic)
+ *
  * ```ts
  * console.log("NoNativeRuntimeDiagnostic")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -152,10 +164,12 @@ export declare namespace NoNativeRuntimeDiagnostic {
   /**
    * Encoded representation of {@link NoNativeRuntimeDiagnostic}.
    *
-   * @example
+   * **Example** (Reference the encoded companion)
+   *
    * ```ts
    * console.log("Encoded")
    * ```
+   *
    * @category models
    * @since 0.0.0
    */
@@ -165,10 +179,12 @@ export declare namespace NoNativeRuntimeDiagnostic {
 /**
  * Summary of repo-local native runtime checks.
  *
- * @example
+ * **Example** (Reference the native-runtime rules summary)
+ *
  * ```ts
  * console.log("NoNativeRuntimeRulesSummary")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -204,10 +220,12 @@ export class NoNativeRuntimeRulesSummary extends S.Class<NoNativeRuntimeRulesSum
 /**
  * Options for collecting native-runtime allowlist lookup keys.
  *
- * @example
+ * **Example** (Reference the violation-key options)
+ *
  * ```ts
  * console.log("NativeRuntimeViolationKeyOptions")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -452,7 +470,7 @@ const formatViolationMessage = (violation: NativeRuntimeViolation): string => {
   }
 
   if (violation.messageId === "nativeError") {
-    return `Avoid native ${data?.ctor ?? ""} in production code. Use TaggedErrorClass or add an allowlist entry.`;
+    return `Avoid native ${data?.ctor ?? ""} in production code. Use S.TaggedError from effect/Schema or add an allowlist entry.`;
   }
 
   if (violation.messageId === "dateStatic") {
@@ -513,10 +531,12 @@ const collectNativeRuntimeViolations = (
 /**
  * Collect normalized native-runtime violation keys for allowlist integrity checks.
  *
- * @example
+ * **Example** (Reference the violation-key collector)
+ *
  * ```ts
  * console.log("collectNativeRuntimeViolationKeys")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -538,10 +558,12 @@ export const collectNativeRuntimeViolationKeys: {
  * Non-hotspot files remain warning-only for `--check` so the P3 cutover preserves the
  * old warn-vs-error split while moving the blocking path away from the repo-wide ESLint lane.
  *
- * @example
+ * **Example** (Reference the native-runtime rules runner)
+ *
  * ```ts
  * console.log("runNoNativeRuntimeRules")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -558,20 +580,15 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   );
   let usedAllowlistKeys = HashSet.empty<string>();
 
-  const isExcludedFile = (filePath: string): boolean => {
-    const normalized = toPosixPath(filePath);
-    if (A.some(options.excludePaths, (excludePath) => normalized === toPosixPath(excludePath))) {
-      return true;
-    }
-    return isExcludedTypeScriptSourcePath(normalized);
-  };
+  const isExcludedFile = (filePath: string): boolean =>
+    isEcosystemMemberSourcePath(filePath) || isExcludedLawScanPath(options.excludePaths, filePath);
 
   const project = new Project({
     tsConfigFilePath: path.join(cwd, "tsconfig.json"),
     skipAddingFilesFromTsConfig: true,
   });
 
-  project.addSourceFilesAtPaths(SOURCE_FILE_GLOBS);
+  project.addSourceFilesAtPaths(options.includePaths ?? SOURCE_FILE_GLOBS);
 
   let sourceFiles = A.empty<ScannedSourceFile>();
 

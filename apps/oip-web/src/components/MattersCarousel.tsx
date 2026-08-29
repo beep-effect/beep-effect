@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// fallow-ignore-file unused-file
+// fallow-ignore-file unused-file -- temporarily unmounted carousel is retained for review-gate re-enable
 /**
  * Selected-matters carousel for the OIP public home page.
  *
@@ -26,12 +26,15 @@ const navButton =
 /**
  * Wraps server-rendered matter cards in a swipeable carousel with chevron navigation.
  *
+ * **Details**
+ *
  * Each child becomes one slide. The card markup stays in the server component so the
  * schema-class content never crosses the client boundary; this wrapper only supplies
  * the carousel mechanics and left/right controls. The slide list follows `children`,
  * so adding records through the Sanity CMS extends the carousel without code changes.
  *
- * @example
+ * **Example** (Wrapping children in MattersCarousel)
+ *
  * ```tsx
  * import { MattersCarousel } from "@beep/oip-web/components/MattersCarousel"
  *

@@ -1,6 +1,6 @@
 # GOAL: harden the shared-kernel persisted-entity base
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: `BaseEntity` carries `Principal`-typed soft-delete and is the single
 canonical audit base, with the typed-error (`.errors.ts`) convention in place for
@@ -15,7 +15,7 @@ contract:
 - `goals/domain-kernel-hardening/ops/manifest.json`
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, the
-`schema-model-specialist` / `schema-first-development` skills, and
+`schema-first-development` skill, and
 `standards/architecture/{02-shared-kernel,04-rich-domain-model,09-errors-across-boundaries}.md`.
 Higher-priority repo standards outrank packet prose when they conflict. Grounding
 lives in `explorations/domain-layer-hardening/` (synthesis 10-21, DECISIONS
@@ -23,9 +23,9 @@ G1-G14) — read by reference, do not copy.
 
 Scope:
 
-- In: `packages/shared/domain/src/entity/BaseEntity.ts` (add `deletedAt` +
+- In: `packages/shared/domain/src/entity/ProductEntity.ts` (add `deletedAt` +
   `deletedByPrincipal`, Principal-typed, nullable→`null`, with an
-  `EntitySchema.persist.*` descriptor); `packages/foundation/modeling/schema/src/DomainModel.ts`
+  `EntitySchema.persist.*` descriptor); `packages/foundation/modeling/schema/src/index.ts`
   (retire or deprecate-alias — `rowVersion` already covers `version`); the kernel
   `.errors.ts` convention; tests + docgen.
 - Out: NO new shared VOs (`TemporalValidity`/`DomainEvent` are deferred to their

@@ -15,7 +15,8 @@ import type { VariantProps } from "class-variance-authority";
 /**
  * Class variance helper for shared button variants and sizes.
  *
- * @example
+ * **Example** (Generate outline button classes)
+ *
  * ```ts
  * import { buttonVariants } from "@beep/ui/components/ui/button"
  *
@@ -65,7 +66,8 @@ const buttonVariants = cva(
 /**
  * Base UI button with shared size and variant styling.
  *
- * @example
+ * **Example** (Render submit Save button)
+ *
  * ```tsx
  * import { Button } from "@beep/ui/components/ui/button"
  *

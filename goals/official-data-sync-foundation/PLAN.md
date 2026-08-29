@@ -51,7 +51,7 @@ Before marking the packet closed:
 ## Verification Commands
 
 ```sh
-bun run beep sync-data-to-ts --all --check --report-dir /tmp/beep-data-sync-check
+bun run beep sync-data-to-ts --all --check --report-dir "$(mktemp -d)"
 bun run --cwd packages/tooling/tool/cli check
 bun run --cwd packages/tooling/tool/cli test sync-data-to-ts
 bun run --cwd packages/foundation/primitive/data check

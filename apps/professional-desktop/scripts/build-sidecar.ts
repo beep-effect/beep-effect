@@ -9,22 +9,64 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ } from "bun";
-import { Data } from "effect";
 
-class MissingTargetTripleError extends Data.TaggedError("MissingTargetTripleError")<{
-  readonly message: string;
-}> {}
+import { BunRuntime } from "@effect/platform-bun";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { Console, Effect, Layer, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { Equivalence } from "effect/Equivalence";
 
-const triple = (await $`rustc -vV`.text()).match(/host: (\S+)/)?.[1];
-if (triple === undefined) {
-  throw new MissingTargetTripleError({
-    message: "could not determine the target triple from `rustc -vV`",
-  });
-}
+// Effect calls the hook with the declared struct equivalence; narrowing it from `never` to `Self`
+// is the contravariant direction (`Self` extends the struct type), so the assertion is sound.
+const declaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
+  typeParameters[0] as Equivalence<Self>;
 
-const outfile = `src-tauri/binaries/sidecar-${triple}`;
-await $`bun build --compile server/main.ts --outfile ${outfile}`;
-// build-script stdout, not application logging
-// @effect-diagnostics-next-line globalConsole:off
-console.log(`sidecar compiled → ${outfile}`);
+class MissingTargetTripleError extends S.TaggedError<MissingTargetTripleError>()(
+  "MissingTargetTripleError",
+  {
+    message: S.String,
+  },
+  { toEquivalence: (typeParameters) => declaredFieldsEquivalence<MissingTargetTripleError>(typeParameters) }
+) {}
+
+class SidecarBuildError extends S.TaggedError<SidecarBuildError>()(
+  "SidecarBuildError",
+  {
+    exitCode: S.Int,
+    message: S.String,
+  },
+  {
+    toEquivalence: (typeParameters) => declaredFieldsEquivalence<SidecarBuildError>(typeParameters),
+  }
+) {}
+
+const program = Effect.gen(function* () {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const rustcOutput = yield* spawner.string(ChildProcess.make("rustc", ["-vV"]));
+  const triple = pipe(Str.match(/host: (\S+)/u)(rustcOutput), O.flatMap(A.get(1)), O.filter(Str.isNonEmpty));
+  if (O.isNone(triple)) {
+    return yield* MissingTargetTripleError.make({
+      message: "could not determine the target triple from `rustc -vV`",
+    });
+  }
+
+  const outfile = `src-tauri/binaries/sidecar-${triple.value}`;
+  const exitCode = yield* spawner.exitCode(
+    ChildProcess.make("bun", ["build", "--compile", "server/main.ts", "--outfile", outfile], {
+      stderr: "inherit",
+      stdout: "inherit",
+    })
+  );
+  if (exitCode !== 0) {
+    return yield* SidecarBuildError.make({ exitCode, message: `sidecar build failed with exit code ${exitCode}` });
+  }
+  yield* Console.log(`sidecar compiled → ${outfile}`);
+});
+
+const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
+
+BunRuntime.runMain(main);

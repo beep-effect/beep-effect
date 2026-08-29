@@ -17,11 +17,23 @@ import {
   enforceConservativeResume,
   RepoPlanPhase,
   RepoPlanStep,
+  RepoPlanWave,
   RepoRunPlan,
   repoProofStepDefinition,
   TurboPlanSnapshot,
-} from "../../../internal/repo-run/index.js";
-import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.js";
+} from "../../../internal/repo-run/index.ts";
+import {
+  githubCheckChangesetStatusLane,
+  githubCheckCheapGateLanes,
+  githubCheckFallowLanes,
+  githubCheckLanePlan,
+  githubCheckPrePushExternalLanes,
+  githubCheckQualityLanes,
+  githubCheckRepoSanityLanes,
+} from "../../Quality/internal/GithubChecks.ts";
+import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.ts";
+import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
 
@@ -46,12 +58,14 @@ type YeetFeedbackTask = (typeof YEET_FEEDBACK_TASKS)[number];
 /**
  * Yeet execution modes.
  *
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { YeetRunMode } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetRunMode.is.verify("verify"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -80,16 +94,18 @@ export type YeetRunMode = typeof YeetRunMode.Type;
 /**
  * Yeet local proof tier.
  *
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { YeetProofTier } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetProofTier.is["review-fix"]("review-fix"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export const YeetProofTier = LiteralKit(["full", "review-fix"]).pipe(
+export const YeetProofTier = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe(
   $I.annoteSchema("YeetProofTier", {
     description: "Local proof tier selected for yeet verify loops.",
   })
@@ -106,7 +122,8 @@ export type YeetProofTier = typeof YeetProofTier.Type;
 /**
  * Options for building a Yeet run plan in a specific mode.
  *
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { YeetRunPlanModeOptions } from "@beep/repo-cli/test/Yeet"
  *
@@ -123,12 +140,17 @@ export type YeetProofTier = typeof YeetProofTier.Type;
  *   }).mode
  * )
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`YeetRunPlanModeOptions`)(
   {
     amend: S.Boolean,
+    collectAll: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
     fast: S.Boolean,
     mode: YeetRunMode,
     monitor: S.Boolean,
@@ -212,14 +234,16 @@ const gitStep = (
 /**
  * Create an empty Turbo metadata snapshot.
  *
- * @param warnings - Optional graph-health warnings.
- * @returns Empty Turbo snapshot with graph health status.
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { emptyTurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(emptyTurboPlanSnapshot([]).graphHealthStatus)
  * ```
+ *
+ * @param warnings - Optional graph-health warnings.
+ * @returns Empty Turbo snapshot with graph health status.
  * @category constructors
  * @since 0.0.0
  */
@@ -230,12 +254,11 @@ export const emptyTurboPlanSnapshot = (warnings: ReadonlyArray<string>): TurboPl
     tasks: [],
   });
 
-// Deterministic auto-fixers run sequentially (runPhase concurrency:1) so parallel
-// inventory writes cannot corrupt each other. Code rewriters (effect-imports) run
-// first, then artifact generators (dual-arity inventory, tsconfig), then biome
-// formats everything, then docgen regenerates docs last.
-// terse-effect/schema-first are intentionally excluded: they can leave manual
-// candidates and are enforced advisory in verify, not auto-fixed here.
+// Deterministic auto-fixers run sequentially (runPhase concurrency:1). Code
+// rewriters run first, then config generation. The collected cheap tier runs
+// before formatting, docgen, or affected feedback can consume heavyweight work.
+// terse-effect applies only safe rewrites here; its manual candidates stay
+// advisory during verification. Schema-first remains excluded from repair.
 const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
   bunRunStep(
     context,
@@ -249,17 +272,15 @@ const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
   ),
   bunRunStep(
     context,
-    "prepare:02-dual-arity",
-    "prepare:laws:dual-arity",
+    "prepare:02-terse-effect",
+    "prepare:laws:terse-effect",
     "prepare",
     "beep",
-    ["laws", "dual-arity", "--write"],
+    ["laws", "terse-effect", "--write"],
     "write",
     "repo"
   ),
   bunRunStep(context, "prepare:03-config-sync", "prepare:config-sync", "prepare", "config-sync", [], "write", "repo"),
-  bunRunStep(context, "prepare:04-lint-fix", "prepare:lint:fix", "prepare", "lint:fix", [], "write", "repo"),
-  bunRunStep(context, "prepare:05-docgen", "prepare:docgen", "prepare", "docgen", [], "write", "repo"),
 ];
 
 const packageNameForFeedbackTask =
@@ -281,9 +302,9 @@ const feedbackFilterArgs = (context: RepoRunContext, feedbackTask: YeetFeedbackT
   );
 
 const feedbackRunArgs = (feedbackTask: YeetFeedbackTask, filters: ReadonlyArray<string>): ReadonlyArray<string> =>
-  // Repair feedback stays on unit/type lanes; verify/publish use only the full pre-push proof.
+  // Repair feedback stays on the unit lane; verify/publish use only the full pre-push proof.
   feedbackTask === "test"
-    ? ["--unit", "--types", ...filters, ...sharedFeedbackTurboArgs]
+    ? ["--unit", ...filters, ...sharedFeedbackTurboArgs]
     : [...filters, ...sharedFeedbackTurboArgs];
 
 const feedbackStep = (
@@ -315,6 +336,21 @@ const feedbackStep = (
 
 const feedbackSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> =>
   A.getSomes([
+    O.some(
+      bunRunStep(
+        context,
+        "feedback:00-heavy:01-lint-fix",
+        "feedback:lint:fix",
+        "feedback",
+        "lint:fix",
+        [],
+        "write",
+        "repo"
+      )
+    ),
+    O.some(
+      bunRunStep(context, "feedback:00-heavy:02-docgen", "feedback:docgen", "feedback", "docgen", [], "write", "repo")
+    ),
     feedbackStep(context, "feedback:01-build", "feedback:build", "build", "build"),
     feedbackStep(context, "feedback:02-check", "feedback:check", "check", "check"),
     feedbackStep(context, "feedback:03-lint", "feedback:lint", "lint", "lint"),
@@ -341,11 +377,67 @@ const fallowAdvisoryFeedbackStep = (context: RepoRunContext): RepoPlanStep =>
     "repo"
   );
 
-const proofStep = (context: RepoRunContext, tier: YeetProofTier): RepoPlanStep => {
-  const proof = repoProofStepDefinition(tier === "review-fix" ? "review-fix" : "pre-push");
-  const proofArgs =
-    tier === "review-fix" ? [...proof.args, "--base", context.base, "--head", context.head] : proof.args;
-  return bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
+const proofDefinitionForTier = (tier: YeetProofTier) =>
+  YeetProofTier.$match(tier, {
+    full: () => repoProofStepDefinition("pre-push"),
+    "cheap-gates": () => repoProofStepDefinition("cheap-gates"),
+    "review-fix": () => repoProofStepDefinition("review-fix"),
+  });
+
+const proofArgsForTier = (
+  context: RepoRunContext,
+  tier: YeetProofTier,
+  collectAll: boolean,
+  args: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  YeetProofTier.$match(tier, {
+    full: () => [...args, ...(collectAll ? ["--collect-all"] : [])],
+    "cheap-gates": () => args,
+    "review-fix": () => [...args, "--base", context.base, "--head", context.head],
+  });
+
+const changesetStatusLanesForProof = (context: RepoRunContext): ReadonlyArray<GithubCheckLaneSpec> =>
+  context.branch === "main" ? [] : [githubCheckChangesetStatusLane(context.repoRoot)];
+
+const proofLanesForTier = (context: RepoRunContext, tier: YeetProofTier): ReadonlyArray<GithubCheckLaneSpec> =>
+  YeetProofTier.$match(tier, {
+    full: () => [
+      ...changesetStatusLanesForProof(context),
+      ...githubCheckRepoSanityLanes(context.repoRoot),
+      ...githubCheckQualityLanes(context.repoRoot),
+      ...githubCheckFallowLanes(context.repoRoot),
+      ...githubCheckPrePushExternalLanes(context.repoRoot),
+    ],
+    "cheap-gates": () => [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],
+    "review-fix": A.empty<GithubCheckLaneSpec>,
+  });
+
+const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boolean): RepoPlanStep => {
+  const proof = proofDefinitionForTier(tier);
+  const proofArgs = proofArgsForTier(context, tier, collectAll, proof.args);
+  const step = bunRunStep(context, proof.id, proof.label, "full", "beep", proofArgs, "readonly", "repo");
+  const lanes = proofLanesForTier(context, tier);
+  return RepoPlanStep.make({
+    ...step,
+    waves: A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) =>
+      RepoPlanWave.make({ id: wave.wave, laneIds: A.map(wave.lanes, (lane) => lane.id) })
+    ),
+  });
+};
+
+const fullProofSteps = (context: RepoRunContext, collectAll: boolean): ReadonlyArray<RepoPlanStep> => [
+  proofStep(context, "cheap-gates", true),
+  proofStep(context, "full", collectAll),
+];
+
+const repairCheapGateStep = (context: RepoRunContext): RepoPlanStep => {
+  const step = proofStep(context, "cheap-gates", true);
+  return RepoPlanStep.make({
+    ...step,
+    id: "feedback:00-cheap-gates",
+    label: "feedback:cheap-gates",
+    phase: "feedback",
+  });
 };
 
 const commitStep = (
@@ -365,26 +457,57 @@ const commitStep = (
       : ["commit", "-m", O.getOrElse(message, () => "<required-conventional-commit-message>")]
   );
 
+/**
+ * Stable plan-step identifier for the branch push, shared by both publish paths.
+ *
+ * **Details**
+ *
+ * The early-publish and ordinary publish phases both carry `publish` work, so
+ * this id — not the phase — is what proves the branch actually reached the
+ * remote.
+ *
+ * **Example** (Recognize the push step)
+ *
+ * ```ts
+ * import { GIT_PUSH_STEP_ID } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(GIT_PUSH_STEP_ID) // "publish:01-git-push"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const GIT_PUSH_STEP_ID = "publish:01-git-push" as const;
+
 // Keep local pre-push hooks (secret scanning, SAST, policy gates) active on the
 // early push: --no-verify would publish unverified content to the remote before
 // any hook could block secrets or policy violations.
 const earlyPushStep = (context: RepoRunContext): RepoPlanStep =>
-  gitStep(context, "early-publish:01-git-push", "early-publish:git:push", "early-publish", [
-    "push",
-    "-u",
-    "origin",
-    "HEAD",
-  ]);
+  gitStep(context, GIT_PUSH_STEP_ID, "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
 
 const pushStep = (context: RepoRunContext): RepoPlanStep =>
   gitStep(
     context,
-    "publish:01-git-push",
+    GIT_PUSH_STEP_ID,
     "publish:git:push",
     "publish",
     ["push", "-u", "origin", "HEAD"],
     O.some({ BEEP_YEET_REUSE_PRE_PUSH_PROOF: "1" })
   );
+
+const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["phase"]): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: HEAD_INSTALL_PREFLIGHT_STEP_ID,
+    label: "publish:head-install-preflight",
+    phase,
+    command: "bun",
+    args: ["install", "--frozen-lockfile"],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "readonly",
+    resume: "never",
+    verification: "detached-clean-temp-worktree-of-HEAD",
+  });
 
 const prCreateStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"): RepoPlanStep =>
   RepoPlanStep.make({
@@ -419,7 +542,11 @@ const monitorChecksStep = (context: RepoRunContext): RepoPlanStep =>
     label: "monitor:pr-checks:watch",
     phase: "monitor",
     command: "gh",
-    args: ["pr", "checks", "--watch"],
+    // `--fail-fast` makes the watch exit on the first failed check instead of
+    // holding a T0 red until the last pending lane ends — this repo's tails
+    // run 20-30 minutes, so without it the monitor's "exits on the first red"
+    // contract was prose, not behavior (ship-velocity A1, research/c2 §1).
+    args: ["pr", "checks", "--watch", "--fail-fast"],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "readonly",
@@ -519,6 +646,7 @@ const publishSteps = (
 ): ReadonlyArray<RepoPlanStep> =>
   options.pushOnly
     ? [
+        headInstallPreflightStep(context, "publish"),
         pushStep(context),
         ...(options.pr ? [prCreateStep(context)] : []),
         ...(options.monitor ? monitorSteps(context) : []),
@@ -527,15 +655,17 @@ const publishSteps = (
       ? [
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
+          headInstallPreflightStep(context, "early-publish"),
           earlyPushStep(context),
           ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
-          proofStep(context, "full"),
+          ...fullProofSteps(context, options.collectAll),
           ...(options.monitor ? monitorSteps(context) : []),
         ]
       : [
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
-          ...(options.fast && options.monitor ? [] : [proofStep(context, "full")]),
+          ...(options.fast && options.monitor ? [] : fullProofSteps(context, options.collectAll)),
+          headInstallPreflightStep(context, "publish"),
           pushStep(context),
           ...(options.pr ? [prCreateStep(context)] : []),
           ...(options.monitor ? monitorSteps(context) : []),
@@ -547,8 +677,14 @@ const stepsForMode = (
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> =>
   YeetRunMode.$match(options.mode, {
-    repair: () => [...repairSteps(context), ...feedbackSteps(context)],
-    verify: () => [fallowAdvisoryFeedbackStep(context), proofStep(context, options.tier)],
+    repair: () => [...repairSteps(context), repairCheapGateStep(context), ...feedbackSteps(context)],
+    verify: () => [
+      fallowAdvisoryFeedbackStep(context),
+      ...(options.tier === "full"
+        ? fullProofSteps(context, options.collectAll)
+        : [proofStep(context, options.tier, options.collectAll)]),
+      ...(options.tier === "full" ? [headInstallPreflightStep(context, "prepare")] : []),
+    ],
     publish: () => publishSteps(context, message, options),
     monitor: () => monitorSteps(context),
     closeout: () => closeoutSteps(context),
@@ -570,11 +706,8 @@ const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean)
 /**
  * Build a yeet run plan for a specific mode.
  *
- * @param context - Hydrated run context.
- * @param message - Optional conventional commit message; required by publish execution.
- * @param options - Mode selector used to choose repair, verify, or publish steps.
- * @returns Ordered repository run plan.
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import {
  *   buildYeetRunPlanWithMode,
@@ -611,6 +744,11 @@ const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean)
  *   ).steps
  * )
  * ```
+ *
+ * @param context - Hydrated run context.
+ * @param message - Optional conventional commit message; required by publish execution.
+ * @param options - Mode selector used to choose repair, verify, or publish steps.
+ * @returns Ordered repository run plan.
  * @category workflows
  * @since 0.0.0
  */
@@ -632,10 +770,8 @@ export const buildYeetRunPlanWithMode: {
 /**
  * Build the publish-mode yeet run plan.
  *
- * @param context - Hydrated run context.
- * @param message - Optional conventional commit message; omitted only for plan mode.
- * @returns Ordered repository run plan.
- * @example
+ * **Example** (Plan a Yeet run)
+ *
  * ```ts
  * import { buildYeetRunPlan, RepoRunContext, TurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
@@ -652,6 +788,10 @@ export const buildYeetRunPlanWithMode: {
  * })
  * console.log(buildYeetRunPlan(context, O.some("feat(repo-cli): add yeet")))
  * ```
+ *
+ * @param context - Hydrated run context.
+ * @param message - Optional conventional commit message; omitted only for plan mode.
+ * @returns Ordered repository run plan.
  * @category workflows
  * @since 0.0.0
  */

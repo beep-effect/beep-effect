@@ -8,7 +8,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { AlignmentStatus } from "@beep/langextract/Extraction";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -18,7 +18,8 @@ const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.errors");
  * Machine-readable reasons for rejecting span-bearing extraction output before
  * it becomes law-practice entities.
  *
- * @example
+ * **Example** (Decode extraction error reason)
+ *
  * ```ts
  * import { IrToLawExtractionErrorReason } from "@beep/law-practice-use-cases/IrToLaw"
  * import * as S from "effect/Schema"
@@ -44,7 +45,8 @@ export const IrToLawExtractionErrorReason = LiteralKit([
 /**
  * Type for {@link IrToLawExtractionErrorReason}.
  *
- * @example
+ * **Example** (Map reasons to labels)
+ *
  * ```ts
  * import type { IrToLawExtractionErrorReason } from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -65,7 +67,8 @@ export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.T
  * Failure raised when required office-action extraction output is missing or
  * lacks a source-grounded span needed for legal evidence.
  *
- * @example
+ * **Example** (Catch extraction error reason)
+ *
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { Effect } from "effect"
@@ -85,7 +88,7 @@ export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.T
  * @category errors
  * @since 0.0.0
  */
-export class IrToLawExtractionError extends TaggedErrorClass<IrToLawExtractionError>($I`IrToLawExtractionError`)(
+export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError>($I`IrToLawExtractionError`)(
   "IrToLawExtractionError",
   {
     alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
@@ -101,7 +104,7 @@ export class IrToLawExtractionError extends TaggedErrorClass<IrToLawExtractionEr
       description: "Machine-readable reason for rejecting the extraction output.",
     }),
   },
-  $I.annote("IrToLawExtractionError", {
+  $I.annoteError<IrToLawExtractionError>("IrToLawExtractionError", {
     description: "Sanitized failure emitted when office-action extraction output cannot be grounded.",
   })
 ) {

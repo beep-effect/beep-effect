@@ -1,13 +1,18 @@
 /**
  * Namespace-first public module for reusable Duration schemas.
  *
- * @example
+ * **When to use**
+ *
+ * Use as the namespace-first entry point for duration schemas and aliases.
+ *
+ * **Example** (Decode from the Duration namespace)
+ *
  * ```ts
  * import * as Duration from "@beep/schema/Duration"
  * import * as S from "effect/Schema"
  *
- * const decode = S.decodeUnknownEffect(Duration.FromInput)
- * console.log(decode)
+ * const decode = S.decodeUnknownSync(Duration.FromInput)
+ * console.log(decode("5 minutes"))
  * ```
  *
  * @packageDocumentation

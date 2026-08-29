@@ -6,10 +6,11 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, Exit } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { NextResponse } from "next/server";
 import { ContactSubmissionResponse, contactSubmissionPayloadFromFormDataEffect, submitContact } from "../../../contact";
 import type { ContactSubmissionPayload } from "../../../contact";
@@ -26,12 +27,27 @@ const ContactRoutePayloadErrorReason = LiteralKit(["form-data", "schema"]).pipe(
 
 type ContactRoutePayloadErrorReason = typeof ContactRoutePayloadErrorReason.Type;
 
-class ContactRoutePayloadError extends TaggedErrorClass<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
+/**
+ * Typed failure raised when the OIP contact route cannot decode a form payload.
+ *
+ * **Example** (Create a schema payload failure)
+ *
+ * ```ts
+ * import { ContactRoutePayloadError } from "@/app/api/contact/ContactRouteResponse"
+ *
+ * const error = ContactRoutePayloadError.fromReason("schema")
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ContactRoutePayloadError extends S.TaggedError<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
   "ContactRoutePayloadError",
   {
     reason: ContactRoutePayloadErrorReason,
   },
-  $I.annote("ContactRoutePayloadError", {
+  $I.annoteError<ContactRoutePayloadError>("ContactRoutePayloadError", {
     description: "Typed OIP contact route form payload failure.",
   })
 ) {
@@ -66,7 +82,8 @@ const readContactFormPayload = Effect.fn("OipContact.readContactFormPayload")(fu
 /**
  * Builds an OIP form-post redirect response using an injected contact workflow.
  *
- * @example
+ * **Example** (Running with injected submit)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { ContactSubmissionResponse } from "@beep/oip-web/contact"
@@ -111,7 +128,8 @@ export const contactRequestResponseWithSubmit: {
 /**
  * Builds an OIP contact route response inside an Effect runtime.
  *
- * @example
+ * **Example** (Running contact request program)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import {

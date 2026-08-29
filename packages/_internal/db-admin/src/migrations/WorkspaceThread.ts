@@ -7,12 +7,17 @@
  */
 
 import { DbSchema as WorkspaceDbSchema } from "@beep/workspace-tables";
-import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
+import { TABLE_NAME as MESSAGE_TABLE_NAME } from "@beep/workspace-tables/entities/Message";
+import { TABLE_NAME as THREAD_TABLE_NAME } from "@beep/workspace-tables/entities/Thread";
+import { TABLE_NAME as TURN_TABLE_NAME } from "@beep/workspace-tables/entities/Turn";
+import { TABLE_NAME as WORKSPACE_TABLE_NAME } from "@beep/workspace-tables/entities/Workspace";
+import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
  * Workspace thread migration target used to prove conversation persistence.
  *
- * @example
+ * **Example** (Log migration target tables)
+ *
  * ```ts
  * import { WorkspaceThreadMigrationTarget } from "@beep/db-admin/migrations/WorkspaceThread"
  *
@@ -25,12 +30,7 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
 export const WorkspaceThreadMigrationTarget: DbAdminMigrationTarget = DbAdminMigrationTarget.make({
   name: "workspace-thread",
   schemaName: "workspace",
-  tables: [
-    WorkspaceDbSchema.workspace.definition.tableName,
-    WorkspaceDbSchema.thread.definition.tableName,
-    WorkspaceDbSchema.turn.definition.tableName,
-    WorkspaceDbSchema.message.definition.tableName,
-  ],
+  tables: [WORKSPACE_TABLE_NAME, THREAD_TABLE_NAME, TURN_TABLE_NAME, MESSAGE_TABLE_NAME],
   drizzleSchema: {
     message: WorkspaceDbSchema.message,
     thread: WorkspaceDbSchema.thread,

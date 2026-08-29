@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "ontology-lifecycle-qa",
+    "title": "Ontology Lifecycle QA",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when shape-induction / SHACL lifecycle work is pulled onto the roadmap; versioned induced shapes with triple-level witnesses land here."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-17",
+    "updated": "2026-08-17"
+  }
+}

@@ -8,7 +8,8 @@
 /**
  * Thread row converter exports.
  *
- * @example
+ * **Example** (Import converter exports)
+ *
  * ```ts
  * import * as Thread from "@beep/workspace-tables/entities/Thread"
  *
@@ -22,11 +23,12 @@ export * from "./Thread.converters.ts";
 /**
  * Thread table exports.
  *
- * @example
+ * **Example** (Import table exports)
+ *
  * ```ts
  * import * as Thread from "@beep/workspace-tables/entities/Thread"
  *
- * console.log(Thread.Table.definition.entityId.entityType)
+ * console.log(Thread.TABLE_NAME)
  * ```
  *
  * @category tables

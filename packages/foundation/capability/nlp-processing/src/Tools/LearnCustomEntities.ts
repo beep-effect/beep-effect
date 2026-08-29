@@ -76,11 +76,14 @@ class LearnCustomEntitiesSuccess extends S.Class<LearnCustomEntitiesSuccess>($I`
  * Defines the agent-facing tool contract for learning custom entity patterns
  * that augment built-in entity extraction.
  *
+ * **Details**
+ *
  * Use this tool before `ExtractEntities` when a domain needs bracket-token
  * patterns such as `[PROPN]`, `[CARDINAL]`, or `[$]` to identify custom labels.
  *
- * @example
- * ```ts
+ * **Example** (Decode custom entity parameters)
+ *
+ * ```ts import.meta.vitest name="Decode custom entity parameters"
  * import * as S from "effect/Schema"
  * import { LearnCustomEntities } from "@beep/nlp-processing/Tools/LearnCustomEntities"
  *

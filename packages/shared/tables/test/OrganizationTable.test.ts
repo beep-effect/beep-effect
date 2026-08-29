@@ -1,4 +1,6 @@
+import { Membership, User } from "@beep/shared-tables/entities";
 import * as Organization from "@beep/shared-tables/entities/Organization";
+import { DbSchema } from "@beep/shared-tables/Schema";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
@@ -13,11 +15,18 @@ const indexConfigNamed = (name: string) =>
   );
 
 describe("OrganizationTable", () => {
+  it("aggregates every shared table under its stable schema key", () => {
+    expect(DbSchema.organization).toBe(Organization.Table);
+    expect(DbSchema.membership).toBe(Membership.Table);
+    expect(DbSchema.user).toBe(User.Table);
+    expect(getTableConfig(Membership.Table).name).toBe("shared_membership");
+    expect(getTableConfig(User.Table).name).toBe("shared_user");
+  });
+
   it("materializes shared Organization metadata without executing a live database", () => {
     const columns = getColumns(Organization.Table);
     const config = getTableConfig(Organization.Table);
 
-    expect(Organization.Table.definition.tableName).toBe("shared_organization");
     expect(config.name).toBe("shared_organization");
     expect(columns.id.name).toBe("id");
     expect(columns.id.primary).toBe(true);

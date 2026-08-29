@@ -184,7 +184,7 @@ describe("@beep/chalk", () => {
     ] as const;
 
     for (const schema of schemas) {
-      const arbitrary = S.toArbitrary(schema);
+      const arbitrary = S.toArbitrary(schema)(fc);
       const decode = S.decodeSync(schema);
       const encode = S.encodeSync(schema);
 
@@ -201,74 +201,98 @@ describe("@beep/chalk", () => {
 describe("supportsColor detection", () => {
   it("honors force-color, no-color, tty, and CI rules", () => {
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { TERM: "xterm-256color" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { TERM: "xterm-256color" } },
+        stream: { isTTY: true },
+      })
     ).toMatchObject({ level: 2 });
 
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { FORCE_COLOR: "3", NO_COLOR: "" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "3", NO_COLOR: "" } },
+        stream: { isTTY: true },
+      })
     ).toMatchObject({ level: 3 });
 
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { NO_COLOR: "1", TERM: "xterm-256color" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { NO_COLOR: "1", TERM: "xterm-256color" } },
+        stream: { isTTY: true },
+      })
     ).toBe(false);
 
     expect(
-      createSupportsColor(
-        { isTTY: false },
-        {},
-        {
-          env: { FORCE_COLOR: "2", NO_COLOR: "1" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "2", NO_COLOR: "1" } },
+        stream: { isTTY: false },
+      })
     ).toMatchObject({ level: 2 });
 
     expect(
-      createSupportsColor(
-        { isTTY: false },
-        {},
-        {
-          env: { FORCE_COLOR: "definitely-not-a-level" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "definitely-not-a-level" } },
+        stream: { isTTY: false },
+      })
     ).toBe(false);
 
     expect(
-      createSupportsColor(
-        { isTTY: false },
-        {},
-        {
-          env: { FORCE_COLOR: "2" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { FORCE_COLOR: "2" } },
+        stream: { isTTY: false },
+      })
     ).toMatchObject({ level: 2 });
 
     expect(
-      createSupportsColor(
-        { isTTY: true },
-        {},
-        {
-          env: { CI: "1", GITHUB_ACTIONS: "1" },
-        }
-      )
+      createSupportsColor({
+        runtimeProcessLike: { env: { CI: "1", GITHUB_ACTIONS: "1" } },
+        stream: { isTTY: true },
+      })
     ).toMatchObject({ level: 3 });
+  });
+
+  it("covers platform, flag, and terminal-specific rules with explicit runtime fixtures", () => {
+    const detect = (
+      env: Readonly<Record<string, string | undefined>>,
+      options: {
+        readonly argv?: ReadonlyArray<string>;
+        readonly osRelease?: string;
+        readonly platform?: string;
+        readonly sniffFlags?: boolean;
+      } = {}
+    ) =>
+      createSupportsColor({
+        options: options.sniffFlags === undefined ? {} : { sniffFlags: options.sniffFlags },
+        runtimeProcessLike: {
+          argv: options.argv ?? [],
+          env,
+          platform: options.platform ?? "linux",
+          ...(options.osRelease === undefined ? {} : { osRelease: options.osRelease }),
+        },
+        stream: { isTTY: true },
+      });
+
+    expect(detect({}, { argv: ["--no-color"] })).toBe(false);
+    expect(detect({}, { argv: ["--color"] })).toMatchObject({ level: 1 });
+    expect(detect({}, { argv: ["--color=256"] })).toMatchObject({ level: 2 });
+    expect(detect({}, { argv: ["--color=16m"] })).toMatchObject({ level: 3 });
+    expect(detect({}, { argv: ["--", "--color"] })).toBe(false);
+    expect(detect({}, { argv: ["--color"], sniffFlags: false })).toBe(false);
+    expect(detect({ TF_BUILD: "1", AGENT_NAME: "agent" })).toMatchObject({ level: 1 });
+    expect(detect({ TERM: "dumb" })).toBe(false);
+    expect(detect({}, { platform: "win32", osRelease: "10.0.10586" })).toMatchObject({ level: 2 });
+    expect(detect({}, { platform: "win32", osRelease: "10.0.14931" })).toMatchObject({ level: 3 });
+    expect(detect({}, { platform: "win32", osRelease: "6.1.7601" })).toMatchObject({ level: 1 });
+    expect(detect({ CI: "1", TRAVIS: "1" })).toMatchObject({ level: 1 });
+    expect(detect({ CI: "1", CI_NAME: "codeship" })).toMatchObject({ level: 1 });
+    expect(detect({ TEAMCITY_VERSION: "9.1.0" })).toMatchObject({ level: 1 });
+    expect(detect({ TEAMCITY_VERSION: "9.0.0" })).toBe(false);
+    expect(detect({ COLORTERM: "truecolor" })).toMatchObject({ level: 3 });
+    expect(detect({ TERM: "xterm-kitty" })).toMatchObject({ level: 3 });
+    expect(detect({ TERM_PROGRAM: "iTerm.app", TERM_PROGRAM_VERSION: "3.5.0" })).toMatchObject({ level: 3 });
+    expect(detect({ TERM_PROGRAM: "iTerm.app", TERM_PROGRAM_VERSION: "2.9.0" })).toMatchObject({ level: 2 });
+    expect(detect({ TERM_PROGRAM: "Apple_Terminal" })).toMatchObject({ level: 2 });
+    expect(detect({ TERM: "xterm-256color" })).toMatchObject({ level: 2 });
+    expect(detect({ TERM: "xterm" })).toMatchObject({ level: 1 });
   });
 });
 

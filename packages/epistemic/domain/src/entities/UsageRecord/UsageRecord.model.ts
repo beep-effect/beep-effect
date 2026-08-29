@@ -6,15 +6,14 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import * as BaseEntitySchema from "@beep/shared-domain/entity/BaseEntity";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/UsageRecord/UsageRecord.model");
+const pg = ProductEntity.pg;
 const UsageModelName = S.NonEmptyString.pipe(
   $I.annoteSchema("UsageModelName", {
     description: "Non-empty model name recorded for usage attribution.",
@@ -31,7 +30,8 @@ const UsageProviderName = S.NonEmptyString.pipe(
 /**
  * Append-only usage attribution for model, tool, or agent work.
  *
- * @example
+ * **Example** (Decode UsageRecord schema)
+ *
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -68,61 +68,32 @@ const UsageProviderName = S.NonEmptyString.pipe(
  * @category entities
  * @since 0.0.0
  */
-export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
-  Epistemic.UsageRecordId,
+export class UsageRecord extends ProductEntity.Entity<UsageRecord>()(Epistemic.UsageRecordId)(
   {
-    fields: {
-      activityId: Epistemic.ActivityId,
-      actor: Principal,
-      costUsdApproxMicros: NonNegativeInt.pipe(S.OptionFromNullOr),
-      credentialReference: OnePasswordReference.pipe(S.OptionFromNullOr),
-      inputTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      latencyMillis: NonNegativeInt.pipe(S.OptionFromNullOr),
-      metadata: UnknownRecord,
-      model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }),
-      outputTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      provider: UsageProviderName.annotateKey({ description: "Provider name recorded for usage attribution." }),
-      totalTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      unitCount: NonNegativeInt.pipe(S.OptionFromNullOr),
-    },
-    persisted: {
-      activityId: EntitySchema.persist.entityId({
-        columnName: "activity_id",
-      }),
-      actor: EntitySchema.persist.jsonb({
-        columnName: "actor",
-      }),
-      costUsdApproxMicros: EntitySchema.persist.int({
-        columnName: "cost_usd_approx_micros",
-      }),
-      credentialReference: EntitySchema.persist.text({
-        columnName: "credential_reference",
-      }),
-      inputTokens: EntitySchema.persist.int({
-        columnName: "input_tokens",
-      }),
-      latencyMillis: EntitySchema.persist.int({
-        columnName: "latency_millis",
-      }),
-      metadata: EntitySchema.persist.jsonb({
-        columnName: "metadata",
-      }),
-      model: EntitySchema.persist.text({
-        columnName: "model",
-      }),
-      outputTokens: EntitySchema.persist.int({
-        columnName: "output_tokens",
-      }),
-      provider: EntitySchema.persist.text({
-        columnName: "provider",
-      }),
-      totalTokens: EntitySchema.persist.int({
-        columnName: "total_tokens",
-      }),
-      unitCount: EntitySchema.persist.int({
-        columnName: "unit_count",
-      }),
-    },
+    activityId: Epistemic.ActivityId.pipe(S.OptionFromNullOr)
+      .annotateKey({
+        description: "Optional persisted provenance Activity link; encoded absence is SQL and JSON null.",
+      })
+      .pipe(pg.integer(), pg.columnName("activity_id")),
+    actor: Principal.pipe(pg.jsonb()),
+    costUsdApproxMicros: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("cost_usd_approx_micros")),
+    credentialReference: OnePasswordReference.pipe(
+      S.OptionFromNullOr,
+      pg.text(),
+      pg.columnName("credential_reference")
+    ),
+    inputTokens: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("input_tokens")),
+    latencyMillis: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("latency_millis")),
+    metadata: UnknownRecord.pipe(pg.jsonb()),
+    model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }).pipe(
+      pg.text()
+    ),
+    outputTokens: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("output_tokens")),
+    provider: UsageProviderName.annotateKey({ description: "Provider name recorded for usage attribution." }).pipe(
+      pg.text()
+    ),
+    totalTokens: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("total_tokens")),
+    unitCount: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("unit_count")),
   },
   $I.annote("UsageRecord", {
     description: "Append-only usage attribution record linked to an epistemic Activity.",
@@ -132,7 +103,8 @@ export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
 /**
  * Boundary command for appending turn-finalization usage attribution.
  *
- * @example
+ * **Example** (Decode turn finalization append)
+ *
  * ```ts
  * import { TurnFinalizationUsageAppend } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
@@ -171,7 +143,7 @@ export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
  */
 export class TurnFinalizationUsageAppend extends S.Class<TurnFinalizationUsageAppend>($I`TurnFinalizationUsageAppend`)(
   {
-    ...BaseEntitySchema.fields,
+    ...ProductEntity.fields,
     ...UsageRecord.fields,
     entityType: S.tag(Epistemic.UsageRecordId.entityType),
     id: Epistemic.UsageRecordId,
@@ -184,7 +156,8 @@ export class TurnFinalizationUsageAppend extends S.Class<TurnFinalizationUsageAp
 /**
  * Build the {@link UsageRecord} appended for a finalized turn.
  *
- * @example
+ * **Example** (Build usage from append)
+ *
  * ```ts
  * import { TurnFinalizationUsageAppend, appendTurnFinalizationUsageRecord } from "@beep/epistemic-domain"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"

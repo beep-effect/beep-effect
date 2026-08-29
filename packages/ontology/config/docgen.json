@@ -27,35 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/ontology-config": [
-        "../../../packages/ontology/config/src/index.ts"
-      ],
-      "@beep/ontology-config/public": [
-        "../../../packages/ontology/config/src/public.ts"
-      ],
-      "@beep/ontology-config/server": [
-        "../../../packages/ontology/config/src/server.ts"
-      ],
-      "@beep/ontology-config/secrets": [
-        "../../../packages/ontology/config/src/secrets.ts"
-      ],
-      "@beep/ontology-config/layer": [
-        "../../../packages/ontology/config/src/layer.ts"
-      ],
-      "@beep/ontology-config/test": [
-        "../../../packages/ontology/config/src/test.ts"
-      ],
-      "@beep/identity": [
-        "../../../packages/foundation/modeling/identity/src/index.ts"
-      ],
-      "@beep/identity/*": [
-        "../../../packages/foundation/modeling/identity/src/*.ts"
-      ],
-      "@beep/identity/packages": [
-        "../../../packages/foundation/modeling/identity/src/packages.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

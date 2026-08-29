@@ -29,7 +29,8 @@ const FirecrawlApiUrlBase = S.String.check(URLStr.filter).check(hasNoTrailingSla
 /**
  * Firecrawl API base URL decoded by the driver configuration schema.
  *
- * @example
+ * **Example** (Decode Firecrawl API URL)
+ *
  * ```ts
  * import { FirecrawlApiUrl } from "@beep/firecrawl"
  * import * as S from "effect/Schema"
@@ -58,7 +59,8 @@ export const FirecrawlApiUrl = S.String.pipe(
 /**
  * Type for {@link FirecrawlApiUrl}.
  *
- * @example
+ * **Example** (Type annotate API URL)
+ *
  * ```ts
  * import type { FirecrawlApiUrl } from "@beep/firecrawl"
  *
@@ -92,7 +94,8 @@ const FirecrawlTimeoutMs = S.Int.check(isPositive).pipe(
 /**
  * Default Firecrawl API base URL used by the live driver layer.
  *
- * @example
+ * **Example** (Log default API URL)
+ *
  * ```ts
  * import { FIRECRAWL_API_URL } from "@beep/firecrawl"
  *
@@ -107,7 +110,8 @@ export const FIRECRAWL_API_URL = "https://api.firecrawl.dev";
 /**
  * Runtime configuration accepted by {@link Firecrawl.makeLayer}.
  *
- * @example
+ * **Example** (Make config with API key)
+ *
  * ```ts
  * import { Redacted } from "effect"
  * import { FirecrawlConfigInput } from "@beep/firecrawl"

@@ -7,24 +7,29 @@ import { Effect, FileSystem } from "effect";
 const identityRegistrationPath = fileURLToPath(
   new URL("../src/commands/CreatePackage/internal/IdentityRegistration.ts", import.meta.url)
 );
+const identityExportBlockPath = fileURLToPath(
+  new URL("../src/commands/CreatePackage/internal/IdentityExportBlock.ts", import.meta.url)
+);
 
 describe("create-package identity template", () => {
-  it.effect("keeps the identity registration template aligned with @beep/identity's generated surface", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps the identity registration template aligned with @beep/identity's generated surface",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const identityRegistrationSource = yield* fs.readFileString(identityRegistrationPath);
+      const identityExportBlockSource = yield* fs.readFileString(identityExportBlockPath);
 
       expect(identityRegistrationSource).toContain('const IDENTITY_PACKAGE_NAME = "@beep/identity" as const;');
-      expect(identityRegistrationSource).toContain(
+      expect(identityExportBlockSource).toContain(
         "const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCase(packageName)}Id`;"
       );
-      expect(identityRegistrationSource).toContain('` * import { ${accessorName} } from "@beep/identity"`');
-      expect(identityRegistrationSource).toContain(
+      expect(identityExportBlockSource).toContain('` * import { ${accessorName} } from "@beep/identity"`');
+      expect(identityExportBlockSource).toContain(
         '`export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = composers.${accessorName};`'
       );
       expect(identityRegistrationSource).toContain(
         'sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers")'
       );
-    }).pipe(provideScopedLayer(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 });

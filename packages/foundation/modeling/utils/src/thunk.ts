@@ -7,14 +7,15 @@
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
+import * as R from "./Record.ts";
 
 type LazyArg<A> = () => A;
 
 /**
  * Creates a thunk that always returns the provided value.
  *
- * @example
+ * **Example** (Constant value thunk)
+ *
  * ```ts
  * import { thunk } from "@beep/utils/thunk"
  *
@@ -36,7 +37,8 @@ export const thunk =
 /**
  * A thunk that always yields `null`.
  *
- * @example
+ * **Example** (Always returns null)
+ *
  * ```ts
  * import { thunkNull } from "@beep/utils/thunk"
  *
@@ -54,7 +56,8 @@ export const thunkNull = thunk(null);
 /**
  * A thunk that always yields `undefined`.
  *
- * @example
+ * **Example** (Always returns undefined)
+ *
  * ```ts
  * import { thunkUndefined } from "@beep/utils/thunk"
  *
@@ -72,7 +75,8 @@ export const thunkUndefined = thunk(undefined);
 /**
  * A thunk that always yields `void 0` (equivalent to `undefined`).
  *
- * @example
+ * **Example** (Always returns void)
+ *
  * ```ts
  * import { thunkVoid } from "@beep/utils/thunk"
  *
@@ -90,7 +94,8 @@ export const thunkVoid = thunk(void 0);
 /**
  * A thunk that always yields `true`.
  *
- * @example
+ * **Example** (Always returns true)
+ *
  * ```ts
  * import { thunkTrue } from "@beep/utils/thunk"
  *
@@ -108,7 +113,8 @@ export const thunkTrue = thunk(true as const);
 /**
  * A thunk that always yields `false`.
  *
- * @example
+ * **Example** (Always returns false)
+ *
  * ```ts
  * import { thunkFalse } from "@beep/utils/thunk"
  *
@@ -126,7 +132,8 @@ export const thunkFalse = thunk(false as const);
 /**
  * A thunk that always yields the empty string.
  *
- * @example
+ * **Example** (Always returns empty string)
+ *
  * ```ts
  * import { thunkEmptyStr } from "@beep/utils/thunk"
  *
@@ -144,7 +151,8 @@ export const thunkEmptyStr = thunk("");
 /**
  * A thunk that always yields `0`.
  *
- * @example
+ * **Example** (Always returns zero)
+ *
  * ```ts
  * import { thunk0 } from "@beep/utils/thunk"
  *
@@ -162,7 +170,8 @@ export const thunk0 = thunk(0);
 /**
  * A thunk that always yields `1`.
  *
- * @example
+ * **Example** (Always returns one)
+ *
  * ```ts
  * import { thunk1 } from "@beep/utils/thunk"
  *
@@ -180,7 +189,8 @@ export const thunk1 = thunk(1);
 /**
  * Returns a thunk that yields a fresh empty mutable array on each call.
  *
- * @example
+ * **Example** (Fresh empty mutable array)
+ *
  * ```ts
  * import { thunkEmptyArray } from "@beep/utils/thunk"
  *
@@ -199,7 +209,8 @@ export const thunkEmptyArray = <A = never>(): LazyArg<Array<A>> => A.empty<A>;
 /**
  * Returns a thunk that yields a fresh empty readonly array on each call.
  *
- * @example
+ * **Example** (Fresh empty readonly array)
+ *
  * ```ts
  * import { thunkEmptyReadonlyArray } from "@beep/utils/thunk"
  *
@@ -218,7 +229,8 @@ export const thunkEmptyReadonlyArray = <A = never>(): LazyArg<ReadonlyArray<A>> 
 /**
  * Lifts an Effect value into a thunk that returns it unchanged.
  *
- * @example
+ * **Example** (Lift Effect into thunk)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { thunkEffect } from "@beep/utils/thunk"
@@ -237,7 +249,8 @@ export const thunkEffect = <T>(effect: T) => thunk(effect);
 /**
  * A thunk that returns `Effect.void`.
  *
- * @example
+ * **Example** (Thunk of Effect.void)
+ *
  * ```ts
  * import { thunkEffectVoid } from "@beep/utils/thunk"
  *
@@ -256,7 +269,8 @@ export const thunkEffectVoid = (..._: ReadonlyArray<unknown>) => Effect.void;
 /**
  * Creates a thunk that returns `Effect.succeed(a)`.
  *
- * @example
+ * **Example** (Thunk of Effect.succeed)
+ *
  * ```ts
  * import { thunkEffectSucceed } from "@beep/utils/thunk"
  *
@@ -276,7 +290,8 @@ export const thunkEffectSucceed = <A>(a: A) => thunkEffect(Effect.succeed(a));
 /**
  * A thunk that returns `Effect.succeed(null)`.
  *
- * @example
+ * **Example** (Effect succeeding with null)
+ *
  * ```ts
  * import { thunkEffectSucceedNull } from "@beep/utils/thunk"
  * import { Effect } from "effect"
@@ -296,7 +311,8 @@ export const thunkEffectSucceedNull = (..._: ReadonlyArray<unknown>) => Effect.s
 /**
  * Returns `Effect.succeed(Option.none())`.
  *
- * @example
+ * **Example** (Effect succeeding with none)
+ *
  * ```ts
  * import { thunkEffectSucceedNone } from "@beep/utils/thunk"
  *
@@ -315,7 +331,8 @@ export const thunkEffectSucceedNone = <A = never>(..._: ReadonlyArray<unknown>) 
 /**
  * Returns a thunk that yields an empty record.
  *
- * @example
+ * **Example** (Empty typed record thunk)
+ *
  * ```ts
  * import { thunkEmptyRecord } from "@beep/utils/thunk"
  *
@@ -330,9 +347,33 @@ export const thunkEffectSucceedNone = <A = never>(..._: ReadonlyArray<unknown>) 
 export const thunkEmptyRecord = <K extends string | symbol = never, V = never>() => R.empty<K, V>();
 
 /**
+ * A thunk that yields a fresh typed empty readonly record.
+ *
+ * **Example** (Empty readonly record fallback)
+ *
+ * ```ts
+ * import { O, R, thunkEmptyReadonlyRecord } from "@beep/utils"
+ *
+ * const value = O.getOrElse(
+ *   O.none<R.ReadonlyRecord<string, number>>(),
+ *   thunkEmptyReadonlyRecord
+ * )
+ * console.log(value) // {}
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const thunkEmptyReadonlyRecord = <K extends string | symbol = never, V = never>(): R.ReadonlyRecord<
+  R.ReadonlyRecord.NonLiteralKey<K>,
+  V
+> => R.emptyReadonly<K, V>();
+
+/**
  * Creates a thunk that yields `Option.some(value)`.
  *
- * @example
+ * **Example** (Thunk of Option.some)
+ *
  * ```ts
  * import { thunkSome } from "@beep/utils/thunk"
  *
@@ -354,7 +395,8 @@ export const thunkSome =
 /**
  * A thunk yielding `Option.some("")`.
  *
- * @example
+ * **Example** (Option.some empty string)
+ *
  * ```ts
  * import { thunkSomeEmptyStr } from "@beep/utils/thunk"
  *
@@ -372,7 +414,8 @@ export const thunkSomeEmptyStr = thunkSome("");
 /**
  * A thunk yielding `-1`.
  *
- * @example
+ * **Example** (Always returns negative one)
+ *
  * ```ts
  * import { thunkNegative1 } from "@beep/utils/thunk"
  *
@@ -390,7 +433,8 @@ export const thunkNegative1 = thunk(-1);
 /**
  * A thunk yielding `Option.some(false)`.
  *
- * @example
+ * **Example** (Option.some false)
+ *
  * ```ts
  * import { thunkSomeFalse } from "@beep/utils/thunk"
  *
@@ -408,7 +452,8 @@ export const thunkSomeFalse = thunkSome(false);
 /**
  * A thunk yielding `Option.some(true)`.
  *
- * @example
+ * **Example** (Option.some true)
+ *
  * ```ts
  * import { thunkSomeTrue } from "@beep/utils/thunk"
  *
@@ -426,7 +471,8 @@ export const thunkSomeTrue = thunkSome(true as const);
 /**
  * Returns a thunk yielding `Option.some([])`.
  *
- * @example
+ * **Example** (Option.some empty array)
+ *
  * ```ts
  * import { thunkSomeEmptyArray } from "@beep/utils/thunk"
  *
@@ -444,7 +490,8 @@ export const thunkSomeEmptyArray = <A = never>() => O.some(A.empty<A>());
 /**
  * Returns a thunk yielding `Option.some({})`.
  *
- * @example
+ * **Example** (Option.some empty record)
+ *
  * ```ts
  * import { thunkSomeEmptyRecord } from "@beep/utils/thunk"
  *
@@ -462,10 +509,13 @@ export const thunkSomeEmptyRecord = <K extends string | symbol = never, V = neve
 /**
  * Returns a thunk yielding `Option.some(Option.none())`.
  *
+ * **Details**
+ *
  * Useful for representing an explicitly-set "empty" value inside a nested
  * `Option` structure.
  *
- * @example
+ * **Example** (Nested Option.some none)
+ *
  * ```ts
  * import { thunkSomeNone } from "@beep/utils/thunk"
  *
@@ -483,10 +533,13 @@ export const thunkSomeNone = <A>(): O.Option<O.Option<A>> => O.some(O.none<A>())
 /**
  * Returns a thunk yielding `Result.failVoid`.
  *
+ * **Details**
+ *
  * Useful for representing an explicitly-set "empty" value inside a nested
  * `Result` structure.
  *
- * @example
+ * **Example** (Result.failVoid thunk)
+ *
  * ```ts
  * import { thunkResultFailVoid } from "@beep/utils/thunk"
  *

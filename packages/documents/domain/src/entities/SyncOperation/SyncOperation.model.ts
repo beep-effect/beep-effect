@@ -6,148 +6,27 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { NonNegativeInt } from "@beep/schema";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
+import { SyncOperationId } from "@beep/shared-domain/identity/Documents/SyncOperationId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import { DocumentContentDigest } from "../../aggregates/Document/index.js";
-import * as Documents from "../../identity/Documents.js";
-import { DmsProvider, VaultRelPath } from "../../values/Sync/index.js";
+import { DocumentContentDigest } from "../../aggregates/Document/index.ts";
+import { DmsProvider, VaultRelPath } from "../../values/Sync/index.ts";
+import { SyncOperationStatus, SyncOperationType } from "./SyncOperation.values.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncOperation/SyncOperation.model");
-
-/**
- * Entity identifier for a persisted documents SyncOperation.
- *
- * @example
- * ```ts
- * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/entities/SyncOperation"
- * import * as S from "effect/Schema"
- *
- * const id: SyncOperationIdValue = S.decodeUnknownSync(SyncOperationId)(1)
- *
- * if (id !== 1 || SyncOperationId.tableName !== "documents_sync_operation") {
- *   throw new Error("expected decoded SyncOperation id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncOperationId = Documents.SyncOperationId;
-
-/**
- * Runtime type for {@link SyncOperationId}.
- *
- * @example
- * ```ts
- * import { SyncOperationId, type SyncOperationId as SyncOperationIdValue } from "@beep/documents-domain/entities/SyncOperation"
- * import * as S from "effect/Schema"
- *
- * const id: SyncOperationIdValue = S.decodeUnknownSync(SyncOperationId)(1)
- * const ids: ReadonlyArray<SyncOperationIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncOperation id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncOperationId = typeof SyncOperationId.Type;
-
-/**
- * Kind of one-way push performed against the DMS mirror.
- *
- * @example
- * ```ts
- * import { SyncOperationType } from "@beep/documents-domain/entities/SyncOperation"
- *
- * const operationType: SyncOperationType = SyncOperationType.Enum.uploadFile
- *
- * if (!SyncOperationType.is.uploadFile(operationType)) {
- *   throw new Error("expected uploadFile operation type")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export const SyncOperationType = LiteralKit([
-  "createFolder",
-  "uploadFile",
-  "uploadFileVersion",
-  "moveItem",
-  "renameItem",
-]).pipe(
-  $I.annoteSchema("SyncOperationType", {
-    description: "Kind of one-way push performed against the DMS mirror.",
-  })
-);
-
-/**
- * Runtime type for {@link SyncOperationType}.
- *
- * @example
- * ```ts
- * import type { SyncOperationType } from "@beep/documents-domain/entities/SyncOperation"
- *
- * const operationType: SyncOperationType = "createFolder"
- * console.log(operationType)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export type SyncOperationType = typeof SyncOperationType.Type;
-
-/**
- * Outbox lifecycle status for a queued push operation.
- *
- * @example
- * ```ts
- * import { SyncOperationStatus } from "@beep/documents-domain/entities/SyncOperation"
- *
- * const status: SyncOperationStatus = SyncOperationStatus.Enum.queued
- *
- * if (!SyncOperationStatus.is.queued(status)) {
- *   throw new Error("expected queued operation status")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export const SyncOperationStatus = LiteralKit(["queued", "leased", "succeeded", "failed"]).pipe(
-  $I.annoteSchema("SyncOperationStatus", {
-    description: "Outbox lifecycle status for a queued push operation.",
-  })
-);
-
-/**
- * Runtime type for {@link SyncOperationStatus}.
- *
- * @example
- * ```ts
- * import type { SyncOperationStatus } from "@beep/documents-domain/entities/SyncOperation"
- *
- * const status: SyncOperationStatus = "succeeded"
- * console.log(status)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export type SyncOperationStatus = typeof SyncOperationStatus.Type;
+const pg = ProductEntity.pg;
 
 /**
  * Durable one-way push outbox operation from the local vault to the DMS mirror.
  *
- * @example
+ * **Example** (Decode SyncOperation entity)
+ *
  * ```ts
- * import { SyncOperation, SyncOperationId } from "@beep/documents-domain/entities/SyncOperation"
+ * import { SyncOperation } from "@beep/documents-domain/entities/SyncOperation"
+ * import { SyncOperationId } from "@beep/shared-domain/identity/Documents/SyncOperationId"
  * import * as S from "effect/Schema"
  *
  * const operation = S.decodeUnknownSync(SyncOperation)({
@@ -182,95 +61,55 @@ export type SyncOperationStatus = typeof SyncOperationStatus.Type;
  * @category entities
  * @since 0.0.0
  */
-export class SyncOperation extends BaseEntity.Class<SyncOperation>($I`SyncOperation`)(
-  SyncOperationId,
+export class SyncOperation extends ProductEntity.Entity<SyncOperation>()(SyncOperationId)(
   {
-    fields: {
-      attemptCount: NonNegativeInt.annotateKey({
-        description: "Number of push attempts already made for this operation.",
-      }),
-      idempotencyKey: S.NonEmptyString.annotateKey({
-        description: "Unique key deduplicating replays of the same push operation.",
-      }),
-      inputContentDigest: DocumentContentDigest.pipe(S.OptionFromNullOr).annotateKey({
+    attemptCount: NonNegativeInt.annotateKey({
+      description: "Number of push attempts already made for this operation.",
+    }).pipe(pg.integer(), pg.columnName("attempt_count")),
+    idempotencyKey: S.NonEmptyString.annotateKey({
+      description: "Unique key deduplicating replays of the same push operation.",
+    }).pipe(pg.text(), pg.columnName("idempotency_key"), pg.uniqueIndex()),
+    inputContentDigest: DocumentContentDigest.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Digest of the local content captured when the operation was queued; none for folders.",
-      }),
-      inputGeneration: NonNegativeInt.annotateKey({
-        description: "Local generation counter captured when the operation was queued.",
-      }),
-      lastError: S.NonEmptyString.pipe(S.OptionFromNullOr).annotateKey({
-        description: "Most recent attempt failure message; none while the operation is healthy.",
-      }),
-      operationType: SyncOperationType.annotateKey({
-        description: "Kind of push performed against the DMS mirror.",
-      }),
-      provider: DmsProvider.annotateKey({
-        description: "DMS provider targeted by the push operation.",
-      }),
-      status: SyncOperationStatus.annotateKey({
-        description: "Outbox lifecycle status of the operation.",
-      }),
-      syncItemId: Documents.SyncItemId.annotateKey({
-        description: "Sync-tracking row this operation pushes for.",
-      }),
-      targetName: S.NonEmptyString.annotateKey({
-        description: "Remote item name to apply with this operation.",
-      }),
-      targetParentRelPath: VaultRelPath.pipe(S.OptionFromNullOr).annotateKey({
+      })
+      .pipe(pg.text(), pg.columnName("input_content_digest")),
+    inputGeneration: NonNegativeInt.annotateKey({
+      description: "Local generation counter captured when the operation was queued.",
+    }).pipe(pg.integer(), pg.columnName("input_generation")),
+    lastError: S.NonEmptyString.pipe(S.OptionFromNullOr)
+      .annotateKey({ description: "Most recent attempt failure message; none while the operation is healthy." })
+      .pipe(pg.text(), pg.columnName("last_error")),
+    operationType: SyncOperationType.annotateKey({
+      description: "Kind of push performed against the DMS mirror.",
+    }).pipe(pg.text(), pg.columnName("operation_type")),
+    provider: DmsProvider.annotateKey({
+      description: "DMS provider targeted by the push operation.",
+    }).pipe(pg.text()),
+    status: SyncOperationStatus.annotateKey({
+      description: "Outbox lifecycle status of the operation.",
+    }).pipe(pg.text(), pg.index({ name: "documents_sync_operation_status_lookup_idx" })),
+    syncItemId: SyncItemId.annotateKey({
+      description: "Sync-tracking row this operation pushes for.",
+    }).pipe(
+      pg.integer(),
+      pg.columnName("sync_item_id"),
+      pg.index({ name: "documents_sync_operation_sync_item_id_lookup_idx" })
+    ),
+    targetName: S.NonEmptyString.annotateKey({
+      description: "Remote item name to apply with this operation.",
+    }).pipe(pg.text(), pg.columnName("target_name")),
+    targetParentRelPath: VaultRelPath.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Vault-relative path of the intended remote parent folder; none targets the mirror root.",
-      }),
-      targetRelPath: VaultRelPath.annotateKey({
-        description: "Intended vault-relative path of the item after this operation.",
-      }),
-      workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
-        description: "Workspace whose vault produced the push operation.",
-      }),
-    },
-    persisted: {
-      attemptCount: EntitySchema.persist.int({
-        columnName: "attempt_count",
-      }),
-      idempotencyKey: EntitySchema.persist.text({
-        columnName: "idempotency_key",
-        indexHints: [EntitySchema.IndexHint.unique],
-      }),
-      inputContentDigest: EntitySchema.persist.text({
-        columnName: "input_content_digest",
-      }),
-      inputGeneration: EntitySchema.persist.int({
-        columnName: "input_generation",
-      }),
-      lastError: EntitySchema.persist.text({
-        columnName: "last_error",
-      }),
-      operationType: EntitySchema.persist.literal({
-        columnName: "operation_type",
-      }),
-      provider: EntitySchema.persist.literal({
-        columnName: "provider",
-      }),
-      status: EntitySchema.persist.literal({
-        columnName: "status",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      syncItemId: EntitySchema.persist.entityId({
-        columnName: "sync_item_id",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      targetName: EntitySchema.persist.text({
-        columnName: "target_name",
-      }),
-      targetParentRelPath: EntitySchema.persist.text({
-        columnName: "target_parent_rel_path",
-      }),
-      targetRelPath: EntitySchema.persist.text({
-        columnName: "target_rel_path",
-      }),
-      workspaceId: EntitySchema.persist.entityId({
-        columnName: "workspace_id",
-        indexHints: [EntitySchema.IndexHint.btree, EntitySchema.IndexHint.lookup],
-      }),
-    },
+      })
+      .pipe(pg.text(), pg.columnName("target_parent_rel_path")),
+    targetRelPath: VaultRelPath.annotateKey({
+      description: "Intended vault-relative path of the item after this operation.",
+    }).pipe(pg.text(), pg.columnName("target_rel_path")),
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace whose vault produced the push operation.",
+    }).pipe(pg.integer(), pg.columnName("workspace_id"), pg.index()),
   },
   $I.annote("SyncOperation", {
     description: "Durable one-way push outbox operation from the local vault to the DMS mirror.",

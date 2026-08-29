@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "dock-substrate-landing",
+    "title": "Dock Substrate Landing",
+    "status": "completed-retained",
+    "created": "2026-07-14",
+    "updated": "2026-07-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/dock-substrate-landing",
+  "lifecycle": "completed-retained",
+  "mission": "Graduate the scratchpad dock system into @beep/dock + @beep/dock-react under foundation/ui-system and land the dock workspace as the root shell of apps/professional-desktop, QA'd to green.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/computable-workspace-geometry",
+    "graduated": "2026-07-14",
+    "note": "Graduates the dock kernel/adapter matured in scratchpad/dockview + scratchpad/dockview-react (PRs #391/#396/#397/#399/#403) per docs/product/workspace-substrate.md section 7 sequencing. beep-effect6 write-gate on apps/professional-desktop released 2026-07-14 (owner confirmation; lane rotated off desktop surfaces)."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until each milestone ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor) and M4 closes the packet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/dock-substrate-landing/README.md",
+    "goals/dock-substrate-landing/SPEC.md",
+    "goals/dock-substrate-landing/PLAN.md",
+    "goals/dock-substrate-landing/GOAL.md",
+    "goals/dock-substrate-landing/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/dock-substrate-landing/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Doctrine + packet (DECISION record, ceiling row, glossary, gate release)",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "M1: @beep/dock kernel package (decompose, vitest, docgen, register)",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "M2: @beep/dock-react adapter + demo rewire + scratchpad retirement",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "M3: professional-desktop dock shell (root workspace, persistence, CSS)",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "M4: QA-to-green + close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/dock-substrate-landing/GOAL.md)\" -le 4000",
+    "jq . goals/dock-substrate-landing/ops/manifest.json",
+    "git diff --check -- goals/dock-substrate-landing",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (no new kernel features; graduation + shell landing only).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

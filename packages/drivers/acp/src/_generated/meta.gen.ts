@@ -16,7 +16,8 @@ void $I;
 /**
  * Generated ACP agent method lookup table.
  *
- * @example
+ * **Example** (Read AGENT_METHODS)
+ *
  * ```ts
  * import { AGENT_METHODS } from "@beep/acp/schema"
  *
@@ -46,7 +47,8 @@ export const AGENT_METHODS = {
 /**
  * Generated ACP client method lookup table.
  *
- * @example
+ * **Example** (Read CLIENT_METHODS)
+ *
  * ```ts
  * import { CLIENT_METHODS } from "@beep/acp/schema"
  *
@@ -73,7 +75,8 @@ export const CLIENT_METHODS = {
 /**
  * Generated ACP protocol version.
  *
- * @example
+ * **Example** (Read PROTOCOL_VERSION)
+ *
  * ```ts
  * import { PROTOCOL_VERSION } from "@beep/acp/schema"
  *

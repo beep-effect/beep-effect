@@ -8,21 +8,23 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.js";
-import { CorpusCopyMode } from "./Salvage.schemas.js";
+import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { CorpusCopyMode } from "./Salvage.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Catalog.schemas");
 
 /**
  * Duplicate-set scope reported by the catalog.
  *
- * @example
+ * **Example** (Validate cross-run scope)
+ *
  * ```ts
  * import { CorpusDuplicateScope } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(CorpusDuplicateScope)("cross-run")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -36,13 +38,15 @@ export const CorpusDuplicateScope = LiteralKit(["intra-run", "cross-run"]).pipe(
 /**
  * Duplicate-set scope type reported by the catalog.
  *
- * @example
+ * **Example** (Assign cross-run scope type)
+ *
  * ```ts
  * import type { CorpusDuplicateScope } from "@beep/repo-cli/commands/Corpus"
  *
  * const scope: CorpusDuplicateScope = "cross-run"
  * console.log(scope) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,7 +55,8 @@ export type CorpusDuplicateScope = typeof CorpusDuplicateScope.Type;
 /**
  * One catalog occurrence row after provenance manifests are unioned by run.
  *
- * @example
+ * **Example** (Make source file record)
+ *
  * ```ts
  * import { CorpusCatalogSourceFileRecord } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
@@ -72,6 +77,7 @@ export type CorpusDuplicateScope = typeof CorpusDuplicateScope.Type;
  * })
  * console.log(record.runLabel) // "base"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -103,7 +109,8 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
 /**
  * JSONL encoder for {@link CorpusCatalogSourceFileRecord}.
  *
- * @example
+ * **Example** (Encode source file JSONL)
+ *
  * ```ts
  * import { CorpusCatalogSourceFileRecord, encodeCorpusCatalogSourceFileRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
@@ -127,6 +134,7 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
  *
  * Effect.runPromise(encodeCorpusCatalogSourceFileRecordJson(record)).then((json) => console.log(json.includes("refresh"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -135,7 +143,8 @@ export const encodeCorpusCatalogSourceFileRecordJson = JsonStringCodec(CorpusCat
 /**
  * One exact-duplicate digest group reported by the corpus catalog.
  *
- * @example
+ * **Example** (Decode duplicate set record)
+ *
  * ```ts
  * import { CorpusDuplicateSetRecord } from "@beep/repo-cli/commands/Corpus"
  * import * as S from "effect/Schema"
@@ -151,6 +160,7 @@ export const encodeCorpusCatalogSourceFileRecordJson = JsonStringCodec(CorpusCat
  * })
  * console.log(record.copies) // 2
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -173,7 +183,8 @@ export class CorpusDuplicateSetRecord extends S.Class<CorpusDuplicateSetRecord>(
 /**
  * JSON encoder for the duplicate-set report array.
  *
- * @example
+ * **Example** (Encode duplicate set report)
+ *
  * ```ts
  * import { encodeCorpusDuplicateSetReportJson } from "@beep/repo-cli/commands/Corpus"
  * import { Effect } from "effect"
@@ -190,6 +201,7 @@ export class CorpusDuplicateSetRecord extends S.Class<CorpusDuplicateSetRecord>(
  *
  * Effect.runPromise(encodeCorpusDuplicateSetReportJson(rows)).then((json) => console.log(json.includes("source-a/a.txt"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -198,13 +210,15 @@ export const encodeCorpusDuplicateSetReportJson = JsonStringCodec(CorpusDuplicat
 /**
  * Validated options used by `corpus catalog`.
  *
- * @example
+ * **Example** (Make catalog options)
+ *
  * ```ts
  * import { CorpusCatalogOptions } from "@beep/repo-cli/commands/Corpus"
  *
  * const options = CorpusCatalogOptions.make({ corpusRoot: "/data/corpus" })
  * console.log(options.corpusRoot)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -220,7 +234,8 @@ export class CorpusCatalogOptions extends S.Class<CorpusCatalogOptions>($I`Corpu
 /**
  * Per-run counts included in the corpus catalog summary.
  *
- * @example
+ * **Example** (Make run summary counts)
+ *
  * ```ts
  * import { CorpusCatalogRunSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -233,6 +248,7 @@ export class CorpusCatalogOptions extends S.Class<CorpusCatalogOptions>($I`Corpu
  * })
  * console.log(run.newDistinctDigests) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -252,7 +268,8 @@ export class CorpusCatalogRunSummary extends S.Class<CorpusCatalogRunSummary>($I
 /**
  * Summary counts returned by `corpus catalog`.
  *
- * @example
+ * **Example** (Make catalog summary)
+ *
  * ```ts
  * import { CorpusCatalogRunSummary, CorpusCatalogSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -278,6 +295,7 @@ export class CorpusCatalogRunSummary extends S.Class<CorpusCatalogRunSummary>($I
  * })
  * console.log(summary.sourceFiles) // 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -302,7 +320,8 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
 /**
  * JSON encoder for {@link CorpusCatalogSummary}.
  *
- * @example
+ * **Example** (Encode catalog summary JSON)
+ *
  * ```ts
  * import { CorpusCatalogRunSummary, CorpusCatalogSummary, encodeCorpusCatalogSummaryJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
@@ -330,6 +349,7 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
  *
  * Effect.runPromise(encodeCorpusCatalogSummaryJson(summary)).then((json) => console.log(json.includes("\"sourceFiles\":1"))) // true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */

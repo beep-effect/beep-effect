@@ -8,8 +8,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { RestatementComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { RestatementComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/RestatementCitation/RestatementCitation.model");
 
@@ -17,13 +17,14 @@ const $I = $LawPracticeDomainId.create("values/RestatementCitation/RestatementCi
  * Restatement citation (#578): secondary authority published by the American
  * Law Institute (e.g., Restatement (Second) of Torts § 402A).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `restatement`
  * discriminant tag plus the edition, subject, and section that identify the
  * cited black-letter rule.
  *
- * **Example**
+ * **Example** (Make RestatementCitation value)
  *
- * @example
  * ```ts
  * import { RestatementCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -87,7 +88,8 @@ export class RestatementCitation extends S.Class<RestatementCitation>($I`Restate
 /**
  * Companion namespace for `RestatementCitation`.
  *
- * @example
+ * **Example** (Access Encoded type)
+ *
  * ```ts
  * import type { RestatementCitation } from "@beep/law-practice-domain"
  *
@@ -101,9 +103,8 @@ export declare namespace RestatementCitation {
   /**
    * Wire-encoded representation of a decoded {@link RestatementCitation}.
    *
-   * **Example**
+   * **Example** (Encoded wire type alias)
    *
-   * @example
    * ```ts
    * import type { RestatementCitation } from "@beep/law-practice-domain"
    *

@@ -19,7 +19,8 @@ const $I = $SharedDomainId.create("values/LocalDate/LocalDate.calendar");
 /**
  * Raw calendar fields used before LocalDate class construction.
  *
- * @example
+ * **Example** (Make leap day parts)
+ *
  * ```ts
  * import { CalendarParts } from "@beep/shared-domain/values/LocalDate/LocalDate.calendar"
  *
@@ -40,7 +41,8 @@ export class CalendarParts extends S.Class<CalendarParts>($I`CalendarParts`)(
 /**
  * Check whether a Gregorian calendar year is a leap year.
  *
- * @example
+ * **Example** (Leap year checks)
+ *
  * ```ts
  * import { isGregorianLeapYear } from "@beep/shared-domain/values/LocalDate/LocalDate.calendar"
  *
@@ -56,7 +58,8 @@ export const isGregorianLeapYear = (year: number): boolean => canonicalIsLeapYea
 /**
  * Return the number of days in a Gregorian calendar month.
  *
- * @example
+ * **Example** (February day counts)
+ *
  * ```ts
  * import { daysInGregorianMonth } from "@beep/shared-domain/values/LocalDate/LocalDate.calendar"
  *
@@ -75,7 +78,8 @@ export const daysInGregorianMonth: {
 /**
  * Check whether raw calendar fields form a real Gregorian local date.
  *
- * @example
+ * **Example** (Validate leap day dates)
+ *
  * ```ts
  * import { isValidGregorianDate } from "@beep/shared-domain/values/LocalDate/LocalDate.calendar"
  *

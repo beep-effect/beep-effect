@@ -1,6 +1,7 @@
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import {
+  makeUsptoError,
   normalizeUsptoApplicationNumber,
   normalizeUsptoPatentNumber,
   Uspto,
@@ -78,14 +79,14 @@ const respondWith = (body: string, status = 200, seenUrls?: Array<string>): Laye
 const usptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
-const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber);
-const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber);
-const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput);
-const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata);
-const ContinuityArbitrary = S.toArbitrary(UsptoContinuity);
-const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference);
-const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason);
-const ErrorArbitrary = S.toArbitrary(UsptoError);
+const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber)(fc);
+const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber)(fc);
+const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput)(fc);
+const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata)(fc);
+const ContinuityArbitrary = S.toArbitrary(UsptoContinuity)(fc);
+const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference)(fc);
+const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason)(fc);
+const ErrorArbitrary = S.toArbitrary(UsptoError)(fc);
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -102,22 +103,27 @@ const expectEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema:
 };
 
 describe("Uspto service", () => {
-  it.effect("resolves application metadata from a file wrapper envelope", () =>
-    Effect.gen(function* () {
-      const seenUrls: Array<string> = [];
-      const uspto = yield* Uspto;
-      const metadata = yield* uspto.getApplication("16138242");
+  it.effect(
+    "resolves application metadata from a file wrapper envelope",
+    Effect.fnUntraced(
+      function* () {
+        const seenUrls: Array<string> = [];
+        const uspto = yield* Uspto;
+        const metadata = yield* uspto.getApplication("16138242");
 
-      expect(metadata.applicationNumberText).toBe("16138242");
-      expect(metadata.inventionTitle).toStrictEqual(O.some("Adjustable widget assembly"));
-      expect(metadata.patentNumber).toStrictEqual(O.some("10772255"));
-      expect(metadata.firstApplicantName).toStrictEqual(O.some("Precision Widgets LLC"));
-      expect(seenUrls).toHaveLength(0);
-    }).pipe(provideScopedLayer(usptoLayer(respondWith(applicationEnvelope))))
+        expect(metadata.applicationNumberText).toBe("16138242");
+        expect(metadata.inventionTitle).toStrictEqual(O.some("Adjustable widget assembly"));
+        expect(metadata.patentNumber).toStrictEqual(O.some("10772255"));
+        expect(metadata.firstApplicantName).toStrictEqual(O.some("Precision Widgets LLC"));
+        expect(seenUrls).toHaveLength(0);
+      },
+      provideScopedLayer(usptoLayer(respondWith(applicationEnvelope)))
+    )
   );
 
-  it.effect("sends the application request to the open data portal path", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "sends the application request to the open data portal path",
+    Effect.fnUntraced(function* () {
       const seenUrls: Array<string> = [];
       const layer = usptoLayer(respondWith(applicationEnvelope, 200, seenUrls));
       yield* Uspto.pipe(
@@ -128,52 +134,79 @@ describe("Uspto service", () => {
     })
   );
 
-  it.effect("maps 404 responses to not-found", () =>
-    Effect.gen(function* () {
-      const uspto = yield* Uspto;
-      const error = yield* uspto.getApplication("99999999").pipe(Effect.flip);
-      expect(error.reason).toBe("not-found");
-    }).pipe(provideScopedLayer(usptoLayer(respondWith("{}", 404))))
+  it.effect(
+    "maps 404 responses to not-found",
+    Effect.fnUntraced(
+      function* () {
+        const uspto = yield* Uspto;
+        const error = yield* uspto.getApplication("99999999").pipe(Effect.flip);
+        expect(error.reason).toBe("not-found");
+      },
+      provideScopedLayer(usptoLayer(respondWith("{}", 404)))
+    )
   );
 
-  it.effect("maps 429 responses to rate-limited", () =>
-    Effect.gen(function* () {
-      const uspto = yield* Uspto;
-      const error = yield* uspto.getApplication("16138242").pipe(Effect.flip);
-      expect(error.reason).toBe("rate-limited");
-    }).pipe(provideScopedLayer(usptoLayer(respondWith("{}", 429))))
+  it.effect(
+    "maps 429 responses to rate-limited",
+    Effect.fnUntraced(
+      function* () {
+        const uspto = yield* Uspto;
+        const error = yield* uspto.getApplication("16138242").pipe(Effect.flip);
+        expect(error.reason).toBe("rate-limited");
+      },
+      provideScopedLayer(usptoLayer(respondWith("{}", 429)))
+    )
   );
 
-  it.effect("extracts continuity parents and children", () =>
-    Effect.gen(function* () {
-      const uspto = yield* Uspto;
-      const continuity = yield* uspto.getContinuity("16138242");
-      expect(continuity.parentApplicationNumbers).toStrictEqual(["15111111"]);
-      expect(continuity.childApplicationNumbers).toStrictEqual(["17999999"]);
-    }).pipe(provideScopedLayer(usptoLayer(respondWith(continuityEnvelope))))
+  it.effect(
+    "extracts continuity parents and children",
+    Effect.fnUntraced(
+      function* () {
+        const uspto = yield* Uspto;
+        const continuity = yield* uspto.getContinuity("16138242");
+        expect(continuity.parentApplicationNumbers).toStrictEqual(["15111111"]);
+        expect(continuity.childApplicationNumbers).toStrictEqual(["17999999"]);
+      },
+      provideScopedLayer(usptoLayer(respondWith(continuityEnvelope)))
+    )
   );
 
-  it.effect("extracts document references with download urls and skips id-less rows", () =>
-    Effect.gen(function* () {
-      const uspto = yield* Uspto;
-      const documents = yield* uspto.getDocuments("16138242");
-      expect(documents).toHaveLength(1);
-      expect(documents[0]?.documentIdentifier).toBe("DOC123");
-      expect(documents[0]?.downloadUrl).toBe("https://api.uspto.gov/docs/DOC123.pdf");
-    }).pipe(provideScopedLayer(usptoLayer(respondWith(documentsEnvelope))))
+  it.effect(
+    "extracts document references with download urls and skips id-less rows",
+    Effect.fnUntraced(
+      function* () {
+        const uspto = yield* Uspto;
+        const documents = yield* uspto.getDocuments("16138242");
+        expect(documents).toHaveLength(1);
+        expect(documents[0]?.documentIdentifier).toBe("DOC123");
+        expect(documents[0]?.downloadUrl).toBe("https://api.uspto.gov/docs/DOC123.pdf");
+      },
+      provideScopedLayer(usptoLayer(respondWith(documentsEnvelope)))
+    )
   );
 
-  it.effect("searches applications and projects each wrapper", () =>
-    Effect.gen(function* () {
-      const uspto = yield* Uspto;
-      const results = yield* uspto.searchApplications('applicationMetaData.patentNumber:"10772255"');
-      expect(results).toHaveLength(1);
-      expect(results[0]?.patentNumber).toStrictEqual(O.some("10772255"));
-    }).pipe(provideScopedLayer(usptoLayer(respondWith(applicationEnvelope))))
+  it.effect(
+    "searches applications and projects each wrapper",
+    Effect.fnUntraced(
+      function* () {
+        const uspto = yield* Uspto;
+        const results = yield* uspto.searchApplications('applicationMetaData.patentNumber:"10772255"');
+        expect(results).toHaveLength(1);
+        expect(results[0]?.patentNumber).toStrictEqual(O.some("10772255"));
+      },
+      provideScopedLayer(usptoLayer(respondWith(applicationEnvelope)))
+    )
   );
 });
 
 describe("Uspto identifier normalization", () => {
+  it("constructs errors in data-last form", () => {
+    const error = makeUsptoError({ cause: "socket hang up" })("transport");
+
+    expect(error.reason).toBe("transport");
+    expect(error.cause).toStrictEqual(O.some("socket hang up"));
+  });
+
   it("normalizes application numbers", () => {
     expect(normalizeUsptoApplicationNumber("16/138,242")).toStrictEqual(O.some("16138242"));
     expect(normalizeUsptoApplicationNumber("16-138-242")).toStrictEqual(O.some("16138242"));
@@ -192,7 +225,7 @@ describe("Uspto identifier normalization", () => {
 describe("Uspto schema parity", () => {
   it("keeps encoded schema wire shapes byte-identical", () => {
     const config = Result.getOrThrow(
-      S.decodeUnknownResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov/" })
+      S.decodeResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov///" })
     );
     const metadata = decode(UsptoApplicationMetadata, {
       applicationNumberText: "16138242",
@@ -222,6 +255,7 @@ describe("Uspto schema parity", () => {
       apiKey: "test-key",
       apiUrl: "https://api.uspto.gov",
     });
+    expect(Result.isFailure(S.decodeResult(UsptoConfigInput)({ apiUrl: "//" }))).toBe(true);
     expect(encode(UsptoApplicationMetadata, metadata)).toEqual({
       applicationNumberText: "16138242",
       firstApplicantName: "Precision Widgets LLC",
@@ -268,11 +302,9 @@ describe("Uspto schema parity", () => {
         ErrorReasonArbitrary,
         ErrorArbitrary,
         (applicationNumber, patentNumber, config, metadata, continuity, document, errorReason, error) => {
-          const normalizedConfig = decode(UsptoConfigInput, encode(UsptoConfigInput, config));
-
           expectEncodedRoundTrip(UsptoApplicationNumber, applicationNumber);
           expectEncodedRoundTrip(UsptoPatentNumber, patentNumber);
-          expectEncodedRoundTrip(UsptoConfigInput, normalizedConfig);
+          expectEncodedRoundTrip(UsptoConfigInput, config);
           expectEncodedRoundTrip(UsptoApplicationMetadata, metadata);
           expectEncodedRoundTrip(UsptoContinuity, continuity);
           expectEncodedRoundTrip(UsptoDocumentReference, document);

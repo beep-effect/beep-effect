@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "stack-installer",
+    "title": "Stack Installer Proof and UX",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when a workflow with product pull adopts the approval-first repair and fresh-machine evidence pattern."
+    ],
+    "sources": [],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-08-13"
+  }
+}

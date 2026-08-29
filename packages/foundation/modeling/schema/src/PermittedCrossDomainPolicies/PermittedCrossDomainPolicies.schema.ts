@@ -31,12 +31,13 @@ const PermittedCrossDomainPoliciesValueBase = LiteralKit([
 /**
  * Schema for allowed `X-Permitted-Cross-Domain-Policies` values.
  *
- * @example
- * ```ts
+ * **Example** (Validate none policy value)
+ *
+ * ```ts import.meta.vitest name="Validate none policy value"
  * import * as S from "effect/Schema"
  * import { PermittedCrossDomainPoliciesValue } from "@beep/schema/PermittedCrossDomainPolicies"
  *
- * console.log(S.is(PermittedCrossDomainPoliciesValue)("none")) // true
+ * S.is(PermittedCrossDomainPoliciesValue)("none") // => true
  * ```
  *
  * @category schemas
@@ -52,7 +53,8 @@ export const PermittedCrossDomainPoliciesValue = PermittedCrossDomainPoliciesVal
 /**
  * Type for allowed `X-Permitted-Cross-Domain-Policies` values.
  *
- * @example
+ * **Example** (Assign none policy type)
+ *
  * ```ts
  * import type { PermittedCrossDomainPoliciesValue } from "@beep/schema/PermittedCrossDomainPolicies"
  *
@@ -70,7 +72,8 @@ const PermittedCrossDomainPoliciesOptionBase = LiteralKit([false, ...PermittedCr
 /**
  * Schema for enabled or disabled cross-domain policy options.
  *
- * @example
+ * **Example** (Decode master-only option)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PermittedCrossDomainPoliciesOption } from "@beep/schema/PermittedCrossDomainPolicies"
@@ -91,7 +94,8 @@ export const PermittedCrossDomainPoliciesOption = PermittedCrossDomainPoliciesOp
 /**
  * Type for enabled or disabled cross-domain policy options.
  *
- * @example
+ * **Example** (Assign master-only option type)
+ *
  * ```ts
  * import type { PermittedCrossDomainPoliciesOption } from "@beep/schema/PermittedCrossDomainPolicies"
  *
@@ -107,7 +111,8 @@ export type PermittedCrossDomainPoliciesOption = typeof PermittedCrossDomainPoli
 /**
  * Model for a rendered `X-Permitted-Cross-Domain-Policies` response header.
  *
- * @example
+ * **Example** (Make response header model)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PermittedCrossDomainPoliciesResponseHeader } from "@beep/schema/PermittedCrossDomainPolicies"
@@ -139,7 +144,8 @@ type PermittedCrossDomainPoliciesResponseHeaderEncoded = typeof PermittedCrossDo
 /**
  * Schema that renders cross-domain policy options into a response header.
  *
- * @example
+ * **Example** (Decode none into header)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PermittedCrossDomainPoliciesHeader } from "@beep/schema/PermittedCrossDomainPolicies"
@@ -216,7 +222,8 @@ export const PermittedCrossDomainPoliciesHeader = S.Union([PermittedCrossDomainP
 /**
  * Type for rendered `X-Permitted-Cross-Domain-Policies` response headers.
  *
- * @example
+ * **Example** (Type annotated header value)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import {
@@ -251,7 +258,8 @@ export {
 /**
  * Concise alias for {@link PermittedCrossDomainPoliciesHeader}.
  *
- * @example
+ * **Example** (Decode via Header alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/schema/PermittedCrossDomainPolicies"
@@ -268,7 +276,8 @@ export const Header = PermittedCrossDomainPoliciesHeader;
 /**
  * Type-level representation of {@link Header}.
  *
- * @example
+ * **Example** (Type annotated Header alias)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { PermittedCrossDomainPoliciesResponseHeader, type Header } from "@beep/schema/PermittedCrossDomainPolicies"

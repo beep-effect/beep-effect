@@ -1,8 +1,9 @@
 /**
  * Semantic version schema helpers for strings shaped like `MAJOR.MINOR.PATCH`.
  *
- * @example
- * ```typescript
+ * **Example** (Decode a semantic version)
+ *
+ * ```ts
  * import * as S from "effect/Schema";
  * import { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
@@ -26,24 +27,7 @@ const SemanticVersionSegment = S.String.check(
   })
 );
 
-/**
- * A Semantic Versioning (SemVer) schema for validating `MAJOR.MINOR.PATCH` version strings.
- *
- * Each segment must be a non-negative integer, and multi-digit segments may not start with `0`.
- *
- * @example
- * ```typescript
- * import * as S from "effect/Schema";
- * import { SemanticVersion } from "@beep/schema/SemanticVersion";
- *
- * S.decodeUnknownSync(SemanticVersion)("0.1.2");
- * S.decodeUnknownSync(SemanticVersion)("12.34.56");
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const SemanticVersion = S.TemplateLiteral([
+const SemanticVersionWithStatics = S.TemplateLiteral([
   SemanticVersionSegment,
   ".",
   SemanticVersionSegment,
@@ -58,18 +42,68 @@ export const SemanticVersion = S.TemplateLiteral([
   })
 );
 
+type SemanticVersionSchemaBase = typeof SemanticVersionWithStatics;
+
 /**
- * {@inheritDoc SemanticVersion}
+ * Named schema surface for {@link SemanticVersion}.
  *
- * @example
- * ```typescript
+ * Declaration emit references this interface by name instead of serializing
+ * the template-literal schema and its statics structurally at every consumer
+ * position.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export interface SemanticVersionSchema extends SemanticVersionSchemaBase {}
+
+/**
+ * Validates Semantic Versioning strings in `MAJOR.MINOR.PATCH` form.
+ *
+ * **When to use**
+ *
+ * Use when a boundary accepts a core semantic version without prerelease or
+ * build metadata.
+ *
+ * **Details**
+ *
+ * Each segment is a non-negative integer, and multi-digit segments cannot
+ * begin with `0`. The schema also exposes `decodeUnknownOption` for callers
+ * that prefer absence over a thrown parse error.
+ *
+ * **Gotchas**
+ *
+ * Prerelease and build suffixes such as `1.2.3-beta+sha` are outside this
+ * schema's intentionally narrow format.
+ *
+ * **Example** (Validate accepted and rejected versions)
+ *
+ * ```ts import.meta.vitest name="Validate accepted and rejected versions"
+ * import * as S from "effect/Schema";
+ * import { SemanticVersion } from "@beep/schema/SemanticVersion";
+ *
+ * S.is(SemanticVersion)("12.34.56") // => true
+ * S.is(SemanticVersion)("01.2.3") // => false
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const SemanticVersion: SemanticVersionSchema = SemanticVersionWithStatics;
+
+/**
+ * Decoded semantic-version string produced by {@link SemanticVersion}.
+ *
+ * **Example** (Annotate a decoded version)
+ *
+ * ```ts
  * import type { SemanticVersion } from "@beep/schema/SemanticVersion";
  *
  * const currentVersion: SemanticVersion = "2.3.4";
  * console.log(currentVersion);
  * ```
  *
- * @category validation
+ * @see {@link SemanticVersion} for the runtime schema and validation behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type SemanticVersion = typeof SemanticVersion.Type;

@@ -9,9 +9,8 @@
 /**
  * CitationBase model exports.
  *
- * **Example**
+ * **Example** (Import CitationBase)
  *
- * @example
  * ```ts
  * import { CitationBase } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationBase.model.js";
+export * from "./CitationBase.model.ts";

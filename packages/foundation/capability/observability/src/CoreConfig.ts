@@ -19,11 +19,14 @@ const ObservabilityCoreConfigFields = {
 /**
  * Browser-safe shared observability configuration.
  *
+ * **Details**
+ *
  * Carries service identity, environment, and minimum log level for both
  * client and server observability wiring.
  *
- * @example
- * ```typescript
+ * **Example** (Creating a core config)
+ *
+ * ```ts import.meta.vitest name="Creating a core config"
  * import { ObservabilityCoreConfig } from "@beep/observability"
  *
  * const config: ObservabilityCoreConfig = {
@@ -33,11 +36,11 @@ const ObservabilityCoreConfigFields = {
  *   minLogLevel: "Info"
  * }
  *
- * console.log(config.serviceName) // "todox-web"
+ * config.serviceName // => "todox-web"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const ObservabilityCoreConfig = LogLevel.toTaggedUnion("minLogLevel")({
   All: ObservabilityCoreConfigFields,
@@ -57,7 +60,8 @@ export const ObservabilityCoreConfig = LogLevel.toTaggedUnion("minLogLevel")({
 /**
  * Type of {@link ObservabilityCoreConfig}
  *
- * @example
+ * **Example** (Typing a config parameter)
+ *
  * ```typescript
  * import type { ObservabilityCoreConfig } from "@beep/observability"
  *
@@ -65,7 +69,7 @@ export const ObservabilityCoreConfig = LogLevel.toTaggedUnion("minLogLevel")({
  * console.log(serviceName)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ObservabilityCoreConfig = typeof ObservabilityCoreConfig.Type;

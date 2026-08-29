@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 import {
   LogRedactedCauseOptions,
   logRedactedCause,
@@ -14,10 +13,22 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Equal, Logger, References } from "effect";
+import { Cause, Context, Effect, Equal, Layer, Logger, References } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+
+class CapturedAnnotations extends Context.Service<CapturedAnnotations, Array<Record<string, unknown>>>()(
+  "@beep/observability/test/CauseRedaction.test/CapturedAnnotations"
+) {}
+
+const capturedAnnotationsLayer = (): Layer.Layer<CapturedAnnotations> => {
+  const annotations: Array<Record<string, unknown>> = [];
+  const logger = Logger.make<unknown, void>((options) => {
+    annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+  });
+  return Layer.merge(Layer.succeed(CapturedAnnotations, annotations), Logger.layer([logger]));
+};
 
 describe("CauseRedaction", () => {
   it("redacts secret-shaped tokens and home paths", () => {
@@ -89,39 +100,60 @@ describe("CauseRedaction", () => {
     })
   );
 
-  it.effect("logs only bounded redacted Cause diagnostics", () =>
-    Effect.gen(function* () {
-      const annotations: Array<Record<string, unknown>> = [];
-      const logger = Logger.make<unknown, void>((options) => {
-        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
-      });
+  it.layer(capturedAnnotationsLayer())("logs only bounded redacted Cause diagnostics", (it) =>
+    it.effect(
+      "captures both log records",
+      Effect.fnUntraced(function* () {
+        const annotations = yield* CapturedAnnotations;
+        yield* logRedactedCause(
+          Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
+          LogRedactedCauseOptions.make({ message: "boundary failed" })
+        );
+        yield* logRedactedCause(
+          Cause.fail(new Error("info boundary")),
+          LogRedactedCauseOptions.make({ level: "Info", message: "info boundary failed" })
+        );
 
-      yield* logRedactedCause(
-        Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
-        LogRedactedCauseOptions.make({ message: "boundary failed" })
-      ).pipe(Effect.provide(Logger.layer([logger])));
-
-      expect(annotations).toHaveLength(1);
-      expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
-      expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
-      expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
-      expect(annotations[0]?.cause_classification).toBe("failure");
-    })
+        expect(annotations).toHaveLength(2);
+        expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+        expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
+        expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
+        expect(annotations[0]?.cause_classification).toBe("failure");
+      })
+    )
   );
 
-  it.effect("observes a boundary failure without changing its Cause", () =>
-    Effect.gen(function* () {
-      const original = Cause.fail(new Error("boom"));
-      const exit = yield* Effect.exit(
-        Effect.failCause(original).pipe(
-          tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" })),
-          Effect.provide(Logger.layer([]))
-        )
-      );
+  it.layer(capturedAnnotationsLayer())("logs through the curried data-last form with the same redaction", (it) =>
+    it.effect(
+      "captures the curried log record",
+      Effect.fnUntraced(function* () {
+        const annotations = yield* CapturedAnnotations;
+        yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
+          Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
+        );
 
-      expect(exit._tag).toBe("Failure");
-      expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
-    })
+        expect(annotations).toHaveLength(1);
+        expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+        expect(annotations[0]?.cause_classification).toBe("failure");
+      })
+    )
+  );
+
+  it.layer(Logger.layer([]))("observes a boundary failure without changing its Cause", (it) =>
+    it.effect(
+      "preserves the original cause",
+      Effect.fnUntraced(function* () {
+        const original = Cause.fail(new Error("boom"));
+        const exit = yield* Effect.exit(
+          Effect.failCause(original).pipe(
+            tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
+          )
+        );
+
+        expect(exit._tag).toBe("Failure");
+        expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
+      })
+    )
   );
 
   it("respects a custom message limit via options", () => {
@@ -135,7 +167,7 @@ describe("CauseRedaction", () => {
 
   it("round-trips schema-derived redaction options", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedactCauseOptions), (options) => {
+      fc.property(S.toArbitrary(RedactCauseOptions)(fc), (options) => {
         const decoded = O.flatMap(
           S.encodeOption(RedactCauseOptions)(options),
           S.decodeUnknownOption(RedactCauseOptions)
@@ -148,7 +180,7 @@ describe("CauseRedaction", () => {
 
   it("honors generated redaction bounds and channel rules", () => {
     fc.assert(
-      fc.property(S.toArbitrary(RedactCauseOptions), fc.string(), (options, rawMessage) => {
+      fc.property(S.toArbitrary(RedactCauseOptions)(fc), fc.string(), (options, rawMessage) => {
         const cause = Cause.fail(new Error(rawMessage));
         const summary = summarizeCause(cause);
         const safe = redactCause(cause, options);

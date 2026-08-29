@@ -6,11 +6,11 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Dataset, Term } from "@beep/rdf/Rdf";
+import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
-import { Dataset, Term } from "../rdf.ts";
-import { makeSemanticSchemaMetadata } from "../semantic-schema-metadata.ts";
 
 const $I = $SemanticWebId.create("services/sparql-query");
 
@@ -28,7 +28,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 /**
  * Minimal v1 SPARQL profile.
  *
- * @example
+ * **Example** (Decode ask profile)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -50,7 +51,8 @@ export const SparqlQueryProfile = LiteralKit(["select", "ask", "construct"]).pip
 /**
  * Type for {@link SparqlQueryProfile}.
  *
- * @example
+ * **Example** (Check ask profile type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { SparqlQueryProfile } from "@beep/semantic-web/services/sparql-query"
@@ -67,7 +69,8 @@ export type SparqlQueryProfile = typeof SparqlQueryProfile.Type;
 /**
  * SPARQL query request.
  *
- * @example
+ * **Example** (Decode SPARQL request)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -100,7 +103,8 @@ export class SparqlQueryRequest extends S.Class<SparqlQueryRequest>($I`SparqlQue
 /**
  * SPARQL select result.
  *
- * @example
+ * **Example** (Make empty select result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query"
@@ -126,7 +130,8 @@ export class SparqlSelectResult extends S.Class<SparqlSelectResult>($I`SparqlSel
 /**
  * SPARQL ask result.
  *
- * @example
+ * **Example** (Make true ask result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { SparqlAskResult } from "@beep/semantic-web/services/sparql-query"
@@ -152,7 +157,8 @@ export class SparqlAskResult extends S.Class<SparqlAskResult>($I`SparqlAskResult
 /**
  * SPARQL construct result.
  *
- * @example
+ * **Example** (Decode construct result)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -182,7 +188,8 @@ export class SparqlConstructResult extends S.Class<SparqlConstructResult>($I`Spa
 /**
  * SPARQL result union.
  *
- * @example
+ * **Example** (Decode ask result union)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -205,7 +212,8 @@ export const SparqlQueryResult = S.Union([SparqlSelectResult, SparqlAskResult, S
 /**
  * Type for {@link SparqlQueryResult}.
  *
- * @example
+ * **Example** (Accept result union type)
+ *
  * ```ts
  * import type { SparqlQueryResult } from "@beep/semantic-web/services/sparql-query"
  *
@@ -213,15 +221,16 @@ export const SparqlQueryResult = S.Union([SparqlSelectResult, SparqlAskResult, S
  * console.log(acceptSparqlQueryResult)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SparqlQueryResult = typeof SparqlQueryResult.Type;
 
 /**
  * SPARQL query error reason.
  *
- * @example
+ * **Example** (Decode unsupported profile reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
@@ -244,7 +253,8 @@ export const SparqlQueryErrorReason = LiteralKit(["unsupportedProfile", "unimple
 /**
  * Type for {@link SparqlQueryErrorReason}.
  *
- * @example
+ * **Example** (Check unsupported profile reason)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { SparqlQueryErrorReason } from "@beep/semantic-web/services/sparql-query"
@@ -261,7 +271,8 @@ export type SparqlQueryErrorReason = typeof SparqlQueryErrorReason.Type;
 /**
  * Typed SPARQL query error.
  *
- * @example
+ * **Example** (Make unsupported profile error)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { SparqlQueryError } from "@beep/semantic-web/services/sparql-query"
@@ -276,13 +287,13 @@ export type SparqlQueryErrorReason = typeof SparqlQueryErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class SparqlQueryError extends TaggedErrorClass<SparqlQueryError>($I`SparqlQueryError`)(
+export class SparqlQueryError extends S.TaggedError<SparqlQueryError>($I`SparqlQueryError`)(
   "SparqlQueryError",
   {
     reason: SparqlQueryErrorReason,
     message: S.String,
   },
-  $I.annote("SparqlQueryError", {
+  $I.annoteError<SparqlQueryError>("SparqlQueryError", {
     description: "Typed SPARQL query error.",
     semanticSchemaMetadata: serviceContractMetadata("SparqlQueryError", "Typed SPARQL query error."),
   })
@@ -291,7 +302,8 @@ export class SparqlQueryError extends TaggedErrorClass<SparqlQueryError>($I`Spar
 /**
  * SPARQL query service contract shape.
  *
- * @example
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { SparqlQueryServiceShape } from "@beep/semantic-web/services/sparql-query"
  *
@@ -299,8 +311,8 @@ export class SparqlQueryError extends TaggedErrorClass<SparqlQueryError>($I`Spar
  * console.log(acceptSparqlQueryServiceShape)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export interface SparqlQueryServiceShape {
   readonly execute: (request: SparqlQueryRequest) => Effect.Effect<SparqlQueryResult, SparqlQueryError>;
@@ -309,7 +321,8 @@ export interface SparqlQueryServiceShape {
 /**
  * SPARQL query service tag.
  *
- * @example
+ * **Example** (Provide and execute service)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
@@ -352,7 +365,8 @@ export class SparqlQueryService extends Context.Service<SparqlQueryService, Spar
 /**
  * Unsupported default live layer for the minimal v1 SPARQL contract.
  *
- * @example
+ * **Example** (Run unimplemented live layer)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"

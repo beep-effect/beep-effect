@@ -7,10 +7,10 @@ until they land here. Deferred questions get an entry too, marked DEFERRED
 with the reason.
 -->
 
-Two kinds of entry below: **LOCKED** (ratified in the planning-session grill,
-see [`CAPTURE.md`](./CAPTURE.md)) and **RECOMMENDED** (the agent's align-stage
-recommendations from the research, awaiting the user's confirmation at the
-review gate — this packet stops before `shape` by request).
+The 2026-06-18 entries preserve the planning-session **LOCKED** decisions and
+the align-stage **RECOMMENDED** branches presented at the human review gate. The
+2026-07-14 **LOCKED** entries record the ratified contract that advanced through
+shape, decomposition, and graduation.
 
 ## 2026-06-18 — docketing-overlay-not-record (LOCKED)
 
@@ -213,3 +213,149 @@ for commercial access/SLA evidence without blocking the zero-purchase spine.
 -first vs buy-first; (2) ratify US-patents-first scope; (3) green-light the
 dead-man's-switch reliability model as a first-class requirement; (4) decide whether
 to pursue CPI/LawToolBox partner-API access evaluation now or defer.
+
+## 2026-07-14 — l2-rules-engine (LOCKED)
+
+**Question:** Is the recommended narrow US-deterministic handroll the ratified L2
+starting point, and what conditions keep that handroll defensible?
+
+**Answer:** **Ratified.** Handroll only maintenance fees (37 CFR 1.362),
+§133/§136(a) office-action response periods, PCT national-phase (Art. 22/39),
+and TM post-registration (§8/§9/§15). CPI, then LawToolBox, then Alt Legal may
+later supply strictly additive candidates behind the same interface. Attorney
+approval remains authoritative; every rule is fixture-pinned to a recorded
+primary authority and version; weekend, holiday, closure, extension, revival,
+and maintenance-fee-expiration asymmetries are explicit cases; foreign and
+litigation computations are prohibited until separately shaped around licensed
+engines.
+
+**Rationale:** This ratifies the 2026-06-18 recommendation without turning a
+bounded checker into a general legal calendar. The four conditions make legal
+authority, human control, and exceptional cases visible and testable. *Rejected:*
+buy-first, silent generic date arithmetic, and broad handroll.
+
+## 2026-07-14 — jurisdiction-order (LOCKED)
+
+**Question:** Is the recommended jurisdiction order now the committed rollout
+sequence?
+
+**Answer:** **Ratified:** US patents → US trademarks → court orders → foreign.
+Each follow-on begins only when its matter-driven gate is satisfied.
+
+**Rationale:** The order starts with the strongest existing official-data and
+domain-model footing, while preventing speculative breadth. *Rejected:* a broad
+multi-jurisdiction v1 or calendar-driven expansion without live matter demand.
+
+## 2026-07-14 — external-dead-mans-switch (LOCKED)
+
+**Question:** What independence level must the v1 dead-man's-switch meet?
+
+**Answer:** **External-monitor independence is a first-class v1 acceptance
+requirement.** The app pings an independent healthchecks.io-style endpoint or
+tailnet cron. Missed pings alert the attorney by email or phone push even when
+the desktop is off. Acceptance requires killing the app and observing the alert
+arrive over that separate path.
+
+**Rationale:** An in-process watchdog shares the failure domain it is meant to
+detect. Years-out deadlines require proof that silence itself becomes an alert.
+*Rejected:* an app-local heartbeat or desktop-only notification.
+
+## 2026-07-14 — vendor-evaluation-trigger (LOCKED)
+
+**Question:** Should CPI or LawToolBox commercial API access be evaluated before
+the handroll spine ships?
+
+**Answer:** **Deferred until the handroll spine ships.** The decomposition must
+carry the exact trigger: **"when handroll v1 lands, open the CPI access request"**.
+LawToolBox waits for the court-orders track.
+
+**Rationale:** Commercial access evidence is useful only after the zero-purchase
+candidate interface exists, and it must not block the spine. *Rejected:* opening
+partner-gated vendor work now or treating the deferral as an unowned maybe.
+
+## 2026-07-14 — docket-of-record-first-slice (LOCKED)
+
+**Question:** What is the docket of record while the first slice is operating?
+
+**Answer:** The attorney's current setup remains the **docket of record**. The
+attorney personally reconciles each approved candidate against it. The product
+never becomes the record.
+
+**Rationale:** This makes the overlay doctrine operational instead of merely
+aspirational. *Rejected:* migration, shadow promotion, or product behavior that
+quietly makes its local database authoritative.
+
+## 2026-07-14 — authoritative-date-policy (LOCKED)
+
+**Question:** Which source is authoritative for triggering events and computed
+deadlines?
+
+**Answer:** **Ratified:** the official register is ground truth for the
+triggering event — ODP mail date, TSDR registration date, or CourtListener docket
+entry. Attorney approval is authoritative for the computed deadline. Computed
+source disagreement escalates and never auto-resolves.
+
+**Rationale:** This ratifies the 2026-06-18 recommendation and preserves the
+separation between observed fact and legal judgment. *Rejected:* silently
+preferring either the product or a vendor when candidates disagree.
+
+## 2026-07-14 — outlook-one-way-push (LOCKED)
+
+**Question:** How deep does Outlook integration go in v1?
+
+**Answer:** **Ratified:** approved deadlines push one way through `@beep/m365`
+to Outlook calendar events and reminders. Two-way sync is a no-go. This packet
+is the concrete trigger for the `m365-driver` goal's future
+`Calendars.ReadWrite` scope.
+
+**Rationale:** This ratifies the 2026-06-18 recommendation while keeping the
+docketing workflow the only writer and avoiding calendar conflict resolution.
+*Rejected:* two-way sync or direct Graph work outside the driver boundary.
+
+## 2026-07-14 — rule-validation-change-control (LOCKED)
+
+**Question:** Who validates legal-rule fixtures, and what happens when an
+upstream rule changes?
+
+**Answer:** The attorney approves rule fixtures. Every rule records its primary
+authority and effective date. Upstream rule changes open a review; they never
+silently recompute approved deadlines.
+
+**Rationale:** Legal-rule correctness is versioned judgment, not evergreen code.
+The policy preserves the audit trail and prevents a source update from rewriting
+operative work without review. *Rejected:* developer-only fixture approval and
+automatic retroactive recomputation.
+
+## 2026-07-14 — docket-of-record-trajectory (LOCKED)
+
+**Question:** Is "overlay, never the record" permanent doctrine, or is the
+family's stated ambition — building toward their own docketing system — an
+acknowledged end state?
+
+**Answer:** **Overlay now, deliberate re-vote later.** The user and his father
+evaluated the vendor docketing market and decided to build toward their own
+solution; until it ships, the attorney manually keeps the docket of record.
+V1 remains a strict approval-gated overlay. The ambition is recorded here
+explicitly: once the reliability contract is proven in practice (independent
+heartbeat + a real track record), promoting the product to docket of record is
+a **deliberate future doctrine re-vote** — a `grill-with-docs` session plus a
+product-vision amendment — never silent feature creep.
+
+**Rationale:** Recording the trajectory keeps the overlay doctrine honest in
+both directions: it forbids silent promotion today while preventing a future
+maintainer from reading "never" as a permanent product boundary the owners do
+not actually hold. *Rejected:* amending the doctrine now (nothing is earned
+yet); leaving the ambition unrecorded (it would resurface as creep).
+
+## 2026-08-13 — holding-pen graduation convention (RATIFIED)
+
+**Question:** Does this packet stay `active` as a holding pen for its gated/queued MAP.md candidates, or does it graduate now that every promised-now goal exists?
+**Answer:** Graduate the packet now that the promised-now patent-spine and
+reliability goals exist. Keep the CPI, trademark, court-orders, and foreign
+candidates in `MAP.md` as re-entry points. A fired gate reopens this packet at
+`decompose`; it does not spawn a goal directly.
+
+**Rationale:** Matter-, access-, and license-gated lanes remain explicit
+without holding the completed patent-docketing exploration open.
+
+**Rejected:** keep-active holding pen (the prior convention — leaves terminal packets indistinguishable from in-flight work); flip-and-spawn (a fired gate spawns a goal directly from MAP.md — skips the operator's align/shape gates on the resumed scope; the ratified rule reopens the packet at `decompose` instead).

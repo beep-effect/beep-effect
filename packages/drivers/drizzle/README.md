@@ -47,19 +47,9 @@ Drizzle-backed boundary as long as they expose `execute` and `withTransaction` t
 | --- | --- |
 | `Drizzle` | Product-neutral Effect service for driver execution. |
 | `DrizzleError` | Technical driver error with optional query context. |
-| `EntityTable` | Generic metadata-only table projection for schema-first entities. |
-
-## Entity Table Projection
-
-`EntityTable.pgTableFrom(entity)` is the generic metadata-only projection from
-`@beep/schema/EntitySchema` definitions into typed Drizzle `pgTable` metadata.
-It attaches the entity definition and source entity schema to the table so
-package-local table proofs can assert the projection without executing a live
-database.
 
 `@beep/drizzle` stays product-neutral and driver-level. Concrete product tables
-belong in table packages such as `@beep/shared-tables` and
-`@beep/workspace-tables`.
+belong in table packages and are projected through `@beep/effect-drizzle`.
 
 ## Error Normalization
 
@@ -91,8 +81,8 @@ bun run lint
 ```
 
 `bun run test` runs both unit tests and integration tests. Integration tests live under `test/integration` and
-self-skip unless `BEEP_TEST_DATABASE_URL` or `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` is set. Tests and dtslint
-files import package source through `@beep/drizzle` or other `@beep/*` aliases. Use relative imports only for local
+self-skip unless `BEEP_TEST_DATABASE_URL` or `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` is set. Tests
+import package source through `@beep/drizzle` or other `@beep/*` aliases. Use relative imports only for local
 helpers, fixtures, and snapshots.
 
 ## License

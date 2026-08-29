@@ -19,6 +19,8 @@ const $I = $SchemaId.create("SchemaUtils/withKeyDefaults");
  * Applies a shared default value to a schema field for both constructor-time
  * defaults and decoding-time missing keys.
  *
+ * **Details**
+ *
  * This helper combines `Schema.withConstructorDefault` and
  * `Schema.withDecodingDefaultTypeKey` using the same decoded value, so the
  * provided default must be valid as both the schema's runtime `Type` and
@@ -28,15 +30,16 @@ const $I = $SchemaId.create("SchemaUtils/withKeyDefaults");
  * - Data-last: `pipe(S.String, withKeyDefaults("draft"))`
  * - Data-first: `withKeyDefaults(S.String, "draft")`
  *
- * @example
- * ```ts
+ * **Example** (Missing key defaults to draft)
+ *
+ * ```ts import.meta.vitest name="Missing key defaults to draft"
  * import * as S from "effect/Schema"
  * import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Status = withKeyDefaults(S.String, "draft")
  * const Settings = S.Struct({ status: Status })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).status) // "draft"
+ * S.decodeUnknownSync(Settings)({}).status // => "draft"
  * ```
  *
  * @typeParam TSchema - Schema receiving the shared default value.
@@ -87,11 +90,14 @@ const applyEmptyArrayDefaults = <
  * Apply empty readonly-array defaults for constructor creation and missing
  * value decoding.
  *
+ * **Details**
+ *
  * This helper is intended for array fields whose default should be
  * `A.empty<TValue>()`. It keeps the element schema inference from the provided
  * array schema while avoiding repeated default wiring at each call site.
  *
- * @example
+ * **Example** (Empty tags array on decode)
+ *
  * ```ts
  * import { A } from "@beep/utils"
  * import * as S from "effect/Schema"
@@ -119,7 +125,8 @@ export function withEmptyArrayDefaults<TValue>(): <
 /**
  * Apply empty readonly-array defaults directly to an array schema.
  *
- * @example
+ * **Example** (Data-first empty array defaults)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { withEmptyArrayDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults"
@@ -141,7 +148,8 @@ export function withEmptyArrayDefaults<
 /**
  * Apply empty readonly-array defaults in data-first or data-last form.
  *
- * @example
+ * **Example** (Data-last empty array defaults)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { withEmptyArrayDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults"
@@ -168,15 +176,16 @@ export function withEmptyArrayDefaults<
  * Create a boolean schema field with a shared constructor and missing-key
  * default.
  *
- * @example
- * ```ts
+ * **Example** (Boolean field defaults to true)
+ *
+ * ```ts import.meta.vitest name="Boolean field defaults to true"
  * import * as S from "effect/Schema"
  * import { boolKeyWithDefault } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Enabled = boolKeyWithDefault(true)
  * const Settings = S.Struct({ enabled: Enabled })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @param defaultValue - Boolean value used when constructing or decoding a
@@ -191,14 +200,15 @@ export const boolKeyWithDefault = (defaultValue: boolean) => withKeyDefaults(S.B
  * Boolean schema field that defaults constructor input and missing keys to
  * `false`.
  *
- * @example
- * ```ts
+ * **Example** (Visible defaults to false)
+ *
+ * ```ts import.meta.vitest name="Visible defaults to false"
  * import * as S from "effect/Schema"
  * import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Settings = S.Struct({ visible: BoolKeyDefaultFalse })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).visible) // false
+ * S.decodeUnknownSync(Settings)({}).visible // => false
  * ```
  *
  * @category constructors
@@ -212,15 +222,6 @@ export const BoolKeyDefaultFalse = boolKeyWithDefault(false).pipe(
 
 /**
  * {@inheritDoc BoolKeyDefaultFalse}
- *
- * @example
- * ```ts
- * import type { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults"
- *
- * const visible: BoolKeyDefaultFalse = false
- * console.log(visible)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -230,14 +231,15 @@ export type BoolKeyDefaultFalse = typeof BoolKeyDefaultFalse.Type;
  * Boolean schema field that defaults constructor input and missing keys to
  * `true`.
  *
- * @example
- * ```ts
+ * **Example** (Enabled defaults to true)
+ *
+ * ```ts import.meta.vitest name="Enabled defaults to true"
  * import * as S from "effect/Schema"
  * import { BoolKeyDefaultTrue } from "@beep/schema/SchemaUtils/withKeyDefaults"
  *
  * const Settings = S.Struct({ enabled: BoolKeyDefaultTrue })
  *
- * console.log(S.decodeUnknownSync(Settings)({}).enabled) // true
+ * S.decodeUnknownSync(Settings)({}).enabled // => true
  * ```
  *
  * @category constructors
@@ -251,15 +253,6 @@ export const BoolKeyDefaultTrue = boolKeyWithDefault(true).pipe(
 
 /**
  * {@inheritDoc BoolKeyDefaultTrue}
- *
- * @example
- * ```ts
- * import type { BoolKeyDefaultTrue } from "@beep/schema/SchemaUtils/withKeyDefaults"
- *
- * const enabled: BoolKeyDefaultTrue = true
- * console.log(enabled)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

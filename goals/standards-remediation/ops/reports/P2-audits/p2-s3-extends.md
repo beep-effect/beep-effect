@@ -51,12 +51,6 @@ Full breakdown:
 
 **Verified by direct read of every file.** Examples:
 
-- `packages/foundation/ui-system/form/src/components/Form.tsx:33` —
-  `FormProps extends React.ComponentProps<"form">`
-- `packages/foundation/ui-system/form/src/fields/TextField.tsx:33` —
-  `TextFieldProps extends Omit<React.ComponentProps<typeof Input>, ...>`
-  (all 26 `form/src/fields/*.tsx` entries follow this exact shape — each
-  extends `React.ComponentProps<typeof <ShadcnPrimitive>>`, always via `Omit`)
 - `packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx:30,59` —
   `GraphNode extends d3.SimulationNodeDatum`, `GraphLink extends
   d3.SimulationLinkDatum<GraphNode>` (`d3` is `node_modules`)
@@ -153,7 +147,7 @@ locked ruling suspends fence 1 for this file). Fold into the "non-schema
 signals" reason once the detector fix lands; no standing exception language
 change needed beyond that.
 
-### Attempt 2 — `DateTimeInsert` (`packages/foundation/modeling/schema/src/Model/Model.datetime.ts:133-138,159`)
+### Attempt 2 — `DateTimeInsert` (`packages/foundation/modeling/schema/src/index.ts:133-138,159`)
 
 `export interface DateTimeInsert extends VariantSchema.Field<{ select: ...;
 insert: Overridable<...>; json: ... }> {}` then `export const DateTimeInsert:
@@ -274,9 +268,6 @@ carve-out language required.
 | foundation/modeling/schema/.../Model.datetime.ts | DateTimeUpdateFromDate | schema-meta idiom | unconvertible (Attempt 2 family) |
 | foundation/modeling/schema/.../Model.datetime.ts | DateTimeUpdateFromNumber | schema-meta idiom | unconvertible (Attempt 2 family) |
 | foundation/modeling/schema/.../Model.sqlite.ts | BooleanSqlite | schema-meta idiom | unconvertible (Attempt 2 family) |
-| foundation/ui-system/form/.../Form.tsx | FormProps | extends-external (React) | detector-ruling |
-| foundation/ui-system/form/.../SubmitButton.tsx | SubmitButtonProps | extends-external (React) | detector-ruling |
-| foundation/ui-system/form/fields/*.tsx (26 files) | `<Name>FieldProps` | extends-external (React) | detector-ruling |
 | foundation/ui-system/ui/.../color-picker.tsx | ColorPickerProps | extends-external (React) | detector-ruling |
 | foundation/ui-system/ui/.../country-select.tsx | CountryOptionContentProps, CountrySelectProps | extends-external (React) | detector-ruling |
 | foundation/ui-system/ui/.../emoji-picker.tsx | EmojiPickerProps | extends-external (frimousse) | detector-ruling |
@@ -298,7 +289,7 @@ UploadAvatarField, UploadBoxField, UploadField — each individually verified by
 ## Files touched (all reverted, `git status --short` clean for each)
 
 - `packages/drivers/duckdb/src/DuckDb.service.ts` (Attempt 1, reverted)
-- `packages/foundation/modeling/schema/src/Model/Model.datetime.ts` (Attempt 2, reverted)
+- `packages/foundation/modeling/schema/src/index.ts` (Attempt 2, reverted)
 - `packages/drivers/acp/src/AcpAgent.service.ts` (Attempt 3, reverted)
 
 No `standards/*.jsonc`, no repo-wide commands, no commits. Compile checks used

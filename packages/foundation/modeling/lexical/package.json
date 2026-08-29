@@ -1,7 +1,7 @@
 {
   "name": "@beep/lexical-schema",
   "version": "0.0.0",
-  "description": "Schema-first models of Lexical serialized editor state with Md to Lexical codecs",
+  "description": "Schema-first strict and lossless Lexical state with Markdown codecs",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -19,8 +19,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
@@ -32,15 +32,16 @@
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "dtslint": "bunx tstyche dtslint/Lexical.tst.ts",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration",
-    "type-test": "bun run dtslint"
+    "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*.ts",
+    "./Lexical.behavior": "./src/Lexical.behavior.ts",
+    "./Lexical.codec": "./src/Lexical.codec.ts",
+    "./Lexical.model": "./src/Lexical.model.ts",
+    "./Lexical.normalize": "./src/Lexical.normalize.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -56,8 +57,11 @@
     "access": "public",
     "provenance": true,
     "exports": {
-      ".": "./dist/index.ts",
-      "./*": "./dist/*.js",
+      ".": "./dist/index.js",
+      "./Lexical.behavior": "./dist/Lexical.behavior.js",
+      "./Lexical.codec": "./dist/Lexical.codec.js",
+      "./Lexical.model": "./dist/Lexical.model.js",
+      "./Lexical.normalize": "./dist/Lexical.normalize.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
@@ -72,10 +76,8 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@lexical/code": "catalog:",
-    "@lexical/link": "catalog:",
     "@lexical/list": "catalog:",
-    "@lexical/rich-text": "catalog:",
+    "@lexical/table": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:",
     "lexical": "catalog:"

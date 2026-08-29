@@ -1,20 +1,28 @@
 import { lintCommand } from "@beep/repo-cli";
-import { classifyGoalDoctorFindings, GoalDoctorFinding, goalsCommand } from "@beep/repo-cli/test/Goals";
+import {
+  classifyGoalDoctorFindings,
+  GoalDoctorFinding,
+  goalsCommand,
+  PacketEventStoreLive,
+} from "@beep/repo-cli/test/Goals";
+import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, Layer, Runtime } from "effect";
-import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.js";
+import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
+  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {

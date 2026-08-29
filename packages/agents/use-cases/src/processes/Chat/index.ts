@@ -9,7 +9,8 @@
 /**
  * Chat public action error.
  *
- * @example
+ * **Example** (Make ChatActionError instance)
+ *
  * ```ts
  * import { ChatActionError } from "@beep/agents-use-cases/public"
  *
@@ -20,11 +21,12 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./Chat.errors.js";
+export * from "./Chat.errors.ts";
 /**
  * Chat rpc declarations and the `ChatRpcs` group.
  *
- * @example
+ * **Example** (List ChatRpcs request keys)
+ *
  * ```ts
  * import { ChatRpcs } from "@beep/agents-use-cases/public"
  *
@@ -34,4 +36,4 @@ export * from "./Chat.errors.js";
  * @category protocols
  * @since 0.0.0
  */
-export * from "./Chat.rpc.js";
+export * from "./Chat.rpc.ts";

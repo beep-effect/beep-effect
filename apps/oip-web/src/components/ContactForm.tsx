@@ -14,11 +14,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import {
-  ContactSubmissionStatus,
-  contactSubmissionPayloadFromFormData,
-  OipContactHttpApiClient,
-} from "../contact/index.ts";
+import { OipContactHttpApiClient } from "../contact/ContactSubmission.http.ts";
+import { ContactSubmissionStatus, contactSubmissionPayloadFromFormData } from "../contact/ContactSubmission.model.ts";
 
 const $I = $OipWebId.create("components/ContactForm");
 const inputClass =
@@ -105,7 +102,8 @@ class ContactFormProps extends S.Class<ContactFormProps>($I`ContactFormProps`)(
 /**
  * Renders the OIP contact form.
  *
- * @example
+ * **Example** (Rendering ContactForm with props)
+ *
  * ```tsx
  * import { ContactForm } from "@beep/oip-web/components/ContactForm"
  *

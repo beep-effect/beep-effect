@@ -7,14 +7,15 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { optionalDesc, optionalName } from "./_fields.js";
+import { optionalDesc, optionalName } from "./_fields.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/tag-values/InlineTagValues");
 
 /**
  * Schema-backed value for a parsed `link` tag occurrence: an inline link to another symbol.
  *
- * @example
+ * **Example** (Create LinkValue instance)
+ *
  * ```ts
  * import { LinkValue } from "@beep/repo-utils/JSDoc/models/tag-values/InlineTagValues"
  *
@@ -25,6 +26,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/InlineTagValues");
  * const tagName: "link" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,7 +41,8 @@ export class LinkValue extends S.TaggedClass<LinkValue>($I`LinkValue`)(
 /**
  * Schema-backed value for a parsed `inheritDoc` tag occurrence: inherits documentation from a parent.
  *
- * @example
+ * **Example** (Create InheritDocValue instance)
+ *
  * ```ts
  * import { InheritDocValue } from "@beep/repo-utils/JSDoc/models/tag-values/InlineTagValues"
  *
@@ -47,6 +50,7 @@ export class LinkValue extends S.TaggedClass<LinkValue>($I`LinkValue`)(
  * const tagName: "inheritDoc" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

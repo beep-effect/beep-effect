@@ -2,20 +2,18 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-Stand up the hybrid 3-channel Reciprocal-Rank-Fusion retrieval layer (k=60:
-embedding cosine + FTS/BM25 + literal-phrase) over a rebuildable pgvector HNSW
-projection, plus the bounded-concurrency, offset-preserving char-span
-ingest/chunker that feeds it between `@beep/md` and `@beep/langextract`. This
-packet is the single designated owner of that retrieval/projection tier;
-`agent-memory-tiers-bitemporal-edges` and `goals/trustgraph-port` consume it
-rather than rebuild it.
+Stand up beep-owned hybrid three-channel weighted RRF as a deterministic,
+span-bearing candidate seam that cannot bypass `ClaimGate`. Graduate the
+fixture-driven fusion core first; add rebuildable vector/lexical projection,
+the local encoder, clean-room dedup, and USPTO citation BFS only through the
+gated follow-on goals in [`MAP.md`](./MAP.md).
 
 ## Sources & provenance
 
@@ -27,13 +25,8 @@ the unknown-license reimplement rule (lawyergpt), and the RRF single-owner manda
 
 ## Next Open Question
 
-**Q2: First slice — what is the thin V1 vertical that graduates into a `goals/`
-packet first?** This is the highest-leverage align fork: it bounds appetite,
-decomposition, and what the first goal's definition-of-ready asserts (read-path
-vertical vs. shipping all six net-new pieces at once). DECISIONS.md pre-drafts a
-recommended answer plus six sibling forks (build-vs-buy, scope boundary,
-vendor/auth ×2, package placement). Resolve them with
-`/grill-with-docs rag-retrieval-projection`.
+None while graduated. The four gated satellites and their MAP gate proofs
+remain re-entry points; a fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -46,5 +39,13 @@ vendor/auth ×2, package placement). Resolve them with
 
 ## Trail
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. The four gated satellites and their MAP gate proofs remain
+  re-entry points, and a fired gate reopens this packet at `decompose`.
+- 2026-07-14: shape gate signed off; BRIEF ratified as drafted; graduated
+  [`goals/hybrid-retrieval-fusion-core`](../../goals/hybrid-retrieval-fusion-core/README.md)
+  as the sole RRF owner. Four gated satellites remain queued; no product prose
+  graduated.
+- 2026-07-14: align gate closed with eight locked decisions; post-align draft advanced the packet to shape with fusion-core first and four gated follow-ons.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'RAG ingestion + char-span chunking' (14 nuggets).

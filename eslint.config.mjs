@@ -1,5 +1,6 @@
 import { DeprecatedApisESLintConfig } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig";
 import { DocsESLintConfig } from "@beep/repo-configs/eslint/DocsESLintConfig";
+import { globalIgnores } from "eslint/config";
 
 const eslintProfile = process.env.BEEP_ESLINT_PROFILE ?? "docs";
 
@@ -18,4 +19,19 @@ const selectedESLintConfig = (() => {
   throw new Error(`Unsupported BEEP_ESLINT_PROFILE: ${eslintProfile}`);
 })();
 
-export default selectedESLintConfig;
+// `.claude/worktrees/**` holds session-local linked worktrees (other checkouts'
+// files that CI never sees); linting them couples this clone's gate to whatever
+// those sessions have checked out. The Impeccable mirrors are vendored agent
+// tooling whose upstream UMD bundle is not authored workspace source.
+// `infra/lambda/**/build/**` is gitignored esbuild bundle output (vendored shim
+// code) that eslint would otherwise scan.
+export default [
+  globalIgnores([
+    "**/src-tauri/target/**",
+    ".claude/worktrees/**",
+    ".claude/skills/impeccable/**",
+    ".github/skills/impeccable/**",
+    "infra/lambda/**/build/**",
+  ]),
+  ...selectedESLintConfig,
+];

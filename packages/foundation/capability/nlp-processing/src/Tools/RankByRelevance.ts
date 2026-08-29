@@ -53,11 +53,14 @@ class RankByRelevanceSuccess extends S.Class<RankByRelevanceSuccess>($I`RankByRe
  * Defines the agent-facing tool contract for ranking candidate texts by
  * relevance to a query.
  *
+ * **Details**
+ *
  * Use this tool for one-shot retrieval over an in-memory candidate list when a
  * persistent corpus is unnecessary.
  *
- * @example
- * ```ts
+ * **Example** (Decode ranking parameters)
+ *
+ * ```ts import.meta.vitest name="Decode ranking parameters"
  * import * as S from "effect/Schema"
  * import { RankByRelevance } from "@beep/nlp-processing/Tools/RankByRelevance"
  *

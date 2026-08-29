@@ -11,8 +11,8 @@
  * in the app's `src/runtime/Observability.ts`.
  *
  * Env-gated, browser-safe, NodeNext-safe: this module deliberately avoids
- * `import.meta.env` (vite-only, untyped under NodeNext — the same reason
- * {@link Chat.atoms} keys off `window.location.origin` rather than vite env).
+ * `import.meta.env` (vite-only, untyped under NodeNext — the same reason the
+ * chat HTTP policy keys off the browser origin rather than vite env).
  * The OTLP base URL is resolved from the live runtime:
  *
  * - An explicit `globalThis.__BEEP_OTLP_URL__` override wins when set (allows a
@@ -20,9 +20,9 @@
  * - Otherwise, on a real http(s) origin (the vite dev server) the exporter posts
  *   to the same-origin `/otlp` path, which vite proxies to the collector (see
  *   the app's vite.config.ts) — no CORS setup needed.
- * - Otherwise, a packaged Tauri webview uses the loopback OTLP/HTTP collector;
- *   jsdom/SSR still collapses to {@link Layer.empty}, so tests without a
- *   collector remain unaffected.
+ * - Otherwise, packaged webviews and jsdom/SSR collapse to
+ *   {@link Layer.empty}; packaged telemetry requires explicit runtime
+ *   injection.
  *
  * @packageDocumentation
  * @category observability
@@ -30,11 +30,13 @@
  */
 
 import { LogLevel } from "@beep/schema";
-import { O, P, Str } from "@beep/utils";
+import { O, P, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import { Effect, Layer, Metric, References } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Otlp, OtlpSerialization } from "effect/unstable/observability";
+import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
+import type { R } from "@beep/utils";
 
 const readRuntimeString = (key: string): O.Option<string> => {
   const runtime: unknown = globalThis;
@@ -43,26 +45,15 @@ const readRuntimeString = (key: string): O.Option<string> => {
     : O.none();
 };
 
-const runtimeAttribute = (key: string, attribute: string): Readonly<Record<string, string>> =>
+const runtimeAttribute = (key: string, attribute: string): R.ReadonlyRecord<string, string> =>
   O.getOrElse(
     O.map(readRuntimeString(key), (value) => ({ [attribute]: value })),
-    () => ({})
+    thunkEmptyReadonlyRecord<string, string>
   );
 
 // browser/runtime-derived config boundary — no vite env, no node `process`.
 const resolveOtlpBaseUrl = (): O.Option<string> =>
-  O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () => {
-    if (typeof window !== "undefined") {
-      const origin = window.location.origin;
-      if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
-        return O.some(new URL("/otlp", origin).toString());
-      }
-      if ("__TAURI_INTERNALS__" in window) {
-        return O.some("http://127.0.0.1:4318");
-      }
-    }
-    return O.none();
-  });
+  O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () => resolveBrowserHttpUrl(globalThis.window, "/otlp"));
 
 const resolveMinimumLogLevel = (): LogLevel =>
   O.match(readRuntimeString("__BEEP_LOG_LEVEL__"), {
@@ -70,7 +61,7 @@ const resolveMinimumLogLevel = (): LogLevel =>
     onSome: (value) => (S.is(LogLevel)(value) ? value : LogLevel.Enum.Info),
   });
 
-const resourceAttributes = (): Readonly<Record<string, string>> => ({
+const resourceAttributes = (): R.ReadonlyRecord<string, string> => ({
   "deployment.environment": "qa",
   ...runtimeAttribute("__BEEP_DEPLOYMENT_ENVIRONMENT__", "deployment.environment"),
   ...runtimeAttribute("__BEEP_LAUNCH_ID__", "launch_id"),
@@ -85,7 +76,8 @@ const resourceAttributes = (): Readonly<Record<string, string>> => ({
  * context onto rpc envelopes; absent ⇒ {@link Layer.empty}, so the exporter is
  * opt-in and dev/tests without a collector are unaffected.
  *
- * @example
+ * **Example** (Verify is a Layer)
+ *
  * ```ts
  * import { ClientObservabilityLive } from "@beep/agents-client"
  * import { Layer } from "effect"

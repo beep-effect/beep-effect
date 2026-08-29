@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-jsdoc-quality",
+    "title": "Effect-level JSDoc Quality",
+    "status": "completed-retained",
+    "created": "2026-07-30",
+    "updated": "2026-08-02",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-jsdoc-quality",
+  "lifecycle": "completed-retained",
+  "mission": "Port Effect v4's JSDoc section grammar into beep law + kind-aware inventory rules, keep example compile validation, prove on a 3-package pilot, ratchet-on-touch.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/effect-jsdoc-quality",
+    "graduated": "2026-07-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/effect-jsdoc-quality/README.md",
+    "goals/effect-jsdoc-quality/SPEC.md",
+    "goals/effect-jsdoc-quality/PLAN.md",
+    "goals/effect-jsdoc-quality/GOAL.md",
+    "goals/effect-jsdoc-quality/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-jsdoc-quality/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Law + skill rewrite",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Inventory rules + docgen harvesting",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Pilot trio + hover acceptance",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/effect-jsdoc-quality/GOAL.md)\" -le 4000",
+    "jq . goals/effect-jsdoc-quality/ops/manifest.json",
+    "rg -n \"effect-jsdoc-quality|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/effect-jsdoc-quality",
+    "git diff --check -- goals/effect-jsdoc-quality",
+    "bun run beep quality jsdoc-inventory",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (mass JSDoc edits or link-resolution work).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

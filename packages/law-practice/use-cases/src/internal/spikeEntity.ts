@@ -1,11 +1,11 @@
 /**
- * Spike-only BaseEntity input shim.
+ * Spike-only ProductEntity input shim.
  *
  * The law-practice domain entities (and the epistemic `CandidateClaim` /
- * `Evidence` the review loop builds) extend `BaseEntity.Class`, so decoding one
+ * `Evidence` the review loop builds) use the ProductEntity kit, so decoding one
  * requires the full audit envelope (`id`, `createdAt`/`updatedAt`,
  * `createdByPrincipal`/`updatedByPrincipal`, `orgId`, `rowVersion`,
- * `schemaVersion`, `source`). `@beep/test-utils` `baseEntityFixtureInput`
+ * `schemaVersion`, `source`). `@beep/test-utils` `productEntityFixtureInput`
  * produces exactly this shape, but it is a devDependency and cannot be imported
  * from `src`. This module mirrors that helper as a spike affordance.
  *
@@ -42,9 +42,10 @@ class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal`)(
 const publicIdFor = (entityType: string, id: number) => `${Str.snakeCase(entityType)}_a${id}`;
 
 /**
- * Build the BaseEntity audit envelope for a spike entity decode.
+ * Build the ProductEntity audit envelope for a spike entity decode.
  *
- * @example
+ * **Example** (Build spike entity input)
+ *
  * ```ts
  * import { spikeEntityInput } from "./spikeEntity.ts"
  *
@@ -77,9 +78,10 @@ export const spikeEntityInput: {
 );
 
 /**
- * Schema-backed BaseEntity audit-envelope input used by the spike shim.
+ * Schema-backed ProductEntity audit-envelope input used by the spike shim.
  *
- * @example
+ * **Example** (Create typed entity input)
+ *
  * ```ts
  * import { EntityInput, spikeEntityInput } from "./spikeEntity.ts"
  *

@@ -17,6 +17,7 @@ grep-verifiable importers; `uspto-mcp` is in progress as the third.
 | `packages/drivers/nlp-mcp` | **Landed** (`mcp-host-retrofit`) | `Server.ts` mounts `NlpToolkit`/`StreamingToolkit` via `sanitizedToolkit` (replacing `McpServer.toolkit`); `StreamingTools.ts`'s 17 tools carry `annotateFourHints(..., readOnlyToolHints)`. |
 | `packages/drivers/m365-mcp` | **Landed** (`mcp-host-retrofit`) | `Server.ts` mounts `M365Toolkit` via `sanitizedToolkit`; `M365Tools.ts`'s 11 tools use `annotateFourHints(..., readOnlyToolHints)` in place of inline `.annotate(...)` chains. |
 | `packages/drivers/uspto-mcp` | In progress (`uspto-mcp` goal) | The thin USPTO MCP proving host — exercises the `SourceAuth` gate registry, credential-keyed composition, and the `api_key_required` envelope against USPTO's `soft`-gated credential. |
+| `packages/epistemic/server` | **Landed** (`agent-execution-authority` PR 5) | `GovernedTierGateLive` implements `TierGateShape` — `evaluate` freezes a per-session grant set on first dispatch and writes a write-ahead ledger decision before any effect runs (no record, no action); `recordOutcome` persists the bounded settlement. This is foundation-mediated port inversion: `ontology/server` keeps consuming `TierGate`, `epistemic/server` implements it, and neither names the other; the binding happens at `apps/professional-desktop/server/OntologyMcpTransport.ts`. |
 
 **Removal condition status**: two of the three named consumers are landed
 with grep-verifiable `@beep/mcp-kit` imports (`rg -n "@beep/mcp-kit"
@@ -36,7 +37,10 @@ once `uspto-mcp` also lands.
    `soft`/`none`-gated tools whose credential is absent at call time.
 4. **`TierGate`** — the fail-closed, refusal-as-value `tools/call` dispatch
    wrapper (the real security boundary), its sanitized audit record schema,
-   and the `EnabledWhen` list-filter helper (list-visibility only).
+   the `recordOutcome` settlement hook (a bounded `TierGateSettlement`
+   literal, never an `Exit`, reported by `dispatchWithTierGate` once an
+   approved dispatch settles), and the `EnabledWhen` list-filter helper
+   (list-visibility only).
 5. **`FieldTier`** — named `minimal`/`balanced`/`complete` Schema projection
    tiers, null-stripping, columnar reshaping, and fetchable handles for
    oversized payloads.
@@ -100,7 +104,7 @@ bun run test:integration
 bun run lint:fix
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests and dtslint files import package source through `@beep/mcp-kit` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/mcp-kit` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 

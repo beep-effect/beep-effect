@@ -9,7 +9,8 @@
 /**
  * Package version for the ontology domain role.
  *
- * @example
+ * **Example** (Assert expected package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-domain"
  *
@@ -34,18 +35,18 @@ export const VERSION = "0.0.0" as const;
  * @category aggregates
  * @since 0.0.0
  */
-export * as Aggregates from "./aggregates/index.js";
+export * as Aggregates from "./aggregates/index.ts";
 /**
  * Direct Session aggregate namespace export.
  *
  * @category aggregates
  * @since 0.0.0
  */
-export * as Session from "./aggregates/Session/index.js";
+export * as Session from "./aggregates/Session/index.ts";
 /**
  * Direct Session model exports for the ontology domain package.
  *
  * @category aggregates
  * @since 0.0.0
  */
-export * from "./aggregates/Session/index.js";
+export * from "./aggregates/Session/index.ts";

@@ -1,0 +1,26 @@
+[
+  {
+    "text": "Cross-dock a patch bundle through one clean proof-depot clone, then return only the verified tree identity to the originating agent clone.",
+    "rationale": "Sibling clones stop paying synchronization and environment-drift costs while the depot proves the exact deliverable tree rather than its warehouse history."
+  },
+  {
+    "text": "Seal every locally proven tree with a tamper-evident chain of lane attestations so hosted CI acts as customs inspection and spot-audits the seal instead of unloading the shipment.",
+    "rationale": "Proof becomes transferable custody attached to content, turning redundant local-plus-hosted execution into verification of provenance and selected challenges."
+  },
+  {
+    "text": "Issue merge-dock appointments just in time, keeping agents in research and probe work until a slot guarantees their final proof will reach squash merge before its base goes stale.",
+    "rationale": "Pulling expensive proof from downstream merge capacity reduces perishable green branches, rebases, and repeated batteries without merely rearranging lane order."
+  },
+  {
+    "text": "Treat failed CI runs as return merchandise: route each failure capsule back to the originating agent with the exact environment, command, artifacts, and resubmission label.",
+    "rationale": "A closed reverse-logistics path replaces dashboard archaeology and blind reruns with deterministic repair parcels that preserve failure state."
+  },
+  {
+    "text": "Zone-skip branch history by shipping the predicted squash tree directly to a merge-terminal worktree and proving the artifact GitHub will actually place on main.",
+    "rationale": "The pipeline avoids validating transient commit arrangements whose only destination form is a single squashed tree."
+  },
+  {
+    "text": "Create an exception dock where only disputed proof claims are unloaded, with each CI job returning a machine-readable shortage, damage, or customs-hold code to the PR agent.",
+    "rationale": "Agents can repair the breached contract directly instead of reopening the entire opaque proof shipment after every nonzero exit."
+  }
+]

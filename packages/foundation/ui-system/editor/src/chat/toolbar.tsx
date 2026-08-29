@@ -1,7 +1,7 @@
 /**
  * The fixed formatting toolbar mounted above the editable surface: text marks
  * (bold/italic/underline/strikethrough/inline-code), list blocks (bulleted/
- * numbered/check), quote, code block, and link. Button pressed-state mirrors the
+ * numbered/check), quote, and code block. Button pressed-state mirrors the
  * current selection so the bar stays in sync as the caret moves.
  *
  * Per the repo atom-first law the selection-mirroring registration is a
@@ -22,32 +22,28 @@ import { Toggle } from "@beep/ui/components/toggle";
 import { cn } from "@beep/ui/lib/utils";
 import { useAtomValue } from "@effect/atom-react";
 import { $createCodeNode, $isCodeNode } from "@lexical/code";
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import {
   $isListNode,
   INSERT_CHECK_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
-  ListNode,
   REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $createQuoteNode, $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
-import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
-import {
-  CodeBlockIcon,
-  CodeIcon,
-  LinkIcon,
-  ListBulletsIcon,
-  ListChecksIcon,
-  ListNumbersIcon,
-  QuotesIcon,
-  TextBIcon,
-  TextItalicIcon,
-  TextStrikethroughIcon,
-  TextUnderlineIcon,
-} from "@phosphor-icons/react";
+import { $isTableCellNode } from "@lexical/table";
+import { CodeIcon } from "@phosphor-icons/react/Code";
+import { CodeBlockIcon } from "@phosphor-icons/react/CodeBlock";
+import { ListBulletsIcon } from "@phosphor-icons/react/ListBullets";
+import { ListChecksIcon } from "@phosphor-icons/react/ListChecks";
+import { ListNumbersIcon } from "@phosphor-icons/react/ListNumbers";
+import { QuotesIcon } from "@phosphor-icons/react/Quotes";
+import { TextBIcon } from "@phosphor-icons/react/TextB";
+import { TextItalicIcon } from "@phosphor-icons/react/TextItalic";
+import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
+import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
+import { Match } from "effect";
 import { Atom } from "effect/unstable/reactivity";
 import {
   $createParagraphNode,
@@ -57,12 +53,26 @@ import {
   FORMAT_TEXT_COMMAND,
   SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import type { ElementNode, LexicalEditor, TextFormatType } from "lexical";
+import type { ElementNode, LexicalEditor, LexicalNode, TextFormatType } from "lexical";
 import type { JSX, ReactNode } from "react";
 
 const $I = $EditorId.create("chat/toolbar");
 
-const BlockType = LiteralKit([
+/**
+ * Schema for the block families represented by the fixed toolbar.
+ *
+ * **Example** (Check code block type)
+ *
+ * ```ts import.meta.vitest name="Check code block type"
+ * import { BlockType } from "@beep/editor/chat/toolbar"
+ *
+ * BlockType.is.code("code") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BlockType = LiteralKit([
   "paragraph",
   "h1",
   "h2",
@@ -81,14 +91,28 @@ const BlockType = LiteralKit([
   })
 );
 
-type BlockType = typeof BlockType.Type;
+/**
+ * Block family represented by the fixed toolbar.
+ *
+ * **Example** (Assign selected block type)
+ *
+ * ```ts import.meta.vitest name="Assign selected block type"
+ * import type { BlockType } from "@beep/editor/chat/toolbar"
+ *
+ * const selectedBlock: BlockType = "code"
+ * selectedBlock // => "code"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BlockType = typeof BlockType.Type;
 
 interface SelectionState {
   readonly blockType: BlockType;
   readonly bold: boolean;
   readonly code: boolean;
   readonly italic: boolean;
-  readonly link: boolean;
   readonly strikethrough: boolean;
   readonly underline: boolean;
 }
@@ -99,7 +123,6 @@ const INITIAL_STATE: SelectionState = {
   underline: false,
   strikethrough: false,
   code: false,
-  link: false,
   blockType: "paragraph",
 };
 
@@ -107,6 +130,17 @@ const INITIAL_STATE: SelectionState = {
 // direct-list and ancestor-list branches so the mapping lives in one place.
 const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockType =>
   listType === "number" ? "number" : listType === "check" ? "check" : "bullet";
+
+const blockTypeFromNode = Match.type<LexicalNode>().pipe(
+  Match.when($isListNode, (node) => blockTypeFromListType(node.getListType())),
+  Match.when($isHeadingNode, (node) => node.getTag()),
+  Match.when($isQuoteNode, BlockType.thunk.quote),
+  Match.when($isCodeNode, BlockType.thunk.code),
+  // A table cell is the local block boundary. Do not climb to the table's
+  // top-level node: classify the nearest supported block inside this cell.
+  Match.when($isTableCellNode, BlockType.thunk.paragraph),
+  Match.orElse(() => undefined)
+);
 
 // The block type of the current selection, read from live editor state. Must run
 // inside a Lexical lexical-scope (`editorState.read` or `editor.update`), where
@@ -117,27 +151,37 @@ const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockTy
 // quick presses both saw the pre-toggle type and *created* a second block
 // instead of toggling back — nesting a code block inside a quote while both
 // buttons still reported unpressed.
-const $selectionBlockType = (): BlockType => {
+/**
+ * Classifies the nearest supported block ancestor of the live range
+ * selection, stopping at a table-cell boundary.
+ *
+ * **Details**
+ *
+ * Must run inside a Lexical read/update scope. Exported so custom toolbars and
+ * selection-focused tests share the exact same classification semantics.
+ *
+ * **Example** (Read selection block type)
+ *
+ * ```ts
+ * import { $selectionBlockType } from "@beep/editor/chat/toolbar"
+ * import { createEditor } from "lexical"
+ *
+ * const editor = createEditor()
+ * console.log(editor.getEditorState().read($selectionBlockType)) // "paragraph"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const $selectionBlockType = (): BlockType => {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) return "paragraph";
-  const anchorNode = selection.anchor.getNode();
-  const element = anchorNode.getKey() === "root" ? anchorNode : (anchorNode.getTopLevelElement() ?? anchorNode);
+  let node: LexicalNode | null = selection.anchor.getNode();
 
-  if ($isListNode(element)) {
-    return blockTypeFromListType(element.getListType());
-  }
-  const parentList = $getNearestNodeOfType(anchorNode, ListNode);
-  if (parentList !== null) {
-    return blockTypeFromListType(parentList.getListType());
-  }
-  if ($isHeadingNode(element)) {
-    return element.getTag();
-  }
-  if ($isQuoteNode(element)) {
-    return "quote";
-  }
-  if ($isCodeNode(element)) {
-    return "code";
+  while (node !== null && node.getKey() !== "root") {
+    const blockType = blockTypeFromNode(node);
+    if (blockType !== undefined) return blockType;
+    node = node.getParent();
   }
   return "paragraph";
 };
@@ -148,15 +192,12 @@ const $selectionBlockType = (): BlockType => {
 const computeSelectionState = (): SelectionState => {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) return INITIAL_STATE;
-  const anchorNode = selection.anchor.getNode();
-  const linkParent = $findMatchingParent(anchorNode, $isLinkNode);
   return {
     bold: selection.hasFormat("bold"),
     italic: selection.hasFormat("italic"),
     underline: selection.hasFormat("underline"),
     strikethrough: selection.hasFormat("strikethrough"),
     code: selection.hasFormat("code"),
-    link: linkParent !== null,
     blockType: $selectionBlockType(),
   };
 };
@@ -166,10 +207,22 @@ const computeSelectionState = (): SelectionState => {
  * read fn registers the update + selection-change listeners (torn down via the
  * atom finalizer) and pushes new snapshots with `get.setSelf`.
  *
+ * **Example** (Read the initial snapshot for a headless editor)
+ *
+ * ```ts
+ * import { toolbarSelectionAtom } from "@beep/editor/chat/toolbar"
+ * import { createHeadlessEditor } from "@lexical/headless"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const editor = createHeadlessEditor({ namespace: "example" })
+ * const registry = AtomRegistry.make()
+ * console.log(registry.get(toolbarSelectionAtom(editor)).blockType) // "paragraph"
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
-const toolbarSelectionAtom = Atom.family((editor: LexicalEditor) =>
+export const toolbarSelectionAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     get.addFinalizer(
       editor.registerUpdateListener(({ editorState }) => get.setSelf(editorState.read(computeSelectionState)))
@@ -219,8 +272,8 @@ interface ToolbarButtonProps {
   readonly onClick: () => void;
 }
 
-// One-shot / block actions (lists, quote, code block, link). Canonical ghost
-// icon button; when the block/link is active we mirror the toggle's pressed
+// One-shot / block actions (lists, quote, code block). Canonical ghost
+// icon button; when the block is active we mirror the toggle's pressed
 // styling so the active state reads identically across the bar.
 function ToolbarButton({ active = false, label, onClick, children }: ToolbarButtonProps): JSX.Element {
   return (
@@ -246,9 +299,10 @@ function ToolbarDivider(): JSX.Element {
 /**
  * Fixed formatting toolbar plugin. Mount inside a `LexicalComposer`.
  *
- * @example
+ * **Example** (Mount fixed toolbar plugin)
+ *
  * ```tsx
- * import { FixedToolbarPlugin } from "@beep/editor/chat"
+ * import { FixedToolbarPlugin } from "@beep/editor/chat/toolbar"
  *
  * function ComposerToolbar() {
  *   return <FixedToolbarPlugin />
@@ -342,13 +396,6 @@ export function FixedToolbarPlugin(): JSX.Element {
         onClick={() => setBlock("code", () => $createCodeNode())}
       >
         <CodeBlockIcon />
-      </ToolbarButton>
-      <ToolbarButton
-        active={state.link}
-        label="Link"
-        onClick={() => editor.dispatchCommand(TOGGLE_LINK_COMMAND, state.link ? null : "https://")}
-      >
-        <LinkIcon />
       </ToolbarButton>
     </div>
   );

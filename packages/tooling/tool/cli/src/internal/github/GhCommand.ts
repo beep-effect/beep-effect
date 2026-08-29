@@ -19,9 +19,9 @@
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { runRepoCommandCapture } from "../repo-run/index.js";
+import { runRepoCommandCapture } from "../repo-run/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GhPageInfo } from "./GhSchema.js";
+import type { GhPageInfo } from "./GhSchema.ts";
 
 /**
  * A classified `gh` invocation failure handed to a caller's error mapper.
@@ -30,13 +30,15 @@ import type { GhPageInfo } from "./GhSchema.js";
  * exit code and captured output; `truncated` reports that captured output
  * overflowed the repo-run capture bound.
  *
- * @example
+ * **Example** (Classify a truncated capture)
+ *
  * ```ts
  * import type { GhCommandFailure } from "@beep/repo-cli/internal/github"
  *
  * const failure: GhCommandFailure = { _tag: "truncated", label: "gh pr view", command: "gh pr view" }
  * console.log(failure._tag)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,9 +71,8 @@ export interface GhOutputOptions<E> {
  * Run `gh` with captured output, returning stdout on success and mapping a spawn
  * failure, nonzero exit, or truncated capture into the caller's error.
  *
- * @param options - Command args, working directory, label, and error mapper.
- * @returns The captured stdout on a clean, non-truncated zero-exit run.
- * @example
+ * **Example** (Fetch PR facts with a caller-owned error)
+ *
  * ```ts
  * import { ghOutput } from "@beep/repo-cli/internal/github"
  * import { Effect } from "effect"
@@ -84,6 +85,9 @@ export interface GhOutputOptions<E> {
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param options - Command args, working directory, label, and error mapper.
+ * @returns The captured stdout on a clean, non-truncated zero-exit run.
  * @category execution
  * @since 0.0.0
  */
@@ -113,9 +117,8 @@ export const ghOutput = Effect.fn("GhCommand.ghOutput")(function* <E>(options: G
  * Build the `-F cursor=<value>` argument pair for a GraphQL page request, or an
  * empty argument list when there is no cursor.
  *
- * @param cursor - The page cursor, if any.
- * @returns The `gh api graphql` cursor argument fragment.
- * @example
+ * **Example** (Render cursor arguments for both cases)
+ *
  * ```ts
  * import { cursorArgs } from "@beep/repo-cli/internal/github"
  * import * as O from "effect/Option"
@@ -123,6 +126,9 @@ export const ghOutput = Effect.fn("GhCommand.ghOutput")(function* <E>(options: G
  * console.log(cursorArgs(O.some("abc")))
  * console.log(cursorArgs(O.none()))
  * ```
+ *
+ * @param cursor - The page cursor, if any.
+ * @returns The `gh api graphql` cursor argument fragment.
  * @category execution
  * @since 0.0.0
  */
@@ -133,9 +139,8 @@ export const cursorArgs = (cursor: O.Option<string>): ReadonlyArray<string> =>
  * Resolve the next page cursor from GraphQL page info, failing when another page
  * is reported without an end cursor.
  *
- * @param options - Page info, a label for error text, and the missing-cursor mapper.
- * @returns `Some(cursor)` for a further page, `None` when pagination is complete.
- * @example
+ * **Example** (Finish pagination on the last page)
+ *
  * ```ts
  * import { GhPageInfo, nextCursor } from "@beep/repo-cli/internal/github"
  * import { Effect } from "effect"
@@ -148,6 +153,9 @@ export const cursorArgs = (cursor: O.Option<string>): ReadonlyArray<string> =>
  * })
  * console.log(O.isNone(Effect.runSync(done)))
  * ```
+ *
+ * @param options - Page info, a label for error text, and the missing-cursor mapper.
+ * @returns `Some(cursor)` for a further page, `None` when pagination is complete.
  * @category execution
  * @since 0.0.0
  */
@@ -188,9 +196,8 @@ export interface GhGraphqlPageOptions<E> {
  * Fetch one `gh api graphql` page for a pull request, threading `owner`, `name`,
  * `number`, and the optional cursor into the query variables.
  *
- * @param options - Repository coordinates, GraphQL query, cursor, and error mapper.
- * @returns The raw GraphQL response body on success.
- * @example
+ * **Example** (Request the first page of a PR query)
+ *
  * ```ts
  * import { ghGraphqlPage } from "@beep/repo-cli/internal/github"
  * import { Effect } from "effect"
@@ -208,6 +215,9 @@ export interface GhGraphqlPageOptions<E> {
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param options - Repository coordinates, GraphQL query, cursor, and error mapper.
+ * @returns The raw GraphQL response body on success.
  * @category execution
  * @since 0.0.0
  */
@@ -232,3 +242,82 @@ export const ghGraphqlPage = <E>(
     label: options.label,
     onFailure: options.onFailure,
   });
+
+/** A review-thread node whose nested comment connection can report truncation. */
+interface GhTruncatableThread {
+  readonly comments: { readonly pageInfo: GhPageInfo };
+  readonly id: string;
+}
+
+/**
+ * Options for {@link collectTruncatableThreadPages}.
+ *
+ * @typeParam T - Thread node type carried by each page.
+ * @typeParam E - Caller-owned error for page fetches and cursor advancement.
+ * @typeParam R - Requirements of the page fetch.
+ * @category models
+ * @since 0.0.0
+ */
+export interface CollectTruncatableThreadPagesOptions<T extends GhTruncatableThread, E, R> {
+  readonly advance: (pageInfo: GhPageInfo) => Effect.Effect<O.Option<string>, E>;
+  readonly fetchPage: (
+    cursor: O.Option<string>
+  ) => Effect.Effect<{ readonly nodes: ReadonlyArray<T>; readonly pageInfo: GhPageInfo }, E, R>;
+  readonly truncationWarning: (threadIds: ReadonlyArray<string>) => string;
+}
+
+/**
+ * Collect every page of a review-thread connection, warning once per page about
+ * threads whose nested comment connection is truncated.
+ *
+ * **Details**
+ *
+ * Both the closeout collector and the reply engine paginate the same
+ * `reviewThreads` shape and must warn when a thread carries more than one
+ * nested comment page; this owns that loop once, parameterized by the page
+ * fetch, the cursor advance, and the caller's warning text.
+ *
+ * **Example** (Collect a single closed page)
+ *
+ * ```ts
+ * import { collectTruncatableThreadPages, GhPageInfo } from "@beep/repo-cli/internal/github"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = collectTruncatableThreadPages({
+ *   advance: () => Effect.succeed(O.none()),
+ *   fetchPage: () =>
+ *     Effect.succeed({ nodes: [], pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: false }) }),
+ *   truncationWarning: (ids) => `truncated: ${ids.length}`
+ * })
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param options - Page fetch, cursor advance, and truncation-warning text.
+ * @returns Every thread node across all pages, in page order.
+ * @category execution
+ * @since 0.0.0
+ */
+export const collectTruncatableThreadPages = <T extends GhTruncatableThread, E, R>(
+  options: CollectTruncatableThreadPagesOptions<T, E, R>
+): Effect.Effect<ReadonlyArray<T>, E, R> => {
+  const go = (cursor: O.Option<string>, collected: ReadonlyArray<T>): Effect.Effect<ReadonlyArray<T>, E, R> =>
+    options.fetchPage(cursor).pipe(
+      Effect.flatMap((page) => {
+        const truncatedThreadIds = pipe(
+          page.nodes,
+          A.filter((thread) => thread.comments.pageInfo.hasNextPage),
+          A.map((thread) => thread.id)
+        );
+        const warn = A.isReadonlyArrayNonEmpty(truncatedThreadIds)
+          ? Effect.logWarning(options.truncationWarning(truncatedThreadIds))
+          : Effect.void;
+        const threads = [...collected, ...page.nodes];
+        return warn.pipe(
+          Effect.andThen(options.advance(page.pageInfo)),
+          Effect.flatMap((next) => (O.isSome(next) ? go(next, threads) : Effect.succeed(threads)))
+        );
+      })
+    );
+  return go(O.none(), A.empty<T>());
+};

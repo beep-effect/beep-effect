@@ -13,19 +13,20 @@ import { $I, usesUnsupportedWindowsNamespacePrefix } from "./FilePath.shared.ts"
 /**
  * Branded schema for strings that contain an embedded NUL byte.
  *
- * @example
- * ```ts
+ * **Example** (Detect embedded NUL byte)
+ *
+ * ```ts import.meta.vitest name="Detect embedded NUL byte"
  * import * as S from "effect/Schema"
  * import { HasNullByte } from "@beep/schema/FilePath"
  *
  * const is = S.is(HasNullByte)
  *
- * console.log(is("hello\x00world")) // true
- * console.log(is("hello")) // false
+ * is("hello\x00world") // => true
+ * is("hello") // => false
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const HasNullByte = S.String.check(
   S.isIncludes("\u0000", {
@@ -45,7 +46,8 @@ export const HasNullByte = S.String.check(
 /**
  * Branded string type containing an embedded NUL byte.
  *
- * @example
+ * **Example** (Decode branded NUL string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HasNullByte } from "@beep/schema/FilePath"
@@ -54,8 +56,8 @@ export const HasNullByte = S.String.check(
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type HasNullByte = typeof HasNullByte.Type;
 
@@ -63,7 +65,8 @@ export type HasNullByte = typeof HasNullByte.Type;
  * Branded schema for path strings that do not use unsupported Windows device
  * namespace prefixes.
  *
- * @example
+ * **Example** (Decode supported Windows path)
+ *
  * ```ts
  * import { SupportedWindowsNamespace } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -72,8 +75,8 @@ export type HasNullByte = typeof HasNullByte.Type;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const SupportedWindowsNamespace = S.NonEmptyString.check(
   S.makeFilter(P.not(usesUnsupportedWindowsNamespacePrefix), {
@@ -93,7 +96,8 @@ export const SupportedWindowsNamespace = S.NonEmptyString.check(
 /**
  * Type for {@link SupportedWindowsNamespace}.
  *
- * @example
+ * **Example** (Type annotated Windows path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { SupportedWindowsNamespace } from "@beep/schema/FilePath"
@@ -102,15 +106,16 @@ export const SupportedWindowsNamespace = S.NonEmptyString.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type SupportedWindowsNamespace = typeof SupportedWindowsNamespace.Type;
 
 /**
  * Branded schema for strings that contain a POSIX separator.
  *
- * @example
+ * **Example** (Decode POSIX separator path)
+ *
  * ```ts
  * import { UsesPosixSeparator } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -119,8 +124,8 @@ export type SupportedWindowsNamespace = typeof SupportedWindowsNamespace.Type;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UsesPosixSeparator = S.String.check(
   S.isIncludes("/", {
@@ -140,7 +145,8 @@ export const UsesPosixSeparator = S.String.check(
 /**
  * Type for {@link UsesPosixSeparator}.
  *
- * @example
+ * **Example** (Type annotated POSIX path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UsesPosixSeparator } from "@beep/schema/FilePath"
@@ -149,15 +155,16 @@ export const UsesPosixSeparator = S.String.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type UsesPosixSeparator = typeof UsesPosixSeparator.Type;
 
 /**
  * Branded schema for strings that contain a Windows separator.
  *
- * @example
+ * **Example** (Decode Windows separator path)
+ *
  * ```ts
  * import { UsesWindowsSeparator } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -166,8 +173,8 @@ export type UsesPosixSeparator = typeof UsesPosixSeparator.Type;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const UsesWindowsSeparator = S.String.check(
   S.makeFilter(Str.includes("\\"), {
@@ -187,7 +194,8 @@ export const UsesWindowsSeparator = S.String.check(
 /**
  * Type for {@link UsesWindowsSeparator}.
  *
- * @example
+ * **Example** (Type annotated Windows path)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { UsesWindowsSeparator } from "@beep/schema/FilePath"
@@ -196,15 +204,16 @@ export const UsesWindowsSeparator = S.String.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type UsesWindowsSeparator = typeof UsesWindowsSeparator.Type;
 
 /**
  * Branded schema for strings that end with a POSIX or Windows path separator.
  *
- * @example
+ * **Example** (Decode trailing separator path)
+ *
  * ```ts
  * import { EndsWithSeparator } from "@beep/schema/FilePath"
  * import * as S from "effect/Schema"
@@ -213,8 +222,8 @@ export type UsesWindowsSeparator = typeof UsesWindowsSeparator.Type;
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EndsWithSeparator = S.String.check(
   S.makeFilter(P.or(Str.endsWith("/"), Str.endsWith("\\")), {
@@ -234,7 +243,8 @@ export const EndsWithSeparator = S.String.check(
 /**
  * Type for {@link EndsWithSeparator}.
  *
- * @example
+ * **Example** (Type annotated trailing separator)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { EndsWithSeparator } from "@beep/schema/FilePath"
@@ -243,7 +253,7 @@ export const EndsWithSeparator = S.String.check(
  * console.log(value)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EndsWithSeparator = typeof EndsWithSeparator.Type;

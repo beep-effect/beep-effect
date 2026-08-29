@@ -20,8 +20,7 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
-import { TaggedErrorClass } from "@beep/schema";
-import { A, O as OptionUtils } from "@beep/utils";
+import { A, O as OptionUtils, P } from "@beep/utils";
 import { Clock, Effect, Graph, MutableHashMap, MutableHashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -34,23 +33,25 @@ const $I = $NlpProcessingId.create("Graph/TextGraph");
 /**
  * A text-processing graph: `TextNode` data with `TextEdge` relationships.
  *
- * @example
- * ```ts
+ * **Example** (Empty graph node count)
+ *
+ * ```ts import.meta.vitest name="Empty graph node count"
  * import { empty, nodeCount, type TextGraph } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph: TextGraph = empty()
- * console.log(nodeCount(graph)) // 0
+ * nodeCount(graph) // => 0
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TextGraph = Graph.DirectedGraph<TextNode, TextEdge>;
 
 /**
  * Mutable text graph used inside construction callbacks.
  *
- * @example
+ * **Example** (Accept MutableTextGraph parameter)
+ *
  * ```ts
  * import type { MutableTextGraph } from "@beep/nlp-processing/Graph/TextGraph"
  *
@@ -58,31 +59,32 @@ export type TextGraph = Graph.DirectedGraph<TextNode, TextEdge>;
  * console.log(acceptsMutable)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MutableTextGraph = Graph.MutableDirectedGraph<TextNode, TextEdge>;
 
 /**
  * Raised when adding children would introduce a cycle (graphs must stay acyclic).
  *
- * @example
- * ```ts
+ * **Example** (Make GraphCycleError instance)
+ *
+ * ```ts import.meta.vitest name="Make GraphCycleError instance"
  * import { GraphCycleError } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const error = GraphCycleError.make({ parentIndex: 0 })
- * console.log(error._tag) // "GraphCycleError"
+ * error._tag // => "GraphCycleError"
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class GraphCycleError extends TaggedErrorClass<GraphCycleError>($I`GraphCycleError`)(
+export class GraphCycleError extends S.TaggedError<GraphCycleError>($I`GraphCycleError`)(
   "GraphCycleError",
   {
     parentIndex: S.Finite,
   },
-  $I.annote("GraphCycleError", {
+  $I.annoteError<GraphCycleError>("GraphCycleError", {
     description: "Raised when a text-graph mutation would create a cycle.",
   })
 ) {}
@@ -108,28 +110,30 @@ const makeTextNode = (fields: {
 /**
  * Create an empty structural text graph.
  *
- * @example
- * ```ts
+ * **Example** (Empty graph zero nodes)
+ *
+ * ```ts import.meta.vitest name="Empty graph zero nodes"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(nodeCount(empty())) // 0
+ * nodeCount(empty()) // => 0
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const empty = (): TextGraph => Graph.directed<TextNode, TextEdge>();
 
 /**
  * Create a text graph with one generated root node.
  *
- * @example
- * ```ts
+ * **Example** (Create singleton document graph)
+ *
+ * ```ts import.meta.vitest name="Create singleton document graph"
  * import { Effect } from "effect"
  * import { nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(nodeCount(graph)) // 1
+ * nodeCount(graph) // => 1
  * ```
  *
  * @effects Builds the root text node through `makeTextNode`, which reads the Effect `Clock` for the node timestamp.
@@ -152,12 +156,14 @@ export const singleton: {
 /**
  * Build a document graph by splitting the root text into sentence children.
  *
- * @remarks
+ * **Details**
+ *
  * The returned effect requires the package tokenization service. Sentence
  * children are connected to the document root with `contains` edges.
  *
- * @example
- * ```ts
+ * **Example** (Document with sentence children)
+ *
+ * ```ts import.meta.vitest name="Document with sentence children"
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
@@ -197,7 +203,7 @@ export const singleton: {
  *   })
  * )
  *
- * console.log(nodeCount(graph)) // 3
+ * nodeCount(graph) // => 3
  * ```
  *
  * @effects Reads the `Tokenization` service to split the document into sentences and reads the Effect `Clock` while creating graph nodes.
@@ -248,8 +254,9 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
 /**
  * Add child nodes under a parent, validating the result stays acyclic.
  *
- * @example
- * ```ts
+ * **Example** (Add child under root)
+ *
+ * ```ts import.meta.vitest name="Add child under root"
  * import { Effect } from "effect"
  * import { addChildren, getRoots, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  * import { TextNode } from "@beep/nlp/Graph/Schema"
@@ -268,11 +275,11 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  *   })
  * )
  *
- * console.log(nodeCount(Effect.runSync(program))) // 2
+ * nodeCount(Effect.runSync(program)) // => 2
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export const addChildren: {
   (
@@ -316,13 +323,15 @@ export const addChildren: {
  * Tokenize every sentence node, adding token children (idempotent: skips
  * sentences that already have token children).
  *
- * @remarks
+ * **Details**
+ *
  * The effect requires the tokenization service. Existing token children prevent
  * duplicate tokenization for a sentence node, so callers can safely retry this
  * pass.
  *
- * @example
- * ```ts
+ * **Example** (Tokenize sentence into tokens)
+ *
+ * ```ts import.meta.vitest name="Tokenize sentence into tokens"
  * import { Chunk, Effect } from "effect"
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
@@ -371,7 +380,7 @@ export const addChildren: {
  *   })
  * )
  *
- * console.log(nodeCount(graph)) // 3
+ * nodeCount(graph) // => 3
  * ```
  *
  * @effects Reads the `Tokenization` service for sentence tokens and reads the Effect `Clock` while adding token nodes.
@@ -469,19 +478,20 @@ const rebuild = (
 /**
  * Map every text node while preserving edges between retained nodes.
  *
- * @example
- * ```ts
+ * **Example** (Map nodes to uppercase)
+ *
+ * ```ts import.meta.vitest name="Map nodes to uppercase"
  * import { Effect } from "effect"
  * import { mapNodes, singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
  * const mapped = mapNodes(graph, (node) => ({ ...node, text: node.text.toUpperCase() }))
  *
- * console.log(toArray(mapped)[0]?.text) // "HELLO."
+ * toArray(mapped)[0]?.text // => "HELLO."
  * ```
  *
- * @since 0.0.0
  * @category mapping
+ * @since 0.0.0
  */
 export const mapNodes: {
   (graph: TextGraph, f: (node: TextNode) => TextNode): TextGraph;
@@ -491,17 +501,18 @@ export const mapNodes: {
 /**
  * Keep matching text nodes and edges whose endpoints both remain.
  *
- * @example
- * ```ts
+ * **Example** (Filter nodes by type)
+ *
+ * ```ts import.meta.vitest name="Filter nodes by type"
  * import { Effect } from "effect"
  * import { filterNodes, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(nodeCount(filterNodes(graph, (node) => node.type === "document"))) // 1
+ * nodeCount(filterNodes(graph, (node) => node.type === "document")) // => 1
  * ```
  *
- * @since 0.0.0
  * @category filtering
+ * @since 0.0.0
  */
 export const filterNodes: {
   (graph: TextGraph, predicate: (node: TextNode) => boolean): TextGraph;
@@ -516,71 +527,94 @@ export const filterNodes: {
 // =============================================================================
 
 /**
+ * Walkers take an optional `start` list, so arity alone cannot decide the call
+ * style. A `TextGraph` is never an array, which makes the subject decidable.
+ */
+const isTraversalDataFirst = (args: IArguments): boolean =>
+  args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !A.isArray(args[0]));
+
+/**
  * Create a depth-first walker over text nodes.
  *
- * @example
- * ```ts
+ * **Example** (Depth-first walk values)
+ *
+ * ```ts import.meta.vitest name="Depth-first walk values"
  * import { Effect, Graph } from "effect"
  * import { dfs, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(Array.from(Graph.values(dfs(graph))).length) // 1
+ * Array.from(Graph.values(dfs(graph, [0]))).length // => 1
  * ```
  *
- * @since 0.0.0
  * @category sequencing
+ * @since 0.0.0
  */
-export const dfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
-  Graph.dfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined);
+export const dfs: {
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode>;
+  (start?: ReadonlyArray<Graph.NodeIndex>): (graph: TextGraph) => Graph.NodeWalker<TextNode>;
+} = dual(
+  isTraversalDataFirst,
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
+    Graph.dfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined)
+);
 
 /**
  * Create a breadth-first walker over text nodes.
  *
- * @example
- * ```ts
+ * **Example** (Breadth-first walk values)
+ *
+ * ```ts import.meta.vitest name="Breadth-first walk values"
  * import { Effect, Graph } from "effect"
  * import { bfs, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(Array.from(Graph.values(bfs(graph))).length) // 1
+ * Array.from(Graph.values(bfs(graph, [0]))).length // => 1
  * ```
  *
- * @since 0.0.0
  * @category sequencing
+ * @since 0.0.0
  */
-export const bfs = (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
-  Graph.bfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined);
+export const bfs: {
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode>;
+  (start?: ReadonlyArray<Graph.NodeIndex>): (graph: TextGraph) => Graph.NodeWalker<TextNode>;
+} = dual(
+  isTraversalDataFirst,
+  (graph: TextGraph, start?: ReadonlyArray<Graph.NodeIndex>): Graph.NodeWalker<TextNode> =>
+    Graph.bfs(graph, start !== undefined ? { start: A.fromIterable(start) } : undefined)
+);
 
 /**
  * Create a topological walker where parents precede children.
  *
- * @example
- * ```ts
+ * **Example** (Topological walk values)
+ *
+ * ```ts import.meta.vitest name="Topological walk values"
  * import { Effect, Graph } from "effect"
  * import { singleton, topo } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(Array.from(Graph.values(topo(graph))).length) // 1
+ * Array.from(Graph.values(topo(graph))).length // => 1
  * ```
  *
- * @since 0.0.0
  * @category sequencing
+ * @since 0.0.0
  */
 export const topo = (graph: TextGraph): Graph.NodeWalker<TextNode> => Graph.topo(graph);
 
 /**
  * Collect all text nodes in backing graph order.
  *
- * @example
- * ```ts
+ * **Example** (Collect nodes into array)
+ *
+ * ```ts import.meta.vitest name="Collect nodes into array"
  * import { Effect } from "effect"
  * import { singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(toArray(Effect.runSync(singleton("Hello.", "document"))).length) // 1
+ * toArray(Effect.runSync(singleton("Hello.", "document"))).length // => 1
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const toArray = (graph: TextGraph): ReadonlyArray<TextNode> =>
   A.fromIterable(graph.pipe(Graph.nodes, Graph.values));
@@ -592,47 +626,50 @@ export const toArray = (graph: TextGraph): ReadonlyArray<TextNode> =>
 /**
  * Count nodes in a text graph.
  *
- * @example
- * ```ts
+ * **Example** (Count nodes in empty)
+ *
+ * ```ts import.meta.vitest name="Count nodes in empty"
  * import { empty, nodeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(nodeCount(empty())) // 0
+ * nodeCount(empty()) // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const nodeCount = (graph: TextGraph): number => Graph.nodeCount(graph);
 
 /**
  * Count edges in a text graph.
  *
- * @example
- * ```ts
+ * **Example** (Count edges in empty)
+ *
+ * ```ts import.meta.vitest name="Count edges in empty"
  * import { empty, edgeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(edgeCount(empty())) // 0
+ * edgeCount(empty()) // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const edgeCount = (graph: TextGraph): number => Graph.edgeCount(graph);
 
 /**
  * Find node indices whose `type` matches a structural text-node kind.
  *
- * @example
- * ```ts
+ * **Example** (Find nodes by document type)
+ *
+ * ```ts import.meta.vitest name="Find nodes by document type"
  * import { Effect } from "effect"
  * import { findNodesByType, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
- * console.log(findNodesByType(graph, "document").length) // 1
+ * findNodesByType(graph, "document").length // => 1
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const findNodesByType: {
   (graph: TextGraph, type: TextNode["type"]): ReadonlyArray<Graph.NodeIndex>;
@@ -646,16 +683,17 @@ export const findNodesByType: {
 /**
  * Return text-graph roots, defined as nodes with no incoming edges.
  *
- * @example
- * ```ts
+ * **Example** (Get roots of singleton)
+ *
+ * ```ts import.meta.vitest name="Get roots of singleton"
  * import { Effect } from "effect"
  * import { getRoots, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(getRoots(Effect.runSync(singleton("Hello.", "document"))).length) // 1
+ * getRoots(Effect.runSync(singleton("Hello.", "document"))).length // => 1
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
   A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "incoming" })));
@@ -663,16 +701,17 @@ export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
 /**
  * Return text-graph leaves, defined as nodes with no outgoing edges.
  *
- * @example
- * ```ts
+ * **Example** (Get leaves of singleton)
+ *
+ * ```ts import.meta.vitest name="Get leaves of singleton"
  * import { Effect } from "effect"
  * import { getLeaves, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(getLeaves(Effect.runSync(singleton("Hello.", "document"))).length) // 1
+ * getLeaves(Effect.runSync(singleton("Hello.", "document"))).length // => 1
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
   A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "outgoing" })));
@@ -680,8 +719,9 @@ export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
 /**
  * Return direct child indices for a text node.
  *
- * @example
- * ```ts
+ * **Example** (Children of document root)
+ *
+ * ```ts import.meta.vitest name="Children of document root"
  * import { Effect } from "effect"
  * import { getChildren, getRoots, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  * import * as A from "effect/Array"
@@ -693,11 +733,11 @@ export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  *   onSome: (root) => getChildren(graph, root).length
  * })
  *
- * console.log(childCount) // 0
+ * childCount // => 0
  * ```
  *
- * @since 0.0.0
  * @category getters
+ * @since 0.0.0
  */
 export const getChildren: {
   (graph: TextGraph, nodeIndex: Graph.NodeIndex): ReadonlyArray<Graph.NodeIndex>;
@@ -714,15 +754,16 @@ export const getChildren: {
 /**
  * Export the text graph to GraphViz DOT format.
  *
- * @example
- * ```ts
+ * **Example** (Export empty to GraphViz)
+ *
+ * ```ts import.meta.vitest name="Export empty to GraphViz"
  * import { empty, toGraphViz } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(toGraphViz(empty()).includes("TextProcessingGraph")) // true
+ * toGraphViz(empty()).includes("TextProcessingGraph") // => true
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export const toGraphViz = (graph: TextGraph): string =>
   Graph.toGraphViz(graph, {
@@ -734,15 +775,16 @@ export const toGraphViz = (graph: TextGraph): string =>
 /**
  * Export the text graph to a Mermaid diagram.
  *
- * @example
- * ```ts
+ * **Example** (Export empty to Mermaid)
+ *
+ * ```ts import.meta.vitest name="Export empty to Mermaid"
  * import { empty, toMermaid } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(toMermaid(empty()).includes("graph")) // true
+ * toMermaid(empty()) // => "flowchart TB"
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export const toMermaid = (graph: TextGraph): string =>
   Graph.toMermaid(graph, {
@@ -761,23 +803,25 @@ export const toMermaid = (graph: TextGraph): string =>
 /**
  * Render the graph as an indented tree from roots downward.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `TextGraph` is a raw `effect/Graph.DirectedGraph` alias, so callers can supply
  * graphs containing cycles that bypass {@link addChildren}'s acyclicity check.
  * Each node index is rendered at most once (tracked via a visited set), which
  * prevents unbounded recursion / stack overflow on root-reachable cycles and
  * avoids repeated output for shared descendants.
  *
- * @example
- * ```ts
+ * **Example** (Show singleton tree string)
+ *
+ * ```ts import.meta.vitest name="Show singleton tree string"
  * import { Effect } from "effect"
  * import { show, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(show(Effect.runSync(singleton("Hello.", "document")))) // "[node] document: Hello."
+ * show(Effect.runSync(singleton("Hello.", "document"))) // => "[node] document: Hello."
  * ```
  *
- * @since 0.0.0
  * @category formatting
+ * @since 0.0.0
  */
 export const show = (graph: TextGraph): string => {
   const lines = A.empty<string>();
@@ -801,30 +845,32 @@ export const show = (graph: TextGraph): string => {
 /**
  * Check whether the text graph is acyclic.
  *
- * @example
- * ```ts
+ * **Example** (Check empty graph acyclic)
+ *
+ * ```ts import.meta.vitest name="Check empty graph acyclic"
  * import { empty, isAcyclic } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(isAcyclic(empty())) // true
+ * isAcyclic(empty()) // => true
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const isAcyclic = (graph: TextGraph): boolean => Graph.isAcyclic(graph);
 
 /**
  * Compute strongly connected components as node-index groups.
  *
- * @example
- * ```ts
+ * **Example** (SCCs of empty graph)
+ *
+ * ```ts import.meta.vitest name="SCCs of empty graph"
  * import { empty, stronglyConnectedComponents } from "@beep/nlp-processing/Graph/TextGraph"
  *
- * console.log(stronglyConnectedComponents(empty()).length) // 0
+ * stronglyConnectedComponents(empty()).length // => 0
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const stronglyConnectedComponents = (graph: TextGraph): ReadonlyArray<ReadonlyArray<Graph.NodeIndex>> =>
   Graph.stronglyConnectedComponents(graph);

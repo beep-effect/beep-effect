@@ -11,27 +11,27 @@ import {
   AiMetricsBenchmarkRunInput,
   AiMetricsQualityGateStatus,
   aiMetricsDerivedDuckDbPath,
-  DEFAULT_AI_METRICS_DATA_ROOT,
   hashPublicTextSha256,
   recordAiMetricsBenchmarkRun,
   upsertAiMetricsBenchmarkCase,
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
+import { Unknown } from "@beep/schema/Unknown";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.js";
+import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import {
   AgentEffectivenessEvalRecordResult,
   AgentEffectivenessEvalScoreReport,
   SkillOptTaskManifest,
-} from "../AgentEffectiveness.schemas.js";
+} from "../AgentEffectiveness.schemas.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalRecord");
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const recordNote = (report: AgentEffectivenessEvalScoreReport): string =>
   `skillopt scorer score=${report.score} completion=${report.breakdown.completion} schemaFirst=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`;
@@ -40,7 +40,8 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
   $I`RecordAgentEffectivenessEvalScoreOptions`
 )(
   {
-    dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))),
+    dataRoot: S.String,
+    elapsedMs: S.Finite,
     report: AgentEffectivenessEvalScoreReport,
     task: SkillOptTaskManifest,
     taskPath: S.String,
@@ -61,7 +62,8 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
  * @since 0.0.0
  */
 export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEvalScorer.record")(function* ({
-  dataRoot = DEFAULT_AI_METRICS_DATA_ROOT,
+  dataRoot,
+  elapsedMs,
   report,
   task,
   taskPath,
@@ -114,7 +116,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
         AiMetricsBenchmarkRunInput.make({
           benchmarkCaseId: task.id,
           configSnapshotId: `skillopt-scorer-${configSnapshotDigest}`,
-          elapsedMs: 0,
+          elapsedMs,
           note: recordNote(report),
           passed: report.score >= 0.999,
           qualityGate:

@@ -9,9 +9,8 @@
 /**
  * CaseGroup model exports.
  *
- * **Example**
+ * **Example** (Import CaseGroup)
  *
- * @example
  * ```ts
  * import { CaseGroup } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CaseGroup.model.js";
+export * from "./CaseGroup.model.ts";

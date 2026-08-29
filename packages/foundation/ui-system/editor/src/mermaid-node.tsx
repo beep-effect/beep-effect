@@ -39,8 +39,9 @@ const decodeSerializedMermaidNode = (input: unknown) => S.decodeUnknownResult(Se
  * Serialized shape of {@link MermaidNode}. Viewer-internal: the wire profile
  * persists a mermaid diagram as a `code` block, never as this type.
  *
- * @example
- * ```ts
+ * **Example** (Make serialized mermaid payload)
+ *
+ * ```ts import.meta.vitest name="Make serialized mermaid payload"
  * import { SerializedMermaidNode } from "@beep/editor/mermaid-node"
  *
  * const payload = SerializedMermaidNode.make({
@@ -49,7 +50,7 @@ const decodeSerializedMermaidNode = (input: unknown) => S.decodeUnknownResult(Se
  *   source: "graph TD\n  A --> B",
  * })
  *
- * console.log(payload.source) // "graph TD\n  A --> B"
+ * payload.source // => "graph TD\n  A --> B"
  * ```
  *
  * @category models
@@ -70,7 +71,8 @@ export class SerializedMermaidNode extends S.Class<SerializedMermaidNode>($I`Ser
 /**
  * Block-level Lexical decorator node that renders a Mermaid diagram.
  *
- * @example
+ * **Example** (Create mermaid node type)
+ *
  * ```tsx
  * import { $createMermaidNode } from "@beep/editor/mermaid-node"
  *
@@ -129,7 +131,8 @@ export class MermaidNode extends DecoratorBlockNode {
 /**
  * Create a Mermaid diagram node.
  *
- * @example
+ * **Example** (Create mermaid node source)
+ *
  * ```ts
  * import { $createMermaidNode } from "@beep/editor/mermaid-node"
  *
@@ -144,7 +147,8 @@ export const $createMermaidNode = (source: string): MermaidNode => new MermaidNo
 /**
  * Type guard for {@link MermaidNode}.
  *
- * @example
+ * **Example** (Guard mermaid node)
+ *
  * ```ts
  * import { $createMermaidNode, $isMermaidNode } from "@beep/editor/mermaid-node"
  *

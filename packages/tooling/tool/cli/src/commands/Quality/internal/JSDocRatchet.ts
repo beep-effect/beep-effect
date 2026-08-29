@@ -8,15 +8,19 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Effect, Path, pipe } from "effect";
+import { Console, DateTime, Effect, FileSystem, MutableHashSet, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.js";
-import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.js";
-import { QualityScriptCommandError } from "../Quality.errors.js";
-import type { FileSystem } from "effect";
+import * as Str from "effect/String";
+import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
+import { runGitLines } from "../../../internal/repo-run/index.ts";
+import { QualityScriptCommandError } from "../Quality.errors.ts";
+import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
 
@@ -27,22 +31,65 @@ const JSDocRatchetedTotalName = LiteralKit([
   "missingExportSince",
   "unsafeExampleFindings",
   "schemaAnnotationFindings",
+  "undescribed-see",
+  "multiple-description-paragraphs",
+  "leading-blank",
+  "trailing-blank",
+  "invalid-heading",
+  "section-out-of-order",
+  "duplicate-section",
+  "empty-section",
+  "section-after-example",
+  "invalid-when-to-use-prefix",
+  "malformed-example",
+  "duplicate-example",
+  "loose-ts-fence",
+  "forbidden-remarks",
 ]).pipe(
   $I.annoteSchema("JSDocRatchetedTotalName", {
     description: "JSDoc inventory total names guarded by the A4 fail-on-growth ratchet.",
   })
 );
 
+const JSDocLegacyTag = LiteralKit(["@remarks", "@example"]).pipe(
+  $I.annoteSchema("JSDocLegacyTag", {
+    description: "Legacy JSDoc carriers forbidden by the zero-legacy gate.",
+  })
+);
+
+class JSDocLegacyFileFinding extends S.Class<JSDocLegacyFileFinding>($I`JSDocLegacyFileFinding`)(
+  {
+    filePath: S.String,
+    tag: JSDocLegacyTag,
+  },
+  $I.annote("JSDocLegacyFileFinding", {
+    description: "Legacy JSDoc tag found in a package source file under the zero-legacy scan.",
+  })
+) {}
+
+/**
+ * Generated residual paths still carrying legacy tags, allowed under `--include-generated`.
+ *
+ * Empty since the acp resync regenerated `schema.gen.ts` with the converted
+ * emitter; kept as the documented channel for any future generated residual.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [];
+
 /**
  * Repo-relative path to the generated JSDoc documentation inventory.
  *
- * @example
+ * **Example** (Inspect the default inventory path)
+ *
  * ```ts
  * import { defaultJSDocInventoryPath } from "@beep/repo-cli/test/Quality"
  *
  * const result = defaultJSDocInventoryPath === "standards/jsdoc-documentation.inventory.jsonc"
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -51,13 +98,15 @@ export const defaultJSDocInventoryPath = "standards/jsdoc-documentation.inventor
 /**
  * Repo-relative path to the committed JSDoc totals regression baseline.
  *
- * @example
+ * **Example** (Inspect the default baseline path)
+ *
  * ```ts
  * import { defaultJSDocTotalsBaselinePath } from "@beep/repo-cli/test/Quality"
  *
  * const result = defaultJSDocTotalsBaselinePath === "standards/jsdoc-totals.regression-baseline.jsonc"
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -66,13 +115,15 @@ export const defaultJSDocTotalsBaselinePath = "standards/jsdoc-totals.regression
 /**
  * Full inventory regeneration command recorded in the totals baseline header.
  *
- * @example
+ * **Example** (Inspect the inventory command)
+ *
  * ```ts
  * import { jsdocInventoryRegenerationCommand } from "@beep/repo-cli/test/Quality"
  *
  * const result = jsdocInventoryRegenerationCommand.includes("jsdoc-inventory")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -81,13 +132,15 @@ export const jsdocInventoryRegenerationCommand = "bun run beep quality jsdoc-inv
 /**
  * Totals snapshot refresh command recorded in the baseline header.
  *
- * @example
+ * **Example** (Inspect the snapshot command)
+ *
  * ```ts
  * import { jsdocTotalsSnapshotCommand } from "@beep/repo-cli/test/Quality"
  *
  * const result = jsdocTotalsSnapshotCommand.includes("write-baseline")
  * console.log(result) // rendered command output
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -113,7 +166,8 @@ class JSDocInventoryTotalsDocument extends S.Class<JSDocInventoryTotalsDocument>
 /**
  * Committed JSDoc totals regression baseline document.
  *
- * @example
+ * **Example** (Construct a totals baseline)
+ *
  * ```ts
  * import { JSDocTotalsRegressionBaseline } from "@beep/repo-cli/test/Quality"
  *
@@ -128,6 +182,7 @@ class JSDocInventoryTotalsDocument extends S.Class<JSDocInventoryTotalsDocument>
  * })
  * console.log(baseline.tracked_totals.missingExportExamples)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -151,7 +206,8 @@ export class JSDocTotalsRegressionBaseline extends S.Class<JSDocTotalsRegression
 /**
  * Difference for one tracked JSDoc inventory total.
  *
- * @example
+ * **Example** (Construct a total delta)
+ *
  * ```ts
  * import { JSDocTotalDelta } from "@beep/repo-cli/test/Quality"
  *
@@ -163,6 +219,7 @@ export class JSDocTotalsRegressionBaseline extends S.Class<JSDocTotalsRegression
  * })
  * console.log(delta.metric)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -181,7 +238,8 @@ export class JSDocTotalDelta extends S.Class<JSDocTotalDelta>($I`JSDocTotalDelta
 /**
  * Comparison between current generated inventory totals and the committed baseline.
  *
- * @example
+ * **Example** (Construct a totals comparison)
+ *
  * ```ts
  * import { JSDocTotalsComparison } from "@beep/repo-cli/test/Quality"
  *
@@ -194,6 +252,7 @@ export class JSDocTotalDelta extends S.Class<JSDocTotalDelta>($I`JSDocTotalDelta
  * })
  * console.log(comparison.increased.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -371,15 +430,223 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
 
   yield* writeArtifact({
     path: absolutePath,
-    body: `${content}\n`,
+    body: content,
     onError: (cause) => QualityScriptCommandError.new(cause, `Failed to write ${baselinePath}.`),
+  });
+});
+
+/**
+ * Git command error adapter shared by the JSDoc quality and migration scans.
+ *
+ * **Example** (Inspect the adapter shape)
+ *
+ * ```ts
+ * import { jsdocGitErrorAdapter } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(typeof jsdocGitErrorAdapter.onSpawnFailure) // "function"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const jsdocGitErrorAdapter = {
+  onSpawnFailure: (commandLine: string) => (cause: unknown) =>
+    QualityScriptCommandError.new(cause, `Failed to run ${commandLine}.`),
+  onNonZeroExit: ({
+    commandLine,
+    exitCode,
+    output,
+  }: {
+    readonly commandLine: string;
+    readonly exitCode: number;
+    readonly output: string;
+  }) =>
+    QualityScriptCommandError.make({
+      message: `${commandLine} failed with exit code ${exitCode}: ${output}`,
+      command: commandLine,
+      exitCode,
+    }),
+  onTruncated: O.none<(commandLine: string) => QualityScriptCommandError>(),
+};
+
+/**
+ * Whether a repo-relative path names generated source excluded from JSDoc gates.
+ *
+ * **Example** (Classify a generated path)
+ *
+ * ```ts
+ * import { isGeneratedSourceFile } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(isGeneratedSourceFile("packages/drivers/box/src/_generated/Box.models.gen.ts")) // true
+ * console.log(isGeneratedSourceFile("packages/drivers/box/src/Box.service.ts")) // false
+ * ```
+ *
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` when the path names generated source.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isGeneratedSourceFile = (filePath: string): boolean =>
+  Str.endsWith(".generated.ts")(filePath) ||
+  Str.includes("/_generated/")(filePath) ||
+  Str.includes("/generated/")(filePath);
+
+const GENERATED_HEADER_PROBE_LENGTH = 512;
+
+/**
+ * Whether source text begins with a `GENERATED FILE` header probe.
+ *
+ * **Example** (Probe a generated header)
+ *
+ * ```ts
+ * import { hasGeneratedFileHeader } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(hasGeneratedFileHeader("// GENERATED FILE - do not edit\nexport {}")) // true
+ * console.log(hasGeneratedFileHeader("export const value = 1")) // false
+ * ```
+ *
+ * @param sourceText - Source text to probe.
+ * @returns `true` when the probe finds a GENERATED FILE marker.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const hasGeneratedFileHeader = (sourceText: string): boolean =>
+  pipe(Str.slice(0, GENERATED_HEADER_PROBE_LENGTH)(sourceText), Str.includes("GENERATED FILE"));
+
+/**
+ * Whether a repo-relative path is a non-generated workspace source file.
+ *
+ * **Example** (Classify workspace source paths)
+ *
+ * ```ts
+ * import { isPackageSourceFile } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(isPackageSourceFile("packages/shared/schema/src/Kits.ts")) // true
+ * console.log(isPackageSourceFile("apps/professional-desktop/src/App.tsx")) // true
+ * console.log(isPackageSourceFile("packages/shared/schema/test/Kits.test.ts")) // false
+ * ```
+ *
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` for non-generated source files under package or app workspaces.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isPackageSourceFile = (filePath: string): boolean =>
+  (Str.startsWith("packages/")(filePath) || Str.startsWith("apps/")(filePath)) &&
+  Str.includes("/src/")(filePath) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
+  !isGeneratedSourceFile(filePath);
+
+/**
+ * Whether a repo-relative path is any workspace source file, including generated.
+ *
+ * Used by the zero-legacy scan when `--include-generated` is set so generator
+ * outputs get their own compliance proof (non-generated scope cannot prove them).
+ *
+ * @param filePath - Repo-relative path to classify.
+ * @returns `true` for source files under packages/…/src or apps/…/src, including generated.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean =>
+  (Str.startsWith("packages/")(filePath) || Str.startsWith("apps/")(filePath)) &&
+  Str.includes("/src/")(filePath) &&
+  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
+
+const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(function* (
+  repoRoot: string,
+  includeGenerated: boolean
+): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
+  const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
+  return A.filter(lines, predicate);
+});
+
+const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function* (
+  repoRoot: string,
+  includeGenerated: boolean
+): Effect.fn.Return<
+  ReadonlyArray<JSDocLegacyFileFinding>,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const files = yield* zeroLegacyCorpusFiles(repoRoot, includeGenerated);
+  const residualAllow = includeGenerated
+    ? MutableHashSet.fromIterable(jsdocZeroLegacyGeneratedResiduals)
+    : MutableHashSet.empty<string>();
+
+  return yield* Effect.forEach(
+    files,
+    (filePath) => {
+      if (MutableHashSet.has(residualAllow, filePath)) {
+        return Effect.succeed(A.empty<JSDocLegacyFileFinding>());
+      }
+      return fs.readFileString(path.join(repoRoot, filePath)).pipe(
+        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
+        Effect.map((sourceText) => {
+          if (!includeGenerated && hasGeneratedFileHeader(sourceText)) {
+            return A.empty<JSDocLegacyFileFinding>();
+          }
+          if (!Str.includes("@example")(sourceText) && !Str.includes("@remarks")(sourceText)) {
+            return A.empty<JSDocLegacyFileFinding>();
+          }
+          const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
+          return A.flatMap(JSDocLegacyTag.Options, (tag) =>
+            A.contains(tags, tag) ? [JSDocLegacyFileFinding.make({ filePath, tag })] : []
+          );
+        })
+      );
+    },
+    { concurrency: 32 }
+  ).pipe(Effect.map(A.flatten));
+});
+
+const enforceZeroLegacy = Effect.fn("JSDocRatchet.enforceZeroLegacy")(function* (
+  repoRoot: string,
+  includeGenerated: boolean
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const findings = yield* zeroLegacyFindings(repoRoot, includeGenerated);
+  const scope = includeGenerated ? "include-generated" : "non-generated";
+  yield* enforceRatchet({
+    regressions: [
+      {
+        present: A.isReadonlyArrayNonEmpty(findings),
+        lines: [
+          `[jsdoc-ratchet] zero-legacy (${scope}): ${A.length(findings)} source file/tag finding(s)`,
+          ...renderTruncatedLines({
+            items: findings,
+            render: (finding) => `  - ${finding.filePath}: remove ${finding.tag}`,
+            limit: 25,
+          }),
+          "[jsdoc-ratchet] every package source file must use titled Example sections and Details/Gotchas.",
+          "  `@example` + loose ts fence  ->  a `**Example** (Short Title)` prose section holding exactly one ts fence",
+          "  `@remarks <text>`            ->  a `**Details**` (or `**Gotchas**`) prose section above the tag block",
+          "  section order: lead paragraph, **When to use**, **Details**, **Gotchas**, **Example** (Title) blocks, then @category/@since tags",
+          "[jsdoc-ratchet] binding law: .patterns/jsdoc-documentation.md",
+        ],
+        error: QualityScriptCommandError.make({
+          message: "JSDoc zero-legacy gate failed.",
+          command: "bun run beep quality jsdoc-ratchet",
+          exitCode: 1,
+        }),
+      },
+    ],
+    okLine: `[jsdoc-ratchet] zero-legacy (${scope}) ok: findings=${A.length(findings)}`,
+    tighten: O.none(),
   });
 });
 
 /**
  * Options accepted by {@link runJSDocRatchet}.
  *
- * @example
+ * **Example** (Configure a ratchet run)
+ *
  * ```ts
  * import type { RunJSDocRatchetOptions } from "@beep/repo-cli/test/Quality"
  *
@@ -390,6 +657,7 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
  * }
  * console.log(options.baselinePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -398,9 +666,11 @@ export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`R
     baselinePath: S.String,
     inventoryPath: S.String,
     writeBaseline: S.Boolean,
+    includeGenerated: S.optionalKey(S.Boolean),
   },
   $I.annote("RunJSDocRatchetOptions", {
-    description: "Options accepted by runJSDocRatchet: inventory source, baseline location, and write mode.",
+    description:
+      "Options accepted by runJSDocRatchet: inventory source, baseline location, write mode, and generated-inclusive zero-legacy scope.",
   })
 ) {}
 
@@ -409,7 +679,8 @@ export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`R
  *
  * @param options - Inventory path, baseline path, and write mode.
  * @returns Effect that fails when any tracked inventory total grows.
- * @example
+ * **Example** (Build the ratchet Effect)
+ *
  * ```ts
  * import { runJSDocRatchet } from "@beep/repo-cli/test/Quality"
  *
@@ -427,7 +698,12 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
   baselinePath,
   inventoryPath,
   writeBaseline: shouldWriteBaseline,
-}: RunJSDocRatchetOptions): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  includeGenerated = false,
+}: RunJSDocRatchetOptions): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const currentTotals = yield* readCurrentInventoryTotals(repoRoot, inventoryPath);
 
@@ -442,12 +718,14 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
 
   const baseline = yield* readBaseline(repoRoot, baselinePath);
   yield* enforceComparison(compareTotals(currentTotals, baseline.tracked_totals), baselinePath);
+  yield* enforceZeroLegacy(repoRoot, includeGenerated);
 });
 
 /**
  * Compare JSDoc inventory totals for focused tests.
  *
- * @example
+ * **Example** (Compare totals)
+ *
  * ```ts
  * import { compareJSDocTotalsForTesting } from "@beep/repo-cli/test/Quality"
  *
@@ -457,7 +735,11 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
  * )
  * console.log(comparison.increased.length)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
-export const compareJSDocTotalsForTesting = compareTotals;
+export const compareJSDocTotalsForTesting: {
+  (baselineTotals: JSDocTrackedTotals): (currentTotals: JSDocTrackedTotals) => JSDocTotalsComparison;
+  (currentTotals: JSDocTrackedTotals, baselineTotals: JSDocTrackedTotals): JSDocTotalsComparison;
+} = dual(2, compareTotals);

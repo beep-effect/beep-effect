@@ -1,279 +1,320 @@
 # beep-effect
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/beep-effect/beep-effect)
+[![Greptile: The War on Bugs](https://www.greptile.com/badge.svg)](https://www.greptile.com/?utm_source=oss_badge&utm_medium=readme&utm_campaign=greptile_for_open_source)
 
-**Mission.** beep-effect is the Effect-first, schema-first monorepo for building local-first, evidence-backed, governed **professional agentic runtimes**. It ships reliable domain experiments as production-quality vertical slices that can be added, rewritten, or removed without long-term topology debt.
+This repository is a trauma response with dependency injection.
 
-**North Star** (from `standards/ARCHITECTURE.md`)
+It started as a way to never rebuild auth. It stayed because my father is
+opening a solo intellectual-property practice, and every legal AI that can
+cite its sources wants his client files in someone else's cloud.
 
-> beep-effect uses a hexagonal vertical slice architecture for product code. Domain-agnostic reusable substrate, developer-operational packages, and technical boundary wrappers use explicit non-slice family/kind grammar so they are as legible as slices instead of becoming generic `common` buckets.
+**Prose-to-Proof** is the product. A local-first workbench for a professional
+who cannot afford a hallucination. Documents go in. Candidate claims come out.
+Nothing becomes practice memory until the exact source span checks out and the
+attorney says yes.
 
-**Core Bet** (from `standards/architecture/00-philosophy.md`)
-
-> high modularity + consistent topology > low ceremony + improvised structure
+> Obsidian for lawyers — but it proves its sources.
 
 ---
 
-## Start Here (Newcomers)
+## What this is
 
-**Read this first:** [`standards/architecture/13-onboarding-the-minimum-viable-slice.md`](standards/architecture/13-onboarding-the-minimum-viable-slice.md)
+A solo IP attorney is the whole firm: partner, associate, paralegal, librarian,
+and IT. Cloud tools that "show their work" process client material on someone
+else's servers. Local tools that keep the files on-device mostly shrug when you
+ask *where that sentence came from*.
 
-This document walks through the smallest legal slice, the 60-second path decoder, and the promotion ceremony for cross-slice language.
+This repo exists to occupy the unoccupied intersection:
 
-**Minimum viable slice (MVS) shape** (abridged target sketch):
+- **local-first** — client data stays on the machine by default
+- **every assertion grounded** — a plausible citation is not evidence
+- **IP-specialized** — office actions, matters, inventors, claims, deadlines
+
+The first user is not a persona. He is my dad. His archive is the seed. His
+daily use is the standard. Agents propose; he approves; the record only keeps
+what survived. That loop is the product strategy, not a footnote.
+
+The full vision, in human and in schema:
+
+- [`docs/PROSE_TO_PROOF_VISION.md`](docs/PROSE_TO_PROOF_VISION.md)
+- [`docs/PROSE_TO_PROOF_FOR_TOM.md`](docs/PROSE_TO_PROOF_FOR_TOM.md)
+- [`docs/product/prose-to-proof.md`](docs/product/prose-to-proof.md)
+- [`goals/agentic-professional-runtime/`](goals/agentic-professional-runtime/)
 
 ```txt
-packages/notes/
-  domain/
-    src/
-      aggregates/Note/
-        Note.model.ts
-        Note.errors.ts
-  use-cases/
-    src/
-      Note/
-        Note.commands.ts
-        Note.queries.ts
-        Note.ports.ts
-        Note.service.ts
-      public/
-      server/
-  server/
-    src/
-      Note/
-        Note.repo.ts
-        Note.http-handlers.ts
-      Layer.ts
+document in
+    → model proposes a claim
+    → the span must reproduce the source
+    → the attorney approves
+    → practice memory
 ```
 
-**60-second path decoder example**
-
-`packages/iam/server/src/Membership/Membership.http-handlers.ts`
-
-- `packages/` — monorepo packages root
-- `iam/` — the slice (bounded context)
-- `server/` — slice-family layer (adapters + Layer)
-- `src/Membership/` — the concept
-- `Membership.http-handlers.ts` — role file (HTTP wiring for the concept)
-
-The onboarding examples are intentionally small sketches. The executable proof
-for the current architecture lives in `packages/architecture-lab/*` with the
-`apps/architecture-lab-proof` harness.
-
-**Common role suffixes**
-
-| Suffix                | Purpose                                      |
-|-----------------------|----------------------------------------------|
-| `.model.ts`           | Schema-first class + pure behavior           |
-| `.errors.ts`          | `TaggedErrorClass` definitions               |
-| `.commands.ts` / `.queries.ts` | Intent shapes                           |
-| `.ports.ts`           | Port declarations (`Context.Tag`)            |
-| `.service.ts`         | Use-case service composing ports + domain    |
-| `.repo.ts`            | Port implementation (server side)            |
-| `.http-handlers.ts`   | HTTP wiring (server side)                    |
-
-**Next reading**
-
-- `01-hexagonal-vertical-slices.md` — why slices + hexagonal boundaries
-- `08-testing.md` — testing strategy and slice isolation
-- `02-shared-kernel.md` — promotion record rules
-
-**Legacy name quick reference** (see `standards/architecture/README.md`)
-
-`providers` → `drivers`, `common`/`core`/`utils` → `foundation` (or `shared/*` or a concrete slice).
+The model *guesses*. The graph *proves*. Confidence gets you to the boundary.
+Only proof gets you across.
 
 ---
 
-## Repository Topology
+## What this is not
 
-### Foundation Family
+- **Not a chatbot with a gavel emoji.** A confident model is not an attorney.
+- **Not a cloud SaaS.** Practice files and the local store stay on the
+  machine. The current desktop default still calls a configured model
+  provider (Anthropic today) for chat turns and extraction when a key is
+  present — that is an explicit egress, not a silent vault upload.
+  Embeddings are intended on-device. Privilege is not a Terms-of-Service
+  checkbox.
+- **Not an autonomous lawyer.** Legal advice, filings, and anything a client
+  sees wait behind an explicit approval gate.
+- **Not a replacement for email, billing, docketing, or the USPTO.** Those
+  stay systems of record. This owns claims, evidence, drafts, approvals, and
+  provenance.
+- **Not a community starter kit.** This is a public laboratory and
+  publication, not a help desk. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- **Not a place for privileged files.** Real client material never enters
+  git. The repo carries synthetic fixtures only.
 
-Domain-agnostic reusable substrate.
+---
 
-Path: `packages/foundation/<kind>/<name>`  
-Kinds: `primitive`, `modeling`, `capability`, `ui-system`
+## What's in front of a user
 
-Manifest contract:
+Honest status, not a launch deck.
 
-```json
-{
-  "beep": { "family": "foundation", "kind": "modeling" }
-}
+| Surface | What it actually is |
+| --- | --- |
+| [`apps/professional-desktop`](apps/professional-desktop) | Tauri workbench. Today a local chat shell on PGlite. Becoming the document portal. |
+| [`apps/practice-kg-mcp`](apps/practice-kg-mcp) | Read-only local MCP server over a portable practice graph. First-user front: Claude Desktop asks the archive; the corpus never enters this repo. |
+| [`apps/oip-web`](apps/oip-web) | Public site for Oppold IP Law. Decoupled from the first-user metric. |
+
+The north star is **Prose-to-Proof in front of Tom**: a real attorney doing
+real work in a shipped surface. Priority lives in
+[`docs/ROADMAP.md`](docs/ROADMAP.md). Packet lifecycle lives in
+[`goals/INDEX.md`](goals/INDEX.md).
+
+---
+
+## How it started
+
+I used to work on a warehouse management system. Fortune 500 clients.
+Healthcare. Pharmaceuticals. The VA. Regulated industries where data integrity
+is not a nice-to-have.
+
+The codebase had no foreign keys.
+
+Not "some tables were missing foreign keys." *None of them had foreign keys.*
+`tenant_id` was a vibes-based suggestion. Multi-tenant isolation was "we trust
+the application layer" and "QA will catch it." The POC became production
+because someone showed it to a stakeholder. The hardening phase is in the
+backlog. It will always be in the backlog.
+
+I sat in sprint reviews for two years. We pointed at the same debt. We agreed
+it mattered. We walked out. Nothing moved. Story points are astrology for
+project managers. Velocity is a number we invented so the board would have a
+number. The deadline was set before the requirements existed. You said two
+weeks. You lied. Pressure code borrows time at a rate you cannot pay.
+
+Every SaaS idea I spawned after that started the same way: three weeks
+rewiring auth, uploads, and settings, then I got impatient and duct-taped the
+dream. This repo was supposed to make Idea #37 start at "ship."
+
+Then the idea that mattered showed up, and it was not another SaaS. It was
+building the machine my father will actually run his practice on.
+
+The VA deserved foreign keys. An IP attorney deserves a privilege wall and
+citations that exist.
+
+---
+
+## This repo has no backlog
+
+It has compile errors.
+
+If a table needs a tenant, the type system rejects the table. If a third-party
+contract is violated, the schema throws. If a citation cannot point at a real
+span, it does not become a fact. The backlog is empty because bad states do
+not merge.
+
+This is not agile. This is spite.
+
+Every factory is a scar. Every type constraint is a promise that you will not
+repeat my mistakes, because I have made them impossible to compile.
+
+- **Branded IDs.** `UserId` is not `string`. `OrganizationId` is not `string`.
+  The type system remembers what you will forget.
+- **Drivers, not SDK leakage.** Treat every third-party like it is trying to
+  kill you. They ship breaking changes on Tuesdays. When — not if — they
+  betray you, the adapter burns. The domain does not know. The domain does
+  not care.
+- **Ground before cite.** Machine output has zero citation authority. A
+  quote crosses only when the proposed span reproduces the source. See
+  [`docs/product/citation-grounding.md`](docs/product/citation-grounding.md).
+- **Matter walls.** A matter is a named subgraph and an ethical wall. Cross-
+  matter reads for conflict checks are a specific, bounded question — not
+  "the model has context."
+- **Workspace as data.** Panels, splits, and documents are schema values, so
+  an agent arranges the desk through the same kernel the mouse uses. See
+  [`docs/product/workspace-substrate.md`](docs/product/workspace-substrate.md).
+
+---
+
+## Effect-first, cry-never
+
+This codebase uses Effect. All of it. v4, because the alternative is waiting
+for a newsletter to tell me the ecosystem moved.
+
+- No `async/await` in domain code
+- No `try/catch` in domain code. Boundaries may catch; they still surface
+  typed errors.
+- Dependency injection via Layers
+- Errors as values, typed and tracked
+- Schema as the source of truth for shape, codecs, and persistence
+
+```typescript
+const program = Effect.gen(function* () {
+  const db = yield* Database
+  const result = yield* db.query(/* ... */)
+  return yield* S.decode(ResponseSchema)(result)
+})
+
+// NOT this
+// async function program() {
+//   try {
+//     return await db.query(/* ... */) // hope it's valid lol
+//   } catch (e) {
+//     console.log(e) // cool, very helpful
+//   }
+// }
 ```
 
-See [`packages/foundation/README.md`](packages/foundation/README.md) and `standards/architecture/07-non-slice-families.md`.
+The Effect version tells you what it needs, what can go wrong, and what it
+returns. The async version *hopes*. I am done hoping.
 
-### Shared Kernel
+APIs get validated against the live Effect source referenced at
+`.repos/effect`, not against whatever an agent remembers from training. See
+[`standards/effect-first-development.md`](standards/effect-first-development.md)
+and
+[`standards/schema-first-development-prompt.md`](standards/schema-first-development-prompt.md).
 
-Deliberate DDD cross-slice product language (high bar).
+---
 
-Normal doctrine homes: `domain/`, `config/`.
+## The recursion
 
-High-bar leaves: `use-cases/`, `client/`, `server/`, `tables/`, `ui/`. These
-must prove a deliberate cross-slice product contract before growing meaningful
-exports.
+There is a `goals/` directory. There is an `explorations/` directory. There
+is a nightly `research/` routine that proposes, and does not silently become
+the plan.
 
-Active leaves in this checkout include `domain/`, `tables/`, and `ui/`;
-`config/`, `use-cases/`, `client/`, and `server/` are scaffolded or narrow
-boundary surfaces.
+I use agents to write packets for agents to implement. The agent researches.
+The agent writes the plan. The agent executes. The agent reflects. The
+reflection improves the next packet.
 
-**Promotion Bar** — code belongs here only when it is:
-
-- Durable product semantics shared by multiple slices
-- Free of driver or slice-specific imports
-- Reviewed with a dated promotion record
-
-**Example (abridged promotion record)**
-
-**OnePasswordReference** (promoted 2026-05-14)  
-
-- Shared semantics: A credential input in installer flows is a reference to a 1Password item field, never a plaintext secret.  
-- Current consumers: no active product-slice package consumers in this checkout; driver-side probe contracts still share the no-plaintext-secret vocabulary.  
-- Rejected homes: Foundation (product security language, not domain-agnostic substrate).  
-- Surface: `@beep/shared-domain/values/OnePasswordReference`.  
-- Runtime limits: value object only — no live Layers.  
-- Full record (including coupling acceptors + removal trigger): see `packages/shared/domain/README.md`.
-
-See [`packages/shared/README.md`](packages/shared/README.md) and `standards/architecture/02-shared-kernel.md`.
-
-### Drivers Family
-
-Thin, repo-level wrappers around external engines, SDKs, and platforms.
-
-Path: `packages/drivers/<name>` (flat family)
-
-Manifest:
-
-```json
-{
-  "beep": { "family": "drivers" }
-}
+```txt
+explorations/   fuzzy front end
+goals/          the things we actually committed to
+research/       machine intel — it proposes, it does not append itself
 ```
 
-Examples: `postgres`, `drizzle`, `openai`, `xai`, `phoenix`, `ffmpeg`, `runpod`, `discord`, etc.
+If this concerns you, remember: the alternative was me doing it manually at
+2am. The agents do not get tired. The agents do not cut corners when they are
+frustrated. I trust the recursion more than I trust myself after midnight.
 
-See `standards/architecture/03-driver-boundaries.md`.
+Shipping that recursion without lying to git is
+[`bun run beep yeet`](packages/tooling/tool/cli/README.md). Feature branch.
+Proof. PR. Hosted checks. No `wip` on `main`.
 
-### Tooling Family
+---
 
-Repo operations, generators, quality automation, and policy.
+## Run it
 
-Path: `packages/tooling/<kind>/<name>`
-
-**Key Commands** (most-used day-to-day)
+This is a laboratory, not `npx create-beep`. You want Bun, a willingness to
+read, and the onboarding doc — not a four-command fantasy.
 
 ```bash
-# Explore architecture commands (the generator surface)
-bun run beep architecture
-
-# Example of adding a canonical concept (see full CLI reference for create/add/plan)
-bun run beep architecture add concept architecture-lab Worker --domain-kind entities --stage persistence --dry-run
-
-# Create a new package following the rules
-bun run beep create-package sandbox --family foundation --kind capability --dry-run
-
-# Local docgen (preferred)
-bun run docgen:local
-
-# Quality, security, and effect-law checks
-bun run beep quality repo-exports-catalog --check
-bun run beep codex quality-review-fix-loop "close the current initiative"
-
-# Graphiti memory helpers
-bun run graphiti:proxy
-bun run graphiti:proxy:ensure
+bun install
+bun run beep yeet verify          # the real quality bar
+bun run beep architecture         # the generator surface
 ```
 
-Full reference (all commands, flags, and schemas): [`packages/tooling/tool/cli/README.md`](packages/tooling/tool/cli/README.md)
+Dev servers go through portless hostnames, never raw `localhost:3000`:
 
-### Product Slices (Vertical Domains)
+```bash
+# examples — see each app's package.json
+# http://professional-desktop.beep.localhost:1355
+# http://oip-web.beep.localhost:1355
+```
 
-Each slice owns its own product language and adds only the role packages it
-currently needs: domain, use-cases, config, server/client adapters, tables, and
-UI are canonical roles, not mandatory scaffolding.
+If something does not work, it is probably Docker. It is always Docker.
 
-Current slices at a glance (checkout snapshot):
-
-| Slice                  | One-line Role                                      | Live roles                         |
-|------------------------|----------------------------------------------------|------------------------------------|
-| `workspace`            | Core workspace and thread runtime                  | `domain`, `tables`                 |
-| `agents`     | Skills, capabilities, and agent governance         | `domain`, `use-cases`              |
-| `epistemic`            | Evidence, claims, candidate work, and provenance   | `domain`                           |
-| `law-practice`         | IP law practice models and workflows               | `domain`                           |
-| `architecture-lab`     | Canonical executable architecture proof            | `domain`, `use-cases`, `config`, `server`, `tables`, `client`, `ui` |
-
-This list is a point-in-time view. The live workspace graph is produced by
-`bun run topo-sort`; new architecture work should go through the architecture
-generator. The architecture docs describe target doctrine, not a claim that
-every current slice has every canonical role.
-
-### Apps
-
-Entry points and public surfaces:
-
-- `professional-desktop` — Tauri desktop shell
-- `oip-web` — Public site for Oppold IP Law
-- `architecture-lab-proof` — Executable architecture proof harness
+Newcomers who came for the *shape* of the monorepo, not the product: start at
+[`standards/architecture/13-onboarding-the-minimum-viable-slice.md`](standards/architecture/13-onboarding-the-minimum-viable-slice.md).
+The executable architecture proof lives in `packages/architecture-lab/*` with
+the `apps/architecture-lab-proof` harness. Binding law:
+[`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md).
 
 ---
 
-## Product Vision (the Proofs)
+## The rules
 
-beep-effect exists to power local-first, evidence-backed agentic runtimes for professional services.
+1. **Make `any` painful.** The friction is the point.
+2. **Slices do not import other slices.** Cross-slice language earns a
+   promotion record or it does not exist.
+3. **The compiler is the first reviewer.** Warnings do not compile. Hope
+   does not type-check.
+4. **Search live source before inventing a helper.** The symbol you want is
+   probably already named.
+5. **Publish through Yeet.** `main` is PR-only.
 
-**Primary proofs**
-
-- **Agentic Solo Practice Law Firm (OIP)** — IP attorney runtime for context capture, document drafting, matter memory, and safe administrative loops under explicit attorney approval. Forces the same epistemic and approval primitives.
-
-See the full product definition and runtime proofs in [`goals/agentic-professional-runtime/`](goals/agentic-professional-runtime/).
-
----
-
-## How the Repo Works
-
-The repository is built on three pillars:
-
-- **Effect-first** — Typed errors, Layer-based dependency wiring, and Effect modules (`A`, `O`, `Str`, `Match`, etc.) are the default. Native JavaScript patterns are used only at explicit boundaries.
-- **Schema-first** — `effect/Schema` (plus `@beep/schema` helpers) is the single source of truth for shape, validation, codecs, and persistence metadata.
-- **Topology as compressed context** — Package paths, role suffixes (`.model.ts`, `.ports.ts`, etc.), and family/kind declarations in `package.json` carry meaning so readers can understand intent before opening files.
-
-See [`standards/effect-first-development.md`](standards/effect-first-development.md) and [`standards/ARCHITECTURE.md`](standards/ARCHITECTURE.md) (especially the Core Principles).
+Human contribution and vulnerability reporting:
+[`CONTRIBUTING.md`](CONTRIBUTING.md) and [`SECURITY.md`](SECURITY.md).
+Agent law: [`AGENTS.md`](AGENTS.md).
 
 ---
 
-## Contributing & Quality
+## First-party history vs `.repos/effect`
 
-All changes must keep the repo quality commands green and follow the non-negotiable habits below:
+First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
+`explorations/`, `standards/`, and the authored `docs/` tree.
 
-- Use `bun run beep architecture` and `bun run beep create-package` for new slice or package work.
-- Search live source and package barrels before introducing new shared symbols.
-- Prefer `bun run docgen:local` for documentation work.
-- Publish through Yeet: feature branch, reviewed staged changes,
-  `bun run beep yeet publish --message "type(scope): summary"`, PR, green
-  required checks, merge.
-- Never commit `saving`, `wip`, or temporary checkpoint work to shared branches.
-  `main` is PR-only and protected by required hosted checks.
-- Keep GitHub merge/squash commit messages conventional too; their bodies are
-  server-side commitlint input, including the 100-character line limit.
-- Run the quality gates (`bun run beep yeet verify`, targeted
-  `bun run beep ci lane <name>`, etc.) and keep them green.
-- Treat hosted PR checks as the final merge gate. Local
-  `bun run beep yeet verify` replays the full pre-push collector:
-  aggregate build/check/lint/test/docgen quality, Knip, JSDoc Ratchet, Repo
-  Sanity plus changeset status, promoted Fallow, Secret Scanning, Security,
-  SAST, and Nix. The remaining hosted-only residue is event-shaped:
-  Commitlint's pushed range, Security's GitHub dependency-review sub-gate, and
-  path-gated desktop IPC setup. Replay those with `bun run beep ci lane
-  commitlint ...`, `bun run beep ci lane desktop-ipc`, or the PR checks when
-  they are relevant.
-- Follow the rules in [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md).
+`.repos/effect` is a gitignored symlink to a machine-local clone of
+[Effect-TS/effect](https://github.com/Effect-TS/effect), provisioned by
+`scripts/setup-agent-memory.sh`, so agents validate APIs against real Effect
+v4 source instead of training-data priors. Nothing under `.repos/` is part
+of the tracked tree.
+
+Do **not** add git subtrees under `.repos/`. Historical subtree imports
+still sit in git objects and poison naive `git log` author counts — those
+names are not first-party contributors.
+
+---
+
+## The promise
+
+I will never again:
+
+- Forget a foreign key
+- Trust a third-party SDK
+- Let tenant data leak
+- Ship untyped errors
+- Send privileged files to a cloud chatbot and call it "AI strategy"
+- Let a model invent a citation
+- Attend a sprint review where tech debt does not move
+
+If you call this over-engineered, wait until you meet a malpractice carrier.
+
+This is not documentation. This is a restraining order against bad decisions,
+signed by the TypeScript compiler, served on every language model that wants
+to practice law without a license.
 
 ---
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
+
+Public laboratory. Session notes you can clone. Not a support contract.
 
 ---
 
-*Start here: [`standards/architecture/13-onboarding-the-minimum-viable-slice.md`](standards/architecture/13-onboarding-the-minimum-viable-slice.md)*
+*"It's not a business priority."*
+
+— Everyone who has ever created a production incident that was absolutely
+their fault

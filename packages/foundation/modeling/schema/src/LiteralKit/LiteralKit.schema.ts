@@ -7,14 +7,12 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { A } from "@beep/utils";
 import { HashMap, HashSet, Match, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { isNonNegative } from "../Number.ts";
-import type { TaggedErrorClassFromFields } from "@beep/schema/TaggedErrorClass";
 import type { SchemaAST, Struct, Unify } from "effect";
 
 const $I = $SchemaId.create("LiteralKit");
@@ -27,13 +25,16 @@ type EnumMappings<L extends Literals = Literals> = A.NonEmptyReadonlyArray<EnumM
  * Maps a literal value to its string key representation used in `Enum`, `is`,
  * `$match`, and `thunk` objects.
  *
+ * **Details**
+ *
  * Key format by type:
  * - boolean: `"true"` or `"false"`
  * - bigint: `"bigint${value}n"` (e.g., `1n` becomes `"bigint1n"`)
  * - number: `"number${value}"` (e.g., `200` becomes `"number200"`)
  * - string: as-is (e.g., `"pending"` stays `"pending"`)
  *
- * @example
+ * **Example** (Number literal key mapping)
+ *
  * ```ts
  * import type { LiteralToKey } from "@beep/schema/LiteralKit"
  *
@@ -41,8 +42,8 @@ type EnumMappings<L extends Literals = Literals> = A.NonEmptyReadonlyArray<EnumM
  * console.log(key)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LiteralToKey<L extends SchemaAST.LiteralValue> = L extends boolean
   ? L extends true
@@ -210,16 +211,17 @@ type ToTaggedUnionFn<L extends PropertyKeyLiteralArray, M extends EnumMappings<L
  * Converts a literal value to its string key at runtime using the
  * {@link LiteralToKey} mapping rules.
  *
- * @example
- * ```ts
+ * **Example** (Runtime literal key conversion)
+ *
+ * ```ts import.meta.vitest name="Runtime literal key conversion"
  * import { matchLiteral } from "@beep/schema/LiteralKit"
  *
  * const keys = [matchLiteral("pending"), matchLiteral(200), matchLiteral(true), matchLiteral(BigInt(1))]
- * console.log(keys) // ["pending", "number200", "true", "bigint1n"]
+ * keys // => ["pending", "number200", "true", "bigint1n"]
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const matchLiteral = <L extends SchemaAST.LiteralValue>(literal: L): LiteralToKey<L> =>
   Match.value(literal).pipe(
@@ -280,121 +282,46 @@ const makeThunks = <L extends Literals, M extends EnumMappings<L> | undefined = 
   );
 
 const LiteralValueSchema = S.Union([S.String, S.BigInt, S.Boolean, S.Finite]);
-const makeLiteralKitErrorBase = <Self, Name extends string, Fields extends S.Struct.Fields>(
-  name: Name,
-  fields: Fields,
-  title: string,
-  description: string
-): TaggedErrorClassFromFields<Self, Name, Fields> =>
-  TaggedErrorClass<Self>($I.make(name as never))(
-    name,
-    fields,
-    $I.annote(name as never, {
-      title,
-      description,
-    })
-  );
-const LiteralNotInSetErrorFields = {
-  literals: S.Array(LiteralValueSchema),
-  input: S.Array(LiteralValueSchema),
-} satisfies S.Struct.Fields;
-const LiteralNotInSetErrorBase: TaggedErrorClassFromFields<
-  LiteralNotInSetError,
-  "LiteralNotInSetError",
-  typeof LiteralNotInSetErrorFields
-> = makeLiteralKitErrorBase(
-  "LiteralNotInSetError",
-  LiteralNotInSetErrorFields,
-  "Not In Literals Error",
-  "Error thrown when an input value is not found in the provided literals array."
-);
-const LiteralKitKeyCollisionErrorFields = {
-  key: S.String,
-  existing: LiteralValueSchema,
-  incoming: LiteralValueSchema,
-} satisfies S.Struct.Fields;
-const LiteralKitKeyCollisionErrorBase: TaggedErrorClassFromFields<
-  LiteralKitKeyCollisionError,
-  "LiteralKitKeyCollisionError",
-  typeof LiteralKitKeyCollisionErrorFields
-> = makeLiteralKitErrorBase(
-  "LiteralKitKeyCollisionError",
-  LiteralKitKeyCollisionErrorFields,
-  "LiteralKit Key Collision Error",
-  "Different literals encoded to the same LiteralKit helper key."
-);
-const LiteralKitEnumMappingDuplicateLiteralErrorFields = {
-  literal: LiteralValueSchema,
-  firstIndex: S.Int.check(isNonNegative),
-  secondIndex: S.Int.check(isNonNegative),
-} satisfies S.Struct.Fields;
-const LiteralKitEnumMappingDuplicateLiteralErrorBase: TaggedErrorClassFromFields<
-  LiteralKitEnumMappingDuplicateLiteralError,
-  "LiteralKitEnumMappingDuplicateLiteralError",
-  typeof LiteralKitEnumMappingDuplicateLiteralErrorFields
-> = makeLiteralKitErrorBase(
-  "LiteralKitEnumMappingDuplicateLiteralError",
-  LiteralKitEnumMappingDuplicateLiteralErrorFields,
-  "LiteralKit Enum Mapping Duplicate Literal Error",
-  "The same source literal appeared more than once in a manual LiteralKit enum mapping."
-);
-const LiteralKitEnumMappingCoverageErrorFields = {
-  literals: S.Array(LiteralValueSchema),
-  mappingLiterals: S.Array(LiteralValueSchema),
-  missing: S.Array(LiteralValueSchema),
-  unexpected: S.Array(LiteralValueSchema),
-} satisfies S.Struct.Fields;
-const LiteralKitEnumMappingCoverageErrorBase: TaggedErrorClassFromFields<
-  LiteralKitEnumMappingCoverageError,
-  "LiteralKitEnumMappingCoverageError",
-  typeof LiteralKitEnumMappingCoverageErrorFields
-> = makeLiteralKitErrorBase(
-  "LiteralKitEnumMappingCoverageError",
-  LiteralKitEnumMappingCoverageErrorFields,
-  "LiteralKit Enum Mapping Coverage Error",
-  "A manual LiteralKit enum mapping did not exactly match the provided literal set."
-);
-const LiteralKitTaggedUnionLiteralErrorFields = {
-  literal: LiteralValueSchema,
-} satisfies S.Struct.Fields;
-const LiteralKitTaggedUnionLiteralErrorBase: TaggedErrorClassFromFields<
-  LiteralKitTaggedUnionLiteralError,
-  "LiteralKitTaggedUnionLiteralError",
-  typeof LiteralKitTaggedUnionLiteralErrorFields
-> = makeLiteralKitErrorBase(
-  "LiteralKitTaggedUnionLiteralError",
-  LiteralKitTaggedUnionLiteralErrorFields,
-  "LiteralKit Tagged Union Literal Error",
-  "LiteralKit.toTaggedUnion only supports literals that can be used as object property keys."
-);
 
 /**
  * Error thrown when an input value is not found in the provided literals
  * array, typically when `omitOptions` removes every literal and cannot return
  * a non-empty result.
  *
- * @example
- * ```ts
+ * **Example** (Create not-in-set error)
+ *
+ * ```ts import.meta.vitest name="Create not-in-set error"
  * import { LiteralNotInSetError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralNotInSetError.make({
  *   literals: ["ready"],
  *   input: ["blocked"]
  * })
- * console.log(error.input.includes("blocked")) // true
+ * error.input.includes("blocked") // => true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class LiteralNotInSetError extends LiteralNotInSetErrorBase {}
+export class LiteralNotInSetError extends S.TaggedError<LiteralNotInSetError>($I.make("LiteralNotInSetError"))(
+  "LiteralNotInSetError",
+  {
+    literals: S.Array(LiteralValueSchema),
+    input: S.Array(LiteralValueSchema),
+  },
+  $I.annoteError<LiteralNotInSetError>("LiteralNotInSetError", {
+    title: "Not In Literals Error",
+    description: "Error thrown when an input value is not found in the provided literals array.",
+  })
+) {}
 
 /**
  * Error thrown when different literals encode to the same helper key via
  * {@link LiteralToKey} mapping.
  *
- * @example
- * ```ts
+ * **Example** (Create key collision error)
+ *
+ * ```ts import.meta.vitest name="Create key collision error"
  * import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitKeyCollisionError.make({
@@ -402,13 +329,26 @@ export class LiteralNotInSetError extends LiteralNotInSetErrorBase {}
  *   existing: "number1",
  *   incoming: 1
  * })
- * console.log(error.key) // "number1"
+ * error.key // => "number1"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitKeyCollisionError extends LiteralKitKeyCollisionErrorBase {}
+export class LiteralKitKeyCollisionError extends S.TaggedError<LiteralKitKeyCollisionError>(
+  $I.make("LiteralKitKeyCollisionError")
+)(
+  "LiteralKitKeyCollisionError",
+  {
+    key: S.String,
+    existing: LiteralValueSchema,
+    incoming: LiteralValueSchema,
+  },
+  $I.annoteError<LiteralKitKeyCollisionError>("LiteralKitKeyCollisionError", {
+    title: "LiteralKit Key Collision Error",
+    description: "Different literals encoded to the same LiteralKit helper key.",
+  })
+) {}
 
 type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
 
@@ -416,8 +356,9 @@ type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
  * Error thrown when the same source literal appears more than once in a manual
  * enum mapping provided to {@link LiteralKit}.
  *
- * @example
- * ```ts
+ * **Example** (Create duplicate literal error)
+ *
+ * ```ts import.meta.vitest name="Create duplicate literal error"
  * import { LiteralKitEnumMappingDuplicateLiteralError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitEnumMappingDuplicateLiteralError.make({
@@ -425,20 +366,34 @@ type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
  *   firstIndex: 0,
  *   secondIndex: 2
  * })
- * console.log(error.secondIndex) // 2
+ * error.secondIndex // => 2
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitEnumMappingDuplicateLiteralError extends LiteralKitEnumMappingDuplicateLiteralErrorBase {}
+export class LiteralKitEnumMappingDuplicateLiteralError extends S.TaggedError<LiteralKitEnumMappingDuplicateLiteralError>(
+  $I.make("LiteralKitEnumMappingDuplicateLiteralError")
+)(
+  "LiteralKitEnumMappingDuplicateLiteralError",
+  {
+    literal: LiteralValueSchema,
+    firstIndex: S.Int.check(isNonNegative),
+    secondIndex: S.Int.check(isNonNegative),
+  },
+  $I.annoteError<LiteralKitEnumMappingDuplicateLiteralError>("LiteralKitEnumMappingDuplicateLiteralError", {
+    title: "LiteralKit Enum Mapping Duplicate Literal Error",
+    description: "The same source literal appeared more than once in a manual LiteralKit enum mapping.",
+  })
+) {}
 
 /**
  * Error thrown when a manual enum mapping does not exactly cover the provided
  * literal set (has missing or unexpected entries).
  *
- * @example
- * ```ts
+ * **Example** (Create coverage error instance)
+ *
+ * ```ts import.meta.vitest name="Create coverage error instance"
  * import { LiteralKitEnumMappingCoverageError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitEnumMappingCoverageError.make({
@@ -447,32 +402,58 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends LiteralKitEnumMa
  *   missing: ["write"],
  *   unexpected: []
  * })
- * console.log(error.missing.includes("write")) // true
+ * error.missing.includes("write") // => true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitEnumMappingCoverageError extends LiteralKitEnumMappingCoverageErrorBase {}
+export class LiteralKitEnumMappingCoverageError extends S.TaggedError<LiteralKitEnumMappingCoverageError>(
+  $I.make("LiteralKitEnumMappingCoverageError")
+)(
+  "LiteralKitEnumMappingCoverageError",
+  {
+    literals: S.Array(LiteralValueSchema),
+    mappingLiterals: S.Array(LiteralValueSchema),
+    missing: S.Array(LiteralValueSchema),
+    unexpected: S.Array(LiteralValueSchema),
+  },
+  $I.annoteError<LiteralKitEnumMappingCoverageError>("LiteralKitEnumMappingCoverageError", {
+    title: "LiteralKit Enum Mapping Coverage Error",
+    description: "A manual LiteralKit enum mapping did not exactly match the provided literal set.",
+  })
+) {}
 
 /**
  * Error thrown when `LiteralKit.toTaggedUnion` receives a literal that cannot
  * act as an object property key.
  *
- * @example
- * ```ts
+ * **Example** (Create tagged-union literal error)
+ *
+ * ```ts import.meta.vitest name="Create tagged-union literal error"
  * import { LiteralKitTaggedUnionLiteralError } from "@beep/schema/LiteralKit"
  *
  * const error = LiteralKitTaggedUnionLiteralError.make({
  *   literal: BigInt(1)
  * })
- * console.log(typeof error.literal) // "bigint"
+ * typeof error.literal // => "bigint"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitTaggedUnionLiteralError extends LiteralKitTaggedUnionLiteralErrorBase {}
+export class LiteralKitTaggedUnionLiteralError extends S.TaggedError<LiteralKitTaggedUnionLiteralError>(
+  $I.make("LiteralKitTaggedUnionLiteralError")
+)(
+  "LiteralKitTaggedUnionLiteralError",
+  {
+    literal: LiteralValueSchema,
+  },
+  $I.annoteError<LiteralKitTaggedUnionLiteralError>("LiteralKitTaggedUnionLiteralError", {
+    title: "LiteralKit Tagged Union Literal Error",
+    description: "LiteralKit.toTaggedUnion only supports literals that can be used as object property keys.",
+  })
+) {}
 
 const validateLiteralKeys = <L extends Literals>(literals: L): void =>
   void pipe(
@@ -645,8 +626,8 @@ const attachHelperDescriptors = <T extends object>(schema: T, descriptors: Prope
 
 /**
  * Runtime literal kit type that augments `Schema.Literals` with convenience
- * helpers: `Options`, `Enum`, `is`, `pickOptions`, `omitOptions`, `$match`,
- * `thunk`, and `toTaggedUnion`.
+ * helpers: `Options`, `HashSet`, `Enum`, `is`, `pickOptions`, `omitOptions`,
+ * `$match`, `thunk`, and `toTaggedUnion`.
  *
  * Supports mixed literal types (`string | number | boolean | bigint`) with
  * keys mapped via {@link LiteralToKey}, or via the manual mapping when one is
@@ -657,6 +638,7 @@ const attachHelperDescriptors = <T extends object>(schema: T, descriptors: Prope
  */
 type LiteralKitBase<L extends Literals, M extends EnumMappings<L> | undefined = undefined> = S.Literals<L> & {
   readonly Options: L;
+  readonly HashSet: HashSet.HashSet<L[number]>;
   readonly is: IsGuards<L, M>;
   readonly Enum: EnumType<L, M>;
   readonly pickOptions: <LSubset extends A.NonEmptyReadonlyArray<L[number]>>(subset: LSubset) => LSubset;
@@ -676,7 +658,8 @@ type LiteralKitBase<L extends Literals, M extends EnumMappings<L> | undefined = 
 /**
  * Runtime literal kit returned by {@link LiteralKit}.
  *
- * @example
+ * **Example** (Runtime kit type usage)
+ *
  * ```ts
  * import { LiteralKit, type LiteralKit as LiteralKitType } from "@beep/schema/LiteralKit"
  *
@@ -695,9 +678,11 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
 /**
  * Builds a literal schema kit from a non-empty tuple of mixed literals.
  *
- * @example
- * ```typescript
+ * **Example** (Build mixed literal kit)
+ *
+ * ```ts
  * import { LiteralKit } from "@beep/schema";
+ * import * as HashSet from "effect/HashSet";
  * import * as S from "effect/Schema";
  *
  * const Status = LiteralKit([1, 20n, true, false, "hello"]);
@@ -707,6 +692,7 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  * Status.Enum.true;          // true
  * Status.is.number1(42);     // false
  * Status.is.hello("hello");  // true
+ * HashSet.has(Status.HashSet, 1); // true
  *
  * const matchResult = Status.$match(Status.Enum.number1, {
  *   number1: () => "one",
@@ -730,10 +716,10 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  * const event = S.decodeUnknownSync(Event)({ kind: "created", id: "evt_1" })
  * console.log(event.kind)
  *
- * const StatusKeys = LiteralKit(
- *   ["one", "two"],
- *   [["one", "ONE"], ["two", "TWO"]]
- * );
+ * const StatusKeys = LiteralKit({
+ *   literals: ["one", "two"],
+ *   enumMapping: [["one", "ONE"], ["two", "TWO"]]
+ * });
  *
  * StatusKeys.Enum.ONE; // "one"
  * ```
@@ -745,30 +731,32 @@ export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>
 /**
  * Builds a literal schema kit with a custom key mapping for `.Enum`.
  *
- * @example
- * ```ts
+ * **Example** (Custom enum key mapping)
+ *
+ * ```ts import.meta.vitest name="Custom enum key mapping"
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
- * const StatusKeys = LiteralKit(
- *   ["one", "two"],
- *   [["one", "ONE"], ["two", "TWO"]]
- * )
+ * const StatusKeys = LiteralKit({
+ *   literals: ["one", "two"],
+ *   enumMapping: [["one", "ONE"], ["two", "TWO"]]
+ * })
  *
- * console.log(StatusKeys.Enum.ONE) // "one"
+ * StatusKeys.Enum.ONE // => "one"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export function LiteralKit<const L extends Literals, const M extends EnumMappings<L>>(
-  literals: L,
-  enumMapping: M & ValidEnumMapping<L, M>
-): LiteralKit<L, M>;
+export function LiteralKit<const L extends Literals, const M extends EnumMappings<L>>(options: {
+  readonly literals: L;
+  readonly enumMapping: M & ValidEnumMapping<L, M>;
+}): LiteralKit<L, M>;
 /**
  * Implementation signature for {@link LiteralKit}; see the overloads above for
  * the public call shapes.
  *
- * @example
+ * **Example** (Implementation signature usage)
+ *
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  *
@@ -780,9 +768,17 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
  * @since 0.0.0
  */
 export function LiteralKit<const L extends Literals, const M extends EnumMappings<L> | undefined = undefined>(
-  literals: L,
-  enumMapping?: M extends EnumMappings<L> ? ValidEnumMapping<L, M> : never
+  literalsOrOptions:
+    | L
+    | {
+        readonly literals: L;
+        readonly enumMapping: M extends EnumMappings<L> ? ValidEnumMapping<L, M> : never;
+      }
 ): LiteralKit<L, M> {
+  const { literals, enumMapping } = P.hasProperty(literalsOrOptions, "literals")
+    ? literalsOrOptions
+    : { literals: literalsOrOptions, enumMapping: undefined };
+
   validateLiteralKeys(literals);
   const validatedEnumMapping = enumMapping === undefined ? undefined : validateEnumMapping(literals, enumMapping);
   const base = S.Literals(literals);
@@ -826,6 +822,7 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
 
   return attachHelperDescriptors(base, {
     Options: readonlyProperty(literals),
+    HashSet: readonlyProperty(HashSet.fromIterable(literals)),
     is: readonlyProperty(is),
     Enum: readonlyProperty(Enum),
     pickOptions: readonlyProperty(pickOptions),

@@ -12,7 +12,7 @@
 import { $MdId } from "@beep/identity";
 import { Markdown, SchemaUtils } from "@beep/schema";
 import { A, Html, Str, thunkEmptyStr } from "@beep/utils";
-import { Match, Number as N } from "effect";
+import { Match, Number as N, SchemaTransformation } from "effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -26,7 +26,7 @@ const trimBlock = Str.replace(/^\n+|\n+$/g, "");
 const unsafeUrlProtocolPattern = /^(?:javascript|vbscript|data):/i;
 const urlProtocolDetectionIgnoredPattern = /[\u0000-\u001f\u007f\s]+/g;
 const urlSchemePrefixPattern = /^([A-Za-z][A-Za-z0-9+.-]*):/u;
-const htmlCharacterReferencePattern = /&(?:#(\d+);?|#x([\da-f]+);?|(colon|tab|newline);?)/gi;
+const htmlCharacterReferencePattern = /&(?:#(\d+);?|#x([\da-f]+);?|(bsol|colon|newline|sol|tab);?)/gi;
 const percentEncodedBytePattern = /%([0-9a-f]{2})/gi;
 const percentEncodedOctetPattern = /%25([0-9a-f]{2})/gi;
 const invalidSurrogatePattern = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
@@ -35,6 +35,7 @@ const lineBreakPattern = /[\r\n]/;
 const backtickRunPattern = /`+/g;
 const maxUnicodeCodePoint = 0x10ffff;
 const maxUrlDecodePasses = 4;
+const urlSchemePattern = /^[a-z][a-z0-9+.-]*:$/u;
 
 const StringArray = S.Array(S.String).pipe(
   $I.annoteSchema("StringArray", {
@@ -56,24 +57,7 @@ const UnsafeUrlProtocolDestination = S.String.check(
   SchemaUtils.withCodecStatics
 );
 
-/**
- * URL destination policy for a rendering sink.
- *
- * An empty `allowedProtocols` list preserves compatibility behavior: active
- * script/data protocols are blocked, but other absolute protocols pass through.
- *
- * @example
- * ```ts
- * import { UrlPolicy } from "@beep/md/Md.escape"
- *
- * const policy = UrlPolicy.make({ allowedProtocols: ["https:"], allowRelative: false })
- * console.log(policy.allowedProtocols[0]) // "https:"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class UrlPolicy extends S.Class<UrlPolicy>($I`UrlPolicy`)(
+class LegacyUrlPolicy extends S.Class<LegacyUrlPolicy>($I`UrlPolicy`)(
   {
     allowedProtocols: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()).annotateKey({
       description: "Lowercase URL protocols accepted by this sink. Empty means compatibility mode.",
@@ -94,35 +78,351 @@ export class UrlPolicy extends S.Class<UrlPolicy>($I`UrlPolicy`)(
 ) {}
 
 /**
- * Compatibility URL policy matching the historical `@beep/md` sanitizer.
+ * Legacy URL destination policy constructor for a rendering sink.
  *
- * @example
- * ```ts
- * import { CompatUrlPolicy } from "@beep/md/Md.escape"
+ * **Details**
  *
- * console.log(CompatUrlPolicy.allowRelative) // true
+ * An empty `allowedProtocols` list preserves compatibility behavior: active
+ * script/data protocols are blocked, but other absolute protocols pass through.
+ *
+ * **Example** (Make HTTPS-only policy)
+ *
+ * ```ts import.meta.vitest name="Make HTTPS-only policy"
+ * import { UrlPolicy } from "@beep/md/Md.escape"
+ *
+ * const policy = UrlPolicy.make({ allowedProtocols: ["https:"], allowRelative: false })
+ * policy.allowedProtocols[0] // => "https:"
+ * ```
+ *
+ * @deprecated Prefer the schema-owned {@link UrlPolicySpec}. This constructor
+ * remains as a compatibility adapter for existing call sites.
+ * @category models
+ * @since 0.0.0
+ */
+export const UrlPolicy = LegacyUrlPolicy;
+
+/**
+ * Instance type constructed by the deprecated {@link UrlPolicy} adapter.
+ *
+ * **Example** (Type constructed policy instance)
+ *
+ * ```ts import.meta.vitest name="Type constructed policy instance"
+ * import { UrlPolicy } from "@beep/md/Md.escape"
+ * import type { UrlPolicy as UrlPolicyType } from "@beep/md/Md.escape"
+ *
+ * const policy: UrlPolicyType = UrlPolicy.make({})
+ * policy.allowRelative // => true
+ * ```
+ *
+ * @deprecated Prefer the schema-owned {@link UrlPolicySpec} type.
+ * @category models
+ * @since 0.0.0
+ */
+export type UrlPolicy = LegacyUrlPolicy;
+
+const LegacyUrlPolicySchema = LegacyUrlPolicy;
+
+const NormalizedUrlScheme = S.Trim.pipe(
+  S.decode(SchemaTransformation.toLowerCase()),
+  S.check(
+    S.isPattern(urlSchemePattern, {
+      identifier: $I`NormalizedUrlSchemeCheck`,
+      title: "Normalized URL Scheme",
+      description: "A lowercase RFC 3986 scheme name followed by a colon.",
+      message: "URL schemes must be lowercase RFC 3986 scheme names ending in ':'.",
+    })
+  ),
+  $I.annoteSchema("NormalizedUrlScheme", {
+    description: "A schema-normalized lowercase URL scheme including its trailing colon.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Historical URL behavior: reject active script/data protocols while retaining
+ * all other absolute and relative destinations.
+ *
+ * **Example** (Create compatibility policy)
+ *
+ * ```ts import.meta.vitest name="Create compatibility policy"
+ * import { CompatibilityUrlPolicy } from "@beep/md/Md.escape"
+ *
+ * CompatibilityUrlPolicy.make({})._tag // => "Compatibility"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CompatibilityUrlPolicy extends S.TaggedClass<CompatibilityUrlPolicy>($I`CompatibilityUrlPolicy`)(
+  "Compatibility",
+  {},
+  $I.annote("CompatibilityUrlPolicy", {
+    description: "Compatibility URL behavior retained for legacy Markdown output.",
+  })
+) {}
+
+/**
+ * Explicit allow-list URL policy.
+ *
+ * **Details**
+ *
+ * Schemes decode to lowercase once at the schema boundary. Relative,
+ * protocol-relative, and backslash-relative behavior is modeled independently
+ * so callers cannot accidentally inherit browser-ambiguous behavior.
+ *
+ * **Example** (Make HTTPS allow-list)
+ *
+ * ```ts import.meta.vitest name="Make HTTPS allow-list"
+ * import { AllowListUrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * const policy = AllowListUrlPolicySpec.make({ schemes: ["https:"] })
+ * policy.schemes // => ["https:"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec>($I`AllowListUrlPolicySpec`)(
+  "AllowList",
+  {
+    schemes: S.Array(NormalizedUrlScheme).annotateKey({
+      description: "Lowercase URL schemes accepted by the policy.",
+    }),
+    allowRelative: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether ordinary relative and fragment destinations are accepted.",
+    }),
+    allowProtocolRelative: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Whether protocol-relative destinations such as //example.com are accepted.",
+    }),
+    allowBackslashRelative: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Whether relative destinations containing backslashes are accepted.",
+    }),
+  },
+  $I.annote("AllowListUrlPolicySpec", {
+    description: "Explicit URL scheme and relative-destination allow list.",
+  })
+) {}
+
+/**
+ * Canonical schema-owned URL policy used by Markdown and downstream editor
+ * codecs.
+ *
+ * **Example** (Decode allow-list policy)
+ *
+ * ```ts import.meta.vitest name="Decode allow-list policy"
+ * import { UrlPolicySpec } from "@beep/md/Md.escape"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const policy = S.decodeUnknownResult(UrlPolicySpec)({ _tag: "AllowList", schemes: [" HTTPS: "] })
+ * Result.isSuccess(policy) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicySpec]).pipe(
+  $I.annoteSchema("UrlPolicySpec", {
+    description: "Canonical tagged URL destination policy.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link UrlPolicySpec}.
+ *
+ * **Example** (Assign compatibility policy type)
+ *
+ * ```ts import.meta.vitest name="Assign compatibility policy type"
+ * import { CompatibilityUrlPolicySpec } from "@beep/md/Md.escape"
+ * import type { UrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * const policy: UrlPolicySpec = CompatibilityUrlPolicySpec
+ * policy._tag // => "Compatibility"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UrlPolicySpec = typeof UrlPolicySpec.Type;
+
+/**
+ * Canonical compatibility policy.
+ *
+ * **Example** (Read compatibility policy tag)
+ *
+ * ```ts import.meta.vitest name="Read compatibility policy tag"
+ * import { CompatibilityUrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * CompatibilityUrlPolicySpec._tag // => "Compatibility"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const CompatUrlPolicy = UrlPolicy.make({});
+export const CompatibilityUrlPolicySpec = CompatibilityUrlPolicy.make({});
+
+/**
+ * Canonical browser-safe policy retained for editor links and images.
+ *
+ * **Example** (Include artifact scheme)
+ *
+ * ```ts import.meta.vitest name="Include artifact scheme"
+ * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * BrowserSafeUrlPolicySpec.schemes.includes("artifact:") // => true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const BrowserSafeUrlPolicySpec = AllowListUrlPolicySpec.make({
+  schemes: ["http:", "https:", "mailto:", "tel:", "artifact:"],
+  allowProtocolRelative: false,
+  allowBackslashRelative: false,
+});
+
+/**
+ * Canonical product-agnostic web policy.
+ *
+ * **Example** (Exclude artifact scheme)
+ *
+ * ```ts import.meta.vitest name="Exclude artifact scheme"
+ * import { StrictWebUrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * StrictWebUrlPolicySpec.schemes.includes("artifact:") // => false
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const StrictWebUrlPolicySpec = AllowListUrlPolicySpec.make({
+  schemes: ["http:", "https:", "mailto:"],
+  allowProtocolRelative: false,
+  allowBackslashRelative: false,
+});
+
+/**
+ * Canonical user-authored link policy.
+ *
+ * **Example** (Include tel scheme)
+ *
+ * ```ts import.meta.vitest name="Include tel scheme"
+ * import { UserContentLinkUrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * UserContentLinkUrlPolicySpec.schemes.includes("tel:") // => true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const UserContentLinkUrlPolicySpec = AllowListUrlPolicySpec.make({
+  schemes: ["https:", "mailto:", "tel:"],
+  allowProtocolRelative: false,
+  allowBackslashRelative: false,
+});
+
+/**
+ * Canonical user-authored image policy.
+ *
+ * **Example** (List HTTPS image schemes)
+ *
+ * ```ts import.meta.vitest name="List HTTPS image schemes"
+ * import { UserContentImageUrlPolicySpec } from "@beep/md/Md.escape"
+ *
+ * UserContentImageUrlPolicySpec.schemes // => ["https:"]
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const UserContentImageUrlPolicySpec = AllowListUrlPolicySpec.make({
+  schemes: ["https:"],
+  allowProtocolRelative: false,
+  allowBackslashRelative: false,
+});
+
+/**
+ * Schema accepted while compatibility URL policy adapters remain supported.
+ *
+ * **Details**
+ *
+ * New code should decode or construct {@link UrlPolicySpec}; the legacy
+ * {@link UrlPolicy} member keeps existing renderer options wire-compatible.
+ *
+ * **Example** (Decode compatibility policy input)
+ *
+ * ```ts import.meta.vitest name="Decode compatibility policy input"
+ * import { UrlPolicyInput } from "@beep/md/Md.escape"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const policy = S.decodeUnknownResult(UrlPolicyInput)({ _tag: "Compatibility" })
+ * Result.isSuccess(policy) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const UrlPolicyInput = S.Union([UrlPolicySpec, LegacyUrlPolicySchema]).pipe(
+  $I.annoteSchema("UrlPolicyInput", {
+    description: "Canonical URL policy or deprecated legacy adapter.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link UrlPolicyInput}.
+ *
+ * **Example** (Type browser-safe policy input)
+ *
+ * ```ts import.meta.vitest name="Type browser-safe policy input"
+ * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
+ * import type { UrlPolicyInput } from "@beep/md/Md.escape"
+ *
+ * const policy: UrlPolicyInput = BrowserSafeUrlPolicySpec
+ * "schemes" in policy // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UrlPolicyInput = typeof UrlPolicyInput.Type;
+
+/**
+ * Compatibility URL policy matching the historical `@beep/md` sanitizer.
+ *
+ * **Example** (Read allowRelative flag)
+ *
+ * ```ts import.meta.vitest name="Read allowRelative flag"
+ * import { CompatUrlPolicy } from "@beep/md/Md.escape"
+ *
+ * CompatUrlPolicy.allowRelative // => true
+ * ```
+ *
+ * @deprecated Prefer {@link CompatibilityUrlPolicySpec}.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const CompatUrlPolicy = LegacyUrlPolicySchema.make({});
 
 /**
  * Browser anchor/image URL policy for HTML sinks.
  *
- * @example
- * ```ts
+ * **Example** (Include artifact protocol)
+ *
+ * ```ts import.meta.vitest name="Include artifact protocol"
  * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
  *
- * console.log(BrowserSafeUrlPolicy.allowedProtocols.includes("artifact:")) // true
+ * BrowserSafeUrlPolicy.allowedProtocols.includes("artifact:") // => true
  * ```
  *
+ * @deprecated Prefer {@link BrowserSafeUrlPolicySpec}.
  * @category utilities
  * @since 0.0.0
  */
-export const BrowserSafeUrlPolicy = UrlPolicy.make({
-  allowedProtocols: ["http:", "https:", "mailto:", "artifact:"],
+export const BrowserSafeUrlPolicy = LegacyUrlPolicySchema.make({
+  allowedProtocols: ["http:", "https:", "mailto:", "tel:", "artifact:"],
   allowProtocolRelative: false,
   allowBackslashRelative: false,
 });
@@ -130,17 +430,19 @@ export const BrowserSafeUrlPolicy = UrlPolicy.make({
 /**
  * Strict web URL policy for product-agnostic web output.
  *
- * @example
- * ```ts
+ * **Example** (Exclude artifact protocol)
+ *
+ * ```ts import.meta.vitest name="Exclude artifact protocol"
  * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
  *
- * console.log(StrictWebUrlPolicy.allowedProtocols.includes("artifact:")) // false
+ * StrictWebUrlPolicy.allowedProtocols.includes("artifact:") // => false
  * ```
  *
+ * @deprecated Prefer {@link StrictWebUrlPolicySpec}.
  * @category utilities
  * @since 0.0.0
  */
-export const StrictWebUrlPolicy = UrlPolicy.make({
+export const StrictWebUrlPolicy = LegacyUrlPolicySchema.make({
   allowedProtocols: ["http:", "https:", "mailto:"],
   allowProtocolRelative: false,
   allowBackslashRelative: false,
@@ -202,18 +504,18 @@ const decodeHtmlCharacterReferences = (value: string): string =>
         [
           pipe(
             O.fromUndefinedOr(named),
-            O.map((value) =>
-              Match.value(Str.toLowerCase(value)).pipe(
+            O.map(Str.toLowerCase),
+            O.map(
+              Match.type<Lowercase<string>>().pipe(
+                Match.when("bsol", () => 92),
+                Match.when("sol", () => 47),
                 Match.when("tab", () => 9),
                 Match.when("newline", () => 10),
                 Match.orElse(() => 58)
               )
             )
           ),
-          pipe(
-            O.fromUndefinedOr(hexadecimal),
-            O.map((value) => parseCodePoint(value, 16))
-          ),
+          pipe(O.fromUndefinedOr(hexadecimal), O.map(parseCodePoint(16))),
         ],
         O.firstSomeOf,
         O.getOrElse(() => parseCodePoint(O.getOrThrow(O.fromUndefinedOr(decimal)), 10))
@@ -253,23 +555,89 @@ const destinationProtocol = (destination: string): O.Option<string> =>
     O.map((protocol) => `${Str.toLowerCase(protocol)}:`)
   );
 
-const hasAllowedProtocol = (policy: UrlPolicy, protocol: string): boolean =>
-  !A.isReadonlyArrayNonEmpty(policy.allowedProtocols) ||
-  A.contains(pipe(policy.allowedProtocols, A.map(Str.toLowerCase)), protocol);
+const normalizeLegacyScheme = flow(Str.trim, Str.toLowerCase, (scheme) =>
+  Str.endsWith(":")(scheme) ? scheme : `${scheme}:`
+);
 
-const isAllowedRelativeDestination = (policy: UrlPolicy, destination: string): boolean =>
-  policy.allowRelative &&
-  (policy.allowProtocolRelative || !Str.startsWith("//")(destination)) &&
-  (policy.allowBackslashRelative || !Str.includes("\\")(destination));
+/**
+ * Normalizes a legacy policy adapter into the canonical tagged policy once.
+ *
+ * **Details**
+ *
+ * Empty legacy protocol arrays intentionally retain compatibility semantics.
+ *
+ * **Example** (Normalize legacy HTTPS policy)
+ *
+ * ```ts import.meta.vitest name="Normalize legacy HTTPS policy"
+ * import { normalizeUrlPolicy, UrlPolicy } from "@beep/md/Md.escape"
+ *
+ * const policy = normalizeUrlPolicy(UrlPolicy.make({ allowedProtocols: ["HTTPS"] }))
+ * policy._tag // => "AllowList"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const normalizeUrlPolicy = (policy: UrlPolicyInput): UrlPolicySpec => {
+  if (UrlPolicySpec.is(policy)) {
+    return policy;
+  }
 
-const isAllowedByPolicy = (policy: UrlPolicy, destination: string): boolean =>
-  pipe(
-    destinationProtocol(destination),
+  if (!A.isReadonlyArrayNonEmpty(policy.allowedProtocols)) {
+    return CompatibilityUrlPolicySpec;
+  }
+
+  return AllowListUrlPolicySpec.make({
+    schemes: pipe(
+      policy.allowedProtocols,
+      A.map(normalizeLegacyScheme),
+      A.filter((scheme) => urlSchemePattern.test(scheme))
+    ),
+    allowRelative: policy.allowRelative,
+    allowProtocolRelative: policy.allowProtocolRelative,
+    allowBackslashRelative: policy.allowBackslashRelative,
+  });
+};
+
+const hasAllowedProtocol: {
+  (policy: UrlPolicySpec, protocol: string): boolean;
+  (protocol: string): (policy: UrlPolicySpec) => boolean;
+} = dual(2, (policy: UrlPolicySpec, protocol: string): boolean =>
+  Match.value(policy).pipe(
+    Match.tagsExhaustive({
+      Compatibility: () => true,
+      AllowList: P.Struct({
+        schemes: A.contains(protocol),
+      }),
+    })
+  )
+);
+
+const isAllowedRelativeDestination = (policy: UrlPolicySpec, destination: string): boolean =>
+  Match.value(policy).pipe(
+    Match.tagsExhaustive({
+      Compatibility: () => true,
+      AllowList: ({ allowBackslashRelative, allowProtocolRelative, allowRelative }) =>
+        allowRelative &&
+        (allowProtocolRelative || !Str.startsWith("//")(destination)) &&
+        (allowBackslashRelative || !Str.includes("\\")(destination)),
+    })
+  );
+
+const isAllowedByPolicy = (policy: UrlPolicySpec, destination: string): boolean => {
+  const normalized = normalizeUrlProtocolCandidate(destination);
+
+  return pipe(
+    destinationProtocol(normalized),
     O.match({
-      onNone: () => isAllowedRelativeDestination(policy, Str.trim(destination)),
+      // URL parsers discard embedded ASCII whitespace before interpreting
+      // special-scheme slashes. Apply the relative-destination flags to that
+      // same canonical candidate so `/\n/host` cannot become `//host` later.
+      onNone: () => isAllowedRelativeDestination(policy, normalized),
       onSome: (protocol) => hasAllowedProtocol(policy, protocol),
     })
   );
+};
 
 const encodeUrlDestination = flow(
   Str.replace(invalidSurrogatePattern, "\uFFFD"),
@@ -277,15 +645,86 @@ const encodeUrlDestination = flow(
   Str.replace(percentEncodedOctetPattern, "%$1")
 );
 
+const urlSafetyCandidates = (destination: string): ReadonlyArray<string> => {
+  const decodedHtml = decodeHtmlCharacterReferences(destination);
+  const decodedPercent = decodePercentEncodedBytes(destination);
+  const decodedHtmlAndPercent = decodePercentEncodedBytes(decodedHtml);
+  const decodedPercentAndHtml = decodeHtmlCharacterReferences(decodedPercent);
+  const decodedHtmlPercentAndHtml = decodeHtmlCharacterReferences(decodedHtmlAndPercent);
+
+  return [
+    destination,
+    decodedHtml,
+    decodedPercent,
+    decodedHtmlAndPercent,
+    decodedPercentAndHtml,
+    decodedHtmlPercentAndHtml,
+  ];
+};
+
+/**
+ * Evaluates a URL destination against a canonical or legacy policy without
+ * mutating the destination.
+ *
+ * **Details**
+ *
+ * HTML character references and repeated percent encoding are evaluated as
+ * alternate protocol candidates so downstream codecs share the same
+ * browser-safe decision.
+ *
+ * **Example** (Allow and reject destinations)
+ *
+ * ```ts import.meta.vitest name="Allow and reject destinations"
+ * import { StrictWebUrlPolicySpec, isUrlDestinationAllowedWithPolicy } from "@beep/md/Md.escape"
+ *
+ * isUrlDestinationAllowedWithPolicy("https://example.com", StrictWebUrlPolicySpec) // => true
+ * isUrlDestinationAllowedWithPolicy("artifact:123", StrictWebUrlPolicySpec) // => false
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const isUrlDestinationAllowedWithPolicy: {
+  (destination: string, policy: UrlPolicyInput): boolean;
+  (policy: UrlPolicyInput): (destination: string) => boolean;
+} = dual(2, (destination: string, policyInput: UrlPolicyInput): boolean => {
+  const policy = normalizeUrlPolicy(policyInput);
+  const candidates = urlSafetyCandidates(destination);
+  const hasUnsafeProtocol = pipe(
+    candidates,
+    A.map(normalizeUrlProtocolCandidate),
+    A.some(UnsafeUrlProtocolDestination.is)
+  );
+
+  return !hasUnsafeProtocol && A.every(candidates, (candidate) => isAllowedByPolicy(policy, candidate));
+});
+
+/**
+ * Evaluates a URL destination using the historical compatibility policy.
+ *
+ * **Example** (Reject javascript destination)
+ *
+ * ```ts import.meta.vitest name="Reject javascript destination"
+ * import { isUrlDestinationAllowed } from "@beep/md/Md.escape"
+ *
+ * isUrlDestinationAllowed("javascript:alert(1)") // => false
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const isUrlDestinationAllowed = isUrlDestinationAllowedWithPolicy(CompatibilityUrlPolicySpec);
+
 /**
  * Joins rendered Markdown blocks with one blank line between blocks.
  *
- * @example
- * ```ts
+ * **Example** (Join title and body)
+ *
+ * ```ts import.meta.vitest name="Join title and body"
  * import { joinBlocks } from "@beep/md/Md.escape"
  *
  * const markdown = joinBlocks(["# Title", "Body text"])
- * console.log(markdown) // "# Title\n\nBody text"
+ * markdown // => "# Title\n\nBody text"
  * ```
  *
  * @category utilities
@@ -300,12 +739,13 @@ export const joinBlocks = (blocks: string | ReadonlyArray<string>): Markdown => 
 /**
  * Prefixes every line of text with the provided marker.
  *
- * @example
- * ```ts
+ * **Example** (Prefix lines as blockquote)
+ *
+ * ```ts import.meta.vitest name="Prefix lines as blockquote"
  * import { prefixLines } from "@beep/md/Md.escape"
  *
  * const quoted = prefixLines("alpha\nbeta", "> ")
- * console.log(quoted) // "> alpha\n> beta"
+ * quoted // => "> alpha\n> beta"
  * ```
  *
  * @category utilities
@@ -321,12 +761,13 @@ export const prefixLines: {
 /**
  * Escapes Markdown control characters in plain text.
  *
- * @example
- * ```ts
+ * **Example** (Escape hash character)
+ *
+ * ```ts import.meta.vitest name="Escape hash character"
  * import { escapeMarkdownText } from "@beep/md/Md.escape"
  *
  * const escaped = escapeMarkdownText("# title")
- * console.log(escaped) // "\\# title"
+ * escaped // => "\\# title"
  * ```
  *
  * @category utilities
@@ -337,80 +778,68 @@ export const escapeMarkdownText = Str.replace(/([\\`*_{}[\]()#+\-.|<>~])/g, "\\$
 /**
  * Normalizes URL-like destinations before rendering Markdown or HTML output.
  *
+ * **Details**
+ *
  * Unsafe active protocols are replaced with a harmless fragment destination.
  *
- * @example
- * ```ts
+ * **Example** (Replace javascript with fragment)
+ *
+ * ```ts import.meta.vitest name="Replace javascript with fragment"
  * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
  *
- * console.log(sanitizeUrlDestination("javascript:alert(1)")) // "#"
+ * sanitizeUrlDestination("javascript:alert(1)") // => "#"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const sanitizeUrlDestinationWithPolicy: {
-  (destination: string, policy: UrlPolicy): string;
-  (policy: UrlPolicy): (destination: string) => string;
-} = dual(2, (destination: string, policy: UrlPolicy): string => {
-  const decodedHtml = decodeHtmlCharacterReferences(destination);
-  const decodedPercent = decodePercentEncodedBytes(destination);
-  const decodedHtmlAndPercent = decodePercentEncodedBytes(decodedHtml);
-  const decodedPercentAndHtml = decodeHtmlCharacterReferences(decodedPercent);
-  const decodedHtmlPercentAndHtml = decodeHtmlCharacterReferences(decodedHtmlAndPercent);
-  const candidates = [
-    destination,
-    decodedHtml,
-    decodedPercent,
-    decodedHtmlAndPercent,
-    decodedPercentAndHtml,
-    decodedHtmlPercentAndHtml,
-  ];
-
+  (destination: string, policy: UrlPolicyInput): string;
+  (policy: UrlPolicyInput): (destination: string) => string;
+} = dual(2, (destination: string, policyInput: UrlPolicyInput): string =>
   // Evaluate normalized/decoded candidates, but preserve the original destination when safe.
-  const hasUnsafeProtocol = pipe(
-    candidates,
-    A.map(normalizeUrlProtocolCandidate),
-    A.some(UnsafeUrlProtocolDestination.is)
-  );
-  return hasUnsafeProtocol || !isAllowedByPolicy(policy, destination) ? "#" : destination;
-});
+  isUrlDestinationAllowedWithPolicy(destination, policyInput) ? destination : "#"
+);
 
 /**
  * Normalizes URL-like destinations before rendering Markdown or HTML output.
  *
+ * **Details**
+ *
  * Unsafe active protocols are replaced with a harmless fragment destination.
  *
- * @example
- * ```ts
+ * **Example** (Replace javascript with fragment)
+ *
+ * ```ts import.meta.vitest name="Replace javascript with fragment"
  * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
  *
- * console.log(sanitizeUrlDestination("javascript:alert(1)")) // "#"
+ * sanitizeUrlDestination("javascript:alert(1)") // => "#"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(CompatUrlPolicy);
+export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(CompatibilityUrlPolicySpec);
 
 /**
  * Escapes Markdown link or image destination delimiters.
  *
- * @example
- * ```ts
+ * **Example** (Escape parenthesis in destination)
+ *
+ * ```ts import.meta.vitest name="Escape parenthesis in destination"
  * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
  *
  * const escaped = escapeMarkdownDestination("https://example.com/a)b")
- * console.log(escaped) // "https://example.com/a\\)b"
+ * escaped // => "https://example.com/a\\)b"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const escapeMarkdownDestinationWithPolicy: {
-  (destination: string, policy: UrlPolicy): string;
-  (policy: UrlPolicy): (destination: string) => string;
-} = dual(2, (destination: string, policy: UrlPolicy): string =>
+  (destination: string, policy: UrlPolicyInput): string;
+  (policy: UrlPolicyInput): (destination: string) => string;
+} = dual(2, (destination: string, policy: UrlPolicyInput): string =>
   pipe(sanitizeUrlDestinationWithPolicy(destination, policy), encodeUrlDestination, Str.replace(/[\\()]/g, "\\$&"))
 );
 
@@ -418,18 +847,19 @@ export const escapeMarkdownDestinationWithPolicy: {
  * Escapes Markdown link or image destination delimiters with the compatibility
  * URL policy.
  *
- * @example
- * ```ts
+ * **Example** (Escape parenthesis in destination)
+ *
+ * ```ts import.meta.vitest name="Escape parenthesis in destination"
  * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
  *
- * console.log(escapeMarkdownDestination("https://example.com/a)b")) // "https://example.com/a\\)b"
+ * escapeMarkdownDestination("https://example.com/a)b") // => "https://example.com/a\\)b"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const escapeMarkdownDestination = flow(
-  sanitizeUrlDestinationWithPolicy(CompatUrlPolicy),
+  sanitizeUrlDestinationWithPolicy(CompatibilityUrlPolicySpec),
   encodeUrlDestination,
   Str.replace(/[\\()]/g, "\\$&")
 );
@@ -437,38 +867,40 @@ export const escapeMarkdownDestination = flow(
 /**
  * Escapes a URL-like destination for use inside an HTML attribute.
  *
- * @example
- * ```ts
+ * **Example** (Percent-encode space)
+ *
+ * ```ts import.meta.vitest name="Percent-encode space"
  * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
  *
- * console.log(escapeHtmlUrlAttribute("a b")) // "a%20b"
+ * escapeHtmlUrlAttribute("a b") // => "a%20b"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const escapeHtmlUrlAttributeWithPolicy: {
-  (destination: string, policy: UrlPolicy): string;
-  (policy: UrlPolicy): (destination: string) => string;
-} = dual(2, (destination: string, policy: UrlPolicy): string =>
+  (destination: string, policy: UrlPolicyInput): string;
+  (policy: UrlPolicyInput): (destination: string) => string;
+} = dual(2, (destination: string, policy: UrlPolicyInput): string =>
   pipe(sanitizeUrlDestinationWithPolicy(destination, policy), encodeUrlDestination, Html.escapeHtml)
 );
 
 /**
  * Escapes a URL for an HTML attribute using the browser-safe URL policy.
  *
- * @example
- * ```ts
+ * **Example** (Escape ampersand in attribute)
+ *
+ * ```ts import.meta.vitest name="Escape ampersand in attribute"
  * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
  *
- * console.log(escapeHtmlUrlAttribute("https://example.com?a=1&b=2")) // "https://example.com?a=1&amp;b=2"
+ * escapeHtmlUrlAttribute("https://example.com?a=1&b=2") // => "https://example.com?a=1&amp;b=2"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const escapeHtmlUrlAttribute = flow(
-  sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicy),
+  sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicySpec),
   encodeUrlDestination,
   Html.escapeHtml
 );
@@ -476,14 +908,15 @@ export const escapeHtmlUrlAttribute = flow(
 /**
  * Returns the length of the longest contiguous backtick run in text.
  *
- * @example
- * ```ts
+ * **Example** (Measure longest backtick run)
+ *
+ * ```ts import.meta.vitest name="Measure longest backtick run"
  * import { Str } from "@beep/utils"
  * import { maxBackticks } from "@beep/md/Md.escape"
  *
  * const triple = Str.repeat("`", 3)
  * const count = maxBackticks(`\`one\` and ${triple}three${triple}`)
- * console.log(count) // 3
+ * count // => 3
  * ```
  *
  * @category utilities
@@ -503,12 +936,13 @@ export const maxBackticks: (text: string) => number = flow(
 /**
  * Builds a Markdown inline code span with an adaptive backtick fence.
  *
- * @example
- * ```ts
+ * **Example** (Fence nested backtick code)
+ *
+ * ```ts import.meta.vitest name="Fence nested backtick code"
  * import { renderInlineCode } from "@beep/md/Md.escape"
  *
  * const code = renderInlineCode("`single`")
- * console.log(code) // "`` `single` ``"
+ * code // => "`` `single` ``"
  * ```
  *
  * Empty and multiline payloads fall back to raw `<code>` HTML because Markdown
@@ -534,17 +968,20 @@ export const renderInlineCode = (text: string): string => {
 /**
  * Builds a Markdown fenced code block with an adaptive backtick fence.
  *
+ * **Details**
+ *
  * The info string is folded through {@link CodeFenceLanguage} so only a single
  * safe language token is ever emitted; non-conforming values are dropped.
  *
- * @example
- * ```ts
+ * **Example** (Render TypeScript code fence)
+ *
+ * ```ts import.meta.vitest name="Render TypeScript code fence"
  * import { Str } from "@beep/utils"
  * import { renderFencedCode } from "@beep/md/Md.escape"
  *
  * const block = renderFencedCode("console.log('beep')", "ts")
  * const fence = Str.repeat("`", 3)
- * console.log(Str.includes(`${fence}ts`)(block)) // true
+ * Str.includes(`${fence}ts`)(block) // => true
  * ```
  *
  * @category utilities
@@ -563,11 +1000,12 @@ export const renderFencedCode: {
 /**
  * Type guard for rendered string arrays accepted by {@link joinBlocks}.
  *
- * @example
- * ```ts
+ * **Example** (Guard rendered string array)
+ *
+ * ```ts import.meta.vitest name="Guard rendered string array"
  * import { isStringArray } from "@beep/md/Md.escape"
  *
- * console.log(isStringArray(["a", "b"])) // true
+ * isStringArray(["a", "b"]) // => true
  * ```
  *
  * @category guards

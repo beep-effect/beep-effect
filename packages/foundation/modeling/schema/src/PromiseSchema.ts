@@ -37,12 +37,15 @@ const promiseAnnotations = {
 /**
  * Type guard that checks whether a value is a native JavaScript `Promise`.
  *
+ * **Details**
+ *
  * This guard is cross-realm aware and rejects plain thenable objects by
  * requiring the built-in promise tag in addition to the standard promise
  * instance methods.
  *
- * @example
- * ```ts
+ * **Example** (Native promise versus thenable)
+ *
+ * ```ts import.meta.vitest name="Native promise versus thenable"
  * import { isPromise } from "@beep/schema/PromiseSchema"
  *
  * const nativePromise = globalThis.Promise.resolve(1)
@@ -52,8 +55,8 @@ const promiseAnnotations = {
  *   finally: () => undefined,
  * }
  *
- * console.log(isPromise(nativePromise)) // true
- * console.log(isPromise(thenable)) // false
+ * isPromise(nativePromise) // => true
+ * isPromise(thenable) // => false
  * ```
  *
  * @param u - The value to test.
@@ -74,7 +77,8 @@ export const isPromise = (u: unknown): u is globalThis.Promise<unknown> =>
 /**
  * Declared schema for native JavaScript `Promise` values.
  *
- * @example
+ * **Example** (Decoding a native promise)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { PromiseSchema } from "@beep/schema/PromiseSchema"
@@ -96,16 +100,6 @@ export const PromiseSchema = S.declare<globalThis.Promise<unknown>>(isPromise, p
 
 /**
  * {@inheritDoc PromiseSchema}
- *
- * @example
- * ```ts
- * import type { PromiseSchema } from "@beep/schema/PromiseSchema"
- *
- * const task: PromiseSchema = globalThis.Promise.resolve("done")
- *
- * console.log(task instanceof globalThis.Promise)
- * ```
- *
  * @category models
  * @since 0.0.0
  */

@@ -1,0 +1,29 @@
+name: beep-ci-runners
+runtime:
+  name: nodejs
+description: Egress-only CI runner groundwork plus the pinned terraform-module ephemeral GitHub Actions controller.
+main: ../src/internal/ci-runners-entry.ts
+packages:
+  ghaRunners:
+    source: terraform-module
+    version: 0.2.2
+    parameters:
+      - github-aws-runners/github-runner/aws
+      - 7.10.1
+      - ghaRunners
+config:
+  aws:region: us-east-1
+  ciRunners:awsRegion: us-east-1
+  ciRunners:vpcCidr: 10.88.0.0/16
+  ciRunners:publicSubnetACidr: 10.88.0.0/20
+  ciRunners:publicSubnetBCidr: 10.88.16.0/20
+  ciRunners:availabilityZoneA: us-east-1a
+  ciRunners:availabilityZoneB: us-east-1b
+  ciRunners:instanceType: m7i.2xlarge
+  ciRunners:rootVolumeSizeGb: "100"
+  ciRunners:maxRunMinutes: "60"
+  # Above the 120-minute Check lane timeout so the tag-based reaper can never
+  # kill a fleet VM under a live job; ephemeral teardown is the module's duty.
+  ciRunners:reaperTtlMinutes: "150"
+  ciRunners:amiSsmParameterName: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+  ciFleetController:runnerLabel: beep-ec2-heavy

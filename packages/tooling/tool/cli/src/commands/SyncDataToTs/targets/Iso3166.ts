@@ -17,13 +17,14 @@ import {
   formatJson,
   formatTsDocCommentValue,
   formatTsLiteral,
+  normalizeJson,
   outputFile,
   parseCsvSource,
   sourceMetadata,
-} from "../internal/Source.js";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
-import type { ParsedCsvRecords } from "../internal/Source.js";
-import type { SyncDataSourceMetadata, SyncDataTarget } from "../SyncDataToTs.schemas.js";
+} from "../internal/Source.ts";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
+import type { ParsedCsvRecords } from "../internal/Source.ts";
+import type { SyncDataSourceMetadata, SyncDataTarget } from "../SyncDataToTs.schemas.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso3166");
 const targetId = "iso3166" as const;
@@ -604,7 +605,7 @@ const acquireIso3166Projection = Effect.fn("SyncDataToTs.Iso3166.acquire")(funct
     sourceMetadata(part1.source, { version: "ISO 3166-1" }),
     sourceMetadata(part2.source, { version: "ISO 3166-2" }),
   ];
-  const canonical = {
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iso3166/v1",
     metadata: {
       sourceUrl: ISO3166_SOURCE_URL,
@@ -615,7 +616,7 @@ const acquireIso3166Projection = Effect.fn("SyncDataToTs.Iso3166.acquire")(funct
     countriesByNumeric: byNumeric(countries),
     subdivisionsByCode: bySubdivisionCode(subdivisions),
     subdivisionsByCountryAlpha2: subdivisionsByCountryAlpha2(subdivisions),
-  } as const;
+  });
 
   return SyncDataTargetProjection.make({
     files: [

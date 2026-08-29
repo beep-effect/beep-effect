@@ -19,13 +19,15 @@ const $I = $LintRulesId;
 /**
  * Package version for `@beep/lint-rules`.
  *
- * @example
+ * **Example** (Assert package version)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import { VERSION } from "@beep/lint-rules"
  *
  * strictEqual(VERSION, "0.1.0")
  * ```
+ *
  * @category configuration
  * @since 0.1.0
  */
@@ -34,7 +36,8 @@ export const VERSION = "0.1.0" as const;
 /**
  * Slugs of the GritQL rules shipped by this package (one `.grit` file each).
  *
- * @example
+ * **Example** (List shipped rule names)
+ *
  * ```ts
  * import { deepStrictEqual } from "node:assert/strict"
  * import { RULE_NAMES } from "@beep/lint-rules"
@@ -46,6 +49,7 @@ export const VERSION = "0.1.0" as const;
  *   "prefer-array-flat-map"
  * ])
  * ```
+ *
  * @category configuration
  * @since 0.1.0
  */
@@ -59,7 +63,8 @@ export const RULE_NAMES = [
 /**
  * Schema-backed literal domain for rule slugs shipped by this package.
  *
- * @example
+ * **Example** (Decode valid rule name)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import { RuleNameSchema } from "@beep/lint-rules"
@@ -69,6 +74,7 @@ export const RULE_NAMES = [
  *
  * strictEqual(decodeRuleName("prefer-array-flat-map"), "prefer-array-flat-map")
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -77,7 +83,8 @@ export const RuleNameSchema = S.Literals(RULE_NAMES);
 /**
  * The slug of a single GritQL rule shipped by this package.
  *
- * @example
+ * **Example** (Assign RuleName type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import type { RuleName } from "@beep/lint-rules"
@@ -86,15 +93,17 @@ export const RuleNameSchema = S.Literals(RULE_NAMES);
  *
  * strictEqual(name, "prefer-array-flat-map")
  * ```
+ *
  * @category type-level
  * @since 0.1.0
  */
-export type RuleName = S.Schema.Type<typeof RuleNameSchema>;
+export type RuleName = typeof RuleNameSchema.Type;
 
 /**
  * Schema-backed literal domain for rule diagnostic severities.
  *
- * @example
+ * **Example** (Decode severity value)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import { RuleSeveritySchema } from "@beep/lint-rules"
@@ -104,6 +113,7 @@ export type RuleName = S.Schema.Type<typeof RuleNameSchema>;
  *
  * strictEqual(decodeSeverity("warn"), "warn")
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -114,7 +124,8 @@ export const RuleSeveritySchema = S.Literals(["warn", "error"]);
  * `error` is mandatory (Biome exits 1). The advisory-to-mandatory transition flips
  * this value in the rule's `.grit` file.
  *
- * @example
+ * **Example** (Assign severity type)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import type { RuleSeverity } from "@beep/lint-rules"
@@ -123,10 +134,11 @@ export const RuleSeveritySchema = S.Literals(["warn", "error"]);
  *
  * strictEqual(severity, "warn")
  * ```
+ *
  * @category type-level
  * @since 0.1.0
  */
-export type RuleSeverity = S.Schema.Type<typeof RuleSeveritySchema>;
+export type RuleSeverity = typeof RuleSeveritySchema.Type;
 
 class RuleMetadataSchema extends S.Class<RuleMetadataSchema>("RuleMetadataSchema")({
   name: RuleNameSchema,
@@ -136,12 +148,13 @@ class RuleMetadataSchema extends S.Class<RuleMetadataSchema>("RuleMetadataSchema
   scope: S.OptionFromNullOr(S.String),
 }) {}
 
-type RuleMetadata = S.Schema.Type<typeof RuleMetadataSchema>;
+type RuleMetadata = RuleMetadataSchema;
 
 /**
  * Schema for the finite rule registry keyed by rule slug.
  *
- * @example
+ * **Example** (Encode rule registry)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import { RULES, RuleRegistrySchema } from "@beep/lint-rules"
@@ -151,6 +164,7 @@ type RuleMetadata = S.Schema.Type<typeof RuleMetadataSchema>;
  *
  * strictEqual(encoded["no-bigint-literals"].replaces, null)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -169,7 +183,8 @@ export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistr
 /**
  * Canonical registry of GritQL rule metadata, keyed by rule slug.
  *
- * @example
+ * **Example** (Read rule severities)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import { RULES } from "@beep/lint-rules"
@@ -177,15 +192,16 @@ export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistr
  * strictEqual(RULES["no-bigint-literals"].severity, "warn")
  * strictEqual(RULES["prefer-array-flat-map"].severity, "error")
  * ```
+ *
  * @category configuration
  * @since 0.1.0
  */
-export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeUnknownSync(RuleRegistrySchema)({
+export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeSync(RuleRegistrySchema)({
   "no-native-error": {
     name: "no-native-error",
     severity: "error",
     replaces: "lint tooling-tagged-errors",
-    summary: "Disallow native Error construction in tooling source; use TaggedErrorClass.",
+    summary: "Disallow native Error construction in tooling source; use S.TaggedError from effect/Schema.",
     scope: "packages/tooling/**/src/**",
   },
   "no-bigint-literals": {
@@ -215,9 +231,8 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeUnknown
  * Absolute filesystem path to a rule's `.grit` file, resolved relative to this
  * module so it works from `src/` (dev) and `dist/` (published) alike.
  *
- * @param name - The rule slug whose `.grit` file path to resolve.
- * @returns The absolute filesystem path to `<name>.grit`.
- * @example
+ * **Example** (Resolve rule grit path)
+ *
  * ```ts
  * import { ok } from "node:assert/strict"
  * import { rulePath } from "@beep/lint-rules"
@@ -226,6 +241,9 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeUnknown
  *
  * ok(grit.endsWith("/rules/no-bigint-literals.grit"))
  * ```
+ *
+ * @param name - The rule slug whose `.grit` file path to resolve.
+ * @returns The absolute filesystem path to `<name>.grit`.
  * @category configuration
  * @since 0.1.0
  */
@@ -235,8 +253,8 @@ export const rulePath = (name: RuleName): string =>
 /**
  * Absolute filesystem path to the directory holding the `.grit` rule files.
  *
- * @returns The absolute filesystem path to the `rules/` directory.
- * @example
+ * **Example** (Get rules directory path)
+ *
  * ```ts
  * import { ok } from "node:assert/strict"
  * import { rulesDir } from "@beep/lint-rules"
@@ -245,6 +263,8 @@ export const rulePath = (name: RuleName): string =>
  *
  * ok(dir.endsWith("/rules/"))
  * ```
+ *
+ * @returns The absolute filesystem path to the `rules/` directory.
  * @category configuration
  * @since 0.1.0
  */

@@ -21,6 +21,7 @@ import {
   VideoDimension,
   VideoProbe,
 } from "@beep/ffmpeg";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -46,7 +47,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   const decode = S.decodeUnknownSync(schema);
 
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
     fcRuns(25)
@@ -54,7 +55,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
 };
 
 // TODO(effect-native-migration): model schema
-const ffprobeJson = S.encodeUnknownSync(S.UnknownFromJsonString)({
+const ffprobeJson = Unknown.encodeUnknownSyncFromJsonString({
   format: { duration: "2.0" },
   streams: [
     {
@@ -160,7 +161,7 @@ describe("@beep/ffmpeg", () => {
     const decodeErrorOptions = S.decodeUnknownSync(FFmpegErrorFromUnknownOptions);
     fc.assert(
       fc.property(
-        S.toArbitrary(FFmpegErrorFromUnknownOptions).filter((options) => O.isNone(options.cause)),
+        S.toArbitrary(FFmpegErrorFromUnknownOptions)(fc).filter((options) => O.isNone(options.cause)),
         (options) => {
           expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
         }
@@ -313,7 +314,7 @@ describe("@beep/ffmpeg", () => {
     ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
   });
 
-  it(
+  it.effect(
     "extracts frames into final names and writes the default manifest",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -360,7 +361,7 @@ describe("@beep/ffmpeg", () => {
     })
   );
 
-  it(
+  it.effect(
     "fails before overwriting an existing frame target",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
@@ -397,7 +398,7 @@ describe("@beep/ffmpeg", () => {
     })
   );
 
-  it(
+  it.effect(
     "normalizes failed ffmpeg exits into FFmpegError",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];

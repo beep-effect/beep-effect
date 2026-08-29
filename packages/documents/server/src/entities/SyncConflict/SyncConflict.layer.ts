@@ -8,12 +8,13 @@
 
 import { SyncConflictRepository } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { Layer } from "effect";
-import { makeDrizzleSyncConflictRepository, makeInMemorySyncConflictRepository } from "./SyncConflict.repo.js";
+import { makeDrizzleSyncConflictRepository, makeInMemorySyncConflictRepository } from "./SyncConflict.repo.ts";
 
 /**
  * In-memory SyncConflict repository layer for deterministic sync tests.
  *
- * @example
+ * **Example** (Import in-memory layer)
+ *
  * ```ts
  * import { SyncConflictRepositoryInMemoryLayer } from "@beep/documents-server/entities/SyncConflict"
  *
@@ -31,7 +32,8 @@ export const SyncConflictRepositoryInMemoryLayer = Layer.effect(
 /**
  * Drizzle-backed SyncConflict repository layer; requires `PostgresDrizzle`.
  *
- * @example
+ * **Example** (Import Drizzle layer)
+ *
  * ```ts
  * import { SyncConflictRepositoryDrizzleLayer } from "@beep/documents-server/entities/SyncConflict"
  *

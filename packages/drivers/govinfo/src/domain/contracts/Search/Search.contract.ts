@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
 import { HttpApiSchema } from "effect/unstable/httpapi";
@@ -17,11 +17,13 @@ const $I = $GovinfoId.create("domain/contracts/Search/Search.contract");
 /**
  * Request body accepted by the GovInfo search endpoint.
  *
- * @remarks
+ * **Details**
+ *
  * GovInfo search is a POST endpoint. `offsetMark` normally starts as `"*"`
  * and the API returns the next cursor in response pagination links.
  *
- * @example
+ * **Example** (Decode search request payload)
+ *
  * ```ts
  * import { Payload } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -51,7 +53,8 @@ export class Payload extends SearchBody.extend<Payload>($I`Payload`)(
 /**
  * Successful GovInfo search response body.
  *
- * @example
+ * **Example** (Decode search success body)
+ *
  * ```ts
  * import { Success } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -92,7 +95,8 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
 /**
  * Bad-request failure returned by the GovInfo search endpoint.
  *
- * @example
+ * **Example** (Decode bad-request failure)
+ *
  * ```ts
  * import { FailureBadRequest } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -107,13 +111,13 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
  * @category errors
  * @since 0.0.0
  */
-export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`FailureBadRequest`)(
+export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`FailureBadRequest`)(
   "FailureBadRequest",
   {
-    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
     status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
   },
-  $I.annote("FailureBadRequest", {
+  $I.annoteError<FailureBadRequest>("FailureBadRequest", {
     description: "Bad-request failure returned when GovInfo rejects the submitted search payload.",
   })
 ) {}
@@ -121,7 +125,8 @@ export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`Fa
 /**
  * Not-found failure returned by the GovInfo search endpoint.
  *
- * @example
+ * **Example** (Decode not-found failure)
+ *
  * ```ts
  * import { FailureNotFound } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -136,13 +141,13 @@ export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`Fa
  * @category errors
  * @since 0.0.0
  */
-export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`FailureNotFound`)(
+export class FailureNotFound extends S.TaggedError<FailureNotFound>($I`FailureNotFound`)(
   "FailureNotFound",
   {
-    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
     status: S.tag(HttpStatus4XX.From.Enum.NotFound),
   },
-  $I.annote("FailureNotFound", {
+  $I.annoteError<FailureNotFound>("FailureNotFound", {
     description: "Not-found failure returned when the GovInfo search route or resource is unavailable.",
   })
 ) {}
@@ -150,7 +155,8 @@ export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`Failur
 /**
  * Internal-server-error failure returned by the GovInfo search endpoint.
  *
- * @example
+ * **Example** (Decode internal server failure)
+ *
  * ```ts
  * import { FailureInternalServerError } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  * import * as S from "effect/Schema"
@@ -165,15 +171,15 @@ export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`Failur
  * @category errors
  * @since 0.0.0
  */
-export class FailureInternalServerError extends TaggedErrorClass<FailureInternalServerError>(
+export class FailureInternalServerError extends S.TaggedError<FailureInternalServerError>(
   $I`FailureInternalServerError`
 )(
   "FailureInternalServerError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
     status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
   },
-  $I.annote("FailureInternalServerError", {
+  $I.annoteError<FailureInternalServerError>("FailureInternalServerError", {
     description: "Internal-server-error failure returned when GovInfo reports an unexpected server-side error.",
   })
 ) {}
@@ -181,7 +187,8 @@ export class FailureInternalServerError extends TaggedErrorClass<FailureInternal
 /**
  * Tagged union of GovInfo search endpoint failures.
  *
- * @example
+ * **Example** (Guard Failure union membership)
+ *
  * ```ts
  * import { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  *
@@ -206,7 +213,8 @@ export const Failure = S.Union([
 /**
  * Type for {@link Failure}.
  *
- * @example
+ * **Example** (Annotate Failure tag type)
+ *
  * ```ts
  * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  *
@@ -222,7 +230,8 @@ export type Failure = typeof Failure.Type;
 /**
  * Companion namespace for {@link Failure}.
  *
- * @example
+ * **Example** (Assign Failure tag literal)
+ *
  * ```ts
  * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
  *
@@ -237,7 +246,8 @@ export declare namespace Failure {
   /**
    * Encoded type for {@link Failure}.
    *
-   * @example
+   * **Example** (Annotate encoded Failure tag)
+   *
    * ```ts
    * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
    *

@@ -7,7 +7,7 @@
 
 import { dual } from "effect/Function";
 
-type BaseEntityFixtureInput = {
+type ProductEntityFixtureInput = {
   readonly createdAt: number;
   readonly createdByPrincipal: typeof systemPrincipal;
   readonly entityType: string;
@@ -24,12 +24,14 @@ type BaseEntityFixtureInput = {
 /**
  * Runtime system principal used by deterministic entity fixture rows.
  *
- * @example
+ * **Example** (System principal kind field)
+ *
  * ```ts
  * import { systemPrincipal } from "@beep/test-utils"
  *
  * console.log(systemPrincipal.kind)
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -42,25 +44,27 @@ const publicIdFor = (entityType: string, id: number) =>
   `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 
 /**
- * Build the common BaseEntity fields used by model decode tests.
+ * Build the common ProductEntity fields used by model decode tests.
+ *
+ * **Example** (Build base entity fixture)
+ *
+ * ```ts
+ * import { productEntityFixtureInput } from "@beep/test-utils"
+ *
+ * console.log(productEntityFixtureInput("ExampleEntity", 1).entityType)
+ * ```
  *
  * @param entityType - Stable entity type tag expected by the decoded model.
  * @param id - Deterministic numeric entity id for the fixture row.
- * @example
- * ```ts
- * import { baseEntityFixtureInput } from "@beep/test-utils"
- *
- * console.log(baseEntityFixtureInput("ExampleEntity", 1).entityType)
- * ```
  * @category testing
  * @since 0.0.0
  */
-export const baseEntityFixtureInput: {
-  (entityType: string, id: number): BaseEntityFixtureInput;
-  (id: number): (entityType: string) => BaseEntityFixtureInput;
+export const productEntityFixtureInput: {
+  (entityType: string, id: number): ProductEntityFixtureInput;
+  (id: number): (entityType: string) => ProductEntityFixtureInput;
 } = dual(
   2,
-  (entityType: string, id: number): BaseEntityFixtureInput => ({
+  (entityType: string, id: number): ProductEntityFixtureInput => ({
     createdAt: id,
     createdByPrincipal: systemPrincipal,
     entityType,

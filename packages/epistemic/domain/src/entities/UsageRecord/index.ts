@@ -8,14 +8,15 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import UsageRecord entity)
+ *
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-domain/entities/UsageRecord"
  *
- * console.log(UsageRecord.definition.entityId.resource)
+ * console.log(UsageRecord.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export * from "./UsageRecord.model.js";
+export * from "./UsageRecord.model.ts";

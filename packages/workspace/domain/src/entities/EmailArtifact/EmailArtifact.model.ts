@@ -6,12 +6,12 @@
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { ArrayOfNonEmptyStrings, UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/EmailArtifact/EmailArtifact.model");
+const pg = ProductEntity.pg;
 const UtcIsoTimestamp = S.NonEmptyString.check(
   S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/u, {
     identifier: $I`UtcIsoTimestampPatternCheck`,
@@ -28,71 +28,45 @@ const UtcIsoTimestamp = S.NonEmptyString.check(
 /**
  * Normalized email artifact imported into a workspace thread.
  *
- * @example
+ * **Example** (Log resource name)
+ *
  * ```ts
  * import { EmailArtifact } from "@beep/workspace-domain"
  *
- * console.log(EmailArtifact.definition.entityId.resource)
+ * console.log(EmailArtifact.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class EmailArtifact extends BaseEntity.Class<EmailArtifact>($I`EmailArtifact`)(
-  Workspace.EmailArtifactId,
+export class EmailArtifact extends ProductEntity.Entity<EmailArtifact>()(Workspace.EmailArtifactId)(
   {
-    fields: {
-      artifactFixtureKey: S.NonEmptyString.annotateKey({
-        description: "Stable fixture key for the imported email artifact.",
-      }),
-      body: S.String.annotateKey({
-        description: "Literal email body content preserved from the import source.",
-      }),
-      from: UnknownRecord.annotateKey({
-        description: "Provider-specific sender contact payload.",
-      }),
-      receivedAt: UtcIsoTimestamp.annotateKey({
-        description: "ISO timestamp when the email artifact was received.",
-      }),
-      sourceSpans: ArrayOfNonEmptyStrings.annotateKey({
-        description: "Source span identifiers covered by this email artifact.",
-      }),
-      subject: S.String.annotateKey({
-        description: "Literal email subject preserved from the import source.",
-      }),
-      threadFixtureKey: S.NonEmptyString.annotateKey({
-        description: "Stable fixture key for the workspace thread containing the artifact.",
-      }),
-      to: S.Array(UnknownRecord).annotateKey({
+    artifactFixtureKey: S.NonEmptyString.annotateKey({
+      description: "Stable fixture key for the imported email artifact.",
+    }).pipe(pg.text(), pg.columnName("artifact_fixture_key")),
+    body: S.String.annotateKey({
+      description: "Literal email body content preserved from the import source.",
+    }).pipe(pg.text()),
+    from: UnknownRecord.annotateKey({
+      description: "Provider-specific sender contact payload.",
+    }).pipe(pg.jsonb(), pg.columnName("from_contact")),
+    receivedAt: UtcIsoTimestamp.annotateKey({
+      description: "ISO timestamp when the email artifact was received.",
+    }).pipe(pg.text(), pg.columnName("received_at")),
+    sourceSpans: ArrayOfNonEmptyStrings.annotateKey({
+      description: "Source span identifiers covered by this email artifact.",
+    }).pipe(pg.jsonb(), pg.columnName("source_spans")),
+    subject: S.String.annotateKey({
+      description: "Literal email subject preserved from the import source.",
+    }).pipe(pg.text()),
+    threadFixtureKey: S.NonEmptyString.annotateKey({
+      description: "Stable fixture key for the workspace thread containing the artifact.",
+    }).pipe(pg.text(), pg.columnName("thread_fixture_key")),
+    to: S.Array(UnknownRecord)
+      .annotateKey({
         description: "Provider-specific recipient contact payloads.",
-      }),
-    },
-    persisted: {
-      artifactFixtureKey: EntitySchema.persist.text({
-        columnName: "artifact_fixture_key",
-      }),
-      body: EntitySchema.persist.text({
-        columnName: "body",
-      }),
-      from: EntitySchema.persist.jsonb({
-        columnName: "from_contact",
-      }),
-      receivedAt: EntitySchema.persist.text({
-        columnName: "received_at",
-      }),
-      sourceSpans: EntitySchema.persist.jsonb({
-        columnName: "source_spans",
-      }),
-      subject: EntitySchema.persist.text({
-        columnName: "subject",
-      }),
-      threadFixtureKey: EntitySchema.persist.text({
-        columnName: "thread_fixture_key",
-      }),
-      to: EntitySchema.persist.jsonb({
-        columnName: "to_contacts",
-      }),
-    },
+      })
+      .pipe(pg.jsonb(), pg.columnName("to_contacts")),
   },
   $I.annote("EmailArtifact", {
     description: "Normalized email artifact imported into a workspace thread.",

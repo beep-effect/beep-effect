@@ -5,48 +5,37 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.errors");
-
-const causeMessage = (cause: unknown): string => {
-  if (P.isError(cause)) {
-    return cause.message;
-  }
-  if (P.hasProperty(cause, "message") && P.isString(cause.message)) {
-    return cause.message;
-  }
-  return Inspectable.toStringUnknown(cause, 0);
-};
-
-const messageWithCause = (message: string, cause: unknown): string => `${message}: ${causeMessage(cause)}`;
 
 /**
  * Operational error during version sync (file read/write, parse failures).
  *
- * @example
+ * **Example** (Create VersionSyncError instance)
+ *
  * ```ts
  * import { VersionSyncError } from "@beep/repo-cli/commands/VersionSync"
  *
  * const error = VersionSyncError.make({ file: "package.json", message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class VersionSyncError extends TaggedErrorClass<VersionSyncError>($I`VersionSyncError`)(
+export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`VersionSyncError`)(
   "VersionSyncError",
   {
     message: S.String,
     file: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("VersionSyncError", {
+  $I.annoteError<VersionSyncError>("VersionSyncError", {
     title: "Version Sync Error",
     description: "Failed to read, resolve, or update a version pin",
   })
@@ -80,20 +69,22 @@ export class VersionSyncError extends TaggedErrorClass<VersionSyncError>($I`Vers
 /**
  * Network unavailable during upstream version resolution.
  *
- * @example
+ * **Example** (Create NetworkUnavailableError instance)
+ *
  * ```ts
  * import { NetworkUnavailableError } from "@beep/repo-cli/commands/VersionSync"
  *
  * const error = NetworkUnavailableError.make({ message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class NetworkUnavailableError extends TaggedErrorClass<NetworkUnavailableError>($I`NetworkUnavailableError`)(
+export class NetworkUnavailableError extends S.TaggedError<NetworkUnavailableError>($I`NetworkUnavailableError`)(
   "NetworkUnavailableError",
   { message: S.String },
-  $I.annote("NetworkUnavailableError", {
+  $I.annoteError<NetworkUnavailableError>("NetworkUnavailableError", {
     title: "Network Unavailable",
     description: "Upstream version resolution failed due to network",
   })
@@ -108,23 +99,25 @@ export class NetworkUnavailableError extends TaggedErrorClass<NetworkUnavailable
 /**
  * Drift detected in check mode (non-zero exit).
  *
- * @example
+ * **Example** (Create VersionSyncDriftError instance)
+ *
  * ```ts
  * import { VersionSyncDriftError } from "@beep/repo-cli/commands/VersionSync"
  *
  * const error = VersionSyncDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
  * console.log(error.message.includes("failed")) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export class VersionSyncDriftError extends TaggedErrorClass<VersionSyncDriftError>($I`VersionSyncDriftError`)(
+export class VersionSyncDriftError extends S.TaggedError<VersionSyncDriftError>($I`VersionSyncDriftError`)(
   "VersionSyncDriftError",
   {
     message: S.String,
     driftCount: S.Finite,
   },
-  $I.annote("VersionSyncDriftError", {
+  $I.annoteError<VersionSyncDriftError>("VersionSyncDriftError", {
     title: "Version Sync Drift Error",
     description: "Version drift detected in check mode",
   })

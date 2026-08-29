@@ -14,17 +14,18 @@ const $I = $SchemaId.create("Timezone");
 /**
  * IANA timezone identifier schema derived from generated tzdb data.
  *
- * @example
- * ```ts
+ * **Example** (Decode IANA timezone)
+ *
+ * ```ts import.meta.vitest name="Decode IANA timezone"
  * import * as S from "effect/Schema"
  * import { Timezone } from "@beep/schema/Timezone"
  *
  * const tz = S.decodeUnknownSync(Timezone)("America/New_York")
- * console.log(tz) // "America/New_York"
+ * tz // => "America/New_York"
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Timezone = LiteralKit(TimezonesData.TimezoneNameValues).pipe(
   $I.annoteSchema("Timezone", {
@@ -35,7 +36,8 @@ export const Timezone = LiteralKit(TimezonesData.TimezoneNameValues).pipe(
 /**
  * Runtime type for {@link Timezone}.
  *
- * @example
+ * **Example** (Type annotated timezone)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Timezone } from "@beep/schema/Timezone"
@@ -44,7 +46,7 @@ export const Timezone = LiteralKit(TimezonesData.TimezoneNameValues).pipe(
  * console.log(tz)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Timezone = typeof Timezone.Type;

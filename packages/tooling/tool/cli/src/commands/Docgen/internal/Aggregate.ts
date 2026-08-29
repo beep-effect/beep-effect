@@ -11,15 +11,15 @@ import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, MutableHashSet, Order, Path, pipe } from "effect";
 import * as P from "effect/Predicate";
-import { generateDocsIndexContent } from "../Docgen.render.js";
-import { byDocsOutputPathAscending, DocgenAggregateResult } from "../Docgen.schemas.js";
+import { generateDocsIndexContent } from "../Docgen.render.ts";
+import { byDocsOutputPathAscending, DocgenAggregateResult } from "../Docgen.schemas.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "./Workspace.js";
+} from "./Workspace.ts";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
-import type { DocgenWorkspacePackage } from "../Docgen.schemas.js";
+import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
 const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
 
@@ -94,10 +94,8 @@ const copyDocsTree: (
 /**
  * Aggregate generated package docs into the root ignored `docs/generated` tree.
  *
- * @param options - Optional package selector and clean flag.
- * @returns Aggregation result rows for every copied package.
- * @effects Reads package-local generated docs and writes the aggregate docs tree.
- * @example
+ * **Example** (Aggregate selected package docs)
+ *
  * ```ts
  * import { aggregateGeneratedDocs } from "@beep/repo-cli/commands/Docgen/internal/Aggregate"
  * import { Effect } from "effect"
@@ -105,6 +103,10 @@ const copyDocsTree: (
  * const program = aggregateGeneratedDocs({ package: "packages/tooling/tool/cli" })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param options - Optional package selector and clean flag.
+ * @returns Aggregation result rows for every copied package.
+ * @effects Reads package-local generated docs and writes the aggregate docs tree.
  * @category workflows
  * @since 0.0.0
  */

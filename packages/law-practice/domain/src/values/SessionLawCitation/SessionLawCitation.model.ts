@@ -8,7 +8,7 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/SessionLawCitation/SessionLawCitation.model");
 
@@ -16,14 +16,15 @@ const $I = $LawPracticeDomainId.create("values/SessionLawCitation/SessionLawCita
  * Session-law citation (#350, #779): a state session law cited by year and
  * chapter (e.g. California Statutes, Nevada session laws).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `sessionLaw`
  * discriminant plus the jurisdiction, compilation code, session year, and
  * chapter that identify the enacted law, along with the optional section and
  * page pinpoints.
  *
- * **Example**
+ * **Example** (Make California session-law citation)
  *
- * @example
  * ```ts
  * import { SessionLawCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -112,7 +113,8 @@ export class SessionLawCitation extends S.Class<SessionLawCitation>($I`SessionLa
 /**
  * Companion namespace for `SessionLawCitation`.
  *
- * @example
+ * **Example** (Alias Encoded wire type)
+ *
  * ```ts
  * import type { SessionLawCitation } from "@beep/law-practice-domain"
  *
@@ -126,9 +128,8 @@ export declare namespace SessionLawCitation {
   /**
    * Wire-encoded representation of a decoded {@link SessionLawCitation}.
    *
-   * **Example**
+   * **Example** (Alias Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { SessionLawCitation } from "@beep/law-practice-domain"
    *

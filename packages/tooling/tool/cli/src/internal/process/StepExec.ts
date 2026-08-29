@@ -23,11 +23,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe, Stream } from "effect";
+import { Duration, Effect, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
@@ -47,6 +49,8 @@ export type StepStdio = "inherit" | "pipe" | "ignore";
 /**
  * Which streams {@link runCaptured} folds, and how.
  *
+ * **Details**
+ *
  * `"all"` folds the spawner's interleaved `handle.all` stream (used by most
  * grouped step runners). `"merge"` decodes `stdout` and `stderr` separately and
  * merges the decoded text streams (used by the repo-run executor); the two
@@ -62,13 +66,15 @@ export type CaptureSource = "all" | "merge" | "stdout";
 /**
  * A character cap plus the notice appended once captured output overflows it.
  *
- * @example
+ * **Example** (Cap captured output at 4 KiB)
+ *
  * ```ts
  * import { OutputBound } from "@beep/repo-cli/internal/process"
  *
  * const bound = OutputBound.make({ maxChars: 4096, truncatedNotice: "\n[cli] truncated" })
  * console.log(bound.maxChars)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -85,13 +91,15 @@ export class OutputBound extends S.Class<OutputBound>($I`OutputBound`)(
 /**
  * Accumulator produced by the bounded output fold.
  *
- * @example
+ * **Example** (Seed a fold accumulator)
+ *
  * ```ts
  * import { BoundedOutput } from "@beep/repo-cli/internal/process"
  *
  * const state = BoundedOutput.make({ text: "captured", truncated: false })
  * console.log(state.truncated)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,13 +116,15 @@ export class BoundedOutput extends S.Class<BoundedOutput>($I`BoundedOutput`)(
 /**
  * Combined captured subprocess result.
  *
- * @example
+ * **Example** (Read a captured exit code)
+ *
  * ```ts
  * import { CapturedStep } from "@beep/repo-cli/internal/process"
  *
  * const result = CapturedStep.make({ exitCode: 0, output: "ok", truncated: false })
  * console.log(result.exitCode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -132,13 +142,15 @@ export class CapturedStep extends S.Class<CapturedStep>($I`CapturedStep`)(
 /**
  * Captured subprocess result with stdout and stderr kept separate.
  *
- * @example
+ * **Example** (Read stdout without stderr noise)
+ *
  * ```ts
  * import { CapturedStreams } from "@beep/repo-cli/internal/process"
  *
- * const result = CapturedStreams.make({ exitCode: 0, stdout: "out", stderr: "" })
+ * const result = CapturedStreams.make({ exitCode: 0, stdout: "out", stderr: "", truncated: false })
  * console.log(result.stdout)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -147,22 +159,61 @@ export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams
     exitCode: S.Finite,
     stdout: S.String,
     stderr: S.String,
+    truncated: S.Boolean,
   },
   $I.annote("CapturedStreams", {
-    description: "Captured subprocess result with stdout and stderr kept separate.",
+    description:
+      "Captured subprocess result with stdout and stderr kept separate, flagged when either stream hit the bound.",
   })
 ) {}
 
 /**
+ * Flake-quarantine policy a quality step may opt into.
+ *
+ * **Details**
+ *
+ * A policy names one established environment-only failure signature. When a
+ * policy-carrying step fails and its captured output matches the signature,
+ * the runner may rerun the failing scope standalone once and record the
+ * incident as an environment flake instead of failing the group.
+ *
+ * **Example** (Narrow a policy literal)
+ *
+ * ```ts
+ * import { StepFlakeQuarantinePolicy } from "@beep/repo-cli/internal/process"
+ *
+ * console.log(StepFlakeQuarantinePolicy.is["ts2589-no-location"]("ts2589-no-location"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const StepFlakeQuarantinePolicy = LiteralKit(["ts2589-no-location"]).pipe(
+  $I.annoteSchema("StepFlakeQuarantinePolicy", {
+    description: "Named environment-only failure signature a quality step may quarantine on.",
+  })
+);
+
+/**
+ * Flake-quarantine policy a quality step may opt into.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StepFlakeQuarantinePolicy = typeof StepFlakeQuarantinePolicy.Type;
+
+/**
  * Planned subprocess invocation shared by repo-quality command families.
  *
- * @remarks
+ * **Details**
+ *
  * This is the sanctioned home for the quality step model. Quality task
  * adapters, GitHub-check lanes, and operational helpers may still render their
  * own labels and errors, but they all describe child processes with this shape
  * so cross-group consumers do not deep-import `commands/Quality/Tasks`.
  *
- * @example
+ * **Example** (Plan a turbo check step)
+ *
  * ```ts
  * import { QualityTaskStep } from "@beep/repo-cli/internal/process"
  *
@@ -174,6 +225,7 @@ export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams
  * })
  * console.log(step.label)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -185,6 +237,8 @@ export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep
     cwd: S.String,
     env: S.optionalKey(S.Record(S.String, S.Union([S.String, S.Undefined]))),
     useLocalEnv: S.optionalKey(S.Boolean),
+    flakeQuarantine: S.optionalKey(StepFlakeQuarantinePolicy),
+    captureTimeoutMillis: S.optionalKey(PosInt),
   },
   $I.annote("QualityTaskStep", {
     description: "Planned subprocess invocation shared by repo-quality command families.",
@@ -194,12 +248,14 @@ export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep
 /**
  * Empty bounded-output accumulator seed.
  *
- * @example
+ * **Example** (Start a fold from the untruncated seed)
+ *
  * ```ts
  * import { emptyBoundedOutput } from "@beep/repo-cli/internal/process"
  *
  * console.log(emptyBoundedOutput.truncated)
  * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -211,12 +267,14 @@ export const emptyBoundedOutput = BoundedOutput.make({
 /**
  * The 512 KiB repo-run output bound, matching the shared run executor.
  *
- * @example
+ * **Example** (Read the repo-run character cap)
+ *
  * ```ts
  * import { repoRunOutputBound } from "@beep/repo-cli/internal/process"
  *
  * console.log(repoRunOutputBound.maxChars)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -228,12 +286,14 @@ export const repoRunOutputBound = OutputBound.make({
 /**
  * The 256 KiB grouped-step output bound, matching the quality task runner.
  *
- * @example
+ * **Example** (Read the grouped-step character cap)
+ *
  * ```ts
  * import { qualityStepOutputBound } from "@beep/repo-cli/internal/process"
  *
  * console.log(qualityStepOutputBound.maxChars)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -245,19 +305,23 @@ export const qualityStepOutputBound = OutputBound.make({
 /**
  * Reducer that appends a decoded chunk while enforcing an output bound.
  *
+ * **Details**
+ *
  * Once the accumulated text reaches the bound the reducer appends the bound's
  * truncation notice, flips `truncated`, and ignores every later chunk. Behavior
  * matches the hand-rolled `appendOutputChunk` folds it replaces.
  *
- * @param bound - Character cap and truncation notice to enforce.
- * @returns A fold step over `(state, chunk)`.
- * @example
+ * **Example** (Overflow a four-character bound)
+ *
  * ```ts
  * import { boundedChunkReducer, emptyBoundedOutput, OutputBound } from "@beep/repo-cli/internal/process"
  *
  * const step = boundedChunkReducer(OutputBound.make({ maxChars: 4, truncatedNotice: "!" }))
  * console.log(step(emptyBoundedOutput, "abcdef"))
  * ```
+ *
+ * @param bound - Character cap and truncation notice to enforce.
+ * @returns A fold step over `(state, chunk)`.
  * @category folding
  * @since 0.0.0
  */
@@ -292,9 +356,8 @@ export const boundedChunkReducer =
 /**
  * Fold a byte stream into decoded text bounded by a character cap.
  *
- * @param bound - Character cap and truncation notice to enforce.
- * @returns A function folding a byte stream into a {@link BoundedOutput}.
- * @example
+ * **Example** (Fold a byte stream under the repo-run bound)
+ *
  * ```ts
  * import { collectBoundedText, repoRunOutputBound } from "@beep/repo-cli/internal/process"
  * import { Stream } from "effect"
@@ -302,6 +365,9 @@ export const boundedChunkReducer =
  * const fold = collectBoundedText(repoRunOutputBound)
  * console.log(fold(Stream.make(new TextEncoder().encode("hi"))))
  * ```
+ *
+ * @param bound - Character cap and truncation notice to enforce.
+ * @returns A function folding a byte stream into a {@link BoundedOutput}.
  * @category streams
  * @since 0.0.0
  */
@@ -316,18 +382,24 @@ export const collectBoundedText =
 /**
  * Fold a byte stream into its full decoded text, unbounded.
  *
- * Replaces the group-private `collectText` helpers duplicated across the
- * command groups.
+ * **Details**
  *
- * @param stream - Byte stream to decode and concatenate.
- * @returns Effect yielding the accumulated text.
- * @example
+ * Nothing caps the accumulator, so this suits streams whose size is known to be
+ * small; use {@link collectBoundedText} wherever a subprocess can emit an
+ * arbitrarily large log. It is the shared replacement for the group-private
+ * `collectText` helpers that were duplicated across the command groups.
+ *
+ * **Example** (Collect a short stream in full)
+ *
  * ```ts
  * import { collectText } from "@beep/repo-cli/internal/process"
  * import { Stream } from "effect"
  *
  * console.log(collectText(Stream.make(new TextEncoder().encode("hi"))))
  * ```
+ *
+ * @param stream - Byte stream to decode and concatenate.
+ * @returns Effect yielding the accumulated text.
  * @category streams
  * @since 0.0.0
  */
@@ -340,15 +412,17 @@ export const collectText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effe
 /**
  * Render an argv as a single space-joined command line for logs and errors.
  *
- * @param command - Executable name or path.
- * @param args - Command arguments.
- * @returns Space-joined command line.
- * @example
+ * **Example** (Render a git invocation for an error message)
+ *
  * ```ts
  * import { formatCommandLine } from "@beep/repo-cli/internal/process"
  *
  * console.log(formatCommandLine("git", ["status", "--short"]))
  * ```
+ *
+ * @param command - Executable name or path.
+ * @param args - Command arguments.
+ * @returns Space-joined command line.
  * @category formatting
  * @since 0.0.0
  */
@@ -361,6 +435,8 @@ type SpawnFields = {
   readonly cwd?: string | undefined;
   readonly env?: Record<string, string | undefined> | undefined;
   readonly extendEnv?: boolean | undefined;
+  /** Escalate child cleanup to `SIGKILL` after this duration. */
+  readonly forceKillAfter?: Duration.Input | undefined;
   readonly stdin?: StepStdio | undefined;
 };
 
@@ -369,7 +445,7 @@ const spawnFields = (options: SpawnFields) =>
     cwd: O.fromUndefinedOr(options.cwd),
     env: O.fromUndefinedOr(options.env),
     extendEnv: O.fromUndefinedOr(options.extendEnv),
-    stdin: O.fromUndefinedOr(options.stdin),
+    forceKillAfter: O.fromUndefinedOr(options.forceKillAfter),
   });
 
 const decodedText = <E>(stream: Stream.Stream<Uint8Array, E>): Stream.Stream<string, E> =>
@@ -387,6 +463,106 @@ const captureTextStream = (
   }
   return decodedText(handle.all);
 };
+
+/**
+ * Defect raised when a capture pipe stays open after the child exited and its process group was
+ * reaped — an escaped descendant (double-fork or `setsid` daemon) still holds the write end.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`CapturePipeWedgedError`)(
+  "CapturePipeWedgedError",
+  {
+    commandLine: S.String,
+    message: S.String,
+  },
+  $I.annoteError<CapturePipeWedgedError>("CapturePipeWedgedError", {
+    description:
+      "Capture pipe still open after child exit and process-group reap; an escaped descendant holds the write end.",
+  })
+) {}
+
+/**
+ * Error raised when a captured command does not exit within its caller's budget.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CaptureCommandTimedOutError extends S.TaggedError<CaptureCommandTimedOutError>(
+  $I`CaptureCommandTimedOutError`
+)(
+  "CaptureCommandTimedOutError",
+  {
+    commandLine: S.String,
+    message: S.String,
+  },
+  $I.annoteError<CaptureCommandTimedOutError>("CaptureCommandTimedOutError", {
+    description: "Captured command exceeded its configured runtime budget and was interrupted.",
+  })
+) {}
+
+/** Grace for inherited-pipe stragglers to close the capture after the child exits, before its process group is reaped. */
+const CAPTURE_DRAIN_GRACE: Duration.Input = "2 seconds";
+/** Grace after the group reap for the kernel to deliver EOF before the capture is declared wedged. */
+const CAPTURE_REAP_GRACE: Duration.Input = "3 seconds";
+/** Grace after forced termination before cleanup detaches from a child whose exit signal was lost. */
+const CAPTURE_FORCE_KILL_REAP_GRACE: Duration.Input = "1 second";
+
+const interruptTimedOutCapture = (
+  handle: ChildProcessSpawner.ChildProcessHandle,
+  forceKillAfter: Duration.Input
+): Effect.Effect<void, never> => {
+  const cleanupTimeout = Duration.sum(
+    Duration.fromInputUnsafe(forceKillAfter),
+    Duration.fromInputUnsafe(CAPTURE_FORCE_KILL_REAP_GRACE)
+  );
+  return Effect.uninterruptibleMask((restore) =>
+    restore(
+      Effect.ignore(
+        handle
+          .kill({ forceKillAfter })
+          .pipe(Effect.timeoutOrElse({ duration: cleanupTimeout, orElse: () => Effect.void }))
+      )
+    ).pipe(Effect.ensuring(Effect.ignore(handle.unref)))
+  );
+};
+
+/**
+ * Bounds a capture stream's lifetime to its child process.
+ *
+ * **Details**
+ *
+ * A capture completes only at pipe EOF, and EOF requires every inherited copy of the write end to
+ * close — not just the direct child. A child that exits successfully gets no process-group cleanup
+ * from the spawner (its cleanup is interrupt/nonzero-only), and the child's own success hard-exit
+ * can orphan a grandchild that still holds the write end, leaving the fold waiting forever while
+ * the lane sits silent (Lint Policy jobs 94646234791 and 95354812245: every policy step logged
+ * done, then 29-40 minutes of nothing until job cleanup reaped the wedged wrapper chain). Spawns
+ * are detached session leaders, so the CI runner's own `setsid` group reap cannot reach them
+ * either. After the child exits, stragglers get a short drain grace; then the child's process
+ * group is reaped so the kernel closes surviving write ends and the capture ends with its text
+ * intact. A descendant that escaped the group too (double-fork or its own `setsid`) becomes a loud
+ * defect naming the command instead of a silent hang. On the normal path the deadline is forked by
+ * `Stream.interruptWhen` and interrupted the moment the stream ends — it costs nothing.
+ */
+const capturePipeDeadline = (
+  handle: ChildProcessSpawner.ChildProcessHandle,
+  commandLine: string
+): Effect.Effect<never, PlatformError.PlatformError> =>
+  handle.exitCode.pipe(
+    Effect.andThen(Effect.sleep(CAPTURE_DRAIN_GRACE)),
+    Effect.andThen(Effect.ignore(handle.kill({ forceKillAfter: "1 second" }))),
+    Effect.andThen(Effect.sleep(CAPTURE_REAP_GRACE)),
+    Effect.andThen(
+      Effect.die(
+        CapturePipeWedgedError.make({
+          commandLine,
+          message: `${commandLine}: capture pipe still open after child exit and process-group reap — an escaped descendant (double-fork or setsid daemon) still holds the write end`,
+        })
+      )
+    )
+  );
 
 const foldDecodedText = <E>(
   stream: Stream.Stream<string, E>,
@@ -431,6 +607,7 @@ export type RunCapturedOptions = SpawnFields & {
   readonly args: ReadonlyArray<string>;
   readonly source?: CaptureSource | undefined;
   readonly bound?: OutputBound | undefined;
+  readonly timeout?: Duration.Input | undefined;
   readonly trim?: boolean | undefined;
   readonly tee?: boolean | undefined;
 };
@@ -438,14 +615,19 @@ export type RunCapturedOptions = SpawnFields & {
 /**
  * Spawn a command and capture combined stdout+stderr into one string.
  *
- * Nonzero exit codes are represented in the result; only spawn/stream failures
- * reach the `PlatformError` channel (map them to a domain error at the call
- * site). Set `bound` to cap the buffer, `trim` to trim the captured text, and
- * `tee` to stream chunks to the parent stdout while capturing.
+ * **Details**
  *
- * @param options - Command, spawn fields, and capture configuration.
- * @returns Captured combined output, exit code, and truncation flag.
- * @example
+ * Nonzero exit codes are represented in the result. Spawn/stream failures
+ * reach the `PlatformError` channel, while an elapsed `timeout` raises
+ * {@link CaptureCommandTimedOutError}; map those operational errors at the
+ * call site. Set `bound` to cap the buffer, `trim` to trim the captured text,
+ * and `tee` to stream chunks to the parent stdout while capturing. The timeout
+ * bounds the full command lifetime, including the direct child's exit signal.
+ * Stdin defaults to `"ignore"` so noninteractive capture cannot inherit or
+ * leave an unread pipe accidentally.
+ *
+ * **Example** (Capture a trimmed git status)
+ *
  * ```ts
  * import { runCaptured, repoRunOutputBound } from "@beep/repo-cli/internal/process"
  *
@@ -459,24 +641,61 @@ export type RunCapturedOptions = SpawnFields & {
  * })
  * console.log(captured)
  * ```
+ *
+ * @param options - Command, spawn fields, and capture configuration.
+ * @returns Captured combined output, exit code, and truncation flag.
  * @category execution
  * @since 0.0.0
  */
 export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
   options: RunCapturedOptions
-): Effect.fn.Return<CapturedStep, PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  CapturedStep,
+  PlatformError.PlatformError | CaptureCommandTimedOutError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
   const source = options.source ?? "all";
-  return yield* Effect.scoped(
+  const commandLine = formatCommandLine(options.command, options.args);
+  const timeout = options.timeout;
+  const operation = Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: source === "stdout" ? "ignore" : "pipe",
       });
-      const [captured, exitCode] = yield* Effect.all(
-        [foldDecodedText(captureTextStream(handle, source), options.bound, options.tee ?? false), handle.exitCode],
+      const deadline = capturePipeDeadline(handle, commandLine);
+      const forceKillAfter = options.forceKillAfter ?? "1 second";
+      const capture = Effect.all(
+        [
+          foldDecodedText(
+            captureTextStream(handle, source).pipe(Stream.interruptWhen(deadline)),
+            options.bound,
+            options.tee ?? false
+          ),
+          handle.exitCode,
+        ],
         { concurrency: "unbounded" }
       );
+      const [captured, exitCode] = yield* P.isUndefined(timeout)
+        ? capture
+        : capture.pipe(
+            Effect.timeoutOrElse({
+              duration: timeout,
+              orElse: () =>
+                interruptTimedOutCapture(handle, forceKillAfter).pipe(
+                  Effect.andThen(
+                    Effect.fail(
+                      CaptureCommandTimedOutError.make({
+                        commandLine,
+                        message: `${commandLine}: captured command did not exit within ${Duration.toMillis(timeout)}ms`,
+                      })
+                    )
+                  )
+                ),
+            })
+          );
       return CapturedStep.make({
         exitCode,
         output: options.trim === true ? Str.trim(captured.text) : captured.text,
@@ -484,6 +703,8 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
       });
     })
   );
+
+  return yield* operation;
 });
 
 /**
@@ -502,12 +723,16 @@ export type RunCapturedStreamsOptions = SpawnFields & {
 /**
  * Spawn a command and capture stdout and stderr as separate strings.
  *
- * Used by call sites that need to keep the two streams apart (for example
- * distinct error excerpts). Nonzero exit codes are represented in the result.
+ * **Details**
  *
- * @param options - Command, spawn fields, and capture configuration.
- * @returns Captured stdout, stderr, and exit code.
- * @example
+ * Used by call sites that need to keep the two streams apart (for example
+ * distinct error excerpts, or structured stdout a parser reads while stderr
+ * stays diagnostic). Nonzero exit codes are represented in the result, stdin
+ * defaults to `"ignore"`, and `truncated` reports whether `bound` clipped
+ * either stream.
+ *
+ * **Example** (Capture a version probe with streams kept apart)
+ *
  * ```ts
  * import { runCapturedStreams } from "@beep/repo-cli/internal/process"
  *
@@ -519,6 +744,9 @@ export type RunCapturedStreamsOptions = SpawnFields & {
  * })
  * console.log(captured)
  * ```
+ *
+ * @param options - Command, spawn fields, and capture configuration.
+ * @returns Captured stdout, stderr, exit code, and truncation flag.
  * @category execution
  * @since 0.0.0
  */
@@ -529,13 +757,15 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: "pipe",
       });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
       const [stdout, stderr, exitCode] = yield* Effect.all(
         [
-          foldDecodedText(decodedText(handle.stdout), options.bound, false),
-          foldDecodedText(decodedText(handle.stderr), options.bound, false),
+          foldDecodedText(decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)), options.bound, false),
+          foldDecodedText(decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)), options.bound, false),
           handle.exitCode,
         ],
         { concurrency: "unbounded" }
@@ -544,6 +774,7 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
         exitCode,
         stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
         stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
+        truncated: stdout.truncated || stderr.truncated,
       });
     })
   );
@@ -559,17 +790,29 @@ export type RunToExitOptions = SpawnFields & {
   readonly command: string;
   readonly args: ReadonlyArray<string>;
   readonly stdio: "inherit" | "ignore";
+  /**
+   * Escalate to `SIGKILL` this long after the scope closes and the child is
+   * sent `SIGTERM`.
+   *
+   * Interrupting a `runToExit` closes the child's scope, which signals the
+   * process group and then waits for the exit event. Without this, a child that
+   * ignores `SIGTERM` makes that wait unbounded, so a caller-side timeout
+   * cannot reclaim the process. Left `undefined`, behavior is unchanged.
+   */
+  readonly forceKillAfter?: Duration.Input | undefined;
 };
 
 /**
  * Spawn a command with inherited or ignored stdio and return its exit code.
  *
- * The `inherited-stdio` variant: nothing is captured, output flows straight to
- * the parent (or is discarded). Nonzero exit codes are returned, not raised.
+ * **Details**
  *
- * @param options - Command, spawn fields, and stdio disposition.
- * @returns The subprocess exit code.
- * @example
+ * The `inherited-stdio` variant: nothing is captured, output flows straight to
+ * the parent (or is discarded). Stdin defaults to the selected stdio mode.
+ * Nonzero exit codes are returned, not raised.
+ *
+ * **Example** (Run an installer with inherited stdio)
+ *
  * ```ts
  * import { runToExit } from "@beep/repo-cli/internal/process"
  *
@@ -581,6 +824,9 @@ export type RunToExitOptions = SpawnFields & {
  * })
  * console.log(exitCode)
  * ```
+ *
+ * @param options - Command, spawn fields, and stdio disposition.
+ * @returns The subprocess exit code.
  * @category execution
  * @since 0.0.0
  */
@@ -591,6 +837,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        stdin: options.stdin ?? options.stdio,
         stdout: options.stdio,
         stderr: options.stdio,
       });
@@ -602,11 +849,14 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
 /**
  * Fail with a caller-supplied tagged error when a captured step exited nonzero.
  *
+ * **Details**
+ *
  * The `must-succeed` variant: thread a {@link CapturedStep} /
  * {@link CapturedStreams} (or any `{ exitCode }`) through this to turn a
  * nonzero exit into the command group's own error type.
  *
- * @example
+ * **Example** (Turn a nonzero git exit into a typed failure)
+ *
  * ```ts
  * import { ensureZeroExit, runCaptured } from "@beep/repo-cli/internal/process"
  * import { Effect } from "effect"
@@ -616,6 +866,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
  * )
  * console.log(proven)
  * ```
+ *
  * @category execution
  * @since 0.0.0
  */

@@ -10,19 +10,28 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { Defect } from "./Opaque.ts";
 
 const $I = $SchemaId.create("StatusCauseError");
 
 /**
  * Shared field set for tagged errors that carry a message, HTTP status, and optional defect cause.
  *
- * @example
+ * **Example** (Build tagged AppError)
+ *
  * ```ts
+ * import { $SchemaId } from "@beep/identity"
  * import * as O from "effect/Option"
- * import { TaggedErrorClass } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { StatusCauseFields } from "@beep/schema/StatusCauseError"
  *
- * class AppError extends TaggedErrorClass<AppError>()("AppError", StatusCauseFields) {}
+ * const $I = $SchemaId.create("Example")
+ *
+ * class AppError extends S.TaggedError<AppError>($I`AppError`)(
+ *   "AppError",
+ *   StatusCauseFields,
+ *   $I.annoteError<AppError>("AppError", { description: "Application failure." })
+ * ) {}
  *
  * const error = AppError.make({
  *   message: "not found",
@@ -39,21 +48,24 @@ const $I = $SchemaId.create("StatusCauseError");
 export const StatusCauseFields = {
   message: S.String,
   status: S.Finite,
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
 } as const;
 
 /**
  * Build the payload object expected by errors using {@link StatusCauseFields}.
  *
+ * **Details**
+ *
  * Normalizes an optional raw cause into an `Option`.
  *
- * @example
- * ```ts
+ * **Example** (Normalize status cause payload)
+ *
+ * ```ts import.meta.vitest name="Normalize status cause payload"
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
  * const payload = statusCauseInput("not found", { status: 404, cause: undefined })
- * console.log(payload.message) // "not found"
- * console.log(payload.status)  // 404
+ * payload.message // => "not found"
+ * payload.status // => 404
  * ```
  *
  * @category utilities
@@ -62,7 +74,7 @@ export const StatusCauseFields = {
 export class StatusCauseInputOptions extends S.Class<StatusCauseInputOptions>($I`StatusCauseInputOptions`)(
   {
     status: S.Finite,
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
   $I.annote("StatusCauseInputOptions", {
     description: "Normalized status/cause input options.",
@@ -72,7 +84,8 @@ export class StatusCauseInputOptions extends S.Class<StatusCauseInputOptions>($I
 /**
  * Input payload shape produced by {@link statusCauseInput}.
  *
- * @example
+ * **Example** (Type status cause payload)
+ *
  * ```ts
  * import { statusCauseInput, type StatusCauseInput } from "@beep/schema/StatusCauseError"
  *
@@ -98,7 +111,8 @@ export class StatusCauseInput extends S.Class<StatusCauseInput>($I`StatusCauseIn
 /**
  * Creates normalized status/cause input payloads.
  *
- * @example
+ * **Example** (Create status cause payload)
+ *
  * ```ts
  * import { statusCauseInput } from "@beep/schema/StatusCauseError"
  *
@@ -131,6 +145,17 @@ type StatusCauseErrorInput = StatusCauseContext & {
   readonly cause: unknown;
 };
 type StatusCauseErrorCauseHandler<Error> = (cause: unknown) => Error;
+/**
+ * The constructed error returned by the data-first {@link makeStatusCauseError}
+ * forms.
+ *
+ * Spelled through a deferred (no-op distributive) conditional rather than a
+ * naked `Error` type parameter: a naked parameter resolves eagerly, so the
+ * pipeable-signature analysis cannot relate the data-first return to its
+ * data-last partner. `Error extends unknown ? Error : never` is `Error` for
+ * every instantiation.
+ */
+type StatusCauseErrorResult<Error> = Error extends unknown ? Error : never;
 type StatusCauseErrorBuilder<Error> = {
   (input: StatusCauseContext): StatusCauseErrorCauseHandler<Error>;
   (input: StatusCauseErrorInput): Error;
@@ -164,17 +189,27 @@ const buildStatusCauseErrorBuilder = <Input extends StatusCauseInput, Error>(
 /**
  * Build a tagged error directly or derive a reusable `(message, status, cause?) => Error` builder.
  *
+ * **Details**
+ *
  * Supports multiple calling conventions via `dual`:
  * - `makeStatusCauseError(Ctor)` returns a builder function.
  * - `makeStatusCauseError(Ctor, message, status)` returns a cause handler.
  * - `makeStatusCauseError(Ctor, message, status, cause)` returns the error directly.
  *
- * @example
+ * **Example** (Build dual error constructor)
+ *
  * ```ts
- * import { TaggedErrorClass } from "@beep/schema"
+ * import { $SchemaId } from "@beep/identity"
+ * import * as S from "effect/Schema"
  * import { StatusCauseFields, makeStatusCauseError } from "@beep/schema/StatusCauseError"
  *
- * class AppError extends TaggedErrorClass<AppError>()("AppError", StatusCauseFields) {}
+ * const $I = $SchemaId.create("Example")
+ *
+ * class AppError extends S.TaggedError<AppError>($I`AppError`)(
+ *   "AppError",
+ *   StatusCauseFields,
+ *   $I.annoteError<AppError>("AppError", { description: "Application failure." })
+ * ) {}
  *
  * const build = makeStatusCauseError(AppError)
  * const err = build({
@@ -199,7 +234,7 @@ export const makeStatusCauseError: {
   <Input extends StatusCauseInput, Error>(
     ctor: StatusCauseErrorCtor<Input, Error>,
     input: StatusCauseErrorInput
-  ): Error;
+  ): StatusCauseErrorResult<Error>;
   (
     input: StatusCauseContext
   ): <Input extends StatusCauseInput, Error>(
@@ -207,7 +242,7 @@ export const makeStatusCauseError: {
   ) => StatusCauseErrorCauseHandler<Error>;
   (
     input: StatusCauseErrorInput
-  ): <Input extends StatusCauseInput, Error>(ctor: StatusCauseErrorCtor<Input, Error>) => Error;
+  ): <Input extends StatusCauseInput, Error>(ctor: StatusCauseErrorCtor<Input, Error>) => StatusCauseErrorResult<Error>;
 } = dual(
   (args) => P.isFunction(args[0]),
   function <Input extends StatusCauseInput, Error>(

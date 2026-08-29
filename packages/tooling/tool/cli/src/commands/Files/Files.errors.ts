@@ -6,9 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Effect } from "effect";
+import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -16,7 +16,7 @@ const $I = $RepoCliId.create("commands/Files/Files.errors");
 
 class PlatformErrorOptions extends S.Class<PlatformErrorOptions>($I`PlatformErrorOptions`)(
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
   },
   $I.annote("PlatformErrorOptions", {
     description: "Options for platform errors, including a cause.",
@@ -26,26 +26,35 @@ class PlatformErrorOptions extends S.Class<PlatformErrorOptions>($I`PlatformErro
 /**
  * Error raised by file curation commands.
  *
- * @example
+ * **Example** (Create FilesCommandError instance)
+ *
  * ```ts
  * import { FilesCommandError } from "@beep/repo-cli/commands/Files/index"
  *
  * const error = FilesCommandError.make({ message: "Invalid directory" })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class FilesCommandError extends TaggedErrorClass<FilesCommandError>($I`FilesCommandError`)(
+export class FilesCommandError extends S.TaggedError<FilesCommandError>($I`FilesCommandError`)(
   "FilesCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
+    exitCode: S.optionalKey(S.Literals([1, 2])).annotateKey({
+      description:
+        "Process exit-code hint per the file-processing SPEC: 2 for configuration/engine-discovery failures, 1 (default) otherwise.",
+    }),
   },
-  $I.annote("FilesCommandError", {
+  $I.annoteError<FilesCommandError>("FilesCommandError", {
     description: "A failure raised while preparing or applying a file curation operation.",
   })
 ) {
+  /** Process exit code reported when this error reaches the runtime boundary. */
+  override readonly [Runtime.errorExitCode] = this.exitCode ?? 1;
+
   /**
    * Construct a file command error from an original cause and message.
    *
@@ -62,17 +71,19 @@ export class FilesCommandError extends TaggedErrorClass<FilesCommandError>($I`Fi
 /**
  * Convert a platform failure into a file command error.
  *
- * @param operation - Operation being attempted.
- * @param filePath - Path involved in the failed operation.
- * @param options - Wrapped platform failure details.
- * @returns File command error with operation context.
- * @example
+ * **Example** (Format rename platform error)
+ *
  * ```ts
  * import { formatPlatformError } from "@beep/repo-cli/commands/Files"
  *
  * const error = formatPlatformError("rename", "/tmp/source.txt", { cause: new Error("EACCES") })
  * console.log(error.message.includes("/tmp/source.txt")) // true
  * ```
+ *
+ * @param operation - Operation being attempted.
+ * @param filePath - Path involved in the failed operation.
+ * @param options - Wrapped platform failure details.
+ * @returns File command error with operation context.
  * @category error-handling
  * @since 0.0.0
  */
@@ -91,9 +102,8 @@ export const formatPlatformError: {
 /**
  * Fail when a rename operation selects an extensionless file.
  *
- * @param filePath - Path rejected because it has no suffix to preserve.
- * @returns Failed effect with a file command error.
- * @example
+ * **Example** (Fail on extensionless path)
+ *
  * ```ts
  * import { failOnExtensionlessFile } from "@beep/repo-cli/commands/Files"
  * import { Effect } from "effect"
@@ -101,6 +111,9 @@ export const formatPlatformError: {
  * const program = failOnExtensionlessFile("/tmp/README")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param filePath - Path rejected because it has no suffix to preserve.
+ * @returns Failed effect with a file command error.
  * @category error-handling
  * @since 0.0.0
  */

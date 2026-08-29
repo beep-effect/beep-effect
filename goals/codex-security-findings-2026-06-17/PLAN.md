@@ -29,7 +29,7 @@ Status: `active` - branch `security/6-17-2026`. Current phase: `P0 bootstrap` ->
   under the global `.beep/yeet/quality-lock`. Only triage (P2) and remediation
   (P5) fan out, capped at ~6-8 concurrent agents.
 - Preserve unrelated worktree changes; stage only reviewed intent.
-- Raw captures + the cookie file stay in `/tmp/codex-security-findings-2026-06-17`;
+- Raw captures + the cookie file stay in a machine-local scratch directory outside the repo;
   commit only sanitized markdown + (post-fix) patches.
 
 ## Verification Commands

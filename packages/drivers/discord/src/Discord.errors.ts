@@ -6,7 +6,7 @@
  */
 
 import { $DiscordId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { DiscordHttpStatus } from "./Discord.models.ts";
 import type * as O from "effect/Option";
@@ -15,7 +15,7 @@ const $I = $DiscordId.create("Discord.errors");
 
 const DiscordErrorReasonBase = LiteralKit(["request", "transport", "response-status", "response-decoding"]);
 // Shared driver codec-statics idiom; drivers are independent and have no in-family home — future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- driver-local error-reason codec statics avoid cross-driver coupling
 const withDiscordErrorReasonCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
   schema: Sch
 ): Sch & {
@@ -30,7 +30,8 @@ const withDiscordErrorReasonCodecStatics = <Sch extends S.Top & S.ConstraintDeco
 /**
  * Literal vocabulary for recoverable failures at the Discord REST boundary.
  *
- * @example
+ * **Example** (Check transport reason predicate)
+ *
  * ```ts
  * import { DiscordErrorReason } from "@beep/discord"
  *
@@ -51,15 +52,6 @@ export const DiscordErrorReason = DiscordErrorReasonBase.pipe(
 
 /**
  * {@inheritDoc DiscordErrorReason}
- *
- * @example
- * ```ts
- * import type { DiscordErrorReason } from "@beep/discord"
- *
- * const reason: DiscordErrorReason = "response-status"
- * console.log(reason)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -68,12 +60,14 @@ export type DiscordErrorReason = typeof DiscordErrorReason.Type;
 /**
  * Redacted technical failure raised by the Discord REST driver.
  *
- * @remarks
+ * **Details**
+ *
  * `DiscordError` keeps the recovery reason, HTTP method, path, status, and a
  * sanitized cause string while avoiding bot tokens and raw Discord response
  * bodies.
  *
- * @example
+ * **Example** (Create DiscordError with make)
+ *
  * ```ts
  * import { DiscordError } from "@beep/discord"
  * import * as O from "effect/Option"
@@ -92,7 +86,7 @@ export type DiscordErrorReason = typeof DiscordErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DiscordError extends TaggedErrorClass<DiscordError>($I`DiscordError`)(
+export class DiscordError extends S.TaggedError<DiscordError>($I`DiscordError`)(
   "DiscordError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
@@ -121,7 +115,7 @@ export class DiscordError extends TaggedErrorClass<DiscordError>($I`DiscordError
       })
     ),
   },
-  $I.annote("DiscordError", {
+  $I.annoteError<DiscordError>("DiscordError", {
     description: "Redacted technical failure raised by the Discord REST driver.",
   })
 ) {}

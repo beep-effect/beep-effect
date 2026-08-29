@@ -6,7 +6,7 @@
  */
 
 import * as S from "effect/Schema";
-import { LegalDocumentTaxonomy } from "./Taxonomy.model.js";
+import { LegalDocumentTaxonomy } from "./Taxonomy.model.ts";
 
 const SCHEME_IRI = "https://ns.beep.sh/documents/taxonomy/legal-document";
 const FOLIO_SOURCE_IRIS = [
@@ -25,7 +25,8 @@ const noFolioConcept = {
 /**
  * JSON-LD context for the repo-owned legal document taxonomy seed.
  *
- * @example
+ * **Example** (Log SKOS context value)
+ *
  * ```ts
  * import { legalDocumentTaxonomyJsonLdContext } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -45,7 +46,8 @@ export const legalDocumentTaxonomyJsonLdContext = {
 /**
  * Repo-owned deterministic legal document taxonomy seed.
  *
- * @example
+ * **Example** (Log first concept id)
+ *
  * ```ts
  * import { legalDocumentTaxonomy } from "@beep/documents-domain/values/Taxonomy"
  *
@@ -341,7 +343,8 @@ export const legalDocumentTaxonomy = S.decodeUnknownSync(LegalDocumentTaxonomy)(
 /**
  * JSON-LD projection of the deterministic legal document taxonomy seed.
  *
- * @example
+ * **Example** (Log JSON-LD type)
+ *
  * ```ts
  * import { legalDocumentTaxonomyJsonLd } from "@beep/documents-domain/values/Taxonomy"
  *

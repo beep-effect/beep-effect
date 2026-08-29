@@ -46,7 +46,8 @@ const osCallMessage = (property: string): string =>
  * Oxlint rule that blocks direct host platform and architecture reads outside
  * the shared host-process reference module.
  *
- * @example
+ * **Example** (Host runtime rule description)
+ *
  * ```ts
  * import { strictEqual } from "node:assert/strict"
  * import plugin from "@beep/lint-rules/oxlint"
@@ -55,6 +56,7 @@ const osCallMessage = (property: string): string =>
  *
  * strictEqual(description?.includes("host runtime"), true)
  * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -106,13 +108,13 @@ export default defineRule({
       O.exists(
         unwrapMemberExpression(node),
         (access) =>
-          isIdentifier(access.object, "globalThis") &&
+          isIdentifier("globalThis")(access.object) &&
           O.exists(getPropertyName(access.property), (p) => p === "process")
       );
 
     // A bare global `process` (skipped when locally shadowed) or the explicit `globalThis.process`.
     const isGlobalProcessObject = (node: MaybeNode): boolean => {
-      if (isIdentifier(unwrapExpression(node), "process")) return !isProcessShadowed();
+      if (isIdentifier("process")(unwrapExpression(node))) return !isProcessShadowed();
       return isGlobalThisProcess(node);
     };
 

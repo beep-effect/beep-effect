@@ -14,15 +14,16 @@ const $I = $LawPracticeDomainId.create("values/ParentheticalType/ParentheticalTy
 /**
  * Signal-word classification for explanatory parentheticals.
  *
+ * **Details**
+ *
  * Based on the leading gerund/verb form in the parenthetical text. Backed by a
  * {@link LiteralKit} so callers get the schema plus derived helpers:
  * `ParentheticalType.Enum` for typed literal access, `ParentheticalType.is` for
  * per-literal guards, and `ParentheticalType.Options` for the full literal
  * list.
  *
- * **Example**
+ * **Example** (Decode and guard types)
  *
- * @example
  * ```ts
  * import { ParentheticalType } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -63,9 +64,8 @@ export const ParentheticalType = LiteralKit([
  * supported parenthetical signal words, including
  * `"holding" | "finding" | "stating" | ...`.
  *
- * **Example**
+ * **Example** (Assign parenthetical signal type)
  *
- * @example
  * ```ts
  * import type { ParentheticalType } from "@beep/law-practice-domain"
  *

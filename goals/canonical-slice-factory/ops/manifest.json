@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "canonical-slice-factory",
     "title": "Canonical Slice Factory",
@@ -28,7 +28,7 @@
     "description": "Synthetic lifecycle task aggregate used to prove canonical slice creation and architecture factory operations."
   },
   "dbAdminReference": {
-    "sourceRepoPath": "~/YeeBois/projects/beep-effect4/packages/_internal/db-admin",
+    "sourceRepoPath": "<beep-effect4-checkout>/packages/_internal/db-admin",
     "purpose": "Capability reference for drizzle-kit migration aggregation, generated migration artifacts, admin DB access, and live repository integration tests.",
     "inspect": [
       "drizzle.config.ts",
@@ -138,5 +138,7 @@
     "grandfatheredNote": "Completion predates the 2026-06-30 PR-mergeable gate (lifecycle 'v1-closed'); not reopened."
   },
   "statusNote": "legacy status: v1-closed",
-  "mission": "Create the next architecture-automation packet for proving and systemizing canonical slice creation. This initiative supersedes the prior repo architecture automation packet: its retained lessons and `fixture-lab/Specimen` are reference material only, not the active contract."
+  "mission": "Create the next architecture-automation packet for proving and systemizing canonical slice creation. This initiative supersedes the prior repo architecture automation packet: its retained lessons and `fixture-lab/Specimen` are reference material only, not the active contract.",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/canonical-slice-factory"
 }

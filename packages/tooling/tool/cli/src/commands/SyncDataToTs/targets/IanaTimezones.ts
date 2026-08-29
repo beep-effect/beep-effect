@@ -6,20 +6,20 @@
  */
 
 import { A, dual, O, P, Str } from "@beep/utils";
-import { Effect, flow, HashSet, Order, pipe } from "effect";
+import { Effect, flow, Order, pipe } from "effect";
 import * as R from "effect/Record";
-import { Parser } from "tar";
+import { extractArchiveTextEntries } from "../internal/FreeLawProject.ts";
 import {
   fetchSource,
   formatJson,
   formatTsDocCommentValue,
   formatTsLiteral,
+  normalizeJson,
   outputFile,
   sourceMetadata,
-} from "../internal/Source.js";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
-import type { ReadEntry } from "tar";
-import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
+} from "../internal/Source.ts";
+import { SyncDataTargetProjection } from "../SyncDataToTs.schemas.ts";
+import type { SyncDataTarget, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
 
 const targetId = "iana-timezones" as const;
 const outputPath = "packages/foundation/primitive/data/src/generated/iana-timezones.ts" as const;
@@ -43,7 +43,7 @@ class IanaTimezoneEntry {
 
 type TzdbTextEntries = Readonly<Record<string, string>>;
 
-const TZDB_TEXT_FILES = HashSet.make(
+const TZDB_TEXT_FILES: ReadonlyArray<string> = [
   "africa",
   "antarctica",
   "asia",
@@ -55,63 +55,15 @@ const TZDB_TEXT_FILES = HashSet.make(
   "northamerica",
   "southamerica",
   "version",
-  "zone1970.tab"
-);
+  "zone1970.tab",
+];
 
 const extractTzdbTextEntries = (bytes: Uint8Array): Effect.Effect<TzdbTextEntries, SyncDataToTsError> =>
-  Effect.callback<TzdbTextEntries, SyncDataToTsError>((resume) => {
-    const entries = R.empty<string, string>();
-    let openEntries = 0;
-    let parserEnded = false;
-    let completed = false;
-    const parser = new Parser({
-      strict: true,
-      filter: (path) => HashSet.has(TZDB_TEXT_FILES, path),
-    });
-    const fail = (cause: unknown) => {
-      if (completed) {
-        return;
-      }
-      completed = true;
-      resume(
-        Effect.fail(
-          SyncDataToTsError.make({
-            message: "Failed to parse IANA tzdata archive.",
-            targetId,
-            cause,
-          })
-        )
-      );
-    };
-    const finish = () => {
-      if (completed || !parserEnded || openEntries > 0) {
-        return;
-      }
-      completed = true;
-      resume(Effect.succeed(entries));
-    };
-    const collectEntry = (entry: ReadEntry) => {
-      openEntries += 1;
-      const chunks = A.empty<Buffer>();
-
-      entry.on("data", (chunk: Buffer) => {
-        chunks.push(chunk);
-      });
-      entry.on("error", fail);
-      entry.on("end", () => {
-        entries[entry.path] = Buffer.concat(chunks).toString("utf8");
-        openEntries -= 1;
-        finish();
-      });
-    };
-
-    parser.on("entry", collectEntry);
-    parser.on("error", fail);
-    parser.on("end", () => {
-      parserEnded = true;
-      finish();
-    });
-    parser.end(Buffer.from(bytes));
+  extractArchiveTextEntries({
+    targetId,
+    bytes,
+    pathSuffixes: TZDB_TEXT_FILES,
+    errorMessage: "Failed to parse IANA tzdata archive.",
   });
 
 const extractPatternMatches: {
@@ -189,8 +141,9 @@ const renderIanaTimezonesModule = (
 /**
  * Stable source metadata for the official IANA tzdb data-only distribution.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb feed metadata)
+ *
+ * \`\`\`ts
  * import { TimezoneDataMetadata } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataMetadata.version === ${formatTsLiteral(version)})
@@ -208,8 +161,9 @@ export const TimezoneDataMetadata = ${formatTsLiteral({
 /**
  * IANA tzdb version.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb version)
+ *
+ * \`\`\`ts
  * import { TimezoneDataVersion } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataVersion === ${formatTsLiteral(version)})
@@ -223,8 +177,9 @@ export const TimezoneDataVersion = ${formatTsLiteral(version)} as const;
 /**
  * IANA tzdb data-only source URL.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb source URL)
+ *
+ * \`\`\`ts
  * import { TimezoneDataSourceUrl } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataSourceUrl.endsWith("tzdata-latest.tar.gz"))
@@ -238,8 +193,9 @@ export const TimezoneDataSourceUrl = ${formatTsLiteral(IANA_TZDATA_SOURCE_URL)} 
 /**
  * SHA-256 digest of the official source payload used for this generated module.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Read the tzdb source digest)
+ *
+ * \`\`\`ts
  * import { TimezoneDataSourceSha256 } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataSourceSha256.length === 64)
@@ -253,8 +209,9 @@ export const TimezoneDataSourceSha256 = ${formatTsLiteral(sha256)} as const;
 /**
  * Normalized IANA timezone entries.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Find a timezone entry by name)
+ *
+ * \`\`\`ts
  * import { TimezoneDataValues } from "@beep/data/generated/iana-timezones"
  *
  * const sample = TimezoneDataValues.find((entry) => entry.name === ${formatTsLiteral(sample.name)})
@@ -269,8 +226,9 @@ export const TimezoneDataValues = ${formatTsLiteral(values)} as const;
 /**
  * Normalized IANA timezone entries keyed by timezone identifier.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Look up a timezone entry by name)
+ *
+ * \`\`\`ts
  * import { TimezoneDataByName } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneDataByName[${formatTsLiteral(sample.name)}].name === ${formatTsLiteral(sample.name)})
@@ -284,8 +242,9 @@ export const TimezoneDataByName = ${formatTsLiteral(byName(values))} as const;
 /**
  * IANA timezone identifier literals.
  *
- * @example
- * \`\`\`typescript
+ * **Example** (Check a timezone identifier literal)
+ *
+ * \`\`\`ts
  * import { TimezoneNameValues } from "@beep/data/generated/iana-timezones"
  *
  * console.assert(TimezoneNameValues.includes(${formatTsLiteral(sample.name)}))
@@ -307,11 +266,11 @@ const acquireIanaTimezonesProjection = Effect.fn("SyncDataToTs.IanaTimezones.acq
     A.map((name) => new IanaTimezoneEntry(name))
   );
   const metadata = sourceMetadata(source, { version });
-  const canonical = {
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iana-timezones/v1",
     metadata,
     timezonesByName: byName(values),
-  } as const;
+  });
 
   return SyncDataTargetProjection.make({
     files: [

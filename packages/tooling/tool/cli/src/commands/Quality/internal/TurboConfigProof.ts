@@ -6,31 +6,37 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Order, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
-import { collectText } from "../../../internal/process/index.js";
+import { commandErrorFields } from "../../../internal/cli/CommandErrorFields.ts";
+import { runCaptured } from "../../../internal/process/index.ts";
+
+export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
+
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 
-const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "type-test", "docgen"] as const;
+const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;
 const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;
-const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "type-test", "docgen"];
+const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check", "test", "docgen"];
 
 /**
  * Turbo task names supported by the scoped-config proof harness.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality"
  * const task = TurboConfigProofTaskName.pick("lint")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -43,11 +49,13 @@ export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUE
 /**
  * Turbo task name supported by the scoped-config proof harness.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import type { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality"
  * const task: TurboConfigProofTaskName = "check"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -56,11 +64,13 @@ export type TurboConfigProofTaskName = typeof TurboConfigProofTaskName.Type;
 /**
  * Selector mode used for Turbo dry-run proof.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import { TurboConfigProofSelectorMode } from "@beep/repo-cli/test/Quality"
  * const mode = TurboConfigProofSelectorMode.pick("affected")
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -73,11 +83,13 @@ export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECT
 /**
  * Selector mode used for Turbo dry-run proof.
  *
- * @example
+ * **Example** (Prove Turbo configuration)
+ *
  * ```ts
  * import type { TurboConfigProofSelectorMode } from "@beep/repo-cli/test/Quality"
  * const mode: TurboConfigProofSelectorMode = "filter-range"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -89,15 +101,10 @@ export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.T
  * @category errors
  * @since 0.0.0
  */
-export class TurboConfigProofError extends TaggedErrorClass<TurboConfigProofError>($I`TurboConfigProofError`)(
+export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError>($I`TurboConfigProofError`)(
   "TurboConfigProofError",
-  {
-    message: S.String,
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-  },
-  $I.annote("TurboConfigProofError", {
+  commandErrorFields,
+  $I.annoteError<TurboConfigProofError>("TurboConfigProofError", {
     description: "Failure raised by the Turbo scoped-config proof harness.",
   })
 ) {
@@ -224,9 +231,9 @@ type CommandOutput = {
 };
 
 const UnknownStringRecord = S.Record(S.String, S.Unknown);
-const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonText = Unknown.decodeUnknownEffectFromJsonString;
 const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownStringRecord);
-const encodeReportJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeReportJson = Unknown.encodeUnknownEffectFromJsonString;
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 
 const emptySummary = () =>
@@ -375,7 +382,7 @@ export const summarizeTurboQueryAffectedOutput = Effect.fn("TurboConfigProof.sum
  * @category parsing
  * @since 0.0.0
  */
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- dry-run summary reduces a distinct Turbo JSON shape from affected-query output
 export const summarizeTurboDryRunOutput = Effect.fn("TurboConfigProof.summarizeTurboDryRunOutput")(function* (
   output: string
 ): Effect.fn.Return<TurboConfigProofCountSummary, TurboConfigProofError> {
@@ -411,19 +418,11 @@ const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CommandOutput, TurboConfigProofError, ChildProcessSpawner.ChildProcessSpawner> {
   const renderedCommand = commandText(command, args);
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd: repoRoot,
-        stdin: "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* collectText(handle.all);
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output };
-    })
-  ).pipe(
+  const result = yield* runCaptured({
+    command,
+    args,
+    cwd: repoRoot,
+  }).pipe(
     Effect.mapError(TurboConfigProofError.mapError(`Failed to spawn ${renderedCommand}.`, { command: renderedCommand }))
   );
 

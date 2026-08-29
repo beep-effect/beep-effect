@@ -24,12 +24,14 @@ import * as O from "effect/Option";
 /**
  * fast-check's own default run count, used when a site passes no inline value.
  *
- * @example
+ * **Example** (Default run count value)
+ *
  * ```ts
  * import { DEFAULT_FC_NUM_RUNS } from "@beep/fc-runs"
  *
  * console.log(DEFAULT_FC_NUM_RUNS) // 100
  * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -38,12 +40,13 @@ export const DEFAULT_FC_NUM_RUNS = 100;
 /**
  * Parse a raw `BEEP_FC_NUM_RUNS` value into a usable floor.
  *
+ * **Details**
+ *
  * Non-integers, non-positives, and absent values collapse to 0 so the
  * result can feed the environment side of a `max()` directly.
  *
- * @param raw - Raw environment value, if any.
- * @returns The parsed positive-integer floor, or 0.
- * @example
+ * **Example** (Parse floor from raw values)
+ *
  * ```ts
  * import { parseFcNumRunsFloor } from "@beep/fc-runs"
  *
@@ -51,6 +54,9 @@ export const DEFAULT_FC_NUM_RUNS = 100;
  * console.log(parseFcNumRunsFloor("2.5")) // 0
  * console.log(parseFcNumRunsFloor(undefined)) // 0
  * ```
+ *
+ * @param raw - Raw environment value, if any.
+ * @returns The parsed positive-integer floor, or 0.
  * @category testing
  * @since 0.0.0
  */
@@ -73,17 +79,21 @@ const fcNumRunsConfig = Config.option(Config.string("BEEP_FC_NUM_RUNS"));
 /**
  * Read the `BEEP_FC_NUM_RUNS` environment floor.
  *
+ * **Details**
+ *
  * Returns 0 when the variable is unset or not a positive integer, so it
  * can be used directly as the environment side of a `max()`.
  *
- * @returns The configured floor, or 0 when absent or invalid.
- * @example
+ * **Example** (Read environment floor value)
+ *
  * ```ts
  * import { envFcNumRunsFloor } from "@beep/fc-runs"
  *
  * const floor = envFcNumRunsFloor()
  * console.log(floor >= 0) // true
  * ```
+ *
+ * @returns The configured floor, or 0 when absent or invalid.
  * @category testing
  * @since 0.0.0
  */
@@ -94,20 +104,24 @@ export const envFcNumRunsFloor = (): number =>
  * Build fast-check run options whose effective `numRuns` is
  * `max(inline ?? DEFAULT_FC_NUM_RUNS, BEEP_FC_NUM_RUNS)`.
  *
+ * **Details**
+ *
  * Inline values are floors: the environment can raise the run count for
  * a deep sweep (the nightly property lane runs with
  * `BEEP_FC_NUM_RUNS=1000`), but can never lower a site below the value
  * it declares (one-round-loop fence 3).
  *
- * @param inline - The site's own run count; defaults to fast-check's 100.
- * @returns Options bag spreadable into `fc.assert` parameters.
- * @example
+ * **Example** (Build maxed numRuns options)
+ *
  * ```ts
  * import { fcRuns } from "@beep/fc-runs"
  *
  * const options = fcRuns(40)
  * console.log(options.numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
+ *
+ * @param inline - The site's own run count; defaults to fast-check's 100.
+ * @returns Options bag spreadable into `fc.assert` parameters.
  * @category testing
  * @since 0.0.0
  */

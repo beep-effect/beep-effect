@@ -54,3 +54,13 @@ marked reuse / extend / NET-NEW. -->
 
 <!-- exploration <-> goal / sibling links; this packet's own RESEARCH.md +
 DECISIONS.md; codex review(s); any upstream synthesis section. -->
+
+### 2026-07-14 paused-packet absorption
+
+- [`07-ip-law-ontology-survey-distillation.md`](./07-ip-law-ontology-survey-distillation.md)
+  condenses the seven-source P0 survey formerly held at
+  `goals/ip-law-knowledge-graph/history/outputs/p0-ontology-research.md`.
+- The full source is intentionally not copied. After packet deletion, recover
+  that path from the last repository-history revision before deletion.
+- Treat every upstream artifact mentioned by the distillation as
+  reference-only until its current URL, version, and license are re-verified.

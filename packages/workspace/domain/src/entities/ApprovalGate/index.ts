@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import ApprovalGate module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/entities/ApprovalGate"
  *
@@ -18,18 +19,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ApprovalGate.model.js";
-/**
- * Module exports.
- *
- * @example
- * ```ts
- * import * as Module from "@beep/workspace-domain/entities/ApprovalGate"
- *
- * console.log(Module)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ApprovalGate.values.js";
+export * from "./ApprovalGate.model.ts";

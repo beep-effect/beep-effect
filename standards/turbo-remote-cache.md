@@ -1,0 +1,111 @@
+# Turbo Remote Cache — Operator Guide
+
+The repo runs its own Turbo remote cache: S3 behind API Gateway with three
+Lambdas (`infra/src/CiTurboCache.ts`). The deployment is deliberately
+asymmetric — either token may **read**, only the trusted token may **write**,
+and the writer is a separate function behind a signed invocation.
+
+Workstations and agent checkouts are **readers only**. No local checkout ever
+holds the trusted write token; remote writes belong to the main-push CI jobs,
+which run full task graphs on every merge and warm the cache for everyone else.
+
+## The per-checkout contract
+
+Remote reads require the whole quad, in one checkout's `.env`:
+
+```dotenv
+TURBO_API=https://<id>.execute-api.<region>.amazonaws.com
+TURBO_TOKEN=op://<vault>/<item>/<field>
+TURBO_TEAM=<team-slug>
+TURBO_CACHE=local:rw,remote:r
+```
+
+`TURBO_TOKEN` is a **1Password secret reference to the read-only token**, not a
+value. It stays a reference on disk; `op run --env-file=.env` resolves it when
+the lane spawns. The read-only token itself lives in the SSM parameter the
+`CiTurboCache` stack is configured with
+(`readOnlyTokenSsmParameterArn` in `infra/ci-runners/Pulumi.production.yaml`);
+mirror it into 1Password once and reference it from every checkout. `TURBO_API`
+and `TURBO_TEAM` are the same values CI uses (`gh variable list`).
+
+## Enabling one checkout
+
+```sh
+TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
+  bash scripts/enable-turbo-remote-reads.sh
+```
+
+Run it from the checkout you want to enable, or pass the checkout path as the
+first argument. It is idempotent: names already present in `.env` are reported
+and left alone. It refuses a `TURBO_TOKEN_REF` that is not an `op://`
+reference, so a resolved secret cannot be written to disk by accident.
+
+Verify without executing a lane:
+
+```sh
+bun run beep quality check --filter=@beep/types --dry=json
+```
+
+The CLI prints the exact turbo command before spawning it. A configured
+checkout shows `--cache=local:rw,remote:r`; anything else shows
+`--cache=local:rw`.
+
+Exported shell variables work too — the CLI reads the ambient environment, not
+only `.env` — but the per-checkout `.env` is the sanctioned path because it
+keeps the token a 1Password reference instead of a live value in every shell.
+
+## How the CLI decides (fail closed)
+
+The decision is one pure resolver, `resolveTurboCachePlan`
+(`packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`), with the matrix
+covered by `packages/tooling/tool/cli/test/turbo-cache.test.ts`:
+
+| Situation | Injected flag |
+| --- | --- |
+| `CI=true` | none — the workflow owns the posture |
+| Caller passed `--cache=…`, `--force`, `--no-cache`, `--remote-only`, `--remote-cache-read-only` | none — the caller owns it |
+| Complete quad, `TURBO_CACHE=local:rw,remote:r` | `--cache=local:rw,remote:r` |
+| Any quad member missing or blank | `--cache=local:rw` |
+| Quad complete, any other posture (including `remote:rw`) | `--cache=local:rw` |
+
+A remote-read plan whose values are still `op://` references makes the lane run
+under `op run`. If the 1Password session is missing, expired, or denied at run
+time, the lane degrades to `--cache=local:rw` and keeps going — it never fails
+for want of a cache. The same fail-closed rule applies in the environment: on a
+*direct* turbo spawn, scrubbing an unresolved credential also pins
+`TURBO_CACHE` to local-only, so turbo is never asked to read a remote cache it
+has no usable token for.
+
+That scrub deliberately does **not** apply to an `op run`-wrapped spawn.
+`op run` resolves `op://` references out of the environment it is handed, not
+only out of its `--env-file`, so scrubbing them there would delete the very
+references the wrapper exists to resolve and leave the wrapped turbo with no
+credential at all.
+
+Steps that carry their own environment (the hosted coverage identity, a
+testcontainer connection URI) are never wrapped in `op run`, because
+`--env-file=.env` would overlay the checkout's dotenv on top of them and clobber
+those values. Those lanes are `cache: false` in `turbo.json`, so they lose no
+remote hits — and because the degradation rule applies to *every* unwrapped
+spawn, they never receive a remote posture they could not use anyway.
+
+## Rules
+
+- Never put the trusted write token on a workstation. A read token that leaks
+  permits downloads, not cache poisoning; a write token permits poisoning every
+  checkout and every CI job.
+- Never commit a resolved secret. `op://` references are references — keep them
+  that way in `.env`, scripts, and docs.
+- `TURBO_CACHE=local:rw,remote:rw` is refused locally by design, not by
+  accident. If you think a workstation needs to write, that is the `beep cache
+  warm` conversation (ship-velocity C3), not a `.env` edit.
+- Yeet still forces dependency-sensitive proof steps with `TURBO_FORCE=true`
+  when `bun.lock` differs from base. Those runs cannot read from any cache;
+  that is a deliberate false-green control, not a misconfiguration.
+
+## Related
+
+- `goals/ship-velocity/research/c4-turbo-cache.md` — the audit this implements.
+- `infra/lambda/turbo-cache/README.md` — token/method matrix on the server.
+- `.github/workflows/check.yml` — CI's own posture (push jobs write, PR jobs
+  are local-only pending ship-velocity C2).

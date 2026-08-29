@@ -20,12 +20,13 @@ import {
   SyncItemRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import type { SyncItemSeed } from "@beep/documents-use-cases/entities/SyncItem/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -35,7 +36,7 @@ const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
 /**
  * Build a full SyncItem entity from a creation seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -45,7 +46,7 @@ const syncItemFromSeed = (id: number, seed: SyncItemSeed): DomainSyncItem.SyncIt
     contentSizeBytes: O.getOrNull(seed.contentSizeBytes),
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncItem.SyncItemId.entityType,
+    entityType: DocumentsIdentity.SyncItemId.entityType,
     id,
     itemKind: seed.itemKind,
     lastError: O.getOrNull(seed.lastError),
@@ -93,7 +94,8 @@ const duplicatePathConflict = (seed: SyncItemSeed): SyncItemRepositoryConflict =
 /**
  * Build the in-memory SyncItem repository used by deterministic sync tests.
  *
- * @example
+ * **Example** (In-memory repository import)
+ *
  * ```ts
  * import { makeInMemorySyncItemRepository } from "@beep/documents-server/entities/SyncItem"
  *
@@ -103,13 +105,12 @@ const duplicatePathConflict = (seed: SyncItemSeed): SyncItemRepositoryConflict =
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for create, update, find, and list repository
  * calls.
- *
  * @category repositories
  * @since 0.0.0
  */
 export const makeInMemorySyncItemRepository = Effect.fn("Documents.SyncItemRepository.makeInMemory")(function* () {
   const { counter, snapshot, store } = yield* makeEntityStore(
-    HashMap.empty<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>()
+    HashMap.empty<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>()
   );
 
   return SyncItemRepository.of({
@@ -165,7 +166,8 @@ const repositoryUnavailable =
 /**
  * Build a Drizzle-backed SyncItem repository used by live persistence tests.
  *
- * @example
+ * **Example** (Drizzle repository import)
+ *
  * ```ts
  * import { makeDrizzleSyncItemRepository } from "@beep/documents-server/entities/SyncItem"
  *
@@ -175,7 +177,6 @@ const repositoryUnavailable =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncItem table and redacts driver failures
  * to `SyncItemRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

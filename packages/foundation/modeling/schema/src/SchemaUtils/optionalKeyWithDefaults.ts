@@ -11,21 +11,23 @@ import * as S from "effect/Schema";
 /**
  * Creates an optional encoded key that decodes to a required value.
  *
- * @remarks
+ * **Details**
+ *
  * This is a v4 replacement for
  * `S.optionalWith(schema, { exact: true, default: () => value })`. Missing
  * keys decode to `defaultValue`, but encoding still requires a decoded value
  * because the encoded side uses `SchemaGetter.required()`.
  *
- * @example
- * ```ts
+ * **Example** (Defaulting a missing optional key)
+ *
+ * ```ts import.meta.vitest name="Defaulting a missing optional key"
  * import * as S from "effect/Schema"
  * import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults"
  *
  * const Settings = S.Struct({ label: optionalKeyWithDefault(S.String, "draft") })
  * const settings = S.decodeUnknownSync(Settings)({})
  *
- * console.log(settings.label) // "draft"
+ * settings.label // => "draft"
  * ```
  *
  * @param schema - Schema for the required decoded value.

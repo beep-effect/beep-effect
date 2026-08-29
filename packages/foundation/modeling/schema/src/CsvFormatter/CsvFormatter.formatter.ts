@@ -95,7 +95,8 @@ const formatCsvHeaderRowEffect = Effect.fn("CsvFormatter.formatCsvHeaderRowEffec
 /**
  * Format a CSV header row.
  *
- * @example
+ * **Example** (Format header row)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"
@@ -130,7 +131,8 @@ const formatCsvDataRowEffect = Effect.fn("CsvFormatter.formatCsvDataRowEffect")(
 /**
  * Format a CSV data row.
  *
- * @example
+ * **Example** (Format data row)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"
@@ -167,7 +169,8 @@ const formatCsvDocumentEffect = Effect.fn("CsvFormatter.formatCsvDocumentEffect"
 /**
  * Format a whole CSV document.
  *
- * @example
+ * **Example** (Format full CSV document)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { CsvCodecOptions } from "@beep/schema/CsvCodecOptions"

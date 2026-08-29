@@ -9,25 +9,39 @@ import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
-import { SchemaFirstInventoryEntry } from "../Lint.schemas.js";
-import type { TypeElementTypes } from "ts-morph";
+import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
+import type { ClassDeclaration, InterfaceDeclaration, Type, TypeAliasDeclaration, TypeElementTypes } from "ts-morph";
 
 const IDENTIFIER_PROPERTY_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
-const FUNCTION_LIKE_TEXT_PATTERN = /=>|\bEffect\.Effect</;
-const NON_SCHEMA_SIGNAL_PATTERN =
-  /\bEffect\.Success<|\bLayer\.Layer<|\bAbortSignal\b|\bAbortController\b|\bUint8Array\b|\bEventJournal\.Entry\b|\bZod\b|\bz\.|\bAtom\.|\bNodeJS\.(?:Readable|Writable)Stream\b|\bStartedTestContainer\b|\bpulumi\.Input<|\bWinkMethods\b|\b(?:Any)?OperationResult\b/;
-const SCHEMA_FIELDS_CALL_PATTERN = /\bS\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)\b/;
-const SCHEMA_CLASS_FIELDS_CALL_PATTERN = /\bS\.(?:Class|TaggedClass|ErrorClass|TaggedErrorClass)\b/;
+const RUNTIME_HANDLE_TYPE_PATTERN =
+  /^(?:(?:import\([^)]*\)|globalThis)\.)?(?:Layer\.Layer|Effect\.Effect|AbortSignal|AbortController|Zod[A-Za-z0-9_$]*|z\.[A-Za-z0-9_$]+|Atom\.[A-Za-z0-9_$]+|MutableHashMap\.[A-Za-z0-9_$]+|Queue\.[A-Za-z0-9_$]+|Ref\.[A-Za-z0-9_$]+|Stream\.[A-Za-z0-9_$]+|Stdio\.Stdio|(?:RpcClient|RpcServer)\.Protocol|NodeJS\.(?:Readable|Writable)Stream|StartedTestContainer|pulumi\.Input|WinkMethods|React(?:\.[A-Za-z0-9_$]+)?|ReactNode|JSX\.Element|d3\.Simulation(?:Link|Node)Datum|AstNode|MaybeNode|HTML[A-Za-z]*Element|WeakMap|WeakSet)(?:<.*>)?(?:\[[^\]]+\])?(?: \| (?:null|undefined))*$/;
+const SCHEMA_REPRESENTABLE_CONTAINER_PATTERN =
+  /^(?:(?:import\([^)]*\)|globalThis)\.)?(?:HashMap\.HashMap|HashSet\.HashSet|(?:O|Option)\.Option|(?:Readonly)?(?:Map|Set))(?:<|\b)/;
+const NULLISH_DATA_TYPE_PATTERN = /^(?:null|undefined)$/;
+const PRIMITIVE_DATA_TYPE_PATTERN =
+  /^(?:any|bigint|boolean|never|null|number|string|symbol|undefined|unknown|void)(?:\b|$)/;
+const RENDER_CONTRACT_PATTERN =
+  /\bReact(?:\.|\b)|\bReactNode\b|\bJSX\.Element\b|\b[A-Za-z0-9_$]*(?:Component|Renderer)\b/;
+const SCHEMA_VALUE_PATTERN =
+  /\b(?:S|Schema)\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|declare|decodeTo|transform)\b|\b(?:Field|LiteralKit|MappedLiteralKit|ProductEntity\.make)\s*\(|\b[A-Za-z_$][\w$]*Entity\.Entity\b/;
+const SCHEMA_FIELDS_CALL_PATTERN =
+  /\bS\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)\b|\b[A-Za-z_$][\w$]*Entity\.Entity\b/;
+const SCHEMA_CLASS_FIELDS_CALL_PATTERN =
+  /\bS\.(?:Class|TaggedClass|Error|TaggedError)\b|\b[A-Za-z_$][\w$]*Entity\.Entity\b/;
 const NUMERIC_DOMAIN_TOKENS = ["timeout", "count", "size", "rate", "limit", "ms", "seconds"] as const;
 const STATIC_API_SCHEMA_SIGNAL_PATTERN = /\b(?:S\.(?:TaggedUnion|toTaggedUnion)|LiteralKit|MappedLiteralKit)\s*\(/;
 const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
-  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
+  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|[A-Za-z_$][\w$]*Entity\.Entity|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
-  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass|toEquivalence|overrideToEquivalence)|SchemaUtils\.toEquivalence)\b/;
+  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|toEquivalence|overrideToEquivalence)|[A-Za-z_$][\w$]*Entity\.Entity|SchemaUtils\.toEquivalence)\b/;
+const TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:(?:S|Schema)\.)?TaggedError\b/;
+const NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:S|Schema)\.TaggedError\b/;
 const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;
 const NORMALIZATION_METHOD_NAMES = ["trim", "toUpperCase", "toLowerCase"] as const;
 const NORMALIZATION_CALL_SIGNAL_PATTERN = /\.(?:trim|toUpperCase|toLowerCase)\(/;
+const SCHEMA_BOUNDARY_CALL_PATTERN = /\b(?:S|Schema)\.(?:decode|encode|validate|asserts|is)[A-Za-z0-9_$]*\s*\(/;
 const NULL_UNDEFINED_RETURN_PATTERN = /\bnull\b|\bundefined\b/;
+const NULL_SAFE_RETURN_WRAPPER_PATTERN = /^(?:Effect\.Effect|(?:O|Option)\.Option|Result\.Result|Exit\.Exit)<.*>$/;
 const GETSOMES_CALL_SIGNAL_PATTERN = /\bgetSomes\s*\(/;
 const GETSOMES_OBJECT_NAMES = ["R", "Record"] as const;
 const SCHEMA_DERIVED_EQUIVALENCE_PATTERN =
@@ -65,47 +79,233 @@ const isFunctionLikeMember = (member: Node): boolean => {
   return false;
 };
 
-const isTypeNodeUnsafe = (typeText: string): boolean =>
-  FUNCTION_LIKE_TEXT_PATTERN.test(typeText) || NON_SCHEMA_SIGNAL_PATTERN.test(typeText);
-
-const typeLiteralMembersUnsafe = (members: ReadonlyArray<Node>): boolean =>
-  A.some(members, (member) => {
-    if (isFunctionLikeMember(member)) {
-      return true;
-    }
-    if (Node.isPropertySignature(member)) {
-      const typeText = member.getTypeNode()?.getText() ?? "";
-      return isTypeNodeUnsafe(typeText);
-    }
-    return false;
-  });
-
-const detectInterfaceReason = (node: import("ts-morph").InterfaceDeclaration): O.Option<string> => {
-  if (node.getTypeParameters().length > 0) {
-    return O.some("Generic interface requires manual modeling and is tracked as an exception.");
-  }
-  if (node.getExtends().length > 0) {
-    return O.some("Derived interface with extends clauses is tracked as an exception.");
-  }
-  if (typeLiteralMembersUnsafe(node.getMembers())) {
-    return O.some("Interface contains non-schema signals such as function members or runtime handles.");
-  }
-  return O.none();
+const nodesShareSymbolDeclaration = (left: Node, right: Node): boolean => {
+  const rightDeclarations = right.getSymbol()?.getDeclarations() ?? [];
+  return (
+    rightDeclarations.length > 0 &&
+    A.some(left.getSymbol()?.getDeclarations() ?? [], (leftDeclaration) => rightDeclarations.includes(leftDeclaration))
+  );
 };
 
-const detectTypeAliasReason = (node: import("ts-morph").TypeAliasDeclaration): O.Option<string> => {
-  if (node.getTypeParameters().length > 0) {
-    return O.some("Generic type alias requires manual modeling and is tracked as an exception.");
+const isSameExportedDeclaration = (node: Node, declaration: Node): boolean =>
+  declaration.getSourceFile() === node.getSourceFile() &&
+  (declaration === node || nodesShareSymbolDeclaration(declaration, node));
+
+const declarationSymbol = (node: Node, declaredName: string | undefined): string =>
+  declaredName !== undefined && Str.isNonEmpty(declaredName)
+    ? declaredName
+    : `default@${node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line}`;
+
+const isEffectivelyExported = (node: Node, name: string): boolean => {
+  const exportedDeclarations = node.getSourceFile().getExportedDeclarations();
+  if (A.some(exportedDeclarations.get(name) ?? [], (declaration) => isSameExportedDeclaration(node, declaration))) {
+    return true;
+  }
+  return A.some(A.fromIterable(exportedDeclarations.values()), (declarations) =>
+    A.some(declarations, (declaration) => isSameExportedDeclaration(node, declaration))
+  );
+};
+
+const isDataLikeMember = (member: Node): boolean => {
+  if (isFunctionLikeMember(member)) {
+    return false;
+  }
+  const typeNodeText = Node.isPropertySignature(member)
+    ? member.getTypeNode()?.getText()
+    : Node.isIndexSignatureDeclaration(member)
+      ? member.getReturnTypeNode()?.getText()
+      : undefined;
+  if (typeNodeText !== undefined && RUNTIME_HANDLE_TYPE_PATTERN.test(typeNodeText)) {
+    return false;
+  }
+  return Node.isPropertySignature(member) || Node.isIndexSignatureDeclaration(member);
+};
+
+const typeLiteralHasDataMember = (members: ReadonlyArray<Node>): boolean =>
+  A.some(members, (member) => isDataLikeMember(member));
+
+const dataLikeCollectionDecision = (type: Type, location: Node, depth: number): O.Option<boolean> => {
+  if (type.isArray() || type.isReadonlyArray()) {
+    const elementType = type.getArrayElementType();
+    return O.some(elementType !== undefined && isDataLikeType(elementType, location, depth + 1));
+  }
+  if (type.isTuple()) {
+    const elementTypes = type.getTupleElements();
+    return O.some(
+      elementTypes.length === 0 ||
+        A.every(elementTypes, (elementType) => isDataLikeType(elementType, location, depth + 1))
+    );
+  }
+
+  const typeText = type.getText(location);
+  if (!SCHEMA_REPRESENTABLE_CONTAINER_PATTERN.test(typeText)) {
+    return O.none();
+  }
+  const typeArguments = [...type.getAliasTypeArguments(), ...type.getTypeArguments()];
+  return O.some(
+    typeArguments.length > 0 &&
+      A.every(typeArguments, (typeArgument) => isDataLikeType(typeArgument, location, depth + 1))
+  );
+};
+
+const dataLikeCompositionDecision = (type: Type, location: Node, depth: number): O.Option<boolean> => {
+  if (type.isUnion()) {
+    const substantiveMembers = A.filter(
+      type.getUnionTypes(),
+      (member) => !NULLISH_DATA_TYPE_PATTERN.test(member.getText(location))
+    );
+    return O.some(
+      substantiveMembers.length === 0 ||
+        A.some(substantiveMembers, (member) => isDataLikeType(member, location, depth + 1))
+    );
+  }
+  return type.isIntersection()
+    ? O.some(A.some(type.getIntersectionTypes(), (member) => isDataLikeType(member, location, depth + 1)))
+    : O.none();
+};
+
+const dataLikeRuntimeDecision = (type: Type, location: Node): O.Option<boolean> =>
+  RUNTIME_HANDLE_TYPE_PATTERN.test(type.getText(location)) ? O.some(false) : O.none();
+
+const dataLikeTerminalDecision = (type: Type, location: Node, depth: number): O.Option<boolean> => {
+  const typeText = type.getText(location);
+  if (
+    typeText === "Uint8Array" ||
+    PRIMITIVE_DATA_TYPE_PATTERN.test(typeText) ||
+    type.isBooleanLiteral() ||
+    type.isStringLiteral() ||
+    type.isNumberLiteral()
+  ) {
+    return O.some(true);
+  }
+  if (type.getCallSignatures().length > 0 || type.getConstructSignatures().length > 0) {
+    return O.some(false);
+  }
+  return depth >= 4 ? O.some(true) : O.none();
+};
+
+const isDataLikeObjectType = (type: Type, location: Node, depth: number): boolean => {
+  const indexTypes = [type.getStringIndexType(), type.getNumberIndexType()];
+  if (A.some(indexTypes, (indexType) => indexType !== undefined)) {
+    return A.every(
+      indexTypes,
+      (indexType) => indexType === undefined || isDataLikeType(indexType, location, depth + 1)
+    );
+  }
+
+  const properties = type.getProperties();
+  if (properties.length === 0) {
+    return true;
+  }
+  return A.some(properties, (property) => isDataLikeProperty(property, location, depth + 1));
+};
+
+const isDataLikeType = (type: Type, location: Node, depth = 0): boolean =>
+  pipe(
+    O.firstSomeOf([
+      dataLikeRuntimeDecision(type, location),
+      dataLikeCollectionDecision(type, location, depth),
+      dataLikeCompositionDecision(type, location, depth),
+      dataLikeTerminalDecision(type, location, depth),
+    ]),
+    O.getOrElse(() => isDataLikeObjectType(type, location, depth))
+  );
+
+const isDataLikeProperty = (property: import("ts-morph").Symbol, location: Node, depth = 0): boolean => {
+  const declarations = property.getDeclarations();
+  const signatureDeclarations = A.filter(
+    declarations,
+    (declaration) =>
+      Node.isPropertySignature(declaration) ||
+      Node.isMethodSignature(declaration) ||
+      Node.isIndexSignatureDeclaration(declaration)
+  );
+  if (signatureDeclarations.length > 0) {
+    return A.some(
+      signatureDeclarations,
+      (declaration) =>
+        isDataLikeMember(declaration) && isDataLikeType(property.getTypeAtLocation(declaration), declaration, depth + 1)
+    );
+  }
+  return isDataLikeType(property.getTypeAtLocation(location), location, depth + 1);
+};
+
+const hasSameNameSchemaCompanion = (node: InterfaceDeclaration | TypeAliasDeclaration): boolean => {
+  const sourceFile = node.getSourceFile();
+  const name = node.getName();
+  const sameNameSchemaValue = A.some(sourceFile.getVariableDeclarations(), (declaration) => {
+    if (declaration.getName() !== name || !isEffectivelyExported(declaration, name)) {
+      return false;
+    }
+    return SCHEMA_VALUE_PATTERN.test(declaration.getInitializer()?.getText() ?? "");
+  });
+  if (sameNameSchemaValue) {
+    return true;
+  }
+
+  return A.some(sourceFile.getClasses(), (declaration) => {
+    if (declaration.getName() !== name || !isEffectivelyExported(declaration, name)) {
+      return false;
+    }
+    const heritage = declaration.getExtends();
+    if (heritage === undefined) {
+      return false;
+    }
+    if (SCHEMA_VALUE_PATTERN.test(heritage.getText())) {
+      return true;
+    }
+    return A.some(
+      heritage.getExpression().getSymbol()?.getDeclarations() ?? [],
+      (baseDeclaration) =>
+        Node.isVariableDeclaration(baseDeclaration) &&
+        SCHEMA_VALUE_PATTERN.test(baseDeclaration.getInitializer()?.getText() ?? "")
+    );
+  });
+};
+
+const isRenderContract = (node: InterfaceDeclaration | TypeAliasDeclaration): boolean => {
+  const sourceFile = node.getSourceFile();
+  return (
+    RENDER_CONTRACT_PATTERN.test(node.getText()) ||
+    (Str.endsWith("Props")(node.getName()) && /(?:from\s+["']react["']|react)/i.test(sourceFile.getFullText()))
+  );
+};
+
+const isInterfaceSchemaFirstCandidate = (node: InterfaceDeclaration): boolean => {
+  if (node.getTypeParameters().length > 0 || isRenderContract(node) || hasSameNameSchemaCompanion(node)) {
+    return false;
+  }
+
+  if (
+    A.some(
+      node.getProperties(),
+      (property) => isDataLikeMember(property) && isDataLikeType(property.getType(), property)
+    )
+  ) {
+    return true;
+  }
+
+  return (
+    A.some(
+      node.getIndexSignatures(),
+      (signature) => isDataLikeMember(signature) && isDataLikeType(signature.getReturnType(), signature)
+    ) || A.some(node.getExtends(), (heritage) => isDataLikeType(heritage.getType(), heritage))
+  );
+};
+
+const isTypeAliasSchemaFirstCandidate = (node: TypeAliasDeclaration): boolean => {
+  if (node.getTypeParameters().length > 0 || isRenderContract(node) || hasSameNameSchemaCompanion(node)) {
+    return false;
   }
   const typeNode = node.getTypeNode();
   if (typeNode === undefined || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
-    return O.some("Non-literal type alias is out of scope for automatic schema-first enforcement.");
+    return false;
   }
   const members = Node.isTypeLiteral(typeNode) ? typeNode.getMembers() : A.empty<TypeElementTypes>();
-  if (typeLiteralMembersUnsafe(members)) {
-    return O.some("Type alias contains non-schema signals such as function members or runtime handles.");
+  if (!typeLiteralHasDataMember(members)) {
+    return false;
   }
-  return O.none();
+  return A.some(node.getType().getProperties(), (property) => isDataLikeProperty(property, node));
 };
 
 const isFunctionLocalNode = (node: Node): boolean =>
@@ -116,14 +316,6 @@ const isFunctionLocalNode = (node: Node): boolean =>
       Node.isArrowFunction(ancestor) ||
       Node.isMethodDeclaration(ancestor)
   ) !== undefined;
-
-const nodesShareSymbolDeclaration = (left: Node, right: Node): boolean => {
-  const rightDeclarations = right.getSymbol()?.getDeclarations() ?? [];
-  return (
-    rightDeclarations.length > 0 &&
-    A.some(left.getSymbol()?.getDeclarations() ?? [], (leftDeclaration) => rightDeclarations.includes(leftDeclaration))
-  );
-};
 
 const isStructFieldsInputForSchemaClass = (callExpression: import("ts-morph").CallExpression): boolean => {
   const variableDeclaration = callExpression.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
@@ -141,35 +333,54 @@ const isStructFieldsInputForSchemaClass = (callExpression: import("ts-morph").Ca
   });
 };
 
-const detectStructReason = (callExpression: import("ts-morph").CallExpression): O.Option<string> => {
+const hasPlainIdentifierStructFields = (callExpression: import("ts-morph").CallExpression): boolean => {
   const firstArgument = callExpression.getArguments()[0];
   if (firstArgument === undefined || !Node.isObjectLiteralExpression(firstArgument)) {
-    return O.some("S.Struct usage without a plain object literal stays tracked as an exception.");
+    return false;
   }
-  const invalidKeys = A.some(firstArgument.getProperties(), (property) => {
+  return A.every(firstArgument.getProperties(), (property) => {
     if (Node.isSpreadAssignment(property)) {
-      return true;
+      return false;
     }
     const nameNode = "getNameNode" in property ? property.getNameNode() : undefined;
     if (nameNode === undefined) {
-      return true;
+      return false;
     }
     const propertyName = Str.replace(/^["']|["']$/g, "")(nameNode.getText());
-    return !IDENTIFIER_PROPERTY_PATTERN.test(propertyName);
+    return IDENTIFIER_PROPERTY_PATTERN.test(propertyName);
   });
-  if (invalidKeys) {
-    return O.some("S.Struct with non-identifier or spread keys stays tracked as an exception.");
+};
+
+const isDirectDefaultStructExport = (callExpression: import("ts-morph").CallExpression): boolean => {
+  const exportAssignment = callExpression.getFirstAncestorByKind(SyntaxKind.ExportAssignment);
+  return (
+    exportAssignment !== undefined &&
+    !exportAssignment.isExportEquals() &&
+    exportAssignment.getExpression() === callExpression
+  );
+};
+
+const isTopLevelExportedStructVariable = (callExpression: import("ts-morph").CallExpression): boolean => {
+  const variableDeclaration = callExpression.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
+  return (
+    variableDeclaration !== undefined &&
+    isEffectivelyExported(variableDeclaration, variableDeclaration.getName()) &&
+    variableDeclaration.getVariableStatement()?.getParent() === callExpression.getSourceFile()
+  );
+};
+
+const isStructSchemaFirstCandidate = (callExpression: import("ts-morph").CallExpression): boolean => {
+  if (!hasPlainIdentifierStructFields(callExpression)) {
+    return false;
   }
-  if (callExpression.getFirstAncestorByKind(SyntaxKind.PropertyAssignment) !== undefined) {
-    return O.some("Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass.");
+  if (
+    callExpression.getFirstAncestorByKind(SyntaxKind.PropertyAssignment) !== undefined ||
+    isStructFieldsInputForSchemaClass(callExpression) ||
+    isFunctionLocalNode(callExpression)
+  ) {
+    return false;
   }
-  if (isStructFieldsInputForSchemaClass(callExpression)) {
-    return O.some("Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model.");
-  }
-  if (isFunctionLocalNode(callExpression)) {
-    return O.some("Function-local S.Struct wrappers used for transient decode envelopes stay tracked as exceptions.");
-  }
-  return O.none();
+  return isDirectDefaultStructExport(callExpression) || isTopLevelExportedStructVariable(callExpression);
 };
 
 const inferStructSymbol = (callExpression: import("ts-morph").CallExpression): string =>
@@ -178,7 +389,10 @@ const inferStructSymbol = (callExpression: import("ts-morph").CallExpression): s
     O.map((declaration) => declaration.getName()),
     O.getOrElse(() => {
       const line = callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line;
-      return `anonymous@${line}`;
+      const exportAssignment = callExpression.getFirstAncestorByKind(SyntaxKind.ExportAssignment);
+      return exportAssignment !== undefined && !exportAssignment.isExportEquals()
+        ? `default@${line}`
+        : `anonymous@${line}`;
     })
   );
 
@@ -398,7 +612,7 @@ const boundaryCodecEntryFromJsonParse = (
     line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
     owner,
     reason:
-      "Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned.",
+      "Direct JSON.parse boundary should use S.fromJsonString(schema) so parsing and validation stay schema-owned.",
   });
 
 /**
@@ -412,22 +626,29 @@ export type FunctionLikeDeclarationNode = import("ts-morph").FunctionDeclaration
 
 const sourceExportedArrowFunctions = (
   sourceFile: import("ts-morph").SourceFile
-): ReadonlyArray<import("ts-morph").ArrowFunction> =>
-  pipe(
-    sourceFile.getVariableStatements(),
-    A.filter((statement) => statement.isExported()),
-    A.flatMap((statement) => statement.getDeclarations()),
+): ReadonlyArray<import("ts-morph").ArrowFunction> => {
+  const variableArrows = pipe(
+    sourceFile.getVariableDeclarations(),
+    A.filter((declaration) => isEffectivelyExported(declaration, declaration.getName())),
     A.map((declaration) => O.fromNullishOr(declaration.getInitializer())),
     A.map(O.filter(Node.isArrowFunction)),
     A.getSomes
   );
+  const defaultArrows = pipe(
+    sourceFile.getExportAssignments(),
+    A.filter((assignment) => !assignment.isExportEquals()),
+    A.map((assignment) => assignment.getExpression()),
+    A.filter(Node.isArrowFunction)
+  );
+  return [...variableArrows, ...defaultArrows];
+};
 
 const functionLikeSymbolName = (node: FunctionLikeDeclarationNode): string => {
   if (Node.isFunctionDeclaration(node)) {
-    return node.getName() ?? "anonymous-function";
+    return declarationSymbol(node, node.getName());
   }
   const variableDeclaration = node.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
-  return variableDeclaration?.getName() ?? "anonymous-arrow";
+  return declarationSymbol(node, variableDeclaration?.getName());
 };
 
 const isInlineTypeLiteralNode = (typeNode: Node | undefined): boolean =>
@@ -445,11 +666,8 @@ const isFnSchemaEligibleFilePath = (filePath: string): boolean => !Str.endsWith(
  * contract is an inline object type literal rather than a schema, within a
  * schema-modeled file. Generic declarations are conservatively skipped.
  *
- * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when an inline object contract is found, `O.none` otherwise.
- * @example
+ * **Example** (Detect inline object contract)
+ *
  * ```ts
  * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -461,6 +679,11 @@ const isFnSchemaEligibleFilePath = (filePath: string): boolean => !Str.endsWith(
  * const entry = fnSchemaEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("updateWidget")
  * ```
+ *
+ * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when an inline object contract is found, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -503,11 +726,8 @@ const fnSchemaEntryFromFunctionLike = (
  * inspected; inferred returns are out of scope. Generic declarations and
  * `.tsx` react boundary files are conservatively skipped by callers.
  *
- * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when a null/undefined return annotation is found, `O.none` otherwise.
- * @example
+ * **Example** (Detect null return annotation)
+ *
  * ```ts
  * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -519,6 +739,11 @@ const fnSchemaEntryFromFunctionLike = (
  * const entry = nullReturnEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("findUser")
  * ```
+ *
+ * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when a null/undefined return annotation is found, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -532,7 +757,11 @@ const nullReturnEntryFromFunctionLike = (
   }
 
   const returnTypeNode = node.getReturnTypeNode();
-  if (returnTypeNode === undefined || !NULL_UNDEFINED_RETURN_PATTERN.test(returnTypeNode.getText())) {
+  if (returnTypeNode === undefined) {
+    return O.none();
+  }
+  const returnTypeText = returnTypeNode.getText();
+  if (!NULL_UNDEFINED_RETURN_PATTERN.test(returnTypeText) || NULL_SAFE_RETURN_WRAPPER_PATTERN.test(returnTypeText)) {
     return O.none();
   }
 
@@ -558,31 +787,85 @@ const isNormalizationMethodName = (name: string): boolean =>
 
 const sourceHasNormalizationSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
   const text = sourceFile.getFullText();
-  return SCHEMA_FIELDS_CALL_PATTERN.test(text) && NORMALIZATION_CALL_SIGNAL_PATTERN.test(text);
+  return SCHEMA_BOUNDARY_CALL_PATTERN.test(text) && NORMALIZATION_CALL_SIGNAL_PATTERN.test(text);
+};
+
+const executableContainer = (node: Node): Node | undefined =>
+  node.getFirstAncestor(
+    (ancestor) =>
+      Node.isFunctionDeclaration(ancestor) ||
+      Node.isArrowFunction(ancestor) ||
+      Node.isFunctionExpression(ancestor) ||
+      Node.isMethodDeclaration(ancestor)
+  );
+
+const isExportedFunctionExecutable = (container: import("ts-morph").FunctionDeclaration): boolean => {
+  const name = container.getName();
+  return name !== undefined && isEffectivelyExported(container, name);
+};
+
+const isExportedMethodExecutable = (container: import("ts-morph").MethodDeclaration): boolean => {
+  if (container.hasModifier(SyntaxKind.PrivateKeyword) || container.hasModifier(SyntaxKind.ProtectedKeyword)) {
+    return false;
+  }
+  const classDeclaration = container.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  const className = classDeclaration?.getName();
+  return (
+    classDeclaration !== undefined && className !== undefined && isEffectivelyExported(classDeclaration, className)
+  );
+};
+
+const isExportedVariableExecutable = (container: Node): boolean => {
+  const declaration = container.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
+  return declaration !== undefined && isEffectivelyExported(declaration, declaration.getName());
+};
+
+const isInExportedExecutable = (node: Node): boolean => {
+  const container = executableContainer(node);
+  if (container === undefined) {
+    return false;
+  }
+  if (Node.isFunctionDeclaration(container)) {
+    return isExportedFunctionExecutable(container);
+  }
+  if (Node.isMethodDeclaration(container)) {
+    return isExportedMethodExecutable(container);
+  }
+  return isExportedVariableExecutable(container);
+};
+
+const isInSchemaBoundaryExecutable = (node: Node): boolean => {
+  const container = executableContainer(node);
+  return container !== undefined && SCHEMA_BOUNDARY_CALL_PATTERN.test(container.getText());
 };
 
 /**
  * Detect a zero-argument `.trim()`/`.toUpperCase()`/`.toLowerCase()` call made
- * inside a function body of a schema-modeled file. Such normalization belongs
- * in a schema transformation so the invariant travels with the data instead of
- * living in ad hoc imperative code.
+ * inside the same exported executable as a schema boundary call. Such
+ * normalization belongs in a schema transformation so the invariant travels
+ * with the decoded data instead of living beside the schema boundary.
  *
- * @param callExpression - Candidate call expression to inspect.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when a function-local normalization call is found, `O.none` otherwise.
- * @example
+ * **Example** (Detect ad hoc normalization)
+ *
  * ```ts
  * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
  * import { Project, SyntaxKind } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
- * const sourceFile = project.createSourceFile("fixture.ts", "export function normalizeName(name: string): string {\n  return name.trim()\n}")
+ * const sourceFile = project.createSourceFile(
+ *   "fixture.ts",
+ *   "export function normalizeName(input: unknown): string {\n  return S.decodeUnknownSync(Name)(input).trim()\n}"
+ * )
  * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
  * const entry = normalizationEntryFromCallExpression(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("normalizeName.trim")
  * ```
+ *
+ * @param callExpression - Candidate call expression to inspect.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` when exported schema-boundary code performs ad hoc normalization, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -596,7 +879,9 @@ const normalizationEntryFromCallExpression = (
     !Node.isPropertyAccessExpression(expression) ||
     !isNormalizationMethodName(expression.getName()) ||
     callExpression.getArguments().length > 0 ||
-    !isFunctionLocalNode(callExpression)
+    !isFunctionLocalNode(callExpression) ||
+    !isInExportedExecutable(callExpression) ||
+    !isInSchemaBoundaryExecutable(callExpression)
   ) {
     return O.none();
   }
@@ -630,11 +915,8 @@ const isGetSomesObjectName = (name: string): boolean =>
  * `O.getSomesStruct` instead. Calls over an identifier/variable argument (the
  * homogeneous dynamic-key dictionary case) are left alone.
  *
- * @param callExpression - Candidate call expression to inspect.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
- * @returns `O.some` with the advisory entry when an inline Option-struct literal is spread through `getSomes`, `O.none` otherwise.
- * @example
+ * **Example** (Detect getSomes struct literal)
+ *
  * ```ts
  * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -646,6 +928,11 @@ const isGetSomesObjectName = (name: string): boolean =>
  * const entry = getsomesStructEntryFromCallExpression(node, "fixture.ts", "@beep/test")
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("pickSomes.R.getSomes")
  * ```
+ *
+ * @param callExpression - Candidate call expression to inspect.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when an inline Option-struct literal is spread through `getSomes`, `O.none` otherwise.
  * @category utilities
  * @since 0.0.0
  */
@@ -730,8 +1017,7 @@ const isExportedEqualsVariableDeclaration = (declaration: import("ts-morph").Var
   if (!Str.Equivalence(declaration.getName(), "equals")) {
     return false;
   }
-  const variableStatement = declaration.getFirstAncestorByKind(SyntaxKind.VariableStatement);
-  return variableStatement?.isExported() ?? false;
+  return isEffectivelyExported(declaration, declaration.getName());
 };
 
 const equivalenceEntryFromVariableDeclaration = (
@@ -763,10 +1049,113 @@ const equivalenceEntryFromVariableDeclaration = (
   );
 };
 
+const sourceImportsNamedTaggedError = (sourceFile: import("ts-morph").SourceFile): boolean =>
+  A.some(
+    sourceFile.getImportDeclarations(),
+    (declaration) =>
+      declaration.getModuleSpecifierValue() === "effect/Schema" &&
+      A.some(
+        declaration.getNamedImports(),
+        (namedImport) => namedImport.getName() === "TaggedError" && namedImport.getAliasNode() === undefined
+      )
+  );
+
+const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
+  const sourceText = sourceFile.getFullText();
+  return (
+    TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) &&
+    (NAMESPACED_TAGGED_ERROR_SIGNAL_PATTERN.test(sourceText) || sourceImportsNamedTaggedError(sourceFile))
+  );
+};
+
+const isNamespacedTaggedErrorFactory = (factory: Node): boolean =>
+  Node.isPropertyAccessExpression(factory) &&
+  factory.getName() === "TaggedError" &&
+  (factory.getExpression().getText() === "S" || factory.getExpression().getText() === "Schema");
+
+const isNamedImportTaggedErrorFactory = (factory: Node, sourceFile: import("ts-morph").SourceFile): boolean =>
+  Node.isIdentifier(factory) && factory.getText() === "TaggedError" && sourceImportsNamedTaggedError(sourceFile);
+
+const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<import("ts-morph").CallExpression> => {
+  const outerCall = declaration.getExtends()?.getExpression();
+  if (!Node.isCallExpression(outerCall)) {
+    return O.none();
+  }
+
+  const factoryCall = outerCall.getExpression();
+  if (!Node.isCallExpression(factoryCall)) {
+    return O.none();
+  }
+
+  const factory = factoryCall.getExpression();
+  return isNamespacedTaggedErrorFactory(factory) ||
+    isNamedImportTaggedErrorFactory(factory, declaration.getSourceFile())
+    ? O.some(outerCall)
+    : O.none();
+};
+
+const isToEquivalenceAnnotationProperty = (node: Node): boolean =>
+  (Node.isPropertyAssignment(node) || Node.isShorthandPropertyAssignment(node) || Node.isMethodDeclaration(node)) &&
+  node.getName() === "toEquivalence";
+
+const isErrorAnnotationCall = (node: Node): boolean => {
+  if (!Node.isCallExpression(node)) {
+    return false;
+  }
+  const callee = node.getExpression();
+  return Node.isPropertyAccessExpression(callee) && callee.getName() === "annoteError";
+};
+
+const annotationCarriesToEquivalence = (annotation: Node, depth = 0): boolean => {
+  if (isErrorAnnotationCall(annotation) || A.some(annotation.getDescendants(), isToEquivalenceAnnotationProperty)) {
+    return true;
+  }
+  if (depth >= 3) {
+    return false;
+  }
+
+  const referencedInitializers = pipe(
+    [annotation, ...annotation.getDescendants()],
+    A.filter(Node.isIdentifier),
+    A.flatMap((identifier) => identifier.getSymbol()?.getDeclarations() ?? A.empty<Node>()),
+    A.filter(Node.isVariableDeclaration),
+    A.map((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
+    A.getSomes
+  );
+  return A.some(referencedInitializers, (initializer) => annotationCarriesToEquivalence(initializer, depth + 1));
+};
+
+const taggedErrorEquivalenceEntryFromClassDeclaration = (
+  declaration: ClassDeclaration,
+  file: string,
+  owner: string
+): O.Option<SchemaFirstInventoryEntry> =>
+  pipe(
+    taggedErrorDeclarationCall(declaration),
+    O.filter((call) => {
+      const annotation = call.getArguments()[2];
+      return annotation === undefined || !annotationCarriesToEquivalence(annotation);
+    }),
+    O.map(() => {
+      const symbol = declarationSymbol(declaration, declaration.getName());
+      return SchemaFirstInventoryEntry.make({
+        file,
+        symbol,
+        kind: "schema-policy-advisory",
+        status: "advisory",
+        ruleId: "SFV4-tagged-error-equivalence",
+        line: declaration.getSourceFile().getLineAndColumnAtPos(declaration.getStart()).line,
+        owner,
+        reason: `S.TaggedError declaration "${symbol}" must declare fields-only equivalence at the class declaration: pass $I.annoteError<${symbol}>(...) as its annotations (or a toEquivalence hook that adopts the declared struct equivalence). Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.`,
+      });
+    })
+  );
+
 /**
  * Grouped schema-first AST detectors consumed by the scan orchestrator.
  *
- * @example
+ * **Example** (Check interface schema candidate)
+ *
  * ```ts
  * import { SchemaFirstDetectors } from "@beep/repo-cli/test/Lint"
  * import * as O from "effect/Option"
@@ -775,24 +1164,27 @@ const equivalenceEntryFromVariableDeclaration = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export interface Widget { id: string }")
  * const [node] = sourceFile.getInterfaces()
- * console.log(O.isOption(SchemaFirstDetectors.detectInterfaceReason(node))) // true
+ * console.log(SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(node)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 export const SchemaFirstDetectors = {
   boundaryCodecEntryFromJsonParse,
   defaultsEntryFromParameter,
-  detectInterfaceReason,
-  detectStructReason,
-  detectTypeAliasReason,
   equivalenceEntryFromVariableDeclaration,
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
+  declarationSymbol,
   inferStructSymbol,
+  isEffectivelyExported,
   isFnSchemaEligibleFilePath,
+  isInterfaceSchemaFirstCandidate,
   isJsonParseCallExpression,
   isNullReturnEligibleFilePath,
+  isStructSchemaFirstCandidate,
+  isTypeAliasSchemaFirstCandidate,
   normalizationEntryFromCallExpression,
   nullReturnEntryFromFunctionLike,
   numericDomainEntryFromProperty,
@@ -804,5 +1196,7 @@ export const SchemaFirstDetectors = {
   sourceHasGetSomesSignal,
   sourceHasNormalizationSignal,
   sourceHasStaticApiSchemaSignal,
+  sourceHasTaggedErrorSignal,
   staticApiEntryFromSwitch,
+  taggedErrorEquivalenceEntryFromClassDeclaration,
 } as const;

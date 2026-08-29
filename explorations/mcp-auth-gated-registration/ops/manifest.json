@@ -3,16 +3,21 @@
   "exploration": {
     "slug": "mcp-auth-gated-registration",
     "title": "MCP Auth-Gated Registration & Progressive Disclosure",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "links": {
-      "goals": ["goals/mcp-kit"],
+      "goals": [
+        "goals/mcp-kit",
+        "goals/uspto-mcp",
+        "goals/mcp-host-retrofit",
+        "goals/agent-execution-authority"
+      ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-07-01",
+    "updated": "2026-07-25",
     "sources": ["research/SOURCES.md"]
   }
 }

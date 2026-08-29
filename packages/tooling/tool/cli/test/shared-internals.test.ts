@@ -15,6 +15,8 @@ Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 import {
   applyJsoncModification,
   booleanEnvValue,
+  canUseTurboCacheSecretSession,
+  configStringEqualsSync,
   configStringOption,
   configStringOptionSync,
   cursorArgs,
@@ -31,18 +33,25 @@ import {
   isUnresolvedSecretReference,
   JsonStringCodec,
   jsonText,
-  localEnvOpRunStep,
   nextCursor,
   readOptionalConfigString,
+  readOptionalRedactedConfigString,
+  readTurboCacheEnvironment,
   renderSchemaFirstPolicyFindingLine,
   SchemaFirstPolicyFinding,
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
+  TurboCacheEnvironment,
+  turboCacheSecretSessionEnvironment,
+  turboEnvExtendsAmbient,
+  turboEnvOverrides,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Data, Effect, Layer } from "effect";
+import { ConfigProvider, Data, Effect, Layer, Redacted, Ref, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
+import { ChildProcessSpawner } from "effect/unstable/process";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -217,6 +226,13 @@ describe("EnvConfig readers", () => {
     expect(O.isNone(configStringOptionSync(UNSET))).toBe(true);
   });
 
+  it("configStringEqualsSync compares present and absent snapshot values", () => {
+    expect(configStringEqualsSync("BEEP_SI_STR", "value")).toBe(true);
+    expect(configStringEqualsSync("value")("BEEP_SI_STR")).toBe(true);
+    expect(configStringEqualsSync("BEEP_SI_STR", "other")).toBe(false);
+    expect(configStringEqualsSync(UNSET, "value")).toBe(false);
+  });
+
   it("envValue returns the value or falls back", () => {
     expect(envValue("BEEP_SI_STR", "fallback")).toBe("value");
     expect(envValue(UNSET, "fallback")).toBe("fallback");
@@ -236,8 +252,9 @@ describe("EnvConfig readers", () => {
     expect(booleanEnvValue(UNSET, false)).toBe(false);
   });
 
-  it.effect("Effect readers re-read the ambient provider on each call (no module-load capture)", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "Effect readers re-read the ambient provider on each call (no module-load capture)",
+    Effect.fnUntraced(function* () {
       const withProvider = (value: string) =>
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value })))(
           readOptionalConfigString("TOKEN")
@@ -255,13 +272,6 @@ describe("EnvConfig readers", () => {
     expect(isUnresolvedSecretReference("op://vault/item/field")).toBe(true);
     expect(isUnresolvedSecretReference("postgres://localhost")).toBe(false);
     expect(isUnresolvedSecretReference(undefined)).toBe(false);
-  });
-
-  it("localEnvOpRunStep wraps a step in op run", () => {
-    const wrapped = localEnvOpRunStep({ label: "test", command: "bun", args: ["test"], cwd: "/repo" });
-    expect(wrapped.command).toBe("op");
-    expect(wrapped.args).toEqual(["run", "--env-file=.env", "--", "bun", "test"]);
-    expect(wrapped.label).toBe("test (op run)");
   });
 });
 
@@ -330,4 +340,199 @@ describe("Github plumbing", () => {
     );
     expect(exit._tag).toBe("Failure");
   });
+});
+
+describe("turboEnvOverrides", () => {
+  const OP_REFERENCE = "op://vault/item/credential";
+  const REMOTE_READ = "local:rw,remote:r";
+
+  const withTurboEnv = (env: Record<string, string>) =>
+    provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)));
+
+  const overridesFor = (
+    env: Record<string, string>,
+    command: string,
+    args: ReadonlyArray<string>
+  ): Record<string, string | undefined> => Effect.runSync(withTurboEnv(env)(turboEnvOverrides(command, args, env)));
+
+  const opRunArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => [
+    "run",
+    "--",
+    "bunx",
+    "turbo",
+    ...turboArgs,
+  ];
+
+  it("returns nothing for a non-turbo command", () => {
+    expect(overridesFor({}, "git", ["status"])).toEqual({});
+    expect(overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
+    expect(overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
+  });
+
+  it("guards the TUI on a direct turbo spawn with resolved credentials", () => {
+    expect(
+      overridesFor({ TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ }, "bunx", [
+        "turbo",
+        "run",
+        "check",
+      ])
+    ).toEqual({ TURBO_UI: "false" });
+  });
+
+  it("scrubs unresolved references and pins the cache posture on a direct spawn", () => {
+    expect(
+      overridesFor(
+        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
+        "bunx",
+        ["turbo", "run", "check"]
+      )
+    ).toStrictEqual({
+      TURBO_UI: "false",
+      TURBO_API: undefined,
+      TURBO_TOKEN: undefined,
+      TURBO_CACHE: "local:rw",
+    });
+  });
+
+  it("gives a wrapped spawn only Turbo secret references and a non-extending environment", () => {
+    const environment = {
+      PATH: "/fixture/bin",
+      SAFE_LITERAL: "fixture-value",
+      TURBO_API: "op://fixture-vault/turbo/api",
+      TURBO_TOKEN: "op://fixture-vault/turbo/token",
+      TURBO_TEAM: "op://fixture-vault/turbo/team",
+      TURBO_CACHE: REMOTE_READ,
+      UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+    };
+    const sanitized = {
+      PATH: "/fixture/bin",
+      SAFE_LITERAL: "fixture-value",
+      TURBO_API: "op://fixture-vault/turbo/api",
+      TURBO_TOKEN: "op://fixture-vault/turbo/token",
+      TURBO_TEAM: "op://fixture-vault/turbo/team",
+      TURBO_CACHE: REMOTE_READ,
+    };
+    const args = opRunArgs(["run", "check"]);
+
+    expect(turboCacheSecretSessionEnvironment(environment)).toStrictEqual(sanitized);
+    expect(overridesFor(environment, "op", args)).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
+    expect(turboEnvExtendsAmbient("op", args)).toBe(false);
+  });
+
+  it("recognizes a wrapped spawn whose turbo arguments contain their own separator", () => {
+    const args = opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]);
+
+    expect(overridesFor({}, "op", args)).toEqual({ TURBO_UI: "false" });
+    expect(turboEnvExtendsAmbient("op", args)).toBe(false);
+  });
+});
+
+// Every classification arm is reachable from an explicit record, so the
+// file's measured coverage no longer depends on which Turbo posture the host
+// process happens to carry (ship-velocity B9).
+describe("readTurboCacheEnvironment", () => {
+  const REMOTE_READ = "local:rw,remote:r";
+
+  it("classifies literal values and unresolved references per name", () => {
+    expect(
+      readTurboCacheEnvironment({
+        TURBO_API: "https://cache.example.test",
+        TURBO_TOKEN: "op://fixture-vault/turbo/token",
+        TURBO_TEAM: "team_fixture",
+        TURBO_CACHE: REMOTE_READ,
+      })
+    ).toStrictEqual(
+      TurboCacheEnvironment.make({ api: "literal", token: "secret-reference", team: "literal", cache: REMOTE_READ })
+    );
+  });
+
+  it("treats blank, whitespace, and missing names as absent", () => {
+    expect(
+      readTurboCacheEnvironment({ TURBO_API: "", TURBO_TOKEN: "   ", TURBO_TEAM: undefined, TURBO_CACHE: "" })
+    ).toStrictEqual(TurboCacheEnvironment.make({}));
+    expect(readTurboCacheEnvironment({})).toStrictEqual(TurboCacheEnvironment.make({}));
+  });
+
+  it("trims the cache posture and ignores unrelated names", () => {
+    expect(
+      readTurboCacheEnvironment({ TURBO_CACHE: ` ${REMOTE_READ} `, UNRELATED: "op://fixture-vault/other/value" })
+    ).toStrictEqual(TurboCacheEnvironment.make({ cache: REMOTE_READ }));
+  });
+});
+
+describe("readOptionalRedactedConfigString", () => {
+  it.effect(
+    "wraps a configured value in Redacted and reports a missing key as none",
+    Effect.fnUntraced(function* () {
+      const present = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: "secret" })))(
+        readOptionalRedactedConfigString("TOKEN")
+      );
+      expect(O.map(present, Redacted.value)).toEqual(O.some("secret"));
+
+      const missing = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
+        readOptionalRedactedConfigString("TOKEN")
+      );
+      expect(O.isNone(missing)).toBe(true);
+    })
+  );
+});
+
+describe("canUseTurboCacheSecretSession", () => {
+  const stubHandle = (exitCode: number) =>
+    ChildProcessSpawner.makeHandle({
+      all: Stream.empty,
+      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+      getInputFd: () => Sink.drain,
+      getOutputFd: () => Stream.empty,
+      isRunning: Effect.succeed(false),
+      kill: () => Effect.void,
+      pid: ChildProcessSpawner.ProcessId(1),
+      stderr: Stream.empty,
+      stdin: Sink.drain,
+      stdout: Stream.empty,
+      unref: Effect.succeed(Effect.void),
+    });
+
+  const sessionWith = Effect.fn("sessionWith")(function* (
+    env: Record<string, string>,
+    spawn: Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>
+  ) {
+    const spawned = yield* Ref.make(0);
+    const spawner = ChildProcessSpawner.make(() =>
+      Ref.update(spawned, (count) => count + 1).pipe(Effect.andThen(spawn))
+    );
+    const usable = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(
+      canUseTurboCacheSecretSession("/repo")
+    ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+    return { usable, spawned: yield* Ref.get(spawned) };
+  });
+
+  it.effect(
+    "refuses a session under CI without probing the op CLI",
+    Effect.fnUntraced(function* () {
+      expect(yield* sessionWith({ CI: "true" }, Effect.succeed(stubHandle(0)))).toEqual({
+        usable: false,
+        spawned: 0,
+      });
+    })
+  );
+
+  it.effect(
+    "accepts a session when op whoami exits zero and refuses otherwise",
+    Effect.fnUntraced(function* () {
+      expect(yield* sessionWith({}, Effect.succeed(stubHandle(0)))).toEqual({ usable: true, spawned: 1 });
+      expect(yield* sessionWith({ CI: "false" }, Effect.succeed(stubHandle(1)))).toEqual({
+        usable: false,
+        spawned: 1,
+      });
+    })
+  );
+
+  it.effect(
+    "treats a spawn failure as an unavailable op CLI",
+    Effect.fnUntraced(function* () {
+      const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
+      expect(yield* sessionWith({}, Effect.fail(failure))).toEqual({ usable: false, spawned: 1 });
+    })
+  );
 });

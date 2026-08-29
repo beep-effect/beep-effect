@@ -12,29 +12,31 @@
 /**
  * Numeric value between 0 and 1 inclusive, shared by handoff confidence fields.
  *
- * @example
+ * **Example** (Log UnitInterval value)
+ *
  * ```ts
  * import { UnitInterval } from "@beep/nlp/Handoff"
  *
  * console.log(UnitInterval)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export { UnitInterval } from "@beep/schema/UnitInterval";
 /**
  * The generic IR handoff contract schemas (Span/Provenance/TextChunk/Mention/
  * Entity/Relation/AnnotatedDocument + branded ids).
  *
- * @example
- * ```typescript
+ * **Example** (Log AnnotatedDocument schema)
+ *
+ * ```ts
  * import { Contract } from "@beep/nlp/Handoff"
  *
  * console.log(Contract.AnnotatedDocument)
  * ```
  *
- * @since 0.0.0
  * @category interop
+ * @since 0.0.0
  */
 export * as Contract from "./Contract.ts";

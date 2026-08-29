@@ -16,7 +16,8 @@ import type { DayButton } from "react-day-picker";
 /**
  * Styled DayPicker calendar using the shared button variants.
  *
- * @example
+ * **Example** (Single date selection)
+ *
  * ```tsx
  * import { Calendar } from "@beep/ui/components/calendar"
  *
@@ -163,7 +164,8 @@ function Calendar({
 /**
  * Day cell button that mirrors DayPicker selection and range modifiers.
  *
- * @example
+ * **Example** (Custom day button)
+ *
  * ```tsx
  * import { Calendar, CalendarDayButton } from "@beep/ui/components/calendar"
  *

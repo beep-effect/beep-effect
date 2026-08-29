@@ -5,6 +5,32 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Professional Desktop</title>
+    <!-- Pre-paint theme: set the MUI color-scheme class before the first frame
+         so a dark session never flashes light. Mirrors Theme.atoms.ts exactly:
+         "professional-desktop:theme-mode" holds a JSON-encoded mode, legacy
+         "mui-mode" a raw one, and MUI later writes the same "light"/"dark"
+         class, so hydration converges to a no-op. -->
+    <script>
+      (() => {
+        try {
+          let mode = "system";
+          try {
+            const stored = JSON.parse(window.localStorage.getItem("professional-desktop:theme-mode"));
+            const legacy = window.localStorage.getItem("mui-mode");
+            if (stored === "light" || stored === "dark") mode = stored;
+            else if (legacy === "light" || legacy === "dark") mode = legacy;
+          } catch {
+            /* unreadable storage falls back to system */
+          }
+          const scheme =
+            mode === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+          document.documentElement.classList.remove("light", "dark");
+          document.documentElement.classList.add(scheme);
+        } catch {
+          /* leave the default paint alone */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

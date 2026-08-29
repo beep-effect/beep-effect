@@ -8,7 +8,8 @@
 /**
  * Epistemic fixture-key value exports.
  *
- * @example
+ * **Example** (Make a fixture key)
+ *
  * ```ts
  * import { EpistemicFixtureKey } from "@beep/epistemic-domain/values/EpistemicFixtureKey"
  *
@@ -18,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./EpistemicFixtureKey.model.js";
+export * from "./EpistemicFixtureKey.model.ts";

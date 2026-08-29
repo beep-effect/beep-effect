@@ -2,7 +2,7 @@
 
 ## Status
 
-Active
+Lifecycle: `completed-retained`
 
 ## Overview
 
@@ -12,12 +12,12 @@ gateway activity into privacy-safe raw archives, derived rollups, OTLP traces,
 and weekly scorecards that answer whether agent-facing config changes improved
 coding-agent performance.
 
-Production-complete V1 means the dankserver tailnet stack is deployed, local
-smoke collection works, P6a hardening gates pass, real sources are flowing, one
-restarted seven-day config-impact scorecard has been generated from live data,
-and a sanitized derived mirror has been confirmed on dankserver. Provider and
-dashboard enrichment remain follow-up work when the scorecard explicitly marks
-those metrics unavailable and not scored.
+Production-complete V1 has the dankserver tailnet stack deployed, local smoke
+collection proven, P6a hardening gates closed, real sources flowing, one
+restarted seven-day config-impact scorecard generated from live data, and a
+sanitized derived mirror confirmed on dankserver. Provider and dashboard
+enrichment remain follow-up work while the scorecard explicitly marks those
+metrics unavailable and not scored.
 
 ## Read This First
 
@@ -54,10 +54,17 @@ those metrics unavailable and not scored.
     closeout template
 - [history/outputs/p6-pre-may16-readiness-ledger.md](./history/outputs/p6-pre-may16-readiness-ledger.md)
   - pre-closeout readiness evidence, label candidates, benchmark/report state,
-    and the remaining completion gate before May 16
+    and the then-remaining completion gate before May 16
 - [history/outputs/p7-topology-first-production-plan.md](./history/outputs/p7-topology-first-production-plan.md)
-  - P7 topology-first production packet, implemented P7a/b mirror and
-    retention workflows, pending P7e V1 closeout, and P7c/P7d follow-up work
+  - P7 topology decisions, mirror/retention implementation, P7f durability,
+    completed P7e closeout, and deferred P7c/P7d follow-up work
+- [history/outputs/p7e-production-readiness-closeout.md](./history/outputs/p7e-production-readiness-closeout.md)
+  - final timer/topology truth, OTLP repair, credited report, confirmed remote
+    mirror, and V1 gate disposition
+- [history/reflections/2026-08-10-codex.md](./history/reflections/2026-08-10-codex.md)
+  - closeout reflection and codification follow-ups
+- [research/OPPORTUNITIES.md](./research/OPPORTUNITIES.md) - friction receipts
+  captured during the P7e closeout
 - [research/effect-native-observability.md](./research/effect-native-observability.md)
   - Effect v4 observability package findings
 - [research/backend-shortlist.md](./research/backend-shortlist.md) - backend
@@ -65,10 +72,9 @@ those metrics unavailable and not scored.
 
 ## Current Progress
 
-P0, P1, P2, P3, P4, P5, P6a, P6b, and P7a/b are complete enough to use as the
-starting checkpoint. The first real collection/export proof remains baseline
-evidence; the credited seven-day proof restarted on May 9, 2026 02:26
-America/Chicago after the P6a closeout gates passed:
+V1 is complete through P7e. The first real collection/export proof remains
+baseline evidence; the final closeout credits the explicit May 9, 2026 02:26
+through May 16, 2026 02:26 America/Chicago window:
 
 - `@beep/repo-ai-metrics` exists with schema-first models, tolerant transcript
   ingest summaries, target-agnostic install specs, benchmark and scorecard
@@ -115,34 +121,36 @@ America/Chicago after the P6a closeout gates passed:
   bounded forwarder pass, reran the archive drill, reconciled Pulumi, verified
   Phoenix `15.5.0`, added one outcome label plus one benchmark run, and
   generated a restarted scorecard with `completionReady=true`.
-- P6 isolation now runs the workstation timer from locked detached worktree
-  `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/ai-metrics-p6-proof`
-  pinned at `63c419721c735bfb860ccfa9bf1b31efbb23e33c`, while preserving the
-  original proof data root under the main checkout.
+- Production collection is owned by the active
+  `beep-ai-metrics-forwarder.timer` on a six-hour cadence. The unit executes
+  from the clean `beep-effect` checkout and writes every durable artifact to
+  `~/.local/state/beep/ai-metrics`. No checkout contains a
+  `.beep/ai-metrics` tree.
 - P7a/b adds the hybrid derived mirror and local-first retention workflows.
   Raw encrypted transcripts remain workstation-local; mirror bundles contain
-  only sanitized manifests, status artifacts, reports, and allowed derived
-  Parquet exports. Retention delete and compact workflows remain dry-run until
-  an explicit window plus `--confirm p7-retention-window` are supplied.
-- Source discovery remains Codex-only in the recent proof window; `--all`
-  discovery confirms Claude Code and OpenClaw sources exist outside the active
-  proof window and are deferred to P7c provider/gateway work.
-- Current P6 work is to keep the timer running through May 16, 2026 02:26
-  America/Chicago and generate the final seven-day report.
+  only sanitized manifests, status artifacts, and allowlisted derived Parquet
+  exports. Report files remain workstation-local; their sanitized scorecard
+  rows are mirrored. Retention delete and compact workflows remain dry-run
+  until an explicit window plus `--confirm p7-retention-window` are supplied.
+- The latest production run included both Codex and Claude sources. OpenClaw
+  safe gateway metadata remains visible when present; provider/model/tool/token
+  and cost enrichment is still explicitly unavailable and not scored.
 - The May 12 P6c label pass added one explicit human-approved outcome label for
-  the isolated-runner config and regenerated an intermediate report where that
-  config is `completionReady=true`. The remaining P6 blocker is elapsed proof
-  time.
-- P7e production-readiness closeout remains the V1 closeout pass after May 16.
-  It must record the final report and confirm a sanitized derived mirror on
-  dankserver.
+  the credited config. The final exact-window report preserves its real labels,
+  benchmark evidence, and `completionReady=true` result.
+- P7f durability now checkpoints each acknowledged 512-span OTLP chunk. The
+  2026-08-10 live repair drained the backlog monotonically under Phoenix queue
+  pressure instead of replaying an accepted prefix.
+- P7e generated the final report and confirmed the sanitized mirror at
+  `/srv/data/ai-metrics/p7-derived-mirror` through remote `mirror status`.
 - P7c provider/gateway metrics, P7d dashboard/backend expansion, and remote
   mirror lifecycle automation beyond confirmed bundle sync/status remain
-  follow-up work, not V1 blockers.
+  separate follow-up work, not V1 blockers.
 
 ## Completion Standard
 
-This initiative is done only when all are true:
+All V1 conditions below are satisfied; detailed proof is in the P7e closeout
+output:
 
 - dankserver tailnet deployment is applied and verified
 - Phoenix is receiving real traces or derived exports

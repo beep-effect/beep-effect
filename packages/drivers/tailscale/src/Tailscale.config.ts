@@ -10,7 +10,8 @@ import { Duration } from "effect";
 /**
  * Default HTTPS port configured by Tailscale Serve.
  *
- * @example
+ * **Example** (Build HTTPS base URL)
+ *
  * ```ts
  * import { DEFAULT_TAILSCALE_SERVE_PORT } from "@beep/tailscale/Tailscale.config"
  * import { buildTailscaleHttpsBaseUrl } from "@beep/tailscale/Tailscale.service"
@@ -30,7 +31,8 @@ export const DEFAULT_TAILSCALE_SERVE_PORT = 443;
 /**
  * Maximum time allowed for `tailscale status`.
  *
- * @example
+ * **Example** (Log timeout in seconds)
+ *
  * ```ts
  * import { TAILSCALE_STATUS_TIMEOUT } from "@beep/tailscale/Tailscale.config"
  * import * as Duration from "effect/Duration"
@@ -46,7 +48,8 @@ export const TAILSCALE_STATUS_TIMEOUT = Duration.seconds(10);
 /**
  * Maximum time allowed for a Tailscale Serve mutation.
  *
- * @example
+ * **Example** (Log serve timeout seconds)
+ *
  * ```ts
  * import { TAILSCALE_SERVE_TIMEOUT } from "@beep/tailscale/Tailscale.config"
  * import * as Duration from "effect/Duration"
@@ -62,7 +65,8 @@ export const TAILSCALE_SERVE_TIMEOUT = Duration.seconds(10);
 /**
  * Maximum time allowed for an HTTPS readiness probe.
  *
- * @example
+ * **Example** (Log probe timeout millis)
+ *
  * ```ts
  * import { TAILSCALE_PROBE_TIMEOUT } from "@beep/tailscale/Tailscale.config"
  * import * as Duration from "effect/Duration"

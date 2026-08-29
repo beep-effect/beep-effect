@@ -1,0 +1,256 @@
+import { CaptureCommandTimedOutError, runCaptured } from "@beep/repo-cli/test/Process";
+import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
+import { PosInt } from "@beep/schema/Int";
+import { provideScopedLayer } from "@beep/test-utils";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect, it } from "@effect/vitest";
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Ref, Sink, Stream } from "effect";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
+import { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcess } from "effect/unstable/process";
+
+const encoder = new TextEncoder();
+
+// A spawner whose child "exits" immediately but whose output pipe stays open until kill is called
+// (killEndsStream: true — the straggler dies with the group reap and the kernel delivers EOF), or
+// forever (killEndsStream: false — a descendant escaped the process group too). This is the shape
+// of the Lint Policy success-exit hang: jobs 94646234791 and 95354812245 logged every policy step
+// done, then sat silent for 29-40 minutes because an orphaned grandchild held the inherited pipe
+// write end and nothing reaped it after a successful exit.
+const makeStuckSpawner = Effect.fnUntraced(function* (options: {
+  readonly output: string;
+  readonly killEndsStream: boolean;
+}) {
+  const closed = yield* Deferred.make<void>();
+  const killCount = yield* Ref.make(0);
+  const pipe = Stream.make(encoder.encode(options.output)).pipe(
+    Stream.concat(Stream.fromEffect(Deferred.await(closed)).pipe(Stream.drain))
+  );
+  const handle = ChildProcessSpawner.makeHandle({
+    all: pipe,
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () =>
+      Ref.update(killCount, (count) => count + 1).pipe(
+        Effect.andThen(options.killEndsStream ? Deferred.succeed(closed, void 0) : Effect.void),
+        Effect.asVoid
+      ),
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: pipe,
+    unref: Effect.succeed(Effect.void),
+  });
+  const spawner = ChildProcessSpawner.make(() => Effect.succeed(handle));
+  return { spawner, killCount, closed } as const;
+});
+
+const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolean) {
+  const shouldCompleteKill = killCompletes ?? true;
+  const closed = yield* Deferred.make<void>();
+  const exited = yield* Deferred.make<ChildProcessSpawner.ExitCode>();
+  const killCount = yield* Ref.make(0);
+  const unrefCount = yield* Ref.make(0);
+  const killOptions = yield* Ref.make<ReadonlyArray<ChildProcess.KillOptions>>([]);
+  const killBlocked = yield* Deferred.make<void>();
+  const pipe = Stream.make(encoder.encode("started")).pipe(
+    Stream.concat(Stream.fromEffect(Deferred.await(closed)).pipe(Stream.drain))
+  );
+  const handle = ChildProcessSpawner.makeHandle({
+    all: pipe,
+    exitCode: Deferred.await(exited),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(true),
+    kill: (options) =>
+      Ref.update(killOptions, (values) => A.append(values, options ?? {})).pipe(
+        Effect.andThen(Ref.update(killCount, (count) => count + 1)),
+        Effect.andThen(
+          shouldCompleteKill
+            ? Deferred.succeed(closed, void 0).pipe(
+                Effect.andThen(Deferred.succeed(exited, ChildProcessSpawner.ExitCode(143)))
+              )
+            : Deferred.await(killBlocked)
+        ),
+        Effect.asVoid
+      ),
+    pid: ChildProcessSpawner.ProcessId(2),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: pipe,
+    unref: Ref.update(unrefCount, (count) => count + 1).pipe(Effect.as(Effect.void)),
+  });
+  const spawner = ChildProcessSpawner.make(() => Effect.succeed(handle));
+  return { spawner, killCount, killOptions, unrefCount } as const;
+});
+
+describe("StepExec capture pipe lifecycle", () => {
+  it.effect(
+    "maps a bounded quality-step timeout to exit code 124",
+    Effect.fnUntraced(function* () {
+      const { spawner } = yield* makeNeverExitSpawner();
+      const fiber = yield* Effect.forkChild(
+        collectStepOutput(
+          QualityTaskStep.make({
+            label: "fake-step",
+            command: "fake-step",
+            args: ["--flag"],
+            cwd: process.cwd(),
+            captureTimeoutMillis: PosInt.make(60_000),
+          })
+        ).pipe(
+          provideScopedLayer(
+            Layer.mergeAll(
+              NodeFileSystem.layer,
+              NodePath.layer,
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            )
+          )
+        )
+      );
+
+      yield* TestClock.adjust("1 minute");
+
+      const result = yield* Fiber.join(fiber);
+      expect(result.exitCode).toBe(124);
+      expect(result.output).toContain("fake-step --flag");
+    })
+  );
+
+  it.effect(
+    "reaps the child's group when a straggler holds the pipe open after exit, keeping captured text",
+    Effect.fnUntraced(function* () {
+      const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial output", killEndsStream: true });
+      const fiber = yield* Effect.forkChild(
+        runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
+          provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+        )
+      );
+
+      yield* TestClock.adjust("2 seconds");
+
+      const result = yield* Fiber.join(fiber);
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toContain("partial output");
+      expect(yield* Ref.get(killCount)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "dies loudly naming the command when even the group reap cannot close the pipe",
+    Effect.fnUntraced(function* () {
+      const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial", killEndsStream: false });
+      const fiber = yield* Effect.forkChild(
+        runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
+          provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+        )
+      );
+
+      yield* TestClock.adjust("2 seconds");
+      yield* TestClock.adjust("3 seconds");
+
+      const exit = yield* Fiber.await(fiber);
+      expect(Exit.isFailure(exit)).toBe(true);
+      const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
+      expect(rendered).toContain("CapturePipeWedgedError");
+      expect(rendered).toContain("fake-step --flag");
+      expect(yield* Ref.get(killCount)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "never kills a child whose stream closes on its own",
+    Effect.fnUntraced(function* () {
+      const { closed, killCount, spawner } = yield* makeStuckSpawner({ output: "clean", killEndsStream: false });
+      yield* Deferred.succeed(closed, void 0);
+
+      const result = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+        provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toBe("clean");
+      expect(yield* Ref.get(killCount)).toBe(0);
+    })
+  );
+
+  it.effect(
+    "interrupts and reaps a captured command whose direct child never exits",
+    Effect.fnUntraced(function* () {
+      const { killCount, killOptions, spawner, unrefCount } = yield* makeNeverExitSpawner();
+      const fiber = yield* Effect.forkChild(
+        runCaptured({
+          command: "fake-step",
+          args: ["--flag"],
+          timeout: "1 minute",
+          forceKillAfter: "1 second",
+        }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+      );
+
+      yield* TestClock.adjust("1 minute");
+
+      const exit = yield* Fiber.await(fiber);
+      expect(Exit.isFailure(exit)).toBe(true);
+      const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
+      expect(rendered).toContain("CaptureCommandTimedOutError");
+      expect(rendered).toContain("fake-step --flag");
+      expect(yield* Ref.get(killCount)).toBe(1);
+      expect(yield* Ref.get(killOptions)).toEqual([{ forceKillAfter: "1 second" }]);
+      expect(yield* Ref.get(unrefCount)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "returns a typed timeout after bounded cleanup when the child never reports exit",
+    Effect.fnUntraced(function* () {
+      const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
+      const fiber = yield* Effect.forkChild(
+        Effect.flip(
+          runCaptured({
+            command: "fake-step",
+            args: ["--flag"],
+            timeout: "1 minute",
+            forceKillAfter: "1 second",
+          }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+        )
+      );
+
+      yield* TestClock.adjust("1 minute");
+      yield* TestClock.adjust("2 seconds");
+
+      const error = yield* Fiber.join(fiber);
+      expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+      if (S.is(CaptureCommandTimedOutError)(error)) {
+        expect(error.commandLine).toBe("fake-step --flag");
+      }
+      expect(yield* Ref.get(killCount)).toBe(1);
+      expect(yield* Ref.get(unrefCount)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "unrefs the child when its caller is interrupted during timeout cleanup",
+    Effect.fnUntraced(function* () {
+      const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
+      const fiber = yield* Effect.forkChild(
+        runCaptured({
+          command: "fake-step",
+          args: ["--flag"],
+          timeout: "1 minute",
+          forceKillAfter: "1 second",
+        }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+      );
+
+      yield* TestClock.adjust("1 minute");
+      yield* Fiber.interrupt(fiber);
+
+      expect(yield* Ref.get(killCount)).toBe(1);
+      expect(yield* Ref.get(unrefCount)).toBe(1);
+    })
+  );
+});

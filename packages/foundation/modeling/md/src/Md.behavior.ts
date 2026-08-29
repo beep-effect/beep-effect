@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import { A, thunkEmptyStr } from "@beep/utils";
+import { A } from "@beep/utils";
 import { Match } from "effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -28,7 +28,8 @@ const embedTitle = (embed: { readonly src: string; readonly title: O.Option<stri
  * The strategy consumed by {@link segmentInlineRuns}: the inline guard plus the
  * per-run and per-block renderers.
  *
- * @example
+ * **Example** (SegmentStrategy type shape)
+ *
  * ```ts
  * import type { SegmentStrategy } from "@beep/md/Md.behavior"
  *
@@ -71,6 +72,8 @@ export interface SegmentStrategy<I, B> {
  * of inline children collapses to one inline render, while every block child
  * renders on its own.
  *
+ * **Details**
+ *
  * The runs are grouped with {@link A.groupWith} keyed by the inline guard, then
  * each run is rendered by the matching handler — inline runs through
  * `renderInlineRun`, block children individually through `renderBlock`.
@@ -78,8 +81,9 @@ export interface SegmentStrategy<I, B> {
  * Dual-arity: call data-first as `segmentInlineRuns(items, strategy)` or
  * data-last as `segmentInlineRuns(strategy)(items)`.
  *
- * @example
- * ```ts
+ * **Example** (Segment inline and block runs)
+ *
+ * ```ts import.meta.vitest name="Segment inline and block runs"
  * import { Inline } from "@beep/md/Md.model"
  * import { segmentInlineRuns } from "@beep/md/Md.behavior"
  * import { Md } from "@beep/md"
@@ -89,7 +93,7 @@ export interface SegmentStrategy<I, B> {
  *   renderInlineRun: (run) => `inline:${run.length}`,
  *   renderBlock: (block) => `block:${block._tag}`,
  * })
- * console.log(segments) // ["inline:2", "block:p"]
+ * segments // => ["inline:2", "block:p"]
  * ```
  *
  * @typeParam I - Inline child element type.
@@ -163,8 +167,8 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
     del: ({ children }) => renderPlainTextInlines(children),
     code: ({ value }) => value,
     a: ({ children }) => renderPlainTextInlines(children),
-    img: thunkEmptyStr,
-    br: thunkEmptyStr,
+    img: ({ alt }) => alt,
+    br: () => "\n",
     inlineMath: ({ value }) => value,
     footnoteReference: ({ identifier }) => identifier,
   })
@@ -173,12 +177,13 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
 /**
  * Projects an inline node to its escaping-free plain-text content.
  *
- * @example
- * ```ts
+ * **Example** (Plain text from inline)
+ *
+ * ```ts import.meta.vitest name="Plain text from inline"
  * import { Md } from "@beep/md"
  * import { renderPlainTextInline } from "@beep/md/Md.behavior"
  *
- * console.log(renderPlainTextInline(Md.strong("beep"))) // "beep"
+ * renderPlainTextInline(Md.strong("beep")) // => "beep"
  * ```
  *
  * @category utilities
@@ -191,12 +196,13 @@ export function renderPlainTextInline(inline: Inline): string {
 /**
  * Projects a block node to its escaping-free plain-text content.
  *
- * @example
- * ```ts
+ * **Example** (Plain text from block)
+ *
+ * ```ts import.meta.vitest name="Plain text from block"
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlock } from "@beep/md/Md.behavior"
  *
- * console.log(renderPlainTextBlock(Md.h1("Hello"))) // "Hello"
+ * renderPlainTextBlock(Md.h1("Hello")) // => "Hello"
  * ```
  *
  * @category utilities
@@ -217,19 +223,20 @@ export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>(
     footnoteDefinition: (block) => renderPlainTextBlocks(block.children),
     admonition: (block) => renderPlainTextBlocks(block.children),
     embed: embedTitle,
-    hr: thunkEmptyStr,
+    hr: () => "",
   })
 );
 
 /**
  * Projects block nodes to plain text, one block per line.
  *
- * @example
- * ```ts
+ * **Example** (Plain text blocks per line)
+ *
+ * ```ts import.meta.vitest name="Plain text blocks per line"
  * import { Md } from "@beep/md"
  * import { renderPlainTextBlocks } from "@beep/md/Md.behavior"
  *
- * console.log(renderPlainTextBlocks([Md.h1("Hello"), Md.p("World")])) // "Hello\nWorld"
+ * renderPlainTextBlocks([Md.h1("Hello"), Md.p("World")]) // => "Hello\nWorld"
  * ```
  *
  * @category utilities

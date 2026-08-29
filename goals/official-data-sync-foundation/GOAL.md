@@ -1,6 +1,6 @@
 # GOAL: Ship the official data sync foundation
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: `@beep/data` owns automatically refreshed official data snapshots, and
 `@beep/schema` derives robust literals/codecs from those snapshots.
@@ -48,7 +48,7 @@ Acceptance:
 Verification:
 
 ```sh
-bun run beep sync-data-to-ts --all --check --report-dir /tmp/beep-data-sync-check
+bun run beep sync-data-to-ts --all --check --report-dir "$(mktemp -d)"
 bun run --cwd packages/tooling/tool/cli check
 bun run --cwd packages/tooling/tool/cli test sync-data-to-ts
 bun run --cwd packages/foundation/primitive/data check

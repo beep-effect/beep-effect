@@ -16,17 +16,19 @@ const stringEquals: {
 /**
  * Remove blank variants and keep the first spelling of each unique string.
  *
- * @remarks
+ * **Details**
+ *
  * Lookup helpers use this after generating increasingly lossy alternatives.
  * Preserving order lets exact or less-normalized spellings win before fallback
  * forms such as basenames or compact identifier spellings.
  *
- * @example
- * ```typescript
+ * **Example** (Dedupe keeping first occurrence)
+ *
+ * ```ts import.meta.vitest name="Dedupe keeping first occurrence"
  * import * as VariantText from "@beep/nlp/VariantText"
  *
  * const deduped = VariantText.orderedDedupe(["foo", "bar", "foo", "", "baz"])
- * console.log(deduped) // ["foo", "bar", "baz"]
+ * deduped // => ["foo", "bar", "baz"]
  * ```
  *
  * @category normalization

@@ -6,7 +6,6 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { A } from "@beep/utils";
 import { HashMap, pipe } from "effect";
 import * as O from "effect/Option";
@@ -14,30 +13,10 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit, LiteralKitKeyCollisionError, matchLiteral } from "../LiteralKit/index.ts";
 import { isNonNegative } from "../Number.ts";
-import type { TaggedErrorClassFromFields } from "@beep/schema/TaggedErrorClass";
 import type { SchemaAST } from "effect";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
 
 const $I = $SchemaId.create("MappedLiteralKit");
-const MappedLiteralDuplicateErrorFields = {
-  side: S.Literals(["from", "to"]),
-  literal: S.Union([S.String, S.BigInt, S.Boolean, S.Finite]),
-  firstIndex: S.Int.check(isNonNegative),
-  secondIndex: S.Int.check(isNonNegative),
-} satisfies S.Struct.Fields;
-const MappedLiteralDuplicateErrorBase: TaggedErrorClassFromFields<
-  MappedLiteralDuplicateError,
-  "MappedLiteralDuplicateError",
-  typeof MappedLiteralDuplicateErrorFields
-> = TaggedErrorClass<MappedLiteralDuplicateError>($I.make("MappedLiteralDuplicateError"))(
-  "MappedLiteralDuplicateError",
-  MappedLiteralDuplicateErrorFields,
-  $I.annote("MappedLiteralDuplicateError", {
-    title: "Mapped Literal Duplicate Error",
-    description: "Thrown when mapped literal entries are not one-to-one.",
-  })
-);
-
 type LiteralValue = SchemaAST.LiteralValue;
 type Literals = A.NonEmptyReadonlyArray<LiteralValue>;
 type MappedPair = readonly [LiteralValue, LiteralValue];
@@ -85,8 +64,9 @@ type DirectionalKit<
  * Error thrown when `MappedLiteralKit` receives duplicate literals on the
  * `from` or `to` side of the mapping.
  *
- * @example
- * ```ts
+ * **Example** (Construct duplicate mapping error)
+ *
+ * ```ts import.meta.vitest name="Construct duplicate mapping error"
  * import { MappedLiteralDuplicateError } from "@beep/schema/MappedLiteralKit"
  *
  * const error = MappedLiteralDuplicateError.make({
@@ -95,13 +75,27 @@ type DirectionalKit<
  *   firstIndex: 0,
  *   secondIndex: 1
  * })
- * console.log(error.side) // "to"
+ * error.side // => "to"
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class MappedLiteralDuplicateError extends MappedLiteralDuplicateErrorBase {}
+export class MappedLiteralDuplicateError extends S.TaggedError<MappedLiteralDuplicateError>(
+  $I.make("MappedLiteralDuplicateError")
+)(
+  "MappedLiteralDuplicateError",
+  {
+    side: S.Literals(["from", "to"]),
+    literal: S.Union([S.String, S.BigInt, S.Boolean, S.Finite]),
+    firstIndex: S.Int.check(isNonNegative),
+    secondIndex: S.Int.check(isNonNegative),
+  },
+  $I.annoteError<MappedLiteralDuplicateError>("MappedLiteralDuplicateError", {
+    title: "Mapped Literal Duplicate Error",
+    description: "Thrown when mapped literal entries are not one-to-one.",
+  })
+) {}
 
 type SeenState = {
   readonly from: HashMap.HashMap<LiteralValue, number>;
@@ -255,13 +249,16 @@ const makeDirectionalKit = <
 /**
  * Runtime mapped literal kit that augments transformed literal schemas with directional helpers.
  *
+ * **Details**
+ *
  * - `decode` maps `From` literals to `To` literals.
  * - `encode` maps `To` literals back to `From` literals.
  * - Top-level helpers (`Enum`, `is`, `$match`, etc.) are aliases of `From`.
  * - Both sides must be unique by literal value and by `LiteralToKey` helper key encoding.
  *
- * @example
- * ```typescript
+ * **Example** (Map SQL state literals)
+ *
+ * ```ts import.meta.vitest name="Map SQL state literals"
  * import { MappedLiteralKit } from "@beep/schema";
  * import * as S from "effect/Schema";
  *
@@ -304,7 +301,8 @@ type MappedLiteralKitBase<M extends MappedPairs> = ForwardDirectionalKit<M> & {
 /**
  * Runtime mapped literal kit returned by {@link MappedLiteralKit}.
  *
- * @example
+ * **Example** (Type mapped kit pairs)
+ *
  * ```ts
  * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
  *
@@ -324,12 +322,15 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
 /**
  * Builds a mapped literal schema kit from a non-empty tuple of literal pairs.
  *
+ * **Details**
+ *
  * Requires one-to-one mappings. Exact duplicate literals on either side throw
  * {@link MappedLiteralDuplicateError}. Helper-key collisions on either side
  * throw {@link LiteralKitKeyCollisionError}.
  *
- * @example
- * ```ts
+ * **Example** (Build HTTP status mapping)
+ *
+ * ```ts import.meta.vitest name="Build HTTP status mapping"
  * import * as S from "effect/Schema"
  * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
  *

@@ -1,15 +1,15 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "unified-ai-toolchain",
     "title": "Unified AI Toolchain",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-05-22",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/unified-ai-toolchain",
-  "lifecycle": "paused",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -27,7 +27,7 @@
     "goals/unified-ai-toolchain/GOAL.md",
     "goals/unified-ai-toolchain/ops/manifest.json"
   ],
-  "currentTargetPhase": "V2.1",
+  "currentTargetPhase": null,
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -75,8 +75,8 @@
     "remainingGates": []
   },
   "v2Completion": {
-    "status": "active",
-    "activeGate": "V2.1 Operator CLI",
+    "status": "deferred",
+    "activeGate": null,
     "closedGates": ["V2/V3 packet bootstrap"],
     "remainingGates": [
       "root beep ai-sync command group",
@@ -88,7 +88,7 @@
     ]
   },
   "v3Completion": {
-    "status": "planned",
+    "status": "deferred",
     "activeGate": null,
     "remainingGates": [
       "canonical per-domain models",
@@ -132,62 +132,72 @@
     {
       "id": "V2.1",
       "name": "Operator CLI",
-      "status": "pending",
-      "version": "V2"
+      "status": "complete",
+      "version": "V2",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V2.2",
       "name": "Broad Dogfood",
-      "status": "pending",
-      "version": "V2"
+      "status": "complete",
+      "version": "V2",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V2.3",
       "name": "Reports And Interop Evidence",
-      "status": "pending",
-      "version": "V2"
+      "status": "complete",
+      "version": "V2",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V2.4",
       "name": "Drift Auto-PR",
-      "status": "pending",
-      "version": "V2"
+      "status": "complete",
+      "version": "V2",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V2.5",
       "name": "V2 Closeout",
-      "status": "pending",
-      "version": "V2"
+      "status": "complete",
+      "version": "V2",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V3.1",
       "name": "Canonical Models",
-      "status": "pending",
-      "version": "V3"
+      "status": "complete",
+      "version": "V3",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V3.2",
       "name": "Canonical Source",
-      "status": "pending",
-      "version": "V3"
+      "status": "complete",
+      "version": "V3",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V3.3",
       "name": "Native Plan And Apply",
-      "status": "pending",
-      "version": "V3"
+      "status": "complete",
+      "version": "V3",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V3.4",
       "name": "Current-Matrix Emitters",
-      "status": "pending",
-      "version": "V3"
+      "status": "complete",
+      "version": "V3",
+      "notes": "Deferred until a real agent-config drift incident."
     },
     {
       "id": "V3b",
       "name": "Research-Gated Additional Agents",
-      "status": "pending",
-      "version": "V3"
+      "status": "complete",
+      "version": "V3",
+      "notes": "Deferred until a real agent-config drift incident."
     }
   ],
   "commandGates": [
@@ -251,6 +261,6 @@
     "Additional-agent support starts before current-matrix V3 emitters are production-ready.",
     "Required source files are missing or materially contradictory."
   ],
-  "nextAction": "Implement V2.1 Operator CLI in @beep/repo-cli, backed by @beep/ai-sync report and validation primitives.",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when agent-config drift next causes a real incident. (previously: legacy status: v2-active)"
+  "nextAction": "No active implementation; reopen V2.1 only after a real agent-config drift incident.",
+  "statusNote": "Portfolio closeout recorded 2026-07-14: V1 is the retained deliverable; all ten V2/V3 phases are wont-do until a real agent-config drift incident. Known drift for claude-code-settings, rulesync-config, and rulesync-mcp remains documented as-is."
 }

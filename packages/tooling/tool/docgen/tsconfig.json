@@ -22,9 +22,6 @@
     },
     {
       "path": "../../library/repo-utils/tsconfig.json"
-    },
-    {
-      "path": "../../../foundation/primitive/types/tsconfig.json"
     }
   ]
 }

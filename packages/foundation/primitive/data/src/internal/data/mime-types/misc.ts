@@ -14,15 +14,16 @@
  * message, model, and x-conference types. Each entry contains a source
  * registry and an array of associated file extensions.
  *
- * @since 0.0.0
- * @category models
- * @example
- * ```typescript
- * import { misc } from "@beep/data/mime-types/misc"
+ * **Example** (Accessing font/woff2 MIME type)
  *
- * misc["font/woff2"]
- * // { source: "iana", extensions: ["woff2"] }
+ * ```ts import.meta.vitest name="Accessing font/woff2 MIME type"
+ * import { misc } from "@beep/data/MimeTypes"
+ *
+ * misc["font/woff2"].extensions.includes("woff2") // => true
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export const misc = {
   "chemical/x-cdx": {

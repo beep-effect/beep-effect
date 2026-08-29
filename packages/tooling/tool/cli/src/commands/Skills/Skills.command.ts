@@ -9,16 +9,21 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { decodeTomlTextAs } from "@beep/schema/Toml";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Console, Crypto, Effect, Encoding, FileSystem, Order, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/unstable/cli";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as jsonc from "jsonc-parser";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.js";
+import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { formatJsonValue } from "../../internal/cli/Json.ts";
+import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
+import { renderSkillProvenanceJson, renderSkillProvenanceSummary } from "./Skills.render.ts";
+import { runSkillProvenance, SkillProvenanceServiceLive } from "./Skills.service.ts";
+import type { SkillProvenanceService } from "./Skills.service.ts";
 
 // cspell:ignore mattpocock Gebert
 
@@ -31,7 +36,7 @@ const SKILLS_LOCK_PATH = "skills-lock.json";
 
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
-const encodeUnknownJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const encodeUnknownJsonResult = Unknown.encodeUnknownResultFromJsonString;
 
 type SkillsRunMode = "write" | "check" | "dry-run";
 
@@ -66,11 +71,22 @@ type SkillDriftLineFormatter<Tag extends SkillDrift["_tag"]> = (drift: SkillDrif
 /**
  * GitHub-backed skill source tracked by this checkout.
  *
- * @example
+ * **Example** (Describe one mirrored skill folder)
+ *
  * ```ts
- * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
- * console.log(remoteSkillSources.length)
+ * import { RemoteSkillSource } from "@beep/repo-cli/commands/Skills"
+ *
+ * const source = RemoteSkillSource.make({
+ *   name: "grill-me",
+ *   source: "UditAkhourii/grill-me",
+ *   sourceType: "github",
+ *   ref: "main",
+ *   skillPath: "skills/grill-me",
+ * })
+ *
+ * console.log(source.name) // "grill-me"
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,7 +107,8 @@ export class RemoteSkillSource extends S.Class<RemoteSkillSource>($I`RemoteSkill
 /**
  * One deterministic entry in skills-lock.json.
  *
- * @example
+ * **Example** (Validate a skill lock entry)
+ *
  * ```ts
  * import { SkillLockEntry } from "@beep/repo-cli/commands/Skills"
  * import * as S from "effect/Schema"
@@ -99,6 +116,7 @@ export class RemoteSkillSource extends S.Class<RemoteSkillSource>($I`RemoteSkill
  * const candidate = { name: "jsdoc-annotation-specialist", source: "repo", version: "0.2.0" }
  * console.log(S.is(SkillLockEntry)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,7 +137,8 @@ export class SkillLockEntry extends S.Class<SkillLockEntry>($I`SkillLockEntry`)(
 /**
  * Deterministic project skill lockfile.
  *
- * @example
+ * **Example** (Validate an empty skill lockfile)
+ *
  * ```ts
  * import { SkillLockFile } from "@beep/repo-cli/commands/Skills"
  * import * as S from "effect/Schema"
@@ -127,6 +146,7 @@ export class SkillLockEntry extends S.Class<SkillLockEntry>($I`SkillLockEntry`)(
  * const candidate = { skills: [] }
  * console.log(S.is(SkillLockFile)(candidate)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -222,16 +242,24 @@ const skillSource = (source: {
 /**
  * GitHub-backed skills that this repo can update automatically.
  *
- * @example
+ * **Example** (Find a configured remote skill)
+ *
  * ```ts
  * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
  *
  * console.log(remoteSkillSources.some((source) => source.name === "grill-me")) // true
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
 export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
+  skillSource({
+    name: "adhd",
+    source: "UditAkhourii/adhd",
+    ref: "main",
+    skillPath: "skills/adhd/SKILL.md",
+  }),
   skillSource({
     name: "grill-me",
     source: "mattpocock/skills",
@@ -245,46 +273,22 @@ export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
     skillPath: "skills/productivity/teach/SKILL.md",
   }),
   skillSource({
-    name: "ponytail",
-    source: "DietrichGebert/ponytail",
+    name: "portless",
+    source: "vercel-labs/portless",
     ref: "main",
-    skillPath: "skills/ponytail/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-audit",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-audit/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-debt",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-debt/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-gain",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-gain/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-help",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-help/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-review",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-review/SKILL.md",
+    skillPath: "skills/portless/SKILL.md",
   }),
   skillSource({
     name: "shadcn",
     source: "shadcn-ui/ui",
     ref: "main",
     skillPath: "skills/shadcn/SKILL.md",
+  }),
+  skillSource({
+    name: "turborepo",
+    source: "vercel/turborepo",
+    ref: "main",
+    skillPath: "skills/turborepo/SKILL.md",
   }),
 ];
 
@@ -295,24 +299,24 @@ const remoteSkillSourcesByName: Readonly<Record<string, RemoteSkillSource>> = pi
 );
 
 const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Report skill drift without writing files and exit non-zero when changes are needed")
 );
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Preview skill updates without writing files or failing on drift")
 );
 const skillFlag = Flag.string("skill").pipe(
   Flag.withDescription("Update or check one known GitHub-backed skill"),
   Flag.optional
 );
-
-const formatJson = (value: unknown): string => {
-  const encoded = Result.getOrThrow(encodeUnknownJsonResult(value));
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
+const provenanceSkillArgument = Argument.string("skill").pipe(
+  Argument.withDescription("Installed skill to resolve; the P1 pilot supports shadcn")
+);
+const provenanceJsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Render the would-be skills-lock/v2 entry as JSON")
+);
 
 const normalizeSlashes = (value: string): string => Str.replaceAll("\\", "/")(value);
 
@@ -351,24 +355,6 @@ const toSortedRecord = <A>(entries: ReadonlyArray<readonly [string, A]>): Record
     record[key] = value;
   }
   return record;
-};
-
-const asArrayBufferView = (bytes: Uint8Array): Uint8Array<ArrayBuffer> => Uint8Array.from(bytes);
-
-const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  let size = 0;
-  for (const chunk of chunks) {
-    size += chunk.byteLength;
-  }
-
-  const output = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    output.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return output;
 };
 
 const sha256Hex = Effect.fn("Skills.sha256Hex")(function* (
@@ -418,15 +404,22 @@ const readExistingFile = Effect.fn("Skills.readExistingFile")(function* (
     .pipe(Effect.map(O.some), SkillsCommandError.mapError(`Failed to read ${absolutePath}.`, absolutePath));
 });
 
-const writeStringFile = Effect.fn("Skills.writeStringFile")(function* (
-  absolutePath: string,
-  content: string
+const makeParentDirectory = Effect.fn("Skills.makeParentDirectory")(function* (
+  absolutePath: string
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs
     .makeDirectory(path.dirname(absolutePath), { recursive: true })
     .pipe(SkillsCommandError.mapError(`Failed to create parent directory for ${absolutePath}.`, absolutePath));
+});
+
+const writeStringFile = Effect.fn("Skills.writeStringFile")(function* (
+  absolutePath: string,
+  content: string
+): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+  yield* makeParentDirectory(absolutePath);
+  const fs = yield* FileSystem.FileSystem;
   yield* fs
     .writeFileString(absolutePath, content)
     .pipe(SkillsCommandError.mapError(`Failed to write ${absolutePath}.`, absolutePath));
@@ -436,11 +429,8 @@ const writeByteFile = Effect.fn("Skills.writeByteFile")(function* (
   absolutePath: string,
   bytes: Uint8Array
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
+  yield* makeParentDirectory(absolutePath);
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs
-    .makeDirectory(path.dirname(absolutePath), { recursive: true })
-    .pipe(SkillsCommandError.mapError(`Failed to create parent directory for ${absolutePath}.`, absolutePath));
   yield* fs
     .writeFile(absolutePath, asArrayBufferView(bytes))
     .pipe(SkillsCommandError.mapError(`Failed to write ${absolutePath}.`, absolutePath));
@@ -731,7 +721,7 @@ const buildDesiredLock = Effect.fn("Skills.buildDesiredLock")(function* (
   });
 });
 
-const renderLockFile = (lock: SkillLockFile): string => formatJson(lock);
+const renderLockFile = (lock: SkillLockFile): string => formatJsonValue(lock);
 
 const tomlString = (value: string): string => Result.getOrThrow(encodeUnknownJsonResult(value));
 
@@ -749,16 +739,18 @@ const renderSkillsBlock = (names: ReadonlyArray<string>): string =>
 /**
  * Render `.codex/config.toml` with skills sourced from `.claude/skills`.
  *
- * @param configText - Existing Codex config text.
- * @param names - Skill names to render into the managed skills table.
- * @returns Codex config text with the managed skills table replaced or appended.
- * @example
+ * **Example** (Render managed Codex skills configuration)
+ *
  * ```ts
  * import { renderCodexConfigWithSkills } from "@beep/repo-cli/commands/Skills"
  *
  * const rendered = renderCodexConfigWithSkills("", ["grill-me"])
  * console.log(rendered.includes("[skills]")) // true
  * ```
+ *
+ * @param configText - Existing Codex config text.
+ * @param names - Skill names to render into the managed skills table.
+ * @returns Codex config text with the managed skills table replaced or appended.
  * @category commands
  * @since 0.0.0
  */
@@ -899,7 +891,8 @@ const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMo
 /**
  * Run the skills update workflow.
  *
- * @example
+ * **Example** (Create the skills update workflow)
+ *
  * ```ts
  * import { runSkillsUpdate } from "@beep/repo-cli/commands/Skills"
  * import { Effect } from "effect"
@@ -908,6 +901,7 @@ const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMo
  * const program = runSkillsUpdate({ mode: "check", skill: O.none() })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -1008,10 +1002,47 @@ const skillsUpdateCommand = Command.make(
   })
 ).pipe(Command.withDescription("Update repo-local Claude/Codex skill mirrors from known upstream sources"));
 
+const runSkillsProvenanceCommand = Effect.fn("Skills.runSkillsProvenanceCommand")(function* (options: {
+  readonly json: boolean;
+  readonly skill: string;
+}): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path | SkillProvenanceService> {
+  const repoRoot = yield* findRepoRoot().pipe(
+    SkillsCommandError.mapError("Failed to locate repository root for skill provenance.")
+  );
+  const report = yield* runSkillProvenance(options.skill, repoRoot);
+  yield* Console.log(
+    options.json ? Str.trimEnd(renderSkillProvenanceJson(report)) : renderSkillProvenanceSummary(report)
+  );
+});
+
+const skillsProvenanceCommand = Command.make(
+  "provenance",
+  {
+    skill: provenanceSkillArgument,
+    json: provenanceJsonFlag,
+  },
+  Effect.fn("Skills.provenanceCommand")(function* (options) {
+    yield* runSkillsProvenanceCommand(options).pipe(
+      Effect.catchTag(
+        "SkillsCommandError",
+        Effect.fn("Skills.provenanceCommand.reportError")(function* (error) {
+          const message = `skills:provenance: ${error.message}`;
+          yield* Console.error(message);
+          return yield* failWithReportedExit(message);
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Report a would-be skills-lock/v2 entry without writing repository state"),
+  Command.provide(SkillProvenanceServiceLive)
+);
+
 /**
  * Skills command group.
  *
- * @example
+ * **Example** (Create the skills command runner)
+ *
  * ```ts
  * import { skillsCommand } from "@beep/repo-cli/commands/Skills"
  * import { Command } from "effect/unstable/cli"
@@ -1020,12 +1051,15 @@ const skillsUpdateCommand = Command.make(
  * const run = Command.run(skillsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
 export const skillsCommand = Command.make("skills", {}, () =>
-  Console.log("Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check")
+  Console.log(
+    "Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check\n- bun run beep skills provenance shadcn"
+  )
 ).pipe(
   Command.withDescription("Manage repo-local Claude and Codex skill mirrors"),
-  Command.withSubcommands([skillsUpdateCommand])
+  Command.withSubcommands([skillsUpdateCommand, skillsProvenanceCommand])
 );

@@ -8,12 +8,15 @@ import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
-const AnnotatedDocumentArbitrary = S.toArbitrary(Contract.AnnotatedDocument);
+const AnnotatedDocumentArbitrary = S.toArbitrary(Contract.AnnotatedDocument)(fc);
 
 const sampleProvenance = Contract.Provenance.make({
   generatedBy: "wink-nlp",
@@ -40,6 +43,15 @@ const sampleDocument = Contract.AnnotatedDocument.make({
       type: "PLACE",
     }),
   ],
+  mentions: [
+    Contract.Mention.make({
+      chunkId: Contract.ChunkId.make("chunk-1"),
+      id: Contract.MentionId.make("mention-1"),
+      provenance: sampleProvenance,
+      span: Contract.Span.make({ end: NonNegativeInt.make(11), start: NonNegativeInt.make(6) }),
+      text: "world",
+    }),
+  ],
   provenance: sampleProvenance,
   relations: [
     Contract.Relation.make({
@@ -50,7 +62,7 @@ const sampleDocument = Contract.AnnotatedDocument.make({
       type: "MENTIONS",
     }),
   ],
-  version: "nlp-ir/1.0",
+  version: "nlp-ir/1.1",
 });
 
 describe("AnnotatedDocument round-trip", () => {
@@ -58,21 +70,39 @@ describe("AnnotatedDocument round-trip", () => {
     "encode then decode preserves the document",
     Effect.fnUntraced(function* () {
       const encoded = yield* S.encodeUnknownEffect(Contract.AnnotatedDocument)(sampleDocument);
-      const decoded = yield* S.decodeUnknownEffect(Contract.AnnotatedDocument)(encoded);
-      expect(decoded.version).toBe("nlp-ir/1.0");
+      const decoded = yield* S.decodeEffect(Contract.AnnotatedDocument)(encoded);
+      expect(decoded.version).toBe("nlp-ir/1.1");
       expect(decoded.chunks.length).toBe(1);
       expect(decoded.entities.length).toBe(1);
+      expect(decoded.mentions.length).toBe(1);
       expect(decoded.relations.length).toBe(1);
       expect(decoded.chunks[0]?.text).toBe("Hello world");
     })
   );
 
   it.effect(
-    "every chunk, entity, and relation carries provenance",
+    "mentions resolve to their entity and chunk with the span cut from the chunk text",
     Effect.fnUntraced(function* () {
       const encoded = yield* S.encodeUnknownEffect(Contract.AnnotatedDocument)(sampleDocument);
-      const decoded = yield* S.decodeUnknownEffect(Contract.AnnotatedDocument)(encoded);
+      const decoded = yield* S.decodeEffect(Contract.AnnotatedDocument)(encoded);
+      const mention = A.head(decoded.mentions);
+      const entity = A.head(decoded.entities);
+      const chunk = A.head(decoded.chunks);
+      expect(O.map(mention, (m) => m.id)).toEqual(O.flatMap(entity, (e) => A.head(e.mentions)));
+      expect(O.map(mention, (m) => m.chunkId)).toEqual(O.map(chunk, (c) => c.id));
+      expect(O.map(mention, (m) => m.text)).toEqual(
+        O.zipWith(mention, chunk, (m, c) => Str.slice(m.span.start, m.span.end)(c.text))
+      );
+    })
+  );
+
+  it.effect(
+    "every chunk, mention, entity, and relation carries provenance",
+    Effect.fnUntraced(function* () {
+      const encoded = yield* S.encodeUnknownEffect(Contract.AnnotatedDocument)(sampleDocument);
+      const decoded = yield* S.decodeEffect(Contract.AnnotatedDocument)(encoded);
       expect(decoded.chunks.every((c) => typeof c.provenance.source === "string")).toBe(true);
+      expect(decoded.mentions.every((m) => typeof m.provenance.source === "string")).toBe(true);
       expect(decoded.entities.every((e) => typeof e.provenance.generatedBy === "string")).toBe(true);
       expect(decoded.relations.every((r) => typeof r.provenance.timestamp === "number")).toBe(true);
     })
@@ -84,7 +114,7 @@ describe("AnnotatedDocument round-trip", () => {
         const decoded = Effect.runSync(
           Effect.gen(function* () {
             const encoded = yield* S.encodeUnknownEffect(Contract.AnnotatedDocument)(document);
-            return yield* S.decodeUnknownEffect(Contract.AnnotatedDocument)(encoded);
+            return yield* S.decodeEffect(Contract.AnnotatedDocument)(encoded);
           })
         );
 
@@ -108,8 +138,8 @@ describe("Span", () => {
   });
 
   it("rejects negative offsets", () => {
-    expect(() => S.decodeUnknownSync(Contract.Span)({ end: 1, start: -1 })).toThrow();
-    expect(() => S.decodeUnknownSync(Contract.Span)({ end: -1, start: 0 })).toThrow();
+    expect(() => S.decodeSync(Contract.Span)({ end: 1, start: -1 })).toThrow();
+    expect(() => S.decodeSync(Contract.Span)({ end: -1, start: 0 })).toThrow();
   });
 
   it("rejects spans whose end precedes start", () => {
@@ -121,7 +151,7 @@ describe("Provenance confidence", () => {
   it.effect(
     "decodes confidence values in the unit interval",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeUnknownEffect(Contract.Provenance)({
+      const decoded = yield* S.decodeEffect(Contract.Provenance)({
         confidence: 1,
         generatedBy: "langextract",
         source: "doc-1",
@@ -135,7 +165,7 @@ describe("Provenance confidence", () => {
     "rejects confidence values outside the unit interval",
     Effect.fnUntraced(function* () {
       const low = yield* Effect.exit(
-        S.decodeUnknownEffect(Contract.Provenance)({
+        S.decodeEffect(Contract.Provenance)({
           confidence: -0.01,
           generatedBy: "langextract",
           source: "doc-1",
@@ -143,7 +173,7 @@ describe("Provenance confidence", () => {
         })
       );
       const high = yield* Effect.exit(
-        S.decodeUnknownEffect(Contract.Provenance)({
+        S.decodeEffect(Contract.Provenance)({
           confidence: 1.01,
           generatedBy: "langextract",
           source: "doc-1",

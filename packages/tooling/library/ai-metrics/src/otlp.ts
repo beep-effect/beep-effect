@@ -7,32 +7,44 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, pipe } from "effect";
+import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
+import { ExportResultCode } from "@opentelemetry/core";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import { Context, Effect, flow, Layer, pipe, Schedule } from "effect";
+import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { ensureAiMetricsDerivedStorage } from "./derived-storage.ts";
 import {
   AiMetricsDeployTarget,
   AiMetricsOtlpEndpointSpec,
   AiMetricsSourceRole,
   AiMetricsTranscriptSource,
 } from "./models.ts";
+import { hashPublicTextSha256 } from "./privacy.ts";
+import type { HrTime } from "@opentelemetry/api";
+import type { Resource } from "@opentelemetry/resources";
+import type { ReadableSpan } from "@opentelemetry/sdk-trace-base";
 
 const $I = $RepoAiMetricsId.create("otlp");
-
 /**
  * OTLP attributes approved for redacted AI metrics span export.
  *
- * @example
+ * **Example** (Use AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST)
+ *
  * ```ts
  * import { AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST } from "@beep/repo-ai-metrics"
  *
  * const carriesSessionId = AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST.includes("session.id")
  * console.log(carriesSessionId)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -64,13 +76,15 @@ export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = [
 /**
  * Attribute value variants allowed on redacted AI metrics OTLP spans.
  *
- * @example
+ * **Example** (Narrow with AiMetricsOtlpAttributeValue)
+ *
  * ```ts
  * import { AiMetricsOtlpAttributeValue } from "@beep/repo-ai-metrics"
  *
  * const isAttributeValue = AiMetricsOtlpAttributeValue.is(42)
  * console.log(isAttributeValue)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -84,12 +98,14 @@ export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolea
 /**
  * Runtime type for {@link AiMetricsOtlpAttributeValue}.
  *
- * @example
+ * **Example** (Type a value as AiMetricsOtlpAttributeValue)
+ *
  * ```ts
  * import type { AiMetricsOtlpAttributeValue } from "@beep/repo-ai-metrics"
  * const value: AiMetricsOtlpAttributeValue = "hash-only"
  * console.log(value)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,7 +114,8 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
 /**
  * Error raised by AI metrics OTLP projection or export.
  *
- * @example
+ * **Example** (Construct AiMetricsOtlpExportError)
+ *
  * ```ts
  * import { AiMetricsOtlpExportError } from "@beep/repo-ai-metrics"
  *
@@ -108,24 +125,26 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
  * })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsOtlpExportError extends TaggedErrorClass<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
+export class AiMetricsOtlpExportError extends S.TaggedError<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
   "AiMetricsOtlpExportError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsOtlpExportError", {
+  $I.annoteError<AiMetricsOtlpExportError>("AiMetricsOtlpExportError", {
     description: "Typed failure raised while projecting or exporting redacted AI metrics OTLP spans.",
   })
 ) {}
 
 /**
- * Input for exporting one derived ingest run as OTLP spans.
+ * Input for exporting every derived turn still awaiting OTLP export.
  *
- * @example
+ * **Example** (Construct AiMetricsOtlpExportInput)
+ *
  * ```ts
  * import { AiMetricsOtlpExportInput, AiMetricsOtlpEndpointSpec } from "@beep/repo-ai-metrics"
  *
@@ -142,6 +161,7 @@ export class AiMetricsOtlpExportError extends TaggedErrorClass<AiMetricsOtlpExpo
  * })
  * console.log(input)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -149,7 +169,6 @@ export class AiMetricsOtlpExportInput extends S.Class<AiMetricsOtlpExportInput>(
   {
     duckDbPath: S.String,
     endpoint: AiMetricsOtlpEndpointSpec,
-    ingestRunId: S.optionalKey(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("AiMetricsOtlpExportInput", {
@@ -158,9 +177,17 @@ export class AiMetricsOtlpExportInput extends S.Class<AiMetricsOtlpExportInput>(
 ) {}
 
 /**
- * One span projection ready to be emitted through Effect tracing.
+ * One span projection ready to be delivered to an OTLP collector.
  *
- * @example
+ * **Details**
+ *
+ * The trace and span ids are content-addressed rather than random, so the same
+ * derived row always projects to the same span identity. That is what makes
+ * re-delivery harmless: a collector enforcing span-id uniqueness — Phoenix has
+ * `uq_spans_span_id` — collapses a repeat send into the row it already stored.
+ *
+ * **Example** (Construct AiMetricsOtlpSpanProjection)
+ *
  * ```ts
  * import { AiMetricsOtlpSpanProjection } from "@beep/repo-ai-metrics"
  *
@@ -170,27 +197,39 @@ export class AiMetricsOtlpExportInput extends S.Class<AiMetricsOtlpExportInput>(
  *     "ai_metrics.line_number": 1,
  *     "openinference.span.kind": "CHAIN"
  *   },
- *   spanName: "ai_metrics.turn"
+ *   spanId: "1122334455667788",
+ *   spanName: "ai_metrics.turn",
+ *   traceId: "0123456789abcdef0123456789abcdef"
  * })
  * console.log(projection.attributes["ai_metrics.event_name"])
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjection>($I`AiMetricsOtlpSpanProjection`)(
   {
     attributes: S.Record(S.String, AiMetricsOtlpAttributeValue),
+    /**
+     * Set on turn spans to the enclosing session span, absent on session spans
+     * themselves, so one agent session arrives as one trace instead of as many
+     * unrelated roots.
+     */
+    parentSpanId: S.optionalKey(S.String),
+    spanId: S.String,
     spanName: S.String,
+    traceId: S.String,
   },
   $I.annote("AiMetricsOtlpSpanProjection", {
-    description: "Redacted span name and bounded attributes derived from AI metrics DuckDB storage.",
+    description: "Redacted span identity, name, and bounded attributes derived from AI metrics DuckDB storage.",
   })
 ) {}
 
 /**
- * Span projection batch resolved for one derived ingest run.
+ * Span projections for every derived turn still awaiting OTLP export.
  *
- * @example
+ * **Example** (Construct AiMetricsOtlpSpanProjectionBatch)
+ *
  * ```ts
  * import {
  *   AiMetricsOtlpSpanProjection,
@@ -198,18 +237,21 @@ export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjec
  * } from "@beep/repo-ai-metrics"
  *
  * const batch = AiMetricsOtlpSpanProjectionBatch.make({
- *   ingestRunId: "forwarder-1",
  *   projections: [
  *     AiMetricsOtlpSpanProjection.make({
  *       attributes: { "ai_metrics.event_name": "codex.event_msg" },
- *       spanName: "ai_metrics.turn"
+ *       spanId: "1122334455667788",
+ *       spanName: "ai_metrics.turn",
+ *       traceId: "0123456789abcdef0123456789abcdef"
  *     })
  *   ],
  *   sessionSpanCount: 0,
+ *   turnIds: ["turn-1"],
  *   turnSpanCount: 1
  * })
  * console.log(batch.projections.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -217,26 +259,31 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
   $I`AiMetricsOtlpSpanProjectionBatch`
 )(
   {
-    ingestRunId: S.String,
     projections: S.Array(AiMetricsOtlpSpanProjection),
     sessionSpanCount: S.Finite,
+    /**
+     * Turn ids backing this batch, carried so a successful export can close the
+     * watermark on exactly the rows it emitted rather than on a re-evaluated
+     * predicate that may have moved underneath it.
+     */
+    turnIds: S.Array(S.String),
     turnSpanCount: S.Finite,
   },
   $I.annote("AiMetricsOtlpSpanProjectionBatch", {
-    description: "Redacted OTLP span projections grouped by one AI metrics ingest run.",
+    description: "Redacted OTLP span projections for every AI metrics turn still awaiting export.",
   })
 ) {}
 
 /**
  * Result of a redacted AI metrics OTLP export attempt.
  *
- * @example
+ * **Example** (Construct AiMetricsOtlpExportResult)
+ *
  * ```ts
  * import { AiMetricsOtlpExportResult } from "@beep/repo-ai-metrics"
  *
  * const result = AiMetricsOtlpExportResult.make({
  *   endpointTraceUrl: "http://127.0.0.1:6006/projects/default/traces",
- *   ingestRunId: "forwarder-1",
  *   sessionSpanCount: 2,
  *   spanCount: 12,
  *   target: "local",
@@ -244,13 +291,13 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Class<AiMetricsOtlpSpanP
  * })
  * console.log(result.spanCount)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class AiMetricsOtlpExportResult extends S.Class<AiMetricsOtlpExportResult>($I`AiMetricsOtlpExportResult`)(
   {
     endpointTraceUrl: S.String,
-    ingestRunId: S.String,
     sessionSpanCount: S.Finite,
     spanCount: S.Finite,
     target: AiMetricsDeployTarget,
@@ -258,15 +305,6 @@ export class AiMetricsOtlpExportResult extends S.Class<AiMetricsOtlpExportResult
   },
   $I.annote("AiMetricsOtlpExportResult", {
     description: "Safe counts returned after emitting redacted AI metrics spans to the active tracer.",
-  })
-) {}
-
-class LatestIngestRunRow extends S.Class<LatestIngestRunRow>($I`LatestIngestRunRow`)(
-  {
-    ingestRunId: S.String,
-  },
-  $I.annote("LatestIngestRunRow", {
-    description: "Latest AI metrics ingest run selected from derived DuckDB storage.",
   })
 ) {}
 
@@ -296,12 +334,25 @@ class AiMetricsOtlpTurnExportRow extends S.Class<AiMetricsOtlpTurnExportRow>($I`
   })
 ) {}
 
-const decodeLatestRows = S.decodeUnknownEffect(S.Array(LatestIngestRunRow));
 const decodeTurnRows = S.decodeUnknownEffect(S.Array(AiMetricsOtlpTurnExportRow));
 const encodeOtlpExportJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 
 const exportFailure = (message: string, cause: unknown): AiMetricsOtlpExportError =>
   AiMetricsOtlpExportError.make({ cause, message });
+
+const retryableOtlpExporterMessage = "Export failed with retryable status";
+
+const errorMessage = (cause: unknown): O.Option<string> =>
+  P.isError(cause)
+    ? O.some(cause.message)
+    : P.hasProperty(cause, "message") && P.isString(cause.message)
+      ? O.some(cause.message)
+      : O.none();
+
+const isRetryableOtlpExportError = (error: AiMetricsOtlpExportError): boolean =>
+  pipe(error.cause, errorMessage, O.exists(Eq.equals(retryableOtlpExporterMessage)));
+
+const otlpDeliveryRetrySchedule = Schedule.exponential("1 second").pipe(Schedule.jittered);
 
 const unknownMetadata = "unknown";
 
@@ -341,35 +392,12 @@ const openInferenceSpanKindFor = (row: AiMetricsOtlpTurnExportRow): string => {
   return A.some(llmEventNameFragments, (fragment) => Str.includes(fragment)(eventName)) ? "LLM" : "CHAIN";
 };
 
-const resolveIngestRunId = Effect.fn("AiMetrics.otlp.resolveIngestRunId")(function* (ingestRunId: string | undefined) {
-  if (ingestRunId !== undefined && Str.trim(ingestRunId) !== "latest") {
-    return ingestRunId;
-  }
-
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb
-    .query(
-      `SELECT ingest_run_id AS "ingestRunId"
-       FROM ai_metrics_ingest_runs
-       ORDER BY started_at_epoch_ms DESC
-       LIMIT 1`
-    )
-    .pipe(Effect.mapError((cause) => exportFailure("Failed to select the latest AI metrics ingest run.", cause)));
-  const decoded = yield* decodeLatestRows(rows).pipe(
-    Effect.mapError((cause) => exportFailure("Failed to decode the latest AI metrics ingest run row.", cause))
-  );
-  const latest = A.head(decoded);
-
-  if (O.isNone(latest)) {
-    return yield* exportFailure("No AI metrics ingest runs are available for OTLP export.", {
-      ingestRunId: ingestRunId ?? "latest",
-    });
-  }
-
-  return latest.value.ingestRunId;
-});
-
-const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* (ingestRunId: string) {
+// Selects every turn that has not yet been exported, rather than the turns belonging
+// to one ingest run. Run-scoping silently dropped work: a run that committed turns and
+// then died before exporting left them attached to a run the exporter would never
+// revisit. Draining on the watermark instead makes a failed export self-healing --
+// the next run simply picks the turns up.
+const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* () {
   const duckdb = yield* DuckDb;
   const rows = yield* duckdb
     .query(
@@ -394,9 +422,8 @@ const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* (ingestR
          s.config_snapshot_id AS "configSnapshotId"
        FROM ai_metrics_turns t
        JOIN ai_metrics_sessions s ON s.agent_session_id = t.agent_session_id
-       WHERE t.ingest_run_id = $ingestRunId
-       ORDER BY t.agent_session_id, t.line_number`,
-      { ingestRunId }
+       WHERE t.otlp_exported_at_epoch_ms IS NULL
+       ORDER BY t.agent_session_id, t.line_number`
     )
     .pipe(Effect.mapError((cause) => exportFailure("Failed to read AI metrics turn rows for OTLP export.", cause)));
 
@@ -405,7 +432,56 @@ const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* (ingestR
   );
 });
 
-const sessionProjection = (row: AiMetricsOtlpTurnExportRow): AiMetricsOtlpSpanProjection =>
+const OTLP_TRACE_ID_HEX_LENGTH = 32;
+const OTLP_SPAN_ID_HEX_LENGTH = 16;
+
+// The OTLP wire format spells "no id" as all zero bytes, so a span carrying an
+// all-zero trace or span id is discarded by the collector rather than stored. A
+// SHA-256 prefix will not realistically be all zeros, but a span that vanishes
+// without an error is not a failure mode worth leaving open.
+const otlpIdFrom = (digest: string, hexLength: number): string => {
+  const candidate = Str.takeLeft(digest, hexLength);
+  return candidate === Str.repeat(hexLength)("0") ? `${Str.repeat(hexLength - 1)("0")}1` : candidate;
+};
+
+const otlpIdFor = Effect.fnUntraced(function* (seed: string, hexLength: number) {
+  const digest = yield* hashPublicTextSha256(seed).pipe(
+    Effect.mapError((cause) => exportFailure("Failed to derive a deterministic AI metrics OTLP span id.", cause))
+  );
+
+  return otlpIdFrom(digest, hexLength);
+});
+
+// Seeded from the transcript, NOT read off `agent_session_id`. That column is now
+// content-addressed too, but a store migrated in place is not guaranteed to be uniform:
+// until `ai-metrics-agent-session-id-v2` has run, rows still carry per-run ids. Deriving
+// trace identity from the transcript keeps a half-migrated store tracing correctly, and
+// keeps trace ids stable across the migration itself.
+//
+// This seed also carries `sourceRole`, which the session row key deliberately does not.
+// They are allowed to diverge: dropping it here would change the trace id of every
+// transcript and detach future spans from traces Phoenix already holds, which costs far
+// more than the rare role flip it would tidy up.
+const sessionSeed = (row: AiMetricsOtlpTurnExportRow): string =>
+  `${row.sourceKind}\u0000${row.sourceRole}\u0000${row.sourcePathHash}`;
+
+// Seeds are prefixed so a session seed and a turn id that happen to share text cannot
+// collide across id kinds, and so a trace id is never the same digest as a span id.
+const traceIdFor = (row: AiMetricsOtlpTurnExportRow) =>
+  otlpIdFor(`trace:${sessionSeed(row)}`, OTLP_TRACE_ID_HEX_LENGTH);
+const sessionSpanIdFor = (row: AiMetricsOtlpTurnExportRow) =>
+  otlpIdFor(`session:${sessionSeed(row)}`, OTLP_SPAN_ID_HEX_LENGTH);
+const turnSpanIdFor = (turnId: string) => otlpIdFor(`turn:${turnId}`, OTLP_SPAN_ID_HEX_LENGTH);
+
+type AiMetricsOtlpSessionIdentity = {
+  readonly sessionSpanId: string;
+  readonly traceId: string;
+};
+
+const sessionProjection = (
+  row: AiMetricsOtlpTurnExportRow,
+  identity: AiMetricsOtlpSessionIdentity
+): AiMetricsOtlpSpanProjection =>
   AiMetricsOtlpSpanProjection.make({
     attributes: allowlistedAttributes({
       ...O.getSomesStruct({
@@ -425,11 +501,17 @@ const sessionProjection = (row: AiMetricsOtlpTurnExportRow): AiMetricsOtlpSpanPr
       "openinference.span.kind": "AGENT",
       "session.id": row.agentSessionId,
     }),
+    spanId: identity.sessionSpanId,
     spanName: "ai_metrics.agent.session",
+    traceId: identity.traceId,
   });
 
-const turnProjection = (row: AiMetricsOtlpTurnExportRow): AiMetricsOtlpSpanProjection => {
+const turnProjection = Effect.fnUntraced(function* (
+  row: AiMetricsOtlpTurnExportRow,
+  identity: AiMetricsOtlpSessionIdentity
+) {
   const toolName = toolNameFor(row);
+  const spanId = yield* turnSpanIdFor(row.turnId);
 
   return AiMetricsOtlpSpanProjection.make({
     attributes: allowlistedAttributes({
@@ -451,79 +533,357 @@ const turnProjection = (row: AiMetricsOtlpTurnExportRow): AiMetricsOtlpSpanProje
       "openinference.span.kind": openInferenceSpanKindFor(row),
       "session.id": row.agentSessionId,
     }),
+    parentSpanId: identity.sessionSpanId,
+    spanId,
     spanName: "ai_metrics.agent.turn",
+    traceId: identity.traceId,
   });
-};
+});
 
-const spanProjectionsFor = (
-  ingestRunId: string,
-  rows: ReadonlyArray<AiMetricsOtlpTurnExportRow>
-): AiMetricsOtlpSpanProjectionBatch => {
-  const sessionRows = pipe(
-    rows,
-    A.dedupeWith((left, right) => left.agentSessionId === right.agentSessionId)
-  );
-  const sessionProjections = A.map(sessionRows, sessionProjection);
-  const turnProjections = A.map(rows, turnProjection);
+const sessionGroupProjections = Effect.fnUntraced(function* (
+  rows: A.NonEmptyReadonlyArray<AiMetricsOtlpTurnExportRow>
+) {
+  const head = A.headNonEmpty(rows);
+  const identity: AiMetricsOtlpSessionIdentity = {
+    sessionSpanId: yield* sessionSpanIdFor(head),
+    traceId: yield* traceIdFor(head),
+  };
+
+  return {
+    session: sessionProjection(head, identity),
+    turns: yield* Effect.forEach(rows, (row) => turnProjection(row, identity)),
+  };
+});
+
+// Grouped by transcript rather than mapped row-by-row so each session's trace and span
+// ids are digested once and shared by every turn beneath it. A run can carry tens of
+// thousands of turns, and `crypto.subtle` is not free.
+//
+// The key is the content seed, not `agent_session_id`. Grouping must not depend on that
+// column, because a store migrated in place can still hold legacy per-run ids alongside
+// content-addressed ones until `ai-metrics-agent-session-id-v2` has run. On such a store,
+// grouping by the column would emit one session projection per legacy row, all carrying
+// the same content-addressed span id -- and a single OTLP request containing a duplicate
+// span id is one the collector may reject outright rather than deduplicate.
+const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMetricsOtlpTurnExportRow>) {
+  const groups = yield* Effect.forEach(R.values(A.groupBy(rows, sessionSeed)), sessionGroupProjections);
+  const sessionProjections = A.map(groups, (group) => group.session);
+  const turnProjections = A.flatMap(groups, (group) => group.turns);
 
   return AiMetricsOtlpSpanProjectionBatch.make({
-    ingestRunId,
-    projections: A.appendAll(sessionProjections, turnProjections),
+    // Keep each session next to its turns. If all session roots lead the array, a
+    // backlog with 512+ sessions can acknowledge a session-only chunk without closing
+    // a single turn watermark, so every retry starts from the same prefix.
+    projections: A.flatMap(groups, (group) => A.prepend(group.turns, group.session)),
     sessionSpanCount: A.length(sessionProjections),
+    turnIds: A.map(rows, (row) => row.turnId),
     turnSpanCount: A.length(turnProjections),
   });
-};
+});
 
 /**
  * Read derived DuckDB rows and build redacted OTLP span projections.
  *
- * @effects Reads derived session and turn rows from the configured DuckDB database.
- * @example
+ * **Example** (Read every pending projection)
+ *
  * ```ts
- * import {
- *   AiMetricsOtlpEndpointSpec,
- *   AiMetricsOtlpExportInput,
- *   readAiMetricsOtlpSpanProjections
- * } from "@beep/repo-ai-metrics"
+ * import { readAiMetricsOtlpSpanProjections } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
  * import { Effect } from "effect"
- * const input = AiMetricsOtlpExportInput.make({
- *   duckDbPath: ".beep/ai-metrics/derived/ai-metrics.duckdb",
- *   endpoint: AiMetricsOtlpEndpointSpec.make({
- *     baseUrl: "http://127.0.0.1:6006",
- *     protocol: "http/protobuf",
- *     resourceAttributes: {},
- *     signalScope: "traces_only",
- *     traceUrl: "http://127.0.0.1:6006/projects/default/traces"
- *   }),
- *   target: "local"
- * })
- * const program = readAiMetricsOtlpSpanProjections(input).pipe(
- *   Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: input.duckDbPath })))
+ * const program = readAiMetricsOtlpSpanProjections.pipe(
+ *   Effect.provide(
+ *     DuckDb.makeNodeLayer(
+ *       DuckDbConnectionOptions.make({ databasePath: ".beep/ai-metrics/derived/ai-metrics.duckdb" })
+ *     )
+ *   )
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Reads derived session and turn rows from the configured DuckDB database.
  * @category services
  * @since 0.0.0
  */
-export const readAiMetricsOtlpSpanProjections: (
-  input: AiMetricsOtlpExportInput
-) => Effect.Effect<AiMetricsOtlpSpanProjectionBatch, AiMetricsOtlpExportError, DuckDb> = Effect.fn(
-  "AiMetrics.readAiMetricsOtlpSpanProjections"
-)(function* (input) {
-  const ingestRunId = yield* resolveIngestRunId(input.ingestRunId);
-  const rows = yield* readTurnRows(ingestRunId);
+export const readAiMetricsOtlpSpanProjections: Effect.Effect<
+  AiMetricsOtlpSpanProjectionBatch,
+  AiMetricsOtlpExportError,
+  DuckDb
+> = Effect.gen(function* () {
+  // The export path has to migrate the store itself. It reads
+  // `otlp_exported_at_epoch_ms`, a column added by the schema migration rather than by
+  // the base DDL, and the only other caller of the migration is the ingest write. A
+  // store written by an earlier release therefore fails this query with a bare DuckDB
+  // binder error until some unrelated forwarder run happens to migrate it.
+  yield* ensureAiMetricsDerivedStorage.pipe(
+    Effect.mapError((cause) =>
+      exportFailure(
+        "Failed to prepare the AI metrics derived DuckDB store for OTLP export; run an ingest first if it does not exist yet.",
+        cause
+      )
+    )
+  );
+  const rows = yield* readTurnRows();
 
-  return spanProjectionsFor(ingestRunId, rows);
+  return yield* spanProjectionsFor(rows);
 });
 
-const emitSpanProjection = Effect.fn("AiMetrics.otlp.emitSpanProjection")((projection: AiMetricsOtlpSpanProjection) =>
-  Effect.void.pipe(
-    Effect.withSpan(projection.spanName, {
-      attributes: projection.attributes,
-    })
-  )
+/**
+ * Close the OTLP export watermark on the turns a batch successfully emitted.
+ *
+ * **When to use**
+ *
+ * Use when an export attempt has already succeeded, never before it. Turns stay
+ * unmarked until their spans are actually away, so a crash or a rejected export simply
+ * leaves them for the next run to pick up instead of stranding them.
+ *
+ * **Gotchas**
+ *
+ * Marking is keyed on the batch's own `turnIds` rather than re-running the
+ * `otlp_exported_at_epoch_ms IS NULL` predicate, so turns ingested after the batch was
+ * read are not silently marked as exported.
+ *
+ * **Example** (Mark a batch as exported)
+ *
+ * ```ts
+ * import { markAiMetricsOtlpTurnsExported } from "@beep/repo-ai-metrics"
+ *
+ * const program = markAiMetricsOtlpTurnsExported(["turn-1", "turn-2"])
+ * console.log(program)
+ * ```
+ *
+ * @effects Updates `otlp_exported_at_epoch_ms` on the named rows in the derived DuckDB store.
+ * @category services
+ * @since 0.0.0
+ */
+export const markAiMetricsOtlpTurnsExported: (
+  turnIds: ReadonlyArray<string>
+) => Effect.Effect<void, AiMetricsOtlpExportError, DuckDb> = Effect.fn("AiMetrics.markAiMetricsOtlpTurnsExported")(
+  function* (turnIds) {
+    if (!A.isReadonlyArrayNonEmpty(turnIds)) {
+      return;
+    }
+    const duckdb = yield* DuckDb;
+    const exportedAtEpochMillis = yield* Effect.clockWith((clock) => clock.currentTimeMillis);
+    // DuckDB parameters are scalars, so the id list becomes numbered placeholders.
+    // Chunked because a run can carry tens of thousands of turns and a single
+    // statement with that many bindings is not worth risking.
+    yield* Effect.forEach(
+      A.chunksOf(turnIds, 500),
+      Effect.fnUntraced(function* (chunk) {
+        const placeholders = A.map(chunk, (_, index) => `$turnId${index}`);
+        const bindings = R.fromEntries(A.map(chunk, (turnId, index) => [`turnId${index}`, turnId] as const));
+        yield* duckdb
+          .run(
+            `UPDATE ai_metrics_turns
+         SET otlp_exported_at_epoch_ms = $exportedAtEpochMillis
+         WHERE turn_id IN (${A.join(placeholders, ", ")})`,
+            { exportedAtEpochMillis, ...bindings }
+          )
+          .pipe(
+            Effect.mapError((cause) =>
+              AiMetricsOtlpExportError.make({
+                cause,
+                message: "Failed to record the AI metrics OTLP export watermark.",
+              })
+            )
+          );
+      }),
+      { discard: true }
+    );
+  }
 );
+
+const AI_METRICS_OTLP_SCOPE_NAME = "@beep/repo-ai-metrics";
+const AI_METRICS_OTLP_SERVICE_NAME = "beep-ai-metrics";
+
+// Kept in lockstep with AGENT_EFFECTIVENESS_PHOENIX_PROJECT in agent-effectiveness.ts,
+// which is the name the doctor and the dataset/prompt bundles look for. Duplicated
+// rather than imported to keep the export path free of a dependency on the reporting
+// module; the pairing is asserted in test/ingest.test.ts.
+const AI_METRICS_OTLP_PHOENIX_PROJECT = "beep-agent-effectiveness";
+const AI_METRICS_OTLP_SERVICE_VERSION = "0.0.0";
+// The OpenTelemetry SDK's own default batch size. Nothing here needs a different one,
+// and matching it keeps request sizes in territory collectors are tuned for.
+const AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE = 512;
+
+// Phoenix routes spans into a project by this resource attribute, and nothing was
+// setting it -- so forwarder spans landed in `default` alongside every other writer
+// reaching the same server (the coding-harness OTel fan-out, and previously Codex
+// CLI internals). Sharing one project means neither writer can be queried, counted,
+// or retained independently, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT named
+// a project that never existed and the read side found nothing.
+//
+// Callers can override it through `endpoint.resourceAttributes`; the default below
+// matches the constant the agent-effectiveness reader already queries for.
+const resourceFor = (input: AiMetricsOtlpExportInput): Resource =>
+  resourceFromAttributes({
+    deployment_environment: input.target,
+    "openinference.project.name": AI_METRICS_OTLP_PHOENIX_PROJECT,
+    ...input.endpoint.resourceAttributes,
+    "service.name": AI_METRICS_OTLP_SERVICE_NAME,
+    "service.version": AI_METRICS_OTLP_SERVICE_VERSION,
+  });
+
+const hrTimeFrom = (epochMillis: number): HrTime => [
+  Math.trunc(epochMillis / 1000),
+  Math.round((epochMillis % 1000) * 1_000_000),
+];
+
+const readableSpanFor =
+  (resource: Resource, timestamp: HrTime) =>
+  (projection: AiMetricsOtlpSpanProjection): ReadableSpan => ({
+    attributes: projection.attributes,
+    droppedAttributesCount: 0,
+    droppedEventsCount: 0,
+    droppedLinksCount: 0,
+    duration: [0, 0],
+    ended: true,
+    endTime: timestamp,
+    events: [],
+    instrumentationScope: { name: AI_METRICS_OTLP_SCOPE_NAME, version: AI_METRICS_OTLP_SERVICE_VERSION },
+    kind: SpanKind.INTERNAL,
+    links: [],
+    name: projection.spanName,
+    ...O.getSomesStruct({
+      parentSpanContext: pipe(
+        O.fromUndefinedOr(projection.parentSpanId),
+        O.map((parentSpanId) => ({
+          spanId: parentSpanId,
+          traceFlags: TraceFlags.SAMPLED,
+          traceId: projection.traceId,
+        }))
+      ),
+    }),
+    resource,
+    spanContext: () => ({
+      spanId: projection.spanId,
+      traceFlags: TraceFlags.SAMPLED,
+      traceId: projection.traceId,
+    }),
+    startTime: timestamp,
+    status: { code: SpanStatusCode.UNSET },
+  });
+
+// The exporter callback is the only real delivery confirmation available. Effect
+// tracing cannot supply one: span emission there is asynchronous and fire-and-forget,
+// so a batch the collector rejected is indistinguishable from one it stored.
+const deliverSpans = (
+  exporter: OTLPTraceExporter,
+  spans: ReadonlyArray<ReadableSpan>
+): Effect.Effect<void, AiMetricsOtlpExportError> =>
+  Effect.callback<void, AiMetricsOtlpExportError>((resume) => {
+    exporter.export([...spans], (result) =>
+      resume(
+        result.code === ExportResultCode.SUCCESS
+          ? Effect.void
+          : Effect.fail(
+              exportFailure(
+                pipe(
+                  errorMessage(result.error),
+                  O.map((message) => `The AI metrics OTLP collector did not accept the exported spans: ${message}`),
+                  O.getOrElse(() => "The AI metrics OTLP collector did not accept the exported spans.")
+                ),
+                result.error ?? { exportResultCode: result.code }
+              )
+            )
+      )
+    );
+  });
+
+const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
+  input: AiMetricsOtlpExportInput,
+  projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
+) {
+  if (!A.isReadonlyArrayNonEmpty(projections)) {
+    return;
+  }
+
+  const resource = resourceFor(input);
+  const timestamp = hrTimeFrom(yield* Effect.clockWith((clock) => clock.currentTimeMillis));
+  const toReadableSpan = readableSpanFor(resource, timestamp);
+
+  yield* Effect.acquireUseRelease(
+    // Protobuf, not JSON: Phoenix answers OTLP/JSON with HTTP 415
+    // ("Unsupported content type: application/json").
+    Effect.sync(() => new OTLPTraceExporter({ url: input.endpoint.traceUrl })),
+    (exporter) => deliverSpans(exporter, A.map(projections, toReadableSpan)),
+    (exporter) => Effect.promise(() => exporter.shutdown()).pipe(Effect.ignore)
+  );
+});
+
+/**
+ * Delivery contract for redacted AI metrics OTLP spans.
+ *
+ * **Example** (Type a stub sender)
+ *
+ * ```ts
+ * import type { AiMetricsOtlpSpanSenderShape } from "@beep/repo-ai-metrics"
+ * import { Effect } from "effect"
+ *
+ * const sender: AiMetricsOtlpSpanSenderShape = { send: () => Effect.void }
+ * console.log(sender)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface AiMetricsOtlpSpanSenderShape {
+  readonly send: (
+    input: AiMetricsOtlpExportInput,
+    projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
+  ) => Effect.Effect<void, AiMetricsOtlpExportError>;
+}
+
+/**
+ * Effect service that delivers redacted AI metrics spans to an OTLP collector.
+ *
+ * **When to use**
+ *
+ * Use when a caller needs delivery confirmation rather than best-effort emission.
+ * Failure is a typed error, so the export watermark can only close on a batch the
+ * collector actually acknowledged.
+ *
+ * **Details**
+ *
+ * Delivery is at-least-once. Span ids are content-addressed, so a redelivered span
+ * carries the id the collector already holds and is collapsed on arrival — Phoenix
+ * enforces `uq_spans_span_id`. Correctness therefore does not depend on the
+ * watermark being perfectly accurate; the watermark only keeps redundant sends rare.
+ *
+ * **Example** (Provide the live sender)
+ *
+ * ```ts
+ * import { AiMetricsOtlpSpanSender } from "@beep/repo-ai-metrics"
+ *
+ * const layer = AiMetricsOtlpSpanSender.layer
+ * console.log(layer)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class AiMetricsOtlpSpanSender extends Context.Service<AiMetricsOtlpSpanSender, AiMetricsOtlpSpanSenderShape>()(
+  $I`AiMetricsOtlpSpanSender`
+) {
+  /**
+   * Live sender backed by the OTLP protobuf trace exporter.
+   *
+   * **Example** (Provide the live sender)
+   *
+   * ```ts
+   * import { AiMetricsOtlpSpanSender } from "@beep/repo-ai-metrics"
+   *
+   * const layer = AiMetricsOtlpSpanSender.layer
+   * console.log(layer)
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly layer: Layer.Layer<AiMetricsOtlpSpanSender> = Layer.succeed(AiMetricsOtlpSpanSender)(
+    AiMetricsOtlpSpanSender.of({ send: sendThroughOtlpProtoExporter })
+  );
+}
 
 const withOtlpExportSpan =
   (input: AiMetricsOtlpExportInput) =>
@@ -540,32 +900,61 @@ const withOtlpExportSpan =
 
 const runAiMetricsOtlpProjectionBatchExportUntraced: (
   input: AiMetricsOtlpExportInput,
-  batch: AiMetricsOtlpSpanProjectionBatch
-) => Effect.Effect<AiMetricsOtlpExportResult> = Effect.fn("AiMetrics.runAiMetricsOtlpProjectionBatchExport.untraced")(
-  function* (input, batch) {
-    yield* Effect.forEach(batch.projections, emitSpanProjection, { discard: true, concurrency: 8 });
+  batch: AiMetricsOtlpSpanProjectionBatch,
+  onChunkDelivered: (
+    projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
+  ) => Effect.Effect<void, AiMetricsOtlpExportError>
+) => Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, AiMetricsOtlpSpanSender> = Effect.fn(
+  "AiMetrics.runAiMetricsOtlpProjectionBatchExport.untraced"
+)(function* (input, batch, onChunkDelivered) {
+  const sender = yield* AiMetricsOtlpSpanSender;
+  // The orchestrator owns both the chunk boundary and its durable acknowledgement.
+  // A pluggable sender therefore cannot report success while silently ignoring the
+  // checkpoint callback: successful delivery returns here before the watermark closes.
+  yield* Effect.forEach(
+    A.chunksOf(batch.projections, AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE),
+    Effect.fnUntraced(function* (chunk) {
+      // The SDK retries only inside one short request deadline. Phoenix reports a
+      // full ingest queue as retryable 503; retry the same uncheckpointed chunk
+      // with bounded exponential backoff after that deadline closes.
+      yield* sender.send(input, chunk).pipe(
+        Effect.retry({
+          schedule: otlpDeliveryRetrySchedule,
+          times: 5,
+          while: isRetryableOtlpExportError,
+        })
+      );
+      yield* onChunkDelivered(chunk);
+    }),
+    { discard: true }
+  );
 
-    return AiMetricsOtlpExportResult.make({
-      endpointTraceUrl: input.endpoint.traceUrl,
-      ingestRunId: batch.ingestRunId,
-      sessionSpanCount: batch.sessionSpanCount,
-      spanCount: A.length(batch.projections),
-      target: input.target,
-      turnSpanCount: batch.turnSpanCount,
-    });
-  }
-);
+  return AiMetricsOtlpExportResult.make({
+    endpointTraceUrl: input.endpoint.traceUrl,
+    sessionSpanCount: batch.sessionSpanCount,
+    spanCount: A.length(batch.projections),
+    target: input.target,
+    turnSpanCount: batch.turnSpanCount,
+  });
+});
 
 /**
- * Emit a pre-resolved redacted AI metrics OTLP span projection batch.
+ * Deliver a pre-resolved redacted AI metrics OTLP span projection batch.
  *
- * @effects Emits one Effect span per projection into the active tracer.
- * @example
+ * **Gotchas**
+ *
+ * This does not close the export watermark. Callers that read their own batch own
+ * the marking too; prefer {@link runAiMetricsOtlpExport}, which reads, delivers, and
+ * marks as one unit and cannot be half-used.
+ *
+ * **Example** (Construct AiMetricsOtlpExportInput)
+ *
  * ```ts
  * import {
  *   AiMetricsOtlpEndpointSpec,
  *   AiMetricsOtlpExportInput,
  *   AiMetricsOtlpSpanProjectionBatch,
+ *   AiMetricsOtlpSpanSender,
  *   runAiMetricsOtlpProjectionBatchExport
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -581,35 +970,64 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
  *   target: "local"
  * })
  * const batch = AiMetricsOtlpSpanProjectionBatch.make({
- *   ingestRunId: "forwarder-1",
  *   projections: [],
  *   sessionSpanCount: 0,
+ *   turnIds: [],
  *   turnSpanCount: 0
  * })
- * const exported = Effect.runPromise(runAiMetricsOtlpProjectionBatchExport(input, batch))
+ * const exported = Effect.runPromise(
+ *   runAiMetricsOtlpProjectionBatchExport(input, batch).pipe(Effect.provide(AiMetricsOtlpSpanSender.layer))
+ * )
  * console.log(exported)
  * ```
+ *
+ * @effects Delivers the batch to the configured OTLP collector over protobuf.
  * @category services
  * @since 0.0.0
  */
 export const runAiMetricsOtlpProjectionBatchExport: {
-  (input: AiMetricsOtlpExportInput, batch: AiMetricsOtlpSpanProjectionBatch): Effect.Effect<AiMetricsOtlpExportResult>;
+  (
+    input: AiMetricsOtlpExportInput,
+    batch: AiMetricsOtlpSpanProjectionBatch
+  ): Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, AiMetricsOtlpSpanSender>;
   (
     batch: AiMetricsOtlpSpanProjectionBatch
-  ): (input: AiMetricsOtlpExportInput) => Effect.Effect<AiMetricsOtlpExportResult>;
+  ): (
+    input: AiMetricsOtlpExportInput
+  ) => Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, AiMetricsOtlpSpanSender>;
 } = dual(2, (input: AiMetricsOtlpExportInput, batch: AiMetricsOtlpSpanProjectionBatch) =>
-  runAiMetricsOtlpProjectionBatchExportUntraced(input, batch).pipe(withOtlpExportSpan(input))
+  runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, () => Effect.void).pipe(withOtlpExportSpan(input))
+);
+
+const turnIdsFor: (projections: ReadonlyArray<AiMetricsOtlpSpanProjection>) => ReadonlyArray<string> = flow(
+  A.map((projection) => pipe(O.fromNullishOr(projection.attributes["ai_metrics.turn_id"]), O.filter(P.isString))),
+  A.getSomes
 );
 
 /**
- * Emit redacted AI metrics derived spans through the active Effect tracer.
+ * Read, deliver, and mark every AI metrics turn still awaiting OTLP export.
  *
- * @effects Reads derived DuckDB rows and emits redacted Effect spans into the active tracer.
- * @example
+ * **When to use**
+ *
+ * Use as the entry point for any export, standalone or forwarder-driven. It reads,
+ * delivers, and closes the watermark as one unit, so no caller can deliver spans and
+ * then forget to record that it did — the failure that let every forwarder run
+ * re-emit the entire store.
+ *
+ * **Details**
+ *
+ * Delivery is at-least-once. The watermark closes only on an acknowledged export, so
+ * a rejected or crashed run leaves its turns pending and the next run picks them up.
+ * A turn sent twice is not a duplicate in the collector: its span id is derived from
+ * its content, and Phoenix's `uq_spans_span_id` collapses the repeat.
+ *
+ * **Example** (Construct AiMetricsOtlpExportInput)
+ *
  * ```ts
  * import {
  *   AiMetricsOtlpEndpointSpec,
  *   AiMetricsOtlpExportInput,
+ *   AiMetricsOtlpSpanSender,
  *   runAiMetricsOtlpExport
  * } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
@@ -626,22 +1044,32 @@ export const runAiMetricsOtlpProjectionBatchExport: {
  *   target: "local"
  * })
  * const program = runAiMetricsOtlpExport(input).pipe(
- *   Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: input.duckDbPath })))
+ *   Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: input.duckDbPath }))),
+ *   Effect.provide(AiMetricsOtlpSpanSender.layer)
  * )
  * console.log(program)
  * ```
+ *
+ * @effects Reads derived DuckDB rows, delivers redacted spans over OTLP, and closes the export watermark.
  * @category services
  * @since 0.0.0
  */
 export const runAiMetricsOtlpExport: (
   input: AiMetricsOtlpExportInput
-) => Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, DuckDb> = Effect.fn(
+) => Effect.Effect<AiMetricsOtlpExportResult, AiMetricsOtlpExportError, AiMetricsOtlpSpanSender | DuckDb> = Effect.fn(
   "AiMetrics.runAiMetricsOtlpExport"
 )(
   function* (input) {
-    const batch = yield* readAiMetricsOtlpSpanProjections(input);
+    const batch = yield* readAiMetricsOtlpSpanProjections;
+    const duckdb = yield* DuckDb;
+    // Ordering is the whole point: each chunk is delivered first, then only that
+    // acknowledged chunk reaches the mark. A rejected chunk fails before its checkpoint,
+    // while earlier chunks stay closed so a retry resumes instead of replaying the prefix.
+    const result = yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, (projections) =>
+      markAiMetricsOtlpTurnsExported(turnIdsFor(projections)).pipe(Effect.provideService(DuckDb, duckdb))
+    );
 
-    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch);
+    return result;
   },
   (effect, input) => effect.pipe(withOtlpExportSpan(input))
 );
@@ -649,7 +1077,8 @@ export const runAiMetricsOtlpExport: (
 /**
  * Render an OTLP export result as JSON.
  *
- * @example
+ * **Example** (Construct AiMetricsOtlpExportResult)
+ *
  * ```ts
  * import { AiMetricsOtlpExportResult, otlpExportResultToJson } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
@@ -658,7 +1087,6 @@ export const runAiMetricsOtlpExport: (
  *   otlpExportResultToJson(
  *     AiMetricsOtlpExportResult.make({
  *       endpointTraceUrl: "http://127.0.0.1:6006/projects/default/traces",
- *       ingestRunId: "forwarder-1",
  *       sessionSpanCount: 0,
  *       spanCount: 0,
  *       target: "local",
@@ -668,6 +1096,7 @@ export const runAiMetricsOtlpExport: (
  * )
  * console.log(json)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

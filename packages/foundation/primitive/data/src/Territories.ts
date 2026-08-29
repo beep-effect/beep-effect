@@ -10,8 +10,9 @@ import * as internal from "./generated/cldr-territories.ts";
 /**
  * A single generated CLDR territory entry.
  *
- * @example
- * ```typescript
+ * **Example** (Lookup US territory entry)
+ *
+ * ```ts import.meta.vitest name="Lookup US territory entry"
  * import { TerritoryDataByCode, type TerritoryData } from "@beep/data/Territories"
  *
  * const unitedStates: TerritoryData = TerritoryDataByCode.US
@@ -26,8 +27,9 @@ export type TerritoryData = (typeof internal.TerritoryDataValues)[number];
 /**
  * Union of generated CLDR territory code strings.
  *
- * @example
- * ```typescript
+ * **Example** (Assign US territory code)
+ *
+ * ```ts import.meta.vitest name="Assign US territory code"
  * import type { TerritoryCode } from "@beep/data/Territories"
  *
  * const code: TerritoryCode = "US"
@@ -42,8 +44,9 @@ export type TerritoryCode = TerritoryData["code"];
 /**
  * Union of generated CLDR territory display names.
  *
- * @example
- * ```typescript
+ * **Example** (Assign United States name)
+ *
+ * ```ts import.meta.vitest name="Assign United States name"
  * import type { TerritoryName } from "@beep/data/Territories"
  *
  * const name: TerritoryName = "United States"
@@ -58,8 +61,9 @@ export type TerritoryName = TerritoryData["name"];
 /**
  * A single generated CLDR continent entry.
  *
- * @example
- * ```typescript
+ * **Example** (Lookup Americas continent entry)
+ *
+ * ```ts import.meta.vitest name="Lookup Americas continent entry"
  * import { ContinentDataByCode, type ContinentData } from "@beep/data/Territories"
  *
  * const americas: ContinentData = ContinentDataByCode["019"]
@@ -74,8 +78,9 @@ export type ContinentData = (typeof internal.ContinentDataValues)[number];
 /**
  * Union of generated CLDR continent code strings.
  *
- * @example
- * ```typescript
+ * **Example** (Assign Americas continent code)
+ *
+ * ```ts import.meta.vitest name="Assign Americas continent code"
  * import type { ContinentCode } from "@beep/data/Territories"
  *
  * const code: ContinentCode = "019"
@@ -90,8 +95,9 @@ export type ContinentCode = ContinentData["code"];
 /**
  * Union of generated CLDR continent display names.
  *
- * @example
- * ```typescript
+ * **Example** (Assign Americas continent name)
+ *
+ * ```ts import.meta.vitest name="Assign Americas continent name"
  * import type { ContinentName } from "@beep/data/Territories"
  *
  * const name: ContinentName = "Americas"
@@ -106,8 +112,9 @@ export type ContinentName = ContinentData["name"];
 /**
  * Stable source metadata for the generated CLDR territory dataset.
  *
- * @example
- * ```typescript
+ * **Example** (Check territory release tag)
+ *
+ * ```ts import.meta.vitest name="Check territory release tag"
  * import { TerritoryDataMetadata } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataMetadata.releaseTag === "48.2.0")
@@ -121,8 +128,9 @@ export const TerritoryDataMetadata: typeof internal.TerritoryDataMetadata = inte
 /**
  * CLDR JSON release tag used for the generated territory dataset.
  *
- * @example
- * ```typescript
+ * **Example** (Assert CLDR release tag)
+ *
+ * ```ts import.meta.vitest name="Assert CLDR release tag"
  * import { TerritoryDataReleaseTag } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataReleaseTag === "48.2.0")
@@ -136,8 +144,9 @@ export const TerritoryDataReleaseTag: typeof internal.TerritoryDataReleaseTag = 
 /**
  * Generated CLDR territory entries.
  *
- * @example
- * ```typescript
+ * **Example** (Find US in territory list)
+ *
+ * ```ts import.meta.vitest name="Find US in territory list"
  * import { TerritoryDataValues } from "@beep/data/Territories"
  *
  * const unitedStates = TerritoryDataValues.find((entry) => entry.code === "US")
@@ -152,8 +161,9 @@ export const TerritoryDataValues: typeof internal.TerritoryDataValues = internal
 /**
  * Generated CLDR territory entries keyed by territory code.
  *
- * @example
- * ```typescript
+ * **Example** (Access US by territory code)
+ *
+ * ```ts import.meta.vitest name="Access US by territory code"
  * import { TerritoryDataByCode } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataByCode.US.name === "United States")
@@ -167,8 +177,9 @@ export const TerritoryDataByCode: typeof internal.TerritoryDataByCode = internal
 /**
  * Generated CLDR territory code literals.
  *
- * @example
- * ```typescript
+ * **Example** (Check US code is included)
+ *
+ * ```ts import.meta.vitest name="Check US code is included"
  * import { TerritoryCodeValues } from "@beep/data/Territories"
  *
  * console.assert(TerritoryCodeValues.includes("US"))
@@ -182,8 +193,9 @@ export const TerritoryCodeValues: typeof internal.TerritoryCodeValues = internal
 /**
  * Generated CLDR territory names keyed by territory code.
  *
- * @example
- * ```typescript
+ * **Example** (Map US code to name)
+ *
+ * ```ts import.meta.vitest name="Map US code to name"
  * import { TerritoryDataNameByCode } from "@beep/data/Territories"
  *
  * console.assert(TerritoryDataNameByCode.US === "United States")
@@ -197,8 +209,9 @@ export const TerritoryDataNameByCode: typeof internal.TerritoryDataNameByCode = 
 /**
  * Generated CLDR territory code to English display-name literal pairs.
  *
- * @example
- * ```typescript
+ * **Example** (Find US code-name pair)
+ *
+ * ```ts import.meta.vitest name="Find US code-name pair"
  * import { TerritoryDataCodeNamePairs } from "@beep/data/Territories"
  *
  * const unitedStates = TerritoryDataCodeNamePairs.find(([code]) => code === "US")
@@ -214,8 +227,9 @@ export const TerritoryDataCodeNamePairs: typeof internal.TerritoryDataCodeNamePa
 /**
  * Generated CLDR continent entries.
  *
- * @example
- * ```typescript
+ * **Example** (Find Americas in continent list)
+ *
+ * ```ts import.meta.vitest name="Find Americas in continent list"
  * import { ContinentDataValues } from "@beep/data/Territories"
  *
  * const americas = ContinentDataValues.find((entry) => entry.code === "019")
@@ -230,8 +244,9 @@ export const ContinentDataValues: typeof internal.ContinentDataValues = internal
 /**
  * Generated CLDR continent entries keyed by CLDR region code.
  *
- * @example
- * ```typescript
+ * **Example** (Access Americas by region code)
+ *
+ * ```ts import.meta.vitest name="Access Americas by region code"
  * import { ContinentDataByCode } from "@beep/data/Territories"
  *
  * console.assert(ContinentDataByCode["019"].name === "Americas")
@@ -245,8 +260,9 @@ export const ContinentDataByCode: typeof internal.ContinentDataByCode = internal
 /**
  * Generated CLDR continent code literals.
  *
- * @example
- * ```typescript
+ * **Example** (Check 019 code is included)
+ *
+ * ```ts import.meta.vitest name="Check 019 code is included"
  * import { ContinentCodeValues } from "@beep/data/Territories"
  *
  * console.assert(ContinentCodeValues.includes("019"))
@@ -260,8 +276,9 @@ export const ContinentCodeValues: typeof internal.ContinentCodeValues = internal
 /**
  * Generated CLDR continent names keyed by CLDR region code.
  *
- * @example
- * ```typescript
+ * **Example** (Map 019 code to name)
+ *
+ * ```ts import.meta.vitest name="Map 019 code to name"
  * import { ContinentDataNameByCode } from "@beep/data/Territories"
  *
  * console.assert(ContinentDataNameByCode["019"] === "Americas")
@@ -275,8 +292,9 @@ export const ContinentDataNameByCode: typeof internal.ContinentDataNameByCode = 
 /**
  * Generated CLDR continent code to English display-name literal pairs.
  *
- * @example
- * ```typescript
+ * **Example** (Find Americas code-name pair)
+ *
+ * ```ts import.meta.vitest name="Find Americas code-name pair"
  * import { ContinentDataCodeNamePairs } from "@beep/data/Territories"
  *
  * const americas = ContinentDataCodeNamePairs.find(([code]) => code === "019")

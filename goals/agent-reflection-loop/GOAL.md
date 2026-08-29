@@ -1,6 +1,6 @@
 # GOAL: ship the schema-first agent reflection loop
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: goal packets carry schema-validated closeout reflections, enforced by
 `bun run beep lint reflection-artifacts`, authored via the `/reflect` skill.
@@ -37,11 +37,10 @@ Workflow:
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] `bun run beep lint reflection-artifacts` routes + runs (`blocking_findings=0`).
-- [ ] `bunx tsgo -b packages/tooling/tool/cli/tsconfig.json` and the reflection
-      lint test pass.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `SPEC.md` acceptance criteria are satisfied.
+- [x] `bun run beep lint reflection-artifacts` routes + runs (`blocking_findings=0`).
+- [x] The focused reflection lint test passes.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 

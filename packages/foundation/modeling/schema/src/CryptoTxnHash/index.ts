@@ -1,7 +1,8 @@
 /**
  * Namespace-first public module for blockchain transaction hash schemas.
  *
- * @example
+ * **Example** (Import CryptoTxnHash namespace)
+ *
  * ```ts
  * import * as CryptoTxnHash from "@beep/schema/CryptoTxnHash"
  * import * as S from "effect/Schema"

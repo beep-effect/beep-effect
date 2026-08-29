@@ -13,13 +13,16 @@ import { Effect, flow, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import * as Configuration from "./Configuration.js";
-import * as Core from "./Core.js";
-import * as Domain from "./Domain.js";
-import * as InternalVersion from "./internal/version.js";
+import * as Configuration from "./Configuration.ts";
+import * as Core from "./Core.ts";
+import * as Domain from "./Domain.ts";
 
 const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
 
+const configFile = Flag.file("config-file", { mustExist: true }).pipe(
+  Flag.withDescription("Package-relative path to an alternate docgen configuration file"),
+  Flag.optional
+);
 const parseTsconfigFile = Flag.file("parse-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
 const parseCompilerOptionsText = Flag.string("parse-compiler-options").pipe(Flag.optional);
 const examplesTsconfigFile = Flag.file("examples-tsconfig-file", { mustExist: true }).pipe(Flag.optional);
@@ -67,11 +70,6 @@ const enforceVersion = Flag.boolean("enforce-version").pipe(
   Flag.optional
 );
 
-const runExamples = Flag.boolean("run-examples").pipe(
-  Flag.withDescription("Whether to execute examples discovered in the source files"),
-  Flag.optional
-);
-
 const include = Flag.string("include").pipe(
   Flag.withDescription("Comma-separated package-relative or srcDir-relative file globs to include"),
   Flag.optional
@@ -115,6 +113,7 @@ const resolveCompilerOptionsInput = (filePath: O.Option<string>, text: O.Option<
   );
 
 const options = {
+  configFile,
   projectHomepage,
   srcLink,
   srcDir,
@@ -124,7 +123,6 @@ const options = {
   enforceDescriptions,
   enforceExamples,
   enforceVersion,
-  runExamples,
   include,
   exclude,
   tscExecutable,
@@ -137,12 +135,8 @@ const options = {
 /**
  * Builds the `docgen` CLI command and wires parsed flags into the core workflow.
  *
- * @internal
- * @effects
- * - Decodes inline compiler-option JSON before loading package configuration.
- * - Prefixes `DocgenError` messages with the resolved package name.
- * - Runs the core docgen workflow with a scoped {@link Configuration.Configuration} layer.
- * @example
+ * **Example** (Run docgen command help)
+ *
  * ```ts
  * import { Command } from "effect/unstable/cli"
  * import { docgenCommand } from "@beep/repo-docgen/CLI"
@@ -150,6 +144,12 @@ const options = {
  * const helpProgram = runDocgen(["--help"])
  * console.log(helpProgram)
  * ```
+ *
+ * @internal
+ * @effects
+ * - Decodes inline compiler-option JSON before loading package configuration.
+ * - Prefixes `DocgenError` messages with the resolved package name.
+ * - Runs the core docgen workflow with a scoped {@link Configuration.Configuration} layer.
  * @category cli-commands
  * @since 0.0.0
  */
@@ -166,6 +166,7 @@ export const docgenCommand = Command.make(
       input.examplesCompilerOptionsText
     );
     const config = yield* Configuration.load({
+      configFile: input.configFile,
       projectHomepage: input.projectHomepage,
       srcLink: input.srcLink,
       srcDir: input.srcDir,
@@ -176,7 +177,6 @@ export const docgenCommand = Command.make(
       enforceExamples: input.enforceExamples,
       enforceVersion: input.enforceVersion,
       tscExecutable: input.tscExecutable,
-      runExamples: input.runExamples,
       include: input.include.pipe(O.map(splitGlobList)),
       exclude: input.exclude.pipe(O.map(A.of)),
       parseCompilerOptions,
@@ -206,17 +206,19 @@ export const docgenCommand = Command.make(
 /**
  * Versioned command runner used by the package binary entry point.
  *
- * @example
+ * **Example** (Invoke CLI with help)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { cli } from "@beep/repo-docgen/CLI"
  *
- * const helpProgram = cli(["--help"]).pipe(Effect.result)
+ * const helpProgram = cli("0.0.2")(["--help"]).pipe(Effect.result)
  * console.log(helpProgram)
  * ```
+ *
+ * @param version - The package version displayed by the command.
+ * @returns A command runner accepting an explicit argument array.
  * @category cli-commands
  * @since 0.0.0
  */
-export const cli = Command.runWith(docgenCommand, {
-  version: `v${InternalVersion.moduleVersion}`,
-});
+export const cli = (version: string) => Command.runWith(docgenCommand, { version: `v${version}` });

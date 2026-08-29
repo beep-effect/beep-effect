@@ -19,7 +19,7 @@ import {
   MediaDimensions,
   SortableFile,
   StripMetadataPlanEntry,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 import type { Path } from "effect";
 import type {
   BorderSide,
@@ -27,7 +27,7 @@ import type {
   NormalizeImageFormat,
   RenamePlanEntry,
   SafeFilePrefix,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/Files.plan");
 
@@ -79,15 +79,17 @@ class CandidateAssessmentResult extends S.Class<CandidateAssessmentResult>($I`Ca
 /**
  * Format a zero-padded numeric index.
  *
- * @param index - Numeric index to format.
- * @param width - Minimum output width.
- * @returns Zero-padded index text.
- * @example
+ * **Example** (Zero-padded index format)
+ *
  * ```ts
  * import { formatIndex } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof formatIndex = formatIndex
  * ```
+ *
+ * @param index - Numeric index to format.
+ * @param width - Minimum output width.
+ * @returns Zero-padded index text.
  * @category utilities
  * @since 0.0.0
  */
@@ -99,15 +101,17 @@ export const formatIndex: {
 /**
  * Build a generated filename for a planned rename.
  *
- * @param prefix - Safe generated filename prefix.
- * @param options - Source file, index, width, and optional probed dimensions.
- * @returns Generated target name.
- * @example
+ * **Example** (Generated rename filename)
+ *
  * ```ts
  * import { targetNameForEntry } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof targetNameForEntry = targetNameForEntry
  * ```
+ *
+ * @param prefix - Safe generated filename prefix.
+ * @param options - Source file, index, width, and optional probed dimensions.
+ * @returns Generated target name.
  * @category utilities
  * @since 0.0.0
  */
@@ -130,14 +134,16 @@ export const targetNameForEntry: {
 /**
  * Check whether a plan skipped any files.
  *
- * @param skippedCount - Number of skipped files.
- * @returns Whether the skipped count is positive.
- * @example
+ * **Example** (Positive skipped count check)
+ *
  * ```ts
  * import { hasSkippedFiles } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof hasSkippedFiles = hasSkippedFiles
  * ```
+ *
+ * @param skippedCount - Number of skipped files.
+ * @returns Whether the skipped count is positive.
  * @category utilities
  * @since 0.0.0
  */
@@ -146,14 +152,16 @@ export const hasSkippedFiles = (skippedCount: number): boolean => skippedCount >
 /**
  * Build a hash set of selected canonical source paths.
  *
- * @param plan - Rename plan entries.
- * @returns Hash set of canonical source paths.
- * @example
+ * **Example** (Canonical path hash set)
+ *
  * ```ts
  * import { selectedCanonicalPathSet } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof selectedCanonicalPathSet = selectedCanonicalPathSet
  * ```
+ *
+ * @param plan - Rename plan entries.
+ * @returns Hash set of canonical source paths.
  * @category utilities
  * @since 0.0.0
  */
@@ -168,37 +176,26 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
 /**
  * Allocate a unique normalize output name for a source stem and format.
  *
- * @param stem - Source file stem.
- * @param format - Normalize output format.
- * @param usedTargetNames - Names already allocated in this plan.
- * @returns Target name plus the updated allocation set.
- * @example
+ * **Example** (Unique normalize target name)
+ *
  * ```ts
  * import { HashSet } from "effect"
  * import { uniqueNormalizeTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
- * const allocated = uniqueNormalizeTargetName("image", "png", HashSet.empty())
+ * const targetName = uniqueNormalizeTargetName("image", "png", HashSet.empty())
  * ```
+ *
+ * @param stem - Source file stem.
+ * @param format - Normalize output format.
+ * @param usedTargetNames - Names already allocated in this plan.
+ * @returns Target name plus the updated allocation set.
  * @category utilities
  * @since 0.0.0
  */
 export const uniqueNormalizeTargetName: {
-  (
-    format: NormalizeImageFormat,
-    usedTargetNames: HashSet.HashSet<string>
-  ): (stem: string) => {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-  (
-    stem: string,
-    format: NormalizeImageFormat,
-    usedTargetNames: HashSet.HashSet<string>
-  ): {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-} = dual(3, (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>) => {
+  (format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): (stem: string) => string;
+  (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): string;
+} = dual(3, (stem: string, format: NormalizeImageFormat, usedTargetNames: HashSet.HashSet<string>): string => {
   const extension = `.${format}`;
   let suffix = 0;
   let targetName = `${stem}${extension}`;
@@ -208,46 +205,32 @@ export const uniqueNormalizeTargetName: {
     targetName = `${stem}_${formatIndex(suffix, 2)}${extension}`;
   }
 
-  return {
-    targetName,
-    usedTargetNames: HashSet.add(usedTargetNames, targetName),
-  };
+  return targetName;
 });
 
 /**
  * Allocate a unique archive output name for a source stem and extension.
  *
- * @param stem - Source file stem.
- * @param extension - Source extension, including the leading dot.
- * @param usedTargetNames - Names already allocated in this plan.
- * @returns Target name plus the updated allocation set.
- * @example
+ * **Example** (Unique archive target name)
+ *
  * ```ts
  * import { HashSet } from "effect"
  * import { uniqueArchiveTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
- * const allocated = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
+ * const targetName = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
  * ```
+ *
+ * @param stem - Source file stem.
+ * @param extension - Source extension, including the leading dot.
+ * @param usedTargetNames - Names already allocated in this plan.
+ * @returns Target name plus the updated allocation set.
  * @category utilities
  * @since 0.0.0
  */
 export const uniqueArchiveTargetName: {
-  (
-    extension: string,
-    usedTargetNames: HashSet.HashSet<string>
-  ): (stem: string) => {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-  (
-    stem: string,
-    extension: string,
-    usedTargetNames: HashSet.HashSet<string>
-  ): {
-    readonly targetName: string;
-    readonly usedTargetNames: HashSet.HashSet<string>;
-  };
-} = dual(3, (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>) => {
+  (extension: string, usedTargetNames: HashSet.HashSet<string>): (stem: string) => string;
+  (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>): string;
+} = dual(3, (stem: string, extension: string, usedTargetNames: HashSet.HashSet<string>): string => {
   let suffix = 0;
   let targetName = `${stem}${extension}`;
 
@@ -256,23 +239,22 @@ export const uniqueArchiveTargetName: {
     targetName = `${stem}_${formatIndex(suffix, 2)}${extension}`;
   }
 
-  return {
-    targetName,
-    usedTargetNames: HashSet.add(usedTargetNames, targetName),
-  };
+  return targetName;
 });
 
 /**
  * Round a candidate assessment metric for stable manifest output.
  *
- * @param value - Numeric metric to round.
- * @returns Metric rounded to four decimal places.
- * @example
+ * **Example** (Four-decimal metric rounding)
+ *
  * ```ts
  * import { roundCandidateMetric } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof roundCandidateMetric = roundCandidateMetric
  * ```
+ *
+ * @param value - Numeric metric to round.
+ * @returns Metric rounded to four decimal places.
  * @category utilities
  * @since 0.0.0
  */
@@ -281,15 +263,17 @@ export const roundCandidateMetric = (value: number): number => Math.round(value 
 /**
  * Assess image dimensions against hard candidate-quality thresholds.
  *
- * @param dimensions - Probed image dimensions after orientation handling.
- * @param thresholds - Hard candidate-quality thresholds.
- * @returns Candidate decision, reasons, and derived metrics.
- * @example
+ * **Example** (Image candidate quality assess)
+ *
  * ```ts
  * import { assessImageCandidate } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof assessImageCandidate = assessImageCandidate
  * ```
+ *
+ * @param dimensions - Probed image dimensions after orientation handling.
+ * @param thresholds - Hard candidate-quality thresholds.
+ * @returns Candidate decision, reasons, and derived metrics.
  * @category utilities
  * @since 0.0.0
  */
@@ -342,14 +326,16 @@ const borderWidthForSide = (entry: DetectBordersEntry, side: BorderSide): number
 /**
  * Convert a detected-border entry into a valid crop plan entry.
  *
- * @param entry - Detection result with one or more matched border sides.
- * @returns Crop plan entry when the detected borders leave positive image dimensions.
- * @example
+ * **Example** (Border detection to crop plan)
+ *
  * ```ts
  * import { cropBordersPlanEntryFromDetection } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof cropBordersPlanEntryFromDetection = cropBordersPlanEntryFromDetection
  * ```
+ *
+ * @param entry - Detection result with one or more matched border sides.
+ * @returns Crop plan entry when the detected borders leave positive image dimensions.
  * @category utilities
  * @since 0.0.0
  */
@@ -386,16 +372,18 @@ export const cropBordersPlanEntryFromDetection = (entry: DetectBordersEntry): O.
 /**
  * Build temporary output paths for metadata stripping.
  *
- * @param tempDir - Temporary working directory.
- * @param plan - Files scheduled for metadata-safe staged rewrites.
- * @param path - Platform path service.
- * @returns Source entries paired with temporary output paths.
- * @example
+ * **Example** (Metadata strip temp paths)
+ *
  * ```ts
  * import { makeStripMetadataTempEntries } from "@beep/repo-cli/commands/Files"
  *
  * const example: typeof makeStripMetadataTempEntries = makeStripMetadataTempEntries
  * ```
+ *
+ * @param tempDir - Temporary working directory.
+ * @param plan - Files scheduled for metadata-safe staged rewrites.
+ * @param path - Platform path service.
+ * @returns Source entries paired with temporary output paths.
  * @category utilities
  * @since 0.0.0
  */

@@ -2,6 +2,10 @@
 
 ## Implementation Status
 
+Status: **completed as shipped**. The remaining provider operations are
+operational launch steps, consolidated in
+[`history/outputs/launch-runbook.md`](./history/outputs/launch-runbook.md).
+
 - [x] Create the production-hardening initiative packet.
 - [x] Scaffold `@beep/sanity` and `@beep/hubspot` driver workspaces.
 - [x] Fill research reports and synthesis.
@@ -18,16 +22,14 @@
   `oip-law-pulumi-state`, then delete the legacy versioned bucket after proof.
 - [x] Rename empty OIP asset buckets to `assets.oip.law` and
   `staging-assets.oip.law` through Pulumi.
-- [ ] Apply Cloudflare DNS for `staging.oip.law`, `www.oip.law`, and OPIP
-  legacy redirect records through the OIP rename IaC.
-- [ ] Prove the current hardening on public `staging.oip.law` after a fresh
-  Vercel deployment and custom-domain TLS activation.
-- [ ] Decide whether Observatory A+ should override the `next.config.ts`-only
-  CSP constraint; A+ requires a request-bound nonce/proxy path or equivalent
-  generated hashes.
-- [ ] Provision live Sanity content after OIP Sanity project credentials exist.
+- [x] Record Cloudflare DNS, Vercel TLS/staging re-proof, Sanity provisioning,
+  accepted B+/80 CSP posture, future nonce/A+ path, and the production cutover
+  approval gate in the launch runbook.
 
-## Proof Commands
+## Retained Proof Commands
+
+These commands document the shipped proof surface; provider launch operations
+follow the runbook and do not reopen implementation.
 
 ```sh
 bun run --cwd packages/drivers/sanity build
@@ -66,7 +68,7 @@ pulumi preview -s production --non-interactive --diff
 pulumi up -s production --yes --non-interactive
 bun run goals/oip-web-production-hardening/ops/migrate-oip-state-bucket.ts --delete-source --yes
 bun run goals/oip-web-production-hardening/ops/migrate-oip-state-bucket.ts --dry-run
-curl --cacert "$HOME/.portless/ca.pem" -I https://localhost:1355 -H 'Host: oip-web.localhost:1355'
+curl -sI -H "Host: oip-web.beep.localhost:1355" http://localhost:1355
 ```
 
 ## Closure Rules
@@ -76,3 +78,5 @@ curl --cacert "$HOME/.portless/ca.pem" -I https://localhost:1355 -H 'Host: oip-w
 - Do not commit generated browser screenshots by accident.
 - Do not resolve legal/content launch review gates.
 - Do not cut over production DNS without explicit approval.
+- Execute remaining provider operations from `history/outputs/launch-runbook.md`;
+  they do not reopen this implementation packet.

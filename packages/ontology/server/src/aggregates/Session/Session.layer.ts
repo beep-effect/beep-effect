@@ -21,7 +21,7 @@ import {
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { Effect, Layer } from "effect";
-import { makeFileSystemOntologyFileStore } from "./Session.file-store.js";
+import { makeFileSystemOntologyFileStore } from "./Session.file-store.ts";
 import type { N3TurtleCodecError } from "@beep/n3";
 
 const toTurtleCodecError = (error: N3TurtleCodecError): TurtleCodecError =>
@@ -59,22 +59,24 @@ const makeTurtleCodec = Effect.fn("Ontology.TurtleCodec.makeN3")(function* () {
 /**
  * N3-backed Turtle codec port layer.
  *
- * @example
+ * **Example** (Import TurtleCodecLayer)
+ *
  * ```ts
  * import { TurtleCodecLayer } from "@beep/ontology-server/aggregates/Session"
  *
  * console.log(TurtleCodecLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const TurtleCodecLayer = Layer.effect(TurtleCodec, makeTurtleCodec()).pipe(Layer.provide(N3TurtleCodecLive));
 
 /**
  * FileSystem-backed ontology file-store port layer.
  *
- * @example
+ * **Example** (Configure file-store layer)
+ *
  * ```ts
  * import { OntologyFileStoreLayer } from "@beep/ontology-server/aggregates/Session"
  * import { NodeServices } from "@effect/platform-node"
@@ -106,45 +108,48 @@ export const OntologyFileStoreLayer = Layer.effect(OntologyFileStore, makeFileSy
 /**
  * Domain-native ontology reasoner port layer.
  *
- * @example
+ * **Example** (Import OntologyReasonerLayer)
+ *
  * ```ts
  * import { OntologyReasonerLayer } from "@beep/ontology-server/aggregates/Session"
  *
  * console.log(OntologyReasonerLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const OntologyReasonerLayer = OntologyReasonerLive;
 
 /**
  * Oxigraph-backed SPARQL runner port layer.
  *
- * @example
+ * **Example** (Import OntologySparqlRunnerLayer)
+ *
  * ```ts
  * import { OntologySparqlRunnerLayer } from "@beep/ontology-server/aggregates/Session"
  *
  * console.log(OntologySparqlRunnerLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const OntologySparqlRunnerLayer = OntologySparqlRunnerLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive));
 
 /**
  * shacl-engine-backed validation runner port layer.
  *
- * @example
+ * **Example** (Import OntologyValidationRunnerLayer)
+ *
  * ```ts
  * import { OntologyValidationRunnerLayer } from "@beep/ontology-server/aggregates/Session"
  *
  * console.log(OntologyValidationRunnerLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const OntologyValidationRunnerLayer = OntologyValidationRunnerLive.pipe(
   Layer.provideMerge(TurtleCodecLayer),
@@ -155,15 +160,16 @@ export const OntologyValidationRunnerLayer = OntologyValidationRunnerLive.pipe(
 /**
  * Live session server layer for the P1 ontology foundation.
  *
- * @example
+ * **Example** (Import SessionServerLayer)
+ *
  * ```ts
  * import { SessionServerLayer } from "@beep/ontology-server/aggregates/Session"
  *
  * console.log(SessionServerLayer)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const SessionServerLayer = SessionUseCasesLayer.pipe(
   Layer.provideMerge(TurtleCodecLayer),

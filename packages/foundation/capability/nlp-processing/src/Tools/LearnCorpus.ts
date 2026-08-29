@@ -58,11 +58,14 @@ class LearnCorpusSuccess extends S.Class<LearnCorpusSuccess>($I`LearnCorpusSucce
  * Defines the agent-facing tool contract for incrementally learning documents
  * into an existing corpus session.
  *
+ * **Details**
+ *
  * Use this tool after `CreateCorpus` to add searchable documents, optionally
  * skipping duplicate document ids during repeated ingestion.
  *
- * @example
- * ```ts
+ * **Example** (Decode LearnCorpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode LearnCorpus parameters"
  * import * as S from "effect/Schema"
  * import { LearnCorpus } from "@beep/nlp-processing/Tools/LearnCorpus"
  *

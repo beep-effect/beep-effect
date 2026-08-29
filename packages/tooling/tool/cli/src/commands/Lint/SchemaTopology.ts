@@ -7,13 +7,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 const $I = $RepoCliId.create("commands/Lint/SchemaTopology");
 
@@ -25,10 +26,8 @@ const LEGACY_CASE_EXPORT_PREFIXES = ["ExpectCT", "XSSProtection"] as const;
 const RETIRED_SUITE_EXPORT_PREFIXES = ["Blockchain", "Dom", "Http", "Location", "Person"] as const;
 const RETIRED_INTERNAL_EXPORT_KEYS = ["./internal/markdown", "./internal/yaml"] as const;
 const PROMOTED_CONCEPT_ROOT_SHIMS = [
-  "CauseTaggedError",
   "DateTimeUtcFromValid",
   "Duration",
-  "EntitySchema",
   "FilePath",
   "Fn",
   "Glob",
@@ -36,18 +35,15 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
   "LiteralKit",
   "LocalDate",
   "MappedLiteralKit",
-  "Model",
   "Record",
-  "StatusCauseTaggedErrorClass",
-  "TaggedErrorClass",
   "Timestamp",
-  "VariantSchema",
 ] as const;
 
 /**
  * Schema topology lint violation.
  *
- * @example
+ * **Example** (Make topology violation)
+ *
  * ```ts
  * import { SchemaTopologyViolation } from "@beep/repo-cli/commands/Lint"
  *
@@ -57,6 +53,7 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
  * })
  * console.log(violation.detail)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -70,7 +67,7 @@ export class SchemaTopologyViolation extends S.Class<SchemaTopologyViolation>($I
   })
 ) {}
 
-const decodeJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJson = Unknown.decodeUnknownEffectFromJsonString;
 const schemaRoleFileTargetPattern = /^\.\/(?:src|dist)\/[A-Z][^/]+\/[^/]+\.[a-z][A-Za-z0-9-]*\.(?:ts|js)$/u;
 const crossConceptIndexExportPattern =
   /^\s*export\s+(?:type\s+)?(?:\*|\{[\s\S]*?\})\s*(?:as\s+[A-Za-z_$][\w$]*\s*)?from\s+["']\.\.\/[^"']+["']/mu;
@@ -417,7 +414,8 @@ const collectTsconfigViolations = Effect.fn("SchemaTopology.collectTsconfigViola
 /**
  * Collect schema topology violations without mutating process state.
  *
- * @example
+ * **Example** (Collect topology violations)
+ *
  * ```ts
  * import { collectSchemaTopologyViolations } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -428,6 +426,7 @@ const collectTsconfigViolations = Effect.fn("SchemaTopology.collectTsconfigViola
  * })
  * console.log(program) // example value
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -456,10 +455,12 @@ export const collectSchemaTopologyViolations = Effect.fn("SchemaTopology.collect
 /**
  * Run the schema topology lint command.
  *
- * @example
+ * **Example** (Invoke schema topology lint)
+ *
  * ```ts
  * console.log("bun run beep lint schema-topology")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -482,10 +483,12 @@ export const runSchemaTopologyLint = Effect.fn("SchemaTopology.runSchemaTopology
 /**
  * Lint command for enforcing canonical `@beep/schema` topology.
  *
- * @example
+ * **Example** (Run schema topology command)
+ *
  * ```ts
  * console.log("bun run beep lint schema-topology")
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

@@ -1,9 +1,10 @@
 {
+  "schemaVersion": "initiative-manifest/v2",
   "id": "oip-web-launch",
   "owner": "@beep-team",
   "app": "@beep/oip-web",
-  "sourcePrototype": "/home/elpresidank/Documents/OP_IP_LAW/site",
-  "sourceBrandContext": "/home/elpresidank/Documents/OP_IP_LAW/assets/BRAND_CONTEXT.md",
+  "sourcePrototype": "OP_IP_LAW prototype site (machine-local, outside the repo)",
+  "sourceBrandContext": "OP_IP_LAW assets/BRAND_CONTEXT.md (machine-local, outside the repo)",
   "scope": {
     "firstMilestone": "faithful-port-and-refactor",
     "routeShape": "single-page-anchors",
@@ -20,7 +21,10 @@
     "git": "local-commit-only",
     "screenshots": "local-proof-only",
     "deployment": "out-of-scope",
-    "publicLaunch": "blocked-by-review-gates"
+    "publicLaunch": "blocked-by-review-gates",
+    "disposition": "FINISH",
+    "pullRequest": "portfolio-consolidation",
+    "proofEvidence": "history/outputs/2026-07-14-proof-lane.md"
   },
   "qualityCommands": [
     "bun run --cwd apps/oip-web build",
@@ -36,6 +40,50 @@
     "contact-email-confirmation",
     "legal-notice-review"
   ],
+  "externalFollowUps": [
+    {
+      "kind": "EXTERNAL",
+      "id": "client-logo-permission",
+      "owner": "user",
+      "requiredFor": "public-launch"
+    },
+    {
+      "kind": "EXTERNAL",
+      "id": "named-matter-publication-comfort",
+      "owner": "user",
+      "requiredFor": "public-launch"
+    },
+    {
+      "kind": "EXTERNAL",
+      "id": "credentials",
+      "owner": "user",
+      "requiredFor": "public-launch"
+    },
+    {
+      "kind": "EXTERNAL",
+      "id": "contact-details",
+      "owner": "user",
+      "requiredFor": "public-launch"
+    },
+    {
+      "kind": "EXTERNAL",
+      "id": "legal-notice-review",
+      "owner": "user",
+      "requiredFor": "public-launch"
+    }
+  ],
+  "proofLane": {
+    "lastRun": "2026-07-14",
+    "status": "failed",
+    "browserSmoke": "driver-evidence-pending",
+    "results": {
+      "build": "failed-environment-port-binding",
+      "check": "passed",
+      "test": "failed-worker-start-timeout",
+      "lint": "passed",
+      "type-test": "failed-script-not-found"
+    }
+  },
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -46,7 +94,12 @@
   "initiative": {
     "id": "oip-web-launch",
     "title": "OIP Web Launch",
-    "status": "paused"
+    "status": "completed-retained",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
   },
-  "statusNote": "legacy status: implementation_complete_review_pending"
+  "packetPath": "goals/oip-web-launch",
+  "lifecycle": "completed-retained",
+  "reflectionRequired": false,
+  "statusNote": "Implementation complete; proof lane re-run 2026-07-14; FINISH disposition rides the portfolio-consolidation PR."
 }

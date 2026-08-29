@@ -1,6 +1,6 @@
 # GOAL: ship the `@beep/m365` Microsoft Graph driver
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect7`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: a native `@beep/m365` driver at `packages/drivers/m365` that
 authenticates to Microsoft Graph `v1.0` with delegated auth-code+PKCE (MSAL) and

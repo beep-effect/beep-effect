@@ -12,14 +12,19 @@ import { Console, Effect, FileSystem, flow, JsonPointer, Match, Path, pipe, Resu
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.js";
-import { formatJson } from "./internal/Source.js";
-import { SyncDataRunMode, SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.schemas.js";
-import { syncDataTargets } from "./targets/index.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.ts";
+import { formatJson } from "./internal/Source.ts";
+import {
+  SyncDataRunMode,
+  SyncDataTargetResult,
+  SyncDataToTsDriftError,
+  SyncDataToTsError,
+} from "./SyncDataToTs.schemas.ts";
+import { syncDataTargets } from "./targets/index.ts";
 import type { Crypto, JsonPatch } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { SyncDataFileResult, SyncDataTarget, SyncDataTargetResult } from "./SyncDataToTs.schemas.js";
+import type { SyncDataFileResult, SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 
 const targetFlag = Flag.string("target").pipe(
   Flag.withAlias("t"),
@@ -27,15 +32,21 @@ const targetFlag = Flag.string("target").pipe(
   Flag.optional
 );
 
-const allFlag = Flag.boolean("all").pipe(Flag.withDescription("Sync every checked-in target"));
+const allFlag = Flag.boolean("all").pipe(Flag.withDefault(false), Flag.withDescription("Sync every checked-in target"));
 const includeAuthenticatedFlag = Flag.boolean("include-authenticated").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Include sync targets that require configured authenticated source access when --all is used")
 );
 const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Report drift without writing files and exit non-zero when changes are needed")
 );
-const dryRunFlag = Flag.boolean("dry-run").pipe(Flag.withDescription("Preview file updates without writing them"));
+const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Preview file updates without writing them")
+);
 const verboseFlag = Flag.boolean("verbose").pipe(
+  Flag.withDefault(false),
   Flag.withAlias("v"),
   Flag.withDescription("Log unchanged targets in addition to changed targets")
 );
@@ -270,7 +281,7 @@ const syncTarget = Effect.fn("syncTarget")(function* (
   );
   const changedFiles = pipe(fileResults, A.filter(Struct.get("changed")), A.map(Struct.get("path")));
 
-  return {
+  return SyncDataTargetResult.make({
     targetId: target.id,
     outputPaths: pipe(projection.files, A.map(Struct.get("path"))),
     changed: A.length(changedFiles) > 0,
@@ -282,8 +293,26 @@ const syncTarget = Effect.fn("syncTarget")(function* (
     sources: projection.sources,
     canonicalPath: projection.canonicalPath,
     canonicalPatch,
-  };
+  });
 });
+
+/**
+ * Test-only access to the per-target producer so schema proofs exercise the
+ * same construction path used by the command.
+ *
+ * **Example** (Check testing helper type)
+ *
+ * ```ts
+ * import { syncTargetForTesting } from "@beep/repo-cli/test/SyncDataToTs"
+ *
+ * console.log(typeof syncTargetForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const syncTargetForTesting = syncTarget;
 
 const primaryOutputPath = (result: SyncDataTargetResult): string =>
   pipe(
@@ -499,7 +528,8 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
 /**
  * CLI command for syncing official upstream datasets into checked-in TypeScript modules.
  *
- * @example
+ * **Example** (Run sync data command)
+ *
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
  * import { Command } from "effect/unstable/cli"
@@ -508,6 +538,7 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

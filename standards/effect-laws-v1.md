@@ -15,7 +15,7 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
 4. No `any`, type assertions, `@ts-ignore`, or non-null assertions.
 5. No runtime `typeof ... === ...`; use `effect/Predicate` guards.
 6. No native `Object/Map/Set/Date` in domain logic.
-7. No native `Error` in production source; use `TaggedErrorClass` from `@beep/schema` for typed errors, and record intentional low-level runtime exceptions in the allowlist.
+7. No native `Error` in production source; extend `S.TaggedError` from `effect/Schema` directly for typed errors, and record intentional low-level runtime exceptions in the allowlist.
 8. No `node:path` in runtime source; use `Path.Path` service APIs.
 9. No native `fetch` in runtime source; use `effect/unstable/http` and provide platform client layers.
 10. No native `Array.prototype.sort`; use `A.sort` with explicit `Order`.
@@ -31,6 +31,7 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
 20. Model finite variants, lifecycle states, status/result cases, and case-specific payloads as discriminated unions; keep optional/nullish bags at external boundaries only when compatibility requires them.
 21. Prefer the tersest equivalent Effect helper form when behavior is unchanged: direct helper refs over trivial wrapper lambdas, `flow(...)` for passthrough `pipe(...)` callbacks, and shared thunk helpers when already in scope.
 22. Reusable functions that directly return `Effect.gen(function*)` must use `Effect.fn` or `Effect.fnUntraced`; zero-arg one-off effect values may stay as `Effect.gen`.
+23. Functions stay within the fallow complexity ceilings pinned in `.fallowrc.jsonc` `health` (the integers live in config, not prose). Every `fallow-ignore-*` suppression carries a `-- <reason>` (enforced by the `require-suppression-reason` rule); an honestly-complex function gets a `thresholdOverrides` entry with `reason` and a review date, never a bare suppression. Prefer real seams (match helpers, schema/data-table dispatch, named concept extraction) over threshold-appeasement fragmentation.
 
 ## Allowlist Contract
 
@@ -56,11 +57,9 @@ The allowlist checker verifies schema validity, duplicate keys, referenced file 
 
 ## Dual-Arity Inventory Contract
 
-[dual-arity.inventory.jsonc](./dual-arity.inventory.jsonc) tracks exported 2-3 parameter helper APIs that are not yet compliant with the dual data-first/data-last convention.
-
 Legitimate scanner exclusions belong in the checker, not in the inventory. Constructor factories documented as `@category constructors`, tagged-template identity helpers, React hooks, and React components are recognized by the scanner and should not create inventory churn.
 
-Inventory entries should remain only for real public helper APIs that need remediation or an explicit package-owner exception. Prefer options objects for third parameters; optional object-shaped third parameters are valid, but scalar third parameters are not.
+Inventory entries should remain only for real public helper APIs that need remediation or an explicit package-owner exception. A callable shaped `(input, options?)` is excluded because its one-argument form is already complete. Prefer options objects for third parameters; optional object-shaped third parameters are valid when the first two parameters are required, but scalar third parameters are not.
 
 ## Scope
 

@@ -61,8 +61,9 @@ const createDriverNotesTable = Effect.fnUntraced(function* () {
 });
 
 describe("PgliteClient (file-backed)", () => {
-  it.effect("persists rows across closing and reopening the same dataDir", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "persists rows across closing and reopening the same dataDir",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-pglite-persistent-" });
@@ -73,11 +74,12 @@ describe("PgliteClient (file-backed)", () => {
       const bodies = yield* readPersistentBodies().pipe(provideScopedLayer(layer));
 
       expect(bodies).toEqual(["durable hello"]);
-    }).pipe(provideScopedLayer(PersistentTestServices))
+    }, provideScopedLayer(PersistentTestServices))
   );
 
-  it.effect("runs Drizzle CRUD through the PgClient alias", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "runs Drizzle CRUD through the PgClient alias",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-pglite-drizzle-" });
@@ -100,6 +102,6 @@ describe("PgliteClient (file-backed)", () => {
       }).pipe(provideScopedLayer(layer));
 
       expect(rows.map((row) => `${row.body}:${row.rating}`)).toEqual(["beta:1", "alpha:2"]);
-    }).pipe(provideScopedLayer(PersistentTestServices))
+    }, provideScopedLayer(PersistentTestServices))
   );
 });

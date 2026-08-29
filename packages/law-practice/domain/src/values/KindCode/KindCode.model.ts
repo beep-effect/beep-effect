@@ -14,11 +14,14 @@ const $I = $LawPracticeDomainId.create("values/KindCode/KindCode");
 /**
  * WIPO ST.16 patent document kind code.
  *
+ * **Details**
+ *
  * The set includes the ST.16 letter codes and each letter code supplemented by
  * digits 1 through 9. Digit 0 is intentionally excluded because ST.16 describes
  * it as internal use outside the recommended standard.
  *
- * @example
+ * **Example** (Validate kind code members)
+ *
  * ```ts
  * import { KindCode } from "@beep/law-practice-domain"
  *
@@ -241,7 +244,8 @@ export const KindCode = LiteralKit([
 /**
  * Type-level literal union produced by {@link KindCode}.
  *
- * @example
+ * **Example** (Satisfy KindCode type literal)
+ *
  * ```ts
  * import type { KindCode } from "@beep/law-practice-domain"
  *

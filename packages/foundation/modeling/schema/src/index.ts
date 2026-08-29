@@ -11,12 +11,13 @@ export * from "./Number.ts";
 /**
  * Package version.
  *
- * @example
- * ```ts
+ * **Example** (Read package version)
+ *
+ * ```ts import.meta.vitest name="Read package version"
  * import { VERSION } from "@beep/schema"
  *
  * const schemaPackageVersion: typeof VERSION = VERSION
- * console.log(schemaPackageVersion.startsWith("0.")) // true
+ * schemaPackageVersion.startsWith("0.") // => true
  * ```
  *
  * @category configuration
@@ -54,11 +55,6 @@ export * from "./BufferEncoding.ts";
  * @category validation
  */
 export * from "./Bytes.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./CauseTaggedError/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -108,7 +104,6 @@ export * from "./Did.ts";
  * @since 0.0.0
  * @category validation
  */
-export * as DomainModel from "./DomainModel.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -145,17 +140,17 @@ export * from "./Email.ts";
  * @since 0.0.0
  * @category validation
  */
-export * as EntitySchema from "./EntitySchema/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * as FileDiff from "./FileDiff.schema.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
 export * from "./FileExtension.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./FileInfo.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -217,6 +212,28 @@ export * from "./Graph/index.ts";
  */
 export * from "./Html.ts";
 /**
+ * HTTP method schemas and literal-kit helpers.
+ *
+ * **Example** (Check HTTP method literal)
+ *
+ * ```ts
+ * import { HttpMethod } from "@beep/schema"
+ *
+ * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * as HttpMethod from "./HttpMethod/index.ts";
+/**
+ * Canonical schema for any three-digit HTTP response status.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { HttpStatusCode } from "./HttpStatus/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */
@@ -226,6 +243,25 @@ export * from "./Int.ts";
  * @category validation
  */
 export * from "./Int64.ts";
+/**
+ * Structured model of JSON Schema draft-2020-12 documents: recursive `Node`
+ * class, lossless wire codec, `boolean | Node` subschema union, document
+ * envelope, and local `$ref` resolvers.
+ *
+ * **Example** (Decode JSON Schema node)
+ *
+ * ```ts
+ * import { JSONSchema } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const node = S.decodeUnknownResult(JSONSchema.NodeCodec)({ type: "object" })
+ * console.log(node._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * as JSONSchema from "./JSONSchema/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -280,17 +316,19 @@ export * from "./MimeType.ts";
  * @since 0.0.0
  * @category validation
  */
-export * as Model from "./Model/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./MutableHashMap.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
 export * from "./MutableHashSet.ts";
+/**
+ * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Opaque.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -304,18 +342,19 @@ export * from "./PascalStr.ts";
 /**
  * Transport-layer port number schemas and codecs.
  *
- * @example
- * ```ts
+ * **Example** (Decode port from string)
+ *
+ * ```ts import.meta.vitest name="Decode port from string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { PortFromString } from "@beep/schema"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)("443"))
- * console.log(port) // 443
+ * port // => 443
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export * from "./Port.ts";
 /**
@@ -343,6 +382,26 @@ export * from "./Record/index.ts";
  * @category validation
  */
 export * from "./RegExp.ts";
+/**
+ * Nominal safe-object schema and object-keyword normalization codec.
+ *
+ * **Example** (Decode safe object value)
+ *
+ * ```ts import.meta.vitest name="Decode safe object value"
+ * import { SafeObject } from "@beep/schema"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const value = await Effect.runPromise(
+ *   S.decodeUnknownEffect(SafeObject)({ enabled: true })
+ * )
+ * value.enabled // => true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -412,17 +471,7 @@ export * from "./StatusCauseError.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./StatusCauseTaggedErrorClass/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./String.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./TaggedErrorClass/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -457,12 +506,12 @@ export * from "./Uint64.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./URL.ts";
+export * from "./Unknown.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
-export * as VariantSchema from "./VariantSchema/index.ts";
+export * from "./URL.ts";
 /**
  * @since 0.0.0
  * @category validation

@@ -7,97 +7,46 @@
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
-import { LiteralKit } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import * as S from "effect/Schema";
+import { MessageRole } from "./Message.values.ts";
 
 const $I = $WorkspaceDomainId.create("entities/Message/Message.model");
-
-/**
- * Workspace message author role.
- *
- * @example
- * ```ts
- * import { MessageRole } from "@beep/workspace-domain/entities/Message"
- *
- * console.log(MessageRole.is.user("user"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const MessageRole = LiteralKit(["system", "user", "assistant", "agent", "tool"]).pipe(
-  $I.annoteSchema("MessageRole", {
-    description: "Author role for a workspace message.",
-  })
-);
-
-/**
- * Runtime type for {@link MessageRole}.
- *
- * @example
- * ```ts
- * import type { MessageRole } from "@beep/workspace-domain/entities/Message"
- *
- * const value: MessageRole = "assistant"
- * console.log(value)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type MessageRole = typeof MessageRole.Type;
+const pg = ProductEntity.pg;
 
 /**
  * Md-aligned message content in a workspace turn.
  *
- * @example
+ * **Example** (Log Message table name)
+ *
  * ```ts
  * import { Message } from "@beep/workspace-domain"
  *
- * console.log(Message.definition.entityId.tableName)
+ * console.log(Message.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class Message extends BaseEntity.Class<Message>($I`Message`)(
-  WorkspaceIdentity.MessageId,
+export class Message extends ProductEntity.Entity<Message>()(WorkspaceIdentity.MessageId)(
   {
-    fields: {
-      content: Document.annotateKey({
-        description: "Md-aligned message document content.",
-      }),
-      role: MessageRole.annotateKey({
-        description: "Author role for the workspace message.",
-      }),
-      threadId: WorkspaceIdentity.ThreadId.annotateKey({
-        description: "Thread containing the message.",
-      }),
-      turnId: WorkspaceIdentity.TurnId.annotateKey({
-        description: "Turn that owns the message content.",
-      }),
-    },
-    persisted: {
-      content: EntitySchema.persist.jsonb({
-        columnName: "content",
-      }),
-      role: EntitySchema.persist.literal({
-        columnName: "role",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      threadId: EntitySchema.persist.entityId({
-        columnName: "thread_id",
-        indexHints: [EntitySchema.IndexHint.btree, EntitySchema.IndexHint.lookup],
-      }),
-      turnId: EntitySchema.persist.entityId({
-        columnName: "turn_id",
-        indexHints: [EntitySchema.IndexHint.btree, EntitySchema.IndexHint.lookup],
-      }),
-    },
+    content: Document.annotateKey({
+      description: "Md-aligned message document content.",
+    }).pipe(pg.jsonb()),
+    role: MessageRole.annotateKey({
+      description: "Author role for the workspace message.",
+    }).pipe(pg.text(), pg.index({ name: "workspace_message_role_lookup_idx" })),
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description: "Thread containing the message.",
+    }).pipe(pg.integer(), pg.columnName("thread_id"), pg.index()),
+    turnId: WorkspaceIdentity.TurnId.annotateKey({
+      description: "Turn that owns the message content.",
+    }).pipe(pg.integer(), pg.columnName("turn_id"), pg.index()),
   },
   $I.annote("Message", {
     description: "Md-aligned message content in a workspace turn.",
   })
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Message);
+}

@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../html/tsconfig.json"
+    },
+    {
       "path": "../identity/tsconfig.json"
     },
     {
@@ -19,9 +22,6 @@
     },
     {
       "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../primitive/types/tsconfig.json"
     }
   ]
 }

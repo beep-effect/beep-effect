@@ -6,14 +6,16 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { O } from "@beep/utils";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { O, Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $TikaId.create("Tika.errors");
 const TikaErrorReasonBase = LiteralKit([
   "config",
   "engine-unavailable",
+  "output-budget",
   "response-decoding",
   "response-status",
   "timeout",
@@ -23,7 +25,8 @@ const TikaErrorReasonBase = LiteralKit([
 /**
  * Technical Tika failure reasons.
  *
- * @example
+ * **Example** (Log TikaErrorReason object)
+ *
  * ```ts
  * import { TikaErrorReason } from "@beep/tika"
  *
@@ -43,7 +46,8 @@ export const TikaErrorReason = TikaErrorReasonBase.pipe(
 /**
  * Type for {@link TikaErrorReason}.
  *
- * @example
+ * **Example** (Assign typed error reason)
+ *
  * ```ts
  * import type { TikaErrorReason } from "@beep/tika"
  *
@@ -59,7 +63,8 @@ export type TikaErrorReason = typeof TikaErrorReason.Type;
 /**
  * Options used when constructing {@link TikaError} instances.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { TikaErrorOptions } from "@beep/tika"
  * import { NonNegativeInt } from "@beep/schema"
@@ -88,7 +93,8 @@ export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOpti
 /**
  * Technical failure raised inside the Tika driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { TikaError } from "@beep/tika"
  *
@@ -99,7 +105,7 @@ export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOpti
  * @category errors
  * @since 0.0.0
  */
-export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
+export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
   "TikaError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
@@ -118,7 +124,7 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
       })
     ),
   },
-  $I.annote("TikaError", {
+  $I.annoteError<TikaError>("TikaError", {
     description: "Redacted technical failure raised inside the Tika driver boundary.",
   })
 ) {
@@ -142,7 +148,8 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
 /**
  * Create a Tika technical error with a typed reason.
  *
- * @example
+ * **Example** (Make error with reason)
+ *
  * ```ts
  * import { makeTikaError } from "@beep/tika"
  *
@@ -153,4 +160,7 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
  * @category constructors
  * @since 0.0.0
  */
-export const makeTikaError = TikaError.fromReason;
+export const makeTikaError: {
+  (options?: TikaErrorOptions): (reason: TikaErrorReason) => TikaError;
+  (reason: TikaErrorReason, options?: TikaErrorOptions): TikaError;
+} = dual((args) => Str.isString(args[0]), TikaError.fromReason);

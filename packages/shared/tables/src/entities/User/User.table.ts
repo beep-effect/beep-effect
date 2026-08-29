@@ -5,17 +5,19 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { User } from "@beep/shared-domain/entities";
 
 /**
  * Postgres Drizzle table metadata for shared human user accounts.
  *
- * @remarks
- * The table is projected from `User.Model`, so the Drizzle table and
- * `Table.definition` stay aligned with the shared-domain account entity.
+ * **Details**
  *
- * @example
+ * The table is projected directly from `User.Model`, preserving the
+ * schema-colocated SQL metadata.
+ *
+ * **Example** (Inspect user table name)
+ *
  * ```ts
  * import { getTableConfig } from "drizzle-orm/pg-core"
  * import { User } from "@beep/shared-tables/entities"
@@ -28,4 +30,4 @@ import { User } from "@beep/shared-domain/entities";
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(User.Model);
+export const Table = toPgTable(User.Model);

@@ -12,9 +12,9 @@ import { Console, Effect, FileSystem } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { printLines } from "../../internal/cli/Printer.js";
-import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.js";
-import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
+import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.ts";
 import {
   ArchitectureDomainKind,
   ArchitecturePackageRole,
@@ -23,13 +23,13 @@ import {
   decodeCanonicalSliceOperationPlanJson,
   defaultArchitecturePlanTarget,
   encodeCanonicalSliceOperationPlanJson,
-} from "./Architecture.schemas.js";
-import { applyCanonicalSliceOperationPlan, checkCanonicalSliceOperationPlan } from "./OperationPlanExecution.js";
+} from "./Architecture.schemas.ts";
+import { applyCanonicalSliceOperationPlan, checkCanonicalSliceOperationPlan } from "./OperationPlanExecution.ts";
 import type {
   CanonicalSliceOperationPlan,
   OperationPlanApplyResult,
   OperationPlanCheckResult,
-} from "./Architecture.schemas.js";
+} from "./Architecture.schemas.ts";
 
 const planFileFlag = Flag.string("file").pipe(
   Flag.withAlias("f"),
@@ -48,6 +48,7 @@ const domainKindFlag = Flag.string("domain-kind").pipe(
 );
 
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Emit the schema-versioned JSON operation plan without writing files")
 );
 
@@ -149,7 +150,7 @@ const runWriteCommand = Effect.fn(function* (plan: CanonicalSliceOperationPlan, 
   const rootDir = yield* findRepoRoot();
   const result = yield* applyCanonicalSliceOperationPlan(rootDir, plan);
   yield* reportApplyResult(result);
-  const registeredSlugs = yield* CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages(rootDir);
+  const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(rootDir);
   if (A.isReadonlyArrayNonEmpty(registeredSlugs)) {
     yield* Console.log(`architecture identity registration: registered ${A.join(registeredSlugs, ", ")}`);
   }
@@ -274,13 +275,15 @@ const printArchitectureIndex = () => printLines(["architecture commands: create,
 /**
  * Architecture automation command group.
  *
- * @example
+ * **Example** (Register architecture command)
+ *
  * ```ts
  * import { architectureCommand } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const commandGroups = { architecture: architectureCommand }
  * console.log(Object.keys(commandGroups)) // ["architecture"]
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

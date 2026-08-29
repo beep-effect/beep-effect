@@ -5,18 +5,19 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 import { LegalClientStatus } from "./LegalClient.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.model");
+const pg = ProductEntity.pg;
 
 /**
  * Legal client entity that owns law-practice contacts and matters.
  *
- * @example
+ * **Example** (Decode LegalClient with Schema)
+ *
  * ```ts
  * import { LegalClient } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -44,31 +45,17 @@ const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.model")
  * @category entities
  * @since 0.0.0
  */
-export class LegalClient extends BaseEntity.Class<LegalClient>($I`LegalClient`)(
-  LawPractice.LegalClientId,
+export class LegalClient extends ProductEntity.Entity<LegalClient>()(LawPractice.LegalClientId)(
   {
-    fields: {
-      displayName: LawPracticeText.annotateKey({
-        description: "Human-readable legal client display name.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the legal client.",
-      }),
-      status: LegalClientStatus.annotateKey({
-        description: "Legal client lifecycle status.",
-      }),
-    },
-    persisted: {
-      displayName: EntitySchema.persist.text({
-        columnName: "display_name",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      status: EntitySchema.persist.literal({
-        columnName: "status",
-      }),
-    },
+    displayName: LawPracticeText.annotateKey({
+      description: "Human-readable legal client display name.",
+    }).pipe(pg.text(), pg.columnName("display_name")),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the legal client.",
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
+    status: LegalClientStatus.annotateKey({
+      description: "Legal client lifecycle status.",
+    }).pipe(pg.text()),
   },
   $I.annote("LegalClient", {
     description: "Legal client entity that owns law-practice contacts and matters.",

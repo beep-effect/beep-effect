@@ -6,11 +6,11 @@ import {
   makeChangesetGraphSummary,
   runChangesetGraphCheck,
 } from "@beep/repo-cli/test/Quality";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { Unknown } from "@beep/schema/Unknown";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess } from "effect/unstable/process";
 
@@ -19,16 +19,13 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  TestConsole.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
-);
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const runGit = Effect.fn("ChangesetGraphTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
+    stdin: "ignore",
     stdout: "ignore",
     stderr: "ignore",
   });
@@ -141,6 +138,42 @@ Record a private workspace change.
       );
 
       expect(references).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "rejects frontmatter whose bump value is outside the major | minor | patch domain",
+    Effect.fnUntraced(function* () {
+      const error = yield* changesetPackageReferencesFromText(
+        ".changeset/typo.md",
+        `---
+"@beep/schema": typo
+---
+
+Record a mistyped bump.
+`
+      ).pipe(Effect.flip);
+
+      expect(error.file).toBe(".changeset/typo.md");
+      expect(error.message).toContain("must map package names to major | minor | patch bumps");
+    })
+  );
+
+  it.effect(
+    "rejects frontmatter whose bump value is null",
+    Effect.fnUntraced(function* () {
+      const error = yield* changesetPackageReferencesFromText(
+        ".changeset/null-bump.md",
+        `---
+"@beep/schema": null
+---
+
+Record a null bump.
+`
+      ).pipe(Effect.flip);
+
+      expect(error.file).toBe(".changeset/null-bump.md");
+      expect(error.message).toContain("must map package names to major | minor | patch bumps");
     })
   );
 

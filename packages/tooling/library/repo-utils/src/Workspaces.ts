@@ -16,12 +16,12 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { DomainError } from "./errors/index.js";
-import { FsUtils } from "./FsUtils.js";
-import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.js";
+import { DomainError } from "./errors/index.ts";
+import { FsUtils } from "./FsUtils.ts";
+import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.ts";
 import type { FileSystem } from "effect";
-import type { NoSuchFileError } from "./errors/index.js";
-import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.js";
+import type { NoSuchFileError } from "./errors/index.ts";
+import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.ts";
 
 const $I = $RepoUtilsId.create("Workspaces");
 
@@ -31,7 +31,7 @@ const $I = $RepoUtilsId.create("Workspaces");
  * @category configuration
  * @since 0.0.0
  */
-const IGNORED_DIRS = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.turbo/**"];
+const IGNORED_DIRS = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/coverage/**", "**/.turbo/**"];
 const absoluteWorkspacePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 
 const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is ReadonlyArray<string> => A.isArray(value);
@@ -40,15 +40,14 @@ const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is Readonl
  * Extract the workspace glob patterns declared in a `package.json` `workspaces`
  * field, normalizing the array and Yarn-object forms to a flat pattern list.
  *
- * @param workspaces - The decoded `package.json` `workspaces` field, either the
- *   array form, the Yarn `{ packages }` object form, or `undefined`/`None` when
- *   the manifest declares no workspaces.
- * @returns The flat list of workspace glob patterns, empty when none are declared.
- * @remarks
+ * **Details**
+ *
  * Returns an empty array when `workspaces` is absent or `None`. The Yarn-style
  * object form contributes its `packages` entry (or nothing when it is absent);
  * the array form is returned as-is.
- * @example
+ *
+ * **Example** (Extract workspace glob patterns)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { workspaceGlobsFrom } from "@beep/repo-utils/Workspaces"
@@ -56,6 +55,11 @@ const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is Readonl
  * const globs = workspaceGlobsFrom(O.some(["packages/*", "apps/*"]))
  * console.log(globs) // ["packages/*", "apps/*"]
  * ```
+ *
+ * @param workspaces - The decoded `package.json` `workspaces` field, either the
+ *   array form, the Yarn `{ packages }` object form, or `undefined`/`None` when
+ *   the manifest declares no workspaces.
+ * @returns The flat list of workspace glob patterns, empty when none are declared.
  * @category utilities
  * @since 0.0.0
  */
@@ -92,13 +96,14 @@ const isContainedCanonicalPath: {
 /**
  * Resolve all workspace directories declared in the root `package.json`.
  *
+ * **Details**
+ *
  * Reads the `workspaces` array from the root `package.json`, expands each
  * glob pattern, reads each matching directory's `package.json` to extract
  * the package name, and returns a `HashMap<PackageName, AbsoluteDirectory>`.
  *
- * @param rootDir - Absolute path to the monorepo root directory.
- * @returns A HashMap mapping package names to their absolute directory paths.
- * @example
+ * **Example** (Resolve root workspace directories)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces"
@@ -106,6 +111,9 @@ const isContainedCanonicalPath: {
  * const program = resolveWorkspaceDirs(".")
  * console.log(program)
  * ```
+ *
+ * @param rootDir - Absolute path to the monorepo root directory.
+ * @returns A HashMap mapping package names to their absolute directory paths.
  * @category utilities
  * @since 0.0.0
  */
@@ -194,13 +202,13 @@ export const resolveWorkspaceDirs: (
 /**
  * Look up the absolute directory for a single workspace by package name.
  *
+ * **Details**
+ *
  * Resolves all workspaces and returns the path for the given name,
  * or `None` if the workspace is not found.
  *
- * @param rootDir - Absolute path to the monorepo root directory.
- * @param name - The package name to look up.
- * @returns An Option containing the absolute directory path, or None.
- * @example
+ * **Example** (Look up package directory)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -209,6 +217,10 @@ export const resolveWorkspaceDirs: (
  * const program = getWorkspaceDir(".", "@beep/repo-utils")
  * console.log(program)
  * ```
+ *
+ * @param rootDir - Absolute path to the monorepo root directory.
+ * @param name - The package name to look up.
+ * @returns An Option containing the absolute directory path, or None.
  * @category utilities
  * @since 0.0.0
  */
@@ -227,11 +239,14 @@ export const getWorkspaceDir: {
  * A resolved workspace package: its absolute directory, decoded manifest, and a
  * flattened scripts record.
  *
- * @remarks
+ * **Details**
+ *
  * `scripts` is the manifest's `scripts` field unwrapped to a plain record (empty
  * when the manifest declares no scripts), provided as a convenience so callers
  * need not re-open the `Option` on `manifest.scripts`.
- * @example
+ *
+ * **Example** (Check workspace has script)
+ *
  * ```ts
  * import * as R from "effect/Record"
  * import type { WorkspacePackage } from "@beep/repo-utils/Workspaces"
@@ -240,6 +255,7 @@ export const getWorkspaceDir: {
  *   R.has(workspace.scripts, "check")
  * console.log(hasCheckScript)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -261,13 +277,16 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
  * Resolve every workspace package declared by the root `package.json` into a map
  * from package name to its directory, decoded manifest, and scripts.
  *
- * @remarks
+ * **Details**
+ *
  * A superset of {@link resolveWorkspaceDirs} that additionally reads and decodes
  * each package's manifest via {@link readPackageJsonFile}. Directories without a
  * `package.json` are already excluded by {@link resolveWorkspaceDirs}, so every
  * entry carries a valid manifest. Fails with {@link DomainError} for unsafe or
  * escaping workspace globs, and with `S.SchemaError` when a manifest is malformed.
- * @example
+ *
+ * **Example** (Count resolved workspace packages)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as HashMap from "effect/HashMap"
@@ -277,6 +296,7 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
  * const count = Effect.map(program, HashMap.size)
  * console.log(count)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

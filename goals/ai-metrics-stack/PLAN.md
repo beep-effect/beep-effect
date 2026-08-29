@@ -1,18 +1,17 @@
 # AI Metrics Stack Plan
 
-This plan executes [SPEC.md](./SPEC.md). The credited P6 proof remains active,
-and the latest implementation target was the constrained P7a/b slice that could
-ship without disturbing that proof. P0 bootstrap, P1 source/privacy proof, P2
-durable ingest, P3 OTLP/backend contracts, P4 report-first scorecards, P5
-install/remote deployment, P6a fresh-review hardening, and P6b proof-runner
-isolation are complete. P7a/b hybrid mirror and retention workflows are now
-implemented. P6c remains the active closeout gate until the credited proof can
-finish on May 16, 2026 02:26 America/Chicago. P7e is the V1 production
-readiness closeout that records the final seven-day report and confirmed
-sanitized mirror. P7c provider/gateway metrics and P7d dashboard/backend
-expansion remain follow-up capabilities, not blockers for V1 completion.
+This plan executes [SPEC.md](./SPEC.md). V1 is complete through P7e: P0
+bootstrap, P1 source/privacy proof, P2 durable ingest, P3 OTLP/backend
+contracts, P4 report-first scorecards, P5 install/remote deployment, P6
+hardening plus the credited seven-day scorecard, P7a/b hybrid mirror and
+retention workflows, P7f forwarder durability, and the P7e production closeout.
 Phoenix is live on dankserver, Pulumi state is reconciled, and the workstation
-timer owns live collection from an isolated pinned proof worktree.
+timer owns live collection in the checkout-independent XDG state root.
+
+P7c provider/gateway metrics and P7d dashboard/backend expansion remain
+explicitly deferred follow-up capabilities, not V1 completion gates. Final
+runtime, report, mirror, and privacy evidence is recorded in
+[history/outputs/p7e-production-readiness-closeout.md](./history/outputs/p7e-production-readiness-closeout.md).
 
 ## P0: Initiative Bootstrap And Current State
 
@@ -31,7 +30,7 @@ Status: completed
 Status: completed
 
 - Added source discovery for Codex, Claude Code, and OpenClaw safe gateway
-  metadata, with configurable repo/home/unit roots, last-seven-days defaults,
+  metadata, with configurable repo, home, and unit roots, last-seven-days defaults,
   `--since`, `--max-files`, and `--all`.
 - Replaced the install-spec hardcoded transcript assumption with source
   discovery, config snapshot, and privacy-check planned commands.
@@ -128,32 +127,27 @@ Status: completed
 
 ## P6: Seven-Day Proof And Hardening
 
-Status: in progress
+Status: completed
 
-- Preserve the first real collection/export proof as baseline evidence.
-- The credited seven-day proof restarted after P6a closeout gates passed.
-- During the restarted window, keep live collection owned by the workstation
-  timer and maintain completion-creditable scorecards with real labels and
-  benchmark runs.
-- Isolate the runner from normal repo work by running the workstation timer from
-  the locked sibling worktree
-  `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/ai-metrics-p6-proof`,
-  pinned at `63c419721c735bfb860ccfa9bf1b31efbb23e33c`, while keeping the
-  proof data root at
-  `/home/elpresidank/YeeBois/projects/beep-effect/.beep/ai-metrics`.
-- Use the daily runbook in
-  [history/outputs/p6-proof-runner-isolation-and-runbook.md](./history/outputs/p6-proof-runner-isolation-and-runbook.md).
-- Track pre-closeout readiness evidence in
-  [history/outputs/p6-pre-may16-readiness-ledger.md](./history/outputs/p6-pre-may16-readiness-ledger.md).
-- The May 12 P6c label gate is closed for the active isolated-runner config:
-  the human-approved label for
-  `agent-task-f86914324ec15a092d633bbc488c0805753ffcad47f05264fe7856cc94a899fd`
-  flipped
-  `config-6c5738fd0e1932ced6043ab52c7df04e52278b1024470769243b724c265f7d52`
-  to `completionReady=true` in the intermediate report.
-- Additional labels require explicit human outcome judgment. Benchmark runs may
-  be recorded for real operator workflows with deploy-safe prompt hashes and
-  redacted notes.
+- Preserved the first real collection/export proof as baseline evidence and
+  credited the explicit May 9, 2026 02:26 through May 16, 2026 02:26
+  America/Chicago window.
+- Retained the human-approved label and benchmark evidence for
+  `config-6c5738fd0e1932ced6043ab52c7df04e52278b1024470769243b724c265f7d52`;
+  the final exact-window scorecard remains `completionReady=true`.
+- Production collection is workstation-owned by
+  `beep-ai-metrics-forwarder.timer` at a six-hour cadence. The unit executes
+  from the clean `beep-effect` checkout and writes all durable state to
+  `~/.local/state/beep/ai-metrics`; no checkout contains a
+  `.beep/ai-metrics` tree.
+- The source cap remains intentionally bounded at 50 files per source and 32
+  MiB per file. The fixed-branch closeout run included 50 of 179 Codex
+  candidates plus all 36 Claude files, created 66 new/changed archive objects,
+  and exported all 27,453 newly pending turns. Candidate counts describe the
+  rolling rescan set rather than an unprocessed queue; there was no evidence
+  that justified raising the memory-heavy production cap.
+- Final P6 and P7e evidence is in
+  [history/outputs/p7e-production-readiness-closeout.md](./history/outputs/p7e-production-readiness-closeout.md).
 
 ## P6a: Fresh Review Data And Ops Hardening
 
@@ -191,11 +185,10 @@ Status: completed
 
 ## P7: Topology-First Productionization
 
-Status: in progress
+Status: completed for V1
 
-- Preserve the credited P6 proof while implementing only the P7 work that does
-  not mutate the active proof runner, pinned proof worktree, timer budgets,
-  source window, or privacy contract.
+- Preserve the credited P6 evidence and privacy contract while operating
+  against the single XDG production root.
 - P7a implemented: raw encrypted transcripts remain workstation-local, while a
   sanitized derived mirror bundle can be built under
   `<dataRoot>/mirror/bundles/<bundleId>`. The bundle contains `manifest.json`,
@@ -215,15 +208,21 @@ Status: in progress
   disposable derived root without printing transcript text.
 - P7b implemented: `@beep/infra` now models the remote mirror root as
   `remoteMirrorRoot` with default `/srv/data/ai-metrics/p7-derived-mirror`.
-  Before May 16, 2026 this remains preview-only infra state; live proofs can
-  use the CLI mirror workflow without changing the active proof runner.
-- V1 pending: P7e production-readiness closeout after the P6 proof window
-  elapses. P7e must generate the final seven-day report, build a sanitized
-  derived mirror from the active data root, run confirmed `mirror sync` to
-  `/srv/data/ai-metrics/p7-derived-mirror`, and verify remote mirror status.
+- P7f completed for the V1 production path. Content-addressed ingest and
+  at-least-once OTLP delivery had already landed. This closeout adds a durable
+  checkpoint after every acknowledged 512-span chunk, preventing a backlog
+  larger than Phoenix's bounded queue from replaying its accepted prefix and
+  starving later turns. The production timer remains on `--parquet-mode none`;
+  that is not a mirror gate because `mirror build` creates fresh allowlisted
+  Parquet directly from DuckDB.
+- P7e completed: generated the final exact-window scorecard, built the
+  sanitized bundle from the XDG data root, synced it with explicit confirmation to
+  `/srv/data/ai-metrics/p7-derived-mirror`, and read the remote manifest back
+  through `mirror status`.
 - Follow-up, not V1-blocking: P7c provider/model/tool/token/cost enrichment,
-  P7d dashboard/backend expansion, and remote mirror lifecycle automation
-  beyond confirmed bundle sync/status.
+  P7d dashboard/backend expansion, clearer sanitized OTLP failure causes,
+  Phoenix capacity telemetry, and remote mirror lifecycle automation beyond
+  confirmed bundle sync/status.
 - Planning packet:
   [history/outputs/p7-topology-first-production-plan.md](./history/outputs/p7-topology-first-production-plan.md).
 
@@ -236,7 +235,6 @@ Status: in progress
 - `@beep/infra`: `check`, `test`, `lint`
 - CLI smoke for source discovery, ingest, install plan/doctor, forwarder timer
   rendering, archive drill, labels, benchmarks, and report generation
-- Proof-runner timer verification: locked proof worktree, service
-  `WorkingDirectory`, absolute proof data root, latest status JSON, and Phoenix
-  health
+- Production timer verification: service `WorkingDirectory`, absolute XDG data
+  root, six-hour cadence, latest status JSON, and Phoenix health/capacity
 - Pulumi preview and apply for the dankserver target

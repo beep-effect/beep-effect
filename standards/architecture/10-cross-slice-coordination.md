@@ -33,6 +33,23 @@ Promotion bar is the same as any other `shared/*` export: a promotion record per
 
 Naming after promotion: `shared/use-cases/iam/events/MembershipRevoked.ts` exports the event contract; ownership stays with the producing slice's team, but the file lives under shared so consumers can import without breaching the slice boundary.
 
+### 2a. Foundation-mediated port inversion
+
+Event promotion is not the only lawful cross-slice mechanism. A slice may also
+implement a `foundation`-owned port that another slice consumes, with the two
+bound at an application entrypoint and neither slice naming the other. Ratified
+2026-07-25 — see `DECISIONS.md`, "Foundation-Mediated Port Inversion Is A Legal
+Cross-Slice Mechanism", for the five admission conditions and the README-record
+requirement.
+
+This exists because events cannot express a gate that must fail closed *before*
+an action runs. Where the coordination is synchronous, product-neutral, and
+decides whether the consuming slice proceeds, use the port. Where it is a
+product fact one slice publishes and others react to, use an event contract per
+§2. Reach for the port only when the contract genuinely carries no product
+semantics; "it was easier than promoting an event" is not an admission
+condition.
+
 ## 3. Forbidden direct event reads
 
 - A slice's `*.processes.ts` or `*.event-handlers.ts` MUST NOT import another slice's `*.events.ts` from anywhere except promoted `shared/use-cases` contracts.
@@ -145,7 +162,7 @@ The `RevokeMembership` command handler in `iam/server` writes `MembershipRevoked
 
 **3. `billing/server` subscribes via a thin handler.**
 
-New file: `packages/billing/server/src/Subscription/Subscription.event-handlers.ts`. It imports `MembershipRevoked` from the future `@beep/shared-use-cases/public` subpath after promotion, registers a handler that decodes the payload, and calls billing's own internal `cancelInvoicesFor` use-case. The handler returns an `Effect.Effect<A, E, R>` and is built with `Effect.fn` per repo convention; failures decode into a `TaggedErrorClass` (from `@beep/schema`) defined in `billing/use-cases`.
+New file: `packages/billing/server/src/Subscription/Subscription.event-handlers.ts`. It imports `MembershipRevoked` from the future `@beep/shared-use-cases/public` subpath after promotion, registers a handler that decodes the payload, and calls billing's own internal `cancelInvoicesFor` use-case. The handler returns an `Effect.Effect<A, E, R>` and is built with `Effect.fn` per repo convention; failures decode into a class extending `S.TaggedError` directly from `effect/Schema`, defined in `billing/use-cases`.
 
 Result:
 
@@ -157,4 +174,6 @@ Result:
 
 - `01-hexagonal-vertical-slices.md` — slice-to-slice direct imports forbidden; cycle prohibition.
 - `02-shared-kernel.md` — promotion record schema and `shared/use-cases` ownership.
+- `07-non-slice-families.md` — `foundation/*` admission rules a mediating port must satisfy.
 - `11-evolution-and-deprecation.md` — additive vs breaking event contract changes, deprecation windows.
+- `DECISIONS.md` (2026-07-25) — foundation-mediated port inversion; §2a above.

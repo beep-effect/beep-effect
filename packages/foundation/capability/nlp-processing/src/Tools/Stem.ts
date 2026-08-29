@@ -39,11 +39,14 @@ class StemSuccess extends S.Class<StemSuccess>($I`StemSuccess`)(
  * Defines the agent-facing tool contract for reducing word tokens to their
  * stems.
  *
+ * **Details**
+ *
  * Use this tool when a caller needs normalized stem forms for matching,
  * deduplication, or lightweight indexing.
  *
- * @example
- * ```ts
+ * **Example** (Decode Stem parametersSchema)
+ *
+ * ```ts import.meta.vitest name="Decode Stem parametersSchema"
  * import * as S from "effect/Schema"
  * import { Stem } from "@beep/nlp-processing/Tools/Stem"
  *

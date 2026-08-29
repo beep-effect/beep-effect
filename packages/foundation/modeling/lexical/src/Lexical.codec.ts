@@ -35,6 +35,7 @@ import {
   ParagraphNode,
   QuoteNode,
   RootNode,
+  SafeUrl,
   SerializedEditorState,
   TableCellNode,
   TableNode,
@@ -46,6 +47,7 @@ import {
   withTextFormat,
   YouTubeNode,
 } from "./Lexical.model.ts";
+import type { SchemaIssue } from "effect";
 import type { TableCellHeaderState, TextFormatBit } from "./Lexical.model.ts";
 
 const $I = $LexicalSchemaId.create("Lexical.codec");
@@ -54,11 +56,12 @@ const $I = $LexicalSchemaId.create("Lexical.codec");
  * URI scheme that round-trips {@link ArtifactRefNode} through the Md AST as a
  * paragraph wrapping a single link.
  *
- * @example
- * ```ts
+ * **Example** (Construct artifact URI)
+ *
+ * ```ts import.meta.vitest name="Construct artifact URI"
  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema/Lexical.codec"
  *
- * console.log(ARTIFACT_URI_PREFIX) // "artifact://"
+ * `${ARTIFACT_URI_PREFIX}artifact-123` // => "artifact://artifact-123"
  * ```
  *
  * @category constants
@@ -70,13 +73,15 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
  * Artifact URI form used when the Md projection carries an
  * {@link ArtifactRefNode} as a link.
  *
- * @example
- * ```ts
+ * **Example** (Decode artifact URI)
+ *
+ * ```ts import.meta.vitest name="Decode artifact URI"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
- * const uri = S.decodeUnknownSync(ArtifactUri)("artifact://artifact-123")
- * console.log(uri) // "artifact://artifact-123"
+ * const result = S.decodeUnknownResult(ArtifactUri)("artifact://artifact-123")
+ * Result.isSuccess(result) && result.success === "artifact://artifact-123" // => true
  * ```
  *
  * @category combinators
@@ -92,7 +97,8 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
 /**
  * Type for {@link ArtifactUri}.
  *
- * @example
+ * **Example** (Accept ArtifactUri type)
+ *
  * ```ts
  * import type { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -114,6 +120,7 @@ const emptyTextDetail = TextDetailMask.make(0);
 const firstOrdinal = PosInt.make(1);
 const noTableCellHeader = 0 satisfies TableCellHeaderState;
 const rowTableCellHeader = 1 satisfies TableCellHeaderState;
+const decodeSafeUrl = S.decodeUnknownEffect(SafeUrl);
 
 // Reversible map between the Lexical heading `tag` ("h1".."h6") and the Md
 // `Heading.level` (1..6): `From.Enum` resolves a tag to its level, `To.Enum`
@@ -127,16 +134,24 @@ const HeadingLevelTag = MappedLiteralKit([
   ["h6", 6],
 ] as const);
 
+// effect 4.0.0-beta.105 makes `makeEffect` honest about failing with a raw
+// `SchemaIssue.Issue`; this module's boundary is `S.SchemaError`, so node
+// construction funnels through this normalizer.
+const asSchemaError = <A, R>(
+  effect: Effect.Effect<A, S.SchemaError | SchemaIssue.Issue, R>
+): Effect.Effect<A, S.SchemaError, R> =>
+  Effect.mapError(effect, (error) => (S.isSchemaError(error) ? error : new S.SchemaError(error)));
+
 const textLeaf: {
   (text: string, format: TextFormatMask): Effect.Effect<TextNode, S.SchemaError>;
   (format: TextFormatMask): (text: string) => Effect.Effect<TextNode, S.SchemaError>;
 } = dual(
   2,
   (text: string, format: TextFormatMask): Effect.Effect<TextNode, S.SchemaError> =>
-    TextNode.makeEffect({ detail: emptyTextDetail, format, mode: "normal", style: "", text })
+    asSchemaError(TextNode.makeEffect({ detail: emptyTextDetail, format, mode: "normal", style: "", text }))
 );
 
-const lineBreak = () => LineBreakNode.makeEffect({});
+const lineBreak = () => asSchemaError(LineBreakNode.makeEffect({}));
 
 const mdInlineText = Match.type<Md.Inline>().pipe(
   Match.tagsExhaustive({
@@ -207,16 +222,18 @@ const mdBlockText = (block: Md.Block): string =>
 
 const inlinesToLexical = (
   inlines: ReadonlyArray<Md.Inline>,
-  format: TextFormatMask
+  format: TextFormatMask,
+  insideLink = false
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.map(
-    Effect.forEach(inlines, (inline) => inlineToLexical(inline, format)),
+    Effect.forEach(inlines, (inline) => inlineToLexical(inline, format, insideLink)),
     A.flatten
   );
 
 const inlineToLexical = (
   inline: Md.Inline,
-  format: TextFormatMask
+  format: TextFormatMask,
+  insideLink = false
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Match.value(inline).pipe(
     Match.tagsExhaustive({
@@ -225,19 +242,31 @@ const inlineToLexical = (
       text: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
       rawMarkdown: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
       rawHtml: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
-      strong: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.bold)),
-      em: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.italic)),
-      del: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.strikethrough)),
+      strong: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.bold), insideLink),
+      em: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.italic), insideLink),
+      del: (node) => inlinesToLexical(node.children, withTextFormat(format, TextFormatBits.strikethrough), insideLink),
       code: (node) => Effect.map(textLeaf(node.value, withTextFormat(format, TextFormatBits.code)), A.of<LexicalNode>),
       a: (node) =>
-        Effect.flatMap(inlinesToLexical(node.children, format), (children) =>
-          Effect.map(LinkNode.makeEffect({ url: node.href, children }), A.of<LexicalNode>)
-        ),
-      // Images degrade to links so the destination survives (README).
+        insideLink
+          ? inlinesToLexical(node.children, format, true)
+          : Effect.flatMap(inlinesToLexical(node.children, format, true), (children) =>
+              Effect.flatMap(decodeSafeUrl(node.href), (url) =>
+                Effect.map(asSchemaError(LinkNode.makeEffect({ url, children, title: node.title })), A.of<LexicalNode>)
+              )
+            ),
+      // Images normally degrade to links so the destination survives. Inside
+      // an outer link, only the alt-text run is representable (README).
       img: (node) =>
-        Effect.flatMap(textLeaf(node.alt, format), (alt) =>
-          Effect.map(LinkNode.makeEffect({ url: node.src, children: [alt] }), A.of<LexicalNode>)
-        ),
+        insideLink
+          ? Effect.map(textLeaf(node.alt, format), A.of<LexicalNode>)
+          : Effect.flatMap(textLeaf(node.alt, format), (alt) =>
+              Effect.flatMap(decodeSafeUrl(node.src), (url) =>
+                Effect.map(
+                  asSchemaError(LinkNode.makeEffect({ url, children: [alt], title: node.title })),
+                  A.of<LexicalNode>
+                )
+              )
+            ),
       br: () => Effect.map(lineBreak(), A.of<LexicalNode>),
       inlineMath: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
       footnoteReference: (node) => Effect.map(textLeaf(`[^${node.identifier}]`, format), A.of<LexicalNode>),
@@ -253,20 +282,29 @@ const listItemsToLexical = (
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.forEach(items, (item, index) =>
     Effect.flatMap(listItemChildrenToLexical(item.children), (children) =>
-      ListItemNode.makeEffect({
-        checked: O.fromUndefinedOr(item.checked),
-        value: PosInt.make(index + start),
-        children,
-      })
+      asSchemaError(
+        ListItemNode.makeEffect({
+          checked: O.fromUndefinedOr(item.checked),
+          value: PosInt.make(index + start),
+          children,
+        })
+      )
     )
   );
 
 const listItemChildrenToLexical = (
   children: ReadonlyArray<Md.ListItemChild>
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
-  A.every(children, Md.Inline.is)
-    ? inlinesToLexical(A.filter(children, Md.Inline.is), emptyTextFormat)
-    : Effect.map(textLeaf(mdListItemChildrenText(children), emptyTextFormat), A.of<LexicalNode>);
+  Effect.map(
+    Effect.forEach(children, (child) =>
+      Md.Inline.is(child)
+        ? inlineToLexical(child, emptyTextFormat)
+        : P.isTagged("ul")(child) || P.isTagged("ol")(child) || P.isTagged("taskList")(child)
+          ? Effect.map(asSchemaError(blockToLexical(child)), A.of<LexicalNode>)
+          : Effect.map(textLeaf(mdBlockText(child), emptyTextFormat), A.of<LexicalNode>)
+    ),
+    A.flatten
+  );
 
 const quoteChildToInlines = (block: Md.Block): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   P.isTagged("p")(block)
@@ -275,7 +313,7 @@ const quoteChildToInlines = (block: Md.Block): Effect.Effect<ReadonlyArray<Lexic
 
 const blockTextParagraph = (block: Md.Block): Effect.Effect<ParagraphNode, S.SchemaError> =>
   Effect.flatMap(textLeaf(mdBlockText(block), emptyTextFormat), (text) =>
-    ParagraphNode.makeEffect({ children: [text] })
+    asSchemaError(ParagraphNode.makeEffect({ children: [text] }))
   );
 
 type ArtifactRef = {
@@ -285,14 +323,18 @@ type ArtifactRef = {
 
 const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
   pipe(
-    ArtifactUriParts.decodeOption(child.href),
-    O.map(([, artifactId]) => {
-      const label = mdInlinesText(child.children);
-      return {
-        artifactId,
-        label: label === artifactId || Str.isEmpty(label) ? O.none<string>() : O.some(label),
-      };
-    })
+    A.length(child.children) === 1 ? A.head(child.children) : O.none<Md.Inline>(),
+    O.filter(S.is(Md.Text)),
+    O.filter(({ value }) => Str.isNonEmpty(value) && O.isNone(child.title)),
+    O.flatMap(({ value: label }) =>
+      pipe(
+        ArtifactUriParts.decodeOption(child.href),
+        O.map(([, artifactId]) => ({
+          artifactId,
+          label: label === artifactId ? O.none<string>() : O.some(label),
+        }))
+      )
+    )
   );
 
 // A single inline child that is an `a` node whose href is an artifact:// URI.
@@ -311,14 +353,15 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
 /**
  * Lift one Md block into its serialized Lexical node.
  *
- * @example
- * ```ts
- * import * as Effect from "effect/Effect"
+ * **Example** (Convert paragraph to Lexical)
+ *
+ * ```ts import.meta.vitest name="Convert paragraph to Lexical"
+ * import { Effect } from "effect"
  * import { P, Text } from "@beep/md/Md.model"
  * import { blockToLexical } from "@beep/lexical-schema/Lexical.codec"
  *
  * const node = Effect.runSync(blockToLexical(P.make({ children: [Text.make({ value: "Hello" })] })))
- * console.log(node.type) // "paragraph"
+ * node.type // => "paragraph"
  * ```
  *
  * @category combinators
@@ -401,24 +444,36 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
 /**
  * Lift a full Md document into a serialized Lexical editor state.
  *
- * @example
- * ```ts
- * import * as Effect from "effect/Effect"
+ * **Gotchas**
+ *
+ * An empty Md document canonicalizes to one blank paragraph because Lexical
+ * cannot apply an editor state whose root has no children.
+ *
+ * **Example** (Lift document to state)
+ *
+ * ```ts import.meta.vitest name="Lift document to state"
+ * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec"
  *
  * const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
  * const state = Effect.runSync(documentToEditorState(document))
- * console.log(state.root.children.length) // 1
+ * state.root.children.length // => 1
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const documentToEditorState = (document: Md.Document): Effect.Effect<SerializedEditorState, S.SchemaError> =>
-  Effect.flatMap(Effect.forEach(document.children, blockToLexical), (children) =>
-    Effect.flatMap(RootNode.makeEffect({ children }), (root) => SerializedEditorState.makeEffect({ root }))
-  );
+export const documentToEditorState = Effect.fn("Lexical.codec.documentToEditorState")(function* (
+  document: Md.Document
+) {
+  const children = yield* Effect.forEach(document.children, blockToLexical);
+  const runtimeChildren = A.isReadonlyArrayNonEmpty(children)
+    ? children
+    : [yield* ParagraphNode.makeEffect({ children: [] })];
+  const root = yield* RootNode.makeEffect({ children: runtimeChildren });
+  return yield* SerializedEditorState.makeEffect({ root });
+});
 
 const markConstructors: ReadonlyArray<readonly [TextFormatBit, (children: ReadonlyArray<Md.Inline>) => Md.Inline]> = [
   [TextFormatBits.strikethrough, (children) => Md.Del.make({ children })],
@@ -442,7 +497,7 @@ const inlineNodeToMd: (node: LexicalNode) => Md.Inline = LexicalNode.match({
     ),
   tab: () => Md.Text.make({ value: "\t" }),
   linebreak: () => Md.Br.make(),
-  link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children) }),
+  link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children), title: node.title }),
   "artifact-ref": (node) =>
     Md.A.make({
       href: ArtifactUri.fromUnknown(`${ARTIFACT_URI_PREFIX}${node.artifactId}`),
@@ -482,51 +537,32 @@ const codeChildText: (node: LexicalNode) => string = LexicalNode.match({
   tablecell: nodeToPlainText,
 });
 
-type CollectedListItem = {
-  readonly checked: O.Option<boolean>;
-  readonly inlines: ReadonlyArray<Md.Inline>;
-};
+const listItemChildrenToMd = (children: ReadonlyArray<LexicalNode>): ReadonlyArray<Md.ListItemChild> =>
+  A.map(children, (child) => (ListNode.is(child) ? listToBlock(child) : inlineNodeToMd(child)));
 
-// Nested lists flatten into the parent list level (README "Lossiness
-// profile") — `@beep/md` list items hold inline content only.
-const collectListItems = (list: ListNode): ReadonlyArray<CollectedListItem> =>
-  A.flatMap(list.children, (child) =>
-    child.type === "listitem"
-      ? A.match(A.filter(child.children, ListNode.is), {
-          onEmpty: (): ReadonlyArray<CollectedListItem> => [
-            { checked: child.checked, inlines: textRunToInlines(child.children) },
-          ],
-          onNonEmpty: (nested) =>
-            A.appendAll(
-              A.match(
-                A.filter(child.children, (node) => !ListNode.is(node)),
-                {
-                  onEmpty: A.empty<CollectedListItem>,
-                  onNonEmpty: (own) => [{ checked: child.checked, inlines: textRunToInlines(own) }],
-                }
-              ),
-              A.flatMap(nested, collectListItems)
-            ),
-        })
-      : ListNode.is(child)
-        ? collectListItems(child)
-        : [{ checked: O.none<boolean>(), inlines: [inlineNodeToMd(child)] }]
-  );
-
-const listToBlock = (node: ListNode): Md.Block => {
-  const items = collectListItems(node);
+function listToBlock(node: ListNode): Md.Block {
+  const items = A.filter(node.children, ListItemNode.is);
   return ListType.$match(node.listType, {
     check: () =>
       Md.TaskList.make({
         children: A.map(items, (item) =>
-          Md.TaskItem.make({ ...O.getSomesStruct({ checked: item.checked }), children: item.inlines })
+          Md.TaskItem.make({
+            ...O.getSomesStruct({ checked: item.checked }),
+            children: listItemChildrenToMd(item.children),
+          })
         ),
       }),
     number: () =>
-      Md.Ol.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })), start: node.start }),
-    bullet: () => Md.Ul.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })) }),
+      Md.Ol.make({
+        children: A.map(items, (item) => Md.Li.make({ children: listItemChildrenToMd(item.children) })),
+        start: node.start,
+      }),
+    bullet: () =>
+      Md.Ul.make({
+        children: A.map(items, (item) => Md.Li.make({ children: listItemChildrenToMd(item.children) })),
+      }),
   });
-};
+}
 
 const tableChildToInlines = (node: LexicalNode): ReadonlyArray<Md.Inline> =>
   node.type === "paragraph" ? textRunToInlines(node.children) : [Md.Text.make({ value: nodeToPlainText(node) })];
@@ -547,7 +583,12 @@ const tableHasHeaderRow = (node: TableNode): boolean =>
   pipe(
     node.children,
     A.findFirst(TableRowNode.is),
-    O.map((row) => A.some(row.children, (child) => TableCellNode.is(child) && child.headerState !== noTableCellHeader)),
+    O.map((row) =>
+      A.some(
+        row.children,
+        (child) => TableCellNode.is(child) && (child.headerState & rowTableCellHeader) !== noTableCellHeader
+      )
+    ),
     O.getOrElse(() => false)
   );
 
@@ -569,16 +610,18 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
 /**
  * Project one serialized Lexical node onto Md blocks.
  *
- * @example
- * ```ts
+ * **Example** (Project artifact-ref node)
+ *
+ * ```ts import.meta.vitest name="Project artifact-ref node"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToBlocks } from "@beep/lexical-schema/Lexical.codec"
  *
- * const node = S.decodeUnknownSync(LexicalNode)({
+ * const result = S.decodeUnknownResult(LexicalNode)({
  *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
  * })
- * console.log(nodeToBlocks(node)[0]?._tag) // "p"
+ * Result.isSuccess(result) && nodeToBlocks(result.success)[0]?._tag === "p" // => true
  * ```
  *
  * @category combinators
@@ -609,15 +652,16 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
  * Project a serialized Lexical editor state onto the canonical Md document
  * AST, applying the documented lossiness profile.
  *
- * @example
- * ```ts
- * import * as Effect from "effect/Effect"
+ * **Example** (Round-trip editor state)
+ *
+ * ```ts import.meta.vitest name="Round-trip editor state"
+ * import { Effect } from "effect"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema/Lexical.codec"
  *
  * const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
  * const state = Effect.runSync(documentToEditorState(document))
- * console.log(editorStateToDocument(state).children[0]?._tag) // "p"
+ * editorStateToDocument(state).children[0]?._tag // => "p"
  * ```
  *
  * @category combinators

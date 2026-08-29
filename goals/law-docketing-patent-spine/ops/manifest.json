@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "law-docketing-patent-spine",
+    "title": "Law Docketing Patent Spine",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/law-docketing-patent-spine",
+  "lifecycle": "active",
+  "mission": "Deliver the US Patent Office-Action Approval Spine from official evidence through attorney-approved durable reconciliation and one-way Outlook reminders.",
+  "statusNote": "Paired acceptance: patent v1 is blocked until goals/law-docketing-reliability proves the independent kill-app alert and restore/backfill/reconciliation path.",
+  "dependencies": [
+    "goals/m365-driver",
+    "goals/law-docketing-reliability",
+    "goals/law-doc-structure-oa-slice"
+  ],
+  "blockedBy": [
+    "goals/m365-driver",
+    "goals/law-docketing-reliability",
+    "goals/law-doc-structure-oa-slice"
+  ],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/solo-firm-docketing",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Additionally not achieved until goals/law-docketing-reliability proves the independent kill-app alert and restore/backfill/reconciliation path and the goals/law-doc-structure-oa-slice intake contract lands (paired acceptance).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/law-docketing-patent-spine/README.md",
+    "goals/law-docketing-patent-spine/SPEC.md",
+    "goals/law-docketing-patent-spine/PLAN.md",
+    "goals/law-docketing-patent-spine/GOAL.md",
+    "goals/law-docketing-patent-spine/research/SOURCES.md",
+    "explorations/solo-firm-docketing/BRIEF.md",
+    "explorations/solo-firm-docketing/MAP.md",
+    "explorations/solo-firm-docketing/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/law-docketing-patent-spine/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/law-docketing-patent-spine/GOAL.md)\" -le 4000",
+    "jq . goals/law-docketing-patent-spine/ops/manifest.json",
+    "rg -n \"law-docketing-patent-spine|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/law-docketing-patent-spine",
+    "git diff --check -- goals/law-docketing-patent-spine",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

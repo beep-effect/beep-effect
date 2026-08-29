@@ -17,7 +17,7 @@ import { A, O, pipe, R, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { PretextSnapshotCodecError } from "./Pretext.errors.js";
+import { PretextSnapshotCodecError } from "./Pretext.errors.ts";
 
 const $I = $PretextId.create("Pretext.models");
 
@@ -30,7 +30,8 @@ const NonNegativeLineCount = S.Int.check(isNonNegative);
  * so pure replays of engine behavior stay honest about which engine they
  * reproduce.
  *
- * @example
+ * **Example** (Decode EngineProfile schema)
+ *
  * ```ts
  * import { EngineProfile } from "@beep/pretext"
  * import * as S from "effect/Schema"
@@ -46,8 +47,8 @@ const NonNegativeLineCount = S.Int.check(isNonNegative);
  * console.log(profile.lineFitEpsilon)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class EngineProfile extends S.Class<EngineProfile>($I`EngineProfile`)(
   {
@@ -68,7 +69,8 @@ export class EngineProfile extends S.Class<EngineProfile>($I`EngineProfile`)(
  * under. `sentence`, `oracle`, and `domLineCounts` are capture provenance —
  * present on oracle-validated fixtures, absent on live captures.
  *
- * @example
+ * **Example** (Decode FontMetrics schema)
+ *
  * ```ts
  * import { FontMetrics } from "@beep/pretext"
  * import * as S from "effect/Schema"
@@ -93,8 +95,8 @@ export class EngineProfile extends S.Class<EngineProfile>($I`EngineProfile`)(
  * console.log(metrics.font)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class FontMetrics extends S.Class<FontMetrics>($I`FontMetrics`)(
   {
@@ -124,19 +126,22 @@ export class FontMetrics extends S.Class<FontMetrics>($I`FontMetrics`)(
  * means every future migration starts from a known format; unversioned input
  * fails decode with a typed error.
  *
+ * **Details**
+ *
  * Codec statics are colocated on the schema: `is`, `decodeOption`,
  * `fromUnknown` (trusted-boundary sync decode), plus the driver's typed
  * `decode`/`encode` Effects failing with {@link PretextSnapshotCodecError}.
  *
- * @example
+ * **Example** (Check snapshot version tag)
+ *
  * ```ts
  * import { FontMetricsSnapshotV1 } from "@beep/pretext"
  *
  * console.log(FontMetricsSnapshotV1.is({ version: 2 }))
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class FontMetricsSnapshotV1 extends S.Class<FontMetricsSnapshotV1>($I`FontMetricsSnapshotV1`)(
   {
@@ -169,7 +174,8 @@ export class FontMetricsSnapshotV1 extends S.Class<FontMetricsSnapshotV1>($I`Fon
 /**
  * Encoded (wire) type for {@link FontMetricsSnapshotV1}.
  *
- * @example
+ * **Example** (Read encoded snapshot version)
+ *
  * ```ts
  * import type { FontMetricsSnapshotV1Encoded } from "@beep/pretext"
  *
@@ -178,15 +184,16 @@ export class FontMetricsSnapshotV1 extends S.Class<FontMetricsSnapshotV1>($I`Fon
  * console.log(versionOf.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type FontMetricsSnapshotV1Encoded = typeof FontMetricsSnapshotV1.Encoded;
 
 /**
  * Text and width inputs for pure line-count and height calculations.
  *
- * @example
+ * **Example** (Make TextLayoutInput value)
+ *
  * ```ts
  * import { TextLayoutInput } from "@beep/pretext"
  *
@@ -195,8 +202,8 @@ export type FontMetricsSnapshotV1Encoded = typeof FontMetricsSnapshotV1.Encoded;
  * console.log(input.maxWidth)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class TextLayoutInput extends S.Class<TextLayoutInput>($I`TextLayoutInput`)(
   {
@@ -205,6 +212,61 @@ export class TextLayoutInput extends S.Class<TextLayoutInput>($I`TextLayoutInput
   },
   $I.annote("TextLayoutInput", {
     description: "Text and maximum width used by pure font-metrics layout calculations.",
+  })
+) {}
+
+/**
+ * A word-indexed line range from a greedy text layout. `startWord` is
+ * inclusive, `endWord` is exclusive, and `width` is the line advance.
+ *
+ * **Example** (Make LineRange value)
+ *
+ * ```ts
+ * import { LineRange } from "@beep/pretext"
+ *
+ * const range = LineRange.make({ startWord: 0, endWord: 2, width: 80 })
+ *
+ * console.log(range.endWord)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LineRange extends S.Class<LineRange>($I`LineRange`)(
+  {
+    startWord: NonNegativeLineCount,
+    endWord: NonNegativeLineCount,
+    width: NonNegativeAdvance,
+  },
+  $I.annote("LineRange", {
+    description: "A word-indexed half-open line range and its measured advance width.",
+  })
+) {}
+
+/**
+ * Aggregate geometry for a greedy text layout: total line count and widest
+ * line advance.
+ *
+ * **Example** (Make LineStats value)
+ *
+ * ```ts
+ * import { LineStats } from "@beep/pretext"
+ *
+ * const stats = LineStats.make({ lineCount: 2, maxLineWidth: 180 })
+ *
+ * console.log(stats.maxLineWidth)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LineStats extends S.Class<LineStats>($I`LineStats`)(
+  {
+    lineCount: NonNegativeLineCount,
+    maxLineWidth: NonNegativeAdvance,
+  },
+  $I.annote("LineStats", {
+    description: "Aggregate line count and maximum line width from a greedy text layout.",
   })
 ) {}
 
@@ -217,10 +279,13 @@ const wordWidths = (metrics: FontMetrics, text: string): O.Option<ReadonlyArray<
  * exactly the pure input a layout constraint solver needs, without asking
  * the DOM. Returns `None` when any word is missing from the snapshot.
  *
+ * **Details**
+ *
  * Word-granularity greedy semantics: trailing collapsible spaces hang at
  * line end, so a break is charged `space + word`, never a dangling space.
  *
- * @example
+ * **Example** (Compute natural shrinkwrap width)
+ *
  * ```ts
  * import { chromeLinuxArial16, naturalWidth } from "@beep/pretext"
  * import { Effect } from "effect"
@@ -248,11 +313,106 @@ export const naturalWidth: {
 );
 
 /**
+ * Greedy first-fit word ranges for `text` at `maxWidth`, computed purely from
+ * snapshot word widths. Returns `None` when any word is missing from the
+ * snapshot. Ranges use half-open word indices and omit trailing spaces from
+ * each line width.
+ *
+ * **Example** (Compute greedy line ranges)
+ *
+ * ```ts
+ * import { chromeLinuxArial16, lineRanges } from "@beep/pretext"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
+ *
+ * const ranges = lineRanges(metrics, { text: "the the", maxWidth: 40 })
+ *
+ * console.log(O.isOption(ranges))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lineRanges: {
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<ReadonlyArray<LineRange>>;
+  (input: TextLayoutInput): (metrics: FontMetrics) => O.Option<ReadonlyArray<LineRange>>;
+} = dual(
+  2,
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<ReadonlyArray<LineRange>> =>
+    O.map(wordWidths(metrics, input.text), (widths) => {
+      const state = A.reduce(
+        widths,
+        { lines: 0, ranges: A.empty<LineRange>(), startWord: 0, width: 0 },
+        (state, wordWidth, index) => {
+          if (state.lines === 0) {
+            return { ...state, lines: 1, width: wordWidth };
+          }
+          const needed = state.width + metrics.spaceWidth + wordWidth;
+          return needed > input.maxWidth
+            ? {
+                lines: state.lines + 1,
+                ranges: A.append(
+                  state.ranges,
+                  LineRange.make({ startWord: state.startWord, endWord: index, width: state.width })
+                ),
+                startWord: index,
+                width: wordWidth,
+              }
+            : { ...state, width: needed };
+        }
+      );
+      return A.append(
+        state.ranges,
+        LineRange.make({ startWord: state.startWord, endWord: A.length(widths), width: state.width })
+      );
+    })
+);
+
+/**
+ * Aggregate greedy line geometry for `text` at `maxWidth`, derived from
+ * {@link lineRanges}. Returns `None` when any word is missing from the
+ * snapshot.
+ *
+ * **Example** (Compute aggregate line stats)
+ *
+ * ```ts
+ * import { chromeLinuxArial16, lineStats } from "@beep/pretext"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
+ *
+ * const stats = lineStats(metrics, { text: "the the", maxWidth: 40 })
+ *
+ * console.log(O.isOption(stats))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lineStats: {
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<LineStats>;
+  (input: TextLayoutInput): (metrics: FontMetrics) => O.Option<LineStats>;
+} = dual(
+  2,
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<LineStats> =>
+    O.map(lineRanges(metrics, input), (ranges) =>
+      LineStats.make({
+        lineCount: A.length(ranges),
+        maxLineWidth: A.reduce(ranges, 0, (maximum, range) => (range.width > maximum ? range.width : maximum)),
+      })
+    )
+);
+
+/**
  * Greedy first-fit line count for `text` at `maxWidth`, computed purely from
  * snapshot word widths. Returns `None` when any word is missing from the
  * snapshot. Greedy semantics only — no justification claims.
  *
- * @example
+ * **Example** (Compute greedy line count)
+ *
  * ```ts
  * import { chromeLinuxArial16, lineCount } from "@beep/pretext"
  * import { Effect } from "effect"
@@ -294,7 +454,8 @@ export const lineCount: {
  * the snapshot's line height. Returns `None` when any word is missing from
  * the snapshot.
  *
- * @example
+ * **Example** (Compute greedy text height)
+ *
  * ```ts
  * import { chromeLinuxArial16, textHeight } from "@beep/pretext"
  * import { Effect } from "effect"

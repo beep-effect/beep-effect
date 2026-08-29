@@ -7,14 +7,15 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { optionalDesc } from "./_fields.js";
+import { optionalDesc } from "./_fields.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/tag-values/DocumentationTagValues");
 
 /**
  * Schema-backed value for a parsed `description` tag occurrence: the main description body.
  *
- * @example
+ * **Example** (Creating a description tag)
+ *
  * ```ts
  * import { DescriptionValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -22,6 +23,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values/DocumentationTagValues")
  * const tagName: "description" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -36,7 +38,8 @@ export class DescriptionValue extends S.TaggedClass<DescriptionValue>($I`Descrip
 /**
  * Schema-backed value for a parsed `summary` tag occurrence: a short summary.
  *
- * @example
+ * **Example** (Creating a summary tag)
+ *
  * ```ts
  * import { SummaryValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -44,6 +47,7 @@ export class DescriptionValue extends S.TaggedClass<DescriptionValue>($I`Descrip
  * const tagName: "summary" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -58,7 +62,8 @@ export class SummaryValue extends S.TaggedClass<SummaryValue>($I`SummaryValue`)(
 /**
  * Schema-backed value for a parsed `remarks` tag occurrence: additional remarks.
  *
- * @example
+ * **Example** (Creating a remarks tag)
+ *
  * ```ts
  * import { RemarksValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -66,6 +71,7 @@ export class SummaryValue extends S.TaggedClass<SummaryValue>($I`SummaryValue`)(
  * const tagName: "remarks" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -80,7 +86,8 @@ export class RemarksValue extends S.TaggedClass<RemarksValue>($I`RemarksValue`)(
 /**
  * Schema-backed value for a parsed `example` tag occurrence: a usage example.
  *
- * @example
+ * **Example** (Creating an example tag)
+ *
  * ```ts
  * import { ExampleValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -88,6 +95,7 @@ export class RemarksValue extends S.TaggedClass<RemarksValue>($I`RemarksValue`)(
  * const tagName: "example" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -102,7 +110,8 @@ export class ExampleValue extends S.TaggedClass<ExampleValue>($I`ExampleValue`)(
 /**
  * Schema-backed value for a parsed `deprecated` tag occurrence: marks a symbol as deprecated.
  *
- * @example
+ * **Example** (Creating a deprecated tag)
+ *
  * ```ts
  * import { DeprecatedValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -110,6 +119,7 @@ export class ExampleValue extends S.TaggedClass<ExampleValue>($I`ExampleValue`)(
  * const tagName: "deprecated" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,7 +134,8 @@ export class DeprecatedValue extends S.TaggedClass<DeprecatedValue>($I`Deprecate
 /**
  * Schema-backed value for a parsed `see` tag occurrence: a reference to related resources.
  *
- * @example
+ * **Example** (Creating a see tag)
+ *
  * ```ts
  * import { SeeValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -132,6 +143,7 @@ export class DeprecatedValue extends S.TaggedClass<DeprecatedValue>($I`Deprecate
  * const tagName: "see" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,7 +158,8 @@ export class SeeValue extends S.TaggedClass<SeeValue>($I`SeeValue`)(
 /**
  * Schema-backed value for a parsed `since` tag occurrence: the version when the symbol was introduced.
  *
- * @example
+ * **Example** (Creating a since tag)
+ *
  * ```ts
  * import { SinceValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -154,6 +167,7 @@ export class SeeValue extends S.TaggedClass<SeeValue>($I`SeeValue`)(
  * const tagName: "since" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -168,7 +182,8 @@ export class SinceValue extends S.TaggedClass<SinceValue>($I`SinceValue`)(
 /**
  * Schema-backed value for a parsed `version` tag occurrence: the current version of the symbol.
  *
- * @example
+ * **Example** (Creating a version tag)
+ *
  * ```ts
  * import { VersionValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -176,6 +191,7 @@ export class SinceValue extends S.TaggedClass<SinceValue>($I`SinceValue`)(
  * const tagName: "version" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -190,7 +206,8 @@ export class VersionValue extends S.TaggedClass<VersionValue>($I`VersionValue`)(
 /**
  * Schema-backed value for a parsed `author` tag occurrence: the author of the symbol.
  *
- * @example
+ * **Example** (Creating an author tag)
+ *
  * ```ts
  * import { AuthorValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -198,6 +215,7 @@ export class VersionValue extends S.TaggedClass<VersionValue>($I`VersionValue`)(
  * const tagName: "author" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -212,7 +230,8 @@ export class AuthorValue extends S.TaggedClass<AuthorValue>($I`AuthorValue`)(
 /**
  * Schema-backed value for a parsed `todo` tag occurrence: a pending task.
  *
- * @example
+ * **Example** (Creating a todo tag)
+ *
  * ```ts
  * import { TodoValue } from "@beep/repo-utils/JSDoc/models/tag-values/DocumentationTagValues"
  *
@@ -220,6 +239,7 @@ export class AuthorValue extends S.TaggedClass<AuthorValue>($I`AuthorValue`)(
  * const tagName: "todo" = tag._tag
  * console.log(tagName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

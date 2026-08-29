@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -26,26 +26,28 @@ type YeetCommandErrorOptions =
 /**
  * Operational error raised by the yeet command.
  *
- * @example
+ * **Example** (Make yeet command error)
+ *
  * ```ts
  * import { YeetCommandError } from "@beep/repo-cli/commands/Yeet"
  *
  * const error = YeetCommandError.make({ message: "failed" })
  * console.log(error.message)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class YeetCommandError extends TaggedErrorClass<YeetCommandError>($I`YeetCommandError`)(
+export class YeetCommandError extends S.TaggedError<YeetCommandError>($I`YeetCommandError`)(
   "YeetCommandError",
   {
     message: S.String,
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("YeetCommandError", {
+  $I.annoteError<YeetCommandError>("YeetCommandError", {
     description: "Failure raised while planning or executing a yeet run.",
   })
 ) {

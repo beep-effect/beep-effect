@@ -23,23 +23,25 @@
  * @since 0.0.0
  */
 
-// Guard IPC stdout before ANY other module loads. The prelude has zero non-stdlib
-// imports, so this side-effect import patches stdout before the effect runtime or
-// sidecar dependencies can run their module initializers.
+// Guard IPC stdout before application and sidecar service modules load. The
+// prelude's functional utility imports are covered by the IPC stdio integration
+// test, which proves startup emits only protocol frames on stdout.
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
-import { DocumentsRpcs, VaultSyncRpcs } from "@beep/documents-use-cases/public";
-import { OntologyRpcs } from "@beep/ontology-use-cases/aggregates/Session";
-import { ExportProvenanceTool, ProposeChangeBatchTool, RepairOntologyTool } from "@beep/ontology-use-cases/tools";
-import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
+import { EpistemicConfigLive } from "@beep/epistemic-config/layer";
+import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
+import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
+import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { Config, Effect, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
-import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc";
 import { RuntimeLive } from "@/runtime/Layer";
+import { SidecarReadyMarker } from "@/runtime/Migrations";
+import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { DesktopRpcs } from "./DesktopRpcs.ts";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
@@ -50,23 +52,9 @@ import type { DesktopStartupError } from "@/runtime/Layer";
 // port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
 const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
-const ONTOLOGY_MCP_MUTATIONS_ENABLED = Effect.runSync(
-  Config.boolean("ONTOLOGY_MCP_MUTATIONS_ENABLED").pipe(Config.withDefault(false))
-);
-const APPROVED_ONTOLOGY_MUTATION_TOOLS = ONTOLOGY_MCP_MUTATIONS_ENABLED
-  ? [ProposeChangeBatchTool.name, RepairOntologyTool.name, ExportProvenanceTool.name]
-  : [];
-
-const DesktopRpcs = ChatRpcs.merge(
-  WorkspaceVaultRpcs,
-  DocumentsRpcs,
-  VaultSyncRpcs,
-  OntologyRpcs,
-  VaultDirectoryPickerRpcs
-);
 
 // The full desktop group includes write-capable workspace vault, document
-// intake, vault sync, and ontology workbench RPCs. HTTP only exposes that
+// intake, vault sync, ontology workbench, and contradiction-triage RPCs. HTTP only exposes that
 // group when the per-launch bearer token is configured; otherwise dev HTTP falls back to
 // chat-only RPCs so loopback HTTP never exposes non-chat writes without an
 // unguessable shell-issued token.
@@ -103,11 +91,16 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
   const OntologyMcp = O.match(RPC_SESSION_TOKEN, {
     onNone: () => Layer.empty,
     onSome: (token: Redacted.Redacted<string>) =>
-      makeOntologyMcpTransportLayer({
-        token,
-        mutationsEnabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
-        approvedMutationTools: APPROVED_ONTOLOGY_MUTATION_TOOLS,
-      }).pipe(Layer.provide(HttpRouter.layer)),
+      makeOntologyMcpTransportLayer({ token }).pipe(
+        Layer.provide(OntologyMcpConfigLive),
+        Layer.provide(ExecutionLedgerDrizzle),
+        Layer.provide(EpistemicConfigLive),
+        // The same module-level const RuntimeLive provides: layer memoization
+        // builds one PGlite instance shared by the rpc handlers and the
+        // governed MCP gate's execution ledger.
+        Layer.provide(PgliteDrizzleLive),
+        Layer.provide(HttpRouter.layer)
+      ),
   });
   const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp);
   return RpcServerLive.pipe(
@@ -135,10 +128,14 @@ const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
 const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
   Layer.tap(
     Effect.fnUntraced(function* () {
+      // Read the declaration rather than the OntologyMcpConfig service: the IPC
+      // branch never mounts the MCP transport, so requiring the service here
+      // would infect a transport that has no ontology MCP surface at all.
+      const ontologyMcpMutationsEnabled = yield* OntologyMcpMutationsEnabledConfig;
       yield* Effect.logInfo("professional desktop sidecar ready").pipe(
         Effect.annotateLogs({
           auth_enabled: O.isSome(RPC_SESSION_TOKEN),
-          ontology_mcp_mutations_enabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
+          ontology_mcp_mutations_enabled: ontologyMcpMutationsEnabled,
           port: PORT,
           transport: ipcTransport ? "ipc" : "http",
         })
@@ -148,6 +145,9 @@ const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
           Effect.annotateLogs({ transport: ipcTransport ? "ipc" : "http" })
         )
       );
+      yield* Effect.sync(() => {
+        process.stderr.write(`${SidecarReadyMarker}\n`);
+      });
     })
   ),
   Layer.withSpan("professional_desktop.sidecar.runtime")

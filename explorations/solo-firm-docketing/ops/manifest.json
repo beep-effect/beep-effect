@@ -3,24 +3,24 @@
   "exploration": {
     "slug": "solo-firm-docketing",
     "title": "Solo-Firm IP Docketing",
-    "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "Review gate: ratify L2 = narrow US-deterministic handroll first (maintenance fees, §133/§136 response periods, PCT national-phase, TM post-reg), with vendor connectors (CPI/LawToolBox/Alt Legal) as additive redundancy — vs buy-first.",
-      "Review gate: ratify jurisdiction scope = US patents first, then TM, then court orders, then foreign.",
-      "Review gate: green-light the dead-man's-switch / heartbeat reliability model as a first-class requirement.",
-      "Review gate: pursue CPI / LawToolBox partner-API access evaluation now, or defer until after the handroll spine ships?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/law-docketing-patent-spine",
+        "goals/law-docketing-reliability"
+      ],
       "docs": [
         "goals/agentic-professional-runtime/docs/product-vision-law-practice.md",
         "goals/agentic-professional-runtime/docs/approval-and-autonomy-policy.md",
-        "docs/product/prose-to-proof.md"
+        "docs/product/prose-to-proof.md",
+        "docs/product/solo-firm-docketing.md"
       ],
       "supersededBy": null
     },
     "created": "2026-06-18",
-    "updated": "2026-06-18"
+    "updated": "2026-08-13",
+    "sources": ["research/SOURCES.md"]
   }
 }

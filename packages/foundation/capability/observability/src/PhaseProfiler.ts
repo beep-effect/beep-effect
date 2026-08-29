@@ -1,10 +1,13 @@
 /**
  * Phase profiling for named application lifecycle phases (startup, migrations, etc.).
  *
+ * **Details**
+ *
  * Wraps an effect with span annotations, structured logs, and optional metric
  * recording to produce a {@link PhaseProfile} summary upon completion.
  *
- * @example
+ * **Example** (Profile migrations phase)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { profilePhase } from "@beep/observability"
@@ -48,8 +51,9 @@ const isProfilePhaseDataFirst = (args: IArguments): boolean => args.length >= 2 
 /**
  * Terminal outcomes for profiled phases: `"completed"`, `"failed"`, or `"interrupted"`.
  *
- * @example
- * ```typescript
+ * **Example** (Return completed outcome)
+ *
+ * ```ts import.meta.vitest name="Return completed outcome"
  * import { PhaseOutcome, profilePhase } from "@beep/observability"
  * import { Effect } from "effect"
  *
@@ -57,11 +61,11 @@ const isProfilePhaseDataFirst = (args: IArguments): boolean => args.length >= 2 
  *   phase: "startup"
  * })
  * const outcome = Effect.runSync(program)
- * console.log(outcome) // "completed"
+ * outcome // => "completed"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const PhaseOutcome = LiteralKit(["completed", "failed", "interrupted"]).pipe(
   $I.annoteSchema("PhaseOutcome", {
@@ -72,7 +76,8 @@ export const PhaseOutcome = LiteralKit(["completed", "failed", "interrupted"]).p
 /**
  * Runtime type for {@link PhaseOutcome}.
  *
- * @example
+ * **Example** (Annotate outcome type)
+ *
  * ```typescript
  * import type { PhaseOutcome } from "@beep/observability"
  *
@@ -88,8 +93,9 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
 /**
  * Deterministic summary of one profiled phase with outcome, duration, and attributes.
  *
- * @example
- * ```typescript
+ * **Example** (Construct a PhaseProfile)
+ *
+ * ```ts import.meta.vitest name="Construct a PhaseProfile"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { PhaseProfile } from "@beep/observability"
@@ -102,12 +108,12 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
  *   phase: "startup"
  * })
  *
- * console.log(profile.phase) // "startup"
- * console.log(profile.outcome) // "completed"
+ * profile.phase // => "startup"
+ * profile.outcome // => "completed"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class PhaseProfile extends S.Class<PhaseProfile>($I`PhaseProfile`)(
   {
@@ -184,13 +190,16 @@ const logPhaseProfile = <A, E>(profile: PhaseProfile, exit: Exit.Exit<A, E>): Ef
 /**
  * Profile one named phase with spans, logs, and optional metrics.
  *
+ * **Details**
+ *
  * Wraps an effect and records:
  * - A `started` counter increment on entry
  * - Span annotations for `phase`, `phase_outcome`, and `phase_duration_ms`
  * - A structured log at the appropriate level on exit
  * - Optional `completed`, `failed`, `interrupted` counters and duration metric
  *
- * @example
+ * **Example** (Profile with custom metrics)
+ *
  * ```typescript
  * import { Effect, Metric } from "effect"
  * import { profilePhase } from "@beep/observability"
@@ -206,9 +215,8 @@ const logPhaseProfile = <A, E>(profile: PhaseProfile, exit: Exit.Exit<A, E>): Ef
  * ```
  *
  * @effects Logs the phase outcome, annotates the current span, and updates any supplied phase metrics.
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 const profilePhaseImpl = Effect.fn("profilePhaseImpl")(function* <A, E, R>(
   effect: Effect.Effect<A, E, R>,
@@ -277,7 +285,8 @@ const profilePhaseImpl = Effect.fn("profilePhaseImpl")(function* <A, E, R>(
 /**
  * Profiles an Effect phase and records its duration and outcome.
  *
- * @example
+ * **Example** (Profile a startup phase)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { profilePhase } from "@beep/observability"
@@ -287,7 +296,6 @@ const profilePhaseImpl = Effect.fn("profilePhaseImpl")(function* <A, E, R>(
  * ```
  *
  * @effects Logs the phase outcome, annotates the current span, and updates any supplied phase metrics.
- *
  * @category observability
  * @since 0.0.0
  */

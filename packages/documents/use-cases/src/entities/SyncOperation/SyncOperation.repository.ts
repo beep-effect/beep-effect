@@ -8,10 +8,10 @@
 
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -20,11 +20,12 @@ import type { Effect } from "effect";
 const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.repository");
 
 /**
- * Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.
+ * Creation input for one push-outbox operation, excluding ProductEntity audit fields.
  *
- * @example
+ * **Example** (Make uploadFile seed)
+ *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -92,14 +93,15 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
     }),
   },
   $I.annote("SyncOperationSeed", {
-    description: "Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one push-outbox operation, excluding ProductEntity audit fields.",
   })
 ) {}
 
 /**
  * Persistence failure raised when an enqueue replays an existing idempotency key.
  *
- * @example
+ * **Example** (Construct conflict error)
+ *
  * ```ts
  * import { SyncOperationRepositoryConflict } from "@beep/documents-use-cases/entities/SyncOperation/server"
  *
@@ -113,7 +115,7 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
  * @category errors
  * @since 0.0.0
  */
-export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperationRepositoryConflict>(
+export class SyncOperationRepositoryConflict extends S.TaggedError<SyncOperationRepositoryConflict>(
   $I`SyncOperationRepositoryConflict`
 )(
   "SyncOperationRepositoryConflict",
@@ -125,7 +127,7 @@ export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperat
       description: "Non-empty repository conflict diagnostic.",
     }),
   },
-  $I.annote("SyncOperationRepositoryConflict", {
+  $I.annoteError<SyncOperationRepositoryConflict>("SyncOperationRepositoryConflict", {
     title: "SyncOperation repository conflict",
     description: "The SyncOperation repository rejected a duplicate idempotency key.",
   })
@@ -136,9 +138,10 @@ export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperat
 /**
  * Persistence failure raised when a SyncOperation row is absent.
  *
- * @example
+ * **Example** (Construct not-found error)
+ *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { SyncOperationRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as S from "effect/Schema"
  *
@@ -151,7 +154,7 @@ export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperat
  * @category errors
  * @since 0.0.0
  */
-export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperationRepositoryNotFound>(
+export class SyncOperationRepositoryNotFound extends S.TaggedError<SyncOperationRepositoryNotFound>(
   $I`SyncOperationRepositoryNotFound`
 )(
   "SyncOperationRepositoryNotFound",
@@ -160,7 +163,7 @@ export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperat
       description: "SyncOperation identity that could not be found.",
     }),
   },
-  $I.annote("SyncOperationRepositoryNotFound", {
+  $I.annoteError<SyncOperationRepositoryNotFound>("SyncOperationRepositoryNotFound", {
     title: "SyncOperation repository not found",
     description: "The SyncOperation repository could not find the requested entity.",
   })
@@ -171,7 +174,8 @@ export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperat
 /**
  * Persistence failure raised when the SyncOperation repository is unavailable.
  *
- * @example
+ * **Example** (Construct unavailable error)
+ *
  * ```ts
  * import { SyncOperationRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncOperation/server"
  *
@@ -182,7 +186,7 @@ export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperat
  * @category errors
  * @since 0.0.0
  */
-export class SyncOperationRepositoryUnavailable extends TaggedErrorClass<SyncOperationRepositoryUnavailable>(
+export class SyncOperationRepositoryUnavailable extends S.TaggedError<SyncOperationRepositoryUnavailable>(
   $I`SyncOperationRepositoryUnavailable`
 )(
   "SyncOperationRepositoryUnavailable",
@@ -191,7 +195,7 @@ export class SyncOperationRepositoryUnavailable extends TaggedErrorClass<SyncOpe
       description: "Non-empty repository availability diagnostic.",
     }),
   },
-  $I.annote("SyncOperationRepositoryUnavailable", {
+  $I.annoteError<SyncOperationRepositoryUnavailable>("SyncOperationRepositoryUnavailable", {
     title: "SyncOperation repository unavailable",
     description: "The SyncOperation repository could not serve the request.",
   })
@@ -202,7 +206,8 @@ export class SyncOperationRepositoryUnavailable extends TaggedErrorClass<SyncOpe
 /**
  * Listing input addressing the queued operations of one workspace mirror.
  *
- * @example
+ * **Example** (Build list-queued input)
+ *
  * ```ts
  * import { ListQueuedSyncOperationsInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -237,9 +242,10 @@ export class ListQueuedSyncOperationsInput extends S.Class<ListQueuedSyncOperati
 /**
  * Listing input addressing the queued operations of one sync-tracking row.
  *
- * @example
+ * **Example** (Build list-for-item input)
+ *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { ListQueuedSyncOperationsForItemInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
@@ -273,7 +279,8 @@ export class ListQueuedSyncOperationsForItemInput extends S.Class<ListQueuedSync
 /**
  * Recovery input addressing the leased operations of one workspace mirror.
  *
- * @example
+ * **Example** (Build requeue-leased input)
+ *
  * ```ts
  * import { RequeueLeasedSyncOperationsInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -308,7 +315,8 @@ export class RequeueLeasedSyncOperationsInput extends S.Class<RequeueLeasedSyncO
 /**
  * Listing input addressing the operations of one workspace mirror by status.
  *
- * @example
+ * **Example** (Build list-by-status input)
+ *
  * ```ts
  * import { ListSyncOperationsByStatusInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -347,14 +355,16 @@ export class ListSyncOperationsByStatusInput extends S.Class<ListSyncOperationsB
 /**
  * SyncOperation repository port consumed by the vault sync engine.
  *
- * @remarks
+ * **Details**
+ *
  * `enqueue` fails with {@link SyncOperationRepositoryConflict} when the seed's
  * `idempotencyKey` is already enqueued. `listQueued` and `listQueuedForItem`
  * return queued operations in FIFO order (ascending entity id). `requeueLeased`
  * is boot recovery: it flips every `leased` operation of the workspace mirror
  * back to `queued` and returns the number of operations it requeued.
  *
- * @example
+ * **Example** (Stub repository implementation)
+ *
  * ```ts
  * import {
  *   ListQueuedSyncOperationsInput,
@@ -414,7 +424,8 @@ export interface SyncOperationRepositoryShape {
 /**
  * Context tag for the SyncOperation repository port.
  *
- * @example
+ * **Example** (Provide repository context)
+ *
  * ```ts
  * import {
  *   SyncOperationRepository,

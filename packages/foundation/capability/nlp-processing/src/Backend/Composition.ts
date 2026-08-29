@@ -20,7 +20,7 @@ import { $NlpProcessingId } from "@beep/identity";
 import { PosInt, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Cache, Duration, Effect } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Obs from "../internal/observability.ts";
 import { NLPBackend } from "./NLPBackend.ts";
@@ -53,7 +53,7 @@ const fallbackOperation = <A, E, R>(
     secondary_backend: secondary.name,
   };
   return primaryEffect.pipe(
-    Effect.catchCause((cause) => Obs.recordNlpBackendFallback(cause, attributes).pipe(Effect.andThen(secondaryEffect))),
+    Effect.catchCause(flow(Obs.recordNlpBackendFallback(attributes), Effect.andThen(secondaryEffect))),
     Obs.trackNlpDuration(`nlp.backend.fallback.${operation}`, attributes)
   );
 };
@@ -80,14 +80,16 @@ const cachedGet = <A, E, R>(
 /**
  * Compose two backends so each operation falls back to a secondary backend.
  *
- * @remarks
+ * **Details**
+ *
  * The wrapper catches any failure from the primary operation and retries the
  * same operation on the secondary backend. Advertised capabilities are the
  * boolean union of both inputs, so capability selection can see the composed
  * surface.
  *
- * @example
- * ```ts
+ * **Example** (Primary secondary fallback composition)
+ *
+ * ```ts import.meta.vitest name="Primary secondary fallback composition"
  * import { Effect } from "effect"
  * import { withFallback } from "@beep/nlp-processing/Backend/Composition"
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -116,7 +118,7 @@ const cachedGet = <A, E, R>(
  *   extractRelations: () => Effect.succeed([])
  * }
  * const secondary: NLPBackendShape = { ...primary, name: "secondary", tokenize: (text) => Effect.succeed([text]) }
- * console.log(withFallback(primary, secondary).name) // "primary+secondary"
+ * withFallback(primary, secondary).name // => "primary+secondary"
  * ```
  *
  * @category combinators
@@ -198,14 +200,15 @@ export const withFallback: {
 /**
  * Cache settings for memoized backend composition.
  *
- * @example
- * ```ts
+ * **Example** (Caching options capacity TTL)
+ *
+ * ```ts import.meta.vitest name="Caching options capacity TTL"
  * import { Duration } from "effect"
  * import { PosInt } from "@beep/schema"
  * import type { CachingOptions } from "@beep/nlp-processing/Backend/Composition"
  *
  * const options: CachingOptions = { capacity: PosInt.make(64), timeToLive: Duration.minutes(5) }
- * console.log(options.capacity) // 64
+ * options.capacity // => 64
  * ```
  *
  * @category models
@@ -224,13 +227,15 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
 /**
  * Wrap a backend with per-operation `effect/Cache` memoization.
  *
- * @remarks
+ * **Details**
+ *
  * Each backend operation gets its own cache keyed by the input text or sentence.
  * The wrapper preserves the backend's capability bitmap and renames it as
  * `cached(<name>)`.
  *
- * @example
- * ```ts
+ * **Example** (Memoized backend tokenize cache)
+ *
+ * ```ts import.meta.vitest name="Memoized backend tokenize cache"
  * import { Effect } from "effect"
  * import { PosInt } from "@beep/schema"
  * import { withCaching } from "@beep/nlp-processing/Backend/Composition"
@@ -260,13 +265,12 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  * const program = Effect.flatMap(withCaching(backend, { capacity: PosInt.make(16) }), (cached) =>
  *   cached.tokenize("typed effects")
  * )
- * Effect.runPromise(program).then(console.log) // ["typed", "effects"]
+ * await Effect.runPromise(program) // => ["typed", "effects"]
  * ```
  *
  * @effects Allocates per-operation `effect/Cache` instances when the wrapper
  * effect runs; operations on the returned backend read and populate those
  * caches through `Cache.get`.
- *
  * @category combinators
  * @since 0.0.0
  */
@@ -275,13 +279,41 @@ export const withCaching = Effect.fn("withCaching")(function* (
   options: (typeof CachingOptions)["~type.make.in"] = {}
 ): Effect.fn.Return<NLPBackendShape> {
   const { capacity, timeToLive } = CachingOptions.make(options);
-  const tokenizeCache = yield* Cache.make({ capacity, lookup: backend.tokenize, timeToLive });
-  const sentencizeCache = yield* Cache.make({ capacity, lookup: backend.sentencize, timeToLive });
-  const posTagCache = yield* Cache.make({ capacity, lookup: backend.posTag, timeToLive });
-  const lemmatizeCache = yield* Cache.make({ capacity, lookup: backend.lemmatize, timeToLive });
-  const entitiesCache = yield* Cache.make({ capacity, lookup: backend.extractEntities, timeToLive });
-  const dependenciesCache = yield* Cache.make({ capacity, lookup: backend.parseDependencies, timeToLive });
-  const relationsCache = yield* Cache.make({ capacity, lookup: backend.extractRelations, timeToLive });
+  const tokenizeCache = yield* Cache.make({
+    capacity,
+    lookup: backend.tokenize,
+    timeToLive,
+  });
+  const sentencizeCache = yield* Cache.make({
+    capacity,
+    lookup: backend.sentencize,
+    timeToLive,
+  });
+  const posTagCache = yield* Cache.make({
+    capacity,
+    lookup: backend.posTag,
+    timeToLive,
+  });
+  const lemmatizeCache = yield* Cache.make({
+    capacity,
+    lookup: backend.lemmatize,
+    timeToLive,
+  });
+  const entitiesCache = yield* Cache.make({
+    capacity,
+    lookup: backend.extractEntities,
+    timeToLive,
+  });
+  const dependenciesCache = yield* Cache.make({
+    capacity,
+    lookup: backend.parseDependencies,
+    timeToLive,
+  });
+  const relationsCache = yield* Cache.make({
+    capacity,
+    lookup: backend.extractRelations,
+    timeToLive,
+  });
 
   return NLPBackend.of({
     capabilities: backend.capabilities,
@@ -313,12 +345,14 @@ export const withCaching = Effect.fn("withCaching")(function* (
 /**
  * Select the first backend whose capability bitmap enables a requested feature.
  *
- * @remarks
+ * **Details**
+ *
  * The input order is the preference order. This is useful before building a
  * layer when a caller has several concrete engines but only one operation
  * requires a specialized capability.
  *
- * @example
+ * **Example** (Select backend by capability)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"

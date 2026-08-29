@@ -12,8 +12,14 @@ import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { $LibpffId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Effect, Match } from "effect";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
+import {
+  LIBPFF_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE,
+  LIBPFF_SCAFFOLD_EXPORT_FAILED_MESSAGE,
+  LIBPFF_SCAFFOLD_TIMEOUT_MESSAGE,
+  libpffOperationError,
+} from "./Libpff.error-translation.ts";
 import { makeLibpffError } from "./Libpff.errors.ts";
 import type {
   DetectFileOperation,
@@ -29,7 +35,8 @@ const $I = $LibpffId.create("Libpff.service");
 /**
  * libpff file-processing engine descriptor.
  *
- * @example
+ * **Example** (Log descriptor name)
+ *
  * ```ts
  * import { LibpffFileProcessingEngineDescriptor } from "@beep/libpff"
  *
@@ -46,54 +53,24 @@ export const LibpffFileProcessingEngineDescriptor = FileProcessingEngineDescript
   supportedFormats: ["pst"],
 });
 
+// The scaffold predates the live pffexport runner and keeps its P1 wording
+// through the shared translator's per-arm overrides.
+const scaffoldErrorWording = {
+  engineUnavailableMessage: LIBPFF_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE,
+  exportFailedMessage: LIBPFF_SCAFFOLD_EXPORT_FAILED_MESSAGE,
+  timeoutMessage: LIBPFF_SCAFFOLD_TIMEOUT_MESSAGE,
+};
+
 const mapLibpffErrorToOperationError = (
   error: LibpffError,
   operation: ExportArchiveOperation
-): FileProcessingOperationError =>
-  Match.value(error.reason).pipe(
-    Match.when("engine-unavailable", () =>
-      FileProcessingOperationError.fromReason("engine-unavailable", {
-        artifactId: operation.source.id,
-        engine: LibpffFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "libpff export is deferred because no libpff runtime is configured for this proof.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.when("output-limit", () =>
-      FileProcessingOperationError.fromReason("output-limit-exceeded", {
-        artifactId: operation.source.id,
-        engine: LibpffFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "libpff export exceeded the configured materialization limit.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.when("timeout", () =>
-      FileProcessingOperationError.fromReason("operation-timed-out", {
-        artifactId: operation.source.id,
-        engine: LibpffFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "libpff export timed out.",
-        operationId: operation.operationId,
-      })
-    ),
-    Match.orElse(() =>
-      FileProcessingOperationError.fromReason("archive-export-failed", {
-        artifactId: operation.source.id,
-        engine: LibpffFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "libpff export failed inside the driver boundary.",
-        operationId: operation.operationId,
-      })
-    )
-  );
+): FileProcessingOperationError => libpffOperationError(operation, error, scaffoldErrorWording);
 
 const decodeLibpffArtifactPath = (
   path: string,
   operation: ExportArchiveOperation
 ): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  S.decodeUnknownEffect(PosixPath)(path).pipe(
+  S.decodeEffect(PosixPath)(path).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {
         artifactId: operation.source.id,
@@ -124,7 +101,8 @@ const deriveLibpffChildArtifactId = (
 /**
  * Options for the P1 libpff engine scaffold.
  *
- * @example
+ * **Example** (Make options with syntheticExport)
+ *
  * ```ts
  * import { LibpffFileProcessingEngineOptions } from "@beep/libpff"
  *
@@ -151,7 +129,8 @@ export class LibpffFileProcessingEngineOptions extends S.Class<LibpffFileProcess
 /**
  * Create the P1 libpff file-processing engine.
  *
- * @example
+ * **Example** (Create file-processing engine)
+ *
  * ```ts
  * import { makeLibpffFileProcessingEngine } from "@beep/libpff"
  *
@@ -221,7 +200,8 @@ export const makeLibpffFileProcessingEngine = (
 /**
  * P1 libpff file-processing engine value with typed unavailable deferrals.
  *
- * @example
+ * **Example** (Log engine descriptor field)
+ *
  * ```ts
  * import { LibpffFileProcessingEngine } from "@beep/libpff"
  *

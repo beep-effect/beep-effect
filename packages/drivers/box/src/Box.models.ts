@@ -8,7 +8,8 @@
 /**
  * Generated Box SDK model exports.
  *
- * @example
+ * **Example** (Import and log payload AST)
+ *
  * ```ts
  * import { FilesGetFileByIdPayload } from "@beep/box"
  *

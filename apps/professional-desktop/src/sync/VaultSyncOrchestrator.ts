@@ -55,16 +55,20 @@ const toVaultSyncActionError = (context: string) =>
 /**
  * RPC handler layer for workspace vault sync commands.
  *
+ * **Details**
+ *
  * Resolves the workspace vault configuration before triggering a sync pass and
  * translates every internal engine failure into the client-safe
  * {@link VaultSyncActionError} so no driver or repository detail leaks over the
  * wire.
  *
- * @example
+ * **Example** (Verify as Effect Layer)
+ *
  * ```ts
  * import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(VaultSyncHandlersLive)
+ * console.log(Layer.isLayer(VaultSyncHandlersLive)) // true
  * ```
  *
  * @category layers
@@ -75,11 +79,11 @@ export const VaultSyncHandlersLive = VaultSyncRpcs.toLayer(
     const workspaceVaultStore = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
     const engine = yield* VaultSyncEngine;
     return VaultSyncRpcs.of({
-      GetVaultSyncStatus: ({ workspaceId }) =>
+      GetVaultSyncStatus: ({ forceProbe, workspaceId }) =>
         observeSyncOperation(
           "get_status",
           engine
-            .status(VaultSyncStatusInput.make({ workspaceId }))
+            .status(VaultSyncStatusInput.make({ forceProbe, workspaceId }))
             .pipe(Effect.catch(toVaultSyncActionError("GetVaultSyncStatus")))
         ),
       ListVaultSyncConflicts: ({ workspaceId }) =>

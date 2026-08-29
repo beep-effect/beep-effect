@@ -26,17 +26,17 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import type * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import type * as Documents from "@beep/documents-domain/identity/Documents";
+import type * as Documents from "@beep/shared-domain/identity/Documents";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
@@ -57,7 +57,51 @@ const SyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(7);
+const ProcfsUnavailableFileSystemLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return {
+      ...fs,
+      realPath: Effect.fnUntraced(function* (candidate: string) {
+        if (Str.startsWith("/proc/self/fd/")(candidate)) {
+          return yield* PlatformError.badArgument({
+            module: "FileSystem",
+            method: "realPath",
+            description: "simulated unavailable procfs descriptor path",
+          });
+        }
+        return yield* fs.realPath(candidate);
+      }),
+    };
+  })
+).pipe(Layer.provide(BunFileSystem.layer));
+
+const ProcfsUnavailableSyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
+  Layer.provideMerge(ProcfsUnavailableFileSystemLayer),
+  Layer.provideMerge(BunPath.layer)
+);
+
+const ProcfsUnavailableMissingInodeFileSystemLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return {
+      ...fs,
+      stat: Effect.fnUntraced(function* (candidate: string) {
+        const info = yield* fs.stat(candidate);
+        return { ...info, ino: O.none() };
+      }),
+    };
+  })
+).pipe(Layer.provide(ProcfsUnavailableFileSystemLayer));
+
+const ProcfsUnavailableMissingInodeSyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
+  Layer.provideMerge(ProcfsUnavailableMissingInodeFileSystemLayer),
+  Layer.provideMerge(BunPath.layer)
+);
+
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(7);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const encodeText = (text: string) => new TextEncoder().encode(text);
 const digestOf = (text: string) => DocumentContentDigest.make(bytesToHex(sha256(encodeText(text))));
@@ -136,8 +180,9 @@ const listOperationsByStatus = (status: DomainSyncOperation.SyncOperationStatus)
   );
 
 describe("@beep/documents-server VaultSyncEngine", () => {
-  it.effect("converges a nested local tree into the remote mirror", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "converges a nested local tree into the remote mirror",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -162,11 +207,49 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.connected).toBe(true);
       expect(status.provider).toBe("box");
       expect(O.isSome(status.cursorPosition)).toBe(true);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("converges a local rename without re-uploading content", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "uploads a normal vault file when procfs descriptor paths are unavailable",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "portable.txt", "portable body");
+      const info = yield* fs.stat(path.join(root, "portable.txt"));
+
+      const status = yield* engine.syncOnce(syncInput(root));
+      const tree = yield* handle.snapshotTree;
+
+      expect(O.isSome(info.ino)).toBe(true);
+      expect(nodeDigest(tree["portable.txt"])).toBe(digestOf("portable body"));
+      expect(status.currentItems).toBe(1);
+      expect(status.failedOperations).toBe(0);
+    }, provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
+  );
+
+  it.effect(
+    "refuses a vault file when procfs and inode identity are unavailable",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "unidentified.txt", "unidentified body");
+
+      const refusal = yield* Effect.flip(engine.syncOnce(syncInput(root)));
+
+      expect(refusal).toMatchObject({
+        _tag: "VaultScanFailed",
+        reason: "vault sync refused changed local file unidentified.txt",
+      });
+    }, provideScopedLayer(ProcfsUnavailableMissingInodeSyncEngineTestLayer))
+  );
+
+  it.effect(
+    "converges a local rename without re-uploading content",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -185,11 +268,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(counts.moveItem).toBe(0);
       expect(status.currentItems).toBe(1);
       expect(status.openConflicts).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("converges a local move by repointing the remote parent", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "converges a local move by repointing the remote parent",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -211,11 +295,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(counts.renameItem).toBe(0);
       expect(counts.ensureFolder).toBe(2);
       expect(status.openConflicts).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
   );
 
-  it.effect("pushes a local edit as a new remote file version", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "pushes a local edit as a new remote file version",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -234,11 +319,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.currentItems).toBe(1);
       // The provider echo of our own version upload is ignored, not a conflict.
       expect(status.openConflicts).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("squashes a rename-while-queued into a single upload at the final path", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "squashes a rename-while-queued into a single upload at the final path",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const itemRepository = yield* SyncItemRepository;
@@ -263,11 +349,37 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(A.map(succeeded, (operation) => operation.inputGeneration)).toEqual([2]);
       expect(status.currentItems).toBe(1);
       expect(status.queuedOperations).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("retries a retryable mirror failure within the same pass and succeeds", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "refuses a queued upload whose vault path is replaced by an escaping symlink",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const itemRepository = yield* SyncItemRepository;
+      const operationRepository = yield* SyncOperationRepository;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeVaultRoot();
+      const outside = yield* fs.makeTempFileScoped({ prefix: "beep-vault-outside-" });
+      yield* fs.writeFileString(outside, "outside secret");
+      const seeded = yield* itemRepository.create(rootFileSeed("queued.txt", "outside secret"));
+      yield* operationRepository.enqueue(rootUploadSeed(seeded.id, "queued.txt", "outside secret", "queued"));
+      yield* fs.symlink(outside, path.join(root, "queued.txt"));
+
+      const status = yield* engine.syncOnce(syncInput(root));
+      const tree = yield* handle.snapshotTree;
+
+      expect(tree["queued.txt"]).toBeUndefined();
+      expect(status.failedOperations).toBe(1);
+      expect(status.errorItems).toBe(1);
+    }, provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
+  );
+
+  it.effect(
+    "retries a retryable mirror failure within the same pass and succeeds",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -282,11 +394,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.currentItems).toBe(1);
       expect(status.failedOperations).toBe(0);
       expect(A.map(succeeded, (operation) => operation.attemptCount)).toEqual([1]);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("fails an operation terminally on a non-retryable mirror failure", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails an operation terminally on a non-retryable mirror failure",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const itemRepository = yield* SyncItemRepository;
@@ -307,11 +420,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.failedOperations).toBe(1);
       expect(A.map(failed, (operation) => operation.attemptCount)).toEqual([1]);
       expect(O.flatMap(tracked, (item) => item.lastError)).toEqual(O.some("fixture injected uploadFile failure"));
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("fails an operation after exhausting the configured attempt budget", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails an operation after exhausting the configured attempt budget",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -329,11 +443,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.errorItems).toBe(1);
       expect(status.failedOperations).toBe(1);
       expect(A.map(failed, (operation) => operation.attemptCount)).toEqual([3]);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("recovers a leased operation on the next pass and pushes it once", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "recovers a leased operation on the next pass and pushes it once",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const itemRepository = yield* SyncItemRepository;
@@ -354,11 +469,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(A.length(succeeded)).toBe(1);
       expect(status.currentItems).toBe(1);
       expect(status.queuedOperations).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("heals a pending item stranded by a crash after its operation succeeded", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "heals a pending item stranded by a crash after its operation succeeded",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const itemRepository = yield* SyncItemRepository;
@@ -388,11 +504,12 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.queuedOperations).toBe(0);
       expect(status.failedOperations).toBe(0);
       expect(status.openConflicts).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
-  it.effect("reports an idle status snapshot before any sync pass", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reports an idle status snapshot before any sync pass",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
 
       const status = yield* engine.status(statusInput);
@@ -407,7 +524,7 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(status.pendingItems).toBe(0);
       expect(status.provider).toBe("box");
       expect(status.queuedOperations).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }, provideScopedLayer(SyncEngineTestLayer))
   );
 
   it("round-trips schema-derived sync configuration and fixture read models", () => {

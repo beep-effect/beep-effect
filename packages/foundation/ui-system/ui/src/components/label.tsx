@@ -12,7 +12,8 @@ import type * as React from "react";
 /**
  * Label component.
  *
- * @example
+ * **Example** (Import Label component)
+ *
  * ```tsx
  * import { Label } from "@beep/ui/components/label"
  *

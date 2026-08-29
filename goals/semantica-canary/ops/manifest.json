@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "semantica-canary",
+    "title": "Semantica Canary",
+    "status": "paused",
+    "created": "2026-08-24",
+    "updated": "2026-08-26",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/semantica-canary",
+  "lifecycle": "paused",
+  "statusNote": "Paused at P2 C0 after the Extraction candidate and single retry failed the frozen relation-paper slate. Review invalidated two apparent passes that relied on ambiguous first-occurrence entity anchors; no review-safe vertical slice passed. Extraction is parked and the source exploration has returned to decompose; see history/p2-c0-probe-breaker.md.",
+  "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/semantica-lab",
+    "graduated": "2026-08-24",
+    "note": "Goal 1 of the semantica-lab decomposition (MAP.md v1.0, ratified 2026-08-24 with M1-M6). The sibling openai-driver packet is a dependency edge before C1 only. Stop rule is the probe-denominated breaker (S1), never a calendar."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/semantica-lab/BRIEF.md",
+    "explorations/semantica-lab/MAP.md",
+    "explorations/semantica-lab/DECISIONS.md",
+    "goals/semantica-canary/README.md",
+    "goals/semantica-canary/SPEC.md",
+    "goals/semantica-canary/PLAN.md",
+    "goals/semantica-canary/GOAL.md",
+    "goals/semantica-canary/research/SOURCES.md",
+    "goals/openai-driver/SPEC.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/semantica-canary/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Scaffold",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "C0",
+      "status": "in-progress"
+    },
+    {
+      "id": "P3",
+      "name": "C1",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "C2",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/semantica-canary/GOAL.md)\" -le 4000",
+    "jq . goals/semantica-canary/ops/manifest.json",
+    "rg -n \"semantica-canary|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/semantica-canary",
+    "git diff --check -- goals/semantica-canary explorations/semantica-lab",
+    "bun run beep goals index --check",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Probe breaker (S1): a family fails a stage on its first-probe candidate and then on its single retry; the family parks, the park is recorded in explorations/semantica-lab/DECISIONS.md, and the exploration drops back to decompose. Never a calendar.",
+    "C1 cannot start until the sibling openai-driver packet has merged (completion gate satisfied and the PR landed on main); C0 and the scaffold never wait on it.",
+    "A change would cross a SPEC non-goal (window, sidecar/IPC, local models, consumption-side retrieval, atlas backlog, NET-NEW reasoning runtime, reusable lab export) or touch a brick outside cleanup-on-touch.",
+    "A stage pass criterion cannot be measured as a lab test or CLI run.",
+    "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
+    "An adopt or pick-one value would be written to the Notion atlas before its canary stage passes.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

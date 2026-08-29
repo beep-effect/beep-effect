@@ -10,22 +10,82 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/DurableLocator/DurableLocator.model");
+
+const DurableLocatorSpace = LiteralKit(["original", "clean"]);
+
+const DurableLocatorFields = {
+  quote: S.Struct({
+    exact: S.String.annotateKey({
+      description: "The exact quoted text — the anchor of record.",
+    }),
+    prefix: S.String.pipe(
+      S.OptionFromOptionalKey,
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Text immediately preceding the exact quote.",
+      })
+    ),
+    suffix: S.String.pipe(
+      S.OptionFromOptionalKey,
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Text immediately following the exact quote.",
+      })
+    ),
+  }).annotateKey({
+    description: "W3C TextQuoteSelector — the anchor of record.",
+  }),
+  position: S.Struct({
+    start: NonNegativeInt.annotateKey({
+      description: "Start offset in space.",
+    }),
+    end: NonNegativeInt.annotateKey({
+      description: "End offset in space.",
+    }),
+  }).annotateKey({
+    description: "W3C TextPositionSelector — offsets in space. Hint/audit; may drift.",
+  }),
+  occurrence: NonNegativeInt.pipe(
+    S.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description:
+        "Document-order ordinal among token-bounded hits of exact. Omitted when the span is not a token-bounded hit.",
+    })
+  ),
+  contentHash: S.String.annotateKey({
+    description: "Stable FNV-1a-64 hex of exact+prefix+suffix — locator identity.",
+  }),
+};
+
+const makeDurableLocatorMember = <T extends typeof DurableLocatorSpace.Type>(literal: S.Literal<T>) =>
+  S.Struct({
+    v: S.tag(1).annotateKey({
+      description: "Schema version.",
+    }),
+    space: S.tag(literal.literal).annotateKey({
+      description: "Which text the offsets and quote were taken from.",
+    }),
+    ...DurableLocatorFields,
+  });
 
 /**
  * A portable, host-agnostic locator for a citation, in the style of W3C Web
  * Annotation selectors.
  *
+ * **Details**
+ *
  * Stores the citation as a quote plus surrounding context (TextQuoteSelector)
  * and an offset hint (TextPositionSelector), so it survives edits to the
  * document.
  *
- * **Example**
+ * **Example** (Creating a DurableLocator)
  *
- * @example
  * ```ts
  * import { DurableLocator } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -49,66 +109,29 @@ const $I = $LawPracticeDomainId.create("values/DurableLocator/DurableLocator.mod
  * @category models
  * @since 0.0.0
  */
-export class DurableLocator extends S.Class<DurableLocator>($I`DurableLocator`)(
-  {
-    v: S.Literal(1).annotateKey({
-      description: "Schema version.",
-    }),
-    space: S.Literals(["original", "clean"]).annotateKey({
-      description: "Which text the offsets + quote were taken from.",
-    }),
-    quote: S.Struct({
-      exact: S.String.annotateKey({
-        description: "The exact quoted text — the anchor of record.",
-      }),
-      prefix: S.String.pipe(
-        S.OptionFromOptionalKey,
-        SchemaUtils.withNoneDefault,
-        S.annotateKey({
-          description: "Text immediately preceding the exact quote.",
-        })
-      ),
-      suffix: S.String.pipe(
-        S.OptionFromOptionalKey,
-        SchemaUtils.withNoneDefault,
-        S.annotateKey({
-          description: "Text immediately following the exact quote.",
-        })
-      ),
-    }).annotateKey({
-      description: "W3C TextQuoteSelector — the anchor of record.",
-    }),
-    position: S.Struct({
-      start: NonNegativeInt.annotateKey({
-        description: "Start offset in space.",
-      }),
-      end: NonNegativeInt.annotateKey({
-        description: "End offset in space.",
-      }),
-    }).annotateKey({
-      description: "W3C TextPositionSelector — offsets in space. Hint/audit; may drift.",
-    }),
-    occurrence: NonNegativeInt.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description:
-          "Document-order ordinal among token-bounded hits of exact. Omitted when the span is not a token-bounded hit.",
-      })
-    ),
-    contentHash: S.String.annotateKey({
-      description: "Stable FNV-1a-64 hex of exact+prefix+suffix — locator identity.",
-    }),
-  },
-  $I.annote("DurableLocator", {
+export const DurableLocator = DurableLocatorSpace.mapMembers(
+  Tuple.evolve([makeDurableLocatorMember, makeDurableLocatorMember])
+).pipe(
+  S.toTaggedUnion("space"),
+  $I.annoteSchema("DurableLocator", {
     description: "A portable, host-agnostic locator for a citation, in the style of W3C Web Annotation selectors.",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link DurableLocator}.
+ *
+ * @see {@link DurableLocator} for the tagged-union schema and locator semantics.
+ * @category models
+ * @since 0.0.0
+ */
+export type DurableLocator = typeof DurableLocator.Type;
 
 /**
  * Companion namespace for `DurableLocator`.
  *
- * @example
+ * **Example** (Accessing Encoded space type)
+ *
  * ```ts
  * import type { DurableLocator } from "@beep/law-practice-domain"
  *
@@ -123,9 +146,8 @@ export declare namespace DurableLocator {
   /**
    * Wire-encoded representation of a decoded {@link DurableLocator}.
    *
-   * **Example**
+   * **Example** (Aliasing the Encoded type)
    *
-   * @example
    * ```ts
    * import type { DurableLocator } from "@beep/law-practice-domain"
    *

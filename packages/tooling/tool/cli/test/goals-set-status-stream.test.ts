@@ -1,0 +1,512 @@
+import {
+  goalsCommand,
+  PacketCoreLive,
+  PacketEvent,
+  PacketEventStore,
+  PacketStreamLocator,
+  PacketTransitionRequest,
+  PacketTransitionWriter,
+  packetEventDigest,
+  packetEventFileName,
+  renderPacketEventFile,
+} from "@beep/repo-cli/test/Goals";
+import { provideScopedLayer } from "@beep/test-utils";
+import { NodeServices } from "@effect/platform-node";
+import { Cause, Effect, Exit, FileSystem, Layer, Runtime } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { Command } from "effect/unstable/cli";
+import { describe, expect, it } from "vitest";
+import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+
+const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+
+const testLayer = Layer.mergeAll(NodeServices.layer, PacketCoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+
+const COMPLETION_GATE = {
+  operator: "yeet",
+  requiresPullRequest: true,
+  requiresMergeable: true,
+  statement: "Ship via yeet.",
+  grandfathered: false,
+};
+
+const writeStreamPacket = Effect.fnUntraced(function* (slug: string) {
+  yield* writeProjectFile(
+    `goals/${slug}/ops/manifest.json`,
+    `${encodeJson({
+      schemaVersion: "initiative-manifest/v2",
+      initiative: { id: slug, title: slug, status: "active" },
+      lifecycle: "active",
+      completionGate: COMPLETION_GATE,
+      phases: [
+        { id: "P0", status: "complete" },
+        { id: "P1", status: "in-progress" },
+      ],
+    })}\n`
+  );
+  yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\n## Status\n\nLifecycle: \`active\`\n`);
+  yield* writeProjectFile(`goals/${slug}/ops/events/.gitkeep`, "");
+});
+
+const listEventFiles = Effect.fnUntraced(function* (slug: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const entries = yield* fs.readDirectory(`goals/${slug}/ops/events`).pipe(Effect.orElseSucceed(A.empty<string>));
+  return A.filter(entries, (name) => name !== ".gitkeep");
+});
+
+const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
+  expect(Exit.isFailure(exit)).toBe(true);
+  if (Exit.isFailure(exit)) {
+    const error = Cause.squash(exit.cause);
+    expect(Runtime.getErrorExitCode(error)).toBe(1);
+  }
+};
+
+describe("set-status guarded stream writer", () => {
+  it(
+    "seeds genesis plus status-set, writes the trace, and keeps appending on later transitions",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("stream-demo");
+
+            const first = yield* Effect.exit(runGoalsCommand(["set-status", "stream-demo", "paused"]));
+            expect(Exit.isSuccess(first)).toBe(true);
+
+            const afterFirst = yield* listEventFiles("stream-demo");
+            expect(A.length(afterFirst)).toBe(2);
+            expect(A.some(afterFirst, Str.startsWith("00001-packet-created-"))).toBe(true);
+            expect(A.some(afterFirst, Str.startsWith("00002-status-set-"))).toBe(true);
+
+            const trace = yield* fs.readFileString("goals/stream-demo/ops/trace.json");
+            expect(trace).toContain('"revision": 2');
+            expect(trace).toContain('"status": "paused"');
+            expect(trace).toContain('"furthestStage": "P1"');
+
+            const manifest = yield* fs.readFileString("goals/stream-demo/ops/manifest.json");
+            expect(manifest).toContain('"status": "paused"');
+
+            const second = yield* Effect.exit(runGoalsCommand(["set-status", "stream-demo", "active"]));
+            expect(Exit.isSuccess(second)).toBe(true);
+            const afterSecond = yield* listEventFiles("stream-demo");
+            expect(A.length(afterSecond)).toBe(3);
+            const traceAfter = yield* fs.readFileString("goals/stream-demo/ops/trace.json");
+            expect(traceAfter).toContain('"revision": 3');
+            expect(traceAfter).toContain('"status": "active"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "writes nothing in --preview mode",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("preview-demo");
+
+            const exit = yield* Effect.exit(runGoalsCommand(["set-status", "preview-demo", "paused", "--preview"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+
+            expect(A.length(yield* listEventFiles("preview-demo"))).toBe(0);
+            const traceExists = yield* fs.exists("goals/preview-demo/ops/trace.json");
+            expect(traceExists).toBe(false);
+            const manifest = yield* fs.readFileString("goals/preview-demo/ops/manifest.json");
+            expect(manifest).not.toContain("paused");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "refuses the whole transition when the stream is forked",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("forked-demo");
+
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "forked-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            // Handcraft a second child of the genesis event (a fork).
+            const store = yield* PacketEventStore;
+            const locator = PacketStreamLocator.make({
+              packet: "forked-demo",
+              root: "goals",
+              packetPath: "goals/forked-demo",
+            });
+            const listing = yield* store.list(locator);
+            const genesisId = O.getOrUndefined(O.map(A.get(listing.events, 0), (stored) => stored.id));
+            const sibling = PacketEvent.make({
+              schemaVersion: "packet-event/v1",
+              packet: "forked-demo",
+              root: "goals",
+              seq: 2,
+              ...(genesisId === undefined ? {} : { parent: genesisId }),
+              expectedRevision: 1,
+              at: "2026-08-17T09:00:00.000Z",
+              actor: "test",
+              body: { type: "status-set", status: "reference", previous: "active" },
+            });
+            const siblingId = yield* packetEventDigest(sibling);
+            const siblingContent = yield* renderPacketEventFile(sibling);
+            yield* fs.writeFileString(
+              `goals/forked-demo/ops/events/${packetEventFileName(sibling, siblingId)}`,
+              siblingContent
+            );
+
+            const beforeCount = A.length(yield* listEventFiles("forked-demo"));
+            const refused = yield* Effect.exit(runGoalsCommand(["set-status", "forked-demo", "active"]));
+            expectReportedFailure(refused);
+            expect(A.length(yield* listEventFiles("forked-demo"))).toBe(beforeCount);
+            const manifest = yield* fs.readFileString("goals/forked-demo/ops/manifest.json");
+            expect(manifest).toContain('"status": "paused"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "commits a streamless plan as a no-op (no events, no trace)",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile("goals/no-stream/README.md", "# no-stream\n");
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "no-stream",
+                  root: "goals",
+                  packetPath: "goals/no-stream",
+                }),
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(plan.streamPresent).toBe(false);
+            expect(plan.disposition).toBe("streamless");
+            const outcome = yield* writer.commit(plan);
+            expect(outcome.disposition).toBe("streamless");
+            expect(outcome.appended).toBe(0);
+            expect(outcome.traceWritten).toBe(false);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "returns an explicit skipped plan and outcome for the current derived status",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("idempotent-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "idempotent-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const beforeFiles = yield* listEventFiles("idempotent-demo");
+            const beforeTrace = yield* fs.readFileString("goals/idempotent-demo/ops/trace.json");
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "idempotent-demo",
+                  root: "goals",
+                  packetPath: "goals/idempotent-demo",
+                }),
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(plan.disposition).toBe("skipped");
+            expect(plan.events).toStrictEqual([]);
+            expect(plan.derivedAfter?.status).toBe("paused");
+
+            const outcome = yield* writer.commit(plan);
+            expect(outcome.disposition).toBe("skipped");
+            expect(outcome.appended).toBe(0);
+            expect(outcome.traceWritten).toBe(false);
+            expect(yield* listEventFiles("idempotent-demo")).toStrictEqual(beforeFiles);
+            expect(yield* fs.readFileString("goals/idempotent-demo/ops/trace.json")).toBe(beforeTrace);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "regenerates a stale trace while skipping the redundant status event",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("skip-stale-trace-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-stale-trace-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const tracePath = "goals/skip-stale-trace-demo/ops/trace.json";
+            const freshTrace = yield* fs.readFileString(tracePath);
+            const beforeFiles = yield* listEventFiles("skip-stale-trace-demo");
+            // Model the interrupted writer: the event landed, the projection never did.
+            yield* fs.remove(tracePath);
+
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "skip-stale-trace-demo",
+                  root: "goals",
+                  packetPath: "goals/skip-stale-trace-demo",
+                }),
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(plan.disposition).toBe("skipped");
+
+            const outcome = yield* writer.commit(plan);
+            expect(outcome.disposition).toBe("skipped");
+            expect(outcome.appended).toBe(0);
+            expect(outcome.traceWritten).toBe(true);
+            expect(yield* fs.readFileString(tracePath)).toBe(freshTrace);
+            expect(yield* listEventFiles("skip-stale-trace-demo")).toStrictEqual(beforeFiles);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "refuses a skipped plan whose stream moved between plan and commit",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeStreamPacket("skip-cas-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-cas-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const locator = PacketStreamLocator.make({
+              packet: "skip-cas-demo",
+              root: "goals",
+              packetPath: "goals/skip-cas-demo",
+            });
+            const writer = yield* PacketTransitionWriter;
+            const stalePlan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator,
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(stalePlan.disposition).toBe("skipped");
+
+            // A concurrent writer advances the stream after the skipped plan was sealed.
+            const concurrent = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator,
+                status: "active",
+                previousStatus: "paused",
+                actor: "other",
+                at: "2026-08-17T11:00:00.000Z",
+              })
+            );
+            expect(concurrent.disposition).toBe("append");
+            expect((yield* writer.commit(concurrent)).appended).toBe(1);
+
+            const refused = yield* Effect.exit(writer.commit(stalePlan));
+            expect(Exit.isFailure(refused)).toBe(true);
+            if (Exit.isFailure(refused)) {
+              expect(String(Cause.squash(refused.cause))).toContain("stream moved between plan and commit");
+            }
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "previews a skipped transition without planning an event or a trace write",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("skip-preview-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-preview-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const beforeFiles = yield* listEventFiles("skip-preview-demo");
+            const beforeTrace = yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json");
+
+            const previewed = yield* Effect.exit(
+              runGoalsCommand(["set-status", "skip-preview-demo", "paused", "--preview"])
+            );
+            expect(Exit.isSuccess(previewed)).toBe(true);
+            expect(yield* listEventFiles("skip-preview-demo")).toStrictEqual(beforeFiles);
+            expect(yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json")).toBe(beforeTrace);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "reports a skipped write through the set-status command surface",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeStreamPacket("skip-write-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            const beforeFiles = yield* listEventFiles("skip-write-demo");
+            const repeated = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
+            expect(Exit.isSuccess(repeated)).toBe(true);
+
+            expect(yield* listEventFiles("skip-write-demo")).toStrictEqual(beforeFiles);
+            const manifest = yield* fs.readFileString("goals/skip-write-demo/ops/manifest.json");
+            expect(manifest).toContain("paused");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "fails invalid writer actors during request decode",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const decoded = yield* Effect.exit(
+            S.decodeEffect(PacketTransitionRequest)({
+              locator: { packet: "decode-demo", root: "goals", packetPath: "goals/decode-demo" },
+              status: "paused",
+              previousStatus: "active",
+              actor: "",
+              at: "2026-08-17T10:00:00.000Z",
+            })
+          );
+          expect(Exit.isFailure(decoded)).toBe(true);
+          if (Exit.isFailure(decoded)) {
+            expect(String(Cause.squash(decoded.cause))).toContain("Expected a non-empty actor");
+          }
+        })
+      ),
+    30_000
+  );
+
+  it(
+    "records previous from the stream's derived status when the manifest snapshot lags",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeStreamPacket("retry-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "retry-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            // A retry after a partial failure re-reads the manifest before the
+            // manifest edit landed: previousStatus arrives stale ("active"),
+            // but the stream already derives "paused".
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "retry-demo",
+                  root: "goals",
+                  packetPath: "goals/retry-demo",
+                }),
+                status: "reference",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            const last = O.getOrUndefined(A.last(plan.events));
+            expect(last?.body.type).toBe("status-set");
+            if (last?.body.type === "status-set") {
+              expect(last.body.previous).toBe("paused");
+            }
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "refuses a compare-and-set append whose expected revision is stale",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeStreamPacket("cas-demo");
+            const store = yield* PacketEventStore;
+            const locator = PacketStreamLocator.make({
+              packet: "cas-demo",
+              root: "goals",
+              packetPath: "goals/cas-demo",
+            });
+            const genesis = PacketEvent.make({
+              schemaVersion: "packet-event/v1",
+              packet: "cas-demo",
+              root: "goals",
+              seq: 1,
+              expectedRevision: 0,
+              at: "2026-08-17T09:00:00.000Z",
+              actor: "test",
+              body: { type: "packet-created", status: "active" },
+            });
+            const appended = yield* store.append(locator, genesis);
+            expect(appended.event.seq).toBe(1);
+
+            const rival = PacketEvent.make({
+              schemaVersion: "packet-event/v1",
+              packet: "cas-demo",
+              root: "goals",
+              seq: 1,
+              expectedRevision: 0,
+              at: "2026-08-17T09:00:01.000Z",
+              actor: "test",
+              body: { type: "packet-created", status: "active" },
+            });
+            const conflict = yield* Effect.exit(store.append(locator, rival));
+            expect(Exit.isFailure(conflict)).toBe(true);
+            if (Exit.isFailure(conflict)) {
+              const error = Cause.squash(conflict.cause);
+              expect(String(error)).toContain("revision");
+            }
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+});

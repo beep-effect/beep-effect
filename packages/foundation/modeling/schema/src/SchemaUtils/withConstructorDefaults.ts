@@ -19,13 +19,16 @@ import * as S from "effect/Schema";
  * Attach an `Option.none()` constructor default to an `Option`-typed schema
  * field, so the field can be omitted when constructing a value.
  *
+ * **Details**
+ *
  * The decode behaviour is unchanged: schemas such as `Schema.OptionFromOptional`
  * and `Schema.OptionFromNullOr` already decode a missing/`null` value to `None`.
  * This only removes the obligation to pass `Option.none()` explicitly at every
  * `make` call site (the `*Defaults` spread-object smell).
  *
- * @example
- * ```ts
+ * **Example** (Omitting Option at construction)
+ *
+ * ```ts import.meta.vitest name="Omitting Option at construction"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { withNoneDefault } from "@beep/schema/SchemaUtils/withConstructorDefaults"
@@ -34,7 +37,7 @@ import * as S from "effect/Schema";
  *   label: S.OptionFromOptionalKey(S.String).pipe(withNoneDefault)
  * })
  *
- * console.log(O.isNone(Node.make({}).label)) // true
+ * O.isNone(Node.make({}).label) // => true
  * ```
  *
  * @typeParam A - Element type carried by the field's `Option`.
@@ -55,12 +58,15 @@ export const withNoneDefault = <
  * omitted when constructing a value while its encoded/wire contract is left
  * unchanged.
  *
+ * **Details**
+ *
  * Use this for fields that are always present on the wire but carry a single
  * canonical value at construction time (e.g. a serialized node `version: 1` or
  * an alignment `format: ""`), to delete the per-call default boilerplate.
  *
- * @example
- * ```ts
+ * **Example** (Constant constructor default)
+ *
+ * ```ts import.meta.vitest name="Constant constructor default"
  * import * as S from "effect/Schema"
  * import { withConstantDefault } from "@beep/schema/SchemaUtils/withConstructorDefaults"
  *
@@ -68,7 +74,7 @@ export const withNoneDefault = <
  *   version: S.Literal(1).pipe(withConstantDefault(1))
  * })
  *
- * console.log(Node.make({}).version) // 1
+ * Node.make({}).version // => 1
  * ```
  *
  * @typeParam A - Default value type, which must satisfy the field's make input.

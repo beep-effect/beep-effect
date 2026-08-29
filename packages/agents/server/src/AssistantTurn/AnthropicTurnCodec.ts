@@ -41,7 +41,8 @@ const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnCodec");
 /**
  * Mermaid diagram declarations accepted by the Anthropic code-block adapter.
  *
- * @example
+ * **Example** (Validate graph type membership)
+ *
  * ```ts
  * import { MermaidDiagramType } from "@beep/agents-server/AnthropicTurnCodec"
  *
@@ -75,7 +76,8 @@ export const MermaidDiagramType = LiteralKit([
 /**
  * Runtime type for {@link MermaidDiagramType}.
  *
- * @example
+ * **Example** (Assign typed diagram value)
+ *
  * ```ts
  * import type { MermaidDiagramType } from "@beep/agents-server/AnthropicTurnCodec"
  *
@@ -163,13 +165,15 @@ const CheckedAssistantBlock = S.Union([
  * Per-block Anthropic codec for decoding individually streamed array elements.
  * Used to validate each completed `"blocks"` element slice as it arrives.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The codec includes the server-only provider checks for mermaid declarations,
  * rectangular tables, and bare YouTube video ids. Importing this module can
  * fail fast if `CheckedAssistantBlock` grows a schema feature that Anthropic's
  * structured-output JSON Schema cannot express.
  *
- * @example
+ * **Example** (Decode streamed block JSON)
+ *
  * ```ts
  * import { assistantBlockOutput } from "@beep/agents-server/AnthropicTurnCodec"
  * import * as S from "effect/Schema"
@@ -189,12 +193,14 @@ export const assistantBlockOutput = AnthropicStructuredOutput.toCodecAnthropic(C
  * feeds the forced-tool parameters; its `codec` is the provider's end-of-turn
  * decoder for the complete `AssistantContent` envelope.
  *
- * @remarks
+ * **Details**
+ *
  * Use {@link assistantBlockOutput} for incremental streamed element decoding;
  * use this whole-envelope codec at the provider boundary when validating the
  * completed forced-tool response.
  *
- * @example
+ * **Example** (Decode full content envelope)
+ *
  * ```ts
  * import { assistantOutput } from "@beep/agents-server/AnthropicTurnCodec"
  * import * as S from "effect/Schema"

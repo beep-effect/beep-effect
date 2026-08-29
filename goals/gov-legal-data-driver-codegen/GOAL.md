@@ -1,6 +1,6 @@
 # GOAL: Build the gov/legal driver substrate (tiered codegen + shared transport)
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: a proven OpenAPI→Effect-Schema codegen + hand-authored transport
 substrate — `@beep/govinfo` finished (keyed) and one keyless driver built — with

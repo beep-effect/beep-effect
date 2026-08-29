@@ -52,18 +52,24 @@ Start with the smallest boundary that owns the meaning:
 | Product language deliberately shared by multiple slices | `shared/*`, after the shared-kernel promotion gate. |
 | External engines, SDKs, services, frameworks, or browser platform wrappers | `drivers/*`. |
 | Domain-agnostic reusable substrate owned by this repo | `foundation/*`, after the specific-home-first routing test. |
+| Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
+| Law-abiding experimental app proving an uncertain idea | `apps/labs/*`, per [15-lab-apps.md](architecture/15-lab-apps.md). |
 | Typed application/runtime configuration contracts | The slice or shared `config` package. |
-| Product-agnostic UI primitives, themes, tokens, hooks, or composition helpers | `foundation/ui-system`. |
+| Product-agnostic UI primitives, themes, tokens, hooks, composition helpers, or repo brand identity | `foundation/ui-system`. |
 | Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
 | App runtime wiring | The app entrypoint or an app-local `src/runtime/Layer.ts` helper. |
 
 Apps are executable workspaces, not reusable package surfaces by default.
 Framework apps such as Next.js and Tauri should keep their runtime modules
 app-local through `@/*` and should not publish a public `@beep/<app>` TypeScript
-API, root `src/index.ts`, package exports, docgen, dtslint, or type-test
-surface. Runtime proof apps are the explicit exception: they may stay
+API, root `src/index.ts`, package exports, or docgen surface. Runtime proof apps are the explicit exception: they may stay
 package-like when the app exists to prove a runtime contract from a public
 workspace API.
+
+Law-abiding experimental apps live under `apps/labs/*`: they are
+production-shaped, durable while useful, and mechanically deletable without
+per-app shared-registration edits. They obey
+[15-lab-apps.md](architecture/15-lab-apps.md).
 
 The core vocabulary is deliberately small at the entry point: slice, domain,
 use-cases, adapter, driver, shared kernel, foundation, config contract, Layer,
@@ -124,28 +130,29 @@ nullish fields unless an external wire contract requires that shape; in those
 cases, decode or normalize the boundary value into an internal tagged model
 before case-specific behavior branches.
 
-Persisted entities follow the same law. `@beep/schema/EntitySchema` is the
-generic source-of-truth kernel: entity models are schema classes, their decoded
-side is domain language, and their encoded side is the persistence row shape.
-Entity fields use normal Effect Schema optional/nullish codecs
+Persisted entities follow the same law. A persisted product entity starts with
+`ProductEntity.make(EntityId)` from
+`@beep/shared-domain/entity/ProductEntity`. The returned effect-drizzle kit
+owns the schema class constructor, shared audit and identity fields, SQL table
+name, and shared indexes. The entity schema's decoded side is domain language,
+and its encoded side is the persistence row shape. Entity fields use normal
+Effect Schema optional/nullish codecs
 (`S.OptionFromNullOr`, `S.OptionFromOptionalKey`, `S.optionalKey`, and related
 variants) instead of bespoke nullable wrappers. Table projection code reads the
 Schema AST and rejects persisted selected-row fields whose encoded absence is
 optional, `undefined`, or ambiguous; SQL row absence must encode as `null`.
 
-Product entity invariants belong in class factories. Shared product entities
-use the `BaseEntity.Class` export from
-`@beep/shared-domain/entity/BaseEntity` to compose
-invariant fields such as entity identity, organization scope, provenance, schema
-version, and row version into the schema class. Entity-specific `.model.ts`
-files inline their own rich fields plus `persisted` descriptors next to the
-schema so domain shape and persistence shape drift together at compile time.
+Entity roles stay explicit. `.model.ts` calls the product kit, declares the
+schema class, colocates SQL column/index metadata through effect-drizzle, and
+spreads identity fields last. `.values.ts` owns reusable supporting schemas and
+literal domains. `.behavior.ts` owns pure behavior and derived guards that do
+not belong in the persistence declaration.
 
-Drizzle tables are projected, not hand-mapped. `@beep/drizzle` exposes the `EntityTable`
-owns the generic Drizzle projection and exposes `pgTableFrom(entity)`.
-Slice/shared `tables` packages may own concrete table metadata for their product
-language, but they do not own a second SQL DSL, live database execution,
-transactions, repositories, or migrations.
+Drizzle tables are projected, not hand-mapped. Slice/shared `tables` packages
+call `toPgTable(EntityModel)` from `@beep/effect-drizzle/pg` and publish only
+concrete table metadata for their product language. `@beep/drizzle` owns
+execution and transaction capability only. Table packages do not own a second
+SQL DSL, live database execution, transactions, repositories, or migrations.
 
 ### 6. Topology Is Compressed Context
 
@@ -164,11 +171,15 @@ Non-slice artifacts are never `misc`.
 - `foundation` owns domain-agnostic reusable substrate
 - `drivers` owns flat repo-level technical boundary wrappers
 - `tooling` owns developer-operational code packages
+- `ecosystem` owns flat publishable libraries authored for external
+  consumption; member `src/` and runtime dependency edges are `@beep/*`-free,
+  and published-package standards supersede repo style laws inside members
+  (see [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md))
 
 Every non-slice artifact declares exactly one family so readers, reviewers, and
 tooling can infer the intended boundary before opening the first file. `kind`
 is required only for families that intentionally declare a kind segment;
-`drivers` remains the flat family exception.
+`drivers` and `ecosystem` remain the flat family exceptions.
 
 `packages/_internal/db-admin` is a narrow durable internal exception for
 repository-owned database migration aggregation and generated migration SQL.
@@ -350,13 +361,13 @@ packages/<kernel>/
 ```
 
 `shared/domain` is the active normal home today; `shared/config` is a reserved
-normal role for real cross-slice config contracts. `shared/use-cases`,
-`shared/client`, `shared/server`, and `shared/ui` do not exist yet. They are
-reserved high-bar exceptions, created only when real exported behavior clears the
-promotion bar. `shared/use-cases` in particular has no package directory today
-because nothing has met that bar.
+normal role for real cross-slice config contracts. `shared/client`,
+`shared/server`, and `shared/ui` do not exist yet. They are reserved high-bar
+exceptions, created only when real exported behavior clears the promotion bar.
+`shared/use-cases` now exists as a contract-only exception whose first promoted
+surface is the tenant-bound `PromotionGate`.
 
-A future `shared/use-cases` package would be contract-only: deliberate
+The `shared/use-cases` package is contract-only: deliberate
 cross-slice commands, queries, driver-neutral DTOs, driver-neutral boundary
 contracts, client-safe application errors, facade interfaces, and ultra-high-bar
 product ports are allowed. A shared product port must prove why a shared
@@ -372,7 +383,7 @@ that package's README before or alongside the export. The record must include:
 - the exported surface being promoted
 - rejected homes, especially the owning slice and `foundation`
 - runtime, adapter, driver, and Layer limits
-- contract-only proof for future `shared/use-cases`
+- contract-only proof for `shared/use-cases`
 - review evidence for the deliberate coupling
 
 `standards/architecture/DECISIONS.md` records architecture-wide policy changes.
@@ -443,11 +454,12 @@ context.
 
 The canonical non-slice families are:
 
-| Family       | Canonical kinds                                         | Purpose                                           |
-|--------------|---------------------------------------------------------|---------------------------------------------------|
-| `foundation` | `primitive`, `modeling`, `capability`, `ui-system`      | Repo-owned domain-agnostic reusable substrate.    |
-| `drivers`    | flat family; no extra kind segment                      | External engines, SDKs, services, and frameworks. |
-| `tooling`    | `library`, `tool`, `policy-pack`, `test-kit`            | Developer-operational code packages.              |
+| Family       | Canonical kinds                                         | Purpose                                                  |
+|--------------|---------------------------------------------------------|----------------------------------------------------------|
+| `foundation` | `primitive`, `modeling`, `capability`, `ui-system`      | Repo-owned domain-agnostic reusable substrate.           |
+| `drivers`    | flat family; no extra kind segment                      | External engines, SDKs, services, and frameworks.        |
+| `tooling`    | `library`, `tool`, `policy-pack`, `test-kit`            | Developer-operational code packages.                     |
+| `ecosystem`  | flat family; no extra kind segment                      | Publishable repo-authored libraries for external consumption. |
 
 The `shared` package family is not part of this table. `shared` remains the DDD
 shared kernel and canonical cross-slice slice. `foundation` is not a rename of
@@ -459,8 +471,8 @@ Route specific homes before reaching for `foundation/capability`:
 2. External engines, SDKs, services, frameworks, and browser platform wrappers
    go to `drivers`.
 3. Repo operations, generators, policy packs, and automation go to `tooling`.
-4. Product-agnostic UI primitives, themes, tokens, hooks, and composition
-   helpers go to `foundation/ui-system`.
+4. Product-agnostic UI primitives, themes, tokens, hooks, composition
+   helpers, and repo brand identity go to `foundation/ui-system`.
 5. Only remaining repo-owned, domain-agnostic technical services may go to
    `foundation/capability`.
 
@@ -497,6 +509,7 @@ The canonical roots are:
 packages/foundation/<kind>/<name>
 packages/drivers/<name>
 packages/tooling/<kind>/<name>
+packages/ecosystem/<name>
 ```
 
 These roots sit beside slice roots such as `packages/iam/*` and the shared
@@ -508,6 +521,7 @@ Public package names follow the family role:
 foundation -> @beep/<purpose>
 drivers    -> @beep/<driver>
 tooling    -> @beep/repo-<purpose>
+ecosystem  -> @beep/<name> (the npm name; workspace name = published name)
 ```
 
 Examples:
@@ -522,6 +536,7 @@ packages/tooling/tool/cli                 -> @beep/repo-cli
 packages/tooling/library/repo-utils       -> @beep/repo-utils
 packages/tooling/policy-pack/repo-configs -> @beep/repo-configs
 packages/tooling/test-kit/test-utils      -> @beep/test-utils
+packages/ecosystem/effect-drizzle         -> @beep/effect-drizzle
 ```
 
 A shared UI primitives library such as `@beep/ui` is a
@@ -532,8 +547,8 @@ package. It is not a slice kind and not shared-kernel language.
 ### Required Metadata
 
 Every non-slice artifact declares machine-readable family metadata. `kind` is
-required for `foundation` and `tooling`. `drivers` is the explicit flat-family
-exception and omits `kind`.
+required for `foundation` and `tooling`. `drivers` and `ecosystem` are the
+explicit flat-family exceptions and omit `kind`.
 
 Code packages record it in `package.json`:
 
@@ -543,6 +558,15 @@ Code packages record it in `package.json`:
   "beep": {
     "family": "foundation",
     "kind": "modeling"
+  }
+}
+```
+
+```json
+{
+  "name": "@beep/effect-drizzle",
+  "beep": {
+    "family": "ecosystem"
   }
 }
 ```
@@ -564,15 +588,23 @@ directory names alone.
 
 `foundation` is layered:
 
-| Kind           | May depend on                                    |
-|----------------|--------------------------------------------------|
-| `primitive`    | `foundation/primitive`                           |
-| `modeling`     | `foundation/primitive`, `foundation/modeling`    |
-| `capability`   | `primitive`, `modeling`, `capability`            |
-| `ui-system`    | `primitive`, `modeling`, `ui-system`             |
+| Kind           | May depend on                                                  |
+|----------------|----------------------------------------------------------------|
+| `primitive`    | `foundation/primitive`                                         |
+| `modeling`     | `foundation/primitive`, `foundation/modeling`                  |
+| `capability`   | `primitive`, `modeling`, `capability`                          |
+| `ui-system`    | `primitive`, `modeling`, `ui-system`, `drivers` (narrow; below) |
 
 `ui-system` is a side branch, not a top layer. It does not depend on
 `foundation/capability` by default.
+
+The `ui-system` → `drivers` edge is narrow (ratified 2026-07-14; see
+`standards/architecture/DECISIONS.md`): a ui-system package may import a
+driver's browser-safe pure root (pure helpers, schemas, service tags) and may
+default a driver's browser-safe `/browser` layer as an overridable dependency
+injection default. A ui-system package must never import or compose a
+driver's server-only or secret-bearing surfaces, and must keep every live
+layer overridable by the consuming app.
 
 `drivers` is intentionally flat:
 
@@ -605,6 +637,19 @@ the driver dependency and project reference directly, keep product semantics out
 of the driver, and keep reusable runtime substrate in `foundation` instead of
 using tooling as a backdoor dependency root.
 
+`ecosystem` inverts the polarity instead of layering:
+
+- member `src/` and runtime manifest edges (`dependencies`,
+  `peerDependencies`) carry no `@beep/*` dependency at all — not even
+  `foundation`; runtime dependencies are peers on the member's host libraries
+- member tests and `devDependencies` may use any repo package (test kits,
+  harnesses, fixtures)
+- any repo package that could legally depend on the member's published npm
+  artifact may depend on the workspace member the same way; the member is
+  consumed in-repo like an external library
+- the family charter, artifact policy, and gate profile live in
+  [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md)
+
 ### Slice Consumption Rules
 
 Slices and the shared kernel may consume `foundation`, but only in boundary-
@@ -625,12 +670,13 @@ appropriate ways:
 - Slice-to-slice direct imports across `domain`, `use-cases`, `server`,
   `tables`, `client`, or `ui` packages of *different* slices are forbidden.
   Cross-slice integration goes through emitted events or, if a real contract has
-  been promoted, the future `shared/use-cases` package. This is the same family
+  been promoted, the `shared/use-cases` package. This is the same family
   of acyclic ceiling that drivers respect among themselves, applied to slices.
 - Product slices and shared-kernel packages do not depend on
   `packages/tooling/*/*`.
-- `foundation`, `drivers`, and `tooling` do not depend on product slices or the
-  shared kernel.
+- `foundation`, `drivers`, `tooling`, and `ecosystem` do not depend on product
+  slices or the shared kernel; `ecosystem` member `src/` additionally depends
+  on no `@beep/*` package at all.
 
 ### Canonical File-Role Anchors
 
@@ -642,7 +688,7 @@ canonical:
 | `foundation/primitive`     | flat modules plus `index.ts`; optional environment entrypoints such as `*.browser.ts` |
 | `foundation/modeling`      | concept modules with `*.schema.ts`, `*.brand.ts`, `*.codec.ts`, `index.ts`; package-specific role files when canonized |
 | `foundation/capability`    | `*.service.ts`, `*.layer.ts`, `*.schema.ts`, `*.errors.ts`, optional `*.client.ts` |
-| `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `index.ts`                        |
+| `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `assets/`, `index.ts`             |
 | `drivers`                  | `*.service.ts`, `*.layer.ts`, `*.errors.ts`, `*.config.ts`, optional `*.browser.ts`, `*.test-layer.ts` |
 | `tooling/library`          | library modules plus `index.ts`                                                   |
 | `tooling/tool`             | `src/bin.ts`, `commands/`, `*.command.ts`, `*.service.ts`, `*.schemas.ts`, `index.ts` |
@@ -1012,7 +1058,7 @@ Canonical subpath names are required names when that role exists, not a requirem
 to add placeholder exports. Package roots and `./*` exports may remain during
 migration, but they are not the canonical boundary contract.
 
-If a future high-bar `shared/use-cases` package is created, it follows the same
+The high-bar `shared/use-cases` package follows the same
 `/public`, `/server`, and `/test` contract. It is narrower than slice
 `use-cases`: only commands, queries, driver-neutral DTOs, driver-neutral boundary
 contracts, client-safe application errors, facade interfaces, and ultra-high-bar
@@ -1108,16 +1154,16 @@ Use-cases own imperative application intent and boundary language:
 
 Product ports live here by default because they describe what the application
 needs in product language. Protocol declarations also live here by default.
-Slice `use-cases` may also declare workflow/process/scheduler contracts. A
-future high-bar `shared/use-cases` package does not: it is contract-only and
+Slice `use-cases` may also declare workflow/process/scheduler contracts. The
+high-bar `shared/use-cases` package does not: it is contract-only and
 limited to deliberate cross-slice commands, queries, driver-neutral DTOs,
 driver-neutral boundary contracts, client-safe application errors, facade
-interfaces, and ultra-high-bar product ports. Product ports in that future
+interfaces, and ultra-high-bar product ports. Product ports in that
 package are exceptional even inside the high-bar exception and require explicit
 proof that a less coupled shared contract is insufficient.
 
 Use-cases may import config contracts and services, but neither slice
-`use-cases` nor any future `shared/use-cases` package owns live Layers that read
+`use-cases` nor the `shared/use-cases` package owns live Layers that read
 the runtime environment or participate in package-local or top-level application
 entrypoint Layer composition.
 
@@ -1172,11 +1218,12 @@ Reserved roles are:
 - `shared/tables`
 - `shared/ui`
 
-`shared/tables` currently exists as a narrow metadata-only package. The others
-above are role names, not package directories today. `shared/use-cases` does not
-exist yet because no cross-slice contract has met the promotion bar.
+`shared/tables` currently exists as a narrow metadata-only package.
+`shared/use-cases` also exists as a contract-only exception for the promoted
+tenant-bound `PromotionGate`; the remaining names above are reserved roles, not
+package directories today.
 
-A future `shared/use-cases` package is contract-only. It may own cross-slice
+The `shared/use-cases` package is contract-only. It may own cross-slice
 commands, queries, driver-neutral DTOs, driver-neutral boundary contracts,
 client-safe application errors, facade interfaces, and ultra-high-bar product
 ports. Product ports must prove why a command/query/event/facade contract is
@@ -1314,7 +1361,6 @@ capability, not product verbs:
 
 ````ts
 import { $DrizzleId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { Context, type Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 
@@ -1326,11 +1372,11 @@ const $I = $DrizzleId.create("Drizzle.service");
  * @category errors
  * @since 0.0.0
  */
-export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError`)(
+export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
   "DrizzleError",
   {
     operation: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: S.Defect({ includeStack: true }),
   },
   $I.annote("DrizzleError", {
     description: "Technical Drizzle driver failure scoped to a driver operation.",
@@ -1402,7 +1448,7 @@ import { $IamUseCasesId } from "@beep/identity/packages";
 import { Context, type Effect } from "effect";
 import type * as O from "effect/Option";
 import type { Membership, MembershipId } from "@beep/iam-domain/entities/Membership";
-import type { MembershipRepositoryUnavailable } from "./Membership.errors.js";
+import type { MembershipRepositoryUnavailable } from "./Membership.errors.ts";
 
 const $I = $IamUseCasesId.create("entities/Membership/Membership.ports");
 
@@ -1639,7 +1685,7 @@ Domain errors are actionable, and domain model behavior is pure:
 
 ````ts
 import { $IamDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $IamDomainId.create("entities/Membership/Membership.errors");
 
@@ -1649,7 +1695,7 @@ const $I = $IamDomainId.create("entities/Membership/Membership.errors");
  * @category errors
  * @since 0.0.0
  */
-export class MembershipAlreadyRevoked extends TaggedErrorClass<MembershipAlreadyRevoked>(
+export class MembershipAlreadyRevoked extends S.TaggedError<MembershipAlreadyRevoked>(
   $I`MembershipAlreadyRevoked`
 )(
   "MembershipAlreadyRevoked",
@@ -1663,12 +1709,11 @@ export class MembershipAlreadyRevoked extends TaggedErrorClass<MembershipAlready
 ````ts
 import { $IamDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import * as Model from "@beep/schema/Model";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { AccountId } from "@beep/iam-domain/entities/Account";
 import { OrganizationId } from "@beep/iam-domain/entities/Organization";
-import { MembershipAlreadyRevoked } from "./Membership.errors.js";
+import { MembershipAlreadyRevoked } from "./Membership.errors.ts";
 
 const $I = $IamDomainId.create("entities/Membership/Membership.model");
 
@@ -1764,12 +1809,12 @@ Use-case service defines the contract in product language:
 ````ts
 import { $IamUseCasesId } from "@beep/identity/packages";
 import { Context, type Effect } from "effect";
-import type { RevokeMembershipCommand } from "./Membership.commands.js";
+import type { RevokeMembershipCommand } from "./Membership.commands.ts";
 import type {
   MembershipNotFound,
   MembershipRevocationDenied,
   MembershipRevocationFailed,
-} from "./Membership.errors.js";
+} from "./Membership.errors.ts";
 
 const $I = $IamUseCasesId.create("entities/Membership/Membership.service");
 

@@ -1,12 +1,23 @@
 import { $RepoCliId } from "@beep/identity/packages";
+import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
+import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import { formatJsonc } from "../../../internal/artifacts/index.js";
-import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.js";
+import { formatJsonc } from "../../../internal/artifacts/index.ts";
+import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
+import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
+import {
+  jsDocSectionBodyText,
+  jsDocSectionOrder,
+  ParseJSDocSectionsOptions,
+  parseJSDocSections,
+} from "../../../internal/jsdoc/JSDocSections.ts";
+import { runGitLines } from "../../../internal/repo-run/index.ts";
+import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
 import {
   declarationKind,
   defaultRepoRoot,
@@ -25,20 +36,101 @@ import {
   tagsFromComment,
   topoSortPackageNames,
   valuesForTag,
-} from "./QualityArtifactSupport.js";
+} from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { SourceFile } from "ts-morph";
-import type { WorkspacePackageInfo } from "./QualityArtifactSupport.js";
+import type { JSDocSectionName } from "../../../internal/jsdoc/JSDocSections.ts";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
+import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocDocumentationInventory");
 
-type DocumentationIssue = {
-  readonly rule: string;
-  readonly detail?: string;
-  readonly lineOffset?: number;
-  readonly text?: string;
-  readonly example?: number;
-};
+const JSDocDocumentationRuleCode = LiteralKit([
+  "no-type-braces-in-tags",
+  "no-hyphen-after-returns-or-throws",
+  "deprecated-requires-link",
+  "undescribed-see",
+  "multiple-description-paragraphs",
+  "leading-blank",
+  "trailing-blank",
+  "invalid-heading",
+  "section-out-of-order",
+  "duplicate-section",
+  "empty-section",
+  "section-after-example",
+  "invalid-when-to-use-prefix",
+  "malformed-example",
+  "duplicate-example",
+  "loose-ts-fence",
+  "forbidden-remarks",
+  "no-deprecated-effect-schema-import",
+  "use-required-namespace-import",
+  "wrong-required-namespace-alias",
+  "no-declare-statements",
+  "no-any-in-examples",
+  "no-type-assertions-in-examples",
+  "category-must-be-lowercase",
+  "missing-schema-annotation",
+  "missing-schema-runtime-type-alias",
+]).pipe(
+  $I.annoteSchema("JSDocDocumentationRuleCode", {
+    description: "Stable diagnostic codes emitted by the JSDoc documentation inventory.",
+  })
+);
+
+type JSDocDocumentationRuleCode = typeof JSDocDocumentationRuleCode.Type;
+
+const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pickOptions([
+  "undescribed-see",
+  "multiple-description-paragraphs",
+  "leading-blank",
+  "trailing-blank",
+  "invalid-heading",
+  "section-out-of-order",
+  "duplicate-section",
+  "empty-section",
+  "section-after-example",
+  "invalid-when-to-use-prefix",
+  "malformed-example",
+  "duplicate-example",
+  "loose-ts-fence",
+  "forbidden-remarks",
+]);
+
+/**
+ * One JSDoc documentation finding produced by an inventory rule.
+ *
+ * **Example** (Construct a finding)
+ *
+ * ```ts
+ * import { DocumentationIssue } from "@beep/repo-cli/test/Quality"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(DocumentationIssue)({ rule: "forbidden-remarks" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DocumentationIssue = S.Struct({
+  rule: JSDocDocumentationRuleCode,
+  detail: S.String.pipe(S.UndefinedOr, S.optionalKey),
+  lineOffset: S.Int.pipe(S.UndefinedOr, S.optionalKey),
+  text: S.String.pipe(S.UndefinedOr, S.optionalKey),
+  example: S.Int.pipe(S.UndefinedOr, S.optionalKey),
+}).pipe(
+  $I.annoteSchema("DocumentationIssue", {
+    description: "One JSDoc documentation finding produced by an inventory rule.",
+  })
+);
+
+/**
+ * One JSDoc documentation finding produced by an inventory rule.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DocumentationIssue = typeof DocumentationIssue.Type;
 
 type InventoryEntry = JsonRecord & {
   readonly remediationStatus: "open" | "resolved";
@@ -50,6 +142,7 @@ type InventoryEntry = JsonRecord & {
   readonly unsafeExampleViolations: ReadonlyArray<DocumentationIssue>;
   readonly schemaAnnotationGaps: ReadonlyArray<DocumentationIssue>;
   readonly categoryViolations: ReadonlyArray<DocumentationIssue>;
+  readonly documentationShapeViolations: ReadonlyArray<DocumentationIssue>;
 };
 
 type PackageInventory = JsonRecord & {
@@ -74,6 +167,7 @@ type PackageInventory = JsonRecord & {
     readonly exampleImportFindings: number;
     readonly unsafeExampleFindings: number;
     readonly schemaAnnotationFindings: number;
+    readonly documentationRuleFindings: JsonRecord;
   };
   readonly modules: ReadonlyArray<InventoryEntry>;
   readonly exports: ReadonlyArray<InventoryEntry>;
@@ -116,6 +210,18 @@ const requiredExportTags = ["@example", "@category", "@since"];
 const requiredModuleTags = ["@since"];
 const forbiddenTags = ["@module", "@template"];
 const requiredTsdocCustomTags = ["@effects", "@precondition", "@postcondition", "@invariant"];
+
+const gitCommandErrorAdapter: GitCommandErrorAdapter<QualityArtifactGeneratorError> = {
+  onSpawnFailure: (commandLine) => (cause) =>
+    QualityArtifactGeneratorError.new(cause, `Failed to run ${commandLine}.`, { command: commandLine }),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    QualityArtifactGeneratorError.make({
+      command: commandLine,
+      exitCode,
+      message: `${commandLine} failed:\n${output}`,
+    }),
+  onTruncated: O.none(),
+};
 
 const JSDocInventoryDirectoryPath = S.String.pipe(
   $I.annoteSchema("JSDocInventoryDirectoryPath", {
@@ -190,40 +296,8 @@ const resolveJSDocInventoryOptions = Effect.fn("JSDocDocumentationInventory.reso
 const markdownAnchor = (value: string): string =>
   Str.replace(/^-+|-+$/g, "")(Str.replace(/[^a-z0-9]+/g, "-")(Str.replace(/`/g, "")(Str.toLowerCase(value))));
 
-const globPatternToRegExp = (pattern: string): RegExp => {
-  const normalized = normalizeSlashes(Str.replace(/^\.\//, "")(pattern));
-  let source = "^";
-  let index = 0;
-
-  while (index < normalized.length) {
-    const char = normalized[index];
-    const next = normalized[index + 1];
-    const afterNext = normalized[index + 2];
-
-    if (char === "*" && next === "*" && afterNext === "/") {
-      source += "(?:.*/)?";
-      index += 3;
-      continue;
-    }
-
-    if (char === "*" && next === "*") {
-      source += ".*";
-      index += 2;
-      continue;
-    }
-
-    if (char === "*") {
-      source += "[^/]*";
-      index += 1;
-      continue;
-    }
-
-    source += escapeRegExp(char ?? "");
-    index += 1;
-  }
-
-  return new RegExp(`${source}$`);
-};
+const globPatternToRegExp = (pattern: string): RegExp =>
+  sharedGlobPatternToRegExp(normalizeSlashes(Str.replace(/^\.\//, "")(pattern)));
 
 const packageSourceMatchesExclude = (
   packagePath: string,
@@ -243,16 +317,159 @@ const packageSourceMatchesExclude = (
 
 const extractExamples = (commentText: string): ReadonlyArray<string> => {
   const cleaned = A.join(stripCommentFraming(commentText), "\n");
-  const examples: Array<string> = [];
-  const codeFencePattern = /```(?:ts|typescript)\s*\n([\s\S]*?)```/g;
-  let match = codeFencePattern.exec(cleaned);
+  return A.map(extractFencedCodeBlocks(cleaned)[0], (example) => example.code);
+};
 
-  while (match !== null) {
-    A.appendInPlace(examples, match[1] ?? "");
-    match = codeFencePattern.exec(cleaned);
+const nonEmptyLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> => A.filter(lines, Str.isNonEmpty);
+
+const hasExampleCarrier = (commentText: string): boolean =>
+  A.contains(tagsFromComment(commentText), "@example") ||
+  A.some(
+    parseJSDocSections(ParseJSDocSectionsOptions.make({ commentText })).sections,
+    (section) => section.name === "Example"
+  );
+
+const isPureTypeLevelExport = (declaration: Node): boolean =>
+  Node.isTypeAliasDeclaration(declaration) ||
+  Node.isInterfaceDeclaration(declaration) ||
+  Node.isModuleDeclaration(declaration);
+
+const missingRequiredExportTags = (
+  declaration: Node,
+  commentText: string,
+  presentTags: ReadonlyArray<string>
+): ReadonlyArray<string> => {
+  const requiredTags = isPureTypeLevelExport(declaration)
+    ? A.filter(requiredExportTags, (tag) => tag !== "@example")
+    : requiredExportTags;
+  const effectiveTags = hasExampleCarrier(commentText) ? A.append(presentTags, "@example") : presentTags;
+  return missingRequiredTags(effectiveTags, requiredTags);
+};
+
+/**
+ * Score one JSDoc comment against the documentation section-shape rules.
+ *
+ * **Details**
+ *
+ * This is the exact scorer the JSDoc ratchet totals are built from, exported
+ * within the package so the carrier-migration codemod can use it as a
+ * per-block oracle: a rewrite is acceptable only when the finding set shrinks
+ * or holds. It never becomes a cross-package public surface.
+ *
+ * **Example** (Score a legacy comment)
+ *
+ * ```ts
+ * import { documentationShapeViolations } from "@beep/repo-cli/test/Quality"
+ *
+ * const findings = documentationShapeViolations("/** Lead.\n *\n * @remarks Detail. *" + "/")
+ * console.log(findings.some((finding) => finding.rule === "forbidden-remarks")) // true
+ * ```
+ *
+ * @param commentText - Raw JSDoc comment text to score.
+ * @returns Shape findings for the comment, empty when compliant.
+ * @category use-cases
+ * @since 0.0.0
+ */
+// fallow-ignore-next-line complexity -- this flat pass preserves the documented section-order state machine in one auditable rule boundary
+export const documentationShapeViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
+  const findings: Array<DocumentationIssue> = [];
+  const { bodyLines, sections } = parseJSDocSections(ParseJSDocSectionsOptions.make({ commentText }));
+  const hasNewStyleSections = A.isReadonlyArrayNonEmpty(sections);
+
+  for (const value of valuesForTag(commentText, "@see")) {
+    if (!/^\{@link\s+[^}]+}\s+\S/.test(value)) {
+      A.appendInPlace(findings, { rule: "undescribed-see", detail: value });
+    }
+  }
+  if (A.contains(tagsFromComment(commentText), "@remarks")) {
+    A.appendInPlace(findings, { rule: "forbidden-remarks" });
   }
 
-  return examples;
+  const firstSectionLine = hasNewStyleSections ? A.headNonEmpty(sections).lineOffset - 1 : bodyLines.length;
+  const leadWithSeparator = A.take(bodyLines, firstSectionLine);
+  const lead = Str.isEmpty(Str.trim(leadWithSeparator[leadWithSeparator.length - 1] ?? ""))
+    ? A.dropRight(leadWithSeparator, 1)
+    : leadWithSeparator;
+  if (Str.isEmpty(Str.trim(lead[0] ?? ""))) {
+    A.appendInPlace(findings, { rule: "leading-blank" });
+  }
+  if (Str.isEmpty(Str.trim(lead[lead.length - 1] ?? ""))) {
+    A.appendInPlace(findings, { rule: "trailing-blank" });
+  }
+  if (A.some(lead, (line) => /^\s*#{1,6}\s/.test(line))) {
+    A.appendInPlace(findings, { rule: "invalid-heading" });
+  }
+  const trimmedLead = A.map(lead, Str.trim);
+  if (A.some(A.drop(A.dropRight(trimmedLead, 1), 1), Str.isEmpty)) {
+    A.appendInPlace(findings, { rule: "multiple-description-paragraphs" });
+  }
+
+  const seenSections = MutableHashSet.empty<JSDocSectionName>();
+  const seenExampleTitles = MutableHashSet.empty<string>();
+  let lastSectionOrder = -1;
+  let exampleSeen = false;
+  let exampleFenceCount = 0;
+
+  for (const section of sections) {
+    const bodyText = jsDocSectionBodyText(section);
+    const meaningfulBody = nonEmptyLines(A.map(section.body, Str.trim));
+    if (A.isReadonlyArrayEmpty(meaningfulBody)) {
+      A.appendInPlace(findings, { rule: "empty-section", lineOffset: section.lineOffset, detail: section.name });
+    }
+    if (section.name === "Example") {
+      exampleSeen = true;
+      const fences = extractFencedCodeBlocks(bodyText)[0];
+      exampleFenceCount += fences.length;
+      const title = section.title ?? "";
+      const hasEmptyFence = fences.length === 1 && Str.isEmpty(Str.trim(fences[0]?.code ?? ""));
+      if (hasEmptyFence) {
+        A.appendInPlace(findings, { rule: "empty-section", lineOffset: section.lineOffset, detail: section.name });
+      }
+      if (Str.isEmpty(title) || fences.length !== 1 || hasEmptyFence) {
+        A.appendInPlace(findings, {
+          rule: "malformed-example",
+          lineOffset: section.lineOffset,
+          detail: Str.isEmpty(title)
+            ? "Example title is required."
+            : hasEmptyFence
+              ? "Example fence must contain code."
+              : "Example must contain exactly one ts fence.",
+        });
+      }
+      if (Str.isNonEmpty(title) && MutableHashSet.has(seenExampleTitles, title)) {
+        A.appendInPlace(findings, { rule: "duplicate-example", lineOffset: section.lineOffset, detail: title });
+      }
+      MutableHashSet.add(seenExampleTitles, title);
+      continue;
+    }
+
+    if (exampleSeen) {
+      A.appendInPlace(findings, {
+        rule: "section-after-example",
+        lineOffset: section.lineOffset,
+        detail: section.name,
+      });
+    }
+    if (MutableHashSet.has(seenSections, section.name)) {
+      A.appendInPlace(findings, { rule: "duplicate-section", lineOffset: section.lineOffset, detail: section.name });
+    }
+    MutableHashSet.add(seenSections, section.name);
+    const currentOrder = jsDocSectionOrder[section.name];
+    if (currentOrder < lastSectionOrder) {
+      A.appendInPlace(findings, { rule: "section-out-of-order", lineOffset: section.lineOffset, detail: section.name });
+    }
+    lastSectionOrder = currentOrder;
+    if (section.name === "When to use" && !/^(?:Use to|Use when|Use as|Use with)\b/.test(meaningfulBody[0] ?? "")) {
+      A.appendInPlace(findings, { rule: "invalid-when-to-use-prefix", lineOffset: section.lineOffset });
+    }
+  }
+
+  const allFenceCount = extractFencedCodeBlocks(A.join(bodyLines, "\n"))[0].length;
+  for (let index = exampleFenceCount; index < allFenceCount; index += 1) {
+    A.appendInPlace(findings, { rule: "loose-ts-fence" });
+  }
+
+  return findings;
 };
 
 const missingRequiredTags = (
@@ -439,7 +656,7 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
   }
   if (Node.isClassDeclaration(node)) {
     const text = getDocNode(node).getText();
-    return /\b(?:S\.Class|Model\.Class|TaggedErrorClass)\b/.test(text);
+    return /\b(?:S\.(?:Class|TaggedError)|Model\.Class|[A-Za-z_$][\w$]*Entity\.Entity)\b/.test(text);
   }
   if (!Node.isVariableDeclaration(node)) {
     return false;
@@ -447,7 +664,7 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
 
   const initializer = decodeTrimmedString(node.getInitializer()?.getText() ?? "");
   return (
-    /^(?:LiteralKit|TaggedErrorClass|DomainModel\.make|Table\.make)\s*\(/.test(initializer) ||
+    /^(?:LiteralKit|DomainModel\.make|ProductEntity\.make|Table\.make)\s*\(/.test(initializer) ||
     /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/.test(
       initializer
     )
@@ -462,12 +679,14 @@ const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile):
   const gaps: Array<DocumentationIssue> = [];
   const text = getDocNode(node).getText();
   const hasAnnotation =
-    /\$I\.annote(?:Schema)?\s*\(/.test(text) || /\.annotate\s*\(/.test(text) || /\bS\.annotate\s*\(/.test(text);
+    /\$I\.annote(?:Schema|Class|Error)?\s*(?:<[\s\S]*?>)?\s*\(/.test(text) ||
+    /\.annotate\s*\(/.test(text) ||
+    /\bS\.annotate\s*\(/.test(text);
 
   if (!hasAnnotation) {
     A.appendInPlace(gaps, {
       rule: "missing-schema-annotation",
-      detail: "Exported schemas should carry $I.annote or $I.annoteSchema metadata.",
+      detail: "Exported schemas should carry $I.annote, $I.annoteClass, $I.annoteError, or $I.annoteSchema metadata.",
     });
   }
 
@@ -505,8 +724,14 @@ const analyzeModule = (
   }
   const malformedTags = fileoverview === undefined ? [] : malformedConditionalTags(fileoverview);
   const categoryIssues = fileoverview === undefined ? [] : categoryViolations(fileoverview);
+  const shapeIssues = fileoverview === undefined ? [] : documentationShapeViolations(fileoverview);
   const findingCount =
-    missingTags.length + forbidden.length + malformedTags.length + categoryIssues.length + (missingSummary ? 1 : 0);
+    missingTags.length +
+    forbidden.length +
+    malformedTags.length +
+    categoryIssues.length +
+    shapeIssues.length +
+    (missingSummary ? 1 : 0);
 
   return {
     docKind,
@@ -523,6 +748,7 @@ const analyzeModule = (
     unsafeExampleViolations: [],
     schemaAnnotationGaps: [],
     categoryViolations: categoryIssues,
+    documentationShapeViolations: shapeIssues,
     exportCount,
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
@@ -586,9 +812,13 @@ const analyzeExportDeclaration = (
     unsafeExampleViolations: unsafeIssues,
     schemaAnnotationGaps: [] as Array<DocumentationIssue>,
     categoryViolations: categoryIssues,
+    documentationShapeViolations: [] as Array<DocumentationIssue>,
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
+
+const countFindings = (missingSummary: boolean, ...findingGroups: ReadonlyArray<ReadonlyArray<unknown>>): number =>
+  A.reduce(findingGroups, missingSummary ? 1 : 0, (total, findings) => total + findings.length);
 
 const analyzeDirectExport = (
   name: string,
@@ -600,7 +830,7 @@ const analyzeDirectExport = (
 ): InventoryEntry => {
   const docText = getJsDocText(declaration);
   const presentTags = tagsFromComment(docText);
-  const missingTags = missingRequiredTags(presentTags, requiredExportTags);
+  const missingTags = missingRequiredExportTags(declaration, docText, presentTags);
   const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(docText);
   const importIssues = exampleImportViolations(docText);
@@ -609,15 +839,18 @@ const analyzeDirectExport = (
   const forbidden = forbiddenTagsIn(presentTags);
   const missingSummary = O.isNone(summaryFromComment(docText));
   const schemaGaps = schemaAnnotationGaps(name, declaration, sourceFile);
-  const findingCount =
-    missingTags.length +
-    forbidden.length +
-    malformedTags.length +
-    importIssues.length +
-    unsafeIssues.length +
-    categoryIssues.length +
-    schemaGaps.length +
-    (missingSummary ? 1 : 0);
+  const shapeIssues = documentationShapeViolations(docText);
+  const findingCount = countFindings(
+    missingSummary,
+    missingTags,
+    forbidden,
+    malformedTags,
+    importIssues,
+    unsafeIssues,
+    categoryIssues,
+    schemaGaps,
+    shapeIssues
+  );
 
   return {
     symbolName: name,
@@ -635,6 +868,7 @@ const analyzeDirectExport = (
     unsafeExampleViolations: unsafeIssues,
     schemaAnnotationGaps: schemaGaps,
     categoryViolations: categoryIssues,
+    documentationShapeViolations: shapeIssues,
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
@@ -662,7 +896,8 @@ const analyzeFunctionOverloadGroup = (
   const anchor = anchorDeclarationForOverloadGroup(declarations);
   const docText = getJsDocText(anchor);
   const presentTags = tagsFromComment(docText);
-  const missingTags = missingRequiredTags(presentTags, requiredExportTags);
+  const effectiveTags = hasExampleCarrier(docText) ? A.append(presentTags, "@example") : presentTags;
+  const missingTags = missingRequiredTags(effectiveTags, requiredExportTags);
   const { filePath, repoPath, line } = declarationLocationOf(anchor, sourceFile, packagePath, repoRoot, path);
   const forbidden = forbiddenTagsIn(presentTags);
   const missingSummary = O.isNone(summaryFromComment(docText));
@@ -676,15 +911,18 @@ const analyzeFunctionOverloadGroup = (
   const importIssues = A.flatMap(groupDocTexts, exampleImportViolations);
   const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
   const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
-  const findingCount =
-    missingTags.length +
-    forbidden.length +
-    malformedTags.length +
-    importIssues.length +
-    unsafeIssues.length +
-    categoryIssues.length +
-    schemaGaps.length +
-    (missingSummary ? 1 : 0);
+  const shapeIssues = A.flatMap(groupDocTexts, documentationShapeViolations);
+  const findingCount = countFindings(
+    missingSummary,
+    missingTags,
+    forbidden,
+    malformedTags,
+    importIssues,
+    unsafeIssues,
+    categoryIssues,
+    schemaGaps,
+    shapeIssues
+  );
 
   return {
     symbolName: name,
@@ -702,6 +940,7 @@ const analyzeFunctionOverloadGroup = (
     unsafeExampleViolations: unsafeIssues,
     schemaAnnotationGaps: schemaGaps,
     categoryViolations: categoryIssues,
+    documentationShapeViolations: shapeIssues,
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
@@ -792,11 +1031,24 @@ const exportedDeclarationsFor = (
   return exports;
 };
 
+const documentationRuleCounts = (entries: ReadonlyArray<InventoryEntry>): JsonRecord =>
+  R.fromEntries(
+    A.map(newDocumentationRuleCodes, (rule) => [
+      rule,
+      A.reduce(
+        entries,
+        0,
+        (total, entry) => total + A.filter(entry.documentationShapeViolations, (issue) => issue.rule === rule).length
+      ),
+    ])
+  );
+
 const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(function* (
   packageInfo: WorkspacePackageInfo,
   topoOrder: number,
   repoRoot: string,
-  path: Path.Path
+  path: Path.Path,
+  trackedPaths: O.Option<MutableHashSet.MutableHashSet<string>>
 ): Effect.fn.Return<PackageInventory, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const docgenPath = path.join(packageInfo.absolutePath, "docgen.json");
@@ -808,6 +1060,10 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const sourceFiles = A.filter(
     yield* listSourceFiles(sourceRoot, path),
     (sourceFilePath) =>
+      O.match(trackedPaths, {
+        onNone: () => true,
+        onSome: (paths) => MutableHashSet.has(paths, repoRelative(sourceFilePath, repoRoot, path)),
+      }) &&
       !A.some(exclude, (pattern) =>
         packageSourceMatchesExclude(packageInfo.absolutePath, srcDir, sourceFilePath, pattern, path)
       )
@@ -887,6 +1143,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
       exampleImportFindings: A.reduce(exports, 0, (total, entry) => total + entry.exampleImportViolations.length),
       unsafeExampleFindings: A.reduce(exports, 0, (total, entry) => total + entry.unsafeExampleViolations.length),
       schemaAnnotationFindings: A.reduce(exports, 0, (total, entry) => total + entry.schemaAnnotationGaps.length),
+      documentationRuleFindings: documentationRuleCounts(A.appendAll(modules, exports)),
     },
     modules,
     exports,
@@ -922,6 +1179,7 @@ const analyzeMissingPackage = (packageName: string, topoOrder: number): PackageI
     exampleImportFindings: 0,
     unsafeExampleFindings: 0,
     schemaAnnotationFindings: 0,
+    documentationRuleFindings: R.fromEntries(A.map(newDocumentationRuleCodes, (rule) => [rule, 0])),
   },
   modules: [] as Array<InventoryEntry>,
   exports: [] as Array<InventoryEntry>,
@@ -960,6 +1218,15 @@ const analyzeRootPolicy = Effect.fn("JSDocDocumentationInventory.analyzeRootPoli
 
 const inventoryTotals = (packages: ReadonlyArray<PackageInventory>, rootPolicy: RootPolicyInventory) => {
   const openPackageCount = packages.filter((entry) => entry.status === "needs-remediation").length;
+  const documentationTotals = R.fromEntries(
+    A.map(newDocumentationRuleCodes, (rule) => [
+      rule,
+      A.reduce(packages, 0, (total, entry) => {
+        const value = R.get(entry.counts.documentationRuleFindings, rule).pipe(O.filter(P.isNumber));
+        return total + O.getOrElse(value, () => 0);
+      }),
+    ])
+  );
   return {
     packages: packages.length,
     cleanPackages: packages.filter((entry) => entry.status === "clean").length,
@@ -980,6 +1247,7 @@ const inventoryTotals = (packages: ReadonlyArray<PackageInventory>, rootPolicy: 
     exampleImportFindings: packages.reduce((total, entry) => total + entry.counts.exampleImportFindings, 0),
     unsafeExampleFindings: packages.reduce((total, entry) => total + entry.counts.unsafeExampleFindings, 0),
     schemaAnnotationFindings: packages.reduce((total, entry) => total + entry.counts.schemaAnnotationFindings, 0),
+    ...documentationTotals,
     rootPolicyOpen: rootPolicy.status === "open" ? 1 : 0,
   };
 };
@@ -1011,6 +1279,9 @@ const detailList = (entry: InventoryEntry): string => {
   if (entry.categoryViolations.length > 0) {
     A.appendInPlace(details, `${entry.categoryViolations.length} category casing violation(s)`);
   }
+  if (entry.documentationShapeViolations.length > 0) {
+    A.appendInPlace(details, `${entry.documentationShapeViolations.length} documentation section/link violation(s)`);
+  }
 
   return details.length === 0 ? "resolved" : A.join(details, "; ");
 };
@@ -1025,7 +1296,7 @@ const renderMarkdown = (inventory: Inventory): string => {
   A.appendInPlace(lines, "");
   A.appendInPlace(
     lines,
-    "The package universe is the current `bun run topo-sort` output. This inventory checks repo JSDoc rules that package docgen does not fully validate yet: required export tags, summaries, TSDoc grammar, forbidden legacy tags, example import aliases, unsafe examples, root TSDoc custom tag registration, and schema annotation/type-alias gaps."
+    "The package universe is the current `bun run topo-sort` output. This inventory checks repo JSDoc rules that package docgen does not fully validate yet: kind-aware Example presence, summaries, section grammar, described links, retired tags, TSDoc grammar, example import aliases, unsafe examples, root TSDoc custom tag registration, and schema annotation/type-alias gaps."
   );
   A.appendInPlace(lines, "");
   A.appendInPlace(lines, "## Totals");
@@ -1108,17 +1379,37 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
   const { generatedAt, repoRoot } = yield* resolveJSDocInventoryOptions(options);
   const packageByName = yield* discoverWorkspacePackages(repoRoot, path);
   const topoNames = yield* topoSortPackageNames(repoRoot, path);
+  const hasGitMetadata = yield* fs
+    .exists(path.join(repoRoot, ".git"))
+    .pipe(QualityArtifactGeneratorError.mapError("Failed to inspect repository Git metadata.", { filePath: repoRoot }));
+  const trackedPaths = hasGitMetadata
+    ? O.some(MutableHashSet.fromIterable(yield* runGitLines(repoRoot, ["ls-files"], gitCommandErrorAdapter)))
+    : O.none<MutableHashSet.MutableHashSet<string>>();
   const rootPolicy = yield* analyzeRootPolicy(repoRoot, path);
+  // Ecosystem members are documented to the published-package grammar and
+  // gated by their own package docgen lane; the repo carrier grammar this
+  // inventory enforces does not govern them (standards/architecture/
+  // 14-ecosystem-packages.md, Style-Law Scoping). Lab apps under apps/labs
+  // are likewise excluded: labs are ceremony-exempt scratch surfaces
+  // (goals/lab-apps-lifecycle D2) and never enter the carrier-grammar
+  // inventory.
+  const inventoriedNames = A.filter(topoNames, (packageName) =>
+    O.match(MutableHashMap.get(packageByName, packageName), {
+      onNone: () => true,
+      onSome: (info) => !Str.startsWith("packages/ecosystem/")(info.path) && !isLabsWorkspacePath(info.path),
+    })
+  );
   const packages = yield* Effect.forEach(
-    topoNames,
+    inventoriedNames,
     (packageName, index) => {
       const packageInfo = MutableHashMap.get(packageByName, packageName);
       return O.isNone(packageInfo)
         ? Effect.succeed(analyzeMissingPackage(packageName, index + 1))
-        : analyzePackage(packageInfo.value, index + 1, repoRoot, path);
+        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, trackedPaths);
     },
     { concurrency: 1 }
   );

@@ -9,7 +9,8 @@
 /**
  * Package version for the architecture lab domain role.
  *
- * @example
+ * **Example** (Assert expected package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-domain"
  *
@@ -34,46 +35,39 @@ export const VERSION = "0.0.0" as const;
  * @category aggregates
  * @since 0.0.0
  */
-export * as Aggregates from "./aggregates/index.js";
+export * as Aggregates from "./aggregates/index.ts";
 /**
  * Direct WorkItem aggregate namespace export.
  *
  * @category aggregates
  * @since 0.0.0
  */
-export * as WorkItem from "./aggregates/WorkItem/index.js";
+export * as WorkItem from "./aggregates/WorkItem/index.ts";
 /**
  * Entity namespace exports for the architecture lab domain package.
  *
  * @category entities
  * @since 0.0.0
  */
-export * as Entities from "./entities/index.js";
+export * as Entities from "./entities/index.ts";
 /**
  * Direct Worker entity namespace export.
  *
  * @category entities
  * @since 0.0.0
  */
-export * as Worker from "./entities/Worker/index.js";
-/**
- * Identity namespace exports for the architecture lab domain package.
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export * as Identity from "./identity/index.js";
+export * as Worker from "./entities/Worker/index.ts";
 /**
  * Value-object namespace exports for the architecture lab domain package.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * as Values from "./values/index.js";
+export * as Values from "./values/index.ts";
 /**
  * Direct WorkPriority value-object namespace export.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * as WorkPriority from "./values/WorkPriority/index.js";
+export * as WorkPriority from "./values/WorkPriority/index.ts";

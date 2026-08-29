@@ -13,18 +13,21 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { Ordering } from "effect/Ordering";
 
 const $I = $RepoCliId.create("internal/repo-run/RepoRun.models");
 
 /**
  * Plan phase used by repository run orchestration.
  *
- * @example
+ * **Example** (Check repo plan phase membership)
+ *
  * ```ts
  * import { RepoPlanPhase } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(RepoPlanPhase.is.feedback("feedback"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -53,12 +56,14 @@ export type RepoPlanPhase = typeof RepoPlanPhase.Type;
 /**
  * Step mutability classification.
  *
- * @example
+ * **Example** (Check repo plan step mutability membership)
+ *
  * ```ts
  * import { RepoPlanStepMutability } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(RepoPlanStepMutability.is.readonly("readonly"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -79,12 +84,14 @@ export type RepoPlanStepMutability = typeof RepoPlanStepMutability.Type;
 /**
  * Step scope classification.
  *
- * @example
+ * **Example** (Check repo plan step scope membership)
+ *
  * ```ts
  * import { RepoPlanStepScope } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(RepoPlanStepScope.is.package("package"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -105,12 +112,14 @@ export type RepoPlanStepScope = typeof RepoPlanStepScope.Type;
 /**
  * Conservative resume eligibility for a planned step.
  *
- * @example
+ * **Example** (Check repo plan step resume membership)
+ *
  * ```ts
  * import { RepoPlanStepResume } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(RepoPlanStepResume.is.never("never"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,12 +140,14 @@ export type RepoPlanStepResume = typeof RepoPlanStepResume.Type;
 /**
  * Graph-health signal recorded while hydrating a run context.
  *
- * @example
+ * **Example** (Check repo graph health status membership)
+ *
  * ```ts
  * import { RepoGraphHealthStatus } from "@beep/repo-cli/internal/repo-run"
  *
  * console.log(RepoGraphHealthStatus.is.warning("warning"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -157,13 +168,15 @@ export type RepoGraphHealthStatus = typeof RepoGraphHealthStatus.Type;
 /**
  * Turbo task metadata captured from dry-runs or summaries.
  *
- * @example
+ * **Example** (Construct a turbo plan task)
+ *
  * ```ts
  * import { TurboPlanTask } from "@beep/repo-cli/internal/repo-run"
  *
  * const task = TurboPlanTask.make({ taskId: "@beep/schema#lint" })
  * console.log(task.taskId)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -186,13 +199,15 @@ export class TurboPlanTask extends S.Class<TurboPlanTask>($I`TurboPlanTask`)(
 /**
  * Workspace package metadata captured from Turbo graph queries.
  *
- * @example
+ * **Example** (Construct a turbo workspace package)
+ *
  * ```ts
  * import { TurboWorkspacePackage } from "@beep/repo-cli/internal/repo-run"
  *
  * const pkg = TurboWorkspacePackage.make({ name: "@beep/repo-cli", path: "packages/tooling/tool/cli" })
  * console.log(pkg.name)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -209,13 +224,15 @@ export class TurboWorkspacePackage extends S.Class<TurboWorkspacePackage>($I`Tur
 /**
  * Turbo snapshot stored in the shared run context.
  *
- * @example
+ * **Example** (Construct a turbo plan snapshot)
+ *
  * ```ts
  * import { TurboPlanSnapshot } from "@beep/repo-cli/internal/repo-run"
  *
  * const snapshot = TurboPlanSnapshot.make({ tasks: [], graphHealthStatus: "ok", graphHealthWarnings: [] })
  * console.log(snapshot.graphHealthStatus)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -235,7 +252,8 @@ export class TurboPlanSnapshot extends S.Class<TurboPlanSnapshot>($I`TurboPlanSn
 /**
  * Shared run context hydrated before planning.
  *
- * @example
+ * **Example** (Construct a repo run context)
+ *
  * ```ts
  * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
  *
@@ -251,6 +269,7 @@ export class TurboPlanSnapshot extends S.Class<TurboPlanSnapshot>($I`TurboPlanSn
  * })
  * console.log(context.base)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -271,9 +290,35 @@ export class RepoRunContext extends S.Class<RepoRunContext>($I`RepoRunContext`)(
 ) {}
 
 /**
+ * One named wave rendered inside a repository proof plan.
+ *
+ * **Example** (Render a preflight wave)
+ *
+ * ```ts
+ * import { RepoPlanWave } from "@beep/repo-cli/internal/repo-run"
+ *
+ * const wave = RepoPlanWave.make({ id: "preflight", laneIds: ["quality:changeset-status"] })
+ * console.log(wave.laneIds.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RepoPlanWave extends S.Class<RepoPlanWave>($I`RepoPlanWave`)(
+  {
+    id: S.String,
+    laneIds: S.Array(S.String),
+  },
+  $I.annote("RepoPlanWave", {
+    description: "One named lane wave rendered inside a repository proof plan.",
+  })
+) {}
+
+/**
  * One subprocess or git operation planned for a repo run.
  *
- * @example
+ * **Example** (Construct a repo plan step)
+ *
  * ```ts
  * import { RepoPlanStep } from "@beep/repo-cli/internal/repo-run"
  *
@@ -290,6 +335,7 @@ export class RepoRunContext extends S.Class<RepoRunContext>($I`RepoRunContext`)(
  * })
  * console.log(step.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -309,6 +355,7 @@ export class RepoPlanStep extends S.Class<RepoPlanStep>($I`RepoPlanStep`)(
     packagePath: S.optionalKey(S.String),
     task: S.optionalKey(S.String),
     verification: S.optionalKey(S.String),
+    waves: RepoPlanWave.pipe(S.Array, S.optionalKey),
   },
   $I.annote("RepoPlanStep", {
     description: "Planned repository command step.",
@@ -318,13 +365,15 @@ export class RepoPlanStep extends S.Class<RepoPlanStep>($I`RepoPlanStep`)(
 /**
  * Repository run plan.
  *
- * @example
+ * **Example** (Construct a repo run plan)
+ *
  * ```ts
  * import { RepoRunPlan } from "@beep/repo-cli/internal/repo-run"
  *
  * const plan = RepoRunPlan.make({ context: {} as never, steps: [] })
  * console.log(plan.steps.length)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -341,13 +390,15 @@ export class RepoRunPlan extends S.Class<RepoRunPlan>($I`RepoRunPlan`)(
 /**
  * Captured subprocess result for a planned step.
  *
- * @example
+ * **Example** (Construct a repo step run result)
+ *
  * ```ts
  * import { RepoStepRunResult } from "@beep/repo-cli/internal/repo-run"
  *
  * const result = RepoStepRunResult.make({ commandText: "bun run build", exitCode: 0, stepId: "feedback:build" })
  * console.log(result.exitCode)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -356,6 +407,9 @@ export class RepoStepRunResult extends S.Class<RepoStepRunResult>($I`RepoStepRun
     stepId: S.String,
     commandText: S.String,
     exitCode: S.Finite,
+    startedAt: S.optionalKey(S.String),
+    endedAt: S.optionalKey(S.String),
+    elapsedMs: S.optionalKey(S.Finite),
     output: S.optionalKey(S.String),
     rawOutputRef: S.optionalKey(S.String),
     truncated: S.optionalKey(S.Boolean),
@@ -382,9 +436,15 @@ const phaseOrderValue = (phase: RepoPlanPhase): number =>
  * @category ordering
  * @since 0.0.0
  */
-export const byRepoPlanStepAscending: Order.Order<RepoPlanStep> = Order.combine(
-  Order.mapInput(Order.Number, (step: RepoPlanStep) => phaseOrderValue(step.phase)),
-  Order.mapInput(Order.String, (step: RepoPlanStep) => step.id)
+export const byRepoPlanStepAscending: {
+  (that: RepoPlanStep): (self: RepoPlanStep) => Ordering;
+  (self: RepoPlanStep, that: RepoPlanStep): Ordering;
+} = dual(
+  2,
+  Order.combine(
+    Order.mapInput(Order.Number, (step: RepoPlanStep) => phaseOrderValue(step.phase)),
+    Order.mapInput(Order.String, (step: RepoPlanStep) => step.id)
+  )
 );
 
 const shellSafeArgPattern = /^[A-Za-z0-9_@%+=:,./-]+$/u;
@@ -402,9 +462,8 @@ const quoteCommandArg = (arg: string): string => {
 /**
  * Render a planned step as a shell-like command string.
  *
- * @param step - Planned repository step.
- * @returns Command text with argv parts quoted when shell-sensitive.
- * @example
+ * **Example** (Render a step's command text)
+ *
  * ```ts
  * import { commandTextForStep, RepoPlanStep } from "@beep/repo-cli/internal/repo-run"
  *
@@ -421,6 +480,9 @@ const quoteCommandArg = (arg: string): string => {
  * })
  * console.log(commandTextForStep(step))
  * ```
+ *
+ * @param step - Planned repository step.
+ * @returns Command text with argv parts quoted when shell-sensitive.
  * @category formatting
  * @since 0.0.0
  */
@@ -430,9 +492,8 @@ export const commandTextForStep = (step: RepoPlanStep): string =>
 /**
  * Determine whether a planned step may use conservative resume metadata.
  *
- * @param step - Planned repository step.
- * @returns Whether the step is read-only, package-scoped feedback.
- * @example
+ * **Example** (Test a step for conservative resume)
+ *
  * ```ts
  * import { isConservativeResumeCandidate, RepoPlanStep } from "@beep/repo-cli/internal/repo-run"
  *
@@ -449,6 +510,9 @@ export const commandTextForStep = (step: RepoPlanStep): string =>
  * })
  * console.log(isConservativeResumeCandidate(step))
  * ```
+ *
+ * @param step - Planned repository step.
+ * @returns Whether the step is read-only, package-scoped feedback.
  * @category predicates
  * @since 0.0.0
  */

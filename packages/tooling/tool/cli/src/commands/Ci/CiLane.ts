@@ -12,20 +12,25 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { decodePackageJsonEffect, findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { Unknown } from "@beep/schema/Unknown";
+import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, Match, Path, pipe, Stream } from "effect";
+import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.js";
-import { CiCommandError } from "./Ci.errors.js";
+import { turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
+import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
+import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
+import { CiCommandError } from "./Ci.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { QualityTaskConfigurationError, QualityTaskGroupFailed } from "../Quality/Tasks.js";
+import type { QualityTaskConfigurationError, QualityTaskGroupFailed } from "../Quality/Tasks.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 
@@ -33,16 +38,19 @@ type CiLaneEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
+const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
 /**
  * Parity classes for CI lanes (one-round-loop D2 taxonomy).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_CLASS_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CI_LANE_CLASS_VALUES.includes("ci-native")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,12 +59,14 @@ export const CI_LANE_CLASS_VALUES = ["cli-runnable", "workflow-gated", "ci-nativ
 /**
  * Parity class for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneClass } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CiLaneClass.is["cli-runnable"]("cli-runnable"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,13 +79,15 @@ export const CiLaneClass = LiteralKit(CI_LANE_CLASS_VALUES).pipe(
 /**
  * Parity class for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { CiLaneClass } from "@beep/repo-cli/commands/Ci"
  *
  * const laneClass: CiLaneClass = "cli-runnable"
  * console.log(laneClass) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,12 +96,14 @@ export type CiLaneClass = typeof CiLaneClass.Type;
 /**
  * Local replay fidelities for CI lanes.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_REPLAY_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CI_LANE_REPLAY_VALUES.includes("exact")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,12 +112,14 @@ export const CI_LANE_REPLAY_VALUES = ["exact", "approximate", "none"] as const;
 /**
  * Local replay fidelity for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneReplay } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CiLaneReplay.is.exact("exact"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -116,13 +132,15 @@ export const CiLaneReplay = LiteralKit(CI_LANE_REPLAY_VALUES).pipe(
 /**
  * Local replay fidelity for a CI lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { CiLaneReplay } from "@beep/repo-cli/commands/Ci"
  *
  * const replay: CiLaneReplay = "exact"
  * console.log(replay) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,12 +149,14 @@ export type CiLaneReplay = typeof CiLaneReplay.Type;
 /**
  * Runnable CI lane identifiers (every check.yml lane with a CLI body).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_ID_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CI_LANE_ID_VALUES.includes("check")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -148,9 +168,12 @@ export const CI_LANE_ID_VALUES = [
   "coverage",
   "desktop-ipc",
   "docgen",
+  "doctest",
+  "ecosystem",
   "fallow",
   "jsdoc-ratchet",
   "knip",
+  "labs",
   "lint",
   "lint-policy",
   "nix",
@@ -166,12 +189,14 @@ export const CI_LANE_ID_VALUES = [
 /**
  * Runnable CI lane identifier.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneId } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(CiLaneId.is.lint("lint"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -184,13 +209,15 @@ export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe(
 /**
  * Runnable CI lane identifier.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { CiLaneId } from "@beep/repo-cli/commands/Ci"
  *
  * const lane: CiLaneId = "lint"
  * console.log(lane) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -201,12 +228,14 @@ const isCiLaneId = S.is(CiLaneId);
 /**
  * Docgen lane execution modes (computed by the workflow lane-gate).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { DOCGEN_LANE_MODE_VALUES } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(DOCGEN_LANE_MODE_VALUES.includes("affected")) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -215,12 +244,14 @@ export const DOCGEN_LANE_MODE_VALUES = ["none", "affected", "full"] as const;
 /**
  * Docgen lane execution mode.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { DocgenLaneMode } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(DocgenLaneMode.is.affected("affected"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -233,13 +264,15 @@ export const DocgenLaneMode = LiteralKit(DOCGEN_LANE_MODE_VALUES).pipe(
 /**
  * Docgen lane execution mode.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import type { DocgenLaneMode } from "@beep/repo-cli/commands/Ci"
  *
  * const mode: DocgenLaneMode = "affected"
  * console.log(mode) // example value
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -248,7 +281,8 @@ export type DocgenLaneMode = typeof DocgenLaneMode.Type;
 /**
  * Machine-readable descriptor for one check.yml lane.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneDescriptor } from "@beep/repo-cli/commands/Ci"
  *
@@ -262,6 +296,7 @@ export type DocgenLaneMode = typeof DocgenLaneMode.Type;
  * })
  * console.log(descriptor.id)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -288,13 +323,15 @@ const TURBO_SHAPE_FLAGS = ["--affected", "--base", "--summarize"] as const;
  * Order mirrors the packet parity table
  * (`goals/one-round-loop/research/ci-lane-parity.md`).
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CI_LANE_DESCRIPTORS } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
  *
  * console.log(A.length(CI_LANE_DESCRIPTORS))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -331,7 +368,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: ["--changeset-status"],
-    notes: "CI passes --changeset-status on pull_request events.",
+    notes: "Always validates the changeset graph; CI also passes --changeset-status on pull requests.",
   }),
   CiLaneDescriptor.make({
     id: "check",
@@ -375,6 +412,26 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes: "Lane-gate mode computation stays in the workflow and arrives as --mode.",
   }),
   CiLaneDescriptor.make({
+    id: "doctest",
+    contextName: "Doctest",
+    required: true,
+    laneClass: "workflow-gated",
+    replay: "exact",
+    flags: ["--mode", "--base", "--head"],
+    notes: "Lane-gate mode computation stays in the workflow and arrives as --mode.",
+  }),
+  // This visible family context lands non-required; promotion is a later
+  // branch-ruleset action after it establishes a stable green history.
+  CiLaneDescriptor.make({
+    id: "ecosystem",
+    contextName: "Ecosystem Contracts",
+    required: false,
+    laneClass: "cli-runnable",
+    replay: "exact",
+    flags: [],
+    notes: "Runs the first ecosystem member's type and bundle contracts explicitly.",
+  }),
+  CiLaneDescriptor.make({
     id: "codegen",
     contextName: "Codegen Drift",
     required: true,
@@ -412,7 +469,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "jsdoc-ratchet",
     contextName: "JSDoc Ratchet",
-    required: true,
+    required: false,
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [],
@@ -493,12 +550,27 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history.",
   }),
+  // lab-apps-lifecycle P2 (ratified row 10): the single visible labs proof
+  // lane. Labs are excluded from every required turbo lane (row 9); this lane
+  // positively selects the labs glob and is PERMANENTLY non-required — never
+  // add its "Labs" context to ruleset 10240248.
+  CiLaneDescriptor.make({
+    id: "labs",
+    contextName: "Labs",
+    required: false,
+    laneClass: "workflow-gated",
+    replay: "exact",
+    flags: ["--summarize"],
+    notes:
+      "Path-gated in the workflow to direct apps/labs/** changes on PRs; push and local replays run the full labs glob. Zero labs => zero tasks (green).",
+  }),
 ];
 
 /**
  * Options accepted by {@link runCiLane}.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneRunOptions } from "@beep/repo-cli/commands/Ci"
  *
@@ -515,6 +587,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
  * })
  * console.log(options.base)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -532,15 +605,27 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     validateEnvelopes: S.Boolean,
     runs: S.optionalKey(S.String),
     seed: S.optionalKey(S.String),
+    filter: S.optionalKey(S.String),
   },
   $I.annote("CiLaneRunOptions", {
-    description: "Shape options for running one CI lane body.",
+    description: "Shape and optional Turbo scope for running one CI lane body.",
   })
 ) {}
+
+// The property lane invokes turbo directly (not through a root script, so it misses the
+// CI concurrency cap in Quality/Tasks.ts). Turbo's default concurrency (~10) starved the
+// hosted runner into 5-minute vitest test timeouts (workspace-use-cases property suite);
+// see goals/quality-speedup/research/instantiation-census.md §5. Lane replay is CI-parity
+// by design, so the cap applies unconditionally.
+const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
   ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+  ...O.match(O.fromUndefinedOr(options.filter), {
+    onNone: A.empty<string>,
+    onSome: (filter) => [`--filter=${filter}`],
+  }),
 ];
 
 // Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
@@ -598,6 +683,11 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
     cwd: repoRoot,
   });
 
+// Lint and Test Unit still run on hosted 16GB ubuntu-24.04 runners (check.yml),
+// not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
+// instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
+const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+
 const turboRootLaneStep = (
   repoRoot: string,
   laneId: CiLaneId,
@@ -613,26 +703,106 @@ const turboRootLaneStep = (
     options.affected ? { TURBO_SCM_BASE: options.base } : undefined
   );
 
+const turboTaskLaneStep = (
+  repoRoot: string,
+  laneId: CiLaneId,
+  task: string,
+  prefixArgs: ReadonlyArray<string>,
+  options: CiLaneRunOptions
+): QualityTaskStep =>
+  QualityTaskStep.make({
+    label: `ci:${laneId}`,
+    command: "bunx",
+    args: ["turbo", "run", task, ...prefixArgs, ...turboShapeArgs(options)],
+    cwd: repoRoot,
+    ...(options.affected ? { env: { TURBO_SCM_BASE: options.base } } : {}),
+  });
+
 const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
   DocgenLaneMode.$match(options.mode, {
     none: A.empty<QualityTaskStep>,
     affected: () => [
-      rootScriptStep(repoRoot, "ci:docgen", "docgen:local", [
-        "--base",
-        options.base,
-        "--head",
-        options.head,
-        "--parallel=3",
-      ]),
+      rootScriptStep(repoRoot, "ci:docgen", "docgen:local", ["--base", options.base, "--head", options.head]),
     ],
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });
+
+/**
+ * Build the exact Vitest step for the Doctest lane.
+ *
+ * **When to use**
+ *
+ * Use to prove the hosted lane's final argv in focused tests and after
+ * affected-file resolution, without performing Git I/O.
+ *
+ * **Example** (Build the full Doctest step)
+ *
+ * ```ts
+ * import { doctestStepForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * const steps = doctestStepForTesting("/repo", undefined)
+ * console.log(steps[0]?.args)
+ * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param files - Sorted affected source paths, or undefined for the full corpus.
+ * @returns No step for an empty affected set; otherwise one exact Vitest step.
+ * @category testing
+ * @since 0.0.0
+ */
+export const doctestStepForTesting: {
+  (files: ReadonlyArray<string> | undefined): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+  (repoRoot: string, files: ReadonlyArray<string> | undefined): ReadonlyArray<QualityTaskStep>;
+} = dual(
+  2,
+  (repoRoot: string, files: ReadonlyArray<string> | undefined): ReadonlyArray<QualityTaskStep> =>
+    files !== undefined && A.isReadonlyArrayEmpty(files)
+      ? A.empty<QualityTaskStep>()
+      : [
+          QualityTaskStep.make({
+            label: "ci:doctest",
+            command: "bunx",
+            args: ["vitest", "run", "--config", "vitest.docs.ts", ...(files ?? A.empty<string>())],
+            cwd: repoRoot,
+          }),
+        ]
+);
+
+const doctestLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
+  DocgenLaneMode.$match(options.mode, {
+    none: A.empty<QualityTaskStep>,
+    affected: A.empty<QualityTaskStep>,
+    full: () => doctestStepForTesting(repoRoot, undefined),
+  });
+
+const CODEGEN_DRIVER_PACKAGE_DIRS = LiteralKit([
+  "packages/drivers/acp",
+  "packages/drivers/ecfr",
+  "packages/drivers/govinfo",
+  "packages/drivers/runpod",
+]);
+
+type CodegenDriverPackageDir = typeof CODEGEN_DRIVER_PACKAGE_DIRS.Type;
+
+const codegenDriverPackageName = Str.replace("packages/drivers/", "");
+
+const codegenDriverStep = (repoRoot: string, packageDir: CodegenDriverPackageDir): QualityTaskStep =>
+  QualityTaskStep.make({
+    label: `ci:codegen:${codegenDriverPackageName(packageDir)}`,
+    command: "bun",
+    args: ["run", "--cwd", packageDir, "generate:check"],
+    cwd: repoRoot,
+  });
+
+const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
+  A.map(CODEGEN_DRIVER_PACKAGE_DIRS.Options, (packageDir) => codegenDriverStep(repoRoot, packageDir));
 
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
 const FALLOW_ADVISORY_LANES = ["health", "boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
 
-const fallowReportPath = (lane: string): string => `.beep/fallow/${lane}.json`;
+const fallowReportPath = (lane: string, advisory: boolean): string =>
+  `.beep/fallow/${lane}.${advisory ? "advisory" : "check"}.json`;
 
 const fallowRunStep = (repoRoot: string, lane: string, gateFlag: string, base: string): QualityTaskStep =>
   QualityTaskStep.make({
@@ -648,13 +818,13 @@ const fallowRunStep = (repoRoot: string, lane: string, gateFlag: string, base: s
       "--base",
       base,
       "--out",
-      fallowReportPath(lane),
+      fallowReportPath(lane, gateFlag === "--advisory"),
       "--quiet",
     ],
     cwd: repoRoot,
   });
 
-const fallowEnvelopeCheckStep = (repoRoot: string, lane: string): QualityTaskStep =>
+const fallowEnvelopeCheckStep = (repoRoot: string, lane: string, advisory: boolean): QualityTaskStep =>
   QualityTaskStep.make({
     label: `ci:fallow:envelope-check:${lane}`,
     command: "bun",
@@ -664,20 +834,22 @@ const fallowEnvelopeCheckStep = (repoRoot: string, lane: string): QualityTaskSte
       "quality",
       "fallow",
       "envelope-check",
-      fallowReportPath(lane),
+      fallowReportPath(lane, advisory),
       "--require",
       FALLOW_ENVELOPE_REQUIRED_FIELDS,
       "--expect-subcommand",
       lane,
       "--expect-report-path",
-      fallowReportPath(lane),
+      fallowReportPath(lane, advisory),
       "--require-raw-output",
     ],
     cwd: repoRoot,
   });
 
-const fallowEnvelopeCheckSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
-  A.map([...FALLOW_ADVISORY_LANES, ...FALLOW_BLOCKING_LANES], (lane) => fallowEnvelopeCheckStep(repoRoot, lane));
+const fallowEnvelopeCheckSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> => [
+  ...A.map(FALLOW_ADVISORY_LANES, (lane) => fallowEnvelopeCheckStep(repoRoot, lane, true)),
+  ...A.map(FALLOW_BLOCKING_LANES, (lane) => fallowEnvelopeCheckStep(repoRoot, lane, false)),
+];
 
 const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> => [
   ...A.map(FALLOW_BLOCKING_LANES, (lane) => fallowRunStep(repoRoot, lane, "--check", options.base)),
@@ -692,11 +864,8 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * runtime additionally maintains `.beep/fallow/status.md` accounting (see
  * {@link runCiLane}).
  *
- * @param repoRoot - Repository root used as every subprocess working directory.
- * @param laneId - CI lane to plan.
- * @param options - Lane shape options.
- * @returns Planned steps in execution order.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
@@ -714,6 +883,11 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * }))
  * console.log(A.map(steps, (step) => step.label))
  * ```
+ *
+ * @param repoRoot - Repository root used as every subprocess working directory.
+ * @param laneId - CI lane to plan.
+ * @param options - Lane shape options.
+ * @returns Planned steps in execution order.
  * @category testing
  * @since 0.0.0
  */
@@ -727,24 +901,19 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      check: () => [turboRootLaneStep(repoRoot, "check", "check", A.empty<string>(), options)],
+      // Fresh Check graphs can overlap the largest tsgo processes and OOM even
+      // on 32GB fleet workers, so this lane stays serial.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
       codegen: () => [
+        ...codegenDriverSteps(repoRoot),
+        // The desktop migration bundle is generated from
+        // packages/_internal/db-admin/drizzle, which the app has no dependency
+        // edge to; this lane runs unaffected-gated so db-admin-only migration
+        // PRs still prove bundle freshness.
         QualityTaskStep.make({
-          label: "ci:codegen:generate",
+          label: "ci:codegen:desktop-migration-bundle",
           command: "bun",
-          args: ["run", "--cwd", "packages/drivers/ecfr", "generate"],
-          cwd: repoRoot,
-        }),
-        QualityTaskStep.make({
-          label: "ci:codegen:drift",
-          command: "git",
-          args: [
-            "diff",
-            "--exit-code",
-            "--",
-            "packages/drivers/ecfr/src/_generated",
-            "packages/drivers/ecfr/openapi.json",
-          ],
+          args: ["run", "--cwd", "apps/professional-desktop", "codegen:check"],
           cwd: repoRoot,
         }),
       ],
@@ -766,7 +935,7 @@ export const ciLaneStepsForTesting: {
                 cwd: repoRoot,
               }),
             ],
-      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", A.empty<string>(), options)],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", ["--concurrency=3"], options)],
       "desktop-ipc": () => [
         QualityTaskStep.make({
           label: "ci:desktop-ipc",
@@ -776,6 +945,23 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       docgen: () => docgenLaneSteps(repoRoot, options),
+      doctest: () => doctestLaneSteps(repoRoot, options),
+      // Target the first ecosystem member explicitly. Generalize member
+      // discovery only when a second ecosystem member exists.
+      ecosystem: () => [
+        QualityTaskStep.make({
+          label: "ci:ecosystem:effect-drizzle:type-test",
+          command: "bun",
+          args: ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:type-test"],
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:ecosystem:effect-drizzle:bundle-probe",
+          command: "bun",
+          args: ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:bundle-probe"],
+          cwd: repoRoot,
+        }),
+      ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
       "jsdoc-ratchet": () => [
         bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
@@ -796,8 +982,47 @@ export const ciLaneStepsForTesting: {
         ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
-      lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", A.empty<string>(), options)],
-      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
+      // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
+      // over the labs glob. Deliberately no --affected — turbo unions filter
+      // selectors, so --affected plus the positive labs filter would WIDEN the
+      // selection to affected-products plus labs; the workflow path gate scopes
+      // PRs, while push and local replays want the full labs set.
+      labs: () => [
+        QualityTaskStep.make({
+          label: "ci:labs",
+          command: "bunx",
+          args: [
+            "turbo",
+            "run",
+            "check",
+            "lint",
+            "test",
+            LABS_TURBO_SELECT_FILTER,
+            HOSTED_16GB_TURBO_CONCURRENCY_ARG,
+            ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+          ],
+          cwd: repoRoot,
+        }),
+      ],
+      // Required Lint Policy owns the repo-policy battery. The Lint context
+      // therefore runs only the package Turbo graph instead of duplicating
+      // that battery through the root `bun run lint` aggregate. The lane
+      // invokes turbo directly (bypassing Quality/Tasks.ts turboRunArgs), so
+      // the labs exclude filter is applied explicitly here (row 9).
+      lint: () => [
+        turboTaskLaneStep(
+          repoRoot,
+          "lint",
+          "lint",
+          [HOSTED_16GB_TURBO_CONCURRENCY_ARG, LABS_TURBO_EXCLUDE_FILTER],
+          options
+        ),
+      ],
+      // `--full` states the hosted scope in the argv instead of inheriting it
+      // from ambient `CI=true`, so a local replay scans the same repo-wide
+      // surface the required Lint Policy context does. Hosted runs are
+      // unchanged: `beep lint policy` already forces the full sweep under CI.
+      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
       nix: () => [
         QualityTaskStep.make({
           label: "ci:nix:flake-check",
@@ -816,7 +1041,7 @@ export const ciLaneStepsForTesting: {
         QualityTaskStep.make({
           label: "ci:property",
           command: "bunx",
-          args: ["turbo", "run", "test:property", ...turboShapeArgs(options)],
+          args: ["turbo", "run", "test:property", CI_LANE_TURBO_CONCURRENCY_ARG, ...turboShapeArgs(options)],
           cwd: repoRoot,
           env: {
             BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),
@@ -826,16 +1051,30 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       "repo-sanity": () => [
+        bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
         bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
         ...(options.changesetStatus
-          ? [bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", ["changeset:status:since-main"])]
+          ? [
+              // lab-apps-lifecycle P2 (ratified row 8): route CI's changeset
+              // gate through the path-aware wrapper so lab-only changes are
+              // exempt from changeset ceremony.
+              bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", [
+                "beep",
+                "quality",
+                "changeset-status",
+                "--since",
+                "origin/main",
+              ]),
+            ]
           : A.empty<QualityTaskStep>()),
       ],
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
       "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
-      "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", "--types"], options)],
+      "test-unit": () => [
+        turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", HOSTED_16GB_TURBO_CONCURRENCY_ARG], options),
+      ],
     })
 );
 
@@ -845,19 +1084,19 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(step.command, [...step.args], {
-        cwd: step.cwd,
-        env: step.env ?? {},
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
+  // Lane bodies that shell out to Turbo need the same env hygiene the root
+  // quality runner applies: no interactive TUI (it can leave a killed run's
+  // terminal in mouse-capture mode) and no unresolved `op://` token/team
+  // references leaking through as literal values on a workstation.
+  const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  return yield* runToExit({
+    command: step.command,
+    args: step.args,
+    cwd: step.cwd,
+    env: { ...envOverrides, ...(step.env ?? {}) },
+    extendEnv: turboEnvExtendsAmbient(step.command, step.args),
+    stdio: "inherit",
+  }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
 });
 
 const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
@@ -896,10 +1135,12 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
   yield* Effect.forEach(
     FALLOW_BLOCKING_LANES,
     Effect.fnUntraced(function* (lane) {
-      const reportPath = path.join(repoRoot, fallowReportPath(lane));
+      const reportPath = path.join(repoRoot, fallowReportPath(lane, false));
       const content = yield* fs.readFileString(reportPath).pipe(Effect.orElseSucceed(() => ""));
       if (Str.isEmpty(content)) {
-        return yield* CiCommandError.make({ message: `Missing or empty Fallow envelope: ${fallowReportPath(lane)}` });
+        return yield* CiCommandError.make({
+          message: `Missing or empty Fallow envelope: ${fallowReportPath(lane, false)}`,
+        });
       }
     }),
     { discard: true }
@@ -933,13 +1174,246 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
+const DOCTEST_WORKSPACE_PATHS = [
+  ":(glob)packages/**/package.json",
+  ":(glob)apps/**/package.json",
+  ":(glob)packages/**/src/**/*.ts",
+  ":(glob)packages/**/src/**/*.tsx",
+  ":(glob)apps/**/src/**/*.ts",
+  ":(glob)apps/**/src/**/*.tsx",
+] as const;
+
+const isDoctestPackageInput = (packageDir: string, file: string): boolean => {
+  const prefix = `${packageDir}/`;
+  if (!Str.startsWith(prefix)(file)) return false;
+  const relativePath = Str.slice(Str.length(prefix))(file);
+  return (
+    Str.startsWith("src/")(relativePath) ||
+    relativePath === "package.json" ||
+    relativePath === "docgen.json" ||
+    O.isSome(Str.match(/^tsconfig(?:\..*)?\.json$/u)(relativePath))
+  );
+};
+
+const packageDependencies = (manifest: {
+  readonly dependencies: O.Option<Readonly<Record<string, string>>>;
+  readonly devDependencies: O.Option<Readonly<Record<string, string>>>;
+  readonly peerDependencies: O.Option<Readonly<Record<string, string>>>;
+}): ReadonlyArray<string> =>
+  pipe(
+    [manifest.dependencies, manifest.devDependencies, manifest.peerDependencies],
+    A.flatMap(O.match({ onNone: A.empty<string>, onSome: R.keys })),
+    A.filter(Str.startsWith("@beep/")),
+    A.dedupe
+  );
+
+const expandDoctestDependents = (
+  changedPackageNames: HashSet.HashSet<string>,
+  workspaces: ReadonlyArray<readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]>
+): HashSet.HashSet<string> => {
+  let affected = changedPackageNames;
+  let priorSize = -1;
+  while (HashSet.size(affected) !== priorSize) {
+    priorSize = HashSet.size(affected);
+    affected = A.reduce(workspaces, affected, (selected, [name, , dependencies]) =>
+      A.some(dependencies, (dependency) => HashSet.has(selected, dependency)) ? HashSet.add(selected, name) : selected
+    );
+  }
+  return affected;
+};
+
+const byDoctestWorkspaceDirLengthDescending: Order.Order<
+  readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]
+> = Order.mapInput(Order.Number, ([, dir]) => -Str.length(dir));
+
+const resolveDeletedDoctestManifestRevision = Effect.fn("CiLane.resolveDeletedDoctestManifestRevision")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<string, never, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* runCaptured({
+    command: "git",
+    args: ["merge-base", base, "HEAD"],
+    cwd: repoRoot,
+    source: "stdout",
+    trim: true,
+  }).pipe(
+    Effect.map((result) =>
+      pipe(
+        result.output,
+        O.liftPredicate(Str.isNonEmpty),
+        O.filter(() => result.exitCode === 0),
+        O.getOrElse(() => base)
+      )
+    ),
+    Effect.orElseSucceed(() => base)
+  );
+});
+
+const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
+  repoRoot: string,
+  base: string,
+  head: string
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, CiLaneEnvironment> {
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["diff", "--name-only", `${base}...${head}`, "--", "packages", "apps"],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(CiCommandError.mapError("Failed to resolve affected Doctest source files."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({ message: `git diff for Doctest failed with exit code ${result.exitCode}.` });
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const changedPaths = pipe(
+    Str.split(/\r?\n/)(result.output),
+    A.map(normalizeSlashes),
+    A.filter(Str.isNonEmpty),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  if (A.isReadonlyArrayEmpty(changedPaths)) return A.empty<string>();
+
+  const trackedResult = yield* runCaptured({
+    command: "git",
+    args: ["ls-files", "--", ...DOCTEST_WORKSPACE_PATHS],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(CiCommandError.mapError("Failed to resolve Doctest workspace files."));
+  if (trackedResult.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `git ls-files for Doctest failed with exit code ${trackedResult.exitCode}.`,
+    });
+  }
+  const trackedPaths = pipe(
+    Str.split(/\r?\n/)(trackedResult.output),
+    A.map(normalizeSlashes),
+    A.filter(Str.isNonEmpty),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  const manifestPaths = A.filter(trackedPaths, Str.endsWith("/package.json"));
+  const workspaces = yield* Effect.forEach(manifestPaths, (manifestPath) =>
+    readPackageJsonFile(path.join(repoRoot, manifestPath)).pipe(
+      Effect.map(
+        (manifest) =>
+          [manifest.name, normalizeSlashes(path.dirname(manifestPath)), packageDependencies(manifest)] as const
+      ),
+      CiCommandError.mapError(`Failed to read Doctest workspace manifest ${manifestPath}.`)
+    )
+  );
+  const orderedWorkspaces = A.sort(workspaces, byDoctestWorkspaceDirLengthDescending);
+  const changedManifestPaths = A.filter(changedPaths, Str.endsWith("/package.json"));
+  const deletedPackageDirs = A.map(changedManifestPaths, path.dirname);
+  const deletedManifestPaths = A.filter(
+    changedManifestPaths,
+    (manifestPath) => !A.contains(manifestPaths, manifestPath)
+  );
+  const deletedManifestRevision = yield* pipe(
+    deletedManifestPaths,
+    A.match({
+      onEmpty: () => Effect.succeed(base),
+      onNonEmpty: () => resolveDeletedDoctestManifestRevision(repoRoot, base),
+    })
+  );
+  const deletedPackageNames = yield* Effect.forEach(deletedManifestPaths, (manifestPath) =>
+    runCaptured({
+      command: "git",
+      args: ["show", `${deletedManifestRevision}:${manifestPath}`],
+      cwd: repoRoot,
+      source: "stdout",
+    }).pipe(
+      CiCommandError.mapError(`Failed to read deleted Doctest workspace manifest ${manifestPath}.`),
+      Effect.flatMap((baseManifestResult) => {
+        if (baseManifestResult.exitCode !== 0) {
+          return Console.log(
+            `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (git show exited ${baseManifestResult.exitCode})`
+          ).pipe(Effect.as(O.none<string>()));
+        }
+        return Unknown.decodeUnknownEffectFromJsonString(baseManifestResult.output).pipe(
+          Effect.flatMap(decodePackageJsonEffect),
+          Effect.map((manifest) => O.some(manifest.name)),
+          Effect.catch(() =>
+            Console.log(
+              `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (base content did not decode)`
+            ).pipe(Effect.as(O.none<string>()))
+          )
+        );
+      })
+    )
+  ).pipe(Effect.map(A.getSomes));
+  const changedPackageNames = HashSet.fromIterable(
+    A.appendAll(
+      A.flatMap(changedPaths, (file) => {
+        const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
+        const deletedPackageOwner = pipe(
+          orderedWorkspaces,
+          A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
+          O.filter(() =>
+            A.some(
+              deletedPackageDirs,
+              (deletedPackageDir) =>
+                file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
+            )
+          )
+        );
+        return pipe(
+          directOwner,
+          O.orElse(() => deletedPackageOwner),
+          O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
+        );
+      }),
+      deletedPackageNames
+    )
+  );
+  const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
+  const affectedPackageDirs = pipe(
+    workspaces,
+    A.filter(([name]) => HashSet.has(affectedPackageNames, name)),
+    A.map(([, packageDir]) => packageDir)
+  );
+  const directlyChangedSources = A.filter(changedPaths, isDoctestSourcePath);
+  const packageSources = pipe(
+    trackedPaths,
+    A.filter(isDoctestSourcePath),
+    A.filter((file) => A.some(affectedPackageDirs, (packageDir) => Str.startsWith(`${packageDir}/src/`)(file)))
+  );
+  const candidates = pipe(A.appendAll(directlyChangedSources, packageSources), A.dedupe, A.sort(Order.String));
+  const existingCandidates = yield* Effect.filter(candidates, (file) =>
+    fs
+      .exists(path.join(repoRoot, file))
+      .pipe(CiCommandError.mapError(`Failed to inspect affected Doctest path ${file}.`))
+  );
+  return yield* Effect.filter(existingCandidates, (file) =>
+    fs
+      .readFileString(path.join(repoRoot, file))
+      .pipe(Effect.map(Str.includes("import.meta.vitest")), Effect.orElseSucceed(thunkFalse))
+  );
+});
+
+const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
+  repoRoot: string,
+  options: CiLaneRunOptions
+): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
+  const files = yield* DocgenLaneMode.$match(options.mode, {
+    none: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
+    affected: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
+    full: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
+  });
+  const steps =
+    options.mode === "none" ? A.empty<QualityTaskStep>() : doctestStepForTesting(repoRoot, O.getOrUndefined(files));
+  if (A.isReadonlyArrayEmpty(steps)) {
+    yield* Console.log("[ci] doctest: no marked affected source files (skipped)");
+    return;
+  }
+  yield* runQualityTaskStreamingStepGroup("ci:doctest", steps);
+});
+
 /**
  * Run a CI lane body exactly as hosted CI would.
  *
- * @param laneId - CI lane to run.
- * @param options - Lane shape options (affected/base/mode/range flags).
- * @returns Effect that fails when the lane's verdict is red.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
  * import { Effect } from "effect"
@@ -957,6 +1431,10 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
  * }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param laneId - CI lane to run.
+ * @param options - Lane shape options (affected/base/mode/range flags).
+ * @returns Effect that fails when the lane's verdict is red.
  * @category use-cases
  * @since 0.0.0
  */
@@ -968,6 +1446,7 @@ export const runCiLane = Effect.fn("CiLane.runCiLane")(function* (
 
   yield* pipe(
     Match.value(laneId),
+    Match.when("doctest", () => runCiDoctestLane(repoRoot, options)),
     Match.when("fallow", () => runCiFallowLane(repoRoot, options)),
     Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, options))
   );
@@ -996,7 +1475,8 @@ const reportCiCommandError = (error: CiCommandError) =>
 /**
  * `beep ci lane` command: run one CI lane body or list the lane inventory.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { ciLaneCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
@@ -1005,6 +1485,7 @@ const reportCiCommandError = (error: CiCommandError) =>
  * const run = Command.run(ciLaneCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -1012,6 +1493,7 @@ export const ciLaneCommand = Command.make(
   "lane",
   {
     affected: Flag.boolean("affected").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Run the turbo-backed lane in CI's --affected pull-request shape")
     ),
     base: Flag.string("base").pipe(
@@ -1020,6 +1502,7 @@ export const ciLaneCommand = Command.make(
     ),
     head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
     summarize: Flag.boolean("summarize").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Pass --summarize to the turbo-backed lane (CI always does)")
     ),
     mode: Flag.choiceWithValue("mode", docgenModeFlagChoices).pipe(
@@ -1028,11 +1511,16 @@ export const ciLaneCommand = Command.make(
     ),
     from: Flag.string("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
     to: Flag.string("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
-    last: Flag.boolean("last").pipe(Flag.withDescription("Lint only the last commit (commitlint --last)")),
+    last: Flag.boolean("last").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Lint only the last commit (commitlint --last)")
+    ),
     changesetStatus: Flag.boolean("changeset-status").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Also run the changeset status check (CI passes this on pull requests)")
     ),
     validateEnvelopes: Flag.boolean("validate-envelopes").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
     ),
     runs: Flag.string("runs").pipe(
@@ -1043,7 +1531,14 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(DEFAULT_PROPERTY_LANE_SEED),
       Flag.withDescription("BEEP_FC_SEED for the property lane; a fixed seed makes local and CI test identical inputs")
     ),
-    list: Flag.boolean("list").pipe(Flag.withDescription("Print the machine-readable lane inventory and exit")),
+    filter: Flag.string("filter").pipe(
+      Flag.withDescription("Pass one package filter to the Turbo invocation inside the selected lane"),
+      Flag.optional
+    ),
+    list: Flag.boolean("list").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the machine-readable lane inventory and exit")
+    ),
     lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
@@ -1053,6 +1548,7 @@ export const ciLaneCommand = Command.make(
     affected,
     base,
     changesetStatus,
+    filter,
     from,
     head,
     lane,
@@ -1071,7 +1567,7 @@ export const ciLaneCommand = Command.make(
       head,
       summarize,
       mode,
-      ...O.getSomesStruct({ from }),
+      ...O.getSomesStruct({ filter, from }),
       to,
       last,
       changesetStatus,
@@ -1108,9 +1604,12 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "security",
   "build",
   "test-unit",
+  "ecosystem",
+  "labs",
   "test-integration",
   "property",
   "docgen",
+  "doctest",
   "coverage",
   "desktop-ipc",
   "fallow",
@@ -1150,30 +1649,26 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
 const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
   repoRoot: string
 ): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("git", ["branch", "--show-current"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      yield* handle.exitCode;
-      return Str.trim(output);
-    })
-  ).pipe(CiCommandError.mapError("Failed to resolve the current git branch."));
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["branch", "--show-current"],
+    cwd: repoRoot,
+    source: "stdout",
+    trim: true,
+  }).pipe(CiCommandError.mapError("Failed to resolve the current git branch."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `git branch --show-current failed with exit code ${result.exitCode}.`,
+    });
+  }
+  return result.output;
 });
 
 /**
  * Resolved shape for planning the local battery's lane dispatch steps.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLocalStepPlan } from "@beep/repo-cli/commands/Ci"
  *
@@ -1184,6 +1679,7 @@ const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
  * })
  * console.log(plan.base)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1200,39 +1696,86 @@ export class CiLocalStepPlan extends S.Class<CiLocalStepPlan>($I`CiLocalStepPlan
 
 const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArray<string> => {
   const affectedFlags = plan.affected ? ["--affected", "--base", plan.base] : A.empty<string>();
+  // check.yml gives every Turbo-backed matrix lane `--summarize` as well as the
+  // affected shape. It only writes gitignored `.turbo/runs/*.json` receipts, so
+  // replaying it locally costs nothing and keeps the dispatched argv identical
+  // to the hosted one.
+  const turboShapeFlags = [...affectedFlags, "--summarize"];
 
   return CiLaneId.$match(laneId, {
     build: A.empty<string>,
-    check: () => affectedFlags,
+    check: () => turboShapeFlags,
     codegen: A.empty<string>,
     commitlint: () => ["--from", plan.base],
-    coverage: () => affectedFlags,
+    coverage: () => turboShapeFlags,
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    doctest: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
     knip: A.empty<string>,
-    lint: () => affectedFlags,
+    labs: A.empty<string>,
+    lint: () => turboShapeFlags,
     "lint-policy": A.empty<string>,
     nix: A.empty<string>,
-    property: () => affectedFlags,
+    property: () => turboShapeFlags,
     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
-    "test-integration": () => affectedFlags,
-    "test-unit": () => affectedFlags,
+    "test-integration": () => turboShapeFlags,
+    "test-unit": () => turboShapeFlags,
   });
 };
 
 /**
+ * Build the `beep ci lane <id>` dispatch step for one lane.
+ *
+ * **Details**
+ *
+ * This is the single source of the argv every local replay of a hosted lane
+ * runs — the local CI battery and Yeet's pre-push proof both dispatch through
+ * it, so neither can drift into a cousin root command that only approximates
+ * the hosted body (ship-velocity B1). Callers own the label because failure
+ * attribution keys on it.
+ *
+ * **Example** (Dispatch the affected check lane)
+ *
+ * ```ts
+ * import { CiLocalStepPlan, ciLaneDispatchStep } from "@beep/repo-cli/commands/Ci"
+ *
+ * const plan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false })
+ * console.log(ciLaneDispatchStep("/repo", "quality:check", "check", plan).args)
+ * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param label - Lane label used for failure attribution.
+ * @param laneId - CI lane to dispatch.
+ * @param plan - Resolved local battery shape.
+ * @returns The planned `beep ci lane` dispatch step.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ciLaneDispatchStep: {
+  (repoRoot: string, label: string, laneId: CiLaneId, plan: CiLocalStepPlan): QualityTaskStep;
+  (label: string, laneId: CiLaneId, plan: CiLocalStepPlan): (repoRoot: string) => QualityTaskStep;
+} = dual(
+  4,
+  (repoRoot: string, label: string, laneId: CiLaneId, plan: CiLocalStepPlan): QualityTaskStep =>
+    QualityTaskStep.make({
+      label,
+      command: "bun",
+      args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
+      cwd: repoRoot,
+    })
+);
+
+/**
  * Build the local battery step plan. Exposed for focused unit tests.
  *
- * @param repoRoot - Repository root used as every subprocess working directory.
- * @param selection - Lanes to run, in order.
- * @param plan - Resolved local battery shape.
- * @returns One `beep ci lane` dispatch step per selected lane.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { CiLocalStepPlan, ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
@@ -1244,6 +1787,11 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
  * )
  * console.log(A.map(steps, (step) => step.label))
  * ```
+ *
+ * @param repoRoot - Repository root used as every subprocess working directory.
+ * @param selection - Lanes to run, in order.
+ * @param plan - Resolved local battery shape.
+ * @returns One `beep ci lane` dispatch step per selected lane.
  * @category testing
  * @since 0.0.0
  */
@@ -1253,22 +1801,14 @@ export const ciLocalStepsForTesting: {
 } = dual(
   3,
   (repoRoot: string, selection: ReadonlyArray<CiLaneId>, plan: CiLocalStepPlan): ReadonlyArray<QualityTaskStep> =>
-    A.map(selection, (laneId) =>
-      QualityTaskStep.make({
-        label: `ci:local:${laneId}`,
-        command: "bun",
-        args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
-        cwd: repoRoot,
-      })
-    )
+    A.map(selection, (laneId) => ciLaneDispatchStep(repoRoot, `ci:local:${laneId}`, laneId, plan))
 );
 
 /**
  * Run the faithful local CI battery: every locally-runnable check.yml lane.
  *
- * @param options - Local battery options (lane selection, fast preset, shape).
- * @returns Effect that fails when any selected lane's verdict is red.
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { runCiLocal } from "@beep/repo-cli/commands/Ci"
  * import { Effect } from "effect"
@@ -1282,6 +1822,9 @@ export const ciLocalStepsForTesting: {
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * @param options - Local battery options (lane selection, fast preset, shape).
+ * @returns Effect that fails when any selected lane's verdict is red.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1307,7 +1850,8 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
 /**
  * `beep ci local` command: replay the locally-runnable CI battery.
  *
- * @example
+ * **Example** (Configure a CI lane)
+ *
  * ```ts
  * import { ciLocalCommand } from "@beep/repo-cli/commands/Ci"
  * import { Command } from "effect/unstable/cli"
@@ -1316,6 +1860,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
  * const run = Command.run(ciLocalCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -1323,13 +1868,17 @@ export const ciLocalCommand = Command.make(
   "local",
   {
     affected: Flag.boolean("affected").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Replay CI's pull-request --affected shape instead of full runs")
     ),
     base: Flag.string("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
     ),
-    fast: Flag.boolean("fast").pipe(Flag.withDescription("Skip the slow lanes: coverage, test-integration, nix")),
+    fast: Flag.boolean("fast").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Skip the slow lanes: coverage, test-integration, nix")
+    ),
     lanes: Flag.string("lanes").pipe(
       Flag.withDescription("Comma-separated lane ids to run (default: the full battery)"),
       Flag.optional

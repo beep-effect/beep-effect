@@ -22,7 +22,31 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
   },
 });
 
-const initialVendorChunkGroups = [
+// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
+// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
+// fallow-ignore-next-line code-duplication -- composition-root plugin mirrors Storybook's .ts-to-.tsx resolver by design
+const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
+  name: "beep:resolve-uniform-typescript-source-specifiers",
+  enforce: "pre",
+  resolveId(source, importer, options) {
+    if (importer === undefined || !source.startsWith(".") || !source.endsWith(".ts")) {
+      return null;
+    }
+
+    return this.resolve(source, importer, { ...options, skipSelf: true }).then((exactSource) =>
+      exactSource === null
+        ? this.resolve(source.replace(/\.ts$/, ".tsx"), importer, { ...options, skipSelf: true })
+        : exactSource
+    );
+  },
+});
+
+const initialChunkGroups = [
+  {
+    name: "iana-media-types",
+    test: /packages[\\/]foundation[\\/]primitive[\\/]data[\\/]src[\\/]generated[\\/]iana-media-types\.ts$/,
+    priority: 60,
+  },
   { name: "react-vendor", test: /node_modules[\\/](react|react-dom)[\\/]/, priority: 50 },
   { name: "mui-vendor", test: /node_modules[\\/](@mui|@emotion)[\\/]/, priority: 45 },
   { name: "effect-vendor", test: /node_modules[\\/]effect[\\/]/, priority: 40 },
@@ -32,11 +56,12 @@ const initialVendorChunkGroups = [
     test: /node_modules[\\/](sonner|tailwind-merge|clsx|class-variance-authority|@base-ui|@phosphor-icons)[\\/]/,
     priority: 30,
   },
+  { name: "pretext-vendor", test: /node_modules[\\/]@chenglou[\\/]pretext[\\/]/, priority: 25 },
 ];
 
 export default defineConfig({
   clearScreen: false,
-  plugins: [stripMisplacedLexicalPureAnnotations(), react()],
+  plugins: [resolveUniformTypeScriptSourceSpecifiers(), stripMisplacedLexicalPureAnnotations(), react()],
   optimizeDeps: {
     // @cosmos.gl/graph imports CJS/UMD deps that need explicit handling:
     // keep cosmos itself un-prebundled, interop-wrap seedrandom, and route
@@ -45,14 +70,21 @@ export default defineConfig({
     // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
     // initialize or prebundle it if a future webview path imports the package.
     exclude: ["@cosmos.gl/graph", "oxigraph"],
-    include: ["seedrandom"],
+    // three is only reached through @beep/graph-3d's lazy import on the first
+    // 3D-toggle; without pre-bundling, Vite discovers it mid-session,
+    // re-optimizes, and the stale hashed chunk URL 404s ("Failed to fetch
+    // dynamically imported module: .../.vite/deps/three.js").
+    include: ["seedrandom", "three", "three/addons/controls/TrackballControls.js"],
   },
   build: {
-    chunkSizeWarningLimit: 650,
+    // Three.js and Mermaid's generated parser each ship as one irreducible
+    // upstream module. Keep the cap just above those modules while splitting
+    // our generated IANA data out of the application entry chunk below.
+    chunkSizeWarningLimit: 750,
     rolldownOptions: {
       output: {
         codeSplitting: {
-          groups: initialVendorChunkGroups,
+          groups: initialChunkGroups,
         },
       },
     },
@@ -71,8 +103,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 1421,
-    strictPort: true,
+    // Port and strictPort come from the portless-wrapped `dev` script
+    // (`--port "${PORT:-1421}" --strictPort`): portless assigns PORT for the
+    // named route, and the 1421 fallback keeps the PORTLESS=0 diagnostic
+    // bypass on the port tauri and the ontology MCP allowlist already accept.
     proxy: {
       // Same-origin rpc: the vite dev server is the single origin, so the
       // webview's `/rpc` calls (see @beep/agents-client Chat.atoms.ts SERVER_URL)
@@ -91,6 +125,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/otlp/, ""),
       },
+    },
+    // Cargo can materialize tens of thousands of generated files under target.
+    // They never affect the web bundle and exhausting inotify there prevents the
+    // canonical portless dev server from starting.
+    watch: {
+      ignored: ["**/src-tauri/target/**"],
     },
   },
   envPrefix: ["VITE_", "TAURI_"],

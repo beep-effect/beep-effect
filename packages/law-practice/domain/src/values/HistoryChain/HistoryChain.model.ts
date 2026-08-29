@@ -7,21 +7,22 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { HistoryLink } from "../HistoryLink/index.js";
+import { HistoryLink } from "../HistoryLink/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/HistoryChain/HistoryChain.model");
 
 /**
  * A subsequent-history chain (#849), ordered root → latest.
  *
+ * **Details**
+ *
  * Built after citation ids are assigned and attached (shared) to every member,
  * the chain references its members by stable {@link CitationId} so it survives
  * filter/sort/map of the result array. Each entry is a {@link HistoryLink}
  * pairing a member id with the history signal connecting it to the next.
  *
- * **Example**
+ * **Example** (Empty chain construction)
  *
- * @example
  * ```ts
  * import { HistoryChain } from "@beep/law-practice-domain"
  *
@@ -47,7 +48,8 @@ export class HistoryChain extends S.Class<HistoryChain>($I`HistoryChain`)(
 /**
  * Companion namespace for `HistoryChain`.
  *
- * @example
+ * **Example** (Encoded links type access)
+ *
  * ```ts
  * import type { HistoryChain } from "@beep/law-practice-domain"
  *
@@ -62,9 +64,8 @@ export declare namespace HistoryChain {
   /**
    * Wire-encoded representation of a decoded {@link HistoryChain}.
    *
-   * **Example**
+   * **Example** (Encoded wire type alias)
    *
-   * @example
    * ```ts
    * import type { HistoryChain } from "@beep/law-practice-domain"
    *

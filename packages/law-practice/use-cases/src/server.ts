@@ -9,7 +9,8 @@
 /**
  * IR-to-law mapping service contract exports.
  *
- * @example
+ * **Example** (Verify IrToLaw factory export)
+ *
  * ```ts
  * import * as IrToLaw from "@beep/law-practice-use-cases/IrToLaw"
  *
@@ -19,11 +20,12 @@
  * @category services
  * @since 0.0.0
  */
-export * as IrToLaw from "./IrToLaw/index.js";
+export * as IrToLaw from "./IrToLaw/index.ts";
 /**
  * Office-action review loop service contract exports.
  *
- * @example
+ * **Example** (Verify review factory export)
+ *
  * ```ts
  * import * as OfficeActionReview from "@beep/law-practice-use-cases/OfficeActionReview"
  *
@@ -33,4 +35,26 @@ export * as IrToLaw from "./IrToLaw/index.js";
  * @category services
  * @since 0.0.0
  */
-export * as OfficeActionReview from "./OfficeActionReview/index.js";
+export * as OfficeActionReview from "./OfficeActionReview/index.ts";
+/**
+ * Practice knowledge-graph MCP declaration exports.
+ *
+ * **Example** (Count practice KG tools)
+ *
+ * ```ts
+ * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(Object.keys(PracticeKgToolkit.tools).length) // 9
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export * from "./PracticeKg.tools.ts";
+/**
+ * Canonical toolkit composers.
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export * from "./Tools.ts";

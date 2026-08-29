@@ -1,0 +1,179 @@
+[
+  {
+    "op": "replace",
+    "path": "/paths/~1pods~1{podId}~1update/post/operationId",
+    "value": "UpdatePodViaPost"
+  },
+  {
+    "op": "replace",
+    "path": "/paths/~1endpoints~1{endpointId}~1update/post/operationId",
+    "value": "UpdateEndpointViaPost"
+  },
+  {
+    "op": "replace",
+    "path": "/paths/~1templates~1{templateId}~1update/post/operationId",
+    "value": "UpdateTemplateViaPost"
+  },
+  {
+    "op": "replace",
+    "path": "/paths/~1networkvolumes~1{networkVolumeId}~1update/post/operationId",
+    "value": "UpdateNetworkVolumeViaPost"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodUpdateInput/properties/ports/default"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/ports/default"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/TemplateCreateInput/properties/ports/default"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/TemplateUpdateInput/properties/ports/default"
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/Pod/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/PodUpdateInput/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/PodCreateInput/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/Template/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/TemplateCreateInput/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/TemplateUpdateInput/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/components/schemas/Endpoint/properties/env/additionalProperties",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/cpuFlavorIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/cpuFlavorPriority/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/dataCenterPriority/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/PodCreateInput/properties/gpuTypePriority/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/Endpoint/properties/minCudaVersion/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/cpuFlavorIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointUpdateInput/properties/minCudaVersion/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/allowedCudaVersions/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/cpuFlavorIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/dataCenterIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/gpuTypeIds/items/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/EndpointCreateInput/properties/minCudaVersion/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/CudaVersions/enum"
+  },
+  {
+    "op": "remove",
+    "path": "/components/schemas/GPUTypeId/enum"
+  }
+]

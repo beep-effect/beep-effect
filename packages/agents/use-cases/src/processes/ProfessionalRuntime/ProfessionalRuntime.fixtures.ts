@@ -6,12 +6,13 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
+import { PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.js";
-import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.js";
-import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
+import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.ts";
+import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
 // cspell:words Priya Raman
 
@@ -64,7 +65,8 @@ class RuntimeFixtureSeedInput extends S.Class<RuntimeFixtureSeedInput>($I`Runtim
 /**
  * Parsed fixture inputs for one runtime data-loop scenario.
  *
- * @example
+ * **Example** (Make RuntimeFixtureInput with seed)
+ *
  * ```ts
  * import { RuntimeFixtureInput } from "@beep/agents-use-cases/proof"
  *
@@ -77,6 +79,7 @@ class RuntimeFixtureSeedInput extends S.Class<RuntimeFixtureSeedInput>($I`Runtim
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",
@@ -94,6 +97,9 @@ export class RuntimeFixtureInput extends S.Class<RuntimeFixtureInput>($I`Runtime
   {
     body: S.String,
     email: RuntimeFixtureEmailInput,
+    promotionSubjects: S.NonEmptyArray(PromotionSubjectRef).annotateKey({
+      description: "Trusted product subjects bound to the deterministic fixture output by its host.",
+    }),
     seed: RuntimeFixtureSeedInput,
   },
   $I.annote("RuntimeFixtureInput", {
@@ -694,12 +700,14 @@ const fixtureRunnerForScenario: (
 /**
  * Run one deterministic runtime data-loop fixture.
  *
- * @remarks
+ * **Details**
+ *
  * Dispatches by `input.email.scenarioId`, verifies that seed and email
  * scenario ids match, and checks that the fixture body contains every source
  * span required by the selected scenario.
  *
- * @example
+ * **Example** (Run multi-span law fixture)
+ *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { Effect } from "effect"
@@ -718,6 +726,7 @@ const fixtureRunnerForScenario: (
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",
@@ -734,7 +743,6 @@ const fixtureRunnerForScenario: (
  * storage, or model services are required. Fails with
  * {@link ProfessionalRuntimeValidationError} for unknown scenarios, mismatched
  * scenario ids, or missing source-span markers.
- *
  * @category testing
  * @since 0.0.0
  */

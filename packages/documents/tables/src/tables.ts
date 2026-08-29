@@ -6,10 +6,10 @@
  * @since 0.0.0
  */
 
-import * as SyncConflict from "./entities/SyncConflict/index.js";
-import * as SyncCursor from "./entities/SyncCursor/index.js";
-import * as SyncItem from "./entities/SyncItem/index.js";
-import * as SyncOperation from "./entities/SyncOperation/index.js";
+import * as SyncConflict from "./entities/SyncConflict/index.ts";
+import * as SyncCursor from "./entities/SyncCursor/index.ts";
+import * as SyncItem from "./entities/SyncItem/index.ts";
+import * as SyncOperation from "./entities/SyncOperation/index.ts";
 
 type DbSchemaShape = {
   readonly syncConflict: typeof SyncConflict.syncConflictTable;
@@ -21,13 +21,14 @@ type DbSchemaShape = {
 /**
  * Drizzle schema object containing the documents sync-state table projections.
  *
- * @example
+ * **Example** (Validate sync table names)
+ *
  * ```ts
  * import { DbSchema } from "@beep/documents-tables/tables"
  * import { getTableName } from "drizzle-orm"
  *
  * const syncItemTableName = getTableName(DbSchema.syncItem)
- * const syncOperationTableName = DbSchema.syncOperation.definition.tableName
+ * const syncOperationTableName = getTableName(DbSchema.syncOperation)
  * if (syncItemTableName !== "documents_sync_item" || syncOperationTableName !== "documents_sync_operation") {
  *   throw new Error("unexpected documents schema")
  * }
@@ -48,12 +49,14 @@ export const DbSchema: DbSchemaShape = {
 /**
  * Type-level view of the documents Drizzle schema object.
  *
- * @example
+ * **Example** (Type-safe schema assignment)
+ *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/documents-tables/tables"
+ * import { getTableName } from "drizzle-orm"
  *
  * const schema: DbSchemaType = DbSchema
- * const syncCursorTableName: "documents_sync_cursor" = schema.syncCursor.definition.tableName
+ * const syncCursorTableName = getTableName(schema.syncCursor)
  *
  * console.log(syncCursorTableName)
  * ```

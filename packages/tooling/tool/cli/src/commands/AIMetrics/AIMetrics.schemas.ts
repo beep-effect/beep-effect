@@ -14,9 +14,8 @@
 export {
   defaultP7MirrorRemoteRoot,
   defaultP7MirrorSshHost,
-  localCollectorDataRoot,
   p7MirrorConfirmToken,
   p7MirrorRawArchiveTable,
   p7MirrorSchemaVersion,
   p7RetentionConfirmToken,
-} from "./internal/Programs.js";
+} from "./internal/Programs.ts";

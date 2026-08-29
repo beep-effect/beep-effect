@@ -63,11 +63,14 @@ class NGramsSuccess extends S.Class<NGramsSuccess>($I`NGramsSuccess`)(
  * Defines the agent-facing tool contract for extracting fixed-size character
  * n-grams from text.
  *
+ * **Details**
+ *
  * Use this tool when a workflow needs repeatable shingles, top-frequency
  * n-grams, or bag-style n-gram features for downstream matching.
  *
- * @example
- * ```ts
+ * **Example** (Decode bag n-gram parameters)
+ *
+ * ```ts import.meta.vitest name="Decode bag n-gram parameters"
  * import * as S from "effect/Schema"
  * import { NGrams } from "@beep/nlp-processing/Tools/NGrams"
  *

@@ -1,0 +1,81 @@
+diff --git a/standards/ARCHITECTURE.md b/standards/ARCHITECTURE.md
+index e6146471f9..478d7e1081 100644
+--- a/standards/ARCHITECTURE.md
++++ b/standards/ARCHITECTURE.md
+@@ -65,6 +65,11 @@ API, root `src/index.ts`, package exports, or docgen surface. Runtime proof apps
+ package-like when the app exists to prove a runtime contract from a public
+ workspace API.
+ 
++Law-abiding experimental apps live under `apps/labs/*`: they are
++production-shaped, durable while useful, and mechanically deletable without
++per-app shared-registration edits. They obey
++[14-lab-apps.md](architecture/14-lab-apps.md).
++
+ The core vocabulary is deliberately small at the entry point: slice, domain,
+ use-cases, adapter, driver, shared kernel, foundation, config contract, Layer,
+ and canonical subpath name. More specialized terms remain canonical, but use the
+diff --git a/standards/architecture/DECISIONS.md b/standards/architecture/DECISIONS.md
+index d333663122..c33c0655e5 100644
+--- a/standards/architecture/DECISIONS.md
++++ b/standards/architecture/DECISIONS.md
+@@ -1345,6 +1345,39 @@ fixture acceptance implementation and no production acceptance composition
+ root; promotion therefore proves that existing boundary and the fail-closed
+ vertical adapter without claiming live product protection.
+ 
++## 2026-08-13: Establish `apps/labs/*` And Zero-Root-Churn Lab Registration
++
++- **Status:** Draft
++
++Decision:
++
++Law-abiding experimental applications live under `apps/labs/*`. Labs are
++private executable workspaces, not a fifth non-slice family, architecture role,
++Scratchpad sublane, or feature-flag experiment. They obey the full code law and
++are exempt only from package ceremony through one-time path-scoped rules.
++
++The labs root uses zero-root-churn registration: one workspace glob and one set
++of gate scopes replace per-lab workspace, changeset, coverage, docgen,
++Storybook, and CI rows. Registration geometry is the single declared surface
++set interpreted forward by create-package, inversely by delete-package, and as
++declared-versus-actual probes by doctor. Root TypeScript solution references
++exclude labs; package-local checks and a visible non-required labs lane own
++their typechecking. Lab identity composers remain real package composers in a
++mechanically generated labs segment. Labs never publish `@beep/*` APIs, add
++tables to `packages/*/tables`, or become dependencies of product slices.
++
++Rationale:
++
++The architecture north star already requires experiments to be easy to create,
++easy to delete, and production-shaped. Scratchpad makes creation cheap by
++relaxing laws; ordinary apps preserve laws but accumulate shared registration
++and deletion ceremony. The labs convention combines full code-law fidelity
++with path-derived ceremony exemption, while registration geometry makes
++deletion completeness testable instead of relying on a parallel hand-written
++checklist. Keeping the CI lane non-required prevents a stale lab from blocking
++unrelated upstream work, while requiring the lab's own PR to pass preserves the
++claim that it is a faithful proving ground.
++
+ ## Known Unknowns
+ 
+ Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
+diff --git a/standards/architecture/GLOSSARY.md b/standards/architecture/GLOSSARY.md
+index 21ccb61d7b..1be69fe0b1 100644
+--- a/standards/architecture/GLOSSARY.md
++++ b/standards/architecture/GLOSSARY.md
+@@ -224,6 +224,16 @@ A technical failure that should be logged, traced, retried, or translated at a
+ boundary, but should not directly drive product behavior in domain/use-case
+ code.
+ 
++## Lab App
++
++A private, law-abiding experimental application under `apps/labs/*`. A lab app
++is production-shaped and durable while useful, but path-scoped out of package
++ceremony so create and delete do not accumulate per-app shared configuration.
++It is not a doctrine-11 feature-flag experiment inside a product runtime, and it
++is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
++package surfaces must not import a lab app; promotion moves earned work into its
++lawful durable home.
++
+ ## Modeling Package
+ 
+ A `foundation` kind for reusable schemas, brands, identity contracts, and

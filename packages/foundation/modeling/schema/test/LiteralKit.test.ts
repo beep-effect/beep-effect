@@ -7,14 +7,17 @@ import {
   LiteralKitKeyCollisionError,
   LiteralNotInSetError,
 } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { describe, expect, it } from "@effect/vitest";
+import * as Eq from "effect/Equal";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const createRuntimeLiteralKit = (
   literals: ReadonlyArray<unknown>,
   enumMapping: ReadonlyArray<readonly [unknown, string]>
-): unknown => Function.prototype.apply.call(LiteralKit, undefined, [literals, enumMapping]);
+): unknown => Function.prototype.apply.call(LiteralKit, undefined, [{ literals, enumMapping }]);
 
 describe("LiteralKit", () => {
   const Status = LiteralKit([1, 20n, true, false, "hello"]);
@@ -23,8 +26,21 @@ describe("LiteralKit", () => {
     expect(Status.Options).toEqual([1, 20n, true, false, "hello"]);
   });
 
+  it("exposes an Effect HashSet derived from Options", () => {
+    expect(HashSet.isHashSet(Status.HashSet)).toBe(true);
+    expect(Eq.equals(Status.HashSet, HashSet.fromIterable(Status.Options))).toBe(true);
+  });
+
+  it("preserves HashSet through annotation and static reattachment", () => {
+    const Annotated = Status.annotate({ title: "Annotated status" });
+    const Reattached = S.Literals(Status.Options).pipe(SchemaUtils.withLiteralKitStatics(Status));
+
+    expect(Annotated.HashSet).toBe(Status.HashSet);
+    expect(Reattached.HashSet).toBe(Status.HashSet);
+  });
+
   it("round-trips schema-derived literal samples", () => {
-    const arbitrary = S.toArbitrary(Status);
+    const arbitrary = S.toArbitrary(Status)(fc);
     const decode = S.decodeUnknownSync(Status);
     const encode = S.encodeSync(Status);
 
@@ -61,11 +77,15 @@ describe("LiteralKit", () => {
 
   it("defines helper properties as readonly and non-configurable", () => {
     const enumDescriptor = Object.getOwnPropertyDescriptor(Status, "Enum");
+    const hashSetDescriptor = Object.getOwnPropertyDescriptor(Status, "HashSet");
     const matchDescriptor = Object.getOwnPropertyDescriptor(Status, "$match");
 
     expect(enumDescriptor?.enumerable).toBe(true);
     expect(enumDescriptor?.writable).toBe(false);
     expect(enumDescriptor?.configurable).toBe(false);
+    expect(hashSetDescriptor?.enumerable).toBe(true);
+    expect(hashSetDescriptor?.writable).toBe(false);
+    expect(hashSetDescriptor?.configurable).toBe(false);
     expect(matchDescriptor?.writable).toBe(false);
     expect(matchDescriptor?.configurable).toBe(false);
   });
@@ -199,13 +219,13 @@ describe("LiteralKit (string-only)", () => {
 });
 
 describe("LiteralKit (manual Enum mapping)", () => {
-  const Status = LiteralKit(
-    ["one", "two"],
-    [
+  const Status = LiteralKit({
+    literals: ["one", "two"],
+    enumMapping: [
       ["one", "ONE"],
       ["two", "TWO"],
-    ]
-  );
+    ],
+  });
 
   it("maps Enum keys from the provided manual names", () => {
     expect(Status.Enum.ONE).toBe("one");
@@ -238,13 +258,13 @@ describe("LiteralKit (manual Enum mapping)", () => {
   });
 
   it("uses mapped keys for branded string helper objects", () => {
-    const RepoPkg = LiteralKit(
-      [$RepoCliId.identifier, $SchemaId.identifier],
-      [
+    const RepoPkg = LiteralKit({
+      literals: [$RepoCliId.identifier, $SchemaId.identifier],
+      enumMapping: [
         [$RepoCliId.identifier, "@beep/repo-cli"],
         [$SchemaId.identifier, "@beep/schema"],
-      ]
-    );
+      ],
+    });
 
     expect(RepoPkg.Enum["@beep/repo-cli"]).toBe("@beep/repo-cli");
     expect(RepoPkg.thunk["@beep/repo-cli"]()).toBe("@beep/repo-cli");
@@ -278,14 +298,14 @@ describe("LiteralKit (manual Enum mapping)", () => {
   });
 
   it("supports mixed source literal types", () => {
-    const Mixed = LiteralKit(
-      [1, true, "two"],
-      [
+    const Mixed = LiteralKit({
+      literals: [1, true, "two"],
+      enumMapping: [
         [1, "ONE"],
         [true, "TRUE"],
         ["two", "TWO"],
-      ]
-    );
+      ],
+    });
 
     expect(Mixed.Enum.ONE).toBe(1);
     expect(Mixed.Enum.TRUE).toBe(true);

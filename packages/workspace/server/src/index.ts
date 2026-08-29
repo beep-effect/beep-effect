@@ -9,7 +9,8 @@
 /**
  * Package version for the workspace server role.
  *
- * @example
+ * **Example** (Import workspace server version)
+ *
  * ```ts
  * import { VERSION } from "@beep/workspace-server"
  *
@@ -34,7 +35,7 @@ export * as Thread from "./aggregates/Thread/index.ts";
  * @category repositories
  * @since 0.0.0
  */
-export * as Workspace from "./aggregates/Workspace/index.js";
+export * as Workspace from "./aggregates/Workspace/index.ts";
 /**
  * Workspace server layer export.
  *
@@ -42,3 +43,10 @@ export * as Workspace from "./aggregates/Workspace/index.js";
  * @since 0.0.0
  */
 export * from "./Layer.ts";
+/**
+ * Workspace-backed canonical source-text resolver exports.
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export * as SourceText from "./SourceText/index.ts";

@@ -10,10 +10,10 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect, pipe } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { isCheckModeFlags, isDryRunModeFlags, isWriteModeFlags } from "./TsconfigSync.schemas.js";
-import { syncTsconfigAtRoot } from "./TsconfigSync.service.js";
-import type { TsconfigSyncMode, TsconfigSyncModeFlags } from "./TsconfigSync.schemas.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { isCheckModeFlags, isDryRunModeFlags, isWriteModeFlags } from "./TsconfigSync.schemas.ts";
+import { syncTsconfigAtRoot } from "./TsconfigSync.service.ts";
+import type { TsconfigSyncMode, TsconfigSyncModeFlags } from "./TsconfigSync.schemas.ts";
 
 const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigSyncMode => {
   const flags = [check, dryRun, write] satisfies TsconfigSyncModeFlags;
@@ -32,7 +32,8 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
 /**
  * CLI command for synchronizing root and workspace tsconfig state.
  *
- * @example
+ * **Example** (Run the tsconfig-sync command)
+ *
  * ```ts
  * import { tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync"
  * import { Command } from "effect/unstable/cli"
@@ -41,6 +42,7 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
  * const run = Command.run(tsconfigSyncCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -48,15 +50,23 @@ export const tsconfigSyncCommand = Command.make(
   "tsconfig-sync",
   {
     check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Validate drift without writing files (non-zero exit on drift)")
     ),
-    dryRun: Flag.boolean("dry-run").pipe(Flag.withDescription("Preview file changes without writing files")),
-    write: Flag.boolean("write").pipe(Flag.withDescription("Apply file changes (default behavior)")),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Preview file changes without writing files")
+    ),
+    write: Flag.boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Apply file changes (default behavior)")
+    ),
     filter: Flag.string("filter").pipe(
       Flag.withDescription("Limit package reference sync to a workspace package name or workspace-relative path"),
       Flag.optional
     ),
     verbose: Flag.boolean("verbose").pipe(
+      Flag.withDefault(false),
       Flag.withAlias("v"),
       Flag.withDescription("Include per-package detail output")
     ),
@@ -92,6 +102,6 @@ export const tsconfigSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Synchronize repo-managed config files including root tsconfig references, aliases, tstyche, syncpack, and package docgen"
+    "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, and package docgen"
   )
 );

@@ -6,7 +6,7 @@
  */
 
 import { $CosmosId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -15,7 +15,8 @@ const $I = $CosmosId.create("Cosmos.errors");
 /**
  * Cosmos driver failure reason.
  *
- * @example
+ * **Example** (Assign importFailed reason)
+ *
  * ```ts
  * import { CosmosDriverErrorReason } from "@beep/cosmos"
  *
@@ -36,7 +37,8 @@ export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvar
 /**
  * Type for {@link CosmosDriverErrorReason}.
  *
- * @example
+ * **Example** (Assign renderFailed reason)
+ *
  * ```ts
  * import { CosmosDriverErrorReason } from "@beep/cosmos"
  *
@@ -53,7 +55,8 @@ export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
 /**
  * Typed cosmos driver error.
  *
- * @example
+ * **Example** (Create typed driver error)
+ *
  * ```ts
  * import { CosmosDriverError } from "@beep/cosmos"
  *
@@ -68,13 +71,13 @@ export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class CosmosDriverError extends TaggedErrorClass<CosmosDriverError>($I`CosmosDriverError`)(
+export class CosmosDriverError extends S.TaggedError<CosmosDriverError>($I`CosmosDriverError`)(
   "CosmosDriverError",
   {
     reason: CosmosDriverErrorReason,
     message: S.String,
   },
-  $I.annote("CosmosDriverError", {
+  $I.annoteError<CosmosDriverError>("CosmosDriverError", {
     description: "Typed error raised by cosmos and sigma graph render adapters.",
   })
 ) {

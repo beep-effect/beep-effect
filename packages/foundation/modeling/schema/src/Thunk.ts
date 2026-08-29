@@ -16,13 +16,14 @@ const $I = $SchemaId.create("Thunk");
 /**
  * Unique brand identifier tag for {@link ThunkUnknown} values.
  *
- * @example
- * ```ts
+ * **Example** (TypeId brand equality)
+ *
+ * ```ts import.meta.vitest name="TypeId brand equality"
  * import { TypeId, nominal } from "@beep/schema/Thunk"
  *
  * const typeId: typeof TypeId = TypeId
  * const thunk = nominal(() => "ready")
- * console.log(typeId === TypeId && thunk() === "ready") // true
+ * typeId === TypeId && thunk() === "ready" // => true
  * ```
  *
  * @category type-ids
@@ -33,12 +34,13 @@ export const TypeId = $I`ThunkUnknown`;
 /**
  * Type for {@link TypeId}.
  *
- * @example
- * ```ts
+ * **Example** (TypeId type satisfaction)
+ *
+ * ```ts import.meta.vitest name="TypeId type satisfaction"
  * import { TypeId, type TypeId as TypeIdType } from "@beep/schema/Thunk"
  *
  * const typeId = TypeId satisfies TypeIdType
- * console.log(typeId === TypeId) // true
+ * typeId === TypeId // => true
  * ```
  *
  * @category type-ids
@@ -50,7 +52,8 @@ export type TypeId = typeof TypeId;
  * Branded thunk type -- a zero-argument function returning `A`, branded with
  * {@link TypeId}.
  *
- * @example
+ * **Example** (Satisfy ThunkUnknown type)
+ *
  * ```ts
  * import { nominal, type ThunkUnknown } from "@beep/schema/Thunk"
  *
@@ -58,8 +61,8 @@ export type TypeId = typeof TypeId;
  * console.log(thunk())
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type ThunkUnknown<A = unknown> = Brand.Branded<() => A, TypeId>;
 
@@ -68,7 +71,8 @@ const isThunkUnknownValue = (u: unknown): u is () => unknown => P.isFunction(u);
 /**
  * Brand constructor that validates and brands a value as {@link ThunkUnknown}.
  *
- * @example
+ * **Example** (Brand zero-arg function)
+ *
  * ```ts
  * import { nominal } from "@beep/schema/Thunk"
  *
@@ -76,8 +80,8 @@ const isThunkUnknownValue = (u: unknown): u is () => unknown => P.isFunction(u);
  * console.log(thunk)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const nominal = Brand.make<ThunkUnknown>(isThunkUnknownValue);
 
@@ -85,7 +89,8 @@ export const nominal = Brand.make<ThunkUnknown>(isThunkUnknownValue);
  * Schema that validates a value is a zero-argument function and brands it with
  * {@link TypeId}. Provides a `.generic` helper for creating typed thunk schemas.
  *
- * @example
+ * **Example** (Decode unknown as thunk)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { ThunkUnknown } from "@beep/schema/Thunk"
@@ -94,8 +99,8 @@ export const nominal = Brand.make<ThunkUnknown>(isThunkUnknownValue);
  * console.log(thunk)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
   S.fromBrand(TypeId, nominal),
@@ -112,16 +117,17 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
  * Type guard that checks whether a value satisfies the {@link ThunkUnknown}
  * schema.
  *
- * @example
- * ```ts
+ * **Example** (Guard function and string)
+ *
+ * ```ts import.meta.vitest name="Guard function and string"
  * import { isThunkUnknown } from "@beep/schema/Thunk"
  *
- * console.log(isThunkUnknown(() => 1)) // true
- * console.log(isThunkUnknown("hello")) // false
+ * isThunkUnknown(() => 1) // => true
+ * isThunkUnknown("hello") // => false
  * ```
  *
- * @since 0.0.0
  * @category guards
+ * @since 0.0.0
  */
 export const isThunkUnknown = ThunkUnknown.is;
 
@@ -131,7 +137,8 @@ export const isThunkUnknown = ThunkUnknown.is;
  * invoking the thunk. Supports both data-first and data-last calling
  * conventions.
  *
- * @example
+ * **Example** (Make string thunk schema)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import * as P from "effect/Predicate"
@@ -144,8 +151,8 @@ export const isThunkUnknown = ThunkUnknown.is;
  * console.log(StringThunk)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const make: {
   <TSchema extends S.Top>(
@@ -166,7 +173,8 @@ export const make: {
 /**
  * Schema instance returned by {@link make} for a specific return schema.
  *
- * @example
+ * **Example** (Typed Instance from make)
+ *
  * ```ts
  * import * as P from "effect/Predicate"
  * import * as S from "effect/Schema"

@@ -27,13 +27,13 @@
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
       "path": "../domain/tsconfig.json"
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/utils/tsconfig.json"
     }
   ]
 }

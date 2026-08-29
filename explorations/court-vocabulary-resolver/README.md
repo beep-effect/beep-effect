@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,13 +18,14 @@ is the ready-made seed for that vocabulary + resolver vertical.
 
 ## Next Open Question
 
-**Q1: Build-vs-buy — reimplement the courts-db resolver in Effect, or adopt an
-existing JS citation library?** This is the highest-leverage fork: it sets the
-provenance posture (clean-room reimplement + re-derive vs copy-with-attribution)
-that every downstream decision (slicing, vendoring, attribution) inherits. The
-recommended answer and six more pre-drafted forks live in
-[`DECISIONS.md`](./DECISIONS.md). Resolve via
-`run /grill-with-docs court-vocabulary-resolver`.
+**Resolver gate:** execute `court-reporter-vocabulary`; scaffold
+`court-string-resolver` only after the versioned artifact, stable-ID lifecycle,
+and compatibility contract are proven. Fuzzy ranking and SKOS remain gated.
+
+**Trail (2026-08-13):** the CourtListener HTTP driver package is gone. Search
+`packages/law-practice/domain` for vocabulary gaps. Recreate the driver only
+from `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs
+it.
 
 ## Sources & provenance
 
@@ -45,5 +46,17 @@ jurisdiction controlled vocabulary" (14 nuggets).
 
 ## Trail
 
+- 2026-08-13: packet closed `graduated`; `court-string-resolver` is the
+  re-entry point and reopens this packet at `decompose` once the versioned
+  artifact, stable-ID lifecycle, and compatibility contract are proven.
+  Fuzzy ranking and SKOS remain gated follow-on notes.
+
+- 2026-07-14: shape gate signed off as drafted; graduated
+  [`goals/court-reporter-vocabulary`](../../goals/court-reporter-vocabulary/README.md)
+  and triggered the ratified deferred
+  [`goals/citation-extraction-engine`](../../goals/citation-extraction-engine/README.md)
+  scaffold. Court-string resolution, fuzzy ranking, and SKOS remain queued.
+- 2026-07-14: align gate closed with all seven questions ratified; post-align
+  BRIEF.md and MAP.md drafted; advanced to shape for sign-off.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Court / jurisdiction controlled vocabulary' (14 nuggets).

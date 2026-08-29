@@ -75,7 +75,8 @@ const NodeSdkMetricTemporality = LiteralKit(["cumulative", "delta"]).pipe(
 /**
  * Additional controls for the shared Node SDK layer.
  *
- * @example
+ * **Example** (Make options with merge)
+ *
  * ```typescript
  * import { NodeSdkServerOptions } from "@beep/observability/server"
  *
@@ -85,8 +86,8 @@ const NodeSdkMetricTemporality = LiteralKit(["cumulative", "delta"]).pipe(
  * console.log(options.loggerMergeWithExisting)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeSdkServerOptions`)(
   {
@@ -109,7 +110,8 @@ export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeS
 /**
  * Constructor input accepted by Node SDK layer builders before schema defaults are resolved.
  *
- * @example
+ * **Example** (Typed input before defaults)
+ *
  * ```typescript
  * import { NodeSdkServerOptions } from "@beep/observability/server"
  * import type { NodeSdkServerOptionsInput } from "@beep/observability/server"
@@ -120,8 +122,8 @@ export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeS
  * // false
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type NodeSdkServerOptionsInput = (typeof NodeSdkServerOptions)["~type.make.in"];
 
@@ -130,7 +132,8 @@ const endpointUrl = (baseUrl: string, path: string): string => new URL(path, `${
 /**
  * Convert the shared server observability config into a Node SDK resource shape.
  *
- * @example
+ * **Example** (Config to resource shape)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, toNodeSdkResource } from "@beep/observability/server"
  *
@@ -150,8 +153,8 @@ const endpointUrl = (baseUrl: string, path: string): string => new URL(path, `${
  * console.log(resource.serviceName)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const toNodeSdkResource = (config: ServerObservabilityConfig): NonNullable<NodeSdk.Configuration["resource"]> =>
   toOtlpResource(config);
@@ -159,7 +162,8 @@ export const toNodeSdkResource = (config: ServerObservabilityConfig): NonNullabl
 /**
  * Build a Node SDK configuration with OTLP HTTP defaults for local LGTM.
  *
- * @example
+ * **Example** (OTLP HTTP local defaults)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, makeNodeSdkServerConfig } from "@beep/observability/server"
  *
@@ -179,8 +183,8 @@ export const toNodeSdkResource = (config: ServerObservabilityConfig): NonNullabl
  * console.log(sdkConfig.resource)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const makeNodeSdkServerConfig: {
   (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration;
@@ -239,7 +243,8 @@ export const makeNodeSdkServerConfig: {
 /**
  * Build a Node SDK configuration that exports traces only.
  *
- * @example
+ * **Example** (Traces-only SDK config)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, makeNodeSdkServerTraceConfig } from "@beep/observability/server"
  *
@@ -259,8 +264,8 @@ export const makeNodeSdkServerConfig: {
  * console.log(sdkConfig.resource)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const makeNodeSdkServerTraceConfig: {
   (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration;
@@ -294,7 +299,8 @@ const makeNodeSdkLayer = (
 /**
  * Build a shared Node SDK layer for server runtimes.
  *
- * @example
+ * **Example** (Shared server SDK layer)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, layerNodeSdkServer } from "@beep/observability/server"
  *
@@ -314,8 +320,8 @@ const makeNodeSdkLayer = (
  * console.log(NodeSdkLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerNodeSdkServer: NodeSdkServerLayer = dual(
   (args) => ServerObservabilityConfig.is(args[0]),
@@ -328,7 +334,8 @@ export const layerNodeSdkServer: NodeSdkServerLayer = dual(
 /**
  * Build a shared trace-only Node SDK layer for server runtimes.
  *
- * @example
+ * **Example** (Trace-only server layer)
+ *
  * ```typescript
  * import { ServerObservabilityConfig, layerNodeSdkServerTraces } from "@beep/observability/server"
  *
@@ -348,8 +355,8 @@ export const layerNodeSdkServer: NodeSdkServerLayer = dual(
  * console.log(NodeSdkLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerNodeSdkServerTraces: NodeSdkServerLayer = dual(
   (args) => ServerObservabilityConfig.is(args[0]),

@@ -12,11 +12,18 @@
  * @category testing
  * @since 0.0.0
  */
-export { OntologyConfig, type OntologyConfigShape, OntologyServerConfig } from "./ServerConfig.js";
+export { OntologyMcpConfig, type OntologyMcpConfigShape, OntologyMcpServerConfig } from "./McpConfig.ts";
 /**
- * Static ontology configuration layer constructor for tests.
+ * Typed ontology configuration contracts used by tests.
  *
  * @category testing
  * @since 0.0.0
  */
-export { makeOntologyConfigTest } from "./TestLayer.js";
+export { OntologyConfig, type OntologyConfigShape, OntologyServerConfig } from "./ServerConfig.ts";
+/**
+ * Static ontology configuration layer constructors for tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { makeOntologyConfigTest, makeOntologyMcpConfigTest } from "./TestLayer.ts";

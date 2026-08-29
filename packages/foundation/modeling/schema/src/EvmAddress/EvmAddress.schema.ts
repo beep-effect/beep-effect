@@ -34,7 +34,8 @@ const EvmAddressChecks = S.makeFilterGroup(
 /**
  * Branded schema for canonical mainnet EVM wallet addresses.
  *
- * @example
+ * **Example** (Decode zero EVM address)
+ *
  * ```ts
  * import { EvmAddress } from "@beep/schema/EvmAddress"
  * import * as S from "effect/Schema"
@@ -43,8 +44,8 @@ const EvmAddressChecks = S.makeFilterGroup(
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EvmAddress = S.NonEmptyString.check(EvmAddressChecks).pipe(
   S.brand("EvmAddress"),
@@ -56,7 +57,8 @@ export const EvmAddress = S.NonEmptyString.check(EvmAddressChecks).pipe(
 /**
  * Type for {@link EvmAddress}.
  *
- * @example
+ * **Example** (Type annotated EVM address)
+ *
  * ```ts
  * import { EvmAddress } from "@beep/schema/EvmAddress"
  * import * as S from "effect/Schema"
@@ -65,15 +67,16 @@ export const EvmAddress = S.NonEmptyString.check(EvmAddressChecks).pipe(
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EvmAddress = typeof EvmAddress.Type;
 
 /**
  * Redacted schema for canonical mainnet EVM wallet addresses.
  *
- * @example
+ * **Example** (Make redacted EVM address)
+ *
  * ```ts
  * import { EvmAddressRedacted } from "@beep/schema/EvmAddress"
  *
@@ -81,8 +84,8 @@ export type EvmAddress = typeof EvmAddress.Type;
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const EvmAddressRedacted = EvmAddress.pipe(
   S.RedactedFromValue,
@@ -97,7 +100,8 @@ export const EvmAddressRedacted = EvmAddress.pipe(
 /**
  * Type for {@link EvmAddressRedacted}.
  *
- * @example
+ * **Example** (Type redacted EVM address)
+ *
  * ```ts
  * import { EvmAddressRedacted } from "@beep/schema/EvmAddress"
  *
@@ -105,8 +109,8 @@ export const EvmAddressRedacted = EvmAddress.pipe(
  * console.log(address)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EvmAddressRedacted = typeof EvmAddressRedacted.Type;
 

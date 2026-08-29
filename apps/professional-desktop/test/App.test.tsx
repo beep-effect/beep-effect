@@ -2,9 +2,13 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { App } from "@/App";
+import { DOCK_SNAPSHOT_KEY } from "@/workspace/dock.atoms";
 
 describe("Professional Desktop app", { concurrent: false }, () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    globalThis.localStorage.removeItem(DOCK_SNAPSHOT_KEY);
+  });
 
   it("mounts the chat shell", () => {
     const { container, unmount } = render(<App />);
@@ -17,6 +21,7 @@ describe("Professional Desktop app", { concurrent: false }, () => {
       .findByTestId("chat-app")
       .then((chatApp) => {
         expect(chatApp).toBeInTheDocument();
+        expect(chatApp.querySelector('[data-slot="orb-background"]')).toBeNull();
         expect(screen.getByTestId("sidebar")).toBeInTheDocument();
         expect(screen.getByTestId("sidebar-new")).toBeInTheDocument();
       })

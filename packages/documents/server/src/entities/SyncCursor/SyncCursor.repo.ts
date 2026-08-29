@@ -18,12 +18,13 @@ import {
   SyncCursorRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncCursorSeed } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -33,7 +34,7 @@ const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
 /**
  * Build a full SyncCursor entity from an upsert seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -41,7 +42,7 @@ const syncCursorFromSeed = (id: number, seed: SyncCursorSeed): DomainSyncCursor.
   decodeSyncCursor({
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncCursor.SyncCursorId.entityType,
+    entityType: DocumentsIdentity.SyncCursorId.entityType,
     id,
     lastError: O.getOrNull(seed.lastError),
     lastEventId: O.getOrNull(seed.lastEventId),
@@ -84,10 +85,13 @@ const matchesMirror = (input: MirrorScope) => (cursor: DomainSyncCursor.SyncCurs
 /**
  * Build the in-memory SyncCursor repository used by deterministic sync tests.
  *
+ * **Details**
+ *
  * At most one cursor row exists per workspace and provider pair: `upsert`
  * inserts when absent and replaces the seed fields in place when present.
  *
- * @example
+ * **Example** (Import in-memory repository)
+ *
  * ```ts
  * import { makeInMemorySyncCursorRepository } from "@beep/documents-server/entities/SyncCursor"
  *
@@ -96,13 +100,12 @@ const matchesMirror = (input: MirrorScope) => (cursor: DomainSyncCursor.SyncCurs
  *
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for find and upsert repository calls.
- *
  * @category repositories
  * @since 0.0.0
  */
 export const makeInMemorySyncCursorRepository = Effect.fn("Documents.SyncCursorRepository.makeInMemory")(function* () {
   const { counter, snapshot, store } = yield* makeEntityStore(
-    HashMap.empty<DomainSyncCursor.SyncCursorId, DomainSyncCursor.SyncCursor>()
+    HashMap.empty<DocumentsIdentity.SyncCursorId, DomainSyncCursor.SyncCursor>()
   );
 
   return SyncCursorRepository.of({
@@ -145,7 +148,8 @@ const repositoryUnavailable =
 /**
  * Build a Drizzle-backed SyncCursor repository used by live persistence tests.
  *
- * @example
+ * **Example** (Import Drizzle repository)
+ *
  * ```ts
  * import { makeDrizzleSyncCursorRepository } from "@beep/documents-server/entities/SyncCursor"
  *
@@ -155,7 +159,6 @@ const repositoryUnavailable =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncCursor table and redacts driver
  * failures to `SyncCursorRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

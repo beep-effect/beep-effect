@@ -8,12 +8,13 @@
 
 import { SyncCursor } from "@beep/documents-domain/entities/SyncCursor";
 import * as S from "effect/Schema";
-import type { syncCursorTable } from "./SyncCursor.table.js";
+import type { syncCursorTable } from "./SyncCursor.table.ts";
 
 /**
  * Selected documents SyncCursor row.
  *
- * @example
+ * **Example** (Row matches table select)
+ *
  * ```ts
  * import type { syncCursorTable, SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
  *
@@ -31,7 +32,8 @@ export type SyncCursorRow = typeof syncCursorTable.$inferSelect;
 /**
  * Insertable documents SyncCursor row.
  *
- * @example
+ * **Example** (Insert matches table insert)
+ *
  * ```ts
  * import type { syncCursorTable, SyncCursorInsert } from "@beep/documents-tables/entities/SyncCursor"
  *
@@ -52,12 +54,15 @@ const decodeSyncCursorRow = S.decodeUnknownSync(SyncCursor);
 /**
  * Convert a SyncCursor entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link syncCursorTable}, whose metadata carries the
  * physical SQL column names. The database-managed `id` (SERIAL) is dropped so
  * the insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert drops managed id)
+ *
  * ```ts
  * import { fromSyncCursorRow, toSyncCursorInsert } from "@beep/documents-tables/entities/SyncCursor"
  * import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
@@ -97,7 +102,8 @@ export const toSyncCursorInsert = (syncCursor: SyncCursor): SyncCursorInsert => 
 /**
  * Convert a selected persistence row into a SyncCursor entity.
  *
- * @example
+ * **Example** (Row to SyncCursor entity)
+ *
  * ```ts
  * import { fromSyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
  * import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"

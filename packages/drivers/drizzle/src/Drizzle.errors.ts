@@ -6,7 +6,7 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -30,7 +30,8 @@ const RedactedSqlParams = S.Array(RedactedSqlParameter).pipe(
 /**
  * Driver operation names surfaced in {@link DrizzleError} diagnostics.
  *
- * @example
+ * **Example** (Log execute operation enum)
+ *
  * ```ts
  * import { DrizzleOperation } from "@beep/drizzle"
  *
@@ -49,7 +50,8 @@ export const DrizzleOperation = LiteralKit(["decodeRows", "execute", "withTransa
 /**
  * Runtime type for {@link DrizzleOperation}.
  *
- * @example
+ * **Example** (Assign typed operation value)
+ *
  * ```ts
  * import type { DrizzleOperation } from "@beep/drizzle"
  *
@@ -65,12 +67,14 @@ export type DrizzleOperation = typeof DrizzleOperation.Type;
 /**
  * Optional SQL text and parameter context captured while normalizing Drizzle failures.
  *
- * @remarks
+ * **Details**
+ *
  * The context class stores the values supplied by the adapter. Parameter
  * redaction happens when the context is passed through
  * {@link DrizzleError.fromUnknown}.
  *
- * @example
+ * **Example** (Build context with query)
+ *
  * ```ts
  * import { deepStrictEqual, strictEqual } from "node:assert"
  * import { DrizzleErrorContext } from "@beep/drizzle"
@@ -114,7 +118,7 @@ const makeContext = (query: string | undefined, params: ReadonlyArray<unknown> |
   });
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown SQL causes inside the Drizzle boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -146,7 +150,7 @@ const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reas
   );
 
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
-  P.hasInspectableObjectShape(value) && safeBoolean(() => S.is(S.Defect({ includeStack: true }))(value))
+  P.hasInspectableObjectShape(value) && safeBoolean(() => S.is(Defect({ includeStack: true }))(value))
     ? O.some(value)
     : O.none();
 
@@ -274,12 +278,14 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
 /**
  * Technical failure normalized at the `@beep/drizzle` driver boundary.
  *
- * @remarks
+ * **Details**
+ *
  * `operation` identifies the driver operation that failed. Optional query
  * context is captured from explicit context or native Drizzle Effect query
  * errors, with parameter values redacted before they leave the boundary.
  *
- * @example
+ * **Example** (Construct bare DrizzleError)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { DrizzleError, DrizzleOperation } from "@beep/drizzle"
@@ -300,13 +306,13 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
  * @category errors
  * @since 0.0.0
  */
-export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError`)(
+export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
   "DrizzleError",
   {
     operation: DrizzleOperation.annotateKey({
       description: "Driver operation being normalized.",
     }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Inspectable defect retained as the normalized technical cause.",
@@ -318,7 +324,7 @@ export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError
       description: "Optional SQL parameter values after redaction.",
     }),
   },
-  $I.annote("DrizzleError", {
+  $I.annoteError<DrizzleError>("DrizzleError", {
     description: "Technical Drizzle driver failure scoped to a driver operation.",
   })
 ) {
@@ -327,13 +333,15 @@ export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError
   /**
    * Normalize an unknown driver failure into a {@link DrizzleError}.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * Existing `DrizzleError` values keep their original operation and query
    * context, but parameter values are replaced with redaction markers. Native
    * Drizzle Effect query errors and `Failed query:` messages are inspected
    * defensively so hostile or cyclic causes do not escape normalization.
    *
-   * @example
+   * **Example** (Normalize error with redaction)
+   *
    * ```ts
    * import { deepStrictEqual, strictEqual } from "node:assert"
    * import { DrizzleError, DrizzleErrorContext } from "@beep/drizzle"

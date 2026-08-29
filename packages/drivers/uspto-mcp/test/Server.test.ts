@@ -33,6 +33,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -81,6 +82,27 @@ const respondWith = (body: string): Layer.Layer<HttpClient.HttpClient> =>
 const testUsptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
+// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
+// builds `McpServer`, so a direct `callTool` — one with no transport middleware
+// in front of it — has to supply the caller itself.
+const stubClientInfo = { name: "uspto-mcp-test-client", version: "0.0.0" };
+
+const StubMcpClientLayer = Layer.succeed(
+  McpServerClient,
+  McpServerClient.of({
+    clientId: 1,
+    protocolVersion: "2025-06-18",
+    clientCapabilities: {},
+    clientInfo: stubClientInfo,
+    getClient: Effect.die("the fixture client is never dereferenced") as never,
+    initializePayload: {
+      capabilities: {},
+      clientInfo: stubClientInfo,
+      protocolVersion: "2025-06-18",
+    } as never,
+  })
+);
+
 const buildLayer = (env: Record<string, string>, http: Layer.Layer<HttpClient.HttpClient>) => {
   const usptoToolkitLayer = sanitizedToolkit(UsptoToolkit).pipe(
     Layer.provide(UsptoToolkitHandlersLive),
@@ -93,6 +115,7 @@ const buildLayer = (env: Record<string, string>, http: Layer.Layer<HttpClient.Ht
   // while this layer builds.
   return Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(gatedLayer(UsptoSourceAuthRegistration, usptoToolkitLayer)),
     ConfigProvider.layer(ConfigProvider.fromUnknown(env))
   );
@@ -124,7 +147,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 
@@ -139,8 +162,9 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
 };
 
 describe("uspto-mcp fixture proofs", () => {
-  it.effect("imports the bin module without launching the stdio server", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "imports the bin module without launching the stdio server",
+    Effect.fnUntraced(function* () {
       const bin = yield* Effect.promise(() => import("@beep/uspto-mcp/bin"));
 
       assert.strictEqual(bin.SERVER_CONFIG.name, "beep-uspto");
@@ -148,12 +172,13 @@ describe("uspto-mcp fixture proofs", () => {
     })
   );
 
-  it.effect("returns the api_key_required envelope when USPTO_API_KEY is absent", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "returns the api_key_required envelope when USPTO_API_KEY is absent",
+    Effect.fnUntraced(function* () {
       const result = yield* callSearch().pipe(provideScopedLayer(buildLayer({}, respondWith(applicationEnvelope))));
 
       assert.isFalse(result.isError);
-      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })))(
+      const decoded = yield* S.decodeEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })))(
         textOf(result)
       );
       assert.strictEqual(decoded.error, "api_key_required");
@@ -161,8 +186,9 @@ describe("uspto-mcp fixture proofs", () => {
     })
   );
 
-  it.effect("returns real @beep/uspto data when USPTO_API_KEY is present", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "returns real @beep/uspto data when USPTO_API_KEY is present",
+    Effect.fnUntraced(function* () {
       const result = yield* callSearch().pipe(
         provideScopedLayer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(applicationEnvelope)))
       );
@@ -172,15 +198,16 @@ describe("uspto-mcp fixture proofs", () => {
         applicationNumberText: S.String,
         inventionTitle: S.optionalKey(S.String),
       }).pipe(S.Array, S.fromJsonString);
-      const decoded = yield* S.decodeUnknownEffect(ApplicationMetadataArray)(textOf(result));
+      const decoded = yield* S.decodeEffect(ApplicationMetadataArray)(textOf(result));
       assert.strictEqual(decoded.length, 1);
       assert.strictEqual(decoded[0]?.applicationNumberText, "16138242");
       assert.strictEqual(decoded[0]?.inventionTitle, "Adjustable widget assembly");
     })
   );
 
-  it.effect("reshapes a large documentBag response under a configured budget via a named field tier", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reshapes a large documentBag response under a configured budget via a named field tier",
+    Effect.fnUntraced(function* () {
       const result = yield* callGetDocuments().pipe(
         provideScopedLayer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(largeDocumentsEnvelope)))
       );
@@ -191,7 +218,7 @@ describe("uspto-mcp fixture proofs", () => {
       // The complete-tier payload for 200 documents comfortably exceeds the
       // default 8000-byte budget; the response must have been reshaped down
       // to a smaller named tier rather than returned inline in full.
-      const projection = yield* S.decodeUnknownEffect(S.fromJsonString(DocumentsProjectionOutput))(raw);
+      const projection = yield* S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput))(raw);
 
       assert.strictEqual(projection._tag, "Inline");
       if (projection._tag === "Inline") {
@@ -203,20 +230,22 @@ describe("uspto-mcp fixture proofs", () => {
 });
 
 describe("uspto-mcp schema parity", () => {
-  it.effect("keeps explicit get-documents parameter wire shape and defaults missing budget in the schema", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps explicit get-documents parameter wire shape and defaults missing budget in the schema",
+    Effect.fnUntraced(function* () {
       const explicitWire = { applicationNumber: "16138242", budgetBytes: 8000 };
-      const decoded = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)(explicitWire);
+      const decoded = yield* S.decodeEffect(UsptoGetDocumentsParams)(explicitWire);
       const encoded = yield* S.encodeEffect(UsptoGetDocumentsParams)(decoded);
-      const defaulted = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)({ applicationNumber: "16138242" });
+      const defaulted = yield* S.decodeEffect(UsptoGetDocumentsParams)({ applicationNumber: "16138242" });
 
       assert.deepEqual(encoded, explicitWire);
       assert.strictEqual(defaulted.budgetBytes, 8000);
     })
   );
 
-  it.effect("keeps failure and projection encoded shapes byte-identical", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps failure and projection encoded shapes byte-identical",
+    Effect.fnUntraced(function* () {
       const failureWire = {
         message: "USPTO get documents failed: transport",
         reason: UsptoToolErrorReason.Enum.transport,
@@ -228,8 +257,8 @@ describe("uspto-mcp schema parity", () => {
         envelope: { columns: ["documentIdentifier"], rows: [["DOC-1"]] },
       };
 
-      const failure = yield* S.decodeUnknownEffect(UsptoMcpFailure)(failureWire);
-      const projection = yield* S.decodeUnknownEffect(DocumentsProjectionOutput)(projectionWire);
+      const failure = yield* S.decodeEffect(UsptoMcpFailure)(failureWire);
+      const projection = yield* S.decodeEffect(DocumentsProjectionOutput)(projectionWire);
 
       assert.isTrue(UsptoMcpFailure.is(failure));
       assert.isTrue(DocumentsProjectionOutput.is(projection));

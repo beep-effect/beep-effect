@@ -6,8 +6,9 @@
  */
 
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { O } from "@beep/utils";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { O, Str } from "@beep/utils";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $LibpffId.create("Libpff.errors");
@@ -16,7 +17,8 @@ const LibpffErrorReasonBase = LiteralKit(["config", "engine-unavailable", "outpu
 /**
  * Technical libpff failure reasons.
  *
- * @example
+ * **Example** (Log available error reasons)
+ *
  * ```ts
  * import { LibpffErrorReason } from "@beep/libpff"
  *
@@ -36,7 +38,8 @@ export const LibpffErrorReason = LibpffErrorReasonBase.pipe(
 /**
  * Type for {@link LibpffErrorReason}.
  *
- * @example
+ * **Example** (Assign a typed reason)
+ *
  * ```ts
  * import type { LibpffErrorReason } from "@beep/libpff"
  *
@@ -52,7 +55,8 @@ export type LibpffErrorReason = typeof LibpffErrorReason.Type;
 /**
  * Options used when constructing {@link LibpffError} instances.
  *
- * @example
+ * **Example** (Make options with exitCode)
+ *
  * ```ts
  * import { LibpffErrorOptions } from "@beep/libpff"
  * import { NonNegativeInt } from "@beep/schema"
@@ -81,7 +85,8 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
 /**
  * Technical failure raised inside the libpff driver boundary.
  *
- * @example
+ * **Example** (Create error from reason)
+ *
  * ```ts
  * import { LibpffError } from "@beep/libpff"
  *
@@ -92,7 +97,7 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
  * @category errors
  * @since 0.0.0
  */
-export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
+export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
   "LibpffError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
@@ -111,7 +116,7 @@ export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
       description: "Redacted technical error reason.",
     }),
   },
-  $I.annote("LibpffError", {
+  $I.annoteError<LibpffError>("LibpffError", {
     description: "Redacted technical failure raised inside the libpff driver boundary.",
   })
 ) {
@@ -135,15 +140,21 @@ export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
 /**
  * Create a libpff technical error with a typed reason.
  *
- * @example
+ * **Example** (Create typed technical error)
+ *
  * ```ts
- * import { makeLibpffError } from "@beep/libpff"
+ * import { pipe } from "effect"
+ * import { LibpffErrorOptions, makeLibpffError } from "@beep/libpff"
  *
  * const error = makeLibpffError("engine-unavailable")
- * console.log(error.reason)
+ * const piped = pipe("timeout", makeLibpffError(LibpffErrorOptions.make({ cause: "pffexport stalled" })))
+ * console.log(error.reason, piped.reason)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeLibpffError = LibpffError.fromReason;
+export const makeLibpffError: {
+  (options?: LibpffErrorOptions): (reason: LibpffErrorReason) => LibpffError;
+  (reason: LibpffErrorReason, options?: LibpffErrorOptions): LibpffError;
+} = dual((args) => Str.isString(args[0]), LibpffError.fromReason);

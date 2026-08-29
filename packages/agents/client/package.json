@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -34,6 +34,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./Chat.atoms": "./src/Chat.atoms.ts",
+    "./Chat.layer": "./src/Chat.layer.ts",
     "./ClientObservability": "./src/ClientObservability.ts",
     "./ProviderInstance.atoms": "./src/ProviderInstance.atoms.ts",
     "./ProviderInstance.service": "./src/ProviderInstance.service.ts",
@@ -54,6 +55,7 @@
     "exports": {
       ".": "./dist/index.js",
       "./Chat.atoms": "./dist/Chat.atoms.js",
+      "./Chat.layer": "./dist/Chat.layer.js",
       "./ClientObservability": "./dist/ClientObservability.js",
       "./ProviderInstance.atoms": "./dist/ProviderInstance.atoms.js",
       "./ProviderInstance.service": "./dist/ProviderInstance.service.js",
@@ -64,10 +66,13 @@
   "dependencies": {
     "@beep/agents-domain": "workspace:^",
     "@beep/agents-use-cases": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@beep/workspace-use-cases": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Unknown } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -13,20 +14,20 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatCommandLine, runCaptured } from "../../../internal/process/index.js";
-import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.js";
-import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.js";
-import { AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.js";
-import { sortViolations } from "./EvalScoring.js";
+import { formatCommandLine, runCaptured } from "../../../internal/process/index.ts";
+import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
+import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
+import { AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
+import { sortViolations } from "./EvalScoring.ts";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.js";
-import type { LawEvaluation } from "./EvalScoring.js";
+import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
+import type { LawEvaluation } from "./EvalScoring.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalLawLanes");
 const SCHEMA_FIRST_FIXTURE_PACKAGE_PREFIX = "packages/fixture/";
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
-const decodeUnknownJsonOption = S.decodeUnknownOption(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const decodeUnknownJsonOption = Unknown.decodeUnknownOptionFromJsonString;
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
 const normalizePathSeparators = Str.replaceAll("\\", "/");
@@ -377,12 +378,14 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * Run the schema-first, tsgo, and biome law lanes over a fixture's source
  * files and collect their violations.
  *
- * @example
+ * **Example** (Evaluate fixture law lanes)
+ *
  * ```ts
  * import { evaluateLaw } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalLawLanes"
  *
  * const evaluation = evaluateLaw("/tmp/fixture", "/repo", ["src/a.ts"])
  * ```
+ *
  * @category services
  * @since 0.0.0
  */

@@ -12,25 +12,25 @@
  * @category tables
  * @since 0.0.0
  */
-export * as SyncConflict from "./SyncConflict/index.js";
+export * as SyncConflict from "./SyncConflict/index.ts";
 /**
  * SyncCursor table namespace.
  *
  * @category tables
  * @since 0.0.0
  */
-export * as SyncCursor from "./SyncCursor/index.js";
+export * as SyncCursor from "./SyncCursor/index.ts";
 /**
  * SyncItem table namespace.
  *
  * @category tables
  * @since 0.0.0
  */
-export * as SyncItem from "./SyncItem/index.js";
+export * as SyncItem from "./SyncItem/index.ts";
 /**
  * SyncOperation table namespace.
  *
  * @category tables
  * @since 0.0.0
  */
-export * as SyncOperation from "./SyncOperation/index.js";
+export * as SyncOperation from "./SyncOperation/index.ts";

@@ -2,11 +2,14 @@
  * Branded schema for portable glob pattern strings accepted by Bun's current
  * glob parser.
  *
+ * **Details**
+ *
  * This schema keeps Bun's parser acceptance rules while enforcing the repo's
  * forward-slash convention for portable patterns.
  *
- * @example
- * ```typescript
+ * **Example** (Decode portable glob pattern)
+ *
+ * ```ts
  * import * as S from "effect/Schema";
  * import { Glob } from "@beep/schema/Glob";
  *
@@ -14,8 +17,8 @@
  * console.log(pattern);
  * ```
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $SchemaId } from "@beep/identity/packages";
@@ -94,11 +97,14 @@ const GlobChecks = S.makeFilterGroup(
 /**
  * Branded schema for portable non-empty glob pattern strings.
  *
+ * **Details**
+ *
  * The runtime validation mirrors the current Bun parser acceptance rules while
  * rejecting backslash separators so patterns remain portable across
  * environments and keeping the repo's defensive max-length limit.
  *
- * @example
+ * **Example** (Decode non-empty glob)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Glob } from "@beep/schema/Glob"
@@ -107,8 +113,8 @@ const GlobChecks = S.makeFilterGroup(
  * console.log(pattern)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const Glob = S.String.check(GlobChecks)
   .annotate({
@@ -124,7 +130,8 @@ export const Glob = S.String.check(GlobChecks)
 /**
  * Type for {@link Glob}.
  *
- * @example
+ * **Example** (Annotate decoded Glob type)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Glob } from "@beep/schema/Glob"
@@ -133,15 +140,16 @@ export const Glob = S.String.check(GlobChecks)
  * console.log(pattern)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type Glob = typeof Glob.Type;
 
 /**
  * Primary glob schema role alias.
  *
- * @example
+ * **Example** (Decode with Schema alias)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Schema } from "@beep/schema/Glob"
@@ -158,7 +166,8 @@ export const Schema = Glob;
 /**
  * Runtime type extracted from {@link Schema}.
  *
- * @example
+ * **Example** (Type extracted Schema value)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import type { Schema as GlobValue } from "@beep/schema/Glob"

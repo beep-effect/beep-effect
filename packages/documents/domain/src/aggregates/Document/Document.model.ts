@@ -9,7 +9,7 @@ import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
-import { LegalDocumentConceptId, ProjectedVaultPath } from "../../values/Taxonomy/index.js";
+import { LegalDocumentConceptId, ProjectedVaultPath } from "../../values/Taxonomy/index.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/Document/Document.model");
 
@@ -18,7 +18,8 @@ const FilingOutcomeKind = LiteralKit(["filed", "inboxed"]);
 /**
  * Reason a document was routed to the intake inbox instead of a taxonomy folder.
  *
- * @example
+ * **Example** (Decode low-confidence reason)
+ *
  * ```ts
  * import { InboxedFilingReason } from "@beep/documents-domain/aggregates/Document"
  * import * as S from "effect/Schema"
@@ -39,7 +40,8 @@ export const InboxedFilingReason = LiteralKit(["llm-unavailable", "low-confidenc
 /**
  * Type for {@link InboxedFilingReason}.
  *
- * @example
+ * **Example** (Assign no-match reason type)
+ *
  * ```ts
  * import { InboxedFilingReason } from "@beep/documents-domain/aggregates/Document"
  *
@@ -67,7 +69,8 @@ const FilingOutcomeBase = FilingOutcomeKind.toTaggedUnion("kind")({
 /**
  * Filing decision outcome: filed under a taxonomy concept, or routed to the intake inbox.
  *
- * @example
+ * **Example** (Build filed FilingOutcome)
+ *
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  *
@@ -94,7 +97,8 @@ export const FilingOutcome = FilingOutcomeBase.pipe(
 /**
  * Type for {@link FilingOutcome}.
  *
- * @example
+ * **Example** (Make inboxed FilingOutcome)
+ *
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  *
@@ -114,7 +118,8 @@ export type FilingOutcome = typeof FilingOutcome.Type;
 /**
  * Stable SHA-256 digest for filed document bytes.
  *
- * @example
+ * **Example** (Decode content digest value)
+ *
  * ```ts
  * import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document"
  * import * as S from "effect/Schema"
@@ -136,7 +141,8 @@ export const DocumentContentDigest = S.NonEmptyString.pipe(
 /**
  * Stable SHA-256 digest for filed document bytes.
  *
- * @example
+ * **Example** (Type annotated digest decode)
+ *
  * ```ts
  * import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document"
  * import * as S from "effect/Schema"
@@ -153,7 +159,8 @@ export type DocumentContentDigest = typeof DocumentContentDigest.Type;
 /**
  * A document materialized into the workspace vault.
  *
- * @example
+ * **Example** (Decode filed Document aggregate)
+ *
  * ```ts
  * import { Document } from "@beep/documents-domain/aggregates/Document"
  * import * as S from "effect/Schema"

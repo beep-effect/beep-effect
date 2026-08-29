@@ -1,15 +1,16 @@
 /**
  * W3C DID Core identifier schemas.
  *
- * @remarks
+ * **Details**
+ *
  * This module models the core DID string syntax from
  * {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID Syntax}.
  * DID URL path, query, and fragment forms are specified separately by
  * {@link https://www.w3.org/TR/did-core/#did-url-syntax | DID URL Syntax} and
  * are intentionally outside this schema.
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
@@ -29,7 +30,8 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
 /**
  * Branded schema for W3C DID Core identifier strings.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The generic DID Core syntax is `did:<method-name>:<method-specific-id>`.
  * The `method-name` component is one or more lowercase ASCII letters or
  * digits. The `method-specific-id` component is non-empty and contains only
@@ -42,8 +44,9 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  * {@link https://www.w3.org/TR/did-spec-registries/ | W3C DID Specification Registries}
  * or that the identifier resolves to a DID document.
  *
- * @example
- * ```ts
+ * **Example** (Decode a valid DID)
+ *
+ * ```ts import.meta.vitest name="Decode a valid DID"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Did } from "@beep/schema/Did"
@@ -52,23 +55,24 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  *   S.decodeUnknownEffect(Did)("did:example:123456789abcdefghi")
  * )
  *
- * console.log(did) // "did:example:123456789abcdefghi"
+ * did // => "did:example:123456789abcdefghi"
  * ```
  *
- * @example
- * ```ts
+ * **Example** (Reject path-bearing DID URLs)
+ *
+ * ```ts import.meta.vitest name="Reject path-bearing DID URLs"
  * import * as S from "effect/Schema"
  * import { Did } from "@beep/schema/Did"
  *
  * const isDid = S.is(Did)
  *
- * console.log(isDid("did:example:123456789abcdefghi")) // true
- * console.log(isDid("did:example:123456789abcdefghi/path")) // false
+ * isDid("did:example:123456789abcdefghi") // => true
+ * isDid("did:example:123456789abcdefghi/path") // => false
  * ```
  *
- * @see {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID Syntax}
- * @see {@link https://www.w3.org/TR/did-core/#did-url-syntax | W3C DID Core DID URL Syntax}
- * @see {@link https://www.w3.org/TR/did-spec-registries/ | W3C DID Specification Registries}
+ * @see {@link https://www.w3.org/TR/did-core/#did-syntax | W3C DID Core DID Syntax} for the DID Core syntax rules.
+ * @see {@link https://www.w3.org/TR/did-core/#did-url-syntax | W3C DID Core DID URL Syntax} for DID URL path query and fragment forms.
+ * @see {@link https://www.w3.org/TR/did-spec-registries/ | W3C DID Specification Registries} for registered DID methods.
  * @category identifiers
  * @since 0.0.0
  */
@@ -88,8 +92,9 @@ export const Did = S.String.check(didSyntaxCheck)
 /**
  * Type for {@link Did}.
  *
- * @example
- * ```ts
+ * **Example** (Annotate decoded DID type)
+ *
+ * ```ts import.meta.vitest name="Annotate decoded DID type"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Did, type Did as DidValue } from "@beep/schema/Did"
@@ -98,7 +103,7 @@ export const Did = S.String.check(didSyntaxCheck)
  *   S.decodeUnknownEffect(Did)("did:web:example.com")
  * )
  *
- * console.log(identifier) // "did:web:example.com"
+ * identifier // => "did:web:example.com"
  * ```
  *
  * @category models
@@ -109,8 +114,9 @@ export type Did = typeof Did.Type;
 /**
  * Companion namespace for encoded DID type surfaces.
  *
- * @example
- * ```ts
+ * **Example** (Encode DID with percent bytes)
+ *
+ * ```ts import.meta.vitest name="Encode DID with percent bytes"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Did, type Did as DidValue } from "@beep/schema/Did"
@@ -120,7 +126,7 @@ export type Did = typeof Did.Type;
  * )
  * const encoded: Did.Encoded = Effect.runSync(S.encodeEffect(Did)(identifier))
  *
- * console.log(encoded) // "did:example:abc%3A123"
+ * encoded // => "did:example:abc%3A123"
  * ```
  *
  * @category type-level
@@ -130,8 +136,9 @@ export declare namespace Did {
   /**
    * Encoded string type for {@link Did}.
    *
-   * @example
-   * ```ts
+   * **Example** (Round-trip encode Did.Encoded)
+   *
+   * ```ts import.meta.vitest name="Round-trip encode Did.Encoded"
    * import { Effect } from "effect"
    * import * as S from "effect/Schema"
    * import { Did } from "@beep/schema/Did"
@@ -139,7 +146,7 @@ export declare namespace Did {
    * const decoded = Effect.runSync(S.decodeUnknownEffect(Did)("did:example:abc"))
    * const encoded: Did.Encoded = Effect.runSync(S.encodeEffect(Did)(decoded))
    *
-   * console.log(encoded) // "did:example:abc"
+   * encoded // => "did:example:abc"
    * ```
    *
    * @category models

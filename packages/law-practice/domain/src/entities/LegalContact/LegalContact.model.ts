@@ -5,18 +5,19 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
-import { LegalContactRole } from "./LegalContact.values.js";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
+import { LegalContactRole } from "./LegalContact.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.model");
+const pg = ProductEntity.pg;
 
 /**
  * Legal contact entity attached to a legal client.
  *
- * @example
+ * **Example** (Decode LegalContact entity)
+ *
  * ```ts
  * import { LegalContact } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -45,37 +46,20 @@ const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.model
  * @category entities
  * @since 0.0.0
  */
-export class LegalContact extends BaseEntity.Class<LegalContact>($I`LegalContact`)(
-  LawPractice.LegalContactId,
+export class LegalContact extends ProductEntity.Entity<LegalContact>()(LawPractice.LegalContactId)(
   {
-    fields: {
-      displayName: LawPracticeText.annotateKey({
-        description: "Human-readable legal contact display name.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the legal contact.",
-      }),
-      legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the legal client this contact belongs to.",
-      }),
-      role: LegalContactRole.annotateKey({
-        description: "Legal contact role.",
-      }),
-    },
-    persisted: {
-      displayName: EntitySchema.persist.text({
-        columnName: "display_name",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      legalClientFixtureKey: EntitySchema.persist.text({
-        columnName: "legal_client_fixture_key",
-      }),
-      role: EntitySchema.persist.literal({
-        columnName: "role",
-      }),
-    },
+    displayName: LawPracticeText.annotateKey({
+      description: "Human-readable legal contact display name.",
+    }).pipe(pg.text(), pg.columnName("display_name")),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the legal contact.",
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
+    legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the legal client this contact belongs to.",
+    }).pipe(pg.text(), pg.columnName("legal_client_fixture_key")),
+    role: LegalContactRole.annotateKey({
+      description: "Legal contact role.",
+    }).pipe(pg.text()),
   },
   $I.annote("LegalContact", {
     description: "Legal contact entity attached to a legal client.",

@@ -1,0 +1,63 @@
+/**
+ * Package-private browser HTTP URL resolution.
+ *
+ * @packageDocumentation
+ * @category internal
+ * @since 0.0.0
+ */
+
+import { $AgentsClientId } from "@beep/identity";
+import { O, P, pipe, Str } from "@beep/utils";
+import { Result } from "effect";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+
+const $I = $AgentsClientId.create("internal/BrowserHttpUrl");
+
+class BrowserHttpLocation extends S.Class<BrowserHttpLocation>($I`BrowserHttpLocation`)(
+  {
+    origin: S.String,
+  },
+  $I.annote("BrowserHttpLocation", {
+    description: "Browser location fields required for HTTP URL resolution.",
+  })
+) {}
+
+class BrowserHttpRuntime extends S.Class<BrowserHttpRuntime>($I`BrowserHttpRuntime`)(
+  {
+    location: BrowserHttpLocation,
+  },
+  $I.annote("BrowserHttpRuntime", {
+    description: "Browser http runtime.",
+  })
+) {}
+
+interface ResolveBrowserHttpUrl {
+  (runtime: BrowserHttpRuntime | undefined, path: `/${string}`): O.Option<string>;
+  (path: `/${string}`): (runtime: BrowserHttpRuntime | undefined) => O.Option<string>;
+}
+
+/**
+ * Resolve a root-relative path against an HTTP(S) browser origin.
+ *
+ * Missing runtimes, non-HTTP origins, and malformed origins resolve to
+ * {@link O.none} so callers retain ownership of their fallback policy.
+ *
+ * @category internal
+ * @since 0.0.0
+ */
+export const resolveBrowserHttpUrl: ResolveBrowserHttpUrl = dual(
+  2,
+  (runtime, path): O.Option<string> =>
+    pipe(
+      O.fromUndefinedOr(runtime),
+      O.map((current) => current.location.origin),
+      O.filter(P.or(Str.startsWith("http://"), Str.startsWith("https://"))),
+      O.flatMap((origin) =>
+        pipe(
+          Result.try(() => new URL(path, origin).href),
+          Result.getSuccess
+        )
+      )
+    )
+);

@@ -10,18 +10,25 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Ci.command.js";
+export * from "./Ci.command.ts";
 /**
  * Public command module export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Ci.errors.js";
+export * from "./Ci.errors.ts";
 /**
  * Public CI lane definitions export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./CiLane.js";
+export * from "./CiLane.ts";
+/**
+ * Public CI lane-timings collector export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LaneTimings.ts";

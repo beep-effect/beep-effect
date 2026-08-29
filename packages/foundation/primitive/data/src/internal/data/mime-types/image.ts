@@ -12,15 +12,16 @@
  * Record of `image/*` MIME type definitions, each containing a source
  * registry and an array of associated file extensions.
  *
- * @since 0.0.0
- * @category models
- * @example
- * ```typescript
- * import { image } from "@beep/data/mime-types/image"
+ * **Example** (Lookup image/png entry)
  *
- * image["image/png"]
- * // { source: "iana", extensions: ["png"] }
+ * ```ts import.meta.vitest name="Lookup image/png entry"
+ * import { image } from "@beep/data/MimeTypes"
+ *
+ * image["image/png"].extensions.includes("png") // => true
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export const image = {
   "image/aces": {

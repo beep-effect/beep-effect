@@ -6,15 +6,15 @@
  */
 "use client";
 
+import { Unknown } from "@beep/schema/Unknown";
 import { TooltipProvider } from "@beep/ui/components/ui/tooltip";
 import * as O from "@beep/utils/Option";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { Effect } from "effect";
-import * as S from "effect/Schema";
-import { editorTheme } from "../../editor/themes/editor-theme.js";
-import { nodes } from "./nodes.js";
-import { Plugins } from "./plugins.js";
+import { editorTheme } from "../../editor/themes/editor-theme.ts";
+import { nodes } from "./nodes.ts";
+import { Plugins } from "./plugins.tsx";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import type { EditorState, SerializedEditorState } from "lexical";
 
@@ -30,7 +30,8 @@ const editorConfig: InitialConfigType = {
 /**
  * Lexical rich-text editor shell with serialized-state change callbacks.
  *
- * @example
+ * **Example** (Serialized change callback)
+ *
  * ```tsx
  * import { Editor } from "@beep/ui/components/blocks/editor-00/editor"
  *
@@ -62,7 +63,7 @@ export function Editor({
           // TODO(effect-native-migration): model schema
           ...O.getSomesStruct({
             editorState: O.map(O.fromUndefinedOr(editorSerializedState), (editorSerializedState) =>
-              S.encodeUnknownSync(S.UnknownFromJsonString)(editorSerializedState)
+              Unknown.encodeUnknownSyncFromJsonString(editorSerializedState)
             ),
           }),
         }}

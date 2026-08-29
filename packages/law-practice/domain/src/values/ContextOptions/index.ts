@@ -9,9 +9,8 @@
 /**
  * ContextOptions model exports.
  *
- * **Example**
+ * **Example** (Import ContextOptions)
  *
- * @example
  * ```ts
  * import { ContextOptions } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ContextOptions.model.js";
+export * from "./ContextOptions.model.ts";

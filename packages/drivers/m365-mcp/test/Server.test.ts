@@ -63,8 +63,8 @@ const message = GraphMessage.make({ id: MessageId, subject: O.some("Review") });
 const event = GraphEvent.make({ id: EventId, subject: O.some("Planning") });
 const listItem = GraphListItem.make({ id: "list-item-id", fields: O.none() });
 
-const M365ToolErrorArbitrary = S.toArbitrary(M365ToolError);
-const M365McpServerConfigArbitrary = S.toArbitrary(M365McpServerConfig);
+const M365ToolErrorArbitrary = S.toArbitrary(M365ToolError)(fc);
+const M365McpServerConfigArbitrary = S.toArbitrary(M365McpServerConfig)(fc);
 const sameM365ToolError = S.toEquivalence(M365ToolError);
 const sameM365McpServerConfig = S.toEquivalence(M365McpServerConfig);
 
@@ -209,16 +209,14 @@ describe("M365 MCP server", () => {
       fc.property(M365ToolErrorArbitrary, M365McpServerConfigArbitrary, (failure, config) => {
         assert.isTrue(
           sameM365ToolError(
-            Result.getOrThrow(
-              S.decodeUnknownResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))
-            ),
+            Result.getOrThrow(S.decodeResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))),
             failure
           )
         );
         assert.isTrue(
           sameM365McpServerConfig(
             Result.getOrThrow(
-              S.decodeUnknownResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
+              S.decodeResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
             ),
             config
           )
@@ -246,8 +244,9 @@ describe("M365 MCP server", () => {
   });
 
   layer(M365ToolkitHandlersLive.pipe(Layer.provide(MockM365Layer)))("via the mounted toolkit", (it) => {
-    it.effect("returns driver results through toolkit handlers", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns driver results through toolkit handlers",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* M365Toolkit;
         const stream = yield* toolkit.handle("m365_get_site", { siteId: SiteId });
         const first = yield* Stream.runHead(stream);
@@ -260,8 +259,9 @@ describe("M365 MCP server", () => {
     );
   });
 
-  it.effect("serves tool listing and tool calls over stdio", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "serves tool listing and tool calls over stdio",
+    Effect.fnUntraced(function* () {
       const stdout = yield* Ref.make("");
       const stdin = yield* Queue.make<Uint8Array>();
       const stage = yield* Ref.make(0);

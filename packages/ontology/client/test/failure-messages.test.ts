@@ -15,7 +15,7 @@ import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeUnknownSync(SessionId)("session-1"),
+    id: S.decodeSync(SessionId)("session-1"),
     baseDataset: makeDataset([]),
   })
 );
@@ -55,6 +55,30 @@ describe("a failed ontology action explains itself", () => {
       expect(text).not.toContain("    at ");
       expect(text).not.toContain(".ts:");
       expect(text).not.toContain("Session.atoms");
+    })
+  );
+
+  it.effect(
+    "redacts untyped failure details before they reach the workbench",
+    Effect.fnUntraced(function* () {
+      const client = OntologyClient.of(((tag: string) =>
+        tag === "RunOntologySparql"
+          ? Effect.die(new Error("token=private-value at /home/operator/query.sparql"))
+          : Effect.die(`unexpected ontology RPC: ${tag}`)) as unknown as OntologyClient["Service"]);
+      const registry = AtomRegistry.make({
+        initialValues: [
+          [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
+        ],
+      });
+      registry.set(ontologySessionAtom, O.some(session));
+
+      registry.set(runOntologySparqlAtom, undefined);
+      yield* AtomRegistry.getResult(registry, runOntologySparqlAtom).pipe(Effect.ignore);
+
+      const text = O.getOrElse(registry.get(ontologySparqlErrorAtom), () => "");
+      expect(text).not.toContain("private-value");
+      expect(text).not.toContain("/home/operator");
+      registry.dispose();
     })
   );
 });

@@ -28,7 +28,8 @@ const alertVariants = cva(
 /**
  * Status message container with default and destructive variants.
  *
- * @example
+ * **Example** (Destructive payment failure alert)
+ *
  * ```tsx
  * import { Alert, AlertDescription, AlertTitle } from "@beep/ui/components/alert"
  *
@@ -52,7 +53,8 @@ function Alert({ className, variant, ...props }: React.ComponentProps<"div"> & V
 /**
  * Prominent heading text inside an {@link Alert}.
  *
- * @example
+ * **Example** (Sync complete alert title)
+ *
  * ```tsx
  * import { Alert, AlertTitle } from "@beep/ui/components/alert"
  *
@@ -84,7 +86,8 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
 /**
  * Supporting body copy inside an {@link Alert}.
  *
- * @example
+ * **Example** (Invite sent description body)
+ *
  * ```tsx
  * import { Alert, AlertDescription, AlertTitle } from "@beep/ui/components/alert"
  *
@@ -117,7 +120,8 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
 /**
  * Right-aligned action slot for compact alert controls.
  *
- * @example
+ * **Example** (Retry button action slot)
+ *
  * ```tsx
  * import { Alert, AlertAction, AlertDescription, AlertTitle } from "@beep/ui/components/alert"
  *

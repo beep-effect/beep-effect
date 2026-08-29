@@ -12,7 +12,23 @@ import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("SchemaUtils/withStatics");
 
-class WithStaticsStaticRedefinitionError extends S.TaggedErrorClass<WithStaticsStaticRedefinitionError>(
+/**
+ * The schema object returned by {@link withStatics}: the original schema with
+ * its companion statics attached.
+ *
+ * Spelled as a named alias (rather than an inline `Schema & Statics`) so the
+ * pipeable-signature analysis can relate the data-first and data-last returns.
+ */
+type WithStatics<Schema extends object, Statics extends Record<string, unknown>> = Schema & Statics;
+
+/**
+ * The data-last application step produced by {@link withStatics}.
+ */
+type WithStaticsTransform<Schema extends object, Statics extends Record<string, unknown>> = (
+  schema: Schema
+) => WithStatics<Schema, Statics>;
+
+class WithStaticsStaticRedefinitionError extends S.TaggedError<WithStaticsStaticRedefinitionError>(
   $I`WithStaticsStaticRedefinitionError`
 )(
   "WithStaticsStaticRedefinitionError",
@@ -20,7 +36,7 @@ class WithStaticsStaticRedefinitionError extends S.TaggedErrorClass<WithStaticsS
     key: S.String,
     message: S.String,
   },
-  $I.annote("WithStaticsStaticRedefinitionError", {
+  $I.annoteError<WithStaticsStaticRedefinitionError>("WithStaticsStaticRedefinitionError", {
     description: "Raised when schema statics would redefine a non-configurable property with a different value.",
   })
 ) {}
@@ -28,7 +44,7 @@ class WithStaticsStaticRedefinitionError extends S.TaggedErrorClass<WithStaticsS
 const attachStatics = <S extends object, M extends Record<string, unknown>>(
   schema: S,
   methods: (schema: S) => M
-): S & M => {
+): WithStatics<S, M> => {
   const originalAnnotate = Reflect.get(schema, "annotate");
   const statics = methods(schema);
 
@@ -72,14 +88,16 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  * Attach static methods to a schema object while preserving them across later
  * `annotate` calls.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Existing configurable properties may be replaced, identical statics are
  * ignored, and conflicting non-configurable properties raise an internal
  * tagged error. Use this for schema companion helpers that should travel with
  * the schema value instead of living as separate module-level functions.
  *
- * @example
- * ```ts
+ * **Example** (Attach companion empty static)
+ *
+ * ```ts import.meta.vitest name="Attach companion empty static"
  * import { $SchemaId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
  * import { withStatics } from "@beep/schema/SchemaUtils/withStatics"
@@ -94,13 +112,13 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  *   })
  * )
  *
- * console.log(MySchema.empty) // ""
+ * MySchema.empty // => ""
  * ```
  *
- * @since 0.0.0
  * @category constructors
+ * @since 0.0.0
  */
 export const withStatics: {
-  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): (schema: S) => S & M;
-  <S extends object, M extends Record<string, unknown>>(schema: S, methods: (schema: S) => M): S & M;
+  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M): WithStaticsTransform<S, M>;
+  <S extends object, M extends Record<string, unknown>>(schema: S, methods: (schema: S) => M): WithStatics<S, M>;
 } = dual(2, attachStatics);

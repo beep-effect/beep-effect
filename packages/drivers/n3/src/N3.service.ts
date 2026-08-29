@@ -12,7 +12,7 @@ import { A, O, Str } from "@beep/utils";
 import { Context, Effect, Layer, Match, pipe } from "effect";
 import * as S from "effect/Schema";
 import { DataFactory, Parser, Writer } from "n3";
-import { N3TurtleCodecError } from "./N3.errors.js";
+import { N3TurtleCodecError } from "./N3.errors.ts";
 import type * as N3 from "n3";
 
 const $I = $N3Id.create("N3.service");
@@ -27,7 +27,8 @@ const PrefixMapWithEmptyDefault = Rdf.PrefixMap.pipe(
 /**
  * N3 Turtle parse request.
  *
- * @example
+ * **Example** (Make turtle parse request)
+ *
  * ```ts
  * import { N3ParseTurtleRequest } from "@beep/n3"
  *
@@ -38,8 +39,8 @@ const PrefixMapWithEmptyDefault = Rdf.PrefixMap.pipe(
  * console.log(request.source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class N3ParseTurtleRequest extends S.Class<N3ParseTurtleRequest>($I`N3ParseTurtleRequest`)(
   {
@@ -54,7 +55,8 @@ export class N3ParseTurtleRequest extends S.Class<N3ParseTurtleRequest>($I`N3Par
 /**
  * N3 Turtle parse result.
  *
- * @example
+ * **Example** (Make turtle parse result)
+ *
  * ```ts
  * import { N3ParseTurtleResult } from "@beep/n3"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -66,8 +68,8 @@ export class N3ParseTurtleRequest extends S.Class<N3ParseTurtleRequest>($I`N3Par
  * console.log(result.dataset.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class N3ParseTurtleResult extends S.Class<N3ParseTurtleResult>($I`N3ParseTurtleResult`)(
   {
@@ -82,7 +84,8 @@ export class N3ParseTurtleResult extends S.Class<N3ParseTurtleResult>($I`N3Parse
 /**
  * N3 Turtle serialize request.
  *
- * @example
+ * **Example** (Make turtle serialize request)
+ *
  * ```ts
  * import { N3SerializeTurtleRequest } from "@beep/n3"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -94,8 +97,8 @@ export class N3ParseTurtleResult extends S.Class<N3ParseTurtleResult>($I`N3Parse
  * console.log(request.dataset.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class N3SerializeTurtleRequest extends S.Class<N3SerializeTurtleRequest>($I`N3SerializeTurtleRequest`)(
   {
@@ -110,7 +113,8 @@ export class N3SerializeTurtleRequest extends S.Class<N3SerializeTurtleRequest>(
 /**
  * N3 Turtle serialize result.
  *
- * @example
+ * **Example** (Make turtle serialize result)
+ *
  * ```ts
  * import { N3SerializeTurtleResult } from "@beep/n3"
  *
@@ -121,8 +125,8 @@ export class N3SerializeTurtleRequest extends S.Class<N3SerializeTurtleRequest>(
  * console.log(result.source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class N3SerializeTurtleResult extends S.Class<N3SerializeTurtleResult>($I`N3SerializeTurtleResult`)(
   {
@@ -283,7 +287,7 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
     catch: parseFailure,
   });
   const decoded = yield* Effect.forEach(quads, fromN3Quad);
-  const decodedPrefixes = yield* S.decodeUnknownEffect(Rdf.PrefixMap)(prefixes).pipe(Effect.mapError(parseFailure));
+  const decodedPrefixes = yield* S.decodeEffect(Rdf.PrefixMap)(prefixes).pipe(Effect.mapError(parseFailure));
 
   return N3ParseTurtleResult.make({
     dataset: Rdf.makeDataset(decoded),
@@ -320,7 +324,8 @@ const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3Se
 /**
  * N3 Turtle codec service tag.
  *
- * @example
+ * **Example** (Yield codec from Effect)
+ *
  * ```ts
  * import { N3TurtleCodec } from "@beep/n3"
  * import { Effect } from "effect"
@@ -333,23 +338,24 @@ const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3Se
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class N3TurtleCodec extends Context.Service<N3TurtleCodec, N3TurtleCodecShape>()($I`N3TurtleCodec`) {}
 
 /**
  * Live N3 Turtle codec layer.
  *
- * @example
+ * **Example** (Log live codec layer)
+ *
  * ```ts
  * import { N3TurtleCodecLive } from "@beep/n3"
  *
  * console.log(N3TurtleCodecLive)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const N3TurtleCodecLive = Layer.succeed(
   N3TurtleCodec,

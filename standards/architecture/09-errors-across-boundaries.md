@@ -8,9 +8,9 @@ The executable proof target for this rule is `packages/architecture-lab/*`: `Wor
 
 Five kinds of failure live in the slice. Each has a fixed home and a fixed translator.
 
-- **Actionable domain failures.** Defined in `domain/<concept>/<Concept>.errors.ts` as `TaggedErrorClass`. Use-cases may branch on them while enforcing domain behavior. Membership: `MembershipAlreadyRevoked`, `UnauthorizedRevoker`.
-- **Port failures.** Defined in `use-cases/<Concept>/<Concept>.errors.ts` as server-only `TaggedErrorClass` values and exported only from the use-case package's `/server` subpath. Use-cases branch on them; protocol callers do not. Membership repository: `MembershipRepositoryNotFound`, `MembershipRepositoryUnavailable`.
-- **Public action failures.** Defined in `use-cases/<Concept>/<Concept>.errors.ts` as client-safe `TaggedErrorClass` values and exported from `/public`. Protocol callers (HTTP handlers, RPC handlers, UI atoms) branch on them. Membership revoke: `MembershipNotFound`, `MembershipRevocationFailed`, `MembershipRevocationDenied`.
+- **Actionable domain failures.** Defined in `domain/<concept>/<Concept>.errors.ts` as classes extending `S.TaggedError` directly. Use-cases may branch on them while enforcing domain behavior. Membership: `MembershipAlreadyRevoked`, `UnauthorizedRevoker`.
+- **Port failures.** Defined in `use-cases/<Concept>/<Concept>.errors.ts` as server-only classes extending `S.TaggedError` directly and exported only from the use-case package's `/server` subpath. Use-cases branch on them; protocol callers do not. Membership repository: `MembershipRepositoryNotFound`, `MembershipRepositoryUnavailable`.
+- **Public action failures.** Defined in `use-cases/<Concept>/<Concept>.errors.ts` as client-safe classes extending `S.TaggedError` directly and exported from `/public`. Protocol callers (HTTP handlers, RPC handlers, UI atoms) branch on them. Membership revoke: `MembershipNotFound`, `MembershipRevocationFailed`, `MembershipRevocationDenied`.
 - **Internal failures.** Driver errors, network errors, deserialization errors, anything technical. These die at the boundary; they MUST NOT reach use-case callers as themselves.
 - **Boundary protocol failures.** HTTP/RPC translation: public action failures map to `400`/`403`/`404`/`409` problem-detail bodies; internals map to `500` with a correlation ID and structured log.
 
@@ -25,6 +25,40 @@ boundary        protocol shape (400/403/500 + body)
 ````
 
 The arrow is always a translation, never a passthrough. A failure that escapes its declaration as itself is a doctrine violation (see section 6).
+
+Every typed error class extends `S.TaggedError` from `effect/Schema` directly.
+Use the package's `$I` composer when a distinct namespaced schema identifier is
+wanted. When no distinct identifier is needed, omit it with
+`S.TaggedError<Self>()("Tag", fields)`; never pass a bare identifier equal to
+the tag. Cause-carrying errors declare
+`cause: Defect({ includeStack: true })` explicitly with the `Defect` wrapper
+from `@beep/schema` (see "Declared field equivalence" below).
+
+### Declared field equivalence
+
+Every `S.TaggedError` declaration adopts its declared field struct as its
+equivalence by passing `$I.annoteError<Self>(identifier, extras?)` as its
+annotations. Effect calls a declaration's `toEquivalence` hook with the derived
+equivalence of its type parameters, and for a tagged error that single
+parameter is the declared `TaggedStruct`; the record returned by `annoteError`
+hands that equivalence back, so `S.toEquivalence(ErrorClass)` compares declared
+diagnostic identity and ignores the `Error` runtime metadata the class
+inherits. Nothing is derived by hand at the class: no field constants, no
+comparator functions, no explicit schema type arguments. Packages that cannot
+depend on `@beep/identity` write the same hook through a module-level
+`declaredFieldsEquivalence<Self>` helper, passed as
+`toEquivalence: (typeParameters) => declaredFieldsEquivalence<X>(typeParameters)`
+on the annotation object
+(`packages/ecosystem/effect-drizzle/src/core/repository.ts`,
+`packages/_internal/db-admin/scripts/check-migrations-drift.ts`).
+
+Opaque payloads declare their own identity rule at the schema layer: `Defect`
+from `@beep/schema` is Effect's `S.Defect(options)` annotated with an
+always-true equivalence, so a `cause` field stays payload and two errors that
+differ only in their defect compare equal. Excluding a field from equivalence at
+the class is not a pattern; the field's schema says whether it participates.
+Tests consume `S.toEquivalence(ErrorClass)` and never install test-local
+overrides.
 
 ## 2. Translation contract
 
@@ -46,7 +80,7 @@ The presence of an `error-translation.ts` file is a signal that the translation 
 
 ## 4. Ports declare only port failures
 
-A port's signature is `Effect.Effect<Result, Failures, never>`. `Failures` is a union of `TaggedErrorClass` types declared for that port boundary and exported only from the server-side use-case surface. Internal/technical errors are NOT in this union. They die in the adapter.
+A port's signature is `Effect.Effect<Result, Failures, never>`. `Failures` is a union of `S.TaggedError` class instances declared for that port boundary and exported only from the server-side use-case surface. Internal/technical errors are NOT in this union. They die in the adapter.
 
 This rule is what lets use-cases write `Effect.catchTags` exhaustively against a fixed set of port failures — the union is closed and authored at the port. If a new technical mode appears in the adapter, it must either be translated to an existing port-declared error or motivate a new port-declared error and an explicit use-case translator update.
 
@@ -61,7 +95,7 @@ The full chain. Each block is one boundary.
 ````ts
 // packages/drivers/postgres/src/Postgres.errors.ts (excerpt)
 import { $PostgresId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PostgresId.create("Postgres.errors");
@@ -72,7 +106,7 @@ const $I = $PostgresId.create("Postgres.errors");
  * @category errors
  * @since 0.0.0
  */
-export class PostgresError extends TaggedErrorClass<PostgresError>(
+export class PostgresError extends S.TaggedError<PostgresError>(
   $I`PostgresError`
 )(
   "PostgresError",
@@ -80,9 +114,9 @@ export class PostgresError extends TaggedErrorClass<PostgresError>(
     operation: S.String,
     sqlState: S.OptionFromOptionalKey(S.String),
     query: S.OptionFromOptionalKey(S.String),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    cause: Defect({ includeStack: true }),
   },
-  $I.annote("PostgresError", {
+  $I.annoteError<PostgresError>("PostgresError", {
     description: "Technical Postgres driver failure scoped to a driver operation.",
   })
 ) {}
@@ -95,7 +129,6 @@ This error is technical. It lives in the driver package and is invisible to anyo
 ````ts
 // packages/iam/use-cases/src/Membership/Membership.errors.ts
 import { $IamUseCasesId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 import { MembershipId } from "@beep/iam-domain/Membership";
 
@@ -107,12 +140,12 @@ const $I = $IamUseCasesId.create("Membership.errors");
  * @category errors
  * @since 0.0.0
  */
-export class MembershipRepositoryNotFound extends TaggedErrorClass<MembershipRepositoryNotFound>(
+export class MembershipRepositoryNotFound extends S.TaggedError<MembershipRepositoryNotFound>(
   $I`MembershipRepositoryNotFound`
 )(
   "MembershipRepositoryNotFound",
   { membershipId: MembershipId },
-  $I.annote("MembershipRepositoryNotFound", {
+  $I.annoteError<MembershipRepositoryNotFound>("MembershipRepositoryNotFound", {
     description: "The requested membership does not exist.",
   })
 ) {}
@@ -123,12 +156,12 @@ export class MembershipRepositoryNotFound extends TaggedErrorClass<MembershipRep
  * @category errors
  * @since 0.0.0
  */
-export class MembershipRepositoryUnavailable extends TaggedErrorClass<MembershipRepositoryUnavailable>(
+export class MembershipRepositoryUnavailable extends S.TaggedError<MembershipRepositoryUnavailable>(
   $I`MembershipRepositoryUnavailable`
 )(
   "MembershipRepositoryUnavailable",
   { reason: S.String },
-  $I.annote("MembershipRepositoryUnavailable", {
+  $I.annoteError<MembershipRepositoryUnavailable>("MembershipRepositoryUnavailable", {
     description: "The membership repository is temporarily unreachable.",
   })
 ) {}
@@ -258,5 +291,5 @@ The only failures crossing each boundary are the ones declared in that boundary'
 ## See also
 
 - `03-driver-boundaries.md` — where adapter translation lives (driver vs. server vs. tables responsibilities).
-- `04-rich-domain-model.md` — the "Forbidden Effect dependencies" subsection: domain errors are `TaggedErrorClass`, not raw `Error`, and never carry transport details.
+- `04-rich-domain-model.md` — the "Forbidden Effect dependencies" subsection: domain errors extend `S.TaggedError`, are not raw `Error`, and never carry transport details.
 - `08-testing.md` — testing error paths: each translator has a test that asserts the source error becomes the expected target error.

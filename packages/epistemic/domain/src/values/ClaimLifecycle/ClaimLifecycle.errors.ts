@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ClaimLifecycle } from "./ClaimLifecycle.model.js";
+import { ClaimLifecycle } from "./ClaimLifecycle.model.ts";
 
 const $I = $EpistemicDomainId.create("values/ClaimLifecycle/ClaimLifecycle.errors");
 
@@ -16,7 +16,8 @@ const $I = $EpistemicDomainId.create("values/ClaimLifecycle/ClaimLifecycle.error
  * the claim's current state (e.g. skipping a state, moving backwards, or
  * advancing past `admitted`).
  *
- * @example
+ * **Example** (Make invalid transition error)
+ *
  * ```ts
  * import { ClaimInvalidTransition } from "@beep/epistemic-domain"
  *
@@ -27,13 +28,13 @@ const $I = $EpistemicDomainId.create("values/ClaimLifecycle/ClaimLifecycle.error
  * @category errors
  * @since 0.0.0
  */
-export class ClaimInvalidTransition extends TaggedErrorClass<ClaimInvalidTransition>($I`ClaimInvalidTransition`)(
+export class ClaimInvalidTransition extends S.TaggedError<ClaimInvalidTransition>($I`ClaimInvalidTransition`)(
   "ClaimInvalidTransition",
   {
     from: ClaimLifecycle,
     to: ClaimLifecycle,
   },
-  $I.annote("ClaimInvalidTransition", {
+  $I.annoteError<ClaimInvalidTransition>("ClaimInvalidTransition", {
     title: "Claim invalid transition",
     description: "The requested lifecycle transition is not a legal forward step for the current claim state.",
   })
@@ -41,7 +42,8 @@ export class ClaimInvalidTransition extends TaggedErrorClass<ClaimInvalidTransit
   /**
    * Build a {@link ClaimInvalidTransition} from a from/to state pair.
    *
-   * @example
+   * **Example** (Build error from states)
+   *
    * ```ts
    * import { ClaimInvalidTransition } from "@beep/epistemic-domain"
    *
@@ -60,7 +62,8 @@ export class ClaimInvalidTransition extends TaggedErrorClass<ClaimInvalidTransit
 /**
  * Union of every claim lifecycle error.
  *
- * @example
+ * **Example** (Decode lifecycle error union)
+ *
  * ```ts
  * import { ClaimInvalidTransition, ClaimLifecycleError } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
@@ -85,7 +88,8 @@ export const ClaimLifecycleError = S.Union([ClaimInvalidTransition]).pipe(
 /**
  * Runtime type for {@link ClaimLifecycleError}.
  *
- * @example
+ * **Example** (Annotate with error type)
+ *
  * ```ts
  * import { ClaimInvalidTransition } from "@beep/epistemic-domain"
  * import type { ClaimLifecycleError } from "@beep/epistemic-domain"

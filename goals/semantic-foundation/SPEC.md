@@ -18,14 +18,14 @@ domain entities.
 - No graph store. Legal semantic facts remain projected into Postgres/PGlite
   per `goals/legal-document-intake` D6.
 - No law-practice domain entities. `TrademarkAsset`, docketing entities, and
-  time-bounded trademark workflow models belong to the dependent
-  `goals/trademark-docketing-domain` packet after M3.
+  time-bounded trademark workflow models stay out; spawn a
+  `trademark-docketing-domain` packet when M3 vocabulary stabilizes.
 - No duplication of `goals/legal-document-intake` documents-slice work:
   taxonomy-derived vault path implementation and concrete taxonomy-backed
   ClaimGate use stay there. This packet supplies vocabulary and registry
   capabilities those packets consume.
-- No editing `goals/ip-law-knowledge-graph` in this packet. Its SPEC annotation
-  is a separate later task.
+- The former ontology-survey packet was removed 2026-07-14, so its no-edit
+  fence is moot; grounding remains in `explorations/legal-ontology-landscape`.
 - No vendoring third-party TTL/OWL into tracked package source. Third-party
   material stays gitignored under the exploration asset pack with committed
   fetch/manifest metadata; repo-owned seed TTL/JSON-LD is tracked as our IP.
@@ -36,7 +36,7 @@ domain entities.
    log, mirrored in
    [`DECISIONS.md`](../../explorations/legal-ontology-landscape/DECISIONS.md).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills (`explore`,
-   `repo-symbol-discovery`, `effect-first-development`,
+   `effect-first-development`,
    `schema-first-development` when implementation starts).
 3. `goals/README.md`, `explorations/README.md`, the goal template, and
    `goals/identity-iri-core` as packet exemplar.
@@ -65,9 +65,10 @@ cannot widen non-goals without a dated `SPEC.md` change.
   the existing `mergeVocab` extension point and `https://ns.beep.sh/`
   authority.
 - `packages/foundation/capability/semantic-web/src/services/shacl-validation.ts`
-  and `packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts`
-  (`@beep/semantic-web`) - bounded SHACL contract remains unchanged; M4 authors
-  intake/ClaimGate shapes against it.
+  (`@beep/semantic-web`) and the bounded validator now at
+  `packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts`
+  (`@beep/epistemic-server`) - bounded SHACL contract remains unchanged; M4
+  authors intake/ClaimGate shapes against it.
 
 ## Constraints
 
@@ -97,31 +98,33 @@ cannot widen non-goals without a dated `SPEC.md` change.
 | --- | --- | --- | --- |
 | M1 Intake-Serving Semantic Seed | Starts now | Repo-owned SKOS taxonomy seed with `https://ns.beep.sh/` concept IRIs, FOLIO `skos:exactMatch`/`skos:closeMatch` where available, document-class vocabulary (`draft`, `redline`, `filed`, `received`, `privileged`, `extracted-child`), filing-path semantics for local vault + Box mirror, and `@beep/ontology` taxonomy registry/loader loading committed seed plus vetted gitignored vendor slices from the exploration asset-pack manifest. | An intake librarian loop can classify a sample document against the taxonomy seed and produce a filing path plus document class with FOLIO-aligned concept IRIs; `bun run beep yeet verify` is green or unrelated failures are recorded. |
 | M2 Classification Schemes | Gated behind the August 5 first-user metric or a demo-day pull | IPC, CPC, and Nice as loadable SKOS concept schemes with edition tracking and broader/narrower lookup. | A caller can load a pinned edition and resolve classification code hierarchy without confusing CPC and IPC. |
-| M3 Docketing and Party Roles | Gated after M2 readiness and explicit product pull | Docketing/deadline vocabulary plus party-role vocabulary modules that separate enduring party identity from time-bounded legal roles. | Dependent `goals/trademark-docketing-domain` can start with stable vocabulary contracts for trademark docketing entities. |
+| M3 Docketing and Party Roles | Gated after M2 readiness and explicit product pull | Docketing/deadline vocabulary plus party-role vocabulary modules that separate enduring party identity from time-bounded legal roles. | A `trademark-docketing-domain` packet can be spawned with stable vocabulary contracts for trademark docketing entities. |
 | M4 Intake ClaimGate Shapes | Gated after M1 consumers prove need and M3 vocabulary is stable enough | SHACL shape authoring for intake/ClaimGate gates against the existing bounded validator in `@beep/semantic-web`. | Shapes validate against `ShaclValidationService` without changing the semantic-web service contract; SPARQL remains unsupported. |
 
 ## Acceptance Criteria
 
-- [ ] M1 taxonomy seed is committed as repo-owned TTL/JSON-LD and schema-first
+- [x] M1 taxonomy seed is committed as repo-owned TTL/JSON-LD and schema-first
       data, with concept IRIs minted under `https://ns.beep.sh/`.
-- [ ] M1 includes document-class vocabulary for `draft`, `redline`, `filed`,
+- [x] M1 includes document-class vocabulary for `draft`, `redline`, `filed`,
       `received`, `privileged`, and `extracted-child`.
-- [ ] M1 registry/loader can load the committed seed plus vetted gitignored
+- [x] M1 registry/loader can load the committed seed plus vetted gitignored
       vendor slices listed by the exploration asset-pack manifest, without
       tracking third-party TTL/OWL.
-- [ ] M1 exposes filing-path semantics for local vault plus Box mirror as
+- [x] M1 exposes filing-path semantics for local vault plus Box mirror as
       vocabulary/registry data, not document-slice placement code.
-- [ ] M1 intake librarian loop can classify a sample document against the
+- [x] M1 intake librarian loop can classify a sample document against the
       taxonomy seed and produce a filing path plus document class with
       FOLIO-aligned concept IRIs.
-- [ ] `@beep/rdf` constants are added only when P1/P2 research verdicts justify
+- [x] `@beep/rdf` constants are added only when P1/P2 research verdicts justify
       them; otherwise existing SKOS/RDF vocabulary constants are reused.
-- [ ] `@beep/semantic-web` bounded SHACL and
+- [x] `@beep/semantic-web` bounded SHACL and
       `UnsupportedSparqlQueryServiceLive` contracts remain unchanged.
-- [ ] `bun run beep yeet verify` passes, or unrelated baseline failures are
+- [x] `bun run beep yeet verify` passes, or unrelated baseline failures are
       reproduced and recorded separately.
-- [ ] No unrelated refactors, package-source churn outside target surfaces, or
-      edits to `goals/ip-law-knowledge-graph`.
+- [x] No unrelated refactors, package-source churn outside target surfaces, or
+      expansion beyond the ontology-survey scope absorbed from
+      `explorations/legal-ontology-landscape`; the removed packet's fence is
+      moot as of 2026-07-14.
 
 ## Verification Matrix
 
@@ -141,8 +144,10 @@ cannot widen non-goals without a dated `SPEC.md` change.
 - Required source files are missing or materially contradictory.
 - The implementation would exceed M1 or pull M2-M4 work forward without the
   named gate.
-- A change requires touching `goals/ip-law-knowledge-graph`, law-practice
-  domain entities, document-intake workflow code, graph-store wiring, SPARQL
+- A change exceeds the ontology-survey scope absorbed from
+  `explorations/legal-ontology-landscape` (the former packet was removed
+  2026-07-14), or requires touching law-practice domain entities,
+  document-intake workflow code, graph-store wiring, SPARQL
   engine wiring, dependencies, lockfiles, credentials, or generated artifacts
   not explicitly required by this spec.
 - Vendor ontology material cannot be licensed or manifested safely.

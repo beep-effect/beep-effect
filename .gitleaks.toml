@@ -2,9 +2,10 @@
 useDefault = true
 
 [[allowlists]]
-description = "Vendored openclaw subtree contains upstream docs and test fixtures with placeholder secrets"
+description = "Vendored subtrees (openclaw, effect) contain upstream docs and test fixtures with placeholder secrets"
 paths = [
   '''^\.repos/openclaw/.*$''',
+  '''^\.repos/effect/.*$''',
 ]
 
 [[allowlists]]
@@ -38,4 +39,11 @@ targetRules = ["generic-api-key"]
 paths = [
   '''^(?:/repo/)?explorations/[^/]+/research/SOURCES\.md$''',
   '''^(?:/repo/)?goals/[^/]+/research/SOURCES\.md$''',
+]
+
+[[allowlists]]
+description = "The packet-system redesign's immutable Firecrawl transcript mentions Sourcegraph once alongside public Git commit hashes. The Sourcegraph detector treats any 40-hex token in the same JSONL record as a candidate even though the record contains no sgp_ token prefix."
+targetRules = ["sourcegraph-access-token"]
+paths = [
+  '''^(?:/repo/)?explorations/packet-system-redesign/research/grok/raw/2-agent-plan-gates\.jsonl$''',
 ]

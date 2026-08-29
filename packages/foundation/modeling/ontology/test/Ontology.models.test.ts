@@ -12,20 +12,20 @@ import {
 } from "@beep/ontology/Ontology.models";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Result, SchemaAST } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const HttpUrlArbitrary = S.toArbitrary(HttpUrl);
-const GraphInfoArbitrary = S.toArbitrary(GraphInfo);
-const HealthResponseArbitrary = S.toArbitrary(HealthResponse);
-const OWLClassArbitrary = S.toArbitrary(OWLClass);
-const OWLObjectPropertyArbitrary = S.toArbitrary(OWLObjectProperty);
-const OWLClassListArbitrary = S.toArbitrary(OWLClassList);
-const OWLObjectPropertyListArbitrary = S.toArbitrary(OWLObjectPropertyList);
-const OWLSearchScoreArbitrary = S.toArbitrary(OWLSearchScore);
-const OWLSearchResultsArbitrary = S.toArbitrary(OWLSearchResults);
-const HTTPValidationErrorArbitrary = S.toArbitrary(HTTPValidationError);
+const HttpUrlArbitrary = S.toArbitrary(HttpUrl)(fc);
+const GraphInfoArbitrary = S.toArbitrary(GraphInfo)(fc);
+const HealthResponseArbitrary = S.toArbitrary(HealthResponse)(fc);
+const OWLClassArbitrary = S.toArbitrary(OWLClass)(fc);
+const OWLObjectPropertyArbitrary = S.toArbitrary(OWLObjectProperty)(fc);
+const OWLClassListArbitrary = S.toArbitrary(OWLClassList)(fc);
+const OWLObjectPropertyListArbitrary = S.toArbitrary(OWLObjectPropertyList)(fc);
+const OWLSearchScoreArbitrary = S.toArbitrary(OWLSearchScore)(fc);
+const OWLSearchResultsArbitrary = S.toArbitrary(OWLSearchResults)(fc);
+const HTTPValidationErrorArbitrary = S.toArbitrary(HTTPValidationError)(fc);
 
 const encode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -99,6 +99,17 @@ const httpValidationErrorWire: S.Codec.Encoded<typeof HTTPValidationError> = {
 };
 
 describe("@beep/ontology models", () => {
+  it("owns constructive HTTP URL metadata and codec statics", () => {
+    expect(SchemaAST.resolve(HttpUrl.ast)?.toArbitrary).toBeDefined();
+    expect(HttpUrl.fromUnknown("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
+  });
+
+  it("accepts only HTTP and HTTPS URL schemes", () => {
+    expect(S.is(HttpUrl)("http://example.com/ontology.owl")).toBe(true);
+    expect(S.is(HttpUrl)("https://example.com/ontology.owl")).toBe(true);
+    expect(S.is(HttpUrl)("ftp://example.com/ontology.owl")).toBe(false);
+  });
+
   it("preserves representative OpenAPI encoded wire shapes", () => {
     expectWireRoundTrip(GraphInfo, graphInfoGithubWire);
     expectWireRoundTrip(GraphInfo, graphInfoHttpWire);
@@ -152,11 +163,11 @@ describe("@beep/ontology models", () => {
     ));
 
   it("rejects malformed values for the absorbed precision invariants", () => {
-    expect(Result.isFailure(S.decodeUnknownResult(HttpUrl)("not a url"))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLSearchScore)(Number.POSITIVE_INFINITY))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLClass)({ iri: "" }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLClass)({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLObjectProperty)({ iri: "", domain: ["Rdomain"] }))).toBe(true);
-    expect(Result.isFailure(S.decodeUnknownResult(OWLObjectProperty)({ iri: "Rproperty", range: [""] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(HttpUrl)("not a url"))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLSearchScore)(Number.POSITIVE_INFINITY))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLClass)({ iri: "" }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLClass)({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLObjectProperty)({ iri: "", domain: ["Rdomain"] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(OWLObjectProperty)({ iri: "Rproperty", range: [""] }))).toBe(true);
   });
 });

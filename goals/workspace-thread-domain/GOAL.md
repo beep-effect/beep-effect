@@ -1,6 +1,6 @@
 # GOAL: implement the workspace thread domain on PGlite
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: Thread/Turn/Message entities + tables exist in the workspace slice
 with migrations proven against PGlite; `@beep/anthropic` driver exists; the
@@ -19,7 +19,7 @@ Read those first, then `AGENTS.md`, `CLAUDE.md`, and standards named by
 `SPEC.md` (esp. `standards/architecture/{03,10}-*.md`). Entity semantics:
 `goals/agentic-professional-runtime/docs/data-model-shared-core.md`.
 Proof-repo reference (read-only):
-`/home/elpresidank/YeeBois/projects/effect-lexical-chat/server/Anthropic.ts`.
+the effect-lexical-chat project's `server/Anthropic.ts` (machine-local checkout).
 
 Scope:
 

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "identity-iri-fibered",
+    "title": "Identity IRI Fibered",
+    "status": "completed-retained",
+    "created": "2026-08-13",
+    "updated": "2026-08-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/identity-iri-fibered",
+  "lifecycle": "completed-retained",
+  "mission": "Ship the discrete Fibered kit, exact IdentityRegistry, byte-identical JSDoc migration, post-move SHACL projection, and test/dev store Layers.",
+  "statusNote": "Completed-retained 2026-08-25: P0 cleared semantic-web PR2 (#695) / PR3 (#687, #711, #715) from live source; P1 shipped the full MAP row (Fibered + IdentityRegistry in @beep/identity, byte-identical JSDocTagDefinition.make migration in @beep/repo-utils, identity RDF binding + layerDataset + SHACL projection in @beep/semantic-web, e2e proof in epistemic-server); P2 evidence in history/p1-p2-evidence.md; P3 published via Yeet; P4 reflection in history/reflections/2026-08-25-claude.md.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/identity-as-iri",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": ["goals/identity-iri-core", "goals/identity-iri-fold"],
+  "blockedBy": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/identity-iri-fibered/README.md",
+    "goals/identity-iri-fibered/SPEC.md",
+    "goals/identity-iri-fibered/PLAN.md",
+    "goals/identity-iri-fibered/GOAL.md",
+    "goals/identity-iri-fibered/research/SOURCES.md",
+    "explorations/identity-as-iri/BRIEF.md",
+    "explorations/identity-as-iri/MAP.md",
+    "explorations/identity-as-iri/DECISIONS.md",
+    "goals/identity-iri-fibered/history/p0-blocker-audit.md",
+    "goals/identity-iri-fibered/research/2026-08-25-p1-design.md",
+    "goals/identity-iri-fibered/history/p1-p2-evidence.md",
+    "goals/identity-iri-fibered/history/reflections/2026-08-25-claude.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/identity-as-iri/research/SOURCES.md",
+    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
+    "research/2026-08-25-p1-design.md",
+    "history/p0-blocker-audit.md",
+    "history/p1-p2-evidence.md",
+    "history/p1-lane-a-report.md",
+    "history/p1-lane-b-report.md",
+    "research/OPPORTUNITIES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/identity-iri-fibered/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Blocker and contract audit",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement full MAP row",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/identity-iri-fibered/GOAL.md)\" -le 4000",
+    "jq . goals/identity-iri-fibered/ops/manifest.json",
+    "rg -n \"identity-iri-fibered|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/identity-iri-fibered",
+    "git diff --check -- goals/identity-iri-fibered",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Either semantic-web PR2 or PR3 cleanup lacks landed-content evidence.",
+    "The post-move SHACL contract layer cannot be identified.",
+    "The discrete case would require version/coherence machinery.",
+    "Store work would become a production technology decision."
+  ]
+}

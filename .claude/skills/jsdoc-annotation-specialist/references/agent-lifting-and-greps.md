@@ -1,140 +1,104 @@
-# Agent Context Lifting Rules and Grep Verification Commands
+# Agent Context Lifting and Grep Audits
 
-## Contents
+## Agent context lifting
 
-- [Agent Context Lifting Rules](#agent-context-lifting-rules)
-- [Grep Verification Commands](#grep-verification-commands)
+Documentation improves generated code only when the relevant parts reach the
+agent. Lift selectively instead of copying an entire block without purpose.
 
-## Agent Context Lifting Rules
+### Generating a call site
 
-When a downstream agent loads a symbol's documentation as context for code
-generation, surface tags selectively based on what the agent is doing:
+Lift the signature, lead, When-to-use, Details, Gotchas, and applicable
+`@deprecated`, `@effects`, `@precondition`, `@invariant`, `@throws`, and `@see`
+content. Examples are useful when they demonstrate the exact composition at hand;
+category and since metadata usually are not.
 
-### When generating a call site for a symbol
+### Generating an implementation
 
-Lift these into the prompt:
+Lift the signature, lead, Details, Gotchas, `@postcondition`, `@invariant`,
+`@throws`, and `@effects`. These describe intent, preserved state, defects, and
+required side effects.
 
-- **Always**: `@deprecated` (with migration target) — block use of deprecated APIs
-- **Always**: The TS signature
-- **`@effects`** — so the agent reasons about side effects in surrounding code
-- **`@precondition`** — so the agent verifies preconditions at the call site
-- **`@invariant`** — so the agent knows what state is preserved
-- **`@throws`** — so the agent handles defects
-- **`@remarks`** — for non-obvious semantics
+### Choosing between symbols
 
-Skip:
+Lift When-to-use, described `@see` relationships, release-stage tags, and
+deprecation guidance. Prefer stable, non-deprecated APIs whose documented use case
+matches the task.
 
-- `@param` / `@returns` when they restate the signature (the agent can read
-  the signature)
-- `@example` (the agent generates its own usage)
-- `@since` / `@category` (irrelevant to call-site generation)
+`@remarks` is retired and should never be requested as the semantic source. Use
+Details and Gotchas. Legacy `@example` tags remain readable in untouched files,
+but files whose documentation is touched migrate to titled Example sections.
 
-### When generating an implementation for a symbol
+## Grep audits
 
-Lift:
+These commands are heuristics for focusing review. The inventory and docgen gates
+remain authoritative.
 
-- The TS signature
-- `@postcondition` — what the implementation must guarantee
-- `@invariant` — what the implementation must preserve
-- `@remarks` — describing intent and complexity
-- `@throws` — defects the implementation may produce
-- `@effects` — side effects the implementation must perform
-
-### When choosing between candidate symbols
-
-Lift:
-
-- `@public` / `@beta` / `@alpha` / `@experimental` — prefer stable APIs
-- `@deprecated` — never pick deprecated symbols when alternatives exist
-- `@remarks` — to disambiguate similar APIs
-
-This is the most direct lever for using documentation to improve agent output
-quality. Generated tags that don't end up in agent context are write-only
-information.
-
-## Grep Verification Commands
-
-Use these to audit a file or directory for compliance gaps:
-
-### Required-tag presence
+### Export ownership and required metadata
 
 ```bash
-# Exports missing JSDoc (heuristic — check lines above each match)
-rg "^export (const|function|class|interface|type)" --type ts
-
-# Files with @example but missing @since
-rg "@example" --type ts -l | xargs rg -L "@since"
-
-# Files with @example but missing @category
-rg "@example" --type ts -l | xargs rg -L "@category"
+rg -n '^export (const|function|class|interface|type|namespace)' --type ts
+rg -n '@category|@since' --type ts
 ```
 
-### TSDoc grammar violations
+Classify owning exports before judging Example presence: value-level exports need
+an Example; pure type-level exports need prose only.
+
+### Transitional carriers
 
 ```bash
-# Type braces in @param / @returns / @throws (TSDoc violation)
-rg '@(param|returns|throws)\s+\{' --type ts
-
-# @template instead of @typeParam
-rg '@template\b' --type ts
-
-# @returns with hyphen separator
-rg '@returns\s+-\s' --type ts
-
-# @module instead of @packageDocumentation
-rg '@module\b' --type ts | rg -v '@packageDocumentation'
+rg -n '@remarks\b|@example\b' --type ts
+rg -n '^\s*\* \*\*Example\*\*' --type ts
 ```
 
-### Conditional tag quality
+In files whose documentation is touched, move `@remarks` into Details or Gotchas
+and convert legacy `@example` to a titled Example section. Do not use these
+searches for a mass migration of untouched files.
+
+### Section shape
 
 ```bash
-# @deprecated without {@link} migration target
-rg -B0 -A2 '@deprecated' --type ts | rg -v '\{@link'
-
-# Empty Effect.gen bodies in examples (heuristic)
-rg -A1 'Effect\.gen\(function\*\s*\(\)\s*\{' --type ts | rg -B1 '^\s*\}\)'
+rg -n '^\s*\* \*\*(When to use|Details|Gotchas|Example)\*\*' --type ts
+rg -n '^\s*\* ```ts\s*$' --type ts
 ```
 
-### Import alias compliance
+Review each matched block for canonical order, non-empty content, unique Example
+titles, exactly one fence per Example, and no loose `ts` fence. Confirm When-to-use
+opens with `Use to`, `Use when`, `Use as`, or `Use with`.
+
+### TSDoc violations
 
 ```bash
-# Wrong Schema import alias
-rg 'import \{ Schema \}' --type ts
-rg 'from "@effect/schema"' --type ts
-
-# Wrong Array / Option / Predicate / Record imports
-rg 'import \{ (Array|Option|Predicate|Record) \}' --type ts
+rg -n '@(param|returns|throws)\s+\{' --type ts
+rg -n '@template\b|@module\b|@returns\s+-\s|@throws\s+-\s' --type ts
 ```
+
+### Described links
+
+```bash
+rg -n '@see\b' --type ts
+rg -n '@deprecated\b' --type ts
+```
+
+Inspect every `@see` for a purpose phrase and every deprecation for a linked
+replacement plus migration guidance. Link-target resolution is not yet automated.
+
+### Import and Example safety
+
+```bash
+rg -n 'import \{ (Schema|Array|Option|Predicate|Record) \}' --type ts
+rg -n 'from "@effect/schema"|: any| as unknown as |declare ' --type ts
+rg -n 'Effect\.gen\(function\*\s*\(\)\s*\{' --type ts
+```
+
+Namespace imports are required for helper modules. Inspect generator matches for
+empty bodies and all safety matches specifically within Example fences.
 
 ### Schema annotation gaps
 
 ```bash
-# S.Class without $I.annote
-rg "extends S\.Class" --type ts -l | xargs rg -L "annote"
-
-# TaggedErrorClass without $I.annote
-rg "extends TaggedErrorClass" --type ts -l | xargs rg -L "annote"
+rg -l 'extends S\.Class' --type ts | xargs rg -L 'annote'
+rg -l 'extends S\.TaggedError' --type ts | xargs rg -L 'annote'
+rg -n 'annoteSchema|\.annotate\(' --type ts
 ```
 
-### Forbidden patterns
-
-```bash
-# Uses any type in examples or signatures
-rg ': any' --type ts
-
-# Type assertions
-rg ' as unknown as ' --type ts
-rg ' as [A-Z]\w+' --type ts
-```
-
-### Internal symbol leakage
-
-```bash
-# @internal symbols re-exported from package index (potential leak)
-rg -l '@internal' --type ts | while read f; do
-  base=$(basename "$f" .ts)
-  if grep -q "$base" "$(dirname "$f")/../index.ts" 2>/dev/null; then
-    echo "Potential @internal leak: $f"
-  fi
-done
-```
+Use `references/annotation-patterns.md` to judge the appropriate annotation form.

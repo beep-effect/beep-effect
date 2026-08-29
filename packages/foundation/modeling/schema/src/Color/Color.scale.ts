@@ -119,7 +119,8 @@ const generateAlphaScaleValues = ({ scale, isDark }: GenerateAlphaScaleInput): H
 /**
  * Fixed-size 12-step canonical hex color scale.
  *
- * @example
+ * **Example** (Decode fixed 12-step scale)
+ *
  * ```ts
  * import { HexColorScale12 } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -133,8 +134,8 @@ const generateAlphaScaleValues = ({ scale, isDark }: GenerateAlphaScaleInput): H
  * console.log(scale.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const HexColorScale12 = S.Array(HexColor)
   .check(HexColorScale12Checks)
@@ -151,7 +152,8 @@ export const HexColorScale12 = S.Array(HexColor)
 /**
  * Type for {@link HexColorScale12}.
  *
- * @example
+ * **Example** (Type annotated scale decode)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HexColorScale12 } from "@beep/schema/Color"
@@ -165,8 +167,8 @@ export const HexColorScale12 = S.Array(HexColor)
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type HexColorScale12 = typeof HexColorScale12.Type;
 
@@ -181,7 +183,8 @@ const HexColorScale12Input = S.Array(NormalizeHexColor)
 /**
  * Request schema for generating a chromatic 12-step scale.
  *
- * @example
+ * **Example** (Decode chromatic scale input)
+ *
  * ```ts
  * import { GenerateScaleInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -190,8 +193,8 @@ const HexColorScale12Input = S.Array(NormalizeHexColor)
  * console.log(input.seed)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class GenerateScaleInput extends S.Class<GenerateScaleInput>($I`GenerateScaleInput`)(
   {
@@ -206,7 +209,8 @@ export class GenerateScaleInput extends S.Class<GenerateScaleInput>($I`GenerateS
 /**
  * One-way schema for generating a chromatic 12-step scale.
  *
- * @example
+ * **Example** (Generate chromatic 12-step scale)
+ *
  * ```ts
  * import { GenerateScale } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -215,8 +219,8 @@ export class GenerateScaleInput extends S.Class<GenerateScaleInput>($I`GenerateS
  * console.log(scale.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const GenerateScale = GenerateScaleInput.pipe(
   S.decodeTo(HexColorScale12, {
@@ -233,7 +237,8 @@ export const GenerateScale = GenerateScaleInput.pipe(
 /**
  * Type for {@link GenerateScale}.
  *
- * @example
+ * **Example** (Type annotated scale generation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { GenerateScale } from "@beep/schema/Color"
@@ -242,15 +247,16 @@ export const GenerateScale = GenerateScaleInput.pipe(
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GenerateScale = typeof GenerateScale.Type;
 
 /**
  * Request schema for generating a neutral 12-step scale.
  *
- * @example
+ * **Example** (Decode neutral scale input)
+ *
  * ```ts
  * import { GenerateNeutralScaleInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -259,8 +265,8 @@ export type GenerateScale = typeof GenerateScale.Type;
  * console.log(input.isDark)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class GenerateNeutralScaleInput extends S.Class<GenerateNeutralScaleInput>($I`GenerateNeutralScaleInput`)(
   {
@@ -275,7 +281,8 @@ export class GenerateNeutralScaleInput extends S.Class<GenerateNeutralScaleInput
 /**
  * One-way schema for generating a neutral 12-step scale.
  *
- * @example
+ * **Example** (Generate neutral 12-step scale)
+ *
  * ```ts
  * import { GenerateNeutralScale } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -284,8 +291,8 @@ export class GenerateNeutralScaleInput extends S.Class<GenerateNeutralScaleInput
  * console.log(scale.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const GenerateNeutralScale = GenerateNeutralScaleInput.pipe(
   S.decodeTo(HexColorScale12, {
@@ -302,7 +309,8 @@ export const GenerateNeutralScale = GenerateNeutralScaleInput.pipe(
 /**
  * Type for {@link GenerateNeutralScale}.
  *
- * @example
+ * **Example** (Type annotated neutral generation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { GenerateNeutralScale } from "@beep/schema/Color"
@@ -311,15 +319,16 @@ export const GenerateNeutralScale = GenerateNeutralScaleInput.pipe(
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GenerateNeutralScale = typeof GenerateNeutralScale.Type;
 
 /**
  * Request schema for generating an alpha-blended 12-step scale.
  *
- * @example
+ * **Example** (Decode alpha scale input)
+ *
  * ```ts
  * import { GenerateAlphaScaleInput } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -336,8 +345,8 @@ export type GenerateNeutralScale = typeof GenerateNeutralScale.Type;
  * console.log(input.scale.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export class GenerateAlphaScaleInput extends S.Class<GenerateAlphaScaleInput>($I`GenerateAlphaScaleInput`)(
   {
@@ -352,7 +361,8 @@ export class GenerateAlphaScaleInput extends S.Class<GenerateAlphaScaleInput>($I
 /**
  * One-way schema for generating an alpha-blended 12-step scale.
  *
- * @example
+ * **Example** (Generate alpha-blended scale)
+ *
  * ```ts
  * import { GenerateAlphaScale } from "@beep/schema/Color"
  * import * as S from "effect/Schema"
@@ -369,8 +379,8 @@ export class GenerateAlphaScaleInput extends S.Class<GenerateAlphaScaleInput>($I
  * console.log(alphaScale.length)
  * ```
  *
- * @since 0.0.0
  * @category validation
+ * @since 0.0.0
  */
 export const GenerateAlphaScale = GenerateAlphaScaleInput.pipe(
   S.decodeTo(HexColorScale12, {
@@ -387,7 +397,8 @@ export const GenerateAlphaScale = GenerateAlphaScaleInput.pipe(
 /**
  * Type for {@link GenerateAlphaScale}.
  *
- * @example
+ * **Example** (Type annotated alpha generation)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { GenerateAlphaScale } from "@beep/schema/Color"
@@ -404,7 +415,7 @@ export const GenerateAlphaScale = GenerateAlphaScaleInput.pipe(
  * console.log(value.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type GenerateAlphaScale = typeof GenerateAlphaScale.Type;

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-child-process-hardening",
+    "title": "Effect Child-Process Hardening",
+    "status": "completed-retained",
+    "created": "2026-07-29",
+    "updated": "2026-07-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-child-process-hardening",
+  "lifecycle": "completed-retained",
+  "mission": "Make Effect child-process ownership explicit and restore the repo CLI's canonical process boundary.",
+  "statusNote": "Implementation and full local proof are complete; PR #509 reached hosted green after retrying one unrelated runner timeout, and the packet closeout is included in the delivery PR.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/effect-child-process-hardening/README.md",
+    "goals/effect-child-process-hardening/SPEC.md",
+    "goals/effect-child-process-hardening/PLAN.md",
+    "goals/effect-child-process-hardening/GOAL.md",
+    "goals/effect-child-process-hardening/research/SOURCES.md",
+    "goals/effect-child-process-hardening/research/2026-07-29-inventory.md",
+    "goals/effect-child-process-hardening/research/2026-07-30-verification.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-07-29-inventory.md",
+    "research/2026-07-30-verification.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-child-process-hardening/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/effect-child-process-hardening/GOAL.md)\" -le 4000",
+    "jq . goals/effect-child-process-hardening/ops/manifest.json",
+    "rg -n \"effect-child-process-hardening|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/effect-child-process-hardening",
+    "git diff --check -- goals/effect-child-process-hardening",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed the effect/unstable/process consumer scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, publication, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

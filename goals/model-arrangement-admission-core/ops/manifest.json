@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "model-arrangement-admission-core",
+    "title": "Model Arrangement Admission Core",
+    "status": "paused",
+    "created": "2026-08-17",
+    "updated": "2026-08-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/model-arrangement-admission-core",
+  "lifecycle": "paused",
+  "mission": "Content-addressed model-arrangement identity, qualification evidence, and five-status immutable dispositions with a two-axis as-of eligibility query — proven by admitting the repo's live chat arrangement as a restricted fixture.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/model-artifact-admission",
+    "graduated": "2026-08-17"
+  },
+  "statusNote": "Paused at scaffold (queue goal): authored-but-not-started; no free program-lane slot at graduation. Resume when a lane slot frees or the roadmap pulls it.",
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/model-arrangement-admission-core/README.md",
+    "goals/model-arrangement-admission-core/SPEC.md",
+    "goals/model-arrangement-admission-core/PLAN.md",
+    "goals/model-arrangement-admission-core/GOAL.md",
+    "goals/model-arrangement-admission-core/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/model-arrangement-admission-core/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research (inherited from exploration)",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "First slice (kits + schemas + digest builder + fixture admission proofs)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/model-arrangement-admission-core/GOAL.md)\" -le 4000",
+    "jq . goals/model-arrangement-admission-core/ops/manifest.json",
+    "git diff --check -- goals/model-arrangement-admission-core",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The component set cannot close without digesting volatile runtime state.",
+    "Eligibility cannot derive from immutable records alone.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
+  ]
+}

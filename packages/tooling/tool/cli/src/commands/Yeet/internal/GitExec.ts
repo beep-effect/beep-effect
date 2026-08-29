@@ -20,10 +20,10 @@ import {
   runGitOutput as runSharedGitOutput,
   runGitPathList as runSharedGitPathList,
   safeOriginBranchFromBase,
-} from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
+} from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.js";
+import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
   onSpawnFailure: (commandLine) => YeetCommandError.new(`Failed to run ${commandLine}.`),
@@ -45,7 +45,8 @@ const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
 /**
  * Run Git with Yeet's historical bounded-output error wording.
  *
- * @example
+ * **Example** (Map git status length)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { runGitOutput } from "@beep/repo-cli/test/Yeet"
@@ -54,6 +55,7 @@ const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
  *   Effect.map((output) => output.length)
  * )
  * ```
+ *
  * @category execution
  * @since 0.0.0
  */
@@ -67,7 +69,8 @@ export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
 /**
  * Run Git and parse Yeet's NUL-delimited path output.
  *
- * @example
+ * **Example** (Count NUL-delimited paths)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { runGitPathList } from "@beep/repo-cli/test/Yeet"
@@ -76,6 +79,7 @@ export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
  *   Effect.map((paths) => paths.length)
  * )
  * ```
+ *
  * @category execution
  * @since 0.0.0
  */
@@ -89,7 +93,8 @@ export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
 /**
  * Collect staged publish paths with Yeet's Git error adapter.
  *
- * @example
+ * **Example** (Count staged publish paths)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectStagedPublishPaths } from "@beep/repo-cli/test/Yeet"
@@ -98,6 +103,7 @@ export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
  *   Effect.map((paths) => paths.length)
  * )
  * ```
+ *
  * @category changed-files
  * @since 0.0.0
  */
@@ -110,7 +116,8 @@ export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPat
 /**
  * Collect unstaged tracked publish paths with Yeet's Git error adapter.
  *
- * @example
+ * **Example** (Count unstaged tracked paths)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectUnstagedTrackedPaths } from "@beep/repo-cli/test/Yeet"
@@ -119,6 +126,7 @@ export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPat
  *   Effect.map((paths) => paths.length)
  * )
  * ```
+ *
  * @category changed-files
  * @since 0.0.0
  */
@@ -131,7 +139,8 @@ export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTracke
 /**
  * Collect untracked publish paths with Yeet's Git error adapter.
  *
- * @example
+ * **Example** (Count untracked publish paths)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { collectUntrackedPaths } from "@beep/repo-cli/test/Yeet"
@@ -140,6 +149,7 @@ export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTracke
  *   Effect.map((paths) => paths.length)
  * )
  * ```
+ *
  * @category changed-files
  * @since 0.0.0
  */
@@ -152,11 +162,8 @@ export const collectUntrackedPaths = Effect.fn("Yeet.collectUntrackedPaths")(fun
 /**
  * Trim a string into `Some` when it is non-empty.
  *
- * @param value - Candidate branch, ref, or CLI text value to trim before
- * checking for useful content.
- * @returns `Some` with the trimmed text, or `None` when the trimmed input is
- * empty.
- * @example
+ * **Example** (Trim non-empty Option)
+ *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { optionFromNonEmpty } from "@beep/repo-cli/test/Yeet"
@@ -165,6 +172,11 @@ export const collectUntrackedPaths = Effect.fn("Yeet.collectUntrackedPaths")(fun
  * strictEqual(O.getOrThrow(optionFromNonEmpty(" main ")), "main")
  * strictEqual(O.isNone(optionFromNonEmpty("   ")), true)
  * ```
+ *
+ * @param value - Candidate branch, ref, or CLI text value to trim before
+ * checking for useful content.
+ * @returns `Some` with the trimmed text, or `None` when the trimmed input is
+ * empty.
  * @category parsing
  * @since 0.0.0
  */
@@ -174,14 +186,16 @@ export const optionFromNonEmpty = (value: string): O.Option<string> =>
 /**
  * Extract and validate the `origin/<branch>` ref from a `--base` value.
  *
- * @param base - The raw `--base` value (e.g. `main` or `origin/main`).
- * @returns `Option.some(branch)` for a safe `origin/<branch>` ref, otherwise `Option.none()`.
- * @example
+ * **Example** (Parse origin branch base)
+ *
  * ```ts
  * import { safeOriginBranchFromBaseForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(safeOriginBranchFromBaseForTesting("origin/main"))
  * ```
+ *
+ * @param base - The raw `--base` value (e.g. `main` or `origin/main`).
+ * @returns `Option.some(branch)` for a safe `origin/<branch>` ref, otherwise `Option.none()`.
  * @category testing
  * @since 0.0.0
  */
@@ -190,7 +204,8 @@ export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
 /**
  * Refresh the configured base ref, preserving Yeet's unsafe-ref errors.
  *
- * @example
+ * **Example** (Refresh origin main ref)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { refreshBaseRef } from "@beep/repo-cli/test/Yeet"
@@ -199,6 +214,7 @@ export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
  *   Effect.as("base-ref refreshed")
  * )
  * ```
+ *
  * @category execution
  * @since 0.0.0
  */
@@ -236,7 +252,8 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
 /**
  * Read the current branch using Yeet's historical `rev-parse --abbrev-ref`.
  *
- * @example
+ * **Example** (Read trimmed branch name)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { currentYeetBranch } from "@beep/repo-cli/test/Yeet"
@@ -245,6 +262,7 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
  *   Effect.map((branch) => branch.trim())
  * )
  * ```
+ *
  * @category execution
  * @since 0.0.0
  */
@@ -257,10 +275,8 @@ export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
 /**
  * Read the current commit SHA.
  *
- * @param context - Repo-run context whose root determines where Git reads
- * `HEAD`.
- * @returns The trimmed commit SHA from `git rev-parse HEAD`.
- * @example
+ * **Example** (Map commit SHA length)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { currentCommitSha } from "@beep/repo-cli/test/Yeet"
@@ -276,6 +292,10 @@ export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], packages: [], tasks: [] }
  * }).pipe(Effect.map((sha) => sha.length))
  * ```
+ *
+ * @param context - Repo-run context whose root determines where Git reads
+ * `HEAD`.
+ * @returns The trimmed commit SHA from `git rev-parse HEAD`.
  * @category execution
  * @since 0.0.0
  */
@@ -285,7 +305,8 @@ export const currentCommitSha = (context: RepoRunContext) =>
 /**
  * Return whether `bun.lock` changed between the configured base and head.
  *
- * @example
+ * **Example** (Detect bun.lock changes)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { lockfileChangedSinceBase } from "@beep/repo-cli/test/Yeet"
@@ -301,6 +322,7 @@ export const currentCommitSha = (context: RepoRunContext) =>
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], packages: [], tasks: [] }
  * }).pipe(Effect.map(Boolean))
  * ```
+ *
  * @category execution
  * @since 0.0.0
  */

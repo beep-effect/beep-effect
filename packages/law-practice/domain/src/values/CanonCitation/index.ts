@@ -9,9 +9,8 @@
 /**
  * CanonCitation model exports.
  *
- * **Example**
+ * **Example** (Import CanonCitation)
  *
- * @example
  * ```ts
  * import { CanonCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CanonCitation.model.js";
+export * from "./CanonCitation.model.ts";

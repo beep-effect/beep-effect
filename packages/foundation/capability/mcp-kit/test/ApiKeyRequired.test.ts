@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const softRegistration = SourceAuthRegistration.make({
   name: "Soft Fixture Source",
@@ -53,13 +54,18 @@ const softSourceLayer = sanitizedToolkit(SoftToolkit).pipe(Layer.provide(SoftToo
 // time an `it.effect` body calls `callTool`, the merged layer output
 // (including the overridden `ConfigProvider`) is already its ambient context.
 const buildLayer = (env: Record<string, string>) =>
-  Layer.mergeAll(McpServer.McpServer.layer, softSourceLayer, ConfigProvider.layer(ConfigProvider.fromUnknown(env)));
+  Layer.mergeAll(
+    McpServer.McpServer.layer,
+    softSourceLayer,
+    StubMcpClientLayer,
+    ConfigProvider.layer(ConfigProvider.fromUnknown(env))
+  );
 
 const ApiKeyRequiredFailureFromJson = S.fromJsonString(ApiKeyRequiredFailure);
 const StringFromJson = S.fromJsonString(S.String);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = S.toArbitrary(schema);
+  const arbitrary = S.toArbitrary(schema)(fc);
   const decode = S.decodeUnknownSync(schema);
   const encode = S.encodeSync(schema);
   const equals = S.toEquivalence(schema);
@@ -74,8 +80,9 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
 
 describe("api_key_required envelope", () => {
   layer(buildLayer({}))("when the credential is absent", (it) => {
-    it.effect("returns isError:false with the envelope mirrored into content[].text", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns isError:false with the envelope mirrored into content[].text",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });
 
@@ -84,7 +91,7 @@ describe("api_key_required envelope", () => {
 
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
-        const envelope = yield* S.decodeUnknownEffect(ApiKeyRequiredFailureFromJson)(
+        const envelope = yield* S.decodeEffect(ApiKeyRequiredFailureFromJson)(
           (first as { readonly text: string }).text
         );
 
@@ -96,15 +103,16 @@ describe("api_key_required envelope", () => {
   });
 
   layer(buildLayer({ MCP_KIT_TEST_SOFT_KEY: "fixture-secret" }))("when the credential is present", (it) => {
-    it.effect("stays registered and succeeds normally", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "stays registered and succeeds normally",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });
 
         assert.isFalse(result.isError);
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
-        const decoded = yield* S.decodeUnknownEffect(StringFromJson)((first as { readonly text: string }).text);
+        const decoded = yield* S.decodeEffect(StringFromJson)((first as { readonly text: string }).text);
         assert.strictEqual(decoded, "ok");
       })
     );

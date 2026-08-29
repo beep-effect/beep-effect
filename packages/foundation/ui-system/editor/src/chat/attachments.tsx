@@ -17,15 +17,16 @@
  */
 
 import { cn } from "@beep/ui/lib/utils";
-import { A } from "@beep/utils";
-import { useAtomMount, useAtomSet } from "@effect/atom-react";
+import { A, N, O } from "@beep/utils";
+import { useAtom, useAtomMount, useAtomSet } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { DRAG_DROP_PASTE } from "@lexical/rich-text";
-import { FileIcon, XIcon } from "@phosphor-icons/react";
+import { FileIcon } from "@phosphor-icons/react/File";
+import { XIcon } from "@phosphor-icons/react/X";
 import { Atom } from "effect/unstable/reactivity";
 import { COMMAND_PRIORITY_LOW } from "lexical";
-import { captureAttachmentsFn } from "./atoms.ts";
-import { isImageAttachment } from "./attachment-model.ts";
+import { attachmentFailureAtom, captureAttachmentsFn } from "./atoms.ts";
+import { AttachmentFailure, isImageAttachment } from "./attachment-model.ts";
 import type { LexicalEditor } from "lexical";
 import type { JSX } from "react";
 import type { ComposerAttachment } from "./attachment-model.ts";
@@ -64,9 +65,10 @@ const dragDropBindingAtom = Atom.family((editor: LexicalEditor) =>
  * {@link captureAttachmentsFn} mounted (via `useAtomSet`) so the registry never
  * interrupts the capture fiber dispatched from the drag-drop binding.
  *
- * @example
+ * **Example** (Mount capture plugin)
+ *
  * ```tsx
- * import { AttachmentPlugin } from "@beep/editor/chat"
+ * import { AttachmentPlugin } from "@beep/editor/chat/attachments"
  *
  * function CaptureBinding() {
  *   return <AttachmentPlugin />
@@ -85,13 +87,65 @@ export function AttachmentPlugin(): null {
   return null;
 }
 
+const attachmentFailureMessage = AttachmentFailure.match({
+  AttachmentInvalidMimeType: ({ filename }) => `${filename} has an unsupported or missing file type.`,
+  AttachmentPortFailed: ({ message }) => message,
+  AttachmentTooLarge: ({ filename, maxBytes }) =>
+    `${filename} is larger than the ${N.round(maxBytes / (1024 * 1024), 1)} MB attachment limit. Choose a smaller file.`,
+});
+
+/**
+ * Inline, dismissible attachment failure for the current composer. Failures are
+ * schema-backed and rendered exhaustively; raw upload-port defects remain in
+ * structured logs and are never interpolated into the DOM.
+ *
+ * **Example** (Render failure notice)
+ *
+ * ```tsx
+ * import { AttachmentFailureNotice } from "@beep/editor/chat/attachments"
+ *
+ * function ComposerFailures() {
+ *   return <AttachmentFailureNotice />
+ * }
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function AttachmentFailureNotice(): JSX.Element | null {
+  const [editor] = useLexicalComposerContext();
+  const [failure, setFailure] = useAtom(attachmentFailureAtom(editor));
+
+  return O.match(failure, {
+    onNone: () => null,
+    onSome: (value) => (
+      <div
+        className="mx-3 mt-2 flex items-center justify-between gap-2 rounded border border-destructive/40 bg-destructive/5 px-2 py-1.5 text-xs text-destructive"
+        role="alert"
+      >
+        <span>{attachmentFailureMessage(value)}</span>
+        <button
+          type="button"
+          aria-label="Dismiss attachment error"
+          className="rounded-sm p-0.5 hover:bg-destructive/10"
+          onClick={() => setFailure(O.none())}
+        >
+          <XIcon className="size-3.5" />
+        </button>
+      </div>
+    ),
+  });
+}
+
 /**
  * The captured-attachment chip strip with per-item remove controls and image
  * thumbnails.
  *
- * @example
+ * **Example** (Chips with remove callback)
+ *
  * ```tsx
- * import { AttachmentChips, type ComposerAttachment } from "@beep/editor/chat"
+ * import { AttachmentChips } from "@beep/editor/chat/attachments"
+ * import type { ComposerAttachment } from "@beep/editor/chat/attachment-model"
  *
  * function CapturedFiles({ attachments }: { readonly attachments: ReadonlyArray<ComposerAttachment> }) {
  *   return <AttachmentChips attachments={attachments} onRemove={(id) => console.log(id)} />

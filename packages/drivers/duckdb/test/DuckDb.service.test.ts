@@ -99,11 +99,16 @@ const fakeRunResult = {} as Awaited<ReturnType<DuckDBConnection["run"]>>;
 const encodeSchema = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): Schema["Encoded"] =>
   Effect.runSync(S.encodeEffect(schema)(value));
 
+const DuckDbErrorFromUnknownOptionsArbitrary = S.toArbitrary(DuckDbErrorFromUnknownOptions)(fc).filter((options) =>
+  O.isNone(options.cause)
+);
+const DuckDbErrorArbitrary = S.toArbitrary(DuckDbError)(fc).filter((error) => O.isNone(error.cause));
+
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
+  arbitrary = S.toArbitrary(schema)(fc),
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema);
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 
@@ -194,8 +199,8 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     assertSchemaArbitraryRoundTrips(DuckDbOperation);
     assertSchemaArbitraryRoundTrips(DuckDbRow);
     assertSchemaArbitraryRoundTrips(DuckDbRows);
-    assertSchemaArbitraryRoundTrips(DuckDbErrorFromUnknownOptions);
-    assertSchemaArbitraryRoundTrips(DuckDbError);
+    assertSchemaArbitraryRoundTrips(DuckDbErrorFromUnknownOptions, DuckDbErrorFromUnknownOptionsArbitrary);
+    assertSchemaArbitraryRoundTrips(DuckDbError, DuckDbErrorArbitrary);
   });
 
   it("normalizes unknown failures into typed DuckDB errors", () => {
@@ -320,8 +325,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("keeps legacy query permits held until interrupted native operations settle", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps legacy query permits held until interrupted native operations settle",
+    Effect.fnUntraced(function* () {
       const firstStarted = makeLatch();
       const releaseFirst = makeLatch();
       const secondStarted = makeLatch();
@@ -372,8 +378,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("keeps legacy run permits held until interrupted native operations settle", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps legacy run permits held until interrupted native operations settle",
+    Effect.fnUntraced(function* () {
       const runStarted = makeLatch();
       const releaseRun = makeLatch();
       const readStarted = makeLatch();
@@ -428,8 +435,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("keeps legacy parquet export permits held until interrupted native operations settle", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps legacy parquet export permits held until interrupted native operations settle",
+    Effect.fnUntraced(function* () {
       const copyStarted = makeLatch();
       const releaseCopy = makeLatch();
       const readStarted = makeLatch();
@@ -484,8 +492,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("closes a legacy scoped instance when connection acquisition fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "closes a legacy scoped instance when connection acquisition fails",
+    Effect.fnUntraced(function* () {
       const connectError = new Error("legacy connect failed");
       let instanceCloseAttempts = 0;
       const fakeInstance = {
@@ -511,8 +520,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("closes a legacy scoped instance even when connection close fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "closes a legacy scoped instance even when connection close fails",
+    Effect.fnUntraced(function* () {
       let connectionCloseAttempts = 0;
       let instanceCloseAttempts = 0;
       const fakeConnection = {
@@ -545,8 +555,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("registers legacy scoped cleanup when first acquisition is interrupted", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "registers legacy scoped cleanup when first acquisition is interrupted",
+    Effect.fnUntraced(function* () {
       const connectStarted = makeLatch();
       const connect = Promise.withResolvers<DuckDBConnection>();
       let connectionCloseAttempts = 0;
@@ -596,8 +607,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("rolls back legacy transactions interrupted after delayed begin", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rolls back legacy transactions interrupted after delayed begin",
+    Effect.fnUntraced(function* () {
       const beginStarted = makeLatch();
       const releaseBegin = makeLatch();
       const rollbackStarted = makeLatch();
@@ -647,8 +659,9 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     })
   );
 
-  it.effect("does not roll back legacy transactions when begin fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "does not roll back legacy transactions when begin fails",
+    Effect.fnUntraced(function* () {
       const beginError = new Error("begin failed");
       const rollbackStarted = makeLatch();
       const statements: Array<string> = [];
@@ -724,81 +737,92 @@ describe("@beep/duckdb", { concurrent: false }, () => {
 });
 
 describe("DuckDbSqlClient", { concurrent: false }, () => {
-  it.effect("provides the generic SqlClient tag and executes core statement paths", () =>
-    Effect.gen(function* () {
-      const duckdbSql = yield* DuckDbSqlClient;
-      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+  it.effect(
+    "provides the generic SqlClient tag and executes core statement paths",
+    Effect.fnUntraced(
+      function* () {
+        const duckdbSql = yield* DuckDbSqlClient;
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
-      expect(duckdbSql).toBe(yield* SqlClient.SqlClient);
+        expect(duckdbSql).toBe(yield* SqlClient.SqlClient);
 
-      yield* sql`
-          CREATE TABLE sql_events (
-            id VARCHAR,
-            value INTEGER
-          )
-        `;
-      yield* sql`INSERT INTO sql_events VALUES (${"sql-1"}, ${42})`;
+        yield* sql`
+      CREATE TABLE sql_events (
+        id VARCHAR,
+        value INTEGER
+      )
+    `;
+        yield* sql`INSERT INTO sql_events VALUES (${"sql-1"}, ${42})`;
 
-      const taggedRows = yield* sql<{ readonly id: string; readonly value: number }>`
-          SELECT id, value
-          FROM sql_events
-          ORDER BY id
-        `;
-      expect(taggedRows).toEqual([{ id: "sql-1", value: 42 }]);
+        const taggedRows = yield* sql<{ readonly id: string; readonly value: number }>`
+      SELECT id, value
+      FROM sql_events
+      ORDER BY id
+    `;
+        expect(taggedRows).toEqual([{ id: "sql-1", value: 42 }]);
 
-      const unsafeRows = yield* sql.unsafe<{ readonly id: string }>("SELECT id FROM sql_events WHERE value = ?", [42]);
-      expect(unsafeRows).toEqual([{ id: "sql-1" }]);
+        const unsafeRows = yield* sql.unsafe<{ readonly id: string }>(
+          "SELECT id FROM sql_events WHERE value = ?",
+          [42]
+        );
+        expect(unsafeRows).toEqual([{ id: "sql-1" }]);
 
-      const values = yield* sql<{ readonly value: number }>`SELECT value FROM sql_events ORDER BY id`.values;
-      expect(values).toEqual([[42]]);
+        const values = yield* sql<{ readonly value: number }>`SELECT value FROM sql_events ORDER BY id`.values;
+        expect(values).toEqual([[42]]);
 
-      const valuesUnprepared = yield* sql.unsafe<{ readonly value: number }>(
-        "SELECT value FROM sql_events WHERE id = ?",
-        ["sql-1"]
-      ).valuesUnprepared;
-      expect(valuesUnprepared).toEqual([[42]]);
+        const valuesUnprepared = yield* sql.unsafe<{ readonly value: number }>(
+          "SELECT value FROM sql_events WHERE id = ?",
+          ["sql-1"]
+        ).valuesUnprepared;
+        expect(valuesUnprepared).toEqual([[42]]);
 
-      const unpreparedRows = yield* sql.unsafe<{ readonly value: number }>(
-        "SELECT value FROM sql_events WHERE id = ?",
-        ["sql-1"]
-      ).unprepared;
-      expect(unpreparedRows).toEqual([{ value: 42 }]);
+        const unpreparedRows = yield* sql.unsafe<{ readonly value: number }>(
+          "SELECT value FROM sql_events WHERE id = ?",
+          ["sql-1"]
+        ).unprepared;
+        expect(unpreparedRows).toEqual([{ value: 42 }]);
 
-      const streamedRows = yield* Stream.runCollect(
-        sql<{ readonly id: string }>`SELECT id FROM sql_events ORDER BY id`.stream
-      );
-      expect(A.fromIterable(streamedRows)).toEqual([{ id: "sql-1" }]);
-    }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
+        const streamedRows = yield* Stream.runCollect(
+          sql<{ readonly id: string }>`SELECT id FROM sql_events ORDER BY id`.stream
+        );
+        expect(A.fromIterable(streamedRows)).toEqual([{ id: "sql-1" }]);
+      },
+      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
+    )
   );
 
-  it.effect("normalizes Date and Uint8Array bind values for generic SQL callers", () =>
-    Effect.gen(function* () {
-      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-      const timestamp = DateTime.toDateUtc(DateTime.makeUnsafe("2026-01-02T03:04:05.000Z"));
-      const bytes = new Uint8Array([1, 2, 3]);
+  it.effect(
+    "normalizes Date and Uint8Array bind values for generic SQL callers",
+    Effect.fnUntraced(
+      function* () {
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        const timestamp = DateTime.toDateUtc(DateTime.makeUnsafe("2026-01-02T03:04:05.000Z"));
+        const bytes = new Uint8Array([1, 2, 3]);
 
-      const rows = yield* sql<{
-        readonly blob_type: string;
-        readonly blob_value: string;
-        readonly timestamp_type: string;
-        readonly timestamp_value: string;
-      }>`
-          SELECT
-            typeof(${timestamp}) AS timestamp_type,
-            ${timestamp}::VARCHAR AS timestamp_value,
-            typeof(${bytes}) AS blob_type,
-            ${bytes}::VARCHAR AS blob_value
-        `;
+        const rows = yield* sql<{
+          readonly blob_type: string;
+          readonly blob_value: string;
+          readonly timestamp_type: string;
+          readonly timestamp_value: string;
+        }>`
+      SELECT
+        typeof(${timestamp}) AS timestamp_type,
+        ${timestamp}::VARCHAR AS timestamp_value,
+        typeof(${bytes}) AS blob_type,
+        ${bytes}::VARCHAR AS blob_value
+    `;
 
-      expect(rows).toEqual([
-        {
-          blob_type: "BLOB",
-          blob_value: "\\x01\\x02\\x03",
-          timestamp_type: "TIMESTAMP_MS",
-          timestamp_value: "2026-01-02 03:04:05",
-        },
-      ]);
-    }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
+        expect(rows).toEqual([
+          {
+            blob_type: "BLOB",
+            blob_value: "\\x01\\x02\\x03",
+            timestamp_type: "TIMESTAMP_MS",
+            timestamp_value: "2026-01-02 03:04:05",
+          },
+        ]);
+      },
+      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
+    )
   );
 
   it.effect("builds from a caller-owned live connection", () =>
@@ -827,8 +851,9 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
     )
   );
 
-  it.effect("closes a created instance when managed connection acquisition fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "closes a created instance when managed connection acquisition fails",
+    Effect.fnUntraced(function* () {
       const connectError = new Error("connect failed");
       let instanceCloseAttempts = 0;
       const fakeInstance = {
@@ -851,8 +876,9 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
     })
   );
 
-  it.effect("closes the managed instance even when connection close fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "closes the managed instance even when connection close fails",
+    Effect.fnUntraced(function* () {
       let connectionCloseAttempts = 0;
       let instanceCloseAttempts = 0;
       const fakeConnection = {
@@ -1131,82 +1157,90 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
     })
   );
 
-  it.effect("commits, rolls back, and reuses the active transaction for nested calls", () =>
-    Effect.gen(function* () {
-      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-      yield* sql`
-          CREATE TABLE tx_events (
-            id VARCHAR
-          )
-        `;
+  it.effect(
+    "commits, rolls back, and reuses the active transaction for nested calls",
+    Effect.fnUntraced(
+      function* () {
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        yield* sql`
+      CREATE TABLE tx_events (
+        id VARCHAR
+      )
+    `;
 
-      const committed = yield* sql.withTransaction(
-        Effect.gen(function* () {
-          yield* sql`INSERT INTO tx_events VALUES (${"committed"})`;
-          return "ok";
-        })
-      );
-      expect(committed).toBe("ok");
-
-      const rollbackExit = yield* Effect.exit(
-        sql.withTransaction(
+        const committed = yield* sql.withTransaction(
           Effect.gen(function* () {
-            yield* sql`INSERT INTO tx_events VALUES (${"rolled-back"})`;
-            return yield* Effect.fail("force rollback");
+            yield* sql`INSERT INTO tx_events VALUES (${"committed"})`;
+            return "ok";
           })
-        )
-      );
-      expect(Exit.isFailure(rollbackExit)).toBe(true);
+        );
+        expect(committed).toBe("ok");
 
-      yield* sql.withTransaction(
-        Effect.gen(function* () {
-          yield* sql`INSERT INTO tx_events VALUES (${"outer"})`;
-          yield* sql.withTransaction(sql`INSERT INTO tx_events VALUES (${"inner"})`);
-        })
-      );
+        const rollbackExit = yield* Effect.exit(
+          sql.withTransaction(
+            Effect.gen(function* () {
+              yield* sql`INSERT INTO tx_events VALUES (${"rolled-back"})`;
+              return yield* Effect.fail("force rollback");
+            })
+          )
+        );
+        expect(Exit.isFailure(rollbackExit)).toBe(true);
 
-      const rows = yield* sql<{ readonly id: string }>`
-          SELECT id
-          FROM tx_events
-          ORDER BY id
-        `;
-      expect(rows).toEqual([{ id: "committed" }, { id: "inner" }, { id: "outer" }]);
-    }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
+        yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* sql`INSERT INTO tx_events VALUES (${"outer"})`;
+            yield* sql.withTransaction(sql`INSERT INTO tx_events VALUES (${"inner"})`);
+          })
+        );
+
+        const rows = yield* sql<{ readonly id: string }>`
+      SELECT id
+      FROM tx_events
+      ORDER BY id
+    `;
+        expect(rows).toEqual([{ id: "committed" }, { id: "inner" }, { id: "outer" }]);
+      },
+      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
+    )
   );
 
-  it.effect("marks the outer transaction rollback-only when a nested transaction fails", () =>
-    Effect.gen(function* () {
-      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-      yield* sql`
-          CREATE TABLE nested_failure_events (
-            id VARCHAR
+  it.effect(
+    "marks the outer transaction rollback-only when a nested transaction fails",
+    Effect.fnUntraced(
+      function* () {
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        yield* sql`
+      CREATE TABLE nested_failure_events (
+        id VARCHAR
+      )
+    `;
+
+        const exit = yield* Effect.exit(
+          sql.withTransaction(
+            Effect.gen(function* () {
+              yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-before"})`;
+              yield* sql
+                .withTransaction(
+                  Effect.gen(function* () {
+                    yield* sql`INSERT INTO nested_failure_events VALUES (${"inner-rolled-back"})`;
+                    return yield* Effect.fail("inner failure");
+                  })
+                )
+                .pipe(Effect.ignore);
+              yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-after"})`;
+            })
           )
-        `;
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
 
-      const exit = yield* Effect.exit(
-        sql.withTransaction(
-          Effect.gen(function* () {
-            yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-before"})`;
-            yield* sql
-              .withTransaction(
-                Effect.gen(function* () {
-                  yield* sql`INSERT INTO nested_failure_events VALUES (${"inner-rolled-back"})`;
-                  return yield* Effect.fail("inner failure");
-                })
-              )
-              .pipe(Effect.ignore);
-            yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-after"})`;
-          })
-        )
-      );
-      expect(Exit.isFailure(exit)).toBe(true);
-
-      const rows = yield* sql<{ readonly id: string }>`
-          SELECT id
-          FROM nested_failure_events
-          ORDER BY id
-        `;
-      expect(rows).toEqual([]);
-    }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
+        const rows = yield* sql<{ readonly id: string }>`
+      SELECT id
+      FROM nested_failure_events
+      ORDER BY id
+    `;
+        expect(rows).toEqual([]);
+      },
+      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
+    )
   );
 });

@@ -13,19 +13,22 @@
 import { $HtmlId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $HtmlId.create("Html.nodes");
 
 /**
  * A character-data text node.
  *
- * @example
- * ```ts
+ * **Example** (Make a text node)
+ *
+ * ```ts import.meta.vitest name="Make a text node"
  * import { Text } from "@beep/html/Html.nodes"
  *
  * const node = Text.make({ value: "Hello" })
- * console.log(node._tag) // "#text"
+ * node._tag // => "#text"
  * ```
  *
  * @category models
@@ -44,12 +47,13 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
 /**
  * Companion namespace for {@link Text}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded text shape)
+ *
+ * ```ts import.meta.vitest name="Encoded text shape"
  * import { Text } from "@beep/html/Html.nodes"
  *
  * const encoded: Text.Encoded = { _tag: "#text", value: "Hello" }
- * console.log(encoded._tag) // "#text"
+ * encoded._tag // => "#text"
  * ```
  *
  * @category models
@@ -66,14 +70,100 @@ export declare namespace Text {
 }
 
 /**
+ * Comment data that can be represented without changing its parsed value.
+ *
+ * **Example** (Validate comment data)
+ *
+ * ```ts import.meta.vitest name="Validate comment data"
+ * import { HtmlCommentData } from "@beep/html/Html.nodes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(HtmlCommentData)("note") // => true
+ * S.is(HtmlCommentData)("-->") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlCommentData = S.String.check(
+  S.makeFilterGroup(
+    [
+      S.makeFilter(P.not(Str.startsWith(">")), {
+        identifier: $I`HtmlCommentDataLeadingCloseCheck`,
+        title: "HTML Comment Leading Close",
+        description: "Rejects comment data beginning with `>`.",
+        message: "Comment data must not begin with >",
+      }),
+      S.makeFilter(P.not(Str.startsWith("->")), {
+        identifier: $I`HtmlCommentDataLeadingArrowCheck`,
+        title: "HTML Comment Leading Arrow",
+        description: "Rejects comment data beginning with `->`.",
+        message: "Comment data must not begin with ->",
+      }),
+      S.makeFilter(P.not(Str.includes("<!--")), {
+        identifier: $I`HtmlCommentDataOpenDelimiterCheck`,
+        title: "HTML Comment Open Delimiter",
+        description: "Rejects nested HTML comment opening delimiters.",
+        message: "Comment data must not contain <!--",
+      }),
+      S.makeFilter(P.not(Str.includes("-->")), {
+        identifier: $I`HtmlCommentDataCloseDelimiterCheck`,
+        title: "HTML Comment Close Delimiter",
+        description: "Rejects HTML comment closing delimiters.",
+        message: "Comment data must not contain -->",
+      }),
+      S.makeFilter(P.not(Str.includes("--!>")), {
+        identifier: $I`HtmlCommentDataBangCloseDelimiterCheck`,
+        title: "HTML Comment Bang Close Delimiter",
+        description: "Rejects HTML comment bang-closing delimiters.",
+        message: "Comment data must not contain --!>",
+      }),
+      S.makeFilter(P.not(Str.endsWith("<!-")), {
+        identifier: $I`HtmlCommentDataTrailingOpenCheck`,
+        title: "HTML Comment Trailing Open",
+        description: "Rejects comment data ending with `<!-`.",
+        message: "Comment data must not end with <!-",
+      }),
+    ],
+    {
+      identifier: $I`HtmlCommentDataChecks`,
+      title: "HTML Comment Data",
+      description: "Checks the HTML comment-data grammar needed for lossless serialization.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("HtmlCommentData", {
+    description: "HTML comment text that serializes without delimiter ambiguity.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlCommentData}.
+ *
+ * **Example** (Typed comment value)
+ *
+ * ```ts
+ * import type { HtmlCommentData } from "@beep/html/Html.nodes"
+ *
+ * const value: HtmlCommentData = "note"
+ * console.log(value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type HtmlCommentData = typeof HtmlCommentData.Type;
+
+/**
  * An HTML comment node (`<!-- ... -->`).
  *
- * @example
- * ```ts
+ * **Example** (Make a comment node)
+ *
+ * ```ts import.meta.vitest name="Make a comment node"
  * import { Comment } from "@beep/html/Html.nodes"
  *
  * const node = Comment.make({ value: "note" })
- * console.log(node._tag) // "#comment"
+ * node._tag // => "#comment"
  * ```
  *
  * @category models
@@ -82,7 +172,7 @@ export declare namespace Text {
 export class Comment extends S.TaggedClass<Comment>($I`Comment`)(
   "#comment",
   {
-    value: S.String.annotateKey({ description: "Comment text (without the delimiters)." }),
+    value: HtmlCommentData.annotateKey({ description: "Comment text (without the delimiters)." }),
   },
   $I.annote("Comment", { description: "An HTML comment node." })
 ) {
@@ -92,12 +182,13 @@ export class Comment extends S.TaggedClass<Comment>($I`Comment`)(
 /**
  * Companion namespace for {@link Comment}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded comment shape)
+ *
+ * ```ts import.meta.vitest name="Encoded comment shape"
  * import { Comment } from "@beep/html/Html.nodes"
  *
  * const encoded: Comment.Encoded = { _tag: "#comment", value: "note" }
- * console.log(encoded._tag) // "#comment"
+ * encoded._tag // => "#comment"
  * ```
  *
  * @category models
@@ -116,12 +207,13 @@ export declare namespace Comment {
 /**
  * A document type declaration (`<!DOCTYPE html>`).
  *
- * @example
- * ```ts
+ * **Example** (Create HTML doctype)
+ *
+ * ```ts import.meta.vitest name="Create HTML doctype"
  * import { Doctype } from "@beep/html/Html.nodes"
  *
  * const node = Doctype.html()
- * console.log(node._tag) // "#doctype"
+ * node._tag // => "#doctype"
  * ```
  *
  * @category models
@@ -148,12 +240,13 @@ export class Doctype extends S.TaggedClass<Doctype>($I`Doctype`)(
 /**
  * Companion namespace for {@link Doctype}.
  *
- * @example
- * ```ts
+ * **Example** (Encoded doctype shape)
+ *
+ * ```ts import.meta.vitest name="Encoded doctype shape"
  * import { Doctype } from "@beep/html/Html.nodes"
  *
  * const encoded: Doctype.Encoded = { _tag: "#doctype", name: "html" }
- * console.log(encoded._tag) // "#doctype"
+ * encoded._tag // => "#doctype"
  * ```
  *
  * @category models

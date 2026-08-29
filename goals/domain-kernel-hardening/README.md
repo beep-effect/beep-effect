@@ -44,7 +44,7 @@ in [`MAP.md`](../../explorations/domain-layer-hardening/MAP.md).
 
 `P0 Research` — confirm the `BaseEntity`/`DomainModel`/`persist` surface and the
 soft-delete persistence strategy before any edit. Next concrete action: inspect
-`packages/shared/domain/src/entity/BaseEntity.ts` and
+`packages/shared/domain/src/entity/ProductEntity.ts` and
 `packages/foundation/modeling/schema/src/{DomainModel.ts,EntitySchema/*}`.
 
 ## Latest Evidence

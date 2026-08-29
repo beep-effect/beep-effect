@@ -8,28 +8,30 @@
 /**
  * Monoid type class plus concrete instances and law checkers.
  *
- * @example
- * ```typescript
+ * **Example** (Fold numbers with NumberSum)
+ *
+ * ```ts import.meta.vitest name="Fold numbers with NumberSum"
  * import { Monoid } from "@beep/nlp/Algebra"
  *
- * console.log(Monoid.fold(Monoid.NumberSum)([1, 2, 3])) // 6
+ * Monoid.fold(Monoid.NumberSum)([1, 2, 3]) // => 6
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export * as Monoid from "./Monoid.ts";
 /**
  * NLP-specific monoid instances (tokens, sentences, documents, corpus, TF-IDF).
  *
- * @example
- * ```typescript
+ * **Example** (Concatenate tokens with TokenConcat)
+ *
+ * ```ts import.meta.vitest name="Concatenate tokens with TokenConcat"
  * import { NLPMonoid } from "@beep/nlp/Algebra"
  *
- * console.log(NLPMonoid.TokenConcat.combine("hello", "world")) // "hello world"
+ * NLPMonoid.TokenConcat.combine("hello", "world") // => "hello world"
  * ```
  *
- * @since 0.0.0
  * @category combinators
+ * @since 0.0.0
  */
 export * as NLPMonoid from "./NLPMonoid.ts";

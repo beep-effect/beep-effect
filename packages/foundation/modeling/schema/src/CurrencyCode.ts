@@ -27,13 +27,14 @@ const currencyNameOptionsNonEmpty = cast<
 /**
  * Schema for active ISO 4217 currency code literals.
  *
- * @example
- * ```ts
+ * **Example** (Decode USD currency code)
+ *
+ * ```ts import.meta.vitest name="Decode USD currency code"
  * import * as S from "effect/Schema"
  * import { CurrencyCode } from "@beep/schema/CurrencyCode"
  *
  * const code = S.decodeUnknownSync(CurrencyCode)("USD")
- * console.log(code) // "USD"
+ * code // => "USD"
  * ```
  *
  * @category models
@@ -49,16 +50,6 @@ const currencyCodeSet = HashSet.fromIterable(CurrencyCode.Options);
 
 /**
  * {@inheritDoc CurrencyCode}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { CurrencyCode } from "@beep/schema/CurrencyCode"
- *
- * const code: CurrencyCode = S.decodeUnknownSync(CurrencyCode)("USD")
- * console.log(code) // "USD"
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -67,13 +58,14 @@ export type CurrencyCode = typeof CurrencyCode.Type;
 /**
  * Schema for active ISO 4217 currency display-name literals.
  *
- * @example
- * ```ts
+ * **Example** (Decode US Dollar name)
+ *
+ * ```ts import.meta.vitest name="Decode US Dollar name"
  * import * as S from "effect/Schema"
  * import { CurrencyName } from "@beep/schema/CurrencyCode"
  *
  * const name = S.decodeUnknownSync(CurrencyName)("US Dollar")
- * console.log(name) // "US Dollar"
+ * name // => "US Dollar"
  * ```
  *
  * @category models
@@ -87,16 +79,6 @@ export const CurrencyName = LiteralKit(currencyNameOptionsNonEmpty).pipe(
 
 /**
  * {@inheritDoc CurrencyName}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { CurrencyName } from "@beep/schema/CurrencyCode"
- *
- * const name: CurrencyName = S.decodeUnknownSync(CurrencyName)("Euro")
- * console.log(name) // "Euro"
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -105,12 +87,13 @@ export type CurrencyName = typeof CurrencyName.Type;
 /**
  * Type guard for {@link CurrencyCode}.
  *
- * @example
- * ```ts
+ * **Example** (Validate currency code guard)
+ *
+ * ```ts import.meta.vitest name="Validate currency code guard"
  * import { isCurrencyCode } from "@beep/schema/CurrencyCode"
  *
- * console.log(isCurrencyCode("USD")) // true
- * console.log(isCurrencyCode("ZZZ")) // false
+ * isCurrencyCode("USD") // => true
+ * isCurrencyCode("ZZZ") // => false
  * ```
  *
  * @category validation
@@ -121,11 +104,12 @@ export const isCurrencyCode = (value: string): value is CurrencyCode => HashSet.
 /**
  * ISO 4217 constant for United States Dollar.
  *
- * @example
- * ```ts
+ * **Example** (Compare USD constant)
+ *
+ * ```ts import.meta.vitest name="Compare USD constant"
  * import { USD } from "@beep/schema/CurrencyCode"
  *
- * console.log(USD === "USD") // true
+ * USD === "USD" // => true
  * ```
  *
  * @category constants
@@ -135,11 +119,12 @@ export const USD: CurrencyCode = CurrencyCode.make("USD");
 /**
  * ISO 4217 constant for Euro.
  *
- * @example
- * ```ts
+ * **Example** (Compare EUR constant)
+ *
+ * ```ts import.meta.vitest name="Compare EUR constant"
  * import { EUR } from "@beep/schema/CurrencyCode"
  *
- * console.log(EUR === "EUR") // true
+ * EUR === "EUR" // => true
  * ```
  *
  * @category constants
@@ -149,11 +134,12 @@ export const EUR: CurrencyCode = CurrencyCode.make("EUR");
 /**
  * ISO 4217 constant for British Pound Sterling.
  *
- * @example
- * ```ts
+ * **Example** (Compare GBP constant)
+ *
+ * ```ts import.meta.vitest name="Compare GBP constant"
  * import { GBP } from "@beep/schema/CurrencyCode"
  *
- * console.log(GBP === "GBP") // true
+ * GBP === "GBP" // => true
  * ```
  *
  * @category constants
@@ -163,11 +149,12 @@ export const GBP: CurrencyCode = CurrencyCode.make("GBP");
 /**
  * ISO 4217 constant for Japanese Yen.
  *
- * @example
- * ```ts
+ * **Example** (Compare JPY constant)
+ *
+ * ```ts import.meta.vitest name="Compare JPY constant"
  * import { JPY } from "@beep/schema/CurrencyCode"
  *
- * console.log(JPY === "JPY") // true
+ * JPY === "JPY" // => true
  * ```
  *
  * @category constants
@@ -177,11 +164,12 @@ export const JPY: CurrencyCode = CurrencyCode.make("JPY");
 /**
  * ISO 4217 constant for Swiss Franc.
  *
- * @example
- * ```ts
+ * **Example** (Compare CHF constant)
+ *
+ * ```ts import.meta.vitest name="Compare CHF constant"
  * import { CHF } from "@beep/schema/CurrencyCode"
  *
- * console.log(CHF === "CHF") // true
+ * CHF === "CHF" // => true
  * ```
  *
  * @category constants
@@ -191,11 +179,12 @@ export const CHF: CurrencyCode = CurrencyCode.make("CHF");
 /**
  * ISO 4217 constant for Canadian Dollar.
  *
- * @example
- * ```ts
+ * **Example** (Compare CAD constant)
+ *
+ * ```ts import.meta.vitest name="Compare CAD constant"
  * import { CAD } from "@beep/schema/CurrencyCode"
  *
- * console.log(CAD === "CAD") // true
+ * CAD === "CAD" // => true
  * ```
  *
  * @category constants
@@ -205,11 +194,12 @@ export const CAD: CurrencyCode = CurrencyCode.make("CAD");
 /**
  * ISO 4217 constant for Australian Dollar.
  *
- * @example
- * ```ts
+ * **Example** (Compare AUD constant)
+ *
+ * ```ts import.meta.vitest name="Compare AUD constant"
  * import { AUD } from "@beep/schema/CurrencyCode"
  *
- * console.log(AUD === "AUD") // true
+ * AUD === "AUD" // => true
  * ```
  *
  * @category constants
@@ -219,11 +209,12 @@ export const AUD: CurrencyCode = CurrencyCode.make("AUD");
 /**
  * ISO 4217 constant for Chinese Yuan.
  *
- * @example
- * ```ts
+ * **Example** (Compare CNY constant)
+ *
+ * ```ts import.meta.vitest name="Compare CNY constant"
  * import { CNY } from "@beep/schema/CurrencyCode"
  *
- * console.log(CNY === "CNY") // true
+ * CNY === "CNY" // => true
  * ```
  *
  * @category constants
@@ -233,11 +224,12 @@ export const CNY: CurrencyCode = CurrencyCode.make("CNY");
 /**
  * ISO 4217 constant for Hong Kong Dollar.
  *
- * @example
- * ```ts
+ * **Example** (Compare HKD constant)
+ *
+ * ```ts import.meta.vitest name="Compare HKD constant"
  * import { HKD } from "@beep/schema/CurrencyCode"
  *
- * console.log(HKD === "HKD") // true
+ * HKD === "HKD" // => true
  * ```
  *
  * @category constants
@@ -247,11 +239,12 @@ export const HKD: CurrencyCode = CurrencyCode.make("HKD");
 /**
  * ISO 4217 constant for Singapore Dollar.
  *
- * @example
- * ```ts
+ * **Example** (Compare SGD constant)
+ *
+ * ```ts import.meta.vitest name="Compare SGD constant"
  * import { SGD } from "@beep/schema/CurrencyCode"
  *
- * console.log(SGD === "SGD") // true
+ * SGD === "SGD" // => true
  * ```
  *
  * @category constants

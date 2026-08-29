@@ -10,18 +10,18 @@ import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { optionalProp } from "../../../internal/cli/OptionRecord.js";
-import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.js";
-import { commandTextForStep, TurboWorkspacePackage, turboTaskForStep } from "../../../internal/repo-run/index.js";
-import { QualityIssue } from "../Yeet.schemas.js";
-import { categoryForStep, knownSubLaneHintFromOutput, routeForCategory } from "./IssueClassification.js";
+import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
+import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
+import { commandTextForStep, TurboWorkspacePackage, turboTaskForStep } from "../../../internal/repo-run/index.ts";
+import { QualityIssue } from "../Yeet.schemas.ts";
+import { categoryForStep, knownSubLaneHintFromOutput, routeForCategory } from "./IssueClassification.ts";
 import type {
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
   TurboPlanTask,
-} from "../../../internal/repo-run/index.js";
-import type { QualityIssueCategory, QualityIssueSeverity } from "../Yeet.schemas.js";
+} from "../../../internal/repo-run/index.ts";
+import type { QualityIssueCategory, QualityIssueSeverity } from "../Yeet.schemas.ts";
 
 const MAX_RAW_EXCERPT_CHARS = 4 * 1024;
 const ansiPattern = /\u001b\[[0-9;]*m/gu;
@@ -369,11 +369,8 @@ const fallbackIssuesFromResult = (
 /**
  * Convert a failed step result into quality issues.
  *
- * @param context - Shared run context.
- * @param step - Planned step that produced the result.
- * @param result - Captured step result.
- * @returns Structured or raw issues; successful results produce no issues.
- * @example
+ * **Example** (Failed step quality issues)
+ *
  * ```ts
  * import { qualityIssuesFromStepResult, RepoPlanStep, RepoRunContext, RepoStepRunResult, TurboPlanSnapshot } from "@beep/repo-cli/test/Yeet"
  *
@@ -401,6 +398,11 @@ const fallbackIssuesFromResult = (
  * const result = RepoStepRunResult.make({ commandText: "bun run check", exitCode: 1, output: "check failed", stepId: step.id })
  * console.log(qualityIssuesFromStepResult(context, step, result))
  * ```
+ *
+ * @param context - Shared run context.
+ * @param step - Planned step that produced the result.
+ * @param result - Captured step result.
+ * @returns Structured or raw issues; successful results produce no issues.
  * @category parsing
  * @since 0.0.0
  */

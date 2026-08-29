@@ -11,4 +11,4 @@
  * @category aggregates
  * @since 0.0.0
  */
-export * from "./Document.model.js";
+export * from "./Document.model.ts";

@@ -18,6 +18,7 @@
   "scripts": {
     "codegen": "echo 'no codegen needed'",
     "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
     "repo-exports:shard": "beep-cli quality repo-exports-catalog --package-shard",
     "lint": "bun run beep:lint",
@@ -26,29 +27,37 @@
     "build": "bun run beep:build",
     "beep:build": "echo 'no build needed'",
     "beep:check": "tsgo -b tsconfig.json",
-    "beep:test": "bunx --bun vitest run --passWithNoTests",
-    "beep:lint": "biome check src/ test/ dtslint/",
-    "beep:lint:fix": "biome check src/ test/ dtslint/ --write",
+    "beep:test": "bunx --bun vitest run --passWithNoTests && bun run test:lambda",
+    "test:lambda": "cd lambda/turbo-cache && bun install --frozen-lockfile && bun run typecheck && bun test && bun run bundle:check && bun run zip:check",
+    "beep:lint": "biome check src/ test/",
+    "beep:lint:fix": "biome check src/ test/ --write",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "audit": "bun run --if-present beep:audit"
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/openclaw": "workspace:^",
     "@beep/repo-ai-metrics": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@pulumi/aws": "catalog:",
     "@pulumi/cloudflare": "catalog:",
     "@pulumi/command": "catalog:",
+    "@pulumi/gharunners": "file:ci-runners/sdks/ghaRunners",
     "@pulumi/pulumi": "catalog:",
     "@pulumiverse/vercel": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  }
+  },
+  "trustedDependencies": [
+    "@pulumi/gharunners"
+  ]
 }

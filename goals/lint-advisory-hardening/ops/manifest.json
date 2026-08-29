@@ -1,16 +1,16 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "lint-advisory-hardening",
     "title": "Lint Advisory Hardening",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-06-12",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lint-advisory-hardening",
-  "lifecycle": "paused",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when advisory noise measurably slows lane agents, or the post-P5 platform window opens.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Implementation shipped previously; closeout bookkeeping is reconciled in the portfolio-consolidation PR. That PR's verify lane is the final P2 evidence before the external completed-retained status flip.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -63,17 +63,19 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete",
+      "evidence": "Done modulo the portfolio-consolidation PR's own verify lane, which supplies the final P2 verification evidence for this bookkeeping closeout."
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "pending"
+      "status": "complete",
+      "evidence": "Closeout bookkeeping and the required reflection were added on 2026-07-14; lifecycle/status flipping remains external-driver work."
     }
   ],
   "taskInventory": "tasks/tasks.jsonc",

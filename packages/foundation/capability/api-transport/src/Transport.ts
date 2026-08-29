@@ -18,9 +18,11 @@
  */
 
 import { $ApiTransportId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Data, Effect, Number as N, Redacted, Ref, Schedule } from "effect";
+import { Effect, Number as N, Redacted, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -34,6 +36,8 @@ const $I = $ApiTransportId.create("Transport");
 /**
  * Auth strategy attached to each outgoing request by the shared transformer.
  *
+ * **Details**
+ *
  * Covers the three gov/legal auth families plus the keyless case:
  * `ApiKeyQueryAuth` (api.data.gov `api_key` query param — GovInfo/DOL by data.gov),
  * `TokenHeaderAuth` (`Authorization: Token <key>` — CourtListener, DRF token auth),
@@ -41,7 +45,8 @@ const $I = $ApiTransportId.create("Transport");
  * Only the query-param and keyless branches are exercised in P0–P1; the header
  * branches are designed in but not verified until the P2 authed drivers.
  *
- * @example
+ * **Example** (Create ApiKeyQueryAuth instance)
+ *
  * ```ts
  * import { ApiAuth } from "@beep/api-transport"
  * import * as Redacted from "effect/Redacted"
@@ -53,32 +58,59 @@ const $I = $ApiTransportId.create("Transport");
  * @category models
  * @since 0.0.0
  */
-export type ApiAuth = Data.TaggedEnum<{
-  NoAuth: {};
-  ApiKeyQueryAuth: { readonly param: string; readonly key: Redacted.Redacted<string> };
-  TokenHeaderAuth: { readonly key: Redacted.Redacted<string> };
-  ApiKeyHeaderAuth: { readonly header: string; readonly key: Redacted.Redacted<string> };
-}>;
+export const ApiAuth = S.TaggedUnion({
+  NoAuth: {},
+  ApiKeyQueryAuth: {
+    key: S.Redacted(S.String),
+    param: S.String,
+  },
+  TokenHeaderAuth: {
+    key: S.Redacted(S.String),
+  },
+  ApiKeyHeaderAuth: {
+    header: S.String,
+    key: S.Redacted(S.String),
+  },
+}).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    NoAuth: () => schema.cases.NoAuth.make({}),
+    ApiKeyQueryAuth: (fields: { readonly key: Redacted.Redacted<string>; readonly param: string }) =>
+      schema.cases.ApiKeyQueryAuth.make(fields),
+    TokenHeaderAuth: (fields: { readonly key: Redacted.Redacted<string> }) => schema.cases.TokenHeaderAuth.make(fields),
+    ApiKeyHeaderAuth: (fields: { readonly header: string; readonly key: Redacted.Redacted<string> }) =>
+      schema.cases.ApiKeyHeaderAuth.make(fields),
+    $is:
+      <Tag extends (typeof schema)["Type"]["_tag"]>(tag: Tag) =>
+      (value: unknown): value is Extract<(typeof schema)["Type"], { readonly _tag: Tag }> =>
+        P.isTagged(tag)(value),
+    $match: schema.match,
+  })),
+  $I.annoteSchema("ApiAuth", {
+    description: "Authentication strategy attached to requests made by the shared API transport.",
+  })
+);
 
 /**
- * Constructors and matchers for {@link ApiAuth}.
+ * Runtime authentication strategy represented by {@link ApiAuth}.
  *
- * @example
+ * **Example** (Type NoAuth as ApiAuth)
+ *
  * ```ts
  * import { ApiAuth } from "@beep/api-transport"
  *
- * console.log(ApiAuth.NoAuth()._tag)
+ * const auth: ApiAuth = ApiAuth.NoAuth()
+ * console.log(auth._tag)
  * ```
  *
- * @category constructors
+ * @category models
  * @since 0.0.0
  */
-export const ApiAuth = Data.taggedEnum<ApiAuth>();
+export type ApiAuth = typeof ApiAuth.Type;
 
 const applyAuth =
   (auth: ApiAuth) =>
   (request: HttpClientRequest.HttpClientRequest): HttpClientRequest.HttpClientRequest =>
-    ApiAuth.$match(auth, {
+    ApiAuth.match(auth, {
       ApiKeyHeaderAuth: ({ header, key }) => HttpClientRequest.setHeader(request, header, Redacted.value(key)),
       ApiKeyQueryAuth: ({ key, param }) => HttpClientRequest.setUrlParam(request, param, Redacted.value(key)),
       NoAuth: () => request,
@@ -118,11 +150,14 @@ const fromRateLimitHeaders = (headers: Headers.Headers): O.Option<RateLimitSnaps
 /**
  * Observable snapshot of the latest parsed `X-RateLimit-*` response headers.
  *
+ * **Details**
+ *
  * The shared transformer records this after every completed response so callers
  * (and offline tests) can observe that rate-limit headers were honored, without
  * reaching into the native limiter's private state.
  *
- * @example
+ * **Example** (Make RateLimitSnapshot values)
+ *
  * ```ts
  * import { RateLimitSnapshot } from "@beep/api-transport"
  *
@@ -161,15 +196,63 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
   static readonly fromHeaders = fromRateLimitHeaders;
 }
 
+const ApiTransportDurationNumber = S.declare<number>(P.isNumber, {
+  identifier: $I`ApiTransportDurationNumber`,
+  title: "API Transport Duration Number",
+  description: "A JavaScript number, including the special values accepted by Effect duration inputs.",
+});
+
+const ApiTransportDurationObject = S.Struct({
+  weeks: S.optional(ApiTransportDurationNumber),
+  days: S.optional(ApiTransportDurationNumber),
+  hours: S.optional(ApiTransportDurationNumber),
+  minutes: S.optional(ApiTransportDurationNumber),
+  seconds: S.optional(ApiTransportDurationNumber),
+  milliseconds: S.optional(ApiTransportDurationNumber),
+  microseconds: S.optional(ApiTransportDurationNumber),
+  nanoseconds: S.optional(ApiTransportDurationNumber),
+});
+
+type ApiTransportDurationString = Extract<Duration.Input, string>;
+
+const apiTransportDurationStringPattern =
+  /^(-?\d+(?:\.\d+)?)\s+(nanos?|micros?|millis?|seconds?|minutes?|hours?|days?|weeks?)$/;
+
+const ApiTransportDurationString = S.declare(
+  (input: unknown): input is ApiTransportDurationString =>
+    P.isString(input) &&
+    (input === "Infinity" || input === "-Infinity" || O.isSome(Str.match(apiTransportDurationStringPattern)(input)))
+).pipe(
+  $I.annoteSchema("ApiTransportDurationString", {
+    description: "A duration string accepted by Effect, including signed fractions, leading zeros, and infinities.",
+  })
+);
+
+const ApiTransportDurationInput = S.Union([
+  S.Duration,
+  ApiTransportDurationNumber,
+  S.BigInt,
+  S.Tuple([ApiTransportDurationNumber, ApiTransportDurationNumber]),
+  ApiTransportDurationString,
+  ApiTransportDurationObject,
+]).pipe(
+  $I.annoteSchema("ApiTransportDurationInput", {
+    description: "Every duration input shape accepted by Effect transport scheduling and rate limiting.",
+  })
+);
+
 /**
  * Options accepted by {@link makeApiTransport}.
+ *
+ * **Details**
  *
  * `auth` selects the auth family, `key` is the rate-limit bucket key, and
  * `rateLimit` seeds the initial window/limit (the native limiter refines these
  * from response headers). `retryTimes`/`retryBaseDelay` tune the jittered
  * exponential retry over transient transport errors.
  *
- * @example
+ * **Example** (Build ApiTransportOptions object)
+ *
  * ```ts
  * import { ApiAuth, type ApiTransportOptions } from "@beep/api-transport"
  *
@@ -185,23 +268,58 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
  * @category models
  * @since 0.0.0
  */
-export interface ApiTransportOptions {
-  readonly auth: ApiAuth;
-  readonly key: string;
-  readonly rateLimit: { readonly limit: number; readonly window: Duration.Input };
-  readonly retryBaseDelay?: Duration.Input | undefined;
-  readonly retryTimes?: number | undefined;
-}
+export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTransportOptions`)(
+  {
+    auth: ApiAuth.pipe(
+      $I.annoteKey("ApiTransportOptions.auth", {
+        description: "Authentication strategy attached to every outgoing request.",
+      })
+    ),
+    key: S.String.pipe(
+      $I.annoteKey("ApiTransportOptions.key", {
+        description: "Stable key used to identify the transport's rate-limit bucket.",
+      })
+    ),
+    rateLimit: S.Struct({
+      limit: ApiTransportDurationNumber.pipe(
+        $I.annoteKey("ApiTransportOptions.rateLimit.limit", {
+          description: "Initial maximum number of requests permitted in the configured window.",
+        })
+      ),
+      window: ApiTransportDurationInput.pipe(
+        $I.annoteKey("ApiTransportOptions.rateLimit.window", {
+          description: "Initial rate-limit window accepted by Effect's duration APIs.",
+        })
+      ),
+    }),
+    retryBaseDelay: S.optional(ApiTransportDurationInput).pipe(
+      $I.annoteKey("ApiTransportOptions.retryBaseDelay", {
+        description: "Optional base delay for the jittered exponential retry schedule.",
+      })
+    ),
+    retryTimes: S.optional(ApiTransportDurationNumber).pipe(
+      $I.annoteKey("ApiTransportOptions.retryTimes", {
+        description: "Optional maximum number of transient transport retries.",
+      })
+    ),
+  },
+  $I.annote("ApiTransportOptions", {
+    description: "Authentication, rate-limit, and retry options for the shared API transport.",
+  })
+) {}
 
 /**
  * The shared transport transformer plus its observable rate-limit accessor.
+ *
+ * **Details**
  *
  * `transformClient` is fed to `HttpApiClient.make`'s `transformClient` seam
  * (keyed drivers) or applied to a raw `HttpClient` alongside `HttpClient.mapRequest`
  * (keyless drivers). `rateLimit` reads the latest {@link RateLimitSnapshot}.
  *
- * @example
- * ```ts
+ * **Example** (Read rate-limit from transport)
+ *
+ * ```ts import.meta.vitest name="Read rate-limit from transport"
  * import { Effect } from "effect"
  * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
  * import { ApiAuth, type ApiTransport, makeApiTransport } from "@beep/api-transport"
@@ -217,7 +335,8 @@ export interface ApiTransportOptions {
  *   return yield* readSnapshot(transport)
  * }).pipe(Effect.provide(RateLimiter.layerStoreMemory))
  *
- * void program
+ * const snapshot = await Effect.runPromise(program)
+ * snapshot._tag // => "None"
  * ```
  *
  * @category models
@@ -231,14 +350,17 @@ export interface ApiTransport {
 /**
  * Build the shared transport transformer over a backing `RateLimiterStore`.
  *
+ * **Details**
+ *
  * Composes auth → native rate limiting (which parses `X-RateLimit-*` and retries
  * `429`) → jittered exponential retry of transient transport errors → an
  * observable rate-limit snapshot. The resulting `transformClient` preserves the
  * `HttpClient.HttpClient` shape: the (in-memory-store) `RateLimiterError` is an
  * unrecoverable defect rather than a widened error channel.
  *
- * @example
- * ```ts
+ * **Example** (Build transport transformClient)
+ *
+ * ```ts import.meta.vitest name="Build transport transformClient"
  * import { Effect } from "effect"
  * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
  * import { ApiAuth, makeApiTransport } from "@beep/api-transport"
@@ -252,7 +374,8 @@ export interface ApiTransport {
  *   return transport.transformClient
  * }).pipe(Effect.provide(RateLimiter.layerStoreMemory))
  *
- * void program
+ * const transformClient = await Effect.runPromise(program)
+ * typeof transformClient // => "function"
  * ```
  *
  * @category constructors

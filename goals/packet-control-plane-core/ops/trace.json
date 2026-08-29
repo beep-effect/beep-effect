@@ -1,0 +1,76 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 1,
+    "furthestStage": "P1",
+    "issues": [],
+    "packet": "packet-control-plane-core",
+    "resumeStage": "P1",
+    "revision": 4,
+    "riskTierOverride": {
+      "actor": "operator",
+      "at": "2026-08-17T19:57:46.844Z",
+      "reason": "D9 self-hosting pilot: first live override through the new writer; standard fits the multi-PR guarded-writer scope",
+      "tier": "standard"
+    },
+    "root": "goals",
+    "status": "completed-retained",
+    "tip": {
+      "id": "bb7957b96c7114a057aba8957229b0650e28bf6f2fc74004e310334f51a865a8",
+      "seq": 4
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "bb7957b96c7114a057aba8957229b0650e28bf6f2fc74004e310334f51a865a8",
+    "seq": 4
+  },
+  "timeline": [
+    {
+      "actor": "operator",
+      "at": "2026-08-17T15:13:10.305Z",
+      "body": {
+        "ordinal": 1,
+        "stage": "P1",
+        "status": "active",
+        "type": "packet-created"
+      },
+      "id": "44c68c33af36948157d827cf2b053336770f277666b1069cc8c9857085d5eb45",
+      "seq": 1
+    },
+    {
+      "actor": "operator",
+      "at": "2026-08-17T15:13:10.305Z",
+      "body": {
+        "previous": "active",
+        "status": "active",
+        "type": "status-set"
+      },
+      "id": "6a94f9dd8fff717256700085ffb3540dd54da38fcdf7297be82e94ea6ddaedf9",
+      "seq": 2
+    },
+    {
+      "actor": "operator",
+      "at": "2026-08-17T19:57:46.844Z",
+      "body": {
+        "reason": "D9 self-hosting pilot: first live override through the new writer; standard fits the multi-PR guarded-writer scope",
+        "tier": "standard",
+        "type": "risk-tier-overridden"
+      },
+      "id": "4e844bca346947cef93244e45e2353b1b7a7a6d3fc691613075a876fd00e2344",
+      "seq": 3
+    },
+    {
+      "actor": "operator",
+      "at": "2026-08-26T20:28:42.193Z",
+      "body": {
+        "previous": "active",
+        "status": "completed-retained",
+        "type": "status-set"
+      },
+      "id": "bb7957b96c7114a057aba8957229b0650e28bf6f2fc74004e310334f51a865a8",
+      "seq": 4
+    }
+  ]
+}

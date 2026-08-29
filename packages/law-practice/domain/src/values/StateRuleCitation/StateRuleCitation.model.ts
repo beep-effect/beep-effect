@@ -8,22 +8,23 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { FederalRuleComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { FederalRuleComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/StateRuleCitation/StateRuleCitation.model");
 
 /**
  * State court rule citation (#636).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields, tags the discriminated union
  * with `type: "stateRule"`, and adds the state-court rule locators. Mirrors the
  * federal-rule citation shape — including reuse of {@link FederalRuleComponentSpan}
  * for the optional `spans` — so state-court rules parse into the same structure.
  *
- * **Example**
+ * **Example** (Creating a state rule citation)
  *
- * @example
  * ```ts
  * import { StateRuleCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -87,7 +88,8 @@ export class StateRuleCitation extends S.Class<StateRuleCitation>($I`StateRuleCi
 /**
  * Companion namespace for `StateRuleCitation`.
  *
- * @example
+ * **Example** (Using Encoded type alias)
+ *
  * ```ts
  * import type { StateRuleCitation } from "@beep/law-practice-domain"
  *
@@ -101,9 +103,8 @@ export declare namespace StateRuleCitation {
   /**
    * Wire-encoded representation of a decoded {@link StateRuleCitation}.
    *
-   * **Example**
+   * **Example** (Referencing Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { StateRuleCitation } from "@beep/law-practice-domain"
    *

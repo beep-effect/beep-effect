@@ -7,7 +7,7 @@
 
 import { $WinkId } from "@beep/identity";
 import { BagOfWords, DefaultBM25Config, DocumentVector, TermFrequency } from "@beep/nlp/Core/Vectorization";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Chunk, Context, Effect, Inspectable, Layer, pipe, Ref } from "effect";
 import * as Bool from "effect/Boolean";
@@ -17,6 +17,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
+import { WinkStringArray } from "./Wink.models.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow } from "./WinkObservability.ts";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
@@ -49,12 +50,14 @@ const learnDocumentState = (
 /**
  * Isolated vectorizer surface passed to scoped BM25 workflows.
  *
- * @remarks
+ * **Details**
+ *
  * Implementations created by `withFreshInstance` do not mutate the shared live
  * vectorizer state, which makes them useful for one-off ranking and keyword
  * extraction jobs.
  *
- * @example
+ * **Example** (Read scoped document terms)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import type { ScopedVectorizer } from "@beep/wink"
@@ -94,11 +97,6 @@ type WinkVectorizerShape = {
 const toFiniteRecord = (record: Record<string, number>): Record<string, number> =>
   R.fromEntries(A.map(R.toEntries(record), ([key, value]) => [key, P.isNumber(value) ? value : 0] as const));
 
-const WinkStringArray = S.Array(S.String).pipe(
-  $I.annoteSchema("WinkStringArray", {
-    description: "Array of strings returned by wink vectorizer accessors.",
-  })
-);
 const TermFrequencyPair = S.Tuple([S.String, S.Finite]).pipe(
   $I.annoteSchema("TermFrequencyPair", {
     description: "Term and finite frequency pair returned by wink vectorizer accessors.",
@@ -146,7 +144,8 @@ const observeVectorizer = (operation: string) =>
 /**
  * Typed failure for learning documents or querying wink BM25 vector data.
  *
- * @example
+ * **Example** (Create error from message)
+ *
  * ```ts
  * import { VectorizerError } from "@beep/wink"
  *
@@ -157,14 +156,14 @@ const observeVectorizer = (operation: string) =>
  * @category errors
  * @since 0.0.0
  */
-export class VectorizerError extends TaggedErrorClass<VectorizerError>($I`VectorizerError`)(
+export class VectorizerError extends S.TaggedError<VectorizerError>($I`VectorizerError`)(
   "VectorizerError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
     message: S.String,
     operation: S.String,
   },
-  $I.annote("VectorizerError", {
+  $I.annoteError<VectorizerError>("VectorizerError", {
     description: "Failure raised while learning or querying wink BM25 vectors.",
   })
 ) {
@@ -346,7 +345,8 @@ const makeWinkVectorizer = Effect.gen(function* () {
 /**
  * Service for learning documents and producing BM25 vectors, bags, and term frequencies.
  *
- * @example
+ * **Example** (Read vectorizer config)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { WinkEngineLive } from "@beep/wink"
@@ -370,7 +370,8 @@ export class WinkVectorizer extends Context.Service<WinkVectorizer, WinkVectoriz
 /**
  * Live BM25 vectorizer layer that depends on the wink engine.
  *
- * @example
+ * **Example** (Provide live vectorizer layer)
+ *
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { WinkEngineLive } from "@beep/wink"

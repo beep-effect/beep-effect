@@ -6,7 +6,7 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -15,7 +15,8 @@ const $I = $GovinfoId.create("Govinfo.errors");
 /**
  * Technical error reasons emitted by the GovInfo REST API driver.
  *
- * @example
+ * **Example** (Log AST reason constant)
+ *
  * ```ts
  * import { GovinfoErrorReason } from "@beep/govinfo"
  *
@@ -40,7 +41,8 @@ export const GovinfoErrorReason = LiteralKit([
 /**
  * Type for {@link GovinfoErrorReason}.
  *
- * @example
+ * **Example** (Type a transport reason)
+ *
  * ```ts
  * import type { GovinfoErrorReason } from "@beep/govinfo"
  *
@@ -56,7 +58,8 @@ export type GovinfoErrorReason = typeof GovinfoErrorReason.Type;
 /**
  * Numeric HTTP status code carried by GovInfo technical errors.
  *
- * @example
+ * **Example** (Decode HTTP status code)
+ *
  * ```ts
  * import { GovinfoHttpStatus } from "@beep/govinfo"
  * import * as S from "effect/Schema"
@@ -77,7 +80,8 @@ export const GovinfoHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.is
 /**
  * Type for {@link GovinfoHttpStatus}.
  *
- * @example
+ * **Example** (Type a decoded status)
+ *
  * ```ts
  * import { GovinfoHttpStatus } from "@beep/govinfo"
  * import type { GovinfoHttpStatus as GovinfoHttpStatusValue } from "@beep/govinfo"
@@ -95,7 +99,8 @@ export type GovinfoHttpStatus = typeof GovinfoHttpStatus.Type;
 /**
  * Options used when constructing {@link GovinfoError} instances.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { GovinfoErrorOptions } from "@beep/govinfo"
  * import * as O from "effect/Option"
@@ -109,7 +114,7 @@ export type GovinfoHttpStatus = typeof GovinfoHttpStatus.Type;
  */
 export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`GovinfoErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
@@ -130,7 +135,8 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
 /**
  * Technical failure raised by the GovInfo REST API driver boundary.
  *
- * @example
+ * **Example** (Create config failure error)
+ *
  * ```ts
  * import { GovinfoError } from "@beep/govinfo"
  *
@@ -141,10 +147,10 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
  * @category errors
  * @since 0.0.0
  */
-export class GovinfoError extends TaggedErrorClass<GovinfoError>($I`GovinfoError`)(
+export class GovinfoError extends S.TaggedError<GovinfoError>($I`GovinfoError`)(
   "GovinfoError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
@@ -158,7 +164,7 @@ export class GovinfoError extends TaggedErrorClass<GovinfoError>($I`GovinfoError
       })
     ),
   },
-  $I.annote("GovinfoError", {
+  $I.annoteError<GovinfoError>("GovinfoError", {
     description: "Redacted technical failure raised by the GovInfo REST API driver boundary.",
   })
 ) {

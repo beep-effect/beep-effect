@@ -17,7 +17,7 @@ import {
   RuntimeRequestKind,
   RuntimeSourceKind,
   RuntimeUsageMode,
-} from "./ProfessionalRuntime.values.js";
+} from "./ProfessionalRuntime.values.ts";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.contracts");
 const RuntimeOrganizationId = S.NonEmptyString.pipe(
@@ -128,7 +128,8 @@ const RuntimeContextPacketSchemaVersion = S.Literal("runtime-data-loop.expected.
 /**
  * Scope for an SDK request.
  *
- * @example
+ * **Example** (Make scope with IDs)
+ *
  * ```ts
  * import { RuntimeScope } from "@beep/agents-use-cases/public"
  *
@@ -162,7 +163,8 @@ export class RuntimeScope extends S.Class<RuntimeScope>($I`RuntimeScope`)(
 /**
  * Lightweight reference to a vertical or runtime entity.
  *
- * @example
+ * **Example** (Make household entity ref)
+ *
  * ```ts
  * import { RuntimeEntityRef } from "@beep/agents-use-cases/public"
  *
@@ -190,7 +192,8 @@ export class RuntimeEntityRef extends S.Class<RuntimeEntityRef>($I`RuntimeEntity
 /**
  * Source evidence reference for a candidate output.
  *
- * @example
+ * **Example** (Make evidence with spans)
+ *
  * ```ts
  * import { RuntimeEvidenceRef } from "@beep/agents-use-cases/public"
  * import * as O from "effect/Option"
@@ -224,7 +227,8 @@ export class RuntimeEvidenceRef extends S.Class<RuntimeEvidenceRef>($I`RuntimeEv
 /**
  * Candidate claim proposed by the runtime.
  *
- * @example
+ * **Example** (Make high-confidence claim)
+ *
  * ```ts
  * import {
  *   RuntimeCandidateClaim,
@@ -274,7 +278,8 @@ export class RuntimeCandidateClaim extends S.Class<RuntimeCandidateClaim>($I`Run
 /**
  * Candidate project proposed by the runtime.
  *
- * @example
+ * **Example** (Make candidate project)
+ *
  * ```ts
  * import {
  *   RuntimeCandidateProject,
@@ -319,7 +324,8 @@ export class RuntimeCandidateProject extends S.Class<RuntimeCandidateProject>($I
 /**
  * Candidate task proposed by the runtime.
  *
- * @example
+ * **Example** (Make task with due date)
+ *
  * ```ts
  * import { RuntimeCandidateTask, RuntimeEvidenceRef } from "@beep/agents-use-cases/public"
  * import * as O from "effect/Option"
@@ -360,7 +366,8 @@ export class RuntimeCandidateTask extends S.Class<RuntimeCandidateTask>($I`Runti
 /**
  * Recipient for a candidate draft.
  *
- * @example
+ * **Example** (Make draft recipient)
+ *
  * ```ts
  * import { RuntimeDraftRecipient } from "@beep/agents-use-cases/public"
  * import { EmailString } from "@beep/schema"
@@ -390,7 +397,8 @@ export class RuntimeDraftRecipient extends S.Class<RuntimeDraftRecipient>($I`Run
 /**
  * Candidate draft proposed by the runtime.
  *
- * @example
+ * **Example** (Make approval-required draft)
+ *
  * ```ts
  * import {
  *   RuntimeCandidateDraft,
@@ -448,7 +456,8 @@ export class RuntimeCandidateDraft extends S.Class<RuntimeCandidateDraft>($I`Run
 /**
  * Candidate approval gate proposed by the runtime.
  *
- * @example
+ * **Example** (Make pending approval gate)
+ *
  * ```ts
  * import { RuntimeApprovalGate, RuntimeEvidenceRef } from "@beep/agents-use-cases/public"
  * import * as O from "effect/Option"
@@ -493,7 +502,8 @@ export class RuntimeApprovalGate extends S.Class<RuntimeApprovalGate>($I`Runtime
 /**
  * Request section embedded in a context packet.
  *
- * @example
+ * **Example** (Make context packet request)
+ *
  * ```ts
  * import { RuntimeContextPacketRequest } from "@beep/agents-use-cases/public"
  *
@@ -523,7 +533,8 @@ export class RuntimeContextPacketRequest extends S.Class<RuntimeContextPacketReq
 /**
  * Source span declared by a context packet source artifact.
  *
- * @example
+ * **Example** (Make source span ref)
+ *
  * ```ts
  * import { RuntimeSourceSpanRef } from "@beep/agents-use-cases/public"
  *
@@ -551,7 +562,8 @@ export class RuntimeSourceSpanRef extends S.Class<RuntimeSourceSpanRef>($I`Runti
 /**
  * Source artifact declared by a context packet.
  *
- * @example
+ * **Example** (Make source artifact)
+ *
  * ```ts
  * import { RuntimeSourceArtifact, RuntimeSourceSpanRef } from "@beep/agents-use-cases/public"
  *
@@ -587,7 +599,8 @@ export class RuntimeSourceArtifact extends S.Class<RuntimeSourceArtifact>($I`Run
 /**
  * Runtime provenance activity included in a context packet.
  *
- * @example
+ * **Example** (Make provenance activity)
+ *
  * ```ts
  * import { RuntimeActivity } from "@beep/agents-use-cases/public"
  * import * as O from "effect/Option"
@@ -625,7 +638,8 @@ export class RuntimeActivity extends S.Class<RuntimeActivity>($I`RuntimeActivity
 /**
  * Runtime usage attribution included in a context packet.
  *
- * @example
+ * **Example** (Make fixture usage record)
+ *
  * ```ts
  * import { RuntimeUsageRecord } from "@beep/agents-use-cases/public"
  *
@@ -657,7 +671,8 @@ export class RuntimeUsageRecord extends S.Class<RuntimeUsageRecord>($I`RuntimeUs
 /**
  * Context packet returned to SDK clients.
  *
- * @example
+ * **Example** (Assemble full context packet)
+ *
  * ```ts
  * import {
  *   RuntimeActivity,
@@ -773,7 +788,8 @@ export class SdkContextPacket extends S.Class<SdkContextPacket>($I`SdkContextPac
 /**
  * Batch of candidate outputs proposed by an agent run.
  *
- * @example
+ * **Example** (Run fixture for candidates)
+ *
  * ```ts
  * import { runRuntimeFixture, RuntimeFixtureInput } from "@beep/agents-use-cases/proof"
  * import { Effect } from "effect"
@@ -792,6 +808,7 @@ export class SdkContextPacket extends S.Class<SdkContextPacket>($I`SdkContextPac
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",

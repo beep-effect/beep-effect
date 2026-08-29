@@ -9,7 +9,7 @@ import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { legalDocumentTaxonomy, slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+import { ONE } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
 import { Effect, flow, Layer, pipe } from "effect";
 import * as O from "effect/Option";
@@ -18,7 +18,7 @@ import * as Str from "effect/String";
 const $I = $DocumentsServerId.create("aggregates/Document/FilingDecisionHeuristic");
 
 const FilingDecision = DocumentUseCases.Document.FilingDecision;
-const deterministicConfidence = UnitInterval.fromUnknown(1);
+const deterministicConfidence = ONE;
 
 const normalizedHaystack = flow(Str.toLowerCase, Str.replace(/[_\s.]+/g, "-"));
 
@@ -53,7 +53,8 @@ const decideFromTaxonomy = (fileName: string) =>
 /**
  * Deterministic FilingDecision layer used by P1.
  *
- * @example
+ * **Example** (Import and log layer)
+ *
  * ```ts
  * import { FilingDecisionHeuristicLayer } from "@beep/documents-server/aggregates/Document"
  *

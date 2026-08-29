@@ -8,7 +8,8 @@
 /**
  * Spike entity input schema exported for package-local schema parity tests.
  *
- * @example
+ * **Example** (Decode entity input schema)
+ *
  * ```ts
  * import { EntityInput } from "@beep/law-practice-use-cases/test"
  * import * as S from "effect/Schema"
@@ -32,11 +33,12 @@
  * @category testing
  * @since 0.0.0
  */
-export { EntityInput } from "./internal/spikeEntity.js";
+export { EntityInput } from "./internal/spikeEntity.ts";
 /**
  * Fixed office-action review spike candidates.
  *
- * @example
+ * **Example** (Log spike candidates length)
+ *
  * ```ts
  * import { OfficeActionReviewSpikeCandidates } from "@beep/law-practice-use-cases/test"
  *
@@ -46,4 +48,4 @@ export { EntityInput } from "./internal/spikeEntity.js";
  * @category fixtures
  * @since 0.0.0
  */
-export { OfficeActionReviewSpikeCandidates } from "./OfficeActionReview/OfficeActionReview.candidates.js";
+export { OfficeActionReviewSpikeCandidates } from "./OfficeActionReview/OfficeActionReview.candidates.ts";

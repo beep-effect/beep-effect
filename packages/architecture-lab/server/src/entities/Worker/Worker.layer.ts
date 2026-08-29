@@ -9,7 +9,7 @@
 import * as WorkerUseCaseServer from "@beep/architecture-lab-use-cases/server";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
 import { Context, Effect, Layer } from "effect";
-import { makeWorkerRepository } from "./Worker.repo.js";
+import { makeWorkerRepository } from "./Worker.repo.ts";
 import type { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public";
 
 const $I = $ArchitectureLabServerId.create("entities/Worker/Worker.layer");
@@ -17,7 +17,8 @@ const $I = $ArchitectureLabServerId.create("entities/Worker/Worker.layer");
 /**
  * Build the Worker server facade.
  *
- * @example
+ * **Example** (Build and list workers)
+ *
  * ```ts
  * import { makeWorkerServer } from "@beep/architecture-lab-server/entities/Worker"
  * import { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public"
@@ -32,7 +33,6 @@ const $I = $ArchitectureLabServerId.create("entities/Worker/Worker.layer");
  *
  * @effects Allocates the default Worker repository and returns the
  * repository-backed Worker use-case facade.
- *
  * @category layers
  * @since 0.0.0
  */
@@ -44,7 +44,8 @@ export const makeWorkerServer = Effect.fn("ArchitectureLab.WorkerServer.make")(f
 /**
  * Worker server facade service.
  *
- * @example
+ * **Example** (Provide test layer list)
+ *
  * ```ts
  * import { WorkerServer } from "@beep/architecture-lab-server/entities/Worker"
  * import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test"
@@ -69,7 +70,8 @@ export class WorkerServer extends Context.Service<WorkerServer, WorkerUseCases.W
 /**
  * Worker server layer.
  *
- * @example
+ * **Example** (Provide layer and list)
+ *
  * ```ts
  * import { WorkerServer, WorkerServerLayer } from "@beep/architecture-lab-server/entities/Worker"
  * import { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public"

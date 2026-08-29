@@ -40,8 +40,8 @@ Route in this order:
 2. External engines, SDKs, services, frameworks, and browser platform wrappers
    go to `drivers`.
 3. Repo operations, generators, policy packs, and automation go to `tooling`.
-4. Product-agnostic UI primitives, themes, tokens, hooks, and composition
-   helpers go to `foundation/ui-system`.
+4. Product-agnostic UI primitives, themes, tokens, hooks, composition
+   helpers, and repo brand identity go to `foundation/ui-system`.
 5. Only remaining repo-owned, domain-agnostic technical services may go to
    `foundation/capability`.
 
@@ -95,6 +95,7 @@ The canonical non-slice families are:
 - `foundation`: domain-agnostic reusable substrate
 - `drivers`: flat repo-level external boundary wrappers
 - `tooling`: developer-operational code packages
+- `ecosystem`: flat publishable libraries authored for external consumption
 
 Every non-slice artifact declares one canonical family. Kind remains required
 only for families that intentionally declare a kind segment.
@@ -103,14 +104,16 @@ only for families that intentionally declare a kind segment.
 packages/foundation/<kind>/<name>
 packages/drivers/<name>
 packages/tooling/<kind>/<name>
+packages/ecosystem/<name>
 ```
 
 The path is the first layer of context compression. The manifest metadata is the
 second. Humans should infer role from the path. Tooling should enforce the same
 fact from metadata.
 
-`drivers` is the explicit flat-family exception. It records family metadata,
-omits `kind` in manifest metadata, and does not add a second `<kind>` segment.
+`drivers` and `ecosystem` are the explicit flat-family exceptions. Each
+records family metadata, omits `kind` in manifest metadata, and does not add a
+second `<kind>` segment.
 
 ## Internal Admin Packages
 
@@ -162,6 +165,26 @@ If the repo owns the implementation as internal substrate, it belongs in
 
 `shared` never owns technical wrappers or external drivers.
 
+## Why `ecosystem` Points Outward
+
+`ecosystem` is the fourth family and the only one whose audience is not this
+repo:
+
+```txt
+drivers    = external engines wrapped for THIS repo's consumption
+ecosystem  = repo-authored libraries built for EXTERNAL consumption
+```
+
+Members are publishable npm packages the repo authors and then consumes like
+any third-party dependency. That outward audience inverts the import polarity:
+member `src/` and runtime manifest edges are 100% `@beep/*`-free, while tests
+and `devDependencies` may use repo harnesses freely. Published-package
+standards supersede repo effect-first style laws inside members.
+
+The family charter — inverted gate, style-law scoping, artifact and peer
+policy, release lane, gate profile, promotion and demotion — lives in
+[14-ecosystem-packages.md](./14-ecosystem-packages.md).
+
 ## Why UI Primitives Stay In `foundation`
 
 A shared primitives library such as `@beep/ui` is not a slice and not a shared
@@ -176,9 +199,27 @@ This keeps the mental model clean:
 - shared kernel owns cross-slice product language
 - `foundation/ui-system` owns product-agnostic UI primitives
 
+### Brand Identity Is A Design-System Role
+
+Repo brand identity (marks, palettes, type stacks, favicons, wordmarks) is not
+product-domain language: no slice owns it, and putting it in `shared/*` would
+make every slice depend on a logo. It is a design-system role, so it routes to
+`foundation/ui-system` as its own package, `@beep/brand`, rather than into
+`@beep/ui`. Keeping the two apart lets an app that carries a different identity
+(`apps/oip-web`) consume `@beep/ui` without inheriting beep colors, and lets a
+demo take the mark and palette without the component library's dependency
+weight. The dependency direction is `@beep/ui -> @beep/brand`, never the
+reverse. Brand tokens are schema-decoded data; the stylesheet and SVG assets
+are generated from them and proven current by a parity test. The `assets/`
+anchor holds those generated files and their rasterised icon set.
+
 `ui-system` is a side branch of foundation. It may depend on
 `foundation/primitive` and `foundation/modeling`, but it does not depend on
-`foundation/capability` by default.
+`foundation/capability` by default. It may also import a driver's
+browser-safe pure root (pure helpers, schemas, service tags) and default a
+driver's browser-safe `/browser` layer as an overridable injection default —
+never a driver's server-only or secret-bearing surfaces (narrow edge ratified
+2026-07-14; see `DECISIONS.md`).
 
 Browser/runtime helpers follow platform-first routing:
 
@@ -236,7 +277,7 @@ Glob.Schema
 The package root remains a curated flat facade for convenience and migration:
 
 ```ts
-import { DurationInput, Glob, TaggedErrorClass } from "@beep/schema"
+import { DurationInput, Glob } from "@beep/schema"
 ```
 
 Root exports are not the canonical place for full concept namespaces. New

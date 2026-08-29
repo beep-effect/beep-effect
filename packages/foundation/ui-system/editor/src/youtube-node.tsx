@@ -6,10 +6,13 @@
  */
 "use client";
 
+import { YouTubeNode as YouTubeNodeSchema } from "@beep/lexical-schema";
+import { O } from "@beep/utils";
 import { BlockWithAlignableContents } from "@lexical/react/LexicalBlockWithAlignableContents";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
-import { YouTubeEmbed } from "./youtube-embed.tsx";
-import type { YouTubeNode as YouTubeNodeSchema } from "@beep/lexical-schema";
+import { Result } from "effect";
+import * as S from "effect/Schema";
+import { YOUTUBE_EMBED_SANDBOX, YouTubeEmbed, youtubeEmbedUrl, youtubeWatchUrl } from "./youtube-embed.tsx";
 import type {
   DOMConversionMap,
   DOMConversionOutput,
@@ -18,7 +21,6 @@ import type {
   ElementFormatType,
   LexicalEditor,
   LexicalNode,
-  LexicalUpdateJSON,
   NodeKey,
 } from "lexical";
 import type { JSX } from "react";
@@ -26,19 +28,20 @@ import type { JSX } from "react";
 /**
  * Serialized wire shape of {@link YouTubeNode}.
  *
- * @example
- * ```ts
+ * **Example** (Serialized wire payload)
+ *
+ * ```ts import.meta.vitest name="Serialized wire payload"
  * import type { SerializedYouTubeNode } from "@beep/editor/youtube-node"
  *
  * const payload = {
  *   type: "youtube",
  *   version: 1,
- *   videoID: "dQw4w9WgXcQ",
+ *   videoID: "M7lc1UVf-VE",
  *   format: "",
  * } satisfies SerializedYouTubeNode
  *
  * const videoID: string = payload.videoID
- * console.log(videoID) // "dQw4w9WgXcQ"
+ * videoID // => "M7lc1UVf-VE"
  * ```
  *
  * @category models
@@ -46,14 +49,27 @@ import type { JSX } from "react";
  */
 export type SerializedYouTubeNode = YouTubeNodeSchema.Encoded;
 
+const decodeYouTubeNode = S.decodeUnknownOption(YouTubeNodeSchema);
+const decodeYouTubeNodeResult = S.decodeUnknownResult(YouTubeNodeSchema);
+const encodeYouTubeNodeResult = S.encodeUnknownResult(YouTubeNodeSchema);
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
+
+const decodedYouTubeNode = (videoID: unknown, format: unknown = "") =>
+  decodeYouTubeNode({ type: "youtube", version: 1, videoID, format });
+
+const invalidYouTubeNode = (): YouTubeNode => new YouTubeNode("");
+const youtubeWrapperAttribute = "data-lexical-youtube-wrapper";
+
 /**
  * Block-level Lexical decorator node for YouTube embeds.
  *
- * @example
+ * **Example** (Create node getType)
+ *
  * ```tsx
  * import { $createYouTubeNode } from "@beep/editor/youtube-node"
  *
- * console.log($createYouTubeNode("dQw4w9WgXcQ").getType()) // "youtube"
+ * console.log($createYouTubeNode("M7lc1UVf-VE").getType()) // "youtube"
  * ```
  *
  * @category components
@@ -77,14 +93,28 @@ export class YouTubeNode extends DecoratorBlockNode {
 
   static override importDOM(): DOMConversionMap | null {
     return {
+      figure: (node: Node) => {
+        const id = node instanceof HTMLElement ? node.getAttribute(youtubeWrapperAttribute) : null;
+        if (id === null) return null;
+        const decoded = decodedYouTubeNode(id);
+        return {
+          conversion: (): DOMConversionOutput => ({
+            after: () => [],
+            node: O.match(decoded, {
+              onNone: () => null,
+              onSome: ({ videoID }) => $createYouTubeNode(videoID),
+            }),
+          }),
+          priority: 1,
+        };
+      },
       iframe: (node: Node) => {
         const id = node instanceof HTMLIFrameElement ? node.getAttribute("data-lexical-youtube") : null;
-        return id === null
-          ? null
-          : {
-              conversion: (): DOMConversionOutput => ({ node: $createYouTubeNode(id) }),
-              priority: 1,
-            };
+        if (id === null || O.isNone(decodedYouTubeNode(id))) return null;
+        return {
+          conversion: (): DOMConversionOutput => ({ node: $createYouTubeNode(id) }),
+          priority: 1,
+        };
       },
     };
   }
@@ -93,32 +123,51 @@ export class YouTubeNode extends DecoratorBlockNode {
   // `SerializedLexicalNode & Record<string, unknown>`; mirror the intersection so
   // the narrowed (schema-pinned, interface-backed) wire shape stays bivariant.
   static override importJSON(serializedNode: SerializedYouTubeNode & Record<string, unknown>): YouTubeNode {
-    return $createYouTubeNode(serializedNode.videoID).updateFromJSON(
-      serializedNode as LexicalUpdateJSON<SerializedYouTubeNode>
-    );
+    return O.match(decodeYouTubeNode(serializedNode), {
+      onNone: invalidYouTubeNode,
+      onSome: (decoded) => new YouTubeNode(decoded.videoID, decoded.format),
+    });
   }
 
   override exportJSON(): SerializedYouTubeNode {
-    return {
-      ...super.exportJSON(),
-      type: "youtube",
-      videoID: this.__id,
-    };
+    const decoded = Result.getOrThrowWith(
+      decodeYouTubeNodeResult({ ...super.exportJSON(), type: "youtube", videoID: this.__id }),
+      schemaIssueToError
+    );
+    return Result.getOrThrowWith(encodeYouTubeNodeResult(decoded), schemaIssueToError);
   }
 
   override exportDOM(): DOMExportOutput {
-    const element = document.createElement("iframe");
-    element.setAttribute("data-lexical-youtube", this.__id);
-    element.setAttribute("width", "560");
-    element.setAttribute("height", "315");
-    element.setAttribute("src", `https://www.youtube-nocookie.com/embed/${this.__id}`);
-    element.setAttribute(
+    const decoded = decodedYouTubeNode(this.__id, this.__format);
+    if (O.isNone(decoded)) {
+      const fallback = document.createElement("span");
+      fallback.textContent = "Video unavailable";
+      return { element: fallback };
+    }
+    const container = document.createElement("figure");
+    container.setAttribute(youtubeWrapperAttribute, decoded.value.videoID);
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("data-lexical-youtube", decoded.value.videoID);
+    iframe.setAttribute("width", "560");
+    iframe.setAttribute("height", "315");
+    iframe.setAttribute("src", youtubeEmbedUrl(decoded.value.videoID));
+    iframe.setAttribute(
       "allow",
       "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     );
-    element.setAttribute("allowfullscreen", "true");
-    element.setAttribute("title", "YouTube video");
-    return { element };
+    iframe.setAttribute("allowfullscreen", "true");
+    iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    iframe.setAttribute("sandbox", YOUTUBE_EMBED_SANDBOX);
+    iframe.setAttribute("title", "YouTube video");
+
+    const watch = document.createElement("a");
+    watch.setAttribute("href", youtubeWatchUrl(decoded.value.videoID));
+    watch.setAttribute("target", "_blank");
+    watch.setAttribute("rel", "noreferrer noopener");
+    watch.textContent = "Watch on YouTube";
+
+    container.append(iframe, watch);
+    return { element: container };
   }
 
   getId(): string {
@@ -126,7 +175,9 @@ export class YouTubeNode extends DecoratorBlockNode {
   }
 
   override getTextContent(): string {
-    return `https://www.youtube.com/watch?v=${this.__id}`;
+    return O.isSome(decodedYouTubeNode(this.__id))
+      ? `https://www.youtube.com/watch?v=${this.__id}`
+      : "Video unavailable";
   }
 
   override decorate(_editor: LexicalEditor, config: EditorConfig): JSX.Element {
@@ -147,27 +198,33 @@ export class YouTubeNode extends DecoratorBlockNode {
 /**
  * Create a YouTube embed node.
  *
- * @example
+ * **Example** (Create node with ID)
+ *
  * ```tsx
  * import { $createYouTubeNode } from "@beep/editor/youtube-node"
  *
- * const node = $createYouTubeNode("dQw4w9WgXcQ")
- * console.log(node.getId()) // "dQw4w9WgXcQ"
+ * const node = $createYouTubeNode("M7lc1UVf-VE")
+ * console.log(node.getId()) // "M7lc1UVf-VE"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): YouTubeNode => new YouTubeNode(videoID);
+export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): YouTubeNode =>
+  O.match(decodedYouTubeNode(videoID), {
+    onNone: invalidYouTubeNode,
+    onSome: (decoded) => new YouTubeNode(decoded.videoID, decoded.format),
+  });
 
 /**
  * Type guard for {@link YouTubeNode}.
  *
- * @example
+ * **Example** (Type guard returns true)
+ *
  * ```tsx
  * import { $createYouTubeNode, $isYouTubeNode } from "@beep/editor/youtube-node"
  *
- * console.log($isYouTubeNode($createYouTubeNode("dQw4w9WgXcQ"))) // true
+ * console.log($isYouTubeNode($createYouTubeNode("M7lc1UVf-VE"))) // true
  * ```
  *
  * @category guards

@@ -1,0 +1,23 @@
+{
+  "name": "@beep/infra-turbo-cache-lambda",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "./build.sh",
+    "bundle:check": "rm -rf build && bunx esbuild src/index.ts src/authorizer.ts src/writer.ts --bundle --platform=node --target=node22 --format=cjs --outdir=build --entry-names='[name]' --out-extension:.js=.cjs && node test/bundle-smoke.cjs build",
+    "zip:check": "rm -rf \"${TMPDIR:-/tmp}/turbo-cache-zip-check\" && ./package-zip.sh build \"${TMPDIR:-/tmp}/turbo-cache-zip-check/turbo-cache.zip\"",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ssm": "3.1109.0",
+    "turborepo-remote-cache": "2.12.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.162",
+    "@types/bun": "1.3.14",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

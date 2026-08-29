@@ -11,10 +11,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { installResearchTimers } from "./internal/Timers.js";
-import { resolveVaultRoot } from "./internal/Vault.js";
-import { ResearchCommandError } from "./Research.errors.js";
-import { printResearchIndex } from "./Research.render.js";
+import { installResearchTimers } from "./internal/Timers.ts";
+import { resolveVaultRoot } from "./internal/Vault.ts";
+import { ResearchCommandError } from "./Research.errors.ts";
+import { printResearchIndex } from "./Research.render.ts";
 import {
   ResearchCaptureOptions,
   ResearchCognifyOptions,
@@ -24,7 +24,7 @@ import {
   ResearchNotionPullOptions,
   ResearchRepoCardOptions,
   ResearchStatusOptions,
-} from "./Research.schemas.js";
+} from "./Research.schemas.ts";
 import {
   captureResearchUrl,
   cognifyResearchCards,
@@ -35,7 +35,7 @@ import {
   siftResearchHistory,
   writeResearchDigest,
   writeResearchRepoCards,
-} from "./Research.service.js";
+} from "./Research.service.ts";
 
 /** @since 0.0.0 */
 const vaultFlag = Flag.directory("vault", { mustExist: true }).pipe(
@@ -117,10 +117,14 @@ const researchRootFlag = Flag.directory("research-root", { mustExist: true }).pi
 );
 /** @since 0.0.0 */
 const starsFlag = Flag.boolean("stars").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Also card GitHub starred repositories via the gh CLI")
 );
 /** @since 0.0.0 */
-const forceFlag = Flag.boolean("force").pipe(Flag.withDescription("Rewrite cards that already exist"));
+const forceFlag = Flag.boolean("force").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Rewrite cards that already exist")
+);
 /** @since 0.0.0 */
 const onlyFlag = Flag.string("only").pipe(
   Flag.withDescription("Only card clones whose directory name contains this substring"),
@@ -196,6 +200,7 @@ const researchNotionPullCommand = Command.make(
 
 /** @since 0.0.0 */
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Report what would be pushed to Cognee without pushing")
 );
 
@@ -239,6 +244,7 @@ const researchDigestCommand = Command.make(
 
 /** @since 0.0.0 */
 const commitFlag = Flag.boolean("commit").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Commit the vault after the daily run when it changed")
 );
 
@@ -269,6 +275,7 @@ const researchDailyCommand = Command.make(
 
 /** @since 0.0.0 */
 const uninstallFlag = Flag.boolean("uninstall").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Disable and remove the research systemd user timers")
 );
 
@@ -303,13 +310,15 @@ const researchStatusCommand = Command.make(
 /**
  * Research knowledge-vault command group.
  *
- * @example
+ * **Example** (Register research command group)
+ *
  * ```ts
  * import { researchCommand } from "@beep/repo-cli/commands/Research"
  *
  * const commandGroups = { research: researchCommand }
  * console.log(Object.keys(commandGroups)) // ["research"]
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

@@ -12,25 +12,26 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
-import { CitationSignal } from "../CitationSignal/index.js";
-import { CitationWarning } from "../CitationWarning/index.js";
-import { Span } from "../Span/index.js";
-import { StringCitationGroup } from "../StringCitationGroup/index.js";
+import { CitationId } from "../CitationId/index.ts";
+import { CitationSignal } from "../CitationSignal/index.ts";
+import { CitationWarning } from "../CitationWarning/index.ts";
+import { Span } from "../Span/index.ts";
+import { StringCitationGroup } from "../StringCitationGroup/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/CitationBase/CitationBase.model");
 
 /**
  * Base fields shared by all citation types.
  *
+ * **Details**
+ *
  * Every concrete citation subtype spreads `{ ...CitationBase.fields }` and adds
  * its own `type` discriminant and component spans on top, so this class carries
  * only the shared metadata: match text, position span, confidence, timing, and
  * the optional string-citation and footnote grouping fields.
  *
- * **Example**
+ * **Example** (Make CitationBase with fields)
  *
- * @example
  * ```ts
  * import { CitationBase, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -87,8 +88,7 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
       description: "Number of regex patterns checked before match.",
     }),
     warnings: S.Array(CitationWarning).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<CitationWarning>(),
       S.annotateKey({
         description: "Warnings for malformed or ambiguous regions.",
       })
@@ -152,7 +152,8 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
 /**
  * Companion namespace for `CitationBase`.
  *
- * @example
+ * **Example** (Access Encoded confidence field)
+ *
  * ```ts
  * import type { CitationBase } from "@beep/law-practice-domain"
  *
@@ -167,9 +168,8 @@ export declare namespace CitationBase {
   /**
    * Wire-encoded representation of a decoded {@link CitationBase}.
    *
-   * **Example**
+   * **Example** (Alias the Encoded type)
    *
-   * @example
    * ```ts
    * import type { CitationBase } from "@beep/law-practice-domain"
    *

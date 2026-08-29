@@ -20,16 +20,17 @@ const textDecoder = new TextDecoder();
 /**
  * OTLP packet families captured by the packet lab.
  *
- * @example
- * ```typescript
+ * **Example** (Enum traces kind value)
+ *
+ * ```ts import.meta.vitest name="Enum traces kind value"
  * import { OtlpPacketKind } from "@beep/observability/experimental/server"
  *
  * const kind: OtlpPacketKind = OtlpPacketKind.Enum.traces
- * console.log(kind) // "traces"
+ * kind // => "traces"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const OtlpPacketKind = LiteralKit(["logs", "metrics", "traces"]).pipe(
   $I.annoteSchema("OtlpPacketKind", {
@@ -40,7 +41,8 @@ export const OtlpPacketKind = LiteralKit(["logs", "metrics", "traces"]).pipe(
 /**
  * Runtime type for {@link OtlpPacketKind}.
  *
- * @example
+ * **Example** (Type alias string assignment)
+ *
  * ```typescript
  * import type { OtlpPacketKind } from "@beep/observability/experimental/server"
  *
@@ -56,16 +58,17 @@ export type OtlpPacketKind = typeof OtlpPacketKind.Type;
 /**
  * OTLP body encodings captured by the packet lab.
  *
- * @example
- * ```typescript
+ * **Example** (Enum json encoding value)
+ *
+ * ```ts import.meta.vitest name="Enum json encoding value"
  * import { OtlpPacketEncoding } from "@beep/observability/experimental/server"
  *
  * const encoding: OtlpPacketEncoding = OtlpPacketEncoding.Enum.json
- * console.log(encoding) // "json"
+ * encoding // => "json"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const OtlpPacketEncoding = LiteralKit(["json", "protobuf"]).pipe(
   $I.annoteSchema("OtlpPacketEncoding", {
@@ -76,7 +79,8 @@ export const OtlpPacketEncoding = LiteralKit(["json", "protobuf"]).pipe(
 /**
  * Runtime type for {@link OtlpPacketEncoding}.
  *
- * @example
+ * **Example** (Type alias string assignment)
+ *
  * ```typescript
  * import type { OtlpPacketEncoding } from "@beep/observability/experimental/server"
  *
@@ -92,8 +96,9 @@ export type OtlpPacketEncoding = typeof OtlpPacketEncoding.Type;
 /**
  * One captured OTLP packet.
  *
- * @example
- * ```typescript
+ * **Example** (Make packet with fields)
+ *
+ * ```ts import.meta.vitest name="Make packet with fields"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { OtlpPacket } from "@beep/observability/experimental/server"
@@ -107,11 +112,11 @@ export type OtlpPacketEncoding = typeof OtlpPacketEncoding.Type;
  *   preview: "{}",
  *   size: zero
  * })
- * console.log(packet.kind) // "traces"
+ * packet.kind // => "traces"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class OtlpPacket extends S.Class<OtlpPacket>($I`OtlpPacket`)(
   {
@@ -130,7 +135,8 @@ export class OtlpPacket extends S.Class<OtlpPacket>($I`OtlpPacket`)(
 /**
  * Packet lab service for capturing serialized OTLP payloads.
  *
- * @example
+ * **Example** (Yield lab and snapshot)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { OtlpPacketLab } from "@beep/observability/experimental/server"
@@ -143,8 +149,8 @@ export class OtlpPacket extends S.Class<OtlpPacket>($I`OtlpPacket`)(
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class OtlpPacketLab extends Context.Service<
   OtlpPacketLab,
@@ -270,7 +276,8 @@ const makeLayer = (encoding: OtlpPacketEncoding, baseLayer: Layer.Layer<OtlpSeri
 /**
  * Build a packet lab backed by JSON OTLP serialization.
  *
- * @example
+ * **Example** (Provide JSON lab layer)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { OtlpPacketLab, layerJson } from "@beep/observability/experimental/server"
@@ -283,15 +290,16 @@ const makeLayer = (encoding: OtlpPacketEncoding, baseLayer: Layer.Layer<OtlpSeri
  * console.log(snapshot)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerJson = makeLayer("json", OtlpSerialization.layerJson);
 
 /**
  * Build a packet lab backed by protobuf OTLP serialization.
  *
- * @example
+ * **Example** (Provide protobuf lab layer)
+ *
  * ```typescript
  * import { Effect } from "effect"
  * import { OtlpPacketLab, layerProtobuf } from "@beep/observability/experimental/server"
@@ -304,7 +312,7 @@ export const layerJson = makeLayer("json", OtlpSerialization.layerJson);
  * console.log(snapshot)
  * ```
  *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const layerProtobuf = makeLayer("protobuf", OtlpSerialization.layerProtobuf);

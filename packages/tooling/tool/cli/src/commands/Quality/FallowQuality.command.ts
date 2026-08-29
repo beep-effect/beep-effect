@@ -8,18 +8,19 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn, NonNegativeInt } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
-import { collectText } from "../../internal/process/index.js";
-import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.js";
+import { runCapturedStreams } from "../../internal/process/index.ts";
+import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.ts";
 import {
   FallowAttributionKinds,
   FallowEnvelopeStatus,
@@ -34,14 +35,15 @@ import {
   FallowReportPayload,
   FallowReportToolFailed,
   FindingAttributionSummary,
+  fallowEnvelopeFileName,
   PositiveExitStatus,
   sameAttributionKind,
   sameEnvelopeStatus,
   sameFeatureFamily,
-} from "./internal/FallowEnvelope.schema.js";
-import { QualityScriptCommandError } from "./Quality.errors.js";
+} from "./internal/FallowEnvelope.schema.ts";
+import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.js";
+import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
 
@@ -79,7 +81,7 @@ const fallbackSourceRef = "standards/fallow.pilot.inventory.jsonc";
 // maximum while still surfacing that the lane has saturated findings.
 const maxFindingsPerCount = 10_000;
 
-const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonText = Unknown.decodeUnknownEffectFromJsonString;
 const encodeFallowEnvelopeJson = S.encodeUnknownEffect(S.fromJsonString(FallowReportEnvelope));
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
@@ -319,7 +321,6 @@ class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawRep
     schema_version: S.Union([S.Finite, S.String]),
     version: S.String,
     elapsed_ms: S.Finite,
-
     summary: S.Struct({
       security_findings: S.Finite,
       unresolved_edge_files: S.Finite,
@@ -337,7 +338,7 @@ class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawRep
  * @category testing
  * @since 0.0.0
  */
-export { fallowCiUploadDiagnosticsForTesting } from "./internal/FallowCiContract.js";
+export { fallowCiUploadDiagnosticsForTesting } from "./internal/FallowCiContract.ts";
 
 const FallowSecurityRawReport = S.Union([FallowSecurityDetailedRawReport, FallowSecuritySummaryRawReport]).pipe(
   $I.annoteSchema("FallowSecurityRawReport", {
@@ -372,6 +373,10 @@ type FallowCommandOptions = {
   readonly base: string;
   readonly check: boolean;
   readonly out: string;
+  readonly quiet: boolean;
+};
+type FallowAuditDiffFallbackArgsOptions = {
+  readonly diffPath: string;
   readonly quiet: boolean;
 };
 type ProcessResult = {
@@ -735,7 +740,7 @@ const normalizeFindings = (feature: FallowFeature, document: unknown): ReadonlyA
     security: () => findingsForCount(feature, "security-findings", rawSecurityFindingCount(document)),
   });
 
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- raw-count dispatch mirrors normalization for each fallow output shape
 const rawFindingCount = (feature: FallowFeature, document: unknown): number =>
   FallowFeatureFamily.$match(feature, {
     audit: () => A.length(normalizeAuditFindings(document)),
@@ -785,30 +790,22 @@ const collectProcessOutput = Effect.fn("FallowQuality.collectProcessOutput")(fun
   command: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<ProcessResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd: repoRoot,
-        extendEnv: true,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      return {
-        stdout,
-        stderr,
-        output: combineProcessOutput(stdout, stderr),
-        exitCode,
-      };
-    })
-  ).pipe(
+  const result = yield* runCapturedStreams({
+    command,
+    args,
+    cwd: repoRoot,
+    extendEnv: true,
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to run ${commandText(command, args)}.`, {
       command: commandText(command, args),
     })
   );
+  return {
+    stdout: result.stdout,
+    stderr: result.stderr,
+    output: combineProcessOutput(result.stdout, result.stderr),
+    exitCode: result.exitCode,
+  };
 });
 
 const collectOptionalOutput = Effect.fn("FallowQuality.collectOptionalOutput")(function* (
@@ -946,42 +943,48 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
 /**
  * Build the fallback Fallow audit argv used when base-snapshot worktrees are unavailable.
  *
- * @param base - Base ref passed through to Fallow audit.
- * @param quiet - Whether the fallback should pass Fallow's `--quiet` flag.
- * @param diffPath - Path to the generated diff file consumed by Fallow audit.
- * @returns Ordered Bun argv for the diff-scoped Fallow audit fallback.
- * @example
+ * **Example** (Build diff-fallback audit arguments)
+ *
  * ```ts
  * import { fallowAuditDiffFallbackArgsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
- * const args = fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")
+ * const args = fallowAuditDiffFallbackArgsForTesting("origin/main", {
+ *   diffPath: "/tmp/audit.diff",
+ *   quiet: true
+ * })
  * console.log(args.includes("--diff-file"), args[args.length - 1])
  * // true all
  * ```
+ *
+ * @param base - Base ref passed through to Fallow audit.
+ * @param options - Diff path and whether the fallback should pass Fallow's `--quiet` flag.
+ * @returns Ordered Bun argv for the diff-scoped Fallow audit fallback.
  * @category testing
  * @since 0.0.0
  */
-export const fallowAuditDiffFallbackArgsForTesting = (
-  base: string,
-  quiet: boolean,
-  diffPath: string
-): ReadonlyArray<string> => [
-  "run",
-  "fallow",
-  "--",
-  "audit",
-  "--config",
-  ".fallowrc.jsonc",
-  "--format",
-  "json",
-  ...(quiet ? ["--quiet"] : []),
-  "--base",
-  base,
-  "--diff-file",
-  diffPath,
-  "--gate",
-  "all",
-];
+export const fallowAuditDiffFallbackArgsForTesting: {
+  (options: FallowAuditDiffFallbackArgsOptions): (base: string) => ReadonlyArray<string>;
+  (base: string, options: FallowAuditDiffFallbackArgsOptions): ReadonlyArray<string>;
+} = dual(
+  2,
+  (base: string, options: FallowAuditDiffFallbackArgsOptions): ReadonlyArray<string> => [
+    "run",
+    "fallow",
+    "--",
+    "audit",
+    "--config",
+    ".fallowrc.jsonc",
+    "--format",
+    "json",
+    ...(options.quiet ? ["--quiet"] : []),
+    "--base",
+    base,
+    "--diff-file",
+    options.diffPath,
+    "--gate",
+    "all",
+  ]
+);
 
 const wrapperArgs = (feature: FallowFeature, options: FallowCommandOptions, out: string): ReadonlyArray<string> => [
   "quality",
@@ -1002,9 +1005,8 @@ const renderWrapperCommand = (feature: FallowFeature, options: FallowCommandOpti
 /**
  * Detect the structured Fallow audit error that should use the diff-scoped fallback.
  *
- * @param result - Captured Fallow audit process result to inspect.
- * @returns `true` when Fallow failed because the base worktree snapshot could not be created.
- * @example
+ * **Example** (Detect a worktree error needing fallback)
+ *
  * ```ts
  * import { fallowAuditNeedsDiffFallbackForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
@@ -1027,6 +1029,9 @@ const renderWrapperCommand = (feature: FallowFeature, options: FallowCommandOpti
  * console.log([worktreeError, unrelatedError])
  * // [true, false]
  * ```
+ *
+ * @param result - Captured Fallow audit process result to inspect.
+ * @returns `true` when Fallow failed because the base worktree snapshot could not be created.
  * @category testing
  * @since 0.0.0
  */
@@ -1210,10 +1215,8 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
 /**
  * Collect the tracked and untracked working-tree diff consumed by the audit fallback.
  *
- * @param repoRoot - Absolute repository root used as the Git working directory.
- * @param base - Base revision for tracked changes.
- * @returns A successful combined binary diff, or the first failed Git process result.
- * @example
+ * **Example** (Collect an audit diff input for testing)
+ *
  * ```ts
  * import { collectAuditDiffInputForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  * import { Effect } from "effect"
@@ -1225,6 +1228,10 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
  * console.log(Effect.isEffect(program))
  * // true
  * ```
+ *
+ * @param repoRoot - Absolute repository root used as the Git working directory.
+ * @param base - Base revision for tracked changes.
+ * @returns A successful combined binary diff, or the first failed Git process result.
  * @category testing
  * @since 0.0.0
  */
@@ -1292,7 +1299,7 @@ const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiff
       return yield* collectProcessOutput(
         repoRoot,
         "bun",
-        fallowAuditDiffFallbackArgsForTesting(options.base, options.quiet, diffPath)
+        fallowAuditDiffFallbackArgsForTesting(options.base, { diffPath, quiet: options.quiet })
       );
     }),
     (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
@@ -2215,23 +2222,32 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
   Command.make(
     feature,
     {
-      advisory: Flag.boolean("advisory").pipe(Flag.withDescription("Exit zero while preserving Fallow exit status")),
+      advisory: Flag.boolean("advisory").pipe(
+        Flag.withDefault(false),
+        Flag.withDescription("Exit zero while preserving Fallow exit status")
+      ),
       base: Flag.string("base").pipe(
         Flag.withDefault(defaultBaseRef),
         Flag.withDescription("Git base ref used by diff-aware Fallow commands")
       ),
       check: Flag.boolean("check").pipe(
+        Flag.withDefault(false),
         Flag.withDescription("Fail only for promoted blocking lanes; advisory P1 lanes do not promote findings")
       ),
-      out: Flag.string("out").pipe(
-        Flag.withDefault(`${defaultOutDir}/${feature}.json`),
-        Flag.withDescription("Envelope output path")
-      ),
+      out: Flag.string("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
       quiet: Flag.boolean("quiet").pipe(
+        Flag.withDefault(false),
         Flag.withDescription("Suppress Fallow tool chatter in raw output where supported")
       ),
     },
-    ({ advisory, base, check, out, quiet }) => runFallowFeature(feature, { advisory, base, check, out, quiet })
+    ({ advisory, base, check, out, quiet }) =>
+      runFallowFeature(feature, {
+        advisory,
+        base,
+        check,
+        out: Str.isNonEmpty(out) ? out : `${defaultOutDir}/${fallowEnvelopeFileName(feature, advisory)}`,
+        quiet,
+      })
   ).pipe(Command.withDescription(`Run Fallow ${feature} and write a repo-cli report envelope`));
 
 const envelopeCheckCommand = Command.make(
@@ -2251,6 +2267,7 @@ const envelopeCheckCommand = Command.make(
       Flag.withDescription("Expected reportPath recorded in the envelope")
     ),
     requireRawOutput: Flag.boolean("require-raw-output").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Require the envelope rawOutputRef artifact to exist")
     ),
   },
@@ -2266,6 +2283,7 @@ const commandContractCheckCommand = Command.make(
       Flag.withDescription("Comma-separated Fallow feature commands expected in the quality surface")
     ),
     requireEnvelope: Flag.boolean("require-envelope").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Run each advisory command and validate the emitted envelope")
     ),
     outDir: Flag.string("out-dir").pipe(
@@ -2279,7 +2297,10 @@ const commandContractCheckCommand = Command.make(
 const boundariesConfigCheckCommand = Command.make(
   "config-check",
   {
-    check: Flag.boolean("check").pipe(Flag.withDescription("Fail when generated Fallow boundary config is stale")),
+    check: Flag.boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when generated Fallow boundary config is stale")
+    ),
   },
   ({ check }) => runBoundariesConfigCheck(check)
 ).pipe(Command.withDescription("Verify generated Fallow boundary config freshness"));
@@ -2300,12 +2321,18 @@ const ciContractCheckCommand = Command.make(
       Flag.withDefault(defaultOutDir),
       Flag.withDescription("Expected envelope artifact output directory")
     ),
-    requireUpload: Flag.boolean("require-upload").pipe(Flag.withDescription("Require artifact upload wiring")),
+    requireUpload: Flag.boolean("require-upload").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Require artifact upload wiring")
+    ),
     ifNoFilesFound: Flag.string("if-no-files-found").pipe(
       Flag.withDefault("error"),
       Flag.withDescription("Expected upload-artifact missing-file behavior")
     ),
-    advisory: Flag.boolean("advisory").pipe(Flag.withDescription("Require advisory Fallow invocations")),
+    advisory: Flag.boolean("advisory").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Require advisory Fallow invocations")
+    ),
   },
   ({ advisory, expectBlockingLanes, expectLanes, expectOutDir, ifNoFilesFound, requireUpload, workflow }) =>
     runCiContractCheck(
@@ -2332,7 +2359,8 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
 /**
  * Fallow command group under the canonical repo quality surface.
  *
- * @example
+ * **Example** (Wire the fallow quality command)
+ *
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
  * import { Command } from "effect/unstable/cli"
@@ -2341,6 +2369,7 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

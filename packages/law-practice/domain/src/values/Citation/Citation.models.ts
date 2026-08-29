@@ -14,46 +14,53 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { A, O, Str, thunkEmptyStr } from "@beep/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 // Tier-C citation subtypes participating in the Citation union.
-import { AnnotationCitation } from "../AnnotationCitation/index.js";
-import { CanonCitation } from "../CanonCitation/index.js";
-import { CitationBase } from "../CitationBase/index.js";
-import { CitationId } from "../CitationId/index.js";
+import { AnnotationCitation } from "../AnnotationCitation/index.ts";
+import { CanonCitation } from "../CanonCitation/index.ts";
+import { CitationBase } from "../CitationBase/index.ts";
+import { CitationId } from "../CitationId/index.ts";
 import {
   CaseComponentSpan,
   IdComponentSpan,
   ShortFormCaseComponentSpan,
   SupraComponentSpan,
-} from "../ComponentSpan/index.js";
-import { ConstitutionalCitation } from "../ConstitutionalCitation/index.js";
-import { CourtInference } from "../CourtInference/index.js";
-import { DocketCitation } from "../DocketCitation/index.js";
-import { FederalRegisterCitation } from "../FederalRegisterCitation/index.js";
-import { FederalRuleCitation } from "../FederalRuleCitation/index.js";
-import { HistoryChain } from "../HistoryChain/index.js";
-import { HistorySignal } from "../HistorySignal/index.js";
-import { JournalCitation } from "../JournalCitation/index.js";
-import { LegislativeMaterialCitation } from "../LegislativeMaterialCitation/index.js";
-import { LocalOrdinanceCitation } from "../LocalOrdinanceCitation/index.js";
-import { NeutralCitation } from "../NeutralCitation/index.js";
-import { ParallelGroup } from "../ParallelGroup/index.js";
-import { ParentheticalType } from "../ParentheticalType/index.js";
-import { PinciteInfo } from "../PinciteInfo/index.js";
-import { PublicLawCitation } from "../PublicLawCitation/index.js";
-import { RegulationCitation } from "../RegulationCitation/index.js";
-import { RestatementCitation } from "../RestatementCitation/index.js";
-import { SessionLawCitation } from "../SessionLawCitation/index.js";
-import { Span } from "../Span/index.js";
-import { StateRuleCitation } from "../StateRuleCitation/index.js";
-import { StatuteCitation } from "../StatuteCitation/index.js";
-import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.js";
-import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.js";
-import { TreatiseCitation } from "../TreatiseCitation/index.js";
-import { TreatyCitation } from "../TreatyCitation/index.js";
-import type * as O from "effect/Option";
+} from "../ComponentSpan/index.ts";
+import { ConstitutionalCitation } from "../ConstitutionalCitation/index.ts";
+import { CourtInference } from "../CourtInference/index.ts";
+import { DocketCitation } from "../DocketCitation/index.ts";
+import { FederalRegisterCitation } from "../FederalRegisterCitation/index.ts";
+import { FederalRuleCitation } from "../FederalRuleCitation/index.ts";
+import { HistoryChain } from "../HistoryChain/index.ts";
+import { HistorySignal } from "../HistorySignal/index.ts";
+import { JournalCitation } from "../JournalCitation/index.ts";
+import { LegislativeMaterialCitation } from "../LegislativeMaterialCitation/index.ts";
+import { LocalOrdinanceCitation } from "../LocalOrdinanceCitation/index.ts";
+import { NeutralCitation } from "../NeutralCitation/index.ts";
+import { ParallelGroup } from "../ParallelGroup/index.ts";
+import { ParentheticalType } from "../ParentheticalType/index.ts";
+import { PinciteInfo } from "../PinciteInfo/index.ts";
+import { PublicLawCitation } from "../PublicLawCitation/index.ts";
+import { RegulationCitation } from "../RegulationCitation/index.ts";
+import { RestatementCitation } from "../RestatementCitation/index.ts";
+import { SessionLawCitation } from "../SessionLawCitation/index.ts";
+import { Span } from "../Span/index.ts";
+import { StateRuleCitation } from "../StateRuleCitation/index.ts";
+import { StatuteCitation } from "../StatuteCitation/index.ts";
+import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
+import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.ts";
+import { TreatiseCitation } from "../TreatiseCitation/index.ts";
+import { TreatyCitation } from "../TreatyCitation/index.ts";
+import type { FastCheck } from "effect/testing";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
+
+const parentheticalCitationsToArbitrary: () => (
+  fc: typeof FastCheck
+) => FastCheck.Arbitrary<ReadonlyArray<Citation.Type>> = () => (fc) =>
+  fc.array(S.toArbitrary(DocketCitation)(fc), { maxLength: 2 });
 
 /**
  * Child citations nested within an explanatory {@link Parenthetical} (#851).
@@ -65,8 +72,10 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
  * same reason (mirrors the `AdditionalPincites` pattern in `PinciteInfo`).
  */
 const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Citation.Encoded> => Citation)).pipe(
-  S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  SchemaUtils.withEmptyArrayDefaults<Citation.Type>(),
+  S.annotate({
+    toArbitrary: parentheticalCitationsToArbitrary,
+  }),
   S.annotateKey({
     description:
       "Child citations nested within this explanatory parenthetical (#851); each carries its own CitationId, may be any citation type, and may itself carry parentheticals (recursive).",
@@ -76,6 +85,8 @@ const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Cita
 /**
  * An extracted explanatory parenthetical from a case citation.
  *
+ * **Details**
+ *
  * Not a citation subtype — it does not spread {@link CitationBase} and carries
  * no `type` discriminant of the citation family. Its `type` field is instead a
  * {@link ParentheticalType} signal-word classification. A parenthetical may nest
@@ -83,9 +94,8 @@ const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Cita
  * `(quoting Doe v. City, 100 F.2d 1)`), so `citations` is a self/mutually
  * recursive field resolved through `S.suspend`.
  *
- * **Example**
+ * **Example** (Making a holding parenthetical)
  *
- * @example
  * ```ts
  * import { Parenthetical } from "@beep/law-practice-domain"
  *
@@ -125,7 +135,8 @@ export class Parenthetical extends S.Class<Parenthetical>($I`Parenthetical`)(
 /**
  * Companion namespace for `Parenthetical`.
  *
- * @example
+ * **Example** (Accessing parenthetical type field)
+ *
  * ```ts
  * import type { Parenthetical } from "@beep/law-practice-domain"
  *
@@ -140,14 +151,15 @@ export declare namespace Parenthetical {
   /**
    * Decoded representation of a {@link Parenthetical}.
    *
+   * **Details**
+   *
    * Hand-written (rather than `typeof Parenthetical.Type`) so the mutually
    * recursive `citations` field can name {@link Citation.Type} through an
    * interface boundary without making the {@link Parenthetical} class base
    * expression circular.
    *
-   * **Example**
+   * **Example** (Aliasing decoded parenthetical type)
    *
-   * @example
    * ```ts
    * import type { Parenthetical } from "@beep/law-practice-domain"
    *
@@ -158,7 +170,7 @@ export declare namespace Parenthetical {
    * @since 0.0.0
    */
   export interface Type {
-    readonly citations: O.Option<ReadonlyArray<Citation.Type>>;
+    readonly citations: ReadonlyArray<Citation.Type>;
     readonly span: O.Option<Span>;
     readonly text: string;
     readonly type: ParentheticalType;
@@ -167,9 +179,8 @@ export declare namespace Parenthetical {
   /**
    * Wire-encoded representation of a decoded {@link Parenthetical}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded parenthetical type)
    *
-   * @example
    * ```ts
    * import type { Parenthetical } from "@beep/law-practice-domain"
    *
@@ -180,7 +191,7 @@ export declare namespace Parenthetical {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly citations?: ReadonlyArray<Citation.Encoded>;
+    readonly citations?: ReadonlyArray<Citation.Encoded> | undefined;
     readonly span?: typeof Span.Encoded;
     readonly text: string;
     readonly type: typeof ParentheticalType.Encoded;
@@ -190,17 +201,18 @@ export declare namespace Parenthetical {
 /**
  * A parsed full case citation (type: `case`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `case`
  * discriminant plus the volume/reporter/page anatomy of a reporter citation,
  * parallel-citation grouping, explanatory {@link Parenthetical}s, subsequent
  * procedural history, structured dates, party names, and the inferred court.
- * Only `volume` and `reporter` are required; every other own field is optional
- * and modeled as `Option` with a `None` constructor default because case-citation
- * forms vary widely across reporters and pinpoint styles.
+ * Only `volume` and `reporter` are required as constructor input. Sparse
+ * citation fields use `Option`, while definitive flags and zero-or-more
+ * collections receive schema-owned defaults.
  *
- * **Example**
+ * **Example** (Making a full case citation)
  *
- * @example
  * ```ts
  * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -227,9 +239,8 @@ export declare namespace Parenthetical {
  * @category models
  * @since 0.0.0
  */
-export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitation`)(
+export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`FullCaseCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("case"),
     volume: S.Union([NonNegativeInt, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
@@ -265,12 +276,10 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
         description: "Court string as captured from the citation parenthetical.",
       })
     ),
-    unpublished: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    unpublished: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True for citations whose source carried an unpublished-disposition marker. Set by NY Slip Op `(U)` / `[U]` suffix detection (#231). Absent or false for published decisions.",
+          "True for citations whose source carried an unpublished-disposition marker. Set by NY Slip Op `(U)` / `[U]` suffix detection (#231). Defaults to false for published decisions.",
       })
     ),
     normalizedCourt: S.String.pipe(
@@ -324,16 +333,14 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
       })
     ),
     parentheticals: S.Array(Parenthetical).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<Parenthetical>(),
       S.annotateKey({
         description:
           "Explanatory parentheticals following the citation. Only populated when explanatory content is found (not court/year/disposition).",
       })
     ),
     subsequentHistoryEntries: S.Array(SubsequentHistoryEntry).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<SubsequentHistoryEntry>(),
       S.annotateKey({
         description:
           "Subsequent history entries attached to this citation. Populated on every chain link that received a history clause from the scanner — not just the chain's root (#619). Each entry describes a procedural event (affirmed, reversed, etc.).",
@@ -460,9 +467,7 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
           'Nominative (historical) reporter abbreviation for early SCOTUS citations. Present only when the citation includes a nominative parenthetical, e.g., `67 U.S. (2 Black) 635` → "Black".',
       })
     ),
-    hasBlankPage: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    hasBlankPage: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
           'True when page position contains a blank placeholder ("___" or "---"), populated by Phase 5 (Blank Page support). When true, page is undefined and confidence is reduced to 0.8.',
@@ -477,8 +482,7 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
       })
     ),
     justices: S.Array(S.String).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      SchemaUtils.withEmptyArrayDefaults<string>(),
       S.annotateKey({
         description:
           'Surname(s) of justice(s) attributed to the parenthetical disposition, populated for justice-attribution parens (#235) like `(Brennan, J., dissenting)` → ["Brennan"].',
@@ -519,12 +523,78 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
   $I.annote("FullCaseCitation", {
     description: 'A parsed full case citation (type: "case").',
   })
-) {}
+) {
+  /**
+   * Reconstruct a canonical Bluebook-style citation string from structured fields.
+   *
+   * **Details**
+   *
+   * Best-effort formatting for a full case citation using the available party
+   * name, reporter, page, pincite, court, and year fields.
+   *
+   * **Example** (Format a Bluebook citation)
+   *
+   * ```ts
+   * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
+   * import { NonNegativeInt } from "@beep/schema"
+   *
+   * const citation = FullCaseCitation.make({
+   *   text: "410 U.S. 113",
+   *   span: Span.make({
+   *     cleanStart: NonNegativeInt.make(0),
+   *     cleanEnd: NonNegativeInt.make(12),
+   *     originalStart: NonNegativeInt.make(0),
+   *     originalEnd: NonNegativeInt.make(12),
+   *   }),
+   *   confidence: 1,
+   *   matchedText: "410 U.S. 113",
+   *   processTimeMs: 0,
+   *   patternsChecked: NonNegativeInt.make(1),
+   *   volume: NonNegativeInt.make(410),
+   *   reporter: "U.S.",
+   * })
+   *
+   * const bluebook = FullCaseCitation.toBlueBook(citation)
+   * ```
+   */
+  static readonly toBlueBook = (citation: FullCaseCitation): string => {
+    const reporter = citation.normalizedReporter.pipe(O.getOrElse(() => citation.reporter));
+    const page = citation.hasBlankPage
+      ? " ___"
+      : citation.page.pipe(
+          O.map((page) => ` ${page}`),
+          O.getOrElse(thunkEmptyStr)
+        );
+    const core = `${citation.volume} ${reporter}${page}`;
+    const pincite = citation.pincite.pipe(
+      O.map((pincite) => `, ${pincite}`),
+      O.getOrElse(thunkEmptyStr)
+    );
+    const courtAndYear = pipe(
+      A.getSomes([
+        citation.normalizedCourt.pipe(O.orElse(() => citation.court)),
+        citation.year.pipe(O.map((year) => `${year}`)),
+      ]),
+      A.join(" "),
+      O.liftPredicate(Str.isNonEmpty),
+      O.map((parenthetical) => ` (${parenthetical})`),
+      O.getOrElse(thunkEmptyStr)
+    );
+
+    const caseName = citation.caseName.pipe(
+      O.map((caseName) => `${caseName}, `),
+      O.getOrElse(thunkEmptyStr)
+    );
+
+    return `${caseName}${core}${pincite}${courtAndYear}`;
+  };
+}
 
 /**
  * Companion namespace for `FullCaseCitation`.
  *
- * @example
+ * **Example** (Accessing case citation type field)
+ *
  * ```ts
  * import type { FullCaseCitation } from "@beep/law-practice-domain"
  *
@@ -539,9 +609,8 @@ export declare namespace FullCaseCitation {
   /**
    * Wire-encoded representation of a decoded {@link FullCaseCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded case citation)
    *
-   * @example
    * ```ts
    * import type { FullCaseCitation } from "@beep/law-practice-domain"
    *
@@ -578,10 +647,10 @@ export declare namespace FullCaseCitation {
     readonly disposition: O.Option<string>;
     readonly fullSpan: O.Option<Span>;
     readonly groupId: O.Option<string>;
-    readonly hasBlankPage: O.Option<boolean>;
+    readonly hasBlankPage: boolean;
     readonly historyChain: O.Option<HistoryChain>;
     readonly inferredCourt: O.Option<CourtInference>;
-    readonly justices: O.Option<ReadonlyArray<string>>;
+    readonly justices: ReadonlyArray<string>;
     readonly nominativeReporter: O.Option<string>;
     readonly nominativeVolume: O.Option<NonNegativeInt>;
     readonly normalizedCourt: O.Option<string>;
@@ -595,7 +664,7 @@ export declare namespace FullCaseCitation {
       }>
     >;
     readonly parallelGroup: O.Option<ParallelGroup>;
-    readonly parentheticals: O.Option<ReadonlyArray<Parenthetical.Type>>;
+    readonly parentheticals: ReadonlyArray<Parenthetical.Type>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly plaintiff: O.Option<string>;
@@ -613,14 +682,14 @@ export declare namespace FullCaseCitation {
     readonly reporter: string;
     readonly scope: O.Option<string>;
     readonly spans: O.Option<CaseComponentSpan>;
-    readonly subsequentHistoryEntries: O.Option<ReadonlyArray<SubsequentHistoryEntry>>;
+    readonly subsequentHistoryEntries: ReadonlyArray<SubsequentHistoryEntry>;
     readonly subsequentHistoryOf: O.Option<{
       readonly index: NonNegativeInt;
       readonly priorId: O.Option<CitationId>;
       readonly signal: HistorySignal;
     }>;
     readonly type: "case";
-    readonly unpublished: O.Option<boolean>;
+    readonly unpublished: boolean;
     readonly volume: NonNegativeInt | string;
     readonly year: O.Option<NonNegativeInt>;
   }
@@ -637,7 +706,11 @@ export declare namespace FullCaseCitation {
     readonly court?: string;
     readonly date?: {
       readonly iso: string;
-      readonly parsed?: { readonly year: number; readonly month?: number; readonly day?: number };
+      readonly parsed?: {
+        readonly year: number;
+        readonly month?: number;
+        readonly day?: number;
+      };
     };
     readonly defendant?: string;
     readonly defendantNormalized?: string;
@@ -647,7 +720,7 @@ export declare namespace FullCaseCitation {
     readonly hasBlankPage?: boolean;
     readonly historyChain?: typeof HistoryChain.Encoded;
     readonly inferredCourt?: typeof CourtInference.Encoded;
-    readonly justices?: ReadonlyArray<string>;
+    readonly justices?: ReadonlyArray<string> | undefined;
     readonly nominativeReporter?: string;
     readonly nominativeVolume?: number;
     readonly normalizedCourt?: string;
@@ -659,7 +732,7 @@ export declare namespace FullCaseCitation {
       readonly page: number;
     }>;
     readonly parallelGroup?: typeof ParallelGroup.Encoded;
-    readonly parentheticals?: ReadonlyArray<Parenthetical.Encoded>;
+    readonly parentheticals?: ReadonlyArray<Parenthetical.Encoded> | undefined;
     readonly pincite?: number;
     readonly pinciteInfo?: PinciteInfo.Encoded;
     readonly plaintiff?: string;
@@ -675,7 +748,7 @@ export declare namespace FullCaseCitation {
     readonly reporter: string;
     readonly scope?: string;
     readonly spans?: typeof CaseComponentSpan.Encoded;
-    readonly subsequentHistoryEntries?: ReadonlyArray<typeof SubsequentHistoryEntry.Encoded>;
+    readonly subsequentHistoryEntries?: ReadonlyArray<typeof SubsequentHistoryEntry.Encoded> | undefined;
     readonly subsequentHistoryOf?: {
       readonly index: number;
       readonly priorId?: string;
@@ -691,15 +764,16 @@ export declare namespace FullCaseCitation {
 /**
  * A parsed `Id.` short-form citation (type: `id`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `id` discriminant.
- * Every own field is optional and modeled as `Option` with a `None` constructor
- * default: an `Id.` reference inherits most of its anatomy (pincite, party
- * names) from the antecedent citation it resolves to, and may carry a trailing
- * {@link Parenthetical}.
+ * Sparse own fields use `Option`: an `Id.` reference inherits most of its
+ * anatomy (pincite, party names) from the antecedent citation it resolves to,
+ * and may carry a trailing {@link Parenthetical}. `pinciteInherited` defaults
+ * to `false`.
  *
- * **Example**
+ * **Example** (Making an Id citation)
  *
- * @example
  * ```ts
  * import { IdCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -724,9 +798,8 @@ export declare namespace FullCaseCitation {
  * @category models
  * @since 0.0.0
  */
-export class IdCitation extends S.Class<IdCitation>($I`IdCitation`)(
+export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("id"),
     pincite: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
@@ -742,12 +815,10 @@ export class IdCitation extends S.Class<IdCitation>($I`IdCitation`)(
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
     ),
-    pinciteInherited: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteInherited: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Undefined when `pincite` was extracted directly from this citation's text or when no pincite was set.",
+          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
     pinciteInheritedFrom: NonNegativeInt.pipe(
@@ -849,7 +920,8 @@ export class IdCitation extends S.Class<IdCitation>($I`IdCitation`)(
 /**
  * Companion namespace for `IdCitation`.
  *
- * @example
+ * **Example** (Accessing Id citation type field)
+ *
  * ```ts
  * import type { IdCitation } from "@beep/law-practice-domain"
  *
@@ -864,9 +936,8 @@ export declare namespace IdCitation {
   /**
    * Wire-encoded representation of a decoded {@link IdCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded Id citation)
    *
-   * @example
    * ```ts
    * import type { IdCitation } from "@beep/law-practice-domain"
    *
@@ -894,7 +965,7 @@ export declare namespace IdCitation {
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
-    readonly pinciteInherited: O.Option<boolean>;
+    readonly pinciteInherited: boolean;
     readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly plaintiff: O.Option<string>;
@@ -934,14 +1005,15 @@ export declare namespace IdCitation {
 /**
  * A parsed `supra` short-form citation (type: `supra`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `supra`
  * discriminant. A `supra` reference points back to an earlier citation by party
- * name; every own field is optional and modeled as `Option` with a `None`
- * constructor default.
+ * name; sparse own fields use `Option`, while `pinciteInherited` defaults to
+ * `false`.
  *
- * **Example**
+ * **Example** (Making a supra citation)
  *
- * @example
  * ```ts
  * import { SupraCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -966,9 +1038,8 @@ export declare namespace IdCitation {
  * @category models
  * @since 0.0.0
  */
-export class SupraCitation extends S.Class<SupraCitation>($I`SupraCitation`)(
+export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("supra"),
     partyName: S.String.pipe(
       S.OptionFromOptionalKey,
@@ -991,12 +1062,10 @@ export class SupraCitation extends S.Class<SupraCitation>($I`SupraCitation`)(
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
     ),
-    pinciteInherited: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteInherited: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Undefined when `pincite` was extracted directly from this citation's text or when no pincite was set.",
+          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
     pinciteInheritedFrom: NonNegativeInt.pipe(
@@ -1047,7 +1116,8 @@ export class SupraCitation extends S.Class<SupraCitation>($I`SupraCitation`)(
 /**
  * Companion namespace for `SupraCitation`.
  *
- * @example
+ * **Example** (Accessing supra citation type field)
+ *
  * ```ts
  * import type { SupraCitation } from "@beep/law-practice-domain"
  *
@@ -1062,9 +1132,8 @@ export declare namespace SupraCitation {
   /**
    * Wire-encoded representation of a decoded {@link SupraCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded supra citation)
    *
-   * @example
    * ```ts
    * import type { SupraCitation } from "@beep/law-practice-domain"
    *
@@ -1090,7 +1159,7 @@ export declare namespace SupraCitation {
     readonly partyName: O.Option<string>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
-    readonly pinciteInherited: O.Option<boolean>;
+    readonly pinciteInherited: boolean;
     readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly spans: O.Option<SupraComponentSpan>;
@@ -1120,15 +1189,16 @@ export declare namespace SupraCitation {
 /**
  * A parsed short-form case citation (type: `shortFormCase`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `shortFormCase`
  * discriminant. An abbreviated reference to an earlier full citation,
  * distinguished from a full case by the lack of a case name. Only `volume` and
- * `reporter` are required; every other own field is optional and modeled as
- * `Option` with a `None` constructor default.
+ * `reporter` are required as constructor input; sparse own fields use `Option`,
+ * while `pinciteInherited` defaults to `false`.
  *
- * **Example**
+ * **Example** (Making a short-form case citation)
  *
- * @example
  * ```ts
  * import { ShortFormCaseCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -1155,9 +1225,8 @@ export declare namespace SupraCitation {
  * @category models
  * @since 0.0.0
  */
-export class ShortFormCaseCitation extends S.Class<ShortFormCaseCitation>($I`ShortFormCaseCitation`)(
+export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCitation>($I`ShortFormCaseCitation`)(
   {
-    ...CitationBase.fields,
     type: S.tag("shortFormCase"),
     volume: S.Union([NonNegativeInt, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
@@ -1186,12 +1255,10 @@ export class ShortFormCaseCitation extends S.Class<ShortFormCaseCitation>($I`Sho
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
     ),
-    pinciteInherited: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    pinciteInherited: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description:
-          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Undefined when `pincite` was extracted directly from this citation's text or when no pincite was set.",
+          "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
     pinciteInheritedFrom: NonNegativeInt.pipe(
@@ -1315,7 +1382,8 @@ export class ShortFormCaseCitation extends S.Class<ShortFormCaseCitation>($I`Sho
 /**
  * Companion namespace for `ShortFormCaseCitation`.
  *
- * @example
+ * **Example** (Accessing short-form type field)
+ *
  * ```ts
  * import type { ShortFormCaseCitation } from "@beep/law-practice-domain"
  *
@@ -1330,9 +1398,8 @@ export declare namespace ShortFormCaseCitation {
   /**
    * Wire-encoded representation of a decoded {@link ShortFormCaseCitation}.
    *
-   * **Example**
+   * **Example** (Aliasing encoded short-form citation)
    *
-   * @example
    * ```ts
    * import type { ShortFormCaseCitation } from "@beep/law-practice-domain"
    *
@@ -1373,7 +1440,7 @@ export declare namespace ShortFormCaseCitation {
     readonly partyNameNormalized: O.Option<string>;
     readonly pincite: O.Option<NonNegativeInt>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
-    readonly pinciteInherited: O.Option<boolean>;
+    readonly pinciteInherited: boolean;
     readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly reporter: string;
@@ -1420,13 +1487,14 @@ export declare namespace ShortFormCaseCitation {
 /**
  * Union type of all citation types.
  *
+ * **Details**
+ *
  * Discriminated on the `type` field, so downstream code can branch exhaustively
  * across every parsed legal-authority kind — full case, short-form, statute,
  * regulation, and the rest of the Tier-C family.
  *
- * **Example**
+ * **Example** (Aliasing all citation types)
  *
- * @example
  * ```ts
  * import { Citation } from "@beep/law-practice-domain"
  *
@@ -1470,9 +1538,8 @@ export const Citation = S.Union([
 /**
  * The decoded union of every citation type.
  *
- * **Example**
+ * **Example** (Aliasing decoded citation union)
  *
- * @example
  * ```ts
  * import { Citation } from "@beep/law-practice-domain"
  *
@@ -1487,14 +1554,15 @@ export type Citation = typeof Citation.Type;
 /**
  * Companion namespace for {@link Citation}.
  *
+ * **Details**
+ *
  * The decoded and encoded shapes are named here so the mutually-recursive
  * {@link ParentheticalCitations} suspend can reference them without forcing the
  * {@link Parenthetical} class base expression to evaluate the {@link Citation}
  * union value (which would be circular).
  *
- * **Example**
+ * **Example** (Aliasing Citation.Type union)
  *
- * @example
  * ```ts
  * import type { Citation } from "@beep/law-practice-domain"
  *
@@ -1569,12 +1637,13 @@ export declare namespace Citation {
 /**
  * Union of all full citation types (not short-form references).
  *
+ * **Details**
+ *
  * Excludes the `id`, `supra`, and `shortFormCase` back-references, leaving only
  * the citation kinds that stand on their own as a complete authority.
  *
- * **Example**
+ * **Example** (Aliasing full citation types)
  *
- * @example
  * ```ts
  * import { FullCitation } from "@beep/law-practice-domain"
  *
@@ -1615,9 +1684,8 @@ export const FullCitation = S.Union([
 /**
  * The decoded union of every full (non-short-form) citation type.
  *
- * **Example**
+ * **Example** (Aliasing decoded full citations)
  *
- * @example
  * ```ts
  * import { FullCitation } from "@beep/law-practice-domain"
  *
@@ -1632,12 +1700,13 @@ export type FullCitation = typeof FullCitation.Type;
 /**
  * Union of all short-form citation types (Id., supra, short-form case).
  *
+ * **Details**
+ *
  * These are back-references to an earlier full citation rather than
  * free-standing authorities.
  *
- * **Example**
+ * **Example** (Aliasing short-form citation types)
  *
- * @example
  * ```ts
  * import { ShortFormCitation } from "@beep/law-practice-domain"
  *
@@ -1657,9 +1726,8 @@ export const ShortFormCitation = S.Union([IdCitation, SupraCitation, ShortFormCa
 /**
  * The decoded union of every short-form citation type.
  *
- * **Example**
+ * **Example** (Aliasing decoded short-form citations)
  *
- * @example
  * ```ts
  * import { ShortFormCitation } from "@beep/law-practice-domain"
  *

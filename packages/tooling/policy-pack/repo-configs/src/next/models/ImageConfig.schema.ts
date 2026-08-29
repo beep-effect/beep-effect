@@ -17,12 +17,14 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
 /**
  * Valid values for the Next.js image loader configuration.
  *
- * @example
+ * **Example** (Import LoaderValue constant)
+ *
  * ```ts
  * import { LoaderValue } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const loader = LoaderValue
  * console.log(loader)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -35,12 +37,14 @@ export const LoaderValue = LiteralKit(["default", "imgix", "cloudinary", "akamai
 /**
  * Literal union of valid Next.js image loader values.
  *
- * @example
+ * **Example** (Assign default loader type)
+ *
  * ```ts
  * import type { LoaderValue } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const loader: LoaderValue = "default"
  * console.log(loader)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -55,12 +59,14 @@ const ImageQuality = S.Int.check(S.isBetween({ minimum: 1, maximum: 100 })).pipe
 /**
  * Configuration properties passed to a Next.js image loader function.
  *
- * @example
+ * **Example** (Import ImageLoaderProps schema)
+ *
  * ```ts
  * import { ImageLoaderProps } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const schema = ImageLoaderProps
  * console.log(schema)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -78,12 +84,14 @@ export class ImageLoaderProps extends S.Class<ImageLoaderProps>($I`ImageLoaderPr
 /**
  * Next.js local image matching pattern.
  *
- * @example
+ * **Example** (Make local pathname pattern)
+ *
  * ```ts
  * import { LocalPattern } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const pattern = LocalPattern.make({ pathname: "/assets/**" })
  * console.log(pattern)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -115,12 +123,14 @@ export class LocalPattern extends S.Class<LocalPattern>($I`LocalPattern`)(
 /**
  * Next.js remote image matching pattern.
  *
- * @example
+ * **Example** (Make remote hostname pattern)
+ *
  * ```ts
  * import { RemotePattern } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const pattern = RemotePattern.make({ hostname: "images.example.com" })
  * console.log(pattern)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -177,12 +187,14 @@ export class RemotePattern extends S.Class<RemotePattern>($I`RemotePattern`)(
 /**
  * Supported image output formats for Next.js image optimization.
  *
- * @example
+ * **Example** (Import ImageFormat schema)
+ *
  * ```ts
  * import { ImageFormat } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const format = ImageFormat
  * console.log(format)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -195,12 +207,14 @@ export const ImageFormat = LiteralKit(["image/avif", "image/webp"]).pipe(
 /**
  * Supported image output format for Next.js image optimization.
  *
- * @example
+ * **Example** (Satisfy webp image format)
+ *
  * ```ts
  * import type { ImageFormat } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const format = "image/webp" satisfies ImageFormat
  * console.log(format)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -209,13 +223,15 @@ export type ImageFormat = typeof ImageFormat.Type;
 /**
  * Image configurations
  *
- * @see [Image configuration options](https://nextjs.org/docs/api-reference/next/image#configuration-options)
- * @example
+ * **Example** (Import complete image config)
+ *
  * ```ts
  * import { ImageConfigComplete } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const schema = ImageConfigComplete
  * console.log(schema)
  * ```
+ *
+ * @see [Image configuration options](https://nextjs.org/docs/api-reference/next/image#configuration-options)
  * @category models
  * @since 0.0.0
  */
@@ -378,19 +394,21 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
 /**
  * Partial Next.js image configuration with repo-default statics.
  *
- * @example
+ * **Example** (Import ImageConfig schema)
+ *
  * ```ts
  * import { ImageConfig } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const config = ImageConfig
  * console.log(config)
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
 export const ImageConfig = ImageConfigComplete.mapFields(Struct.map(S.optionalKey)).pipe(
   SchemaUtils.withStatics((schema) => ({
     default: Result.getOrThrowWith(
-      S.decodeUnknownResult(schema)({
+      S.decodeResult(schema)({
         deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
         imageSizes: [32, 48, 64, 96, 128, 256, 384],
         path: "/_next/image",
@@ -425,12 +443,14 @@ export const ImageConfig = ImageConfigComplete.mapFields(Struct.map(S.optionalKe
 /**
  * Partial Next.js image configuration.
  *
- * @example
+ * **Example** (Satisfy empty image config)
+ *
  * ```ts
  * import type { ImageConfig } from "@beep/repo-configs/next/models/ImageConfig.schema"
  * const config = {} satisfies ImageConfig
  * console.log(config)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

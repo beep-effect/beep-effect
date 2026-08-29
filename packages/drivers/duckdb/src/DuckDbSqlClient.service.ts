@@ -1,7 +1,8 @@
 /**
  * Effect SQL client implementation backed by DuckDB's native Node API.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This module adapts `@duckdb/node-api` to the generic Effect SQL
  * `SqlClient.SqlClient` service. The v1 compiler intentionally uses Effect
  * SQL's SQLite compiler because DuckDB accepts positional `?` placeholders and
@@ -44,7 +45,8 @@ const ATTR_DB_SYSTEM_NAME = "db.system.name";
 /**
  * Runtime type identifier for DuckDB-backed Effect SQL clients.
  *
- * @example
+ * **Example** (Checking type id marker)
+ *
  * ```ts
  * import { DuckDbSqlClientTypeId } from "@beep/duckdb"
  *
@@ -65,7 +67,8 @@ export const DuckDbSqlClientTypeId: DuckDbSqlClientTypeId = "~@beep/duckdb/DuckD
 /**
  * Type-level identifier for DuckDB-backed Effect SQL clients.
  *
- * @example
+ * **Example** (Assigning type-level identifier)
+ *
  * ```ts
  * import type { DuckDbSqlClientTypeId } from "@beep/duckdb"
  *
@@ -81,7 +84,8 @@ export type DuckDbSqlClientTypeId = "~@beep/duckdb/DuckDbSqlClient";
 /**
  * Options for creating a DuckDB-backed Effect SQL client.
  *
- * @example
+ * **Example** (In-memory database options)
+ *
  * ```ts
  * import type { DuckDbSqlClientOptions } from "@beep/duckdb"
  *
@@ -103,7 +107,8 @@ export type DuckDbSqlClientOptions = Pick<DuckDbConnectionOptions, "databaseOpti
 /**
  * DuckDB-backed Effect SQL client value.
  *
- * @example
+ * **Example** (Reading client config)
+ *
  * ```ts
  * import type { DuckDbSqlClientValue } from "@beep/duckdb"
  *
@@ -361,11 +366,9 @@ const makeDuckDbWithTransaction =
               Effect.flatMap(() =>
                 Effect.provideContext(
                   restore(effect),
-                  Context.mutate(services, (services) =>
-                    services.pipe(
-                      Context.add(options.transactionService, [connection, id]),
-                      Context.add(Tracer.ParentSpan, span)
-                    )
+                  services.pipe(
+                    Context.add(options.transactionService, [connection, id]),
+                    Context.add(Tracer.ParentSpan, span)
                   )
                 )
               ),
@@ -478,7 +481,8 @@ const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnec
 /**
  * Build a DuckDB-backed Effect SQL client from a caller-owned live connection.
  *
- * @example
+ * **Example** (Client from live connection)
+ *
  * ```ts
  * import { DuckDbSqlClient } from "@beep/duckdb"
  * import type { DuckDBConnection } from "@duckdb/node-api"
@@ -495,7 +499,6 @@ const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnec
  * @effects
  * Builds SQL client state over the supplied live connection without taking
  * ownership of its close lifecycle.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -508,7 +511,8 @@ export const fromClient = Effect.fn("DuckDbSqlClient.fromClient")(function* (
 /**
  * Acquire a managed DuckDB-backed Effect SQL client.
  *
- * @example
+ * **Example** (Managed in-memory client)
+ *
  * ```ts
  * import { DuckDbSqlClient } from "@beep/duckdb"
  *
@@ -519,7 +523,6 @@ export const fromClient = Effect.fn("DuckDbSqlClient.fromClient")(function* (
  * @effects
  * Opens a native DuckDB instance and connection, then registers scope
  * finalizers that close both resources.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -533,7 +536,8 @@ export const make = Effect.fn("DuckDbSqlClient.make")(function* (
 /**
  * Build a Layer that provides both the DuckDB-specific client and generic SQL client.
  *
- * @example
+ * **Example** (Layer for in-memory client)
+ *
  * ```ts
  * import { DuckDbSqlClient } from "@beep/duckdb"
  *
@@ -556,7 +560,8 @@ export const makeLayer = (
 /**
  * Service key for DuckDB-backed Effect SQL clients.
  *
- * @example
+ * **Example** (Service key reference)
+ *
  * ```ts
  * import { DuckDbSqlClient } from "@beep/duckdb"
  *

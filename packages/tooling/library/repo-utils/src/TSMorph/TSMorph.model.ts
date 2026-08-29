@@ -116,12 +116,14 @@ const symbolKindOptions = TSSyntaxKind.pickOptions([
 /**
  * Repository root directory path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { RepoRootPath } from "@beep/repo-utils"
  * const identifier = RepoRootPath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -136,11 +138,13 @@ export const RepoRootPath = FilePath.pipe(
 /**
  * Branded repository root directory path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { RepoRootPath } from "@beep/repo-utils"
  * type Example = RepoRootPath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -149,12 +153,14 @@ export type RepoRootPath = typeof RepoRootPath.Type;
 /**
  * Workspace directory path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { WorkspaceDirectoryPath } from "@beep/repo-utils"
  * const identifier = WorkspaceDirectoryPath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -169,11 +175,13 @@ export const WorkspaceDirectoryPath = FilePath.pipe(
 /**
  * Branded workspace directory path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { WorkspaceDirectoryPath } from "@beep/repo-utils"
  * type Example = WorkspaceDirectoryPath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -182,12 +190,14 @@ export type WorkspaceDirectoryPath = typeof WorkspaceDirectoryPath.Type;
 /**
  * `tsconfig*.json` file path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsConfigFilePath } from "@beep/repo-utils"
  * const identifier = TsConfigFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -203,11 +213,13 @@ export const TsConfigFilePath = FilePath.check(tsConfigFilePathChecks).pipe(
 /**
  * Branded `tsconfig*.json` file path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { TsConfigFilePath } from "@beep/repo-utils"
  * type Example = TsConfigFilePath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -216,12 +228,14 @@ export type TsConfigFilePath = typeof TsConfigFilePath.Type;
 /**
  * TypeScript implementation file path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TypeScriptImplementationFilePath } from "@beep/repo-utils"
  * const identifier = TypeScriptImplementationFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -237,11 +251,13 @@ export const TypeScriptImplementationFilePath = FilePath.check(typeScriptImpleme
 /**
  * Branded TypeScript implementation file path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { TypeScriptImplementationFilePath } from "@beep/repo-utils"
  * type Example = TypeScriptImplementationFilePath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -250,12 +266,14 @@ export type TypeScriptImplementationFilePath = typeof TypeScriptImplementationFi
 /**
  * TypeScript declaration file path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TypeScriptDeclarationFilePath } from "@beep/repo-utils"
  * const identifier = TypeScriptDeclarationFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -269,11 +287,13 @@ export const TypeScriptDeclarationFilePath = FilePath.check(typeScriptDeclaratio
 /**
  * Branded TypeScript declaration file path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { TypeScriptDeclarationFilePath } from "@beep/repo-utils"
  * type Example = TypeScriptDeclarationFilePath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -282,12 +302,14 @@ export type TypeScriptDeclarationFilePath = typeof TypeScriptDeclarationFilePath
 /**
  * TypeScript source file path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TypeScriptFilePath } from "@beep/repo-utils"
  * const identifier = TypeScriptFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -302,11 +324,13 @@ export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, Typ
 /**
  * Branded TypeScript source file path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { TypeScriptFilePath } from "@beep/repo-utils"
  * type Example = TypeScriptFilePath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -315,12 +339,14 @@ export type TypeScriptFilePath = typeof TypeScriptFilePath.Type;
 /**
  * Symbol-safe implementation file path schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolFilePath } from "@beep/repo-utils"
  * const identifier = SymbolFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -335,11 +361,13 @@ export const SymbolFilePath = TypeScriptImplementationFilePath.check(symbolIdSaf
 /**
  * Branded symbol-safe implementation file path.
  *
- * @example
+ * **Example** (Use branded path type)
+ *
  * ```ts
  * import type { SymbolFilePath } from "@beep/repo-utils"
  * type Example = SymbolFilePath
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -348,12 +376,14 @@ export type SymbolFilePath = typeof SymbolFilePath.Type;
 /**
  * Single segment schema for a symbol name.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolNameSegment } from "@beep/repo-utils"
  * const identifier = SymbolNameSegment.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -369,11 +399,13 @@ export const SymbolNameSegment = S.String.check(S.isPattern(SYMBOL_NAME_SEGMENT_
 /**
  * Branded single symbol name segment.
  *
- * @example
+ * **Example** (Use branded segment type)
+ *
  * ```ts
  * import type { SymbolNameSegment } from "@beep/repo-utils"
  * type Example = SymbolNameSegment
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -382,12 +414,14 @@ export type SymbolNameSegment = typeof SymbolNameSegment.Type;
 /**
  * Qualified symbol name schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolQualifiedName } from "@beep/repo-utils"
  * const identifier = SymbolQualifiedName.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -403,11 +437,13 @@ export const SymbolQualifiedName = S.String.check(S.isPattern(SYMBOL_QUALIFIED_N
 /**
  * Branded qualified symbol name.
  *
- * @example
+ * **Example** (Use branded name type)
+ *
  * ```ts
  * import type { SymbolQualifiedName } from "@beep/repo-utils"
  * type Example = SymbolQualifiedName
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -416,12 +452,14 @@ export type SymbolQualifiedName = typeof SymbolQualifiedName.Type;
 /**
  * Supported TypeScript declaration kinds for normalized symbols.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolKind } from "@beep/repo-utils"
  * const identifier = SymbolKind.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -434,11 +472,13 @@ export const SymbolKind = LiteralKit(symbolKindOptions).pipe(
 /**
  * Literal union of supported TypeScript declaration kinds.
  *
- * @example
+ * **Example** (Use kind union type)
+ *
  * ```ts
  * import type { SymbolKind } from "@beep/repo-utils"
  * type Example = SymbolKind
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -447,12 +487,14 @@ export type SymbolKind = typeof SymbolKind.Type;
 /**
  * Coarse symbol categories used by the TSMorph models.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolCategory } from "@beep/repo-utils"
  * const identifier = SymbolCategory.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -465,11 +507,13 @@ export const SymbolCategory = LiteralKit(["function", "class", "member", "type"]
 /**
  * Literal union of coarse TSMorph symbol categories.
  *
- * @example
+ * **Example** (Use category union type)
+ *
  * ```ts
  * import type { SymbolCategory } from "@beep/repo-utils"
  * type Example = SymbolCategory
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -478,13 +522,15 @@ export type SymbolCategory = typeof SymbolCategory.Type;
 /**
  * Maps a declaration kind to its coarse symbol category.
  *
- * @example
+ * **Example** (Map kind to category)
+ *
  * ```ts
  * import { symbolCategoryFromKind } from "@beep/repo-utils"
  *
  * const category = symbolCategoryFromKind("MethodDeclaration")
  * console.log(category)
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -503,12 +549,14 @@ export const symbolCategoryFromKind = SymbolKind.$match({
 /**
  * Schema transformation from declaration kind to coarse symbol category.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolKindToCategory } from "@beep/repo-utils"
  * const identifier = SymbolKindToCategory.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -527,11 +575,13 @@ export const SymbolKindToCategory = SymbolKind.pipe(
 /**
  * Output type produced by `SymbolKindToCategory`.
  *
- * @example
+ * **Example** (Use transformation output type)
+ *
  * ```ts
  * import type { SymbolKindToCategory } from "@beep/repo-utils"
  * type Example = SymbolKindToCategory
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -540,12 +590,14 @@ export type SymbolKindToCategory = typeof SymbolKindToCategory.Type;
 /**
  * Non-empty source text schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SourceText } from "@beep/repo-utils"
  * const identifier = SourceText.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -560,11 +612,13 @@ export const SourceText = S.NonEmptyString.pipe(
 /**
  * Branded non-empty source text.
  *
- * @example
+ * **Example** (Use branded text type)
+ *
  * ```ts
  * import type { SourceText } from "@beep/repo-utils"
  * type Example = SourceText
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -573,12 +627,14 @@ export type SourceText = typeof SourceText.Type;
 /**
  * Positive 1-based line number schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { LineNumber } from "@beep/repo-utils"
  * const identifier = LineNumber.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -593,11 +649,13 @@ export const LineNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 /**
  * Branded positive 1-based line number.
  *
- * @example
+ * **Example** (Use branded line type)
+ *
  * ```ts
  * import type { LineNumber } from "@beep/repo-utils"
  * type Example = LineNumber
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -606,12 +664,14 @@ export type LineNumber = typeof LineNumber.Type;
 /**
  * Positive 1-based column number schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ColumnNumber } from "@beep/repo-utils"
  * const identifier = ColumnNumber.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -626,11 +686,13 @@ export const ColumnNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 /**
  * Branded positive 1-based column number.
  *
- * @example
+ * **Example** (Use branded column type)
+ *
  * ```ts
  * import type { ColumnNumber } from "@beep/repo-utils"
  * type Example = ColumnNumber
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -639,12 +701,14 @@ export type ColumnNumber = typeof ColumnNumber.Type;
 /**
  * Non-negative byte offset schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ByteOffset } from "@beep/repo-utils"
  * const identifier = ByteOffset.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -659,11 +723,13 @@ export const ByteOffset = NonNegativeInt.pipe(
 /**
  * Branded non-negative byte offset.
  *
- * @example
+ * **Example** (Use branded offset type)
+ *
  * ```ts
  * import type { ByteOffset } from "@beep/repo-utils"
  * type Example = ByteOffset
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -672,12 +738,14 @@ export type ByteOffset = typeof ByteOffset.Type;
 /**
  * Non-negative byte length schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ByteLength } from "@beep/repo-utils"
  * const identifier = ByteLength.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -692,11 +760,13 @@ export const ByteLength = NonNegativeInt.pipe(
 /**
  * Branded non-negative byte length.
  *
- * @example
+ * **Example** (Use branded length type)
+ *
  * ```ts
  * import type { ByteLength } from "@beep/repo-utils"
  * type Example = ByteLength
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -705,12 +775,14 @@ export type ByteLength = typeof ByteLength.Type;
 /**
  * SHA-256 content hash schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ContentHash } from "@beep/repo-utils"
  * const identifier = ContentHash.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -727,11 +799,13 @@ export const ContentHash = Sha256Hex.pipe(
 /**
  * Branded SHA-256 content hash.
  *
- * @example
+ * **Example** (Use branded hash type)
+ *
  * ```ts
  * import type { ContentHash } from "@beep/repo-utils"
  * type Example = ContentHash
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -740,12 +814,14 @@ export type ContentHash = typeof ContentHash.Type;
 /**
  * Supported ts-morph project scope modes.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphScopeMode } from "@beep/repo-utils"
  * const identifier = TsMorphScopeMode.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -758,11 +834,13 @@ export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]).pipe(
 /**
  * Literal union of ts-morph project scope modes.
  *
- * @example
+ * **Example** (Use scope mode type)
+ *
  * ```ts
  * import type { TsMorphScopeMode } from "@beep/repo-utils"
  * type Example = TsMorphScopeMode
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -771,12 +849,14 @@ export type TsMorphScopeMode = typeof TsMorphScopeMode.Type;
 /**
  * Reference traversal policies for ts-morph scope resolution.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphReferencePolicy } from "@beep/repo-utils"
  * const identifier = TsMorphReferencePolicy.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -789,11 +869,13 @@ export const TsMorphReferencePolicy = LiteralKit(["workspaceOnly", "followRefere
 /**
  * Literal union of ts-morph reference traversal policies.
  *
- * @example
+ * **Example** (Use reference policy type)
+ *
  * ```ts
  * import type { TsMorphReferencePolicy } from "@beep/repo-utils"
  * type Example = TsMorphReferencePolicy
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -811,12 +893,14 @@ const resolvedProjectIdentity = S.TemplateLiteral([
  * Structural identity parts for a resolved ts-morph project scope or cache
  * key: tsconfig path, scope mode, and reference policy.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ProjectIdentityParts } from "@beep/repo-utils"
  * const identifier = ProjectIdentityParts.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -846,12 +930,14 @@ const withProjectIdentityStatics = <Schema extends S.ConstraintDecoder<string, n
 /**
  * Stable identity schema for a resolved ts-morph project scope.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ProjectScopeId } from "@beep/repo-utils"
  * const identifier = ProjectScopeId.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -866,11 +952,13 @@ export const ProjectScopeId = resolvedProjectIdentity.pipe(
 /**
  * Branded stable identity for a resolved ts-morph project scope.
  *
- * @example
+ * **Example** (Use branded scope id)
+ *
  * ```ts
  * import type { ProjectScopeId } from "@beep/repo-utils"
  * type Example = ProjectScopeId
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -879,12 +967,14 @@ export type ProjectScopeId = typeof ProjectScopeId.Type;
 /**
  * Parsed components of a `ProjectScopeId`.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ProjectScopeIdParts } from "@beep/repo-utils"
  * const identifier = ProjectScopeIdParts.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -904,12 +994,14 @@ export const ProjectScopeIdParts = S.TemplateLiteralParser([
 /**
  * Cache key schema for memoized ts-morph projects.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ProjectCacheKey } from "@beep/repo-utils"
  * const identifier = ProjectCacheKey.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -924,11 +1016,13 @@ export const ProjectCacheKey = resolvedProjectIdentity.pipe(
 /**
  * Branded cache key for memoized ts-morph projects.
  *
- * @example
+ * **Example** (Use branded cache key)
+ *
  * ```ts
  * import type { ProjectCacheKey } from "@beep/repo-utils"
  * type Example = ProjectCacheKey
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -938,19 +1032,21 @@ export type ProjectCacheKey = typeof ProjectCacheKey.Type;
 const symbolIdentity = S.TemplateLiteral([SymbolFilePath, "::", SymbolQualifiedName, "#", SymbolKind]).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(S.toArbitrary(SymbolFilePath), S.toArbitrary(SymbolQualifiedName), S.toArbitrary(SymbolKind))
+      .tuple(S.toArbitrary(SymbolFilePath)(fc), S.toArbitrary(SymbolQualifiedName)(fc), S.toArbitrary(SymbolKind)(fc))
       .map(([filePath, qualifiedName, kind]) => `${filePath}::${qualifiedName}#${kind}` as typeof symbolIdentity.Type),
 });
 
 /**
  * Stable symbol identity schema.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolId } from "@beep/repo-utils"
  * const identifier = SymbolId.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -976,11 +1072,13 @@ export const SymbolId = symbolIdentity.pipe(
 /**
  * Branded stable symbol identity.
  *
- * @example
+ * **Example** (Use branded symbol id)
+ *
  * ```ts
  * import type { SymbolId } from "@beep/repo-utils"
  * type Example = SymbolId
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -989,12 +1087,14 @@ export type SymbolId = typeof SymbolId.Type;
 /**
  * Parsed components of a `SymbolId`.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolIdParts } from "@beep/repo-utils"
  * const identifier = SymbolIdParts.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1008,12 +1108,14 @@ export const SymbolIdParts = S.TemplateLiteralParser([SymbolFilePath, "::", Symb
  * Structural identity parts for a stable `SymbolId`: file path, qualified
  * name, and declaration kind.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolIdentityParts } from "@beep/repo-utils"
  * const identifier = SymbolIdentityParts.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1031,12 +1133,14 @@ export class SymbolIdentityParts extends S.Class<SymbolIdentityParts>($I`SymbolI
 /**
  * Schema transformation from a generic file path to a `TsConfigFilePath`.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { FilePathToTsConfigFilePath } from "@beep/repo-utils"
  * const identifier = FilePathToTsConfigFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1053,12 +1157,14 @@ export const FilePathToTsConfigFilePath = FilePath.pipe(
 /**
  * Schema transformation from a generic file path to a TypeScript implementation file path.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { FilePathToTypeScriptImplementationFilePath } from "@beep/repo-utils"
  * const identifier = FilePathToTypeScriptImplementationFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1075,12 +1181,14 @@ export const FilePathToTypeScriptImplementationFilePath = FilePath.pipe(
 /**
  * Schema transformation from a generic file path to a TypeScript declaration file path.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { FilePathToTypeScriptDeclarationFilePath } from "@beep/repo-utils"
  * const identifier = FilePathToTypeScriptDeclarationFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1097,12 +1205,14 @@ export const FilePathToTypeScriptDeclarationFilePath = FilePath.pipe(
 /**
  * Schema transformation from a generic file path to a TypeScript source file path.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { FilePathToTypeScriptFilePath } from "@beep/repo-utils"
  * const identifier = FilePathToTypeScriptFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1119,12 +1229,14 @@ export const FilePathToTypeScriptFilePath = FilePath.pipe(
 /**
  * Schema transformation from a TypeScript implementation file path to a symbol-safe file path.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TypeScriptImplementationFilePathToSymbolFilePath } from "@beep/repo-utils"
  * const identifier = TypeScriptImplementationFilePathToSymbolFilePath.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1144,12 +1256,14 @@ const decodeSha256HexFromBytesEffect = S.decodeUnknownEffect(Sha256HexFromBytes)
 /**
  * Effectful one-way schema transformation from source bytes to a canonical content hash.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ContentHashFromBytes } from "@beep/repo-utils"
  * const identifier = ContentHashFromBytes.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1178,12 +1292,14 @@ const textEncoder = new TextEncoder();
 /**
  * Effectful one-way schema transformation from source text to a canonical content hash.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { ContentHashFromSourceText } from "@beep/repo-utils"
  * const identifier = ContentHashFromSourceText.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1208,12 +1324,14 @@ export const ContentHashFromSourceText = SourceText.pipe(
  * Internal runtime schemas.
  * These are intentionally not re-exported from the package entrypoint.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { InternalTsMorphProject } from "@beep/repo-utils"
  * const identifier = InternalTsMorphProject.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1226,12 +1344,14 @@ export const InternalTsMorphProject = S.instanceOf(Project).pipe(
 /**
  * Internal runtime schema for a live ts-morph SourceFile instance.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { InternalTsMorphSourceFile } from "@beep/repo-utils"
  * const identifier = InternalTsMorphSourceFile.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1246,12 +1366,14 @@ export const InternalTsMorphSourceFile = S.declare<SourceFile>(
 /**
  * Internal runtime schema for a live ts-morph Node instance.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { InternalTsMorphNode } from "@beep/repo-utils"
  * const identifier = InternalTsMorphNode.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1266,12 +1388,14 @@ export const InternalTsMorphNode = S.declare<TsMorphNode>(
 /**
  * TS-native symbol record with strict identity, kind, and source-location metadata.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { Symbol as TsMorphSymbol } from "@beep/repo-utils"
  * const identifier = TsMorphSymbol.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1337,12 +1461,14 @@ export class Symbol extends S.Class<Symbol>($I`Symbol`)(
 /**
  * Namespace helpers for normalized TSMorph symbols.
  *
- * @example
+ * **Example** (Access namespace helpers)
+ *
  * ```ts
  * import { Symbol as TsMorphSymbol } from "@beep/repo-utils"
  * const identifier = TsMorphSymbol.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1350,11 +1476,13 @@ export declare namespace Symbol {
   /**
    * Runtime-decoded `Symbol` value type.
    *
-   * @example
+   * **Example** (Use decoded symbol type)
+   *
    * ```ts
    * import type { Symbol as TsMorphSymbol } from "@beep/repo-utils"
    * type Example = TsMorphSymbol.Type
    * ```
+   *
    * @category models
    * @since 0.0.0
    */
@@ -1362,11 +1490,13 @@ export declare namespace Symbol {
   /**
    * Encoded representation of a `Symbol` value.
    *
-   * @example
+   * **Example** (Use encoded symbol type)
+   *
    * ```ts
    * import type { Symbol as TsMorphSymbol } from "@beep/repo-utils"
    * type Example = TsMorphSymbol.Encoded
    * ```
+   *
    * @category models
    * @since 0.0.0
    */
@@ -1376,12 +1506,14 @@ export declare namespace Symbol {
 /**
  * Input shape for constructing a normalized `Symbol`.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { SymbolInit } from "@beep/repo-utils"
  * const identifier = SymbolInit.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1417,9 +1549,8 @@ export class SymbolInit extends S.Class<SymbolInit>($I`SymbolInit`)(
 /**
  * Builds a stable `SymbolId` from validated symbol identity parts.
  *
- * @param parts - Validated symbol identity parts containing the file path, qualified name, and declaration kind.
- * @returns Stable symbol identifier.
- * @example
+ * **Example** (Build stable symbol id)
+ *
  * ```ts
  * import { makeSymbolId, SymbolFilePath, SymbolQualifiedName } from "@beep/repo-utils"
  * import * as S from "effect/Schema"
@@ -1429,6 +1560,9 @@ export class SymbolInit extends S.Class<SymbolInit>($I`SymbolInit`)(
  * const symbolId = makeSymbolId({ filePath, qualifiedName, kind: "ClassDeclaration" })
  * console.log(symbolId)
  * ```
+ *
+ * @param parts - Validated symbol identity parts containing the file path, qualified name, and declaration kind.
+ * @returns Stable symbol identifier.
  * @category utilities
  * @since 0.0.0
  */
@@ -1437,9 +1571,8 @@ export const makeSymbolId = (parts: SymbolIdentityParts): SymbolId => SymbolId.f
 /**
  * Builds a stable `ProjectScopeId` from validated scope identity parts.
  *
- * @param parts - Validated scope identity parts containing the tsconfig path, scope mode, and reference policy.
- * @returns Stable project scope identifier.
- * @example
+ * **Example** (Build project scope id)
+ *
  * ```ts
  * import { makeProjectScopeId, TsConfigFilePath } from "@beep/repo-utils"
  * import * as S from "effect/Schema"
@@ -1452,6 +1585,9 @@ export const makeSymbolId = (parts: SymbolIdentityParts): SymbolId => SymbolId.f
  * })
  * console.log(scopeId)
  * ```
+ *
+ * @param parts - Validated scope identity parts containing the tsconfig path, scope mode, and reference policy.
+ * @returns Stable project scope identifier.
  * @category utilities
  * @since 0.0.0
  */
@@ -1460,9 +1596,8 @@ export const makeProjectScopeId = (parts: ProjectIdentityParts): ProjectScopeId 
 /**
  * Builds a stable `ProjectCacheKey` from validated scope identity parts.
  *
- * @param parts - Validated cache identity parts containing the tsconfig path, scope mode, and reference policy.
- * @returns Stable project cache key.
- * @example
+ * **Example** (Build project cache key)
+ *
  * ```ts
  * import { makeProjectCacheKey, TsConfigFilePath } from "@beep/repo-utils"
  * import * as S from "effect/Schema"
@@ -1475,6 +1610,9 @@ export const makeProjectScopeId = (parts: ProjectIdentityParts): ProjectScopeId 
  * })
  * console.log(cacheKey)
  * ```
+ *
+ * @param parts - Validated cache identity parts containing the tsconfig path, scope mode, and reference policy.
+ * @returns Stable project cache key.
  * @category utilities
  * @since 0.0.0
  */
@@ -1483,9 +1621,8 @@ export const makeProjectCacheKey = (parts: ProjectIdentityParts): ProjectCacheKe
 /**
  * Normalizes symbol input by deriving missing identity and category fields.
  *
- * @param input - Symbol fields to normalize into a `Symbol` instance.
- * @returns Normalized symbol instance.
- * @example
+ * **Example** (Normalize symbol input)
+ *
  * ```ts
  * import {
  *   ByteLength,
@@ -1528,6 +1665,9 @@ export const makeProjectCacheKey = (parts: ProjectIdentityParts): ProjectCacheKe
  * })
  * console.log(symbol.id)
  * ```
+ *
+ * @param input - Symbol fields to normalize into a `Symbol` instance.
+ * @returns Normalized symbol instance.
  * @category utilities
  * @since 0.0.0
  */
@@ -1569,18 +1709,20 @@ class TsMorphScopeEntrypointFile extends S.Class<TsMorphScopeEntrypointFile>($I`
   })
 ) {
   static readonly new = (filePath: string) =>
-    TsMorphScopeEntrypointFile.make({ filePath: S.decodeUnknownSync(TypeScriptFilePath)(filePath) });
+    TsMorphScopeEntrypointFile.make({ filePath: S.decodeSync(TypeScriptFilePath)(filePath) });
 }
 
 /**
  * Tagged union schema for ts-morph scope resolution entrypoints.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphScopeEntrypoint } from "@beep/repo-utils"
  * const identifier = TsMorphScopeEntrypoint.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1606,11 +1748,13 @@ export const TsMorphScopeEntrypoint = S.Union([TsMorphScopeEntrypointTsConfig, T
 /**
  * Decoded ts-morph scope entrypoint union.
  *
- * @example
+ * **Example** (Use entrypoint union type)
+ *
  * ```ts
  * import type { TsMorphScopeEntrypoint } from "@beep/repo-utils"
  * type Example = TsMorphScopeEntrypoint
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1619,12 +1763,14 @@ export type TsMorphScopeEntrypoint = typeof TsMorphScopeEntrypoint.Type;
 /**
  * Request schema for resolving a ts-morph project scope.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphProjectScopeRequest } from "@beep/repo-utils"
  * const identifier = TsMorphProjectScopeRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1643,12 +1789,14 @@ export class TsMorphProjectScopeRequest extends S.Class<TsMorphProjectScopeReque
 /**
  * Request schema for read-only ts-morph project inspection.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphProjectInspectionRequest } from "@beep/repo-utils"
  * const identifier = TsMorphProjectInspectionRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1672,12 +1820,14 @@ export class TsMorphProjectInspectionRequest extends S.Class<TsMorphProjectInspe
 /**
  * Resolved ts-morph project scope payload.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphProjectScope } from "@beep/repo-utils"
  * const identifier = TsMorphProjectScope.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1699,12 +1849,14 @@ export class TsMorphProjectScope extends S.Class<TsMorphProjectScope>($I`TsMorph
 /**
  * Request schema for extracting a file outline.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphFileOutlineRequest } from "@beep/repo-utils"
  * const identifier = TsMorphFileOutlineRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1721,12 +1873,14 @@ export class TsMorphFileOutlineRequest extends S.Class<TsMorphFileOutlineRequest
 /**
  * File outline payload for a TypeScript source file.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphFileOutline } from "@beep/repo-utils"
  * const identifier = TsMorphFileOutline.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1744,12 +1898,14 @@ export class TsMorphFileOutline extends S.Class<TsMorphFileOutline>($I`TsMorphFi
 /**
  * Request schema for reading file source text.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSourceTextRequest } from "@beep/repo-utils"
  * const identifier = TsMorphSourceTextRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1765,12 +1921,14 @@ export class TsMorphSourceTextRequest extends S.Class<TsMorphSourceTextRequest>(
 /**
  * Source text payload for a TypeScript file.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSourceTextResult } from "@beep/repo-utils"
  * const identifier = TsMorphSourceTextResult.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1788,12 +1946,14 @@ export class TsMorphSourceTextResult extends S.Class<TsMorphSourceTextResult>($I
 /**
  * Request schema for symbol lookup by stable identifier.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSymbolLookupRequest } from "@beep/repo-utils"
  * const identifier = TsMorphSymbolLookupRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1810,12 +1970,14 @@ export class TsMorphSymbolLookupRequest extends S.Class<TsMorphSymbolLookupReque
 /**
  * Symbol lookup result payload.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSymbolLookupResult } from "@beep/repo-utils"
  * const identifier = TsMorphSymbolLookupResult.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1832,12 +1994,14 @@ export class TsMorphSymbolLookupResult extends S.Class<TsMorphSymbolLookupResult
 /**
  * Positive result-limit schema for ts-morph search.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSearchLimit } from "@beep/repo-utils"
  * const identifier = TsMorphSearchLimit.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1851,11 +2015,13 @@ export const TsMorphSearchLimit = S.Int.check(S.isGreaterThan(0)).pipe(
 /**
  * Branded positive result limit for ts-morph search.
  *
- * @example
+ * **Example** (Use branded limit type)
+ *
  * ```ts
  * import type { TsMorphSearchLimit } from "@beep/repo-utils"
  * type Example = TsMorphSearchLimit
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1864,12 +2030,14 @@ export type TsMorphSearchLimit = typeof TsMorphSearchLimit.Type;
 /**
  * Request schema for symbol search within a resolved scope.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSymbolSearchRequest } from "@beep/repo-utils"
  * const identifier = TsMorphSymbolSearchRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1899,12 +2067,14 @@ export class TsMorphSymbolSearchRequest extends S.Class<TsMorphSymbolSearchReque
 /**
  * Symbol search result payload.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSymbolSearchResult } from "@beep/repo-utils"
  * const identifier = TsMorphSymbolSearchResult.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1934,12 +2104,14 @@ export class TsMorphSymbolSearchResult extends S.Class<TsMorphSymbolSearchResult
 /**
  * Request schema for reading symbol source text.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSymbolSourceRequest } from "@beep/repo-utils"
  * const identifier = TsMorphSymbolSourceRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1956,12 +2128,14 @@ export class TsMorphSymbolSourceRequest extends S.Class<TsMorphSymbolSourceReque
 /**
  * Symbol source payload including extracted text.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphSymbolSourceResult } from "@beep/repo-utils"
  * const identifier = TsMorphSymbolSourceResult.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1980,12 +2154,14 @@ export class TsMorphSymbolSourceResult extends S.Class<TsMorphSymbolSourceResult
 /**
  * Supported normalized diagnostic categories.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphDiagnosticCategory } from "@beep/repo-utils"
  * const identifier = TsMorphDiagnosticCategory.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1998,11 +2174,13 @@ export const TsMorphDiagnosticCategory = LiteralKit(["error", "warning", "sugges
 /**
  * Literal union of normalized diagnostic categories.
  *
- * @example
+ * **Example** (Use category union type)
+ *
  * ```ts
  * import type { TsMorphDiagnosticCategory } from "@beep/repo-utils"
  * type Example = TsMorphDiagnosticCategory
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2068,13 +2246,15 @@ class TsMorphDiagnosticMessage extends TsMorphDiagnosticBase.extend<TsMorphDiagn
 /**
  * Tagged union schema for normalized TypeScript diagnostics.
  *
- * @returns Tagged union schema keyed by diagnostic category.
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphDiagnostic } from "@beep/repo-utils"
  * const identifier = TsMorphDiagnostic.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
+ * @returns Tagged union schema keyed by diagnostic category.
  * @category models
  * @since 0.0.0
  */
@@ -2096,11 +2276,13 @@ export const TsMorphDiagnostic = TsMorphDiagnosticCategory.mapMembers(
 /**
  * Decoded normalized TypeScript diagnostic union.
  *
- * @example
+ * **Example** (Use diagnostic union type)
+ *
  * ```ts
  * import type { TsMorphDiagnostic } from "@beep/repo-utils"
  * type Example = TsMorphDiagnostic
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2109,12 +2291,14 @@ export type TsMorphDiagnostic = typeof TsMorphDiagnostic.Type;
 /**
  * Request schema for TypeScript diagnostics in a resolved scope.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphDiagnosticsRequest } from "@beep/repo-utils"
  * const identifier = TsMorphDiagnosticsRequest.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2131,12 +2315,14 @@ export class TsMorphDiagnosticsRequest extends S.Class<TsMorphDiagnosticsRequest
 /**
  * Diagnostics payload for a TypeScript file.
  *
- * @example
+ * **Example** (Access schema identifier)
+ *
  * ```ts
  * import { TsMorphDiagnosticsResult } from "@beep/repo-utils"
  * const identifier = TsMorphDiagnosticsResult.ast.annotations?.identifier
  * console.log(identifier)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -11,13 +11,14 @@ const $I = $SchemaId.create("AbortSignal");
 /**
  * Type guard that checks whether a value is an `AbortSignal` instance.
  *
- * @example
- * ```ts
+ * **Example** (Guard AbortSignal values)
+ *
+ * ```ts import.meta.vitest name="Guard AbortSignal values"
  * import { isAbortSignal } from "@beep/schema/AbortSignal"
  *
  * const controller = new AbortController()
- * console.log(isAbortSignal(controller.signal)) // true
- * console.log(isAbortSignal("nope")) // false
+ * isAbortSignal(controller.signal) // => true
+ * isAbortSignal("nope") // => false
  * ```
  *
  * @param u - The value to test.
@@ -30,14 +31,15 @@ export const isAbortSignal = (u: unknown): u is AbortSignal => u instanceof Abor
 /**
  * Declared schema for `AbortSignal` instances.
  *
- * @example
- * ```ts
+ * **Example** (Decode AbortSignal schema)
+ *
+ * ```ts import.meta.vitest name="Decode AbortSignal schema"
  * import * as S from "effect/Schema"
  * import { AbortSig } from "@beep/schema/AbortSignal"
  *
  * const controller = new AbortController()
  * const signal = S.decodeUnknownSync(AbortSig)(controller.signal)
- * console.log(signal.aborted) // false
+ * signal.aborted // => false
  * ```
  *
  * @category validation
@@ -51,17 +53,6 @@ export const AbortSig = S.declare(isAbortSignal).pipe(
 
 /**
  * {@inheritDoc AbortSig}
- *
- * @example
- * ```ts
- * import * as S from "effect/Schema"
- * import { AbortSig } from "@beep/schema/AbortSignal"
- *
- * const controller = new AbortController()
- * const signal: AbortSig = S.decodeUnknownSync(AbortSig)(controller.signal)
- * console.log(signal.aborted) // false
- * ```
- *
  * @category models
  * @since 0.0.0
  */

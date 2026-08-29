@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { Effect, flow, SchemaGetter, SchemaIssue } from "effect";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -17,23 +16,12 @@ const $I = $SchemaId.create("Toml");
 
 const decodeUnknownRecord = S.decodeUnknownEffect(UnknownRecord);
 
-const encodeUnsupported = (value: UnknownRecord): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding unknown values to TOML text is not supported by TomlTextToUnknown.",
     })
   );
-
-const invalidTomlInput: {
-  (content: string, message: string): SchemaIssue.InvalidValue;
-  (message: string): (content: string) => SchemaIssue.InvalidValue;
-} = dual(
-  2,
-  (content: string, message: string): SchemaIssue.InvalidValue =>
-    new SchemaIssue.InvalidValue(O.some(content), {
-      message,
-    })
-);
 
 type TomlParse = (content: string) => unknown;
 
@@ -55,7 +43,7 @@ const getTomlParse = (): O.Option<TomlParse> => {
 };
 
 const decodeTomlUnknown = (content: string) => {
-  const makeInvalid = (message: string) => invalidTomlInput(content, message);
+  const makeInvalid = (message: string) => new SchemaIssue.InvalidValue({ message });
   return getTomlParse().pipe(
     Effect.fromOption,
     Effect.mapError(() => makeInvalid("Bun.TOML.parse is" + " unavailable in the current runtime.")),
@@ -78,7 +66,8 @@ const decodeTomlUnknown = (content: string) => {
  * Schema transformation that decodes TOML text into an unknown record using
  * `Bun.TOML.parse`.
  *
- * @example
+ * **Example** (Decode TOML to unknown)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -104,18 +93,6 @@ export const TomlTextToUnknown = S.String.pipe(
 
 /**
  * {@inheritDoc TomlTextToUnknown}
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { TomlTextToUnknown } from "@beep/schema/Toml"
- *
- * const program = S.decodeUnknownEffect(TomlTextToUnknown)("port = 8080")
- * const parsed: typeof TomlTextToUnknown.Type = await Effect.runPromise(program)
- * console.log(parsed.port)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -125,8 +102,9 @@ export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
  * Builds a decoder that parses TOML text and then decodes the result through a
  * target schema.
  *
- * @example
- * ```ts
+ * **Example** (Decode TOML with schema)
+ *
+ * ```ts import.meta.vitest name="Decode TOML with schema"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { decodeTomlTextAs } from "@beep/schema/Toml"
@@ -136,7 +114,7 @@ export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
  *
  * const program = decodeConfig("[server]\nport = 8080\nhost = \"localhost\"")
  * const config = await Effect.runPromise(program)
- * console.log(config.server.port) // 8080
+ * config.server.port // => 8080
  * ```
  *
  * @param schema - Target schema to decode parsed TOML document into.

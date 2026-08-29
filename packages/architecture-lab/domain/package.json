@@ -15,8 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json && bun run babel",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -37,8 +37,6 @@
     "./aggregates/WorkItem": "./src/aggregates/WorkItem/index.ts",
     "./entities": "./src/entities/index.ts",
     "./entities/Worker": "./src/entities/Worker/index.ts",
-    "./identity": "./src/identity/index.ts",
-    "./identity/ArchitectureLab": "./src/identity/ArchitectureLab.ts",
     "./internal/*": null,
     "./package.json": "./package.json",
     "./values": "./src/values/index.ts",
@@ -61,8 +59,6 @@
       "./aggregates/WorkItem": "./dist/aggregates/WorkItem/index.js",
       "./entities": "./dist/entities/index.js",
       "./entities/Worker": "./dist/entities/Worker/index.js",
-      "./identity": "./dist/identity/index.js",
-      "./identity/ArchitectureLab": "./dist/identity/ArchitectureLab.js",
       "./internal/*": null,
       "./package.json": "./package.json",
       "./values": "./dist/values/index.js",
@@ -76,7 +72,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/effect-drizzle": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "drizzle-orm": "catalog:"
   }
 }

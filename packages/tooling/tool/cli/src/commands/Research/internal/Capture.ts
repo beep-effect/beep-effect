@@ -11,8 +11,8 @@ import { Console, DateTime, Effect, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter, ResearchCaptureSummary } from "../Research.schemas.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter, ResearchCaptureSummary } from "../Research.schemas.ts";
 import {
   INSERT_CAPTURE_LOG,
   INSERT_SEEN_URL,
@@ -20,13 +20,13 @@ import {
   SELECT_SEEN_URL,
   singleCount,
   UPSERT_CARD,
-} from "./Catalog.js";
-import { catalogDbPath } from "./CatalogOps.js";
-import { asRecord } from "./UnknownRecord.js";
-import { normalizeUrl, renderCard, sha256HexOf, slugFor, VAULT_DIRS, writeCard } from "./Vault.js";
+} from "./Catalog.ts";
+import { catalogDbPath } from "./CatalogOps.ts";
+import { asRecord } from "./UnknownRecord.ts";
+import { normalizeUrl, renderCard, sha256HexOf, slugFor, VAULT_DIRS, writeCard } from "./Vault.ts";
 import type { FirecrawlScrapeSuccess } from "@beep/firecrawl";
-import type { ResearchCaptureOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import type { ResearchCaptureOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const scrapeMarkdown = Effect.fn("Research.scrapeMarkdown")(function* (
   url: string
@@ -66,7 +66,8 @@ const documentTitle = (success: FirecrawlScrapeSuccess): O.Option<string> =>
 /**
  * Capture a URL as a knowledge card through Firecrawl.
  *
- * @example
+ * **Example** (Capture tagged URL card)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { captureUrlImpl } from "@beep/repo-cli/commands/Research/internal/Capture"
@@ -77,6 +78,7 @@ const documentTitle = (success: FirecrawlScrapeSuccess): O.Option<string> =>
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

@@ -22,7 +22,8 @@ type TooltipNameType = number | string;
 /**
  * Configuration describing each chart series' label, icon, and color or per-theme colors.
  *
- * @example
+ * **Example** (Series labels and theme colors)
+ *
  * ```tsx
  * import type { ChartConfig } from "@beep/ui/components/chart"
  *
@@ -60,7 +61,8 @@ function useChart() {
 /**
  * Responsive chart wrapper that provides the chart config context and theme CSS variables.
  *
- * @example
+ * **Example** (Line chart with config context)
+ *
  * ```tsx
  * import { ChartContainer, type ChartConfig } from "@beep/ui/components/chart"
  * import { Line, LineChart } from "recharts"
@@ -143,11 +145,13 @@ const sanitizeChartSelectorId = (id: string): string => Str.replace(/[^A-Za-z0-9
 /**
  * Injects per-theme CSS custom properties for a chart's configured series colors.
  *
- * @remarks
+ * **Details**
+ *
  * Chart ids, series keys, and color values are sanitized before they are
  * serialized into the generated style tag.
  *
- * @example
+ * **Example** (Static chart CSS variables)
+ *
  * ```tsx
  * import { ChartStyle, type ChartConfig } from "@beep/ui/components/chart"
  *
@@ -206,7 +210,8 @@ ${A.join(
 /**
  * Recharts tooltip primitive paired with {@link ChartTooltipContent}.
  *
- * @example
+ * **Example** (Bar chart with tooltip)
+ *
  * ```tsx
  * import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@beep/ui/components/chart"
  * import { Bar, BarChart } from "recharts"
@@ -235,7 +240,8 @@ const ChartTooltip = RechartsPrimitive.Tooltip;
 /**
  * Themed tooltip content for charts, rendering the active payload's label, indicator, and values.
  *
- * @example
+ * **Example** (Tooltip with line indicator)
+ *
  * ```tsx
  * import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@beep/ui/components/chart"
  * import { Line, LineChart } from "recharts"
@@ -397,7 +403,8 @@ function ChartTooltipContent({
 /**
  * Recharts legend primitive paired with {@link ChartLegendContent}.
  *
- * @example
+ * **Example** (Area chart with legend)
+ *
  * ```tsx
  * import { ChartContainer, ChartLegend, ChartLegendContent, type ChartConfig } from "@beep/ui/components/chart"
  * import { Area, AreaChart } from "recharts"
@@ -426,7 +433,8 @@ const ChartLegend = RechartsPrimitive.Legend;
 /**
  * Themed legend content for charts, rendering each series' icon or color swatch and label.
  *
- * @example
+ * **Example** (Legend without series icons)
+ *
  * ```tsx
  * import { ChartContainer, ChartLegend, ChartLegendContent, type ChartConfig } from "@beep/ui/components/chart"
  * import { Bar, BarChart } from "recharts"
@@ -456,12 +464,13 @@ function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
-  verticalAlign = "bottom",
+  position = "bottom",
   nameKey,
 }: React.ComponentProps<"div"> & {
   readonly hideIcon?: boolean;
   readonly nameKey?: string;
-} & RechartsPrimitive.DefaultLegendContentProps) {
+  readonly position?: RechartsPrimitive.DefaultLegendContentProps["verticalAlign"];
+} & Omit<RechartsPrimitive.DefaultLegendContentProps, "verticalAlign">) {
   const { config } = useChart();
 
   if ((payload?.length ?? 0) === 0) {
@@ -469,7 +478,7 @@ function ChartLegendContent({
   }
 
   return (
-    <div className={cn("flex items-center justify-center gap-4", verticalAlign === "top" ? "pb-3" : "pt-3", className)}>
+    <div className={cn("flex items-center justify-center gap-4", position === "top" ? "pb-3" : "pt-3", className)}>
       {A.map(
         A.filter(payload ?? [], (item) => item.type !== "none"),
         (item, index) => {

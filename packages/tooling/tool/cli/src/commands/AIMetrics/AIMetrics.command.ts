@@ -14,32 +14,32 @@ import {
 } from "@beep/repo-ai-metrics";
 import { pipe } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { jsonFlag } from "../../internal/cli/Flags.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { runAiMetricsProgram } from "./AIMetrics.errors.js";
-import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.js";
-import { makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram } from "./internal/Forwarder.js";
+import { aiMetricsDataRootEnvVar, aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { runAiMetricsProgram } from "./AIMetrics.errors.ts";
+import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.ts";
+import { makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram } from "./internal/Forwarder.ts";
 import {
   makeConfigSnapshotProgram,
   makeIngestProgram,
   makePrivacyCheckProgram,
   makeSourcesDiscoverProgram,
-} from "./internal/Ingest.js";
+} from "./internal/Ingest.ts";
 import {
   makeInstallApplyProgram,
   makeInstallComposeProgram,
   makeInstallDoctorProgram,
   makeInstallPlanProgram,
   makeInstallPreviewProgram,
-} from "./internal/Install.js";
-import { makeMirrorBuildProgram, makeMirrorStatusProgram, makeMirrorSyncProgram } from "./internal/Mirror.js";
+} from "./internal/Install.ts";
+import { makeMirrorBuildProgram, makeMirrorStatusProgram, makeMirrorSyncProgram } from "./internal/Mirror.ts";
 import {
   makeArchiveDrillProgram,
   makeRetentionEnforceProgram,
   makeRetentionListProgram,
   makeRetentionMutationProgram,
   makeRetentionRestoreDrillProgram,
-} from "./internal/Retention.js";
+} from "./internal/Retention.ts";
 import {
   makeBenchmarkCaseAddProgram,
   makeBenchmarkCaseListProgram,
@@ -48,7 +48,7 @@ import {
   makeLabelAddProgram,
   makeLabelQueueProgram,
   makeWeeklyReportProgram,
-} from "./internal/Scorecard.js";
+} from "./internal/Scorecard.ts";
 
 const inputFlag = Flag.string("input").pipe(
   Flag.withAlias("i"),
@@ -138,6 +138,7 @@ const beforeFlag = Flag.string("before").pipe(
 );
 
 const allFlag = Flag.boolean("all").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Scan all matching source files instead of the default 7 days")
 );
 
@@ -177,6 +178,7 @@ const timerParquetExportModeFlag = Flag.choiceWithValue("parquet-mode", [
   Flag.withDescription("Parquet export mode embedded in the rendered forwarder timer command")
 );
 const retentionEnforceFlag = Flag.boolean("retention-enforce").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Remove old per-run Parquet snapshots after a successful forwarder run")
 );
 const maxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").pipe(
@@ -193,6 +195,7 @@ const forwarderRunMaxSnapshotExportsFlag = Flag.integer("max-snapshot-exports").
 // already-installed systemd timer units (and any timer-rendered command) that still pass
 // --retention-enforce continue to parse instead of failing with an unrecognized-flag error.
 const forwarderRunRetentionEnforceCompatFlag = Flag.boolean("retention-enforce").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Deprecated no-op: forwarder run always prunes old per-run Parquet snapshots; kept for backward compatibility"
   )
@@ -209,7 +212,6 @@ const rawArchiveKeySecretRefFlag = Flag.string("raw-archive-key-secret-ref").pip
   Flag.withDescription("Secret reference that resolves BEEP_AI_METRICS_RAW_ARCHIVE_KEY for non-local install targets"),
   Flag.optional
 );
-const dataRootFlag = Flag.string("data-root").pipe(Flag.withDescription("AI metrics data root"), Flag.optional);
 const remoteRootFlag = Flag.string("remote-root").pipe(
   Flag.withDefault(defaultP7MirrorRemoteRoot),
   Flag.withDescription("Remote AI metrics mirror root")
@@ -236,9 +238,13 @@ const openClawUnitFlag = Flag.string("openclaw-unit").pipe(
   Flag.optional
 );
 
-const otlpFlag = Flag.boolean("otlp").pipe(Flag.withDescription("Enable explicit OTLP trace export for this command"));
+const otlpFlag = Flag.boolean("otlp").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Enable explicit OTLP trace export for this command")
+);
 
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Preview install apply steps without changing local or remote state")
 );
 
@@ -247,10 +253,6 @@ const otlpBaseUrlFlag = Flag.string("otlp-base-url").pipe(
   Flag.optional
 );
 
-const ingestRunFlag = Flag.string("ingest-run").pipe(
-  Flag.withDefault("latest"),
-  Flag.withDescription("Derived ingest run id to export, or latest")
-);
 const installPreviewCommand = Command.make(
   "preview",
   {
@@ -571,7 +573,7 @@ const forwarderRunCommand = Command.make(
         rawArchiveKeySecretRef,
         repoRoot,
         // Local forwarder runs always self-prune the per-run Parquet snapshots so the
-        // `.beep/ai-metrics/derived/parquet` directory cannot grow unbounded; keep-N is tunable via
+        // `<data-root>/derived/parquet` directory cannot grow unbounded; keep-N is tunable via
         // --max-snapshot-exports. Snapshot retention history is opt-in on the `timer` command instead.
         retentionEnforce: true,
         retentionMaxSnapshotExports,
@@ -653,18 +655,16 @@ const otlpExportCommand = Command.make(
   {
     dataRoot: dataRootFlag,
     hashSaltSecretRef: hashSaltSecretRefFlag,
-    ingestRunId: ingestRunFlag,
     json: jsonFlag,
     otlpBaseUrl: otlpBaseUrlFlag,
     rawArchiveKeySecretRef: rawArchiveKeySecretRefFlag,
     target: targetFlag,
   },
-  ({ dataRoot, hashSaltSecretRef, ingestRunId, json, otlpBaseUrl, rawArchiveKeySecretRef, target }) =>
+  ({ dataRoot, hashSaltSecretRef, json, otlpBaseUrl, rawArchiveKeySecretRef, target }) =>
     runAiMetricsProgram(
       makeOtlpExportProgram({
         dataRoot,
         hashSaltSecretRef,
-        ingestRunId,
         json,
         otlpBaseUrl,
         rawArchiveKeySecretRef,
@@ -674,7 +674,7 @@ const otlpExportCommand = Command.make(
 ).pipe(Command.withDescription("Export redacted derived AI metrics spans through OTLP"));
 
 const otlpCommand = Command.make("otlp", {}, () =>
-  printLines(["AI metrics OTLP commands:", "- bun run beep ai-metrics otlp export --target local --ingest-run latest"])
+  printLines(["AI metrics OTLP commands:", "- bun run beep ai-metrics otlp export --target local"])
 ).pipe(Command.withDescription("AI metrics OTLP export workflow"), Command.withSubcommands([otlpExportCommand]));
 
 const benchmarkRunCommand = Command.make(
@@ -895,7 +895,7 @@ const labelCommand = Command.make("label", {}, () =>
   printLines([
     "AI metrics label commands:",
     "- bun run beep ai-metrics label queue",
-    "- bun run beep ai-metrics label queue --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key",
+    `- bun run beep ai-metrics label queue --target dankserver --data-root "$${aiMetricsDataRootEnvVar}" --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
     "- bun run beep ai-metrics label add --task <id> --passed true --rating 5",
   ])
 ).pipe(
@@ -932,7 +932,7 @@ const reportCommand = Command.make("report", {}, () =>
   printLines([
     "AI metrics report commands:",
     "- bun run beep ai-metrics report weekly",
-    "- bun run beep ai-metrics report weekly --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key",
+    `- bun run beep ai-metrics report weekly --target dankserver --data-root "$${aiMetricsDataRootEnvVar}" --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
   ])
 ).pipe(Command.withDescription("AI metrics report workflow"), Command.withSubcommands([reportWeeklyCommand]));
 
@@ -1002,7 +1002,7 @@ const mirrorStatusCommand = Command.make(
 const mirrorCommand = Command.make("mirror", {}, () =>
   printLines([
     "AI metrics mirror commands:",
-    "- bun run beep ai-metrics mirror build --target dankserver --data-root .beep/ai-metrics",
+    `- bun run beep ai-metrics mirror build --target dankserver --data-root "$${aiMetricsDataRootEnvVar}"`,
     "- bun run beep ai-metrics mirror sync --bundle latest",
     "- bun run beep ai-metrics mirror status",
   ])
@@ -1129,9 +1129,9 @@ const retentionRestoreDrillCommand = Command.make(
 const retentionCommand = Command.make("retention", {}, () =>
   printLines([
     "AI metrics retention commands:",
-    "- bun run beep ai-metrics retention list --data-root .beep/ai-metrics",
+    `- bun run beep ai-metrics retention list --data-root "$${aiMetricsDataRootEnvVar}"`,
     "- bun run beep ai-metrics retention restore-drill --restore-root /tmp/ai-metrics-restore --before <iso>",
-    "- bun run beep ai-metrics retention enforce --data-root .beep/ai-metrics",
+    `- bun run beep ai-metrics retention enforce --data-root "$${aiMetricsDataRootEnvVar}"`,
     "- bun run beep ai-metrics retention delete --before <iso>",
     "- bun run beep ai-metrics retention compact --before <iso>",
   ])
@@ -1171,7 +1171,7 @@ const archiveCommand = Command.make("archive", {}, () =>
   printLines([
     "AI metrics archive commands:",
     "- bun run beep ai-metrics archive drill",
-    `- BEEP_AI_METRICS_RAW_ARCHIVE_KEY="$(op read 'op://TBK/ai-metrics/raw-archive-key')" bun run beep ai-metrics archive drill --target dankserver --data-root .beep/ai-metrics --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
+    `- BEEP_AI_METRICS_RAW_ARCHIVE_KEY="$(op read 'op://TBK/ai-metrics/raw-archive-key')" bun run beep ai-metrics archive drill --target dankserver --data-root "$${aiMetricsDataRootEnvVar}" --hash-salt-secret-ref op://TBK/ai-metrics/hash-salt --raw-archive-key-secret-ref op://TBK/ai-metrics/raw-archive-key`,
   ])
 ).pipe(
   Command.withDescription("AI metrics archive verification workflow"),
@@ -1179,17 +1179,27 @@ const archiveCommand = Command.make("archive", {}, () =>
 );
 
 /**
- * AI metrics root command.
+ * Root of the `ai-metrics` command tree: ingest, storage, export, and retention.
  *
- * @example
+ * **Details**
+ *
+ * Invoked with no subcommand it prints the available subcommands rather than
+ * doing work, so an operator can discover the surface without risking a run.
+ * Every subcommand accepts `--data-root`, which falls back to
+ * `BEEP_AI_METRICS_DATA_ROOT` and then to the XDG state store.
+ *
+ * **Example** (Mounting the command tree in a CLI entrypoint)
+ *
  * ```ts
  * import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics/index"
- * import { Command } from "effect/unstable/cli"
  * import { Effect } from "effect"
+ * import { Command } from "effect/unstable/cli"
  *
  * const run = Command.run(aiMetricsCommand, { version: "0.0.0" })
+ *
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

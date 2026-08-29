@@ -9,9 +9,8 @@
 /**
  * DurableLocatorOptions model exports.
  *
- * **Example**
+ * **Example** (Import DurableLocatorOptions)
  *
- * @example
  * ```ts
  * import { DurableLocatorOptions } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./DurableLocatorOptions.model.js";
+export * from "./DurableLocatorOptions.model.ts";

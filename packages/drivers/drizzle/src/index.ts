@@ -1,11 +1,12 @@
 /**
  * `@beep/drizzle` driver-level capability wrapper for product-neutral database execution.
  *
- * @remarks
+ * **Details**
+ *
  * Import from this package boundary for the stable Drizzle driver surface.
  * `Drizzle` owns execution and transaction ports, `DrizzleError` owns
- * technical failure normalization, and `EntityTable` owns metadata-only
- * schema-to-table projection.
+ * technical failure normalization. Product table projection lives in
+ * `@beep/effect-drizzle`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -25,10 +26,3 @@ export * from "./Drizzle.errors.ts";
  * @category services
  */
 export * from "./Drizzle.service.ts";
-/**
- * Public schema-first Drizzle table projection exports.
- *
- * @since 0.0.0
- * @category tables
- */
-export * as EntityTable from "./EntityTable.models.ts";

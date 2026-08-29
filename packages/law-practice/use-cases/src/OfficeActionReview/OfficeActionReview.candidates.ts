@@ -6,16 +6,19 @@
  */
 
 import { ExtractionCandidate } from "@beep/langextract/Extraction";
-import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.js";
+import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.ts";
 
 /**
  * Fixed candidate set for the office-action review spike mapping tests.
+ *
+ * **Details**
  *
  * This is retained through the package test surface so integration tests can
  * assert grounding for the same synthetic office-action phrases without
  * coupling the production loop back to fixed candidates.
  *
- * @example
+ * **Example** (Map spike candidate labels)
+ *
  * ```ts
  * import { OfficeActionReviewSpikeCandidates } from "@beep/law-practice-use-cases/test"
  *

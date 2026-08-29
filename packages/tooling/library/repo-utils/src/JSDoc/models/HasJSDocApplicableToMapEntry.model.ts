@@ -6,7 +6,7 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { ApplicableTo } from "./ApplicableTo.model.js";
+import { ApplicableTo } from "./ApplicableTo.model.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/HasJSDocApplicableToMapEntry.model");
 
@@ -21,7 +21,8 @@ const fields = { member: S.String } as const;
 /**
  * JSDoc model export.
  *
- * @example
+ * **Example** (Make applicable map entry)
+ *
  * ```ts
  * import { HasJSDocApplicableToMapEntry } from "@beep/repo-utils/JSDoc/models/HasJSDocApplicableToMapEntry.model"
  *
@@ -31,6 +32,7 @@ const fields = { member: S.String } as const;
  * })
  * console.log(entry.member)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

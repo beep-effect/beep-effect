@@ -41,8 +41,8 @@ describe("@beep/identity", () => {
   });
 
   it("normalizes package constructor bases through the schema codec", () => {
-    expect(S.decodeUnknownOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
-    expect(S.decodeUnknownOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
     expect(make("my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@beep/my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
@@ -50,7 +50,7 @@ describe("@beep/identity", () => {
 
   it("round-trips generated base constructor input values", () => {
     fc.assert(
-      fc.property(S.toArbitrary(BaseIdentityInput), (base) => {
+      fc.property(S.toArbitrary(BaseIdentityInput)(fc), (base) => {
         const decoded = O.flatMap(S.encodeOption(BaseIdentityInput)(base), S.decodeUnknownOption(BaseIdentityInput));
 
         expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
@@ -109,6 +109,22 @@ describe("@beep/identity", () => {
     expect(annotation.default).toEqual({ version: 1 });
     expect(annotation.description).toBe("Tenant schema");
     expect(annotation.version).toBe(1);
+  });
+
+  it("creates class annotations through the same runtime merge path as annote", () => {
+    const sameText = (self: string, that: string): boolean => self === that;
+    const extras = {
+      description: "Tenant class",
+      toEquivalence: () => sameText,
+    };
+    const annotation = $SchemaId.annoteClass<typeof S.String, readonly []>("TenantClass", extras);
+
+    expect(annotation).toEqual($SchemaId.annote("TenantClass", extras));
+    expect(annotation.schemaId).toBe(Symbol.for("@beep/schema/TenantClass"));
+    expect(annotation.identifier).toBe("@beep/schema/TenantClass");
+    expect(annotation.title).toBe("TenantClass");
+    expect(annotation.description).toBe("Tenant class");
+    expect(annotation.toEquivalence).toBe(extras.toEquivalence);
   });
 
   it("applies schema annotations via annoteSchema", () => {

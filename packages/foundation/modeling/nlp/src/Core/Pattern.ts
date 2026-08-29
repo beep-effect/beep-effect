@@ -77,17 +77,19 @@ const renderBracketString = (values: ReadonlyArray<string>): string => `[${A.joi
 /**
  * Universal part-of-speech tags accepted by wink-backed pattern matching.
  *
- * @remarks
+ * **Details**
+ *
  * These tags follow wink-nlp's Universal POS vocabulary and are used only for
  * grammatical pattern positions. Literal token text belongs in
  * {@link LiteralPatternElement}.
  *
- * @example
- * ```ts
+ * **Example** (Checking NOUN tag membership)
+ *
+ * ```ts import.meta.vitest name="Checking NOUN tag membership"
  * import { UniversalPOSTag } from "@beep/nlp/Core/Pattern"
  *
- * console.log(UniversalPOSTag.is.NOUN("NOUN")) // true
- * console.log(UniversalPOSTag.is.NOUN("VERB")) // false
+ * UniversalPOSTag.is.NOUN("NOUN") // => true
+ * UniversalPOSTag.is.NOUN("VERB") // => false
  * ```
  *
  * @category models
@@ -103,12 +105,13 @@ export const UniversalPOSTag = UniversalPOSTagKit.pipe(
 /**
  * Runtime TypeScript union decoded by {@link UniversalPOSTag}.
  *
- * @example
- * ```ts
+ * **Example** (Typing a POS tag parameter)
+ *
+ * ```ts import.meta.vitest name="Typing a POS tag parameter"
  * import type { UniversalPOSTag } from "@beep/nlp/Core/Pattern"
  *
  * const describe = (tag: UniversalPOSTag): string => `pos:${tag}`
- * console.log(typeof describe) // "function"
+ * typeof describe // => "function"
  * ```
  *
  * @category models
@@ -119,12 +122,13 @@ export type UniversalPOSTag = typeof UniversalPOSTag.Type;
 /**
  * Named-entity labels accepted by wink-backed entity pattern matching.
  *
- * @example
- * ```ts
+ * **Example** (Checking EMAIL entity membership)
+ *
+ * ```ts import.meta.vitest name="Checking EMAIL entity membership"
  * import { NamedEntityType } from "@beep/nlp/Core/Pattern"
  *
- * console.log(NamedEntityType.is.EMAIL("EMAIL")) // true
- * console.log(NamedEntityType.is.EMAIL("URL")) // false
+ * NamedEntityType.is.EMAIL("EMAIL") // => true
+ * NamedEntityType.is.EMAIL("URL") // => false
  * ```
  *
  * @category models
@@ -140,12 +144,13 @@ export const NamedEntityType = NamedEntityTypeKit.pipe(
 /**
  * Runtime TypeScript union decoded by {@link NamedEntityType}.
  *
- * @example
- * ```ts
+ * **Example** (Typing an entity type parameter)
+ *
+ * ```ts import.meta.vitest name="Typing an entity type parameter"
  * import type { NamedEntityType } from "@beep/nlp/Core/Pattern"
  *
  * const describe = (entityType: NamedEntityType): string => `entity:${entityType}`
- * console.log(typeof describe) // "function"
+ * typeof describe // => "function"
  * ```
  *
  * @category models
@@ -169,17 +174,19 @@ const DisambiguatedLiteralPatternOptionChoice = S.makeFilter(
 /**
  * Non-empty set of POS choices for one pattern slot.
  *
- * @remarks
+ * **Details**
+ *
  * The empty string is allowed as one alternative so bracket syntax can express
  * wildcard-ish optional choices, but every option set must include at least one
  * meaningful POS tag.
  *
- * @example
- * ```ts
+ * **Example** (Making a POS option set)
+ *
+ * ```ts import.meta.vitest name="Making a POS option set"
  * import { POSPatternOption } from "@beep/nlp/Core/Pattern"
  *
  * const option = POSPatternOption.make(["NOUN", "PROPN"])
- * console.log(option.includes("NOUN")) // true
+ * option.includes("NOUN") // => true
  * ```
  *
  * @category models
@@ -197,27 +204,29 @@ export const POSPatternOption = S.NonEmptyArray(S.Union([UniversalPOSTag, EmptyP
 /**
  * Runtime type for {@link POSPatternOption}.
  *
- * @example
- * ```ts
+ * **Example** (Aliasing POSPatternOption type)
+ *
+ * ```ts import.meta.vitest name="Aliasing POSPatternOption type"
  * import type { POSPatternOption } from "@beep/nlp/Core/Pattern"
  *
  * type Example = POSPatternOption
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type POSPatternOption = typeof POSPatternOption.Type;
 
 /**
  * Non-empty set of entity-type choices for one pattern slot.
  *
- * @example
- * ```ts
+ * **Example** (Making an entity option set)
+ *
+ * ```ts import.meta.vitest name="Making an entity option set"
  * import { EntityPatternOption } from "@beep/nlp/Core/Pattern"
  *
  * const option = EntityPatternOption.make(["EMAIL", "URL"])
- * console.log(option.includes("URL")) // true
+ * option.includes("URL") // => true
  * ```
  *
  * @category models
@@ -235,31 +244,34 @@ export const EntityPatternOption = S.NonEmptyArray(S.Union([NamedEntityType, Emp
 /**
  * Runtime type for {@link EntityPatternOption}.
  *
- * @example
- * ```ts
+ * **Example** (Aliasing EntityPatternOption type)
+ *
+ * ```ts import.meta.vitest name="Aliasing EntityPatternOption type"
  * import type { EntityPatternOption } from "@beep/nlp/Core/Pattern"
  *
  * type Example = EntityPatternOption
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type EntityPatternOption = typeof EntityPatternOption.Type;
 
 /**
  * Non-empty set of literal token-text choices for one pattern slot.
  *
- * @remarks
+ * **Details**
+ *
  * At least one choice must be a non-reserved literal so a literal pattern cannot
  * be confused with a POS tag, entity label, or empty wildcard placeholder.
  *
- * @example
- * ```ts
+ * **Example** (Making a literal option set)
+ *
+ * ```ts import.meta.vitest name="Making a literal option set"
  * import { LiteralPatternOption } from "@beep/nlp/Core/Pattern"
  *
  * const option = LiteralPatternOption.make(["Effect", "effect-ts"])
- * console.log(option[0]) // "Effect"
+ * option[0] // => "Effect"
  * ```
  *
  * @category models
@@ -278,27 +290,29 @@ export const LiteralPatternOption = S.NonEmptyArray(S.Union([S.NonEmptyString, E
 /**
  * Runtime type for {@link LiteralPatternOption}.
  *
- * @example
- * ```ts
+ * **Example** (Aliasing LiteralPatternOption type)
+ *
+ * ```ts import.meta.vitest name="Aliasing LiteralPatternOption type"
  * import type { LiteralPatternOption } from "@beep/nlp/Core/Pattern"
  *
  * type Example = LiteralPatternOption
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type LiteralPatternOption = typeof LiteralPatternOption.Type;
 
 /**
  * Tagged pattern element that matches grammatical POS alternatives.
  *
- * @example
- * ```ts
+ * **Example** (Creating a POS pattern element)
+ *
+ * ```ts import.meta.vitest name="Creating a POS pattern element"
  * import { POSPatternElement } from "@beep/nlp/Core/Pattern"
  *
  * const element = POSPatternElement.make({ value: ["NOUN"] })
- * console.log(element._tag) // "POSPatternElement"
+ * element._tag // => "POSPatternElement"
  * ```
  *
  * @category models
@@ -317,12 +331,13 @@ export class POSPatternElement extends S.TaggedClass<POSPatternElement>($I`POSPa
 /**
  * Tagged pattern element that matches named-entity alternatives.
  *
- * @example
- * ```ts
+ * **Example** (Creating an entity pattern element)
+ *
+ * ```ts import.meta.vitest name="Creating an entity pattern element"
  * import { EntityPatternElement } from "@beep/nlp/Core/Pattern"
  *
  * const element = EntityPatternElement.make({ value: ["EMAIL"] })
- * console.log(element._tag) // "EntityPatternElement"
+ * element._tag // => "EntityPatternElement"
  * ```
  *
  * @category models
@@ -341,12 +356,13 @@ export class EntityPatternElement extends S.TaggedClass<EntityPatternElement>($I
 /**
  * Tagged pattern element that matches literal token text alternatives.
  *
- * @example
- * ```ts
+ * **Example** (Creating a literal pattern element)
+ *
+ * ```ts import.meta.vitest name="Creating a literal pattern element"
  * import { LiteralPatternElement } from "@beep/nlp/Core/Pattern"
  *
  * const element = LiteralPatternElement.make({ value: ["Effect"] })
- * console.log(element.value[0]) // "Effect"
+ * element.value[0] // => "Effect"
  * ```
  *
  * @category models
@@ -365,12 +381,13 @@ export class LiteralPatternElement extends S.TaggedClass<LiteralPatternElement>(
 /**
  * Schema union for every pattern element variant supported by this package.
  *
- * @example
- * ```ts
+ * **Example** (Making a literal PatternElement)
+ *
+ * ```ts import.meta.vitest name="Making a literal PatternElement"
  * import { PatternElement } from "@beep/nlp/Core/Pattern"
  *
  * const element = PatternElement.make({ _tag: "LiteralPatternElement", value: ["Effect"] })
- * console.log(element._tag) // "LiteralPatternElement"
+ * element._tag // => "LiteralPatternElement"
  * ```
  *
  * @category models
@@ -386,27 +403,29 @@ export const PatternElement = S.Union([POSPatternElement, EntityPatternElement, 
 /**
  * Runtime type for {@link PatternElement}.
  *
- * @example
- * ```ts
+ * **Example** (Aliasing PatternElement type)
+ *
+ * ```ts import.meta.vitest name="Aliasing PatternElement type"
  * import type { PatternElement } from "@beep/nlp/Core/Pattern"
  *
  * type Example = PatternElement
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PatternElement = typeof PatternElement.Type;
 
 /**
  * Non-empty identifier for a reusable pattern definition.
  *
- * @example
- * ```ts
+ * **Example** (Making a PatternId value)
+ *
+ * ```ts import.meta.vitest name="Making a PatternId value"
  * import { PatternId } from "@beep/nlp/Core/Pattern"
  *
  * const id = PatternId.make("package-name")
- * console.log(id) // "package-name"
+ * id // => "package-name"
  * ```
  *
  * @category models
@@ -423,32 +442,35 @@ export const PatternId = S.NonEmptyString.pipe(
 /**
  * Runtime type for {@link PatternId}.
  *
- * @example
- * ```ts
+ * **Example** (Aliasing PatternId type)
+ *
+ * ```ts import.meta.vitest name="Aliasing PatternId type"
  * import type { PatternId } from "@beep/nlp/Core/Pattern"
  *
  * type Example = PatternId
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type PatternId = typeof PatternId.Type;
 
 /**
  * Inclusive `[start, end]` element-index range selected by a pattern.
  *
- * @remarks
+ * **Details**
+ *
  * Mark ranges let a broader pattern match context while highlighting a narrower
  * span for extraction.
  *
- * @example
- * ```ts
+ * **Example** (Decoding a mark range pair)
+ *
+ * ```ts import.meta.vitest name="Decoding a mark range pair"
  * import * as S from "effect/Schema"
  * import { MarkRange } from "@beep/nlp/Core/Pattern"
  *
  * const range = S.decodeUnknownSync(MarkRange)([1, 2])
- * console.log(range[0]) // 1
+ * range[0] // => 1
  * ```
  *
  * @category models
@@ -463,28 +485,31 @@ export const MarkRange = S.Tuple([NonNegativeInt, NonNegativeInt]).pipe(
 /**
  * Runtime type for {@link MarkRange}.
  *
- * @example
- * ```ts
+ * **Example** (Aliasing MarkRange type)
+ *
+ * ```ts import.meta.vitest name="Aliasing MarkRange type"
  * import type { MarkRange } from "@beep/nlp/Core/Pattern"
  *
  * type Example = MarkRange
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type MarkRange = typeof MarkRange.Type;
 
 /**
  * Ordered pattern of POS, entity, and literal slots with an optional mark.
  *
- * @remarks
+ * **Details**
+ *
  * Patterns model bracket-style NLP matchers as schema values. Each element is a
  * token-position choice set; `mark` can select the subrange to emit after the
  * full pattern matches.
  *
- * @example
- * ```ts
+ * **Example** (Building a literal Pattern value)
+ *
+ * ```ts import.meta.vitest name="Building a literal Pattern value"
  * import { Chunk } from "effect"
  * import * as O from "effect/Option"
  * import { LiteralPatternElement, Pattern, PatternId } from "@beep/nlp/Core/Pattern"
@@ -495,7 +520,7 @@ export type MarkRange = typeof MarkRange.Type;
  *   elements: Chunk.of(LiteralPatternElement.make({ value: ["Effect"] })),
  *   mark: O.none()
  * })
- * console.log(Pattern.is(pattern)) // true
+ * Pattern.is(pattern) // => true
  * ```
  *
  * @category models
@@ -592,7 +617,7 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
     (input: S.Codec.Encoded<typeof Pattern>) => Pattern
   >(
     (args) => args.length >= 1,
-    (input) => Result.getOrThrowWith(S.decodeUnknownResult(Pattern)(input), schemaIssueToError)
+    (input) => Result.getOrThrowWith(S.decodeResult(Pattern)(input), schemaIssueToError)
   );
 
   /**

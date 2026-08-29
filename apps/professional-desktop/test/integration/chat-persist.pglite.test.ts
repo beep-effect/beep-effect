@@ -25,7 +25,8 @@
  */
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AgentTurnKernel } from "@beep/agents-use-cases/public";
-import { makeDrizzleLayer } from "@beep/postgres";
+import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
+import { makeDrizzle, makeDrizzleLayer } from "@beep/postgres";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
@@ -33,6 +34,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Chunk, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
@@ -42,7 +44,11 @@ import { UsageRecordSink, UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
 import { migrateOnBoot } from "@/runtime/Migrations";
 
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
-const makeInProcessPgliteLayer = () => Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" }));
+// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
+// database has to register the bundled extension exactly as the sidecar's
+// `makeBundledPgliteLayer` does.
+const makeInProcessPgliteLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const migrateAll = Effect.fnUntraced(function* () {
   yield* migrateOnBoot;
@@ -72,7 +78,7 @@ if (!shouldRunPgliteIntegration) {
           const store = yield* Thread.ThreadStore;
           const kernel = yield* AgentTurnKernel;
           const usage = yield* UsageRecordSink;
-          const ops = makeChatOperations(store, kernel, usage);
+          const ops = yield* makeChatOperations(store, kernel, usage);
 
           const workspaceId = decodeWorkspaceId(2);
           const thread = yield* ops.createThread(workspaceId, "Persisted matter");
@@ -105,6 +111,20 @@ if (!shouldRunPgliteIntegration) {
               expect(O.getOrNull(codeBlock.language)).toBe("text");
             }
           }
+
+          const db = yield* makeDrizzle();
+          const usageRows = yield* db.select().from(UsageRecordTable.Table);
+          expect(usageRows).toHaveLength(1);
+          expect(usageRows[0]).toMatchObject({
+            activityId: null,
+            costUsdApproxMicros: 0,
+            inputTokens: 12,
+            model: "fixture",
+            outputTokens: 8,
+            provider: "fixture",
+            totalTokens: 20,
+          });
+          expect(usageRows[0]?.latencyMillis).not.toBeNull();
         }),
         pgliteIntegrationTimeoutMillis
       );

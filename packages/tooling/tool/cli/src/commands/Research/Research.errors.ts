@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -16,23 +16,25 @@ const $I = $RepoCliId.create("commands/Research/Research.errors");
 /**
  * Error raised by research knowledge-vault commands.
  *
- * @example
+ * **Example** (Create research command error)
+ *
  * ```ts
  * import { ResearchCommandError } from "@beep/repo-cli/commands/Research/index"
  *
  * const error = ResearchCommandError.make({ message: "Invalid vault root" })
  * console.log(error.message)
  * ```
+ *
  * @category error-handling
  * @since 0.0.0
  */
-export class ResearchCommandError extends TaggedErrorClass<ResearchCommandError>($I`ResearchCommandError`)(
+export class ResearchCommandError extends S.TaggedError<ResearchCommandError>($I`ResearchCommandError`)(
   "ResearchCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("ResearchCommandError", {
+  $I.annoteError<ResearchCommandError>("ResearchCommandError", {
     description: "A failure raised while preparing or applying a research knowledge-vault operation.",
   })
 ) {

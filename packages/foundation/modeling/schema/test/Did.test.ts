@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const DidArbitrary = S.toArbitrary(Did);
+const DidArbitrary = S.toArbitrary(Did)(fc);
 const decodeDid = S.decodeUnknownEffect(Did);
 
 const invalidDidExamples = [
@@ -28,8 +28,9 @@ const invalidDidExamples = [
 ];
 
 describe("Did", () => {
-  it.effect("accepts W3C DID Core syntax examples", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts W3C DID Core syntax examples",
+    Effect.fnUntraced(function* () {
       expect(yield* decodeDid("did:example:123456789abcdefghi")).toBe("did:example:123456789abcdefghi");
       expect(yield* decodeDid("did:plc:ewvi7nxzyoun6zhxrhs64oiz")).toBe("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
       expect(yield* decodeDid("did:web:example.com")).toBe("did:web:example.com");

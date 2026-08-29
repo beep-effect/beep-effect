@@ -1,7 +1,8 @@
 /**
  * Public UI view-model package for the architecture lab proof surface.
  *
- * @remarks
+ * **Details**
+ *
  * This package does not render components directly. It projects canonical
  * architecture-lab domain aggregates into client-renderable read models for
  * proof apps and downstream UI packages.
@@ -14,7 +15,8 @@
 /**
  * Version marker for the architecture lab UI view-model package.
  *
- * @example
+ * **Example** (Assert expected VERSION value)
+ *
  * ```ts
  * import { VERSION } from "@beep/architecture-lab-ui"
  *
@@ -36,7 +38,8 @@ export const VERSION = "0.0.0" as const;
 /**
  * WorkItem UI namespace for client-renderable WorkItem summaries.
  *
- * @example
+ * **Example** (Map WorkItem to summary)
+ *
  * ```ts
  * import { defaultWorkItemPublicConfig } from "@beep/architecture-lab-config/public"
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
@@ -59,4 +62,4 @@ export const VERSION = "0.0.0" as const;
  * @category read-models
  * @since 0.0.0
  */
-export * as WorkItem from "./aggregates/WorkItem/index.js";
+export * as WorkItem from "./aggregates/WorkItem/index.ts";

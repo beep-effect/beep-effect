@@ -13,12 +13,13 @@ Shared may contain:
   language
 - `shared/domain` driver-neutral primitives that multiple slices deliberately
   share
-- `shared/domain` entity metadata constructors when they encode shared product
-  semantics such as tenant organization scoping, actor provenance, and
-  source-kind vocabulary rather than reusable domain-agnostic schema substrate
+- `shared/domain` product-entity kits when they encode shared product semantics
+  such as tenant organization scoping, actor provenance, identity, and
+  source-kind vocabulary; these may compose the metadata-only
+  `@beep/effect-drizzle` schema kit but must not expose database execution
 - future `shared/config` contracts and config vocabulary that multiple slices
   deliberately agree on
-- future `shared/use-cases` application contracts when multiple slices
+- promoted `shared/use-cases` application contracts when multiple slices
   deliberately share commands, queries, driver-neutral DTOs, driver-neutral
   boundary contracts, client-safe application errors, facade interfaces, or
   ultra-high-bar product ports, with each export subject to a promotion record
@@ -35,7 +36,7 @@ Shared should not contain:
 
 - product-specific behavior from one slice
 - a partial domain model waiting for a home
-- driver-specific leakage that domain packages will inherit
+- driver-specific runtime leakage that domain packages will inherit
 - workflows, process managers, schedulers, handlers, or concrete adapters that
   execute shared contracts
 - one-off convenience wrappers created to avoid a local import
@@ -46,8 +47,10 @@ Shared should not contain:
 - technical wrappers or external drivers
 - repo tooling or runtime-specific assistant wiring
 
-`shared/tables` may use a metadata-only table constructor for shared entity
-descriptors when the resulting tables encode shared product language. It must
+`shared/domain` may expose the promoted `ProductEntity` kit because its fields
+encode agreed product semantics; the underlying effect-drizzle dependency is
+limited to schema and SQL metadata. `shared/tables` may project those models
+with `toPgTable` when the resulting tables encode shared product language. It must
 not grow live database execution, transaction management, migration tooling, or
 repository helpers; those belong in drivers and server packages.
 
@@ -58,21 +61,21 @@ truly shared and the owning teams/slices accept the coupling.
 
 `shared` is not a special horizontal bucket. It is the canonical cross-slice
 slice with a deliberately reduced spine. The active package directories today
-are `domain/` and `tables/`:
+are `domain/`, `use-cases/`, and `tables/`:
 
 ```txt
 packages/<kernel>/
   domain/
+  use-cases/ # contract-only; promotion record required per export
   tables/ # promotion record required per appendix
 ```
 
-Reserved role names are `config/`, `use-cases/`, `client/`, `server/`, and
-`ui/`. They are not package directories today. Create one only when real
-exported behavior clears the promotion bar. `shared/use-cases` does not exist
-yet because nothing has met the bar for a durable contract-only cross-slice
-surface.
+Reserved role names are `config/`, `client/`, `server/`, and `ui/`; create one
+only when real exported behavior clears the promotion bar. `shared/use-cases`
+now exists as a contract-only exception because the tenant-bound
+`PromotionGate` contract cleared that bar.
 
-A future `shared/use-cases` package is contract-only. It may hold cross-slice
+The `shared/use-cases` package is contract-only. It may hold cross-slice
 commands, queries, driver-neutral DTOs, driver-neutral boundary contracts,
 client-safe application errors, facade interfaces, and ultra-high-bar product
 ports. Product ports are exceptional even inside this exception: the promotion
@@ -80,7 +83,7 @@ record must prove why a shared command/query/facade contract is insufficient. It
 does not hold workflows, process managers, schedulers, handlers, concrete
 adapters, driver imports, or live Layer values.
 
-When that package exists, it follows the same explicit export contract as slice
+It follows the same explicit export contract as slice
 `use-cases`: `/public`, `/server`, and `/test`. `/public` stays
 client-safe. `/server` is limited to server-only shared application contracts
 such as server-only facade interfaces and ultra-high-bar product ports. `/test`
@@ -94,7 +97,7 @@ suggestion.
 Meaningful exports in `shared/*` packages requiring a promotion record must
 include one in the affected package README before or alongside the export, per
 the schema in the appendix below. This applies to active `shared/tables` and to
-any future `shared/use-cases`, `shared/client`, `shared/server`, or `shared/ui`
+`shared/use-cases` and any future `shared/client`, `shared/server`, or `shared/ui`
 package. It also applies when a normal shared package adds a new durable product
 concept whose coupling is not already obvious from existing README policy.
 
@@ -105,7 +108,7 @@ The record must state:
 - the exported surface being promoted
 - rejected homes, especially the owning slice and `foundation`
 - runtime, adapter, driver, and Layer limits
-- contract-only proof for future `shared/use-cases` exports
+- contract-only proof for `shared/use-cases` exports
 - review evidence for the deliberate coupling
 
 `standards/architecture/DECISIONS.md` records architecture-wide policy changes.
@@ -191,7 +194,7 @@ A promotion record is a fillable section in the affected `shared/*` package's `R
   - Owning slice — <why it can't live in the slice that introduced it>
   - Foundation — <why it isn't a domain-agnostic primitive>
 - **Surface:** <list of exported symbols and the canonical subpath(s) they're published from>
-- **Runtime limits:** <one of: "no live Layers", "contract-only" (required for future `shared/use-cases`), "live Layers permitted under §X">
+- **Runtime limits:** <one of: "no live Layers", "contract-only" (required for `shared/use-cases`), "live Layers permitted under §X">
 - **Coupling acceptors:** <PR review sign-off from each consuming slice's owner; PR link>
 - **Removal trigger:** <the condition under which this export should be retired — e.g., "remove when iam owns its own membership ID format">
 

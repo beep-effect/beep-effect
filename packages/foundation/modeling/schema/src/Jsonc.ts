@@ -8,7 +8,6 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { isNonNegative } from "./Number.ts";
@@ -18,13 +17,14 @@ const $I = $SchemaId.create("Jsonc");
 /**
  * Typed representation of a single JSONC parse diagnostic produced by `jsonc-parser`.
  *
- * @example
- * ```ts
+ * **Example** (Decode parse diagnostic object)
+ *
+ * ```ts import.meta.vitest name="Decode parse diagnostic object"
  * import { JsoncParseDiagnostic } from "@beep/schema/Jsonc"
  * import * as S from "effect/Schema"
  *
- * const diag = S.decodeUnknownSync(JsoncParseDiagnostic)({})
- * console.log(diag)
+ * const diag = S.decodeUnknownSync(JsoncParseDiagnostic)({ code: 1, offset: 0, length: 1 })
+ * diag.code // => 1
  * ```
  *
  * @category models
@@ -41,9 +41,9 @@ export class JsoncParseDiagnostic extends S.Class<JsoncParseDiagnostic>($I`Jsonc
   })
 ) {}
 
-const encodeUnsupported = (value: unknown): Effect.Effect<string, SchemaIssue.Issue> =>
+const encodeUnsupported = (): Effect.Effect<string, SchemaIssue.Issue> =>
   Effect.fail(
-    new SchemaIssue.InvalidValue(O.some(value), {
+    new SchemaIssue.InvalidValue({
       message: "Encoding unknown values to JSONC text is not supported by JsoncTextToUnknown.",
     })
   );
@@ -59,7 +59,7 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
     onEmpty: () => Effect.succeed(parsed),
     onNonEmpty: (errors) =>
       Effect.fail(
-        new SchemaIssue.InvalidValue(O.some(content), {
+        new SchemaIssue.InvalidValue({
           message: pipe(
             errors,
             A.map((error) => `${jsonc.printParseErrorCode(error.error)}@${error.offset}:${error.length}`),
@@ -75,7 +75,8 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
  * Schema transformation that decodes a JSONC string (JSON with comments and
  * trailing commas) into an unknown parsed value.
  *
- * @example
+ * **Example** (Decode JSONC text to unknown)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -104,18 +105,6 @@ export const JsoncTextToUnknown = S.String.pipe(
 
 /**
  * {@inheritDoc JsoncTextToUnknown}
- *
- * @example
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { JsoncTextToUnknown } from "@beep/schema/Jsonc"
- *
- * const program = S.decodeUnknownEffect(JsoncTextToUnknown)('{ "port": 8080 }')
- * const parsed: typeof JsoncTextToUnknown.Type = await Effect.runPromise(program)
- * console.log(parsed)
- * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -125,8 +114,9 @@ export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
  * Builds a decoder that parses JSONC text and then decodes the result through a
  * target schema.
  *
- * @example
- * ```ts
+ * **Example** (Decode JSONC into schema)
+ *
+ * ```ts import.meta.vitest name="Decode JSONC into schema"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { decodeJsoncTextAs } from "@beep/schema/Jsonc"
@@ -136,7 +126,7 @@ export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
  *
  * const program = decodeConfig('{ "port": 8080, "host": "localhost" }')
  * const config = await Effect.runPromise(program)
- * console.log(config.port) // 8080
+ * config.port // => 8080
  * ```
  *
  * @param schema - Target schema to decode parsed JSONC document into.

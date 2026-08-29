@@ -15,21 +15,23 @@ import {
   ArchitectureSliceRolePlan,
   WriteFileOperation,
   WritePackageJsonOperation,
-} from "../Architecture.schemas.js";
-import { packageNameForRole, pathForRole } from "./RoleTopology.js";
+} from "../Architecture.schemas.ts";
+import { packageNameForRole, pathForRole } from "./RoleTopology.ts";
 import type * as R from "effect/Record";
 
 /**
  * Builds the synthetic target used for shell-only package plans.
  *
- * @param boundedContext - Slug of the slice the shell package belongs to.
- * @returns A synthetic plan target pinned to the `PackageShell` concept.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * console.log(packageShellTargetFor("research-lab").concept) // "PackageShell"
  * ```
+ *
+ * @param boundedContext - Slug of the slice the shell package belongs to.
+ * @returns A synthetic plan target pinned to the `PackageShell` concept.
  * @category constructors
  * @since 0.0.0
  */
@@ -72,29 +74,34 @@ const packageShellExportsForRole = ArchitecturePackageRole.$match({
 /**
  * Builds role metadata for a shell-only package plan.
  *
- * @param target - Plan target describing the slice being scaffolded.
- * @param role - Package role whose name, path, and exports are resolved.
- * @returns Role plan metadata for the shell-only package.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellRolePlanFor, packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * const target = packageShellTargetFor("research-lab")
  * console.log(packageShellRolePlanFor(target, "domain").path)
  * ```
+ *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose name, path, and exports are resolved.
+ * @returns Role plan metadata for the shell-only package.
  * @category constructors
  * @since 0.0.0
  */
-export const packageShellRolePlanFor = (
-  target: ArchitecturePlanTarget,
-  role: ArchitecturePackageRole
-): ArchitectureSliceRolePlan =>
-  ArchitectureSliceRolePlan.make({
-    role,
-    packageName: packageNameForRole(target, role),
-    path: pathForRole(target, role),
-    exports: packageShellExportsForRole(role),
-  });
+export const packageShellRolePlanFor: {
+  (role: ArchitecturePackageRole): (target: ArchitecturePlanTarget) => ArchitectureSliceRolePlan;
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): ArchitectureSliceRolePlan;
+} = dual(
+  2,
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): ArchitectureSliceRolePlan =>
+    ArchitectureSliceRolePlan.make({
+      role,
+      packageName: packageNameForRole(target, role),
+      path: pathForRole(target, role),
+      exports: packageShellExportsForRole(role),
+    })
+);
 
 const packageShellDescriptionForRole = (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): string => {
   const contextLabel = Str.replaceAll("-", " ")(Str.kebabCase(target.boundedContext));
@@ -188,35 +195,40 @@ const packageShellDevDependenciesForRole = (role: ArchitecturePackageRole): R.Re
 /**
  * Builds the package.json operation for a shell-only role package.
  *
- * @param target - Plan target describing the slice being scaffolded.
- * @param role - Package role whose manifest fields are derived.
- * @returns A write-package-json operation for the shell role package.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellTargetFor, shellPackageJsonOperationFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * const operation = shellPackageJsonOperationFor(packageShellTargetFor("research-lab"), "domain")
  * console.log(operation.packageName)
  * ```
+ *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose manifest fields are derived.
+ * @returns A write-package-json operation for the shell role package.
  * @category constructors
  * @since 0.0.0
  */
-export const shellPackageJsonOperationFor = (
-  target: ArchitecturePlanTarget,
-  role: ArchitecturePackageRole
-): WritePackageJsonOperation =>
-  WritePackageJsonOperation.make({
-    kind: "write-package-json",
-    role,
-    path: `${pathForRole(target, role)}/package.json`,
-    packageName: packageNameForRole(target, role),
-    packageDescription: packageShellDescriptionForRole(target, role),
-    repositoryDirectory: pathForRole(target, role),
-    exports: packageShellExportsForRole(role),
-    dependencies: packageShellDependenciesForRole(target, role),
-    devDependencies: packageShellDevDependenciesForRole(role),
-    description: `Write structured ${role} package manifest for ${target.boundedContext}.`,
-  });
+export const shellPackageJsonOperationFor: {
+  (role: ArchitecturePackageRole): (target: ArchitecturePlanTarget) => WritePackageJsonOperation;
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): WritePackageJsonOperation;
+} = dual(
+  2,
+  (target: ArchitecturePlanTarget, role: ArchitecturePackageRole): WritePackageJsonOperation =>
+    WritePackageJsonOperation.make({
+      kind: "write-package-json",
+      role,
+      path: `${pathForRole(target, role)}/package.json`,
+      packageName: packageNameForRole(target, role),
+      packageDescription: packageShellDescriptionForRole(target, role),
+      repositoryDirectory: pathForRole(target, role),
+      exports: packageShellExportsForRole(role),
+      dependencies: packageShellDependenciesForRole(target, role),
+      devDependencies: packageShellDevDependenciesForRole(role),
+      description: `Write structured ${role} package manifest for ${target.boundedContext}.`,
+    })
+);
 
 const packageShellAgentsContent = (
   target: ArchitecturePlanTarget,
@@ -259,7 +271,7 @@ const packageShellTsconfigContent = (): string => `{
 const packageShellTestTsconfigContent = (): string => `{
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../tsconfig.base.json",
-  "include": ["src", "test", "dtslint"],
+  "include": ["src", "test"],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
@@ -270,6 +282,23 @@ const packageShellTestTsconfigContent = (): string => `{
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
+  }
+}
+`;
+
+const packageShellCheckTsconfigContent = (): string => `{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "references": [],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": "../../.."
   }
 }
 `;
@@ -299,15 +328,15 @@ const categoryForRole = ArchitecturePackageRole.$match({
 
 const extraExportForRole = ArchitecturePackageRole.$match({
   domain: () =>
-    '\n/**\n * Aggregate namespace exports.\n *\n * @category aggregates\n * @since 0.0.0\n */\nexport * as Aggregates from "./aggregates/index.js";\n/**\n * Entity namespace exports.\n *\n * @category entities\n * @since 0.0.0\n */\nexport * as Entities from "./entities/index.js";\n/**\n * Identity namespace exports.\n *\n * @category entity-ids\n * @since 0.0.0\n */\nexport * as Identity from "./identity/index.js";\n/**\n * Value-object namespace exports.\n *\n * @category value-objects\n * @since 0.0.0\n */\nexport * as Values from "./values/index.js";\n',
+    '\n/**\n * Aggregate namespace exports.\n *\n * @category aggregates\n * @since 0.0.0\n */\nexport * as Aggregates from "./aggregates/index.ts";\n/**\n * Entity namespace exports.\n *\n * @category entities\n * @since 0.0.0\n */\nexport * as Entities from "./entities/index.ts";\n/**\n * Identity namespace exports.\n *\n * @category entity-ids\n * @since 0.0.0\n */\nexport * as Identity from "./identity/index.ts";\n/**\n * Value-object namespace exports.\n *\n * @category value-objects\n * @since 0.0.0\n */\nexport * as Values from "./values/index.ts";\n',
   "use-cases": () =>
-    '\n/**\n * Public use-case exports.\n *\n * @category use-cases\n * @since 0.0.0\n */\nexport * from "./public.js";\n',
+    '\n/**\n * Public use-case exports.\n *\n * @category use-cases\n * @since 0.0.0\n */\nexport * from "./public.ts";\n',
   config: () =>
-    '\n/**\n * Browser-safe public configuration exports.\n *\n * @category configuration\n * @since 0.0.0\n */\nexport * from "./public.js";\n',
+    '\n/**\n * Browser-safe public configuration exports.\n *\n * @category configuration\n * @since 0.0.0\n */\nexport * from "./public.ts";\n',
   server: () =>
-    '\n/**\n * Server layer exports.\n *\n * @category layers\n * @since 0.0.0\n */\nexport * from "./Layer.js";\n',
+    '\n/**\n * Server layer exports.\n *\n * @category layers\n * @since 0.0.0\n */\nexport * from "./Layer.ts";\n',
   tables: () =>
-    '\n/**\n * Table collection exports.\n *\n * @category tables\n * @since 0.0.0\n */\nexport * from "./tables.js";\n',
+    '\n/**\n * Table collection exports.\n *\n * @category tables\n * @since 0.0.0\n */\nexport * from "./tables.ts";\n',
   client: () => "",
   ui: () => "",
 });
@@ -420,16 +449,18 @@ export type DbSchema = typeof DbSchema;
 /**
  * Builds file operations for a shell-only role package.
  *
- * @param target - Plan target describing the slice being scaffolded.
- * @param role - Package role whose file set is emitted.
- * @returns The ordered write-file operations that materialize the role package.
- * @example
+ * **Example** (Build an architecture package shell)
+ *
  * ```ts
  * import { packageShellFileOperationsFor, packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
  *
  * const operations = packageShellFileOperationsFor(packageShellTargetFor("research-lab"), "domain")
  * console.log(operations.some((operation) => operation.path.endsWith("src/index.ts")))
  * ```
+ *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose file set is emitted.
+ * @returns The ordered write-file operations that materialize the role package.
  * @category constructors
  * @since 0.0.0
  */
@@ -490,18 +521,18 @@ export const packageShellFileOperationsFor: {
     WriteFileOperation.make({
       kind: "write-file",
       role,
-      path: `${basePath}/vitest.config.ts`,
-      writer: "template",
-      content: packageShellVitestContent(),
-      description: `Write ${role} package Vitest configuration.`,
+      path: `${basePath}/tsconfig.check.json`,
+      writer: "jsonc",
+      content: packageShellCheckTsconfigContent(),
+      description: `Write ${role} package check TypeScript configuration.`,
     }),
     WriteFileOperation.make({
       kind: "write-file",
       role,
-      path: `${basePath}/dtslint/.gitkeep`,
+      path: `${basePath}/vitest.config.ts`,
       writer: "template",
-      content: "",
-      description: `Create ${role} package dtslint directory.`,
+      content: packageShellVitestContent(),
+      description: `Write ${role} package Vitest configuration.`,
     }),
     WriteFileOperation.make({
       kind: "write-file",

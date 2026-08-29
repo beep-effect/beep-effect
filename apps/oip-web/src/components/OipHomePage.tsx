@@ -521,7 +521,8 @@ function Footer({ content }: { readonly content: OipSiteContent }) {
 /**
  * Renders the OIP public home page.
  *
- * @example
+ * **Example** (Rendering OipHomePage with content)
+ *
  * ```tsx
  * import { OipHomePage } from "@beep/oip-web/components/OipHomePage"
  * import { oipSiteContent } from "@beep/oip-web/content"

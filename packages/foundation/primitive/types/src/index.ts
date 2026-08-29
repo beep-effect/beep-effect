@@ -1,9 +1,12 @@
 /**
  * Shared utility types for the beep platform.
  *
+ * **Details**
+ *
  * Provides array, string, and unsafe type-level utilities used across packages.
  *
- * @example
+ * **Example** (Compose shared utility types)
+ *
  * ```ts
  * import type { TArray, TString, TUnsafe, TUtils } from "@beep/types"
  *
@@ -23,7 +26,8 @@
 /**
  * Array utility types.
  *
- * @example
+ * **Example** (Extract tuple element type)
+ *
  * ```ts
  * import type { TArray } from "@beep/types"
  *
@@ -36,11 +40,12 @@
  * @category utilities
  * @since 0.0.0
  */
-export type * as TArray from "./TArray.types.js";
+export type * as TArray from "./TArray.types.ts";
 /**
  * String utility types.
  *
- * @example
+ * **Example** (Brand non-empty string type)
+ *
  * ```ts
  * import type { TString } from "@beep/types"
  *
@@ -53,11 +58,12 @@ export type * as TArray from "./TArray.types.js";
  * @category utilities
  * @since 0.0.0
  */
-export type * as TString from "./TString.types.js";
+export type * as TString from "./TString.types.ts";
 /**
  * Unsafe type aliases for auditable escape hatches.
  *
- * @example
+ * **Example** (Accept values as Any)
+ *
  * ```ts
  * import type { TUnsafe } from "@beep/types"
  *
@@ -68,11 +74,12 @@ export type * as TString from "./TString.types.js";
  * @category utilities
  * @since 0.0.0
  */
-export type * as TUnsafe from "./TUnsafe.types.js";
+export type * as TUnsafe from "./TUnsafe.types.ts";
 /**
  * General-purpose type utilities.
  *
- * @example
+ * **Example** (Simplify intersection object type)
+ *
  * ```ts
  * import type { TUtils } from "@beep/types"
  *
@@ -85,4 +92,4 @@ export type * as TUnsafe from "./TUnsafe.types.js";
  * @category utilities
  * @since 0.0.0
  */
-export type * as TUtils from "./TUtils.types.js";
+export type * as TUtils from "./TUtils.types.ts";

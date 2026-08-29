@@ -45,18 +45,20 @@ const Sfixed32Checks = S.makeFilterGroup(
 /**
  * Branded schema for protobuf `sfixed32` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes `sfixed32` as four fixed bytes and exposes the JavaScript
  * value as a `number`.
  *
- * @example
- * ```ts
+ * **Example** (Decode negative sfixed32 value)
+ *
+ * ```ts import.meta.vitest name="Decode negative sfixed32 value"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Sfixed32 } from "@beep/schema/Sfixed32"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Sfixed32)(-1024))
- * console.log(value) // -1024
+ * value // => -1024
  * ```
  *
  * @invariant Values are integers from -2147483648 through 2147483647.
@@ -77,8 +79,9 @@ export const Sfixed32 = S.Finite.annotate({
 /**
  * Type-level value inferred from {@link Sfixed32}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow unknown to Sfixed32)
+ *
+ * ```ts import.meta.vitest name="Narrow unknown to Sfixed32"
  * import * as S from "effect/Schema"
  * import { Sfixed32 } from "@beep/schema/Sfixed32"
  * import type { Sfixed32 as Sfixed32Value } from "@beep/schema/Sfixed32"
@@ -86,7 +89,7 @@ export const Sfixed32 = S.Finite.annotate({
  * const input: unknown = -32
  * if (S.is(Sfixed32)(input)) {
  *   const value: Sfixed32Value = input
- *   console.log(value) // -32
+ *   value // => -32
  * }
  * ```
  *

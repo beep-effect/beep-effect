@@ -11,14 +11,13 @@ import { Console, DateTime, Effect, FileSystem, MutableHashMap, Order, Path } fr
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ResearchCommandError } from "../Research.errors.js";
-import { ResearchCognifySummary } from "../Research.schemas.js";
-import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.js";
-import { catalogDbPath } from "./CatalogOps.js";
-import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.js";
-import { postResearchEpisode } from "./GraphitiEpisodes.js";
-import type { ResearchCognifyOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { ResearchCognifySummary } from "../Research.schemas.ts";
+import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.ts";
+import { catalogDbPath } from "./CatalogOps.ts";
+import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.ts";
+import type { ResearchCognifyOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/Cognify");
 
@@ -47,7 +46,8 @@ interface CognifyUpload {
 /**
  * Push pending research cards into Cognee datasets.
  *
- * @example
+ * **Example** (Cognify vault dry-run)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { cognifyImpl } from "@beep/repo-cli/commands/Research/internal/Cognify"
@@ -56,6 +56,7 @@ interface CognifyUpload {
  * const program = cognifyImpl(ResearchCognifyOptions.make({ dryRun: true, vaultRoot: "/repo/.research" }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -148,10 +149,6 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     }
   );
 
-  yield* postResearchEpisode(
-    "research cognify",
-    `Pushed ${cardsPushed} knowledge cards into Cognee datasets ${A.join(datasets, ", ")} at ${now}.`
-  );
   yield* Console.log(
     `research cognify: pushed=${cardsPushed} datasets=${A.join(datasets, ", ")} (cognify running in background).`
   );

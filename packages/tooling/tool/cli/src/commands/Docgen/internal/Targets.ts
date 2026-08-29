@@ -11,20 +11,19 @@ import { A, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, flow } from "effect";
 import { dual } from "effect/Function";
-import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.js";
-import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.js";
+import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.ts";
+import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "./Workspace.js";
+} from "./Workspace.ts";
 
 /**
  * Resolve generation targets from the optional CLI package selector.
  *
- * @param selector - Optional package selector supplied by `--package` or `--filter`.
- * @returns Configured docgen package targets, or a typed failure for missing config.
- * @example
+ * **Example** (Resolve all generate targets)
+ *
  * ```ts
  * import { resolveGenerateTargets } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import { Effect } from "effect"
@@ -33,6 +32,9 @@ import {
  * const program = resolveGenerateTargets(O.none()).pipe(Effect.map((targets) => targets.length))
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param selector - Optional package selector supplied by `--package` or `--filter`.
+ * @returns Configured docgen package targets, or a typed failure for missing config.
  * @category queries
  * @since 0.0.0
  */
@@ -57,9 +59,8 @@ export const resolveGenerateTargets = Effect.fn("Docgen.resolveGenerateTargets")
 /**
  * Resolve analysis targets from the optional CLI package selector.
  *
- * @param selector - Optional package selector supplied by `--package`.
- * @returns Package targets eligible for metadata analysis.
- * @example
+ * **Example** (Resolve all analyze targets)
+ *
  * ```ts
  * import { resolveAnalyzeTargets } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import { Effect } from "effect"
@@ -68,6 +69,9 @@ export const resolveGenerateTargets = Effect.fn("Docgen.resolveGenerateTargets")
  * const program = resolveAnalyzeTargets(O.none()).pipe(Effect.map((targets) => targets.length))
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param selector - Optional package selector supplied by `--package`.
+ * @returns Package targets eligible for metadata analysis.
  * @category queries
  * @since 0.0.0
  */
@@ -84,10 +88,8 @@ export const resolveAnalyzeTargets = Effect.fn("Docgen.resolveAnalyzeTargets")(f
 /**
  * Combine the legacy `--filter` selector with the canonical `--package` flag.
  *
- * @param packageSelector - Optional package selector.
- * @param filterSelector - Optional compatibility selector.
- * @returns The selected package option after conflict validation.
- * @example
+ * **Example** (Combine matching package selectors)
+ *
  * ```ts
  * import { resolvePackageSelector } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import { Effect } from "effect"
@@ -96,6 +98,10 @@ export const resolveAnalyzeTargets = Effect.fn("Docgen.resolveAnalyzeTargets")(f
  * const program = resolvePackageSelector(O.some("@beep/schema"), O.some("@beep/schema"))
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param packageSelector - Optional package selector.
+ * @param filterSelector - Optional compatibility selector.
+ * @returns The selected package option after conflict validation.
  * @category queries
  * @since 0.0.0
  */
@@ -115,15 +121,17 @@ export const resolvePackageSelector = Effect.fn("Docgen.resolvePackageSelector")
 /**
  * Parse the optional comma-separated `--include` flag.
  *
- * @param include - Optional raw include flag value.
- * @returns Trimmed include glob patterns in flag order.
- * @example
+ * **Example** (Parse comma-separated include flag)
+ *
  * ```ts
  * import { includePatternsFromFlag } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import * as O from "effect/Option"
  *
  * console.log(includePatternsFromFlag(O.some("src/index.ts, src/foo.ts")).length)
  * ```
+ *
+ * @param include - Optional raw include flag value.
+ * @returns Trimmed include glob patterns in flag order.
  * @category parsing
  * @since 0.0.0
  */
@@ -135,9 +143,8 @@ export const includePatternsFromFlag: (include: O.Option<string>) => ReadonlyArr
 /**
  * Decide whether a quality report should fail `docgen quality --check`.
  *
- * @param report - Quality report shape containing summary counts and package status values.
- * @returns `true` when failures, warnings, or incomplete package statuses are present.
- * @example
+ * **Example** (Detect blocking quality findings)
+ *
  * ```ts
  * import { qualityReportHasBlockingFindings } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  *
@@ -147,6 +154,9 @@ export const includePatternsFromFlag: (include: O.Option<string>) => ReadonlyArr
  * })
  * console.log(blocking) // example value
  * ```
+ *
+ * @param report - Quality report shape containing summary counts and package status values.
+ * @returns `true` when failures, warnings, or incomplete package statuses are present.
  * @category validation
  * @since 0.0.0
  */
@@ -161,9 +171,8 @@ export const qualityReportHasBlockingFindings = (report: {
 /**
  * Verify package-local docgen proof manifests for check reuse.
  *
- * @param targets - Package targets with names and absolute package paths.
- * @returns Proof-manifest verification results in target order.
- * @example
+ * **Example** (Verify empty proof targets)
+ *
  * ```ts
  * import { verifyDocgenCheckProofManifests } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import { Effect } from "effect"
@@ -171,6 +180,9 @@ export const qualityReportHasBlockingFindings = (report: {
  * const program = verifyDocgenCheckProofManifests([])
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param targets - Package targets with names and absolute package paths.
+ * @returns Proof-manifest verification results in target order.
  * @category validation
  * @since 0.0.0
  */
@@ -190,10 +202,8 @@ export const verifyDocgenCheckProofManifests = Effect.fn("Docgen.verifyDocgenChe
 /**
  * Check whether a target has a current proof-manifest verification.
  *
- * @param verifications - Manifest verification rows.
- * @param target - Package target to match by absolute package path.
- * @returns `true` when the target has a current proof manifest.
- * @example
+ * **Example** (Match current proof manifest)
+ *
  * ```ts
  * import { targetHasCurrentDocgenProofManifest } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  *
@@ -207,6 +217,10 @@ export const verifyDocgenCheckProofManifests = Effect.fn("Docgen.verifyDocgenChe
  * console.log(current) // example value
  * console.log(currentDataLast) // example value
  * ```
+ *
+ * @param verifications - Manifest verification rows.
+ * @param target - Package target to match by absolute package path.
+ * @returns `true` when the target has a current proof manifest.
  * @category validation
  * @since 0.0.0
  */
@@ -233,9 +247,8 @@ export const targetHasCurrentDocgenProofManifest: {
 /**
  * Resolve the quality report source for worker evaluation commands.
  *
- * @param options - Mutually exclusive input, package, or all-source options.
- * @returns A decoded or freshly generated quality report plus source metadata.
- * @example
+ * **Example** (Resolve all-source quality report)
+ *
  * ```ts
  * import { resolveQualityWorkerEvalSource } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import { Effect } from "effect"
@@ -249,6 +262,9 @@ export const targetHasCurrentDocgenProofManifest: {
  * })
  * console.log(Effect.isEffect(program))
  * ```
+ *
+ * @param options - Mutually exclusive input, package, or all-source options.
+ * @returns A decoded or freshly generated quality report plus source metadata.
  * @category validation
  * @since 0.0.0
  */

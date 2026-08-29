@@ -8,25 +8,26 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { StatuteComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { StatuteComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/StatuteCitation/StatuteCitation.model");
 
 /**
  * A parsed statute citation (type: `statute`).
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `statute`
  * discriminant plus statute-specific components: title, code, section, chapter,
  * subsection, structured section/subsection ranges, jurisdiction, edition
  * metadata, and the {@link StatuteComponentSpan} locating each sub-part in the
- * source text. Every own field is optional and modeled as `Option` with a
- * `None` constructor default, because statute forms vary widely (bare-section,
- * chapter-only, annotated-edition parentheticals, and so on).
+ * source text. Sparse components use `Option` because statute forms vary widely
+ * (bare-section, chapter-only, annotated-edition parentheticals, and so on);
+ * `hasEtSeq` defaults to `false`.
  *
- * **Example**
+ * **Example** (Creating a statute citation)
  *
- * @example
  * ```ts
  * import { StatuteCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -120,9 +121,7 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
         description: "Alias for subsection (string chain, unlike case pincite which is a number).",
       })
     ),
-    hasEtSeq: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    hasEtSeq: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: 'True when "et seq." follows the citation',
       })
@@ -172,7 +171,8 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
 /**
  * Companion namespace for `StatuteCitation`.
  *
- * @example
+ * **Example** (Using Encoded type alias)
+ *
  * ```ts
  * import type { StatuteCitation } from "@beep/law-practice-domain"
  *
@@ -186,9 +186,8 @@ export declare namespace StatuteCitation {
   /**
    * Wire-encoded representation of a decoded {@link StatuteCitation}.
    *
-   * **Example**
+   * **Example** (Referencing Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { StatuteCitation } from "@beep/law-practice-domain"
    *

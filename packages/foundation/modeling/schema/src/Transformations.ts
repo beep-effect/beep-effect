@@ -7,7 +7,6 @@
 
 import { Effect, SchemaGetter as Getter, SchemaIssue, Struct } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 type DestructiveTransform<Self extends S.Top, B> = S.decodeTo<
@@ -21,12 +20,15 @@ const makeDestructiveOutput = <B>(): S.Codec<Readonly<B>> => S.make<S.Codec<Read
 /**
  * Applies a lossy transform by inferring the target type from a callback result.
  *
+ * **Details**
+ *
  * This helper intentionally does not require an inverse transform. Decoding runs
  * the source schema first, then applies `transform`. Encoding passes the
  * transformed value through unchanged. Supports both data-first and data-last
  * calling conventions.
  *
- * @example
+ * **Example** (Data-first and data-last)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { pipe } from "effect"
@@ -41,8 +43,8 @@ const makeDestructiveOutput = <B>(): S.Codec<Readonly<B>> => S.make<S.Codec<Read
  * console.log(Piped)
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const destructiveTransform: {
   <Self extends S.Top, B>(transform: (input: Self["Type"]) => B): (self: Self) => DestructiveTransform<Self, B>;
@@ -55,7 +57,7 @@ export const destructiveTransform: {
       return yield* Effect.try({
         try: () => transform(decoded),
         catch: () =>
-          new SchemaIssue.InvalidValue(O.some(decoded), {
+          new SchemaIssue.InvalidValue({
             message: "Error applying transformation",
           }),
       });

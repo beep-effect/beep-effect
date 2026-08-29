@@ -18,24 +18,27 @@ import { makeDataset, serializeQuad } from "@beep/rdf/Rdf";
 import { NonNegativeInt } from "@beep/schema";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer, pipe, Semaphore } from "effect";
+import { Config, Context, Effect, FileSystem, Layer, Path, pipe, Semaphore } from "effect";
+import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import {
   buildOntologySnapshot,
   ExportOntologyProvenanceCommand,
   InferOntologySessionInput,
   OntologyFilePath,
+  OntologyFileStore,
   OntologyReasoner,
   OntologySparqlRunner,
   OntologySparqlSafeguards,
   OntologyValidationRunner,
   OpenOntologyFileCommand,
+  ReadOntologyFileRequest,
   RunOntologySparqlInput,
   RunOntologyValidationInput,
   SaveOntologyFileCommand,
   SessionUseCases,
   searchOntologyResources,
-} from "../aggregates/Session/index.js";
+} from "../aggregates/Session/index.ts";
 import {
   CapabilityMetadataResponse,
   ExportProvenanceResponse,
@@ -55,7 +58,7 @@ import {
   RepairOntologyResponse,
   SnapshotDescribeResponse,
   ValidateOntologyResponse,
-} from "./OntologyToolkit.js";
+} from "./OntologyToolkit.ts";
 import type { OntologyChangeActor, Session, SessionChangeApplication } from "@beep/ontology-domain/aggregates/Session";
 import type {
   CapabilityMetadataRequest,
@@ -68,7 +71,7 @@ import type {
   RepairOntologyRequest,
   SnapshotDescribeRequest,
   ValidateOntologyRequest,
-} from "./OntologyToolkit.js";
+} from "./OntologyToolkit.ts";
 
 const $I = $OntologyUseCasesId.create("tools/OntologyToolService");
 const fingerprintEquivalence = S.toEquivalence(OntologyFingerprint);
@@ -235,12 +238,12 @@ const applyAndSave = Effect.fn("Ontology.Tools.applyAndSave")(function* (
     .pipe(Effect.mapError(mapLayerError("save")));
   const saved = yield* openSavedOntology(request);
   const validation = yield* OntologyValidationRunner;
-  const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.prov.ttl`).pipe(
+  const provPath = yield* S.decodeEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.prov.ttl`).pipe(
     Effect.mapError(mapLayerError("provenance-journal-path"))
   );
-  const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)(
-    `${request.path}.${saved.fingerprint}.dataset.ttl`
-  ).pipe(Effect.mapError(mapLayerError("provenance-journal-path")));
+  const datasetPath = yield* S.decodeEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.dataset.ttl`).pipe(
+    Effect.mapError(mapLayerError("provenance-journal-path"))
+  );
   yield* validation
     .exportProvenance(ExportOntologyProvenanceCommand.make({ session: application.session, provPath, datasetPath }))
     .pipe(Effect.mapError(mapLayerError("provenance-journal")));
@@ -301,13 +304,17 @@ const capabilities = [
   OntologyToolCapability.make({ name: "ontology_capability_metadata", mutating: false }),
 ];
 
-/** Service shape implemented by real ontology agent tool orchestration.
- * @example
+/**
+ *  Service shape implemented by real ontology agent tool orchestration.
+ *
+ * **Example** (Accept service shape type)
+ *
  * ```ts
  * import type { OntologyToolServiceShape } from "@beep/ontology-use-cases/tools"
  * const accept = (service: OntologyToolServiceShape) => service
  * console.log(accept)
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -335,14 +342,18 @@ export interface OntologyToolServiceShape {
   readonly validate: (request: ValidateOntologyRequest) => Effect.Effect<ValidateOntologyResponse, OntologyToolFailure>;
 }
 
-/** Stateless ontology agent tool orchestration service.
- * @example
+/**
+ *  Stateless ontology agent tool orchestration service.
+ *
+ * **Example** (Yield service in Effect)
+ *
  * ```ts
  * import { OntologyToolService } from "@beep/ontology-use-cases/tools"
  * import { Effect } from "effect"
  * const program = Effect.gen(function* () { return yield* OntologyToolService })
  * console.log(Effect.isEffect(program))
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -352,14 +363,55 @@ export class OntologyToolService extends Context.Service<OntologyToolService, On
 
 const makeOntologyToolService = Effect.gen(function* () {
   const sessions = yield* SessionUseCases;
+  const fileStore = yield* OntologyFileStore;
   const sparql = yield* OntologySparqlRunner;
   const validation = yield* OntologyValidationRunner;
   const canonicalization = yield* CanonicalizationService;
   const reasoner = yield* OntologyReasoner;
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const workspaceRoot = yield* Config.nonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
+  const canonicalWorkspaceRoot = yield* fileSystem.realPath(workspaceRoot);
   // The desktop sidecar is the sole v1 write authority for files exposed via
   // /mcp. This semaphore closes compare/apply/write TOCTOU inside that process;
   // deliberately no cross-process lock or stateful session repository exists.
   const mutationSemaphore = yield* Semaphore.make(1);
+  const ensureProvenanceDestinationsAvailable = Effect.fn("Ontology.Tools.ensureProvenanceDestinationsAvailable")(
+    function* (request: ExportProvenanceRequest) {
+      const sourcePath = path.resolve(canonicalWorkspaceRoot, path.normalize(request.path));
+      const provPath = path.resolve(canonicalWorkspaceRoot, path.normalize(request.provPath));
+      const datasetPath = path.resolve(canonicalWorkspaceRoot, path.normalize(request.datasetPath));
+      if (Eq.equals(sourcePath, provPath) || Eq.equals(sourcePath, datasetPath) || Eq.equals(provPath, datasetPath)) {
+        return yield* executionError(
+          "export-provenance",
+          "Provenance output paths must be distinct from the source ontology and from each other.",
+          true
+        );
+      }
+
+      yield* Effect.forEach(
+        [request.provPath, request.datasetPath],
+        (path) =>
+          fileStore.read(ReadOntologyFileRequest.make({ path })).pipe(
+            Effect.matchEffect({
+              onFailure: (error) =>
+                error.reason === "notFound"
+                  ? Effect.void
+                  : Effect.fail(executionError("export-provenance", error.message, true)),
+              onSuccess: () =>
+                Effect.fail(
+                  executionError(
+                    "export-provenance",
+                    `Refusing to overwrite existing provenance output: ${path}.`,
+                    true
+                  )
+                ),
+            })
+          ),
+        { discard: true }
+      );
+    }
+  );
   const provideDependencies = <A2, E>(
     effect: Effect.Effect<
       A2,
@@ -527,6 +579,7 @@ const makeOntologyToolService = Effect.gen(function* () {
           Effect.gen(function* () {
             const opened = yield* openSavedOntology(request);
             yield* ensureCas(request.expectedFingerprint, opened.fingerprint);
+            yield* ensureProvenanceDestinationsAvailable(request);
             const result = yield* validation
               .exportProvenance(
                 ExportOntologyProvenanceCommand.make({
@@ -548,12 +601,16 @@ const makeOntologyToolService = Effect.gen(function* () {
   });
 }).pipe(Effect.withSpan("Ontology.Tools.makeService"));
 
-/** Live ontology tool orchestration layer over real ontology service ports.
- * @example
+/**
+ *  Live ontology tool orchestration layer over real ontology service ports.
+ *
+ * **Example** (Inspect live layer export)
+ *
  * ```ts
  * import { OntologyToolServiceLive } from "@beep/ontology-use-cases/tools"
  * console.log(OntologyToolServiceLive)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

@@ -181,18 +181,18 @@ docs lane did not find or rely on an existing OriginTrail assessment artifact.
 # References
 
 [R1] Local fallback copy of OriginTrail docs index:
-`/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect5/ea57f70e-159a-4fc2-9828-26514d3e7422/scratchpad/llms/origintrail-llms.txt`
+a machine-local session scratch copy (not preserved)
 for original URL `https://docs.origintrail.io/llms.txt`. I read this local file
 because outbound DNS resolution for `docs.origintrail.io` failed.
 
 [R2] Repo doctrine:
-`/home/elpresidank/YeeBois/projects/beep-effect5/standards/memory-architecture/README.md`.
+`<beep-effect-repo>/standards/memory-architecture/README.md`.
 
 [R3] Repo memory taxonomy:
-`/home/elpresidank/YeeBois/projects/beep-effect5/standards/memory-architecture/01-memory-layer-taxonomy.md`.
+`<beep-effect-repo>/standards/memory-architecture/01-memory-layer-taxonomy.md`.
 
 [R4] Product authority:
-`/home/elpresidank/YeeBois/projects/beep-effect5/goals/agentic-professional-runtime/README.md`.
+`<beep-effect-repo>/goals/agentic-professional-runtime/README.md`.
 
 Unfollowed OriginTrail links due to unavailable network/DNS. These are listed as
 gaps, not cited as page evidence:

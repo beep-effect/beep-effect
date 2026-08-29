@@ -16,7 +16,8 @@ declare module "@mui/material/Chip" {
 /**
  * Chip theme theme value.
  *
- * @example
+ * **Example** (Import chip theme)
+ *
  * ```ts
  * import { chipTheme } from "@beep/ui/themes/components/chip"
  *

@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/documents-domain`.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/documents-domain"
  *
@@ -27,39 +28,32 @@ export const VERSION = "0.0.0" as const;
  * @category aggregates
  * @since 0.0.0
  */
-export * from "./aggregates/Document/index.js";
+export * from "./aggregates/Document/index.ts";
 /**
  * IntakeBatch aggregate exports.
  *
  * @category aggregates
  * @since 0.0.0
  */
-export * from "./aggregates/IntakeBatch/index.js";
+export * from "./aggregates/IntakeBatch/index.ts";
 /**
  * Aggregate namespace exports.
  *
  * @category aggregates
  * @since 0.0.0
  */
-export * as Aggregates from "./aggregates/index.js";
+export * as Aggregates from "./aggregates/index.ts";
 /**
  * Entity namespace exports.
  *
  * @category entities
  * @since 0.0.0
  */
-export * as Entities from "./entities/index.js";
-/**
- * Identity namespace exports.
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export * as Identity from "./identity/index.js";
+export * as Entities from "./entities/index.ts";
 /**
  * Value-object namespace exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * as Values from "./values/index.js";
+export * as Values from "./values/index.ts";

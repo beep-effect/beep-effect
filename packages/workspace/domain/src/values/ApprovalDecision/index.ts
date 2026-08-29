@@ -8,7 +8,8 @@
 /**
  * Module exports.
  *
- * @example
+ * **Example** (Import ApprovalDecision module)
+ *
  * ```ts
  * import * as Module from "@beep/workspace-domain/values/ApprovalDecision"
  *
@@ -18,4 +19,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ApprovalDecision.model.js";
+export * from "./ApprovalDecision.model.ts";

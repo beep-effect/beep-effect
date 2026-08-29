@@ -20,6 +20,7 @@ import {
   SyncOperationRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { extractPostgresDiagnostics, PostgresDrizzle, PostgresErrorCodeByName } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
@@ -27,7 +28,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -37,7 +38,7 @@ const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperatio
 /**
  * Build a full SyncOperation entity from an enqueue seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -46,7 +47,7 @@ const syncOperationFromSeed = (id: number, seed: SyncOperationSeed): DomainSyncO
     attemptCount: seed.attemptCount,
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncOperation.SyncOperationId.entityType,
+    entityType: DocumentsIdentity.SyncOperationId.entityType,
     id,
     idempotencyKey: seed.idempotencyKey,
     inputContentDigest: O.getOrNull(seed.inputContentDigest),
@@ -86,9 +87,12 @@ const duplicateIdempotencyKeyConflict = (idempotencyKey: string): SyncOperationR
 /**
  * Build the in-memory SyncOperation repository used by deterministic sync tests.
  *
+ * **Details**
+ *
  * Queued listings are FIFO: ascending entity id equals enqueue order.
  *
- * @example
+ * **Example** (In-memory repository factory)
+ *
  * ```ts
  * import { makeInMemorySyncOperationRepository } from "@beep/documents-server/entities/SyncOperation"
  *
@@ -98,14 +102,13 @@ const duplicateIdempotencyKeyConflict = (idempotencyKey: string): SyncOperationR
  * @effects Allocates an in-memory `Ref` store plus an id counter and mutates
  * that process-local state for enqueue, update, requeue, and list repository
  * calls.
- *
  * @category repositories
  * @since 0.0.0
  */
 export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOperationRepository.makeInMemory")(
   function* () {
     const { counter, snapshot, store } = yield* makeEntityStore(
-      HashMap.empty<DomainSyncOperation.SyncOperationId, DomainSyncOperation.SyncOperation>()
+      HashMap.empty<DocumentsIdentity.SyncOperationId, DomainSyncOperation.SyncOperation>()
     );
 
     return SyncOperationRepository.of({
@@ -234,11 +237,14 @@ const translateEnqueueFailure =
 /**
  * Build a Drizzle-backed SyncOperation repository used by live persistence tests.
  *
+ * **Details**
+ *
  * Duplicate idempotency keys are rejected by the table's unique index; the
  * driver failure is detected and translated to
  * `SyncOperationRepositoryConflict`.
  *
- * @example
+ * **Example** (Drizzle repository factory)
+ *
  * ```ts
  * import { makeDrizzleSyncOperationRepository } from "@beep/documents-server/entities/SyncOperation"
  *
@@ -248,7 +254,6 @@ const translateEnqueueFailure =
  * @effects Requires `PostgresDrizzle`; executes `select`, `insert`, and
  * `update` statements against the SyncOperation table and redacts driver
  * failures to `SyncOperationRepositoryUnavailable`.
- *
  * @category repositories
  * @since 0.0.0
  */

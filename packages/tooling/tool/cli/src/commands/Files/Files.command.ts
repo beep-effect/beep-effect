@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
-import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
 import {
   ArchivePoorCandidatesOptions,
@@ -14,24 +14,30 @@ import {
   CropBordersOptions,
   DetectBordersOptions,
   DetectFacesOptions,
+  FlattenMediaOptions,
+  ImageAuditOptions,
+  ImageCurationOptions,
   NormalizeFilesOptions,
   ProcessFilesOptions,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 import {
   archivePoorCandidates,
+  auditImages,
   createCaptionFiles,
   cropBordersFiles,
+  curateImages,
   detectBordersFiles,
   detectFacesFiles,
   FilesCommandServiceLive,
+  flattenMediaFiles,
   normalizeFiles,
   printFilesIndex,
   processFiles,
   sortAndRenameFiles,
   stripMetadataFiles,
-} from "./Files.service.js";
-import type { FilesCommandError } from "./Files.errors.js";
-import type { FilesCommandService } from "./Files.service.js";
+} from "./Files.service.ts";
+import type { FilesCommandError } from "./Files.errors.ts";
+import type { FilesCommandService } from "./Files.service.ts";
 
 const runFilesProgram = <A>(
   effect: Effect.Effect<A, FilesCommandError, FilesCommandService>
@@ -39,6 +45,9 @@ const runFilesProgram = <A>(
 
 const sortDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct regular files should be sorted and renamed")
+);
+const flattenMediaDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Directory recursively searched for image and video files to move")
 );
 const stripDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image and video files should have metadata stripped")
@@ -64,11 +73,36 @@ const cropBordersDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
 const archiveCandidatesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be assessed for poor-candidate archival")
 );
+const auditImagesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Directory whose direct image files should be audited without mutation")
+);
+const auditImagesModelFlag = Flag.file("model", { mustExist: true }).pipe(
+  Flag.withDescription("Pinned YuNet-compatible ONNX face detection model")
+);
+const auditImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+  Flag.withDescription("Path to the image audit manifest")
+);
+const curateImagesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Immutable source directory containing direct image files")
+);
+const curateImagesDecisionsFlag = Flag.file("decisions", { mustExist: true }).pipe(
+  Flag.withDescription("Complete hash-pinned image curation decision ledger")
+);
+const curateImagesOutDirFlag = Flag.directory("out-dir").pipe(
+  Flag.withDescription("Output root for canonical, holdout, reserve, archive, and manifest derivatives")
+);
+const curateImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+  Flag.withDescription("Curation manifest output path; defaults to --out-dir/manifests/image-curation-manifest.json"),
+  Flag.optional
+);
 const archiveDirFlag = Flag.directory("archive-dir").pipe(
   Flag.withDescription("Directory that receives archived poor image candidates")
 );
 const normalizeOutDirFlag = Flag.directory("out-dir").pipe(
   Flag.withDescription("Output directory for normalized image files")
+);
+const flattenMediaOutDirFlag = Flag.directory("out-dir").pipe(
+  Flag.withDescription("Flat output directory for moved image and video files")
 );
 const processInputFlag = Flag.path("input", { mustExist: true, pathType: "either" }).pipe(
   Flag.withDescription("File or directory to process into a V1 proof manifest")
@@ -120,30 +154,53 @@ const prefixFlag = Flag.string("prefix").pipe(
   Flag.withDescription("Generated filename prefix without dots, path separators, or embedded NUL bytes")
 );
 const sortDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned renames without touching files")
 );
+const flattenMediaDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the planned moves without touching files")
+);
 const stripDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned metadata rewrites without touching files")
 );
 const normalizeDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned normalizations without writing files")
 );
 const createCaptionsDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned caption sidecars without writing files")
 );
 const archiveDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned poor-candidate archival without moving files")
+);
+const curateImagesDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Validate and print every disposition without writing derivatives")
+);
+const auditImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Overwrite an existing regular-file image audit manifest")
+);
+const curateImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Overwrite existing regular-file curation outputs and manifest")
 );
 const captionTextFlag = Flag.string("caption").pipe(
   Flag.withDefault(""),
   Flag.withDescription("Caption text to write to newly created sidecar files")
 );
 const normalizeDedupeFlag = Flag.boolean("dedupe").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Skip later files whose normalized bytes exactly duplicate an earlier normalized output; implied by --move-duplicates-to"
   )
 );
 const processExportChildrenFlag = Flag.boolean("export-children").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Export child artifacts from archive-like sources such as PST")
 );
 const normalizeMoveDuplicatesToFlag = Flag.directory("move-duplicates-to").pipe(
@@ -151,21 +208,43 @@ const normalizeMoveDuplicatesToFlag = Flag.directory("move-duplicates-to").pipe(
   Flag.optional
 );
 const cropBordersDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print detected border crops without rewriting files")
 );
 const overwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing normalized outputs, duplicate move targets, and manifest")
 );
 const archiveOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing archived files, sidecars, and manifest")
 );
 const processOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing files process output directory")
 );
+const processTikaJarFlag = Flag.file("tika-jar", { mustExist: true }).pipe(
+  Flag.withDescription("Apache tika-app jar; selects the Tika App engine for non-PST extraction"),
+  Flag.optional
+);
+const processJavaFlag = Flag.string("java").pipe(
+  Flag.withDescription("java binary used to run the tika-app jar"),
+  Flag.optional
+);
+const processTikaUrlFlag = Flag.string("tika-url").pipe(
+  Flag.withDescription("Tika Server base URL; defaults to the BEEP_TIKA_* environment configuration"),
+  Flag.optional
+);
+const processPffexportFlag = Flag.string("pffexport").pipe(
+  Flag.withDescription("pffexport binary used for PST archive export"),
+  Flag.optional
+);
 const createCaptionsOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing caption sidecar files")
 );
 const withDimensionsFlag = Flag.boolean("with-dimensions").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Include probed image or video dimensions in generated media filenames")
 );
 const candidateProfileFlag = Flag.choiceWithValue("profile", [["character-lora", "character-lora"]]).pipe(
@@ -192,7 +271,10 @@ const sidecarsFlag = Flag.string("sidecars").pipe(
   Flag.withDefault("txt"),
   Flag.withDescription("Same-stem sidecars to move with archived images: none or a comma-separated extension list")
 );
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Emit a machine-readable JSON report"));
+const jsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Emit a machine-readable JSON report")
+);
 const borderToleranceFlag = Flag.float("tolerance").pipe(
   Flag.withDefault(12),
   Flag.withDescription("Maximum RGB channel distance for near-solid border pixels")
@@ -220,6 +302,33 @@ const minFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
 const faceEdgeMarginPctFlag = Flag.float("edge-margin-pct").pipe(
   Flag.withDefault(2),
   Flag.withDescription("Flag detected faces whose primary face box is within this percent of an image edge")
+);
+
+const filesAuditImagesCommand = Command.make(
+  "audit-images",
+  {
+    dir: auditImagesDirFlag,
+    manifest: auditImagesManifestFlag,
+    minConfidence: minFaceConfidenceFlag,
+    modelPath: auditImagesModelFlag,
+    overwrite: auditImagesOverwriteFlag,
+  },
+  Effect.fn(function* ({ dir, manifest, minConfidence, modelPath, overwrite }) {
+    yield* runFilesProgram(
+      auditImages(
+        ImageAuditOptions.make({
+          dir,
+          manifest,
+          minConfidence,
+          modelPath,
+          overwrite,
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Audit image hashes, geometry, metadata presence, faces, and advisory quality"),
+  Command.provide(FilesCommandServiceLive)
 );
 
 const filesCreateCaptionsCommand = Command.make(
@@ -356,6 +465,35 @@ const filesCropBordersCommand = Command.make(
   Command.provide(FilesCommandServiceLive)
 );
 
+const filesCurateImagesCommand = Command.make(
+  "curate-images",
+  {
+    decisionsPath: curateImagesDecisionsFlag,
+    dir: curateImagesDirFlag,
+    dryRun: curateImagesDryRunFlag,
+    manifest: curateImagesManifestFlag,
+    outDir: curateImagesOutDirFlag,
+    overwrite: curateImagesOverwriteFlag,
+  },
+  Effect.fn(function* ({ decisionsPath, dir, dryRun, manifest, outDir, overwrite }) {
+    yield* runFilesProgram(
+      curateImages(
+        ImageCurationOptions.make({
+          decisionsPath,
+          dir,
+          dryRun,
+          manifest,
+          outDir,
+          overwrite,
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Materialize hash-pinned image decisions as metadata-free canonical PNG derivatives"),
+  Command.provide(FilesCommandServiceLive)
+);
+
 const filesDetectFacesCommand = Command.make(
   "detect-faces",
   {
@@ -433,11 +571,27 @@ const filesProcessCommand = Command.make(
     exportChildren: processExportChildrenFlag,
     failurePolicy: processFailurePolicyFlag,
     input: processInputFlag,
+    java: processJavaFlag,
     maxMaterializedBytes: maxMaterializedBytesFlag,
     outDir: processOutDirFlag,
     overwrite: processOverwriteFlag,
+    pffexport: processPffexportFlag,
+    tikaJar: processTikaJarFlag,
+    tikaUrl: processTikaUrlFlag,
   },
-  Effect.fn(function* ({ engine, exportChildren, failurePolicy, input, maxMaterializedBytes, outDir, overwrite }) {
+  Effect.fn(function* ({
+    engine,
+    exportChildren,
+    failurePolicy,
+    input,
+    java,
+    maxMaterializedBytes,
+    outDir,
+    overwrite,
+    pffexport,
+    tikaJar,
+    tikaUrl,
+  }) {
     yield* runFilesProgram(
       processFiles(
         ProcessFilesOptions.make({
@@ -448,12 +602,20 @@ const filesProcessCommand = Command.make(
           outDir,
           overwrite,
           ...(O.isNone(maxMaterializedBytes) ? {} : { maxMaterializedBytes: maxMaterializedBytes.value }),
+          ...O.getSomesStruct({
+            javaPath: java,
+            pffexportPath: pffexport,
+            tikaJarPath: tikaJar,
+            tikaUrl,
+          }),
         })
       )
     );
   })
 ).pipe(
-  Command.withDescription("Process files into the V1 file-processing proof manifest tree"),
+  Command.withDescription(
+    "Process files into the V1 file-processing proof manifest tree; point --input at generated fixtures or an operator-local corpus (coverage.json is the coverage profile)"
+  ),
   Command.provide(FilesCommandServiceLive)
 );
 
@@ -470,6 +632,21 @@ const filesSortAndRenameCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Sort direct files by size and rename them with a generated prefix"),
+  Command.provide(FilesCommandServiceLive)
+);
+
+const filesFlattenMediaCommand = Command.make(
+  "flatten-media",
+  {
+    dir: flattenMediaDirFlag,
+    dryRun: flattenMediaDryRunFlag,
+    outDir: flattenMediaOutDirFlag,
+  },
+  Effect.fn(function* ({ dir, dryRun, outDir }) {
+    yield* runFilesProgram(flattenMediaFiles(FlattenMediaOptions.make({ dir, dryRun, outDir })));
+  })
+).pipe(
+  Command.withDescription("Recursively move image and video files into a flat directory"),
   Command.provide(FilesCommandServiceLive)
 );
 
@@ -490,7 +667,8 @@ const filesStripMetadataCommand = Command.make(
 /**
  * File curation command group.
  *
- * @example
+ * **Example** (Run files command group)
+ *
  * ```ts
  * import { filesCommand } from "@beep/repo-cli/commands/Files"
  * import { Command } from "effect/unstable/cli"
@@ -499,17 +677,21 @@ const filesStripMetadataCommand = Command.make(
  * const run = Command.run(filesCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
 export const filesCommand = Command.make("files", {}, () => printFilesIndex).pipe(
   Command.withDescription("Dataset file curation commands"),
   Command.withSubcommands([
+    filesAuditImagesCommand,
     filesArchivePoorCandidatesCommand,
     filesCreateCaptionsCommand,
     filesCropBordersCommand,
+    filesCurateImagesCommand,
     filesDetectBordersCommand,
     filesDetectFacesCommand,
+    filesFlattenMediaCommand,
     filesNormalizeCommand,
     filesProcessCommand,
     filesSortAndRenameCommand,

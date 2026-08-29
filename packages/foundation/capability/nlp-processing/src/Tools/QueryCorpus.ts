@@ -63,11 +63,14 @@ class QueryCorpusSuccess extends S.Class<QueryCorpusSuccess>($I`QueryCorpusSucce
  * Defines the agent-facing tool contract for querying a learned corpus session
  * without relearning its documents.
  *
+ * **Details**
+ *
  * Use this tool after `LearnCorpus` when the caller needs vector-ranked corpus
  * results, optionally including each matched document's source text.
  *
- * @example
- * ```ts
+ * **Example** (Decode QueryCorpus parameters)
+ *
+ * ```ts import.meta.vitest name="Decode QueryCorpus parameters"
  * import * as S from "effect/Schema"
  * import { QueryCorpus } from "@beep/nlp-processing/Tools/QueryCorpus"
  *

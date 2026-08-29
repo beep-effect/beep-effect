@@ -12,11 +12,12 @@ import { Config, Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Argument, Command } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.js";
-import { CiCommandError } from "./Ci.errors.js";
-import { ciLaneCommand, ciLocalCommand } from "./CiLane.js";
+import { Argument, Command, Flag } from "effect/unstable/cli";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
+import { CiCommandError } from "./Ci.errors.ts";
+import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
+import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.command");
 
@@ -152,21 +153,22 @@ const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
     .pipe(CiCommandError.mapError(`Failed to append Turbo summary to ${summaryPath}.`));
 });
 
-const resolveSummaryPath = Effect.fn("Ci.resolveSummaryPath")(function* (
+const resolveSummaryPaths = Effect.fn("Ci.resolveSummaryPaths")(function* (
   repoRoot: string,
-  explicitPath: O.Option<string>
-): Effect.fn.Return<O.Option<string>, CiCommandError, FileSystem.FileSystem | Path.Path> {
+  explicitPath: O.Option<string>,
+  includeAll: boolean
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
   if (O.isSome(explicitPath)) {
-    return O.some(path.resolve(repoRoot, explicitPath.value));
+    return [path.resolve(repoRoot, explicitPath.value)];
   }
 
   const runDirectory = path.join(repoRoot, ".turbo", "runs");
   const exists = yield* fs.exists(runDirectory).pipe(Effect.orElseSucceed(thunkFalse));
   if (!exists) {
-    return O.none<string>();
+    return A.empty<string>();
   }
 
   const entries = yield* fs
@@ -189,12 +191,12 @@ const resolveSummaryPath = Effect.fn("Ci.resolveSummaryPath")(function* (
     { concurrency: 4 }
   ).pipe(Effect.map(A.getSomes));
 
-  return pipe(
+  const sortedPaths = pipe(
     candidates,
     A.sort(Order.mapInput(Order.Number, (candidate: SummaryCandidate) => -candidate.mtimeMillis)),
-    A.head,
-    O.map((candidate) => candidate.path)
+    A.map((candidate) => candidate.path)
   );
+  return includeAll ? A.reverse(sortedPaths) : A.take(sortedPaths, 1);
 });
 
 const renderTurboSummary = (repoRoot: string, summaryPath: string, run: TurboSummary, path: Path.Path): string => {
@@ -245,10 +247,8 @@ const renderTurboSummary = (repoRoot: string, summaryPath: string, run: TurboSum
 /**
  * Append the latest Turbo run summary to GitHub step summary or stdout.
  *
- * @param explicitPath - Optional explicit Turbo summary path.
- * @returns Effect that renders the summary.
- * @effects Locates the repository root, reads Turbo summary JSON, reads `GITHUB_STEP_SUMMARY`, then appends Markdown to that file or logs it to stdout.
- * @example
+ * **Example** (Append Turbo summary program)
+ *
  * ```ts
  * import { appendTurboSummary } from "@beep/repo-cli/commands/Ci"
  * import { NodeServices } from "@effect/platform-node"
@@ -258,45 +258,64 @@ const renderTurboSummary = (repoRoot: string, summaryPath: string, run: TurboSum
  * const program = appendTurboSummary(O.some(".turbo/runs/latest.json")).pipe(Effect.provide(NodeServices.layer))
  * Effect.runPromise(program).then(() => console.log("summary appended"))
  * ```
+ *
+ * @param explicitPath - Optional explicit Turbo summary path.
+ * @param includeAll - Whether to append every summary in `.turbo/runs` instead of only the newest.
+ * @returns Effect that renders the summary.
+ * @effects Locates the repository root, reads Turbo summary JSON, reads `GITHUB_STEP_SUMMARY`, then appends Markdown to that file or logs it to stdout.
  * @category use-cases
  * @since 0.0.0
  */
 export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
-  explicitPath: O.Option<string>
+  explicitPath: O.Option<string>,
+  includeAll = false
 ): Effect.fn.Return<void, CiCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
-  const summaryPath = yield* resolveSummaryPath(repoRoot, explicitPath);
+  const summaryPaths = yield* resolveSummaryPaths(repoRoot, explicitPath, includeAll);
 
-  if (O.isNone(summaryPath)) {
+  if (A.isReadonlyArrayEmpty(summaryPaths)) {
     yield* logTurboSummary("No run summary file found.");
     return;
   }
 
-  const exists = yield* fs.exists(summaryPath.value).pipe(Effect.orElseSucceed(thunkFalse));
-  if (!exists) {
+  const rendered = yield* Effect.forEach(
+    summaryPaths,
+    Effect.fnUntraced(function* (summaryPath) {
+      const exists = yield* fs.exists(summaryPath).pipe(Effect.orElseSucceed(thunkFalse));
+      if (!exists) {
+        return O.none<string>();
+      }
+
+      const content = yield* fs
+        .readFileString(summaryPath)
+        .pipe(CiCommandError.mapError(`Failed to read ${summaryPath}.`));
+      const run = yield* decodeTurboSummary(content).pipe(CiCommandError.mapError(`Failed to parse ${summaryPath}.`));
+      return O.some(renderTurboSummary(repoRoot, summaryPath, run, path));
+    })
+  ).pipe(Effect.map(A.getSomes));
+
+  if (A.isReadonlyArrayEmpty(rendered)) {
     yield* logTurboSummary("No run summary file found.");
     return;
   }
 
-  const content = yield* fs
-    .readFileString(summaryPath.value)
-    .pipe(CiCommandError.mapError(`Failed to read ${summaryPath.value}.`));
-  const run = yield* decodeTurboSummary(content).pipe(CiCommandError.mapError(`Failed to parse ${summaryPath.value}.`));
-
-  yield* appendToSummary(renderTurboSummary(repoRoot, summaryPath.value, run, path));
+  yield* appendToSummary(A.join(rendered, "\n"));
 });
 
 const appendTurboSummaryCommand = Command.make(
   "append-turbo-summary",
   {
+    all: Flag.boolean("all").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Append every Turbo run summary from the current job")
+    ),
     summaryPath: Argument.string("summary-path").pipe(Argument.optional),
   },
-  ({ summaryPath }) =>
+  ({ all, summaryPath }) =>
     pipe(
-      summaryPath,
-      appendTurboSummary,
+      appendTurboSummary(summaryPath, all),
       Effect.catchTag("CiCommandError", (error) =>
         Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)))
       )
@@ -306,13 +325,15 @@ const appendTurboSummaryCommand = Command.make(
 /**
  * CI helper command group.
  *
- * @example
+ * **Example** (Register CI command group)
+ *
  * ```ts
  * import { ciCommand } from "@beep/repo-cli/commands/Ci"
  *
  * const commandGroups = { ci: ciCommand }
  * console.log(Object.keys(commandGroups)) // ["ci"]
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -321,9 +342,10 @@ export const ciCommand = Command.make("ci", {}, () =>
     "CI commands:",
     "- bun run beep ci append-turbo-summary",
     "- bun run beep ci lane <id> [flags] (or --list)",
+    "- bun run beep ci lane-timings [--runs n] [--tsv]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
   ])
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
-  Command.withSubcommands([appendTurboSummaryCommand, ciLaneCommand, ciLocalCommand])
+  Command.withSubcommands([appendTurboSummaryCommand, ciLaneCommand, ciLaneTimingsCommand, ciLocalCommand])
 );

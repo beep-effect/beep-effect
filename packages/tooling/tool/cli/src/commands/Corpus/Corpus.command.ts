@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
-import { CorpusCommandError } from "./Corpus.errors.js";
+import { CorpusCommandError } from "./Corpus.errors.ts";
 import {
   CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
@@ -19,7 +19,7 @@ import {
   CorpusOrganizeOptions,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
-} from "./Corpus.schemas.js";
+} from "./Corpus.schemas.ts";
 import {
   archiveMoveCorpus,
   CorpusCommandServiceLive,
@@ -30,7 +30,7 @@ import {
   printCorpusIndex,
   salvageCorpus,
   verifySalvage,
-} from "./Corpus.service.js";
+} from "./Corpus.service.ts";
 
 /** @since 0.0.0 */
 const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(
@@ -54,10 +54,12 @@ const javaFlag = Flag.string("java").pipe(
 );
 /** @since 0.0.0 */
 const exportChildrenFlag = Flag.boolean("export-children").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Export per-message child artifacts and attachments from PST archives")
 );
 /** @since 0.0.0 */
 const includeDuplicatesFlag = Flag.boolean("include-duplicates").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Process every manifest record instead of one representative per content digest")
 );
 /** @since 0.0.0 */
@@ -84,6 +86,7 @@ const maxFilesFlag = Flag.integer("max-files").pipe(
 );
 /** @since 0.0.0 */
 const extractOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Replace an existing staging/extract output tree")
 );
 /** @since 0.0.0 */
@@ -98,6 +101,7 @@ const salvageRunLabelFlag = Flag.string("run-label").pipe(
 );
 /** @since 0.0.0 */
 const salvageDedupeFlag = Flag.boolean("dedupe").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Hash each origin before copy and write provenance-only rows for already-known digests")
 );
 /** @since 0.0.0 */
@@ -208,6 +212,7 @@ const clientMapFlag = Flag.file("client-map", { mustExist: true }).pipe(
   Flag.optional
 );
 const organizeOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Rebuild a non-empty organized/ tree")
 );
 
@@ -312,13 +317,15 @@ const corpusArchiveMoveCommand = Command.make(
 /**
  * Corpus curation command group.
  *
- * @example
+ * **Example** (Register corpus command group)
+ *
  * ```ts
  * import { corpusCommand } from "@beep/repo-cli/commands/Corpus"
  *
  * const commandGroups = { corpus: corpusCommand }
  * console.log(Object.keys(commandGroups)) // ["corpus"]
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

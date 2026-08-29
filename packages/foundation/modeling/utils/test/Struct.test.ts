@@ -330,6 +330,14 @@ describe("@beep/utils Struct.fromEntries", () => {
     expect(result).toEqual({ a: 1, b: "hello" });
   });
 
+  it("preserves a literal union in the key slot of homogeneous entries", () => {
+    const keys = ["alpha", "beta"] as const;
+    const result = Struct.fromEntries(keys.map((key) => [key, 1] as const));
+
+    expectTypeOf(result).toEqualTypeOf<{ alpha: 1; beta: 1 }>();
+    expect(result).toEqual({ alpha: 1, beta: 1 });
+  });
+
   it("roundtrips with entries", () => {
     const source = { x: 10, y: 20 };
     const result = Struct.fromEntries(Struct.entries(source));

@@ -23,12 +23,36 @@ import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type { DocTextError } from "./DocText.errors.ts";
 
 /**
+ * Version of the canonical text emitted by the JS-native document extractor.
+ *
+ * **Details**
+ *
+ * Increment this value when PDF or DOCX extraction semantics change in a way
+ * that can alter the canonical text or its UTF-16 offsets.
+ *
+ * **Example** (Log engine version constant)
+ *
+ * ```ts
+ * import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text"
+ *
+ * console.log(DOC_TEXT_ENGINE_VERSION) // "1"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DOC_TEXT_ENGINE_VERSION = "1";
+
+/**
  * JS-native document text file-processing engine descriptor.
+ *
+ * **Details**
  *
  * The capability contract currently groups text engines under the `tika`
  * engine family; the concrete `doc-text-js` name distinguishes this runtime.
  *
- * @example
+ * **Example** (Log supported formats list)
+ *
  * ```ts
  * import { DocTextFileProcessingEngineDescriptor } from "@beep/doc-text"
  *
@@ -43,6 +67,7 @@ export const DocTextFileProcessingEngineDescriptor = FileProcessingEngineDescrip
   engine: "tika",
   name: "doc-text-js",
   supportedFormats: ["pdf-text-layer", "docx"],
+  version: DOC_TEXT_ENGINE_VERSION,
 });
 
 const operationFailure = (operation: ExtractFileOperation, error: DocTextError): FileProcessingOperationError =>
@@ -66,6 +91,15 @@ const operationFailure = (operation: ExtractFileOperation, error: DocTextError):
         operationId: operation.operationId,
       })
     ),
+    Match.when("input-limit", () =>
+      FileProcessingOperationError.fromReason("output-limit-exceeded", {
+        artifactId: operation.source.id,
+        engine: DocTextFileProcessingEngineDescriptor.name,
+        format: operation.format,
+        message: "Document source exceeds the configured materialization limit.",
+        operationId: operation.operationId,
+      })
+    ),
     Match.orElse(() =>
       FileProcessingOperationError.fromReason("file-extraction-failed", {
         artifactId: operation.source.id,
@@ -81,7 +115,10 @@ const sourceBytes = (operation: ExtractFileOperation): Effect.Effect<Uint8Array,
   O.fromUndefinedOr(operation.source.bytes).pipe(
     O.match({
       onNone: () => Effect.fail(makeDocTextError("source-bytes-unavailable")),
-      onSome: Effect.succeed,
+      onSome: (bytes) =>
+        O.fromUndefinedOr(operation.maxMaterializedBytes).pipe(O.exists((limit) => bytes.byteLength > limit))
+          ? Effect.fail(makeDocTextError("input-limit"))
+          : Effect.succeed(bytes),
     })
   );
 
@@ -91,8 +128,13 @@ const extractPdf = Effect.fn("DocTextFileProcessingEngine.extractPdf")(function*
   const bytes = yield* sourceBytes(operation);
   const result = yield* Effect.tryPromise({
     // pdfjs transfers the input buffer to its parser, detaching the caller's
-    // view; hand it a copy so the operation's source bytes stay intact.
-    try: () => getDocumentProxy(new Uint8Array(bytes)).then((proxy) => extractText(proxy, { mergePages: true })),
+    // view; hand it a copy so the operation's source bytes stay intact. Keep
+    // recoverable parser warnings inside this driver boundary; extraction
+    // failures are returned through the typed operation error below.
+    try: () =>
+      getDocumentProxy(new Uint8Array(bytes), { verbosity: 0 }).then((proxy) =>
+        extractText(proxy, { mergePages: true })
+      ),
     catch: () => makeDocTextError("extraction"),
   });
 
@@ -102,6 +144,7 @@ const extractPdf = Effect.fn("DocTextFileProcessingEngine.extractPdf")(function*
 
   return ExtractionResult.make({
     engine: DocTextFileProcessingEngineDescriptor.name,
+    engineVersion: DOC_TEXT_ENGINE_VERSION,
     format: operation.format,
     metadata: { "pdf.totalPages": `${result.totalPages}` },
     operationId: operation.operationId,
@@ -122,6 +165,7 @@ const extractDocx = Effect.fn("DocTextFileProcessingEngine.extractDocx")(functio
 
   return ExtractionResult.make({
     engine: DocTextFileProcessingEngineDescriptor.name,
+    engineVersion: DOC_TEXT_ENGINE_VERSION,
     format: operation.format,
     metadata: {},
     operationId: operation.operationId,
@@ -134,7 +178,8 @@ const extractDocx = Effect.fn("DocTextFileProcessingEngine.extractDocx")(functio
 /**
  * Create the JS-native PDF and DOCX text extraction engine.
  *
- * @example
+ * **Example** (Create engine and log name)
+ *
  * ```ts
  * import { makeDocTextFileProcessingEngine } from "@beep/doc-text"
  *
@@ -196,7 +241,8 @@ export const makeDocTextFileProcessingEngine = (): FileProcessingEngineShape => 
 /**
  * JS-native PDF and DOCX text extraction engine value.
  *
- * @example
+ * **Example** (Check DOCX format support)
+ *
  * ```ts
  * import { DocTextFileProcessingEngine } from "@beep/doc-text"
  *

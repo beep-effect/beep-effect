@@ -11,7 +11,7 @@ import {
 } from "@beep/agents-use-cases/public";
 import { ProviderInstance } from "@beep/agents-use-cases/server";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -28,7 +28,7 @@ const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
 
 const makeInstance = (kind: Domain.ProviderKind = "claude"): Domain.ProviderInstance =>
   S.decodeUnknownSync(Domain.ProviderInstance)({
-    ...baseEntityFixtureInput("AgentsProviderInstance", 1),
+    ...productEntityFixtureInput("AgentsProviderInstance", 1),
     binaryPath: kind === "claude" ? "/usr/bin/claude" : "/usr/bin/codex",
     envVars: {},
     homePath: null,
@@ -66,8 +66,9 @@ const makeRepository = (initial: ReadonlyArray<Domain.ProviderInstance>) => {
 };
 
 describe("@beep/agents-use-cases ProviderInstance", () => {
-  it.effect("runs add, update, list, get, and remove command/query logic", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "runs add, update, list, get, and remove command/query logic",
+    Effect.fnUntraced(function* () {
       const initial = makeInstance();
       const state = makeRepository([initial]);
       const repository: ProviderInstanceRepositoryShape = {
@@ -104,8 +105,9 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
     })
   );
 
-  it.effect("persists an authenticated probe snapshot", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "persists an authenticated probe snapshot",
+    Effect.fnUntraced(function* () {
       const state = makeRepository([makeInstance()]);
       const snapshot = Domain.AuthenticatedSnapshot.make({ probedAt });
       const useCases = ProviderInstance.makeProviderInstanceUseCases(state.repository, {
@@ -121,8 +123,9 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
     ["claude", "claude auth login"],
     ["codex", "codex login"],
   ] as const) {
-    it.effect(`persists ${kind} logged-out snapshots and returns exact login guidance`, () =>
-      Effect.gen(function* () {
+    it.effect(
+      `persists ${kind} logged-out snapshots and returns exact login guidance`,
+      Effect.fnUntraced(function* () {
         const state = makeRepository([makeInstance(kind)]);
         const snapshot = Domain.UnauthenticatedSnapshot.make({ probedAt });
         const useCases = ProviderInstance.makeProviderInstanceUseCases(state.repository, {
@@ -138,8 +141,9 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
     );
   }
 
-  it.effect("surfaces not-found paths for get, update, remove, and probe", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "surfaces not-found paths for get, update, remove, and probe",
+    Effect.fnUntraced(function* () {
       const state = makeRepository([]);
       const useCases = ProviderInstance.makeProviderInstanceUseCases(state.repository, {
         probe: () => Effect.die("must not run"),

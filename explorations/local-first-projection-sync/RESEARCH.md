@@ -8,6 +8,61 @@ synthesis. All in-repo paths verified via rg/ls on 2026-06-29 against Effect
 4.0.0-beta.91.
 -->
 
+## 2026-07-14 Amendment — Effect v4 durable dispatch and live-source scan
+
+The align gate supersedes the original hub-first wedge below where the two
+conflict. The accepted design is a two-plane projection-dispatch seam:
+repo-native Postgres stores an accepted authority record and projection intent
+atomically; Effect v4 `DurableQueue` plus a persistence-backed worker owns
+durable projector work; and a scoped queue/stream carries only a best-effort
+"projection version changed; re-query" hint. The v3-era in-memory
+`EventStreamHub` premise is no longer a durable-work candidate, and the earlier
+`ThreadStore` attach recommendation is superseded by the standalone
+`projection-dispatch-core` goal.
+
+### Effect v4 `DurableQueue` accounting
+
+The pinned live source is
+`node_modules/effect/src/unstable/workflow/DurableQueue.ts`. `make` defines a
+schema-backed payload and caller-supplied deterministic `idempotencyKey`;
+`process` offers encoded work through `PersistedQueue`; and `worker` runs a
+bounded-concurrency handler. The worker layer requires both `WorkflowEngine`
+and `PersistedQueue.PersistedQueueFactory`. This is an unstable API and not, by
+itself, proof that the accepted-record transaction and persisted queue share an
+atomic boundary. `goals/effect-v4-workflow-engine-spike` therefore remains a
+hard prerequisite: its adapter, persistence, competing-worker, ambiguous
+completion, and real kill/restart evidence must land before the projection goal
+freezes store integration.
+
+### Live-source scan results
+
+- `packages/epistemic/{use-cases,server,tables}` exist, but no accepted-record
+  projection-dispatch schemas, ports, subscription RPC, intent/cursor tables, or
+  target-family workers were found. Those pieces are honestly **NET-NEW**.
+- `packages/drivers/workflow` is not yet a live package; its adapter is
+  **NET-NEW** and owned first by `goals/effect-v4-workflow-engine-spike`.
+- `packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts` and its
+  server implementation provide cursor/status/reconciliation precedent. Their
+  vault/provider semantics are studied, not generalized or reused.
+- `apps/professional-desktop/src/sync/Sync.atoms.ts` proves reactivity-keyed RPC
+  re-query; `src/transport/TauriIpcSocket.ts` and `IpcChatClient.ts` prove the
+  Effect socket/RPC bridge. They do not prove multiple independently scoped
+  connections.
+- `apps/professional-desktop/server/RpcSessionAuth.ts` proves per-launch bearer
+  authentication. It authenticates a launch, not a user. Existing desktop RPC
+  handlers pass client-supplied `workspaceId` through, so server-authorized
+  subscription scope and a future principal boundary are **NET-NEW**.
+
+### Resulting boundary
+
+The first slice is one trivial rebuildable repo-native read projection with a
+deterministic key from `{ authorityRecordId, authorityVersion,
+projectionTarget }`, recorded monotonic cursor/status, retry-no-duplicate and
+no-regress proof, and kill/restart both before and after worker completion. A
+desktop reconnect must converge by re-query even when the hint is absent. RRF,
+vector scoring, retrieval policy, FalkorDB, and generic multi-device
+replication are outside this accounting.
+
 The wedge: after an authority write, push a typed event to every live desktop
 connection so local-first FalkorDB/UI projections refresh without polling. The
 ported shape (from TalentScore, port-shape-only — see licensing below) is a

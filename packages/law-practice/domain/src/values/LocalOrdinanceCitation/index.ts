@@ -9,9 +9,8 @@
 /**
  * LocalOrdinanceCitation model exports.
  *
- * **Example**
+ * **Example** (Import model from values)
  *
- * @example
  * ```ts
  * import { LocalOrdinanceCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LocalOrdinanceCitation.model.js";
+export * from "./LocalOrdinanceCitation.model.ts";

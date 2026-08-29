@@ -8,16 +8,12 @@
 "@beep/anthropic": patch
 "@beep/api-transport": patch
 "@beep/box": patch
-"@beep/courtlistener": patch
 "@beep/data": patch
-"@beep/dol": patch
 "@beep/ecfr": patch
 "@beep/editor": patch
-"@beep/federal-register": patch
 "@beep/ffmpeg": patch
 "@beep/file-processing": patch
 "@beep/firecrawl": patch
-"@beep/form": patch
 "@beep/govinfo": patch
 "@beep/html": patch
 "@beep/hubspot": patch

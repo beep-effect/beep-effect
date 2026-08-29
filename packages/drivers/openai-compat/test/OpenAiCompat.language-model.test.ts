@@ -1,6 +1,8 @@
 import {
   decodeChatCompletionChunk,
+  decodeChatCompletionResponse,
   makeFromProvider,
+  model as makeLanguageModel,
   OpenAiCompatAssistantDelta,
   OpenAiCompatAssistantMessage,
   OpenAiCompatChatCompletionChoice,
@@ -34,16 +36,17 @@ import * as Toolkit from "effect/unstable/ai/Toolkit";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { TUnsafe } from "@beep/types";
+import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
-const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions);
-const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig);
-const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage);
-const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat);
-const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest);
-const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse);
-const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk);
+const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions)(fc);
+const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig)(fc);
+const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage)(fc);
+const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat)(fc);
+const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest)(fc);
+const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse)(fc);
+const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk)(fc);
 
 const encodeClientOptions = S.encodeResult(OpenAiCompatClientOptions);
 const decodeClientOptions = S.decodeUnknownResult(OpenAiCompatClientOptions);
@@ -126,6 +129,20 @@ const makeOpenAiCompatClientLayer = (respond: TestRespond) =>
   );
 
 layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (it) => {
+  it.effect(
+    "supports data-last codecs and model construction",
+    Effect.fnUntraced(function* () {
+      const response = yield* decodeChatCompletionResponse()(Result.getOrThrow(encodeResponse(makeResponse("hello"))));
+      const chunk = yield* decodeChatCompletionChunk()({
+        choices: [{ delta: { content: "hello", role: "assistant" }, index: 0 }],
+      });
+
+      expect(response.choices).toHaveLength(1);
+      expect(chunk.choices).toHaveLength(1);
+      expect(makeLanguageModel()("compat-model")).toBeDefined();
+    })
+  );
+
   it("keeps encoded OpenAI-compatible schema wire shapes byte-identical", () => {
     const clientOptions = OpenAiCompatClientOptions.make({
       headers: O.some({ "X-Provider": "test" }),
@@ -257,6 +274,64 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       expect(captured).toHaveLength(1);
       expect(captured[0]?.model).toBe("compat-model");
       expect(captured[0]?.messages).toEqual([{ content: [{ text: "hello", type: "text" }], role: "user" }]);
+      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(false);
+      expect(Object.hasOwn(captured[0] ?? {}, "tool_choice")).toBe(false);
+    })
+  );
+
+  it.effect(
+    "declares tool_choice alongside declared tools",
+    Effect.fnUntraced(function* () {
+      const requests = yield* Ref.make<ReadonlyArray<OpenAiCompatChatCompletionRequest>>([]);
+      const languageModel = yield* makeFromProvider({
+        model: "compat-model",
+        moduleName: "OpenAiCompatLanguageModelTest",
+        provider: {
+          createChatCompletion: (request) =>
+            pipe(Ref.update(requests, A.append(request)), Effect.as(makeResponse("hello from compat"))),
+          streamChatCompletion: () => Stream.empty,
+        },
+      });
+
+      const WeatherTool = Tool.make("weather", {
+        parameters: S.Struct({ city: S.String }),
+        success: S.String,
+      });
+      const namedChoice: LanguageModel.ToolChoice<"weather"> = { tool: "weather" };
+      const requiredChoice: LanguageModel.ToolChoice<"weather"> = { mode: "required", oneOf: ["weather"] };
+      const autoChoice: LanguageModel.ToolChoice<"weather"> = { mode: "auto", oneOf: ["weather"] };
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: "auto",
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: namedChoice,
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: requiredChoice,
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: autoChoice,
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      const captured = yield* Ref.get(requests);
+
+      expect(captured).toHaveLength(4);
+      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(true);
+      expect(captured[0]?.tool_choice).toBe("auto");
+      expect(captured[1]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
+      expect(captured[2]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
+      expect(captured[3]?.tool_choice).toBe("auto");
     })
   );
 
@@ -833,6 +908,46 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       expect(AiError.isAiError(error)).toBe(true);
       expect(error.method).toBe("streamChatCompletion");
       expect(error.reason._tag).toBe("InvalidOutputError");
+    })
+  );
+
+  it.effect(
+    "maps SSE decoding failures to typed AiError",
+    Effect.fnUntraced(function* () {
+      const request = OpenAiCompatChatCompletionRequest.make({
+        messages: [userMessage()],
+        model: "compat-model",
+      });
+
+      // `Sse.decode` fails only when a pending event outgrows its 10 MiB
+      // `maxEventSize`, so the body is a single `data:` field past that bound
+      // with no blank line to flush it.
+      const oversizedEvent = `data: ${"x".repeat(10 * 1024 * 1024)}`;
+
+      const error = yield* pipe(
+        Effect.gen(function* () {
+          const client = yield* OpenAiCompatClient;
+          return yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
+        }),
+        provideScopedLayer(
+          makeOpenAiCompatClientLayer(() =>
+            Effect.succeed(
+              new Response(oversizedEvent, {
+                headers: {
+                  "content-type": "text/event-stream",
+                },
+              })
+            )
+          )
+        )
+      );
+
+      expect(AiError.isAiError(error)).toBe(true);
+      expect(error.method).toBe("streamChatCompletion");
+      expect(error.reason._tag).toBe("InvalidOutputError");
+      // Proves the decoding reason survives the mapping rather than being
+      // flattened into a generic stream failure.
+      expect(String(error)).toContain("EventTooLarge");
     })
   );
 });

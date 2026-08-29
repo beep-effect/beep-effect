@@ -23,11 +23,13 @@ const someVersionPin = (value: string) => O.some(AiSyncVersionPin.make(value));
 /**
  * Tier-1 sources fetched by the generator and strict drift checker.
  *
- * @example
+ * **Example** (Log tier-one sources length)
+ *
  * ```ts
  * import { TIER_ONE_SOURCES } from "@beep/ai-sync"
  * console.log(TIER_ONE_SOURCES.length)
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -128,11 +130,13 @@ export const TIER_ONE_SOURCES = [
 /**
  * Complete V1 schema support matrix.
  *
- * @example
+ * **Example** (Detect unknown schema cells)
+ *
  * ```ts
  * import { V1_SCHEMA_COVERAGE } from "@beep/ai-sync"
  * console.log(V1_SCHEMA_COVERAGE.some((cell) => cell.status === "unknown_schema"))
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -328,11 +332,13 @@ export const V1_SCHEMA_COVERAGE = [
 /**
  * P4 transform evidence ledger.
  *
- * @example
+ * **Example** (List transform evidence statuses)
+ *
  * ```ts
  * import { V1_TRANSFORM_EVIDENCE } from "@beep/ai-sync"
  * console.log(V1_TRANSFORM_EVIDENCE.map((entry) => entry.status))
  * ```
+ *
  * @category interop
  * @since 0.0.0
  */

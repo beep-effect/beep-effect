@@ -1,13 +1,14 @@
 /**
  * Namespace-first public module for Content Security Policy schemas.
  *
- * @example
- * ```ts
+ * **Example** (Create CSP directive value)
+ *
+ * ```ts import.meta.vitest name="Create CSP directive value"
  * import * as Csp from "@beep/schema/Csp"
  *
  * const value = Csp.createDirectiveValue("default-src", "'self'")
  *
- * console.log(value) // "default-src 'self'"
+ * value // => "default-src 'self'"
  * ```
  *
  * @packageDocumentation

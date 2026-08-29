@@ -10,17 +10,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DateTime, Effect, FileSystem, MutableHashSet, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter } from "../Research.schemas.js";
-import { CATALOG_DB_NAME, INSERT_CAPTURE_LOG, INSERT_SEEN_URL, runWithResearchDb, UPSERT_CARD } from "./Catalog.js";
-import { renderCard, sha256HexOf, VAULT_DIRS, writeCard } from "./Vault.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter } from "../Research.schemas.ts";
+import { CATALOG_DB_NAME, INSERT_CAPTURE_LOG, INSERT_SEEN_URL, runWithResearchDb, UPSERT_CARD } from "./Catalog.ts";
+import { renderCard, sha256HexOf, VAULT_DIRS, writeCard } from "./Vault.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/CatalogOps");
 
 /**
  * Resolve and create the DuckDB catalog path for a vault.
  *
- * @example
+ * **Example** (Resolve vault DuckDB path)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { catalogDbPath } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
@@ -29,6 +30,7 @@ const $I = $RepoCliId.create("commands/Research/internal/CatalogOps");
  * const program = catalogDbPath("/repo/.research")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -47,7 +49,8 @@ export const catalogDbPath = Effect.fn("Research.catalogDbPath")(function* (
 /**
  * Card content staged for filesystem and catalog persistence.
  *
- * @example
+ * **Example** (Make card persist row)
+ *
  * ```ts
  * import { CardPersistRow } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
@@ -69,6 +72,7 @@ export const catalogDbPath = Effect.fn("Research.catalogDbPath")(function* (
  * })
  * console.log(row.relativePath)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -86,7 +90,8 @@ export class CardPersistRow extends S.Class<CardPersistRow>($I`CardPersistRow`)(
 /**
  * Write knowledge cards and record their catalog rows.
  *
- * @example
+ * **Example** (Persist empty capture batch)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { persistCards } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
@@ -95,6 +100,7 @@ export class CardPersistRow extends S.Class<CardPersistRow>($I`CardPersistRow`)(
  * const program = persistCards("/repo/.research", "/repo/.research/.state/catalog.duckdb", "capture", [])
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category repositories
  * @since 0.0.0
  */
@@ -152,7 +158,8 @@ const decodeSeenUrlRows = S.decodeUnknownEffect(S.Array(SeenUrlRow));
 /**
  * Load normalized URLs that the research catalog has already seen.
  *
- * @example
+ * **Example** (Load seen catalog URLs)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { loadSeenUrls } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
@@ -160,6 +167,7 @@ const decodeSeenUrlRows = S.decodeUnknownEffect(S.Array(SeenUrlRow));
  * const program = loadSeenUrls("/repo/.research/.state/catalog.duckdb")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category queries
  * @since 0.0.0
  */

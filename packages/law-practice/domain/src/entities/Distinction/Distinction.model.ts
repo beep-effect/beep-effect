@@ -6,23 +6,26 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle";
-import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.js";
+import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { DistinctionDetail } from "./Distinction.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model");
+const pg = ProductEntity.pg;
 
 /**
  * Distinction entity asserted to overcome a rejection against a claim.
+ *
+ * **Details**
  *
  * Stores the argued {@link DistinctionDetail}, a source {@link TextAnchor}, and
  * the {@link ClaimLifecycle} state while linking to the claim it defends and the
  * rejection it answers.
  *
- * @example
+ * **Example** (Decode Distinction via Schema)
+ *
  * ```ts
  * import { Distinction } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -56,49 +59,26 @@ const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model")
  * @category entities
  * @since 0.0.0
  */
-export class Distinction extends BaseEntity.Class<Distinction>($I`Distinction`)(
-  LawPractice.DistinctionId,
+export class Distinction extends ProductEntity.Entity<Distinction>()(LawPractice.DistinctionId)(
   {
-    fields: {
-      anchor: TextAnchor.annotateKey({
-        description: "Source text anchor for the asserted distinction.",
-      }),
-      claimFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the claim defended by this distinction.",
-      }),
-      detail: DistinctionDetail.annotateKey({
-        description: "Substantive distinction detail.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the distinction.",
-      }),
-      lifecycleState: ClaimLifecycle.annotateKey({
-        description: "Lifecycle state of the distinction claim.",
-      }),
-      rejectionFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the rejection answered by this distinction.",
-      }),
-    },
-    persisted: {
-      anchor: EntitySchema.persist.jsonb({
-        columnName: "anchor",
-      }),
-      claimFixtureKey: EntitySchema.persist.text({
-        columnName: "claim_fixture_key",
-      }),
-      detail: EntitySchema.persist.jsonb({
-        columnName: "detail",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      lifecycleState: EntitySchema.persist.literal({
-        columnName: "lifecycle_state",
-      }),
-      rejectionFixtureKey: EntitySchema.persist.text({
-        columnName: "rejection_fixture_key",
-      }),
-    },
+    anchor: TextAnchor.annotateKey({
+      description: "Source text anchor for the asserted distinction.",
+    }).pipe(pg.jsonb()),
+    claimFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the claim defended by this distinction.",
+    }).pipe(pg.text(), pg.columnName("claim_fixture_key")),
+    detail: DistinctionDetail.annotateKey({
+      description: "Substantive distinction detail.",
+    }).pipe(pg.jsonb()),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the distinction.",
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
+    lifecycleState: ClaimLifecycle.annotateKey({
+      description: "Lifecycle state of the distinction claim.",
+    }).pipe(pg.text(), pg.columnName("lifecycle_state")),
+    rejectionFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the rejection answered by this distinction.",
+    }).pipe(pg.text(), pg.columnName("rejection_fixture_key")),
   },
   $I.annote("Distinction", {
     description: "Distinction entity asserted to overcome a rejection against a claim.",

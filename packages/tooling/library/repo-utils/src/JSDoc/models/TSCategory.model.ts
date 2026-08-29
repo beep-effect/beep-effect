@@ -13,11 +13,11 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ArchitecturalLayer } from "./ArchitecturalLayer.model.js";
-import { ASTSignal } from "./ASTSignal.model.js";
-import { DependencyProfile } from "./DependencyProfile.model.js";
-import type { ApplicableTo } from "./ApplicableTo.model.js";
-import type { ArchitecturalLayer as ArchitecturalLayerValue } from "./ArchitecturalLayer.model.js";
+import { ArchitecturalLayer } from "./ArchitecturalLayer.model.ts";
+import { ASTSignal } from "./ASTSignal.model.ts";
+import { DependencyProfile } from "./DependencyProfile.model.ts";
+import type { ApplicableTo } from "./ApplicableTo.model.ts";
+import type { ArchitecturalLayer as ArchitecturalLayerValue } from "./ArchitecturalLayer.model.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/TSCategory.model");
 
@@ -65,13 +65,15 @@ type TSCategoryTagBase = typeof TSCategoryTagBase.Type;
 /**
  * Purity classification for a TSCategory taxonomy member.
  *
- * @example
+ * **Example** (Checking pure purity value)
+ *
  * ```ts
  * import { CategoryPurity } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * const purity = CategoryPurity.Enum.pure
  * console.log(CategoryPurity.is.pure(purity))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -86,7 +88,8 @@ export const CategoryPurity = LiteralKit(["pure", "effectful", "mixed"]).pipe(
 /**
  * Inferred type for {@link CategoryPurity}.
  *
- * @example
+ * **Example** (Accepting CategoryPurity type)
+ *
  * ```ts
  * import type { CategoryPurity } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
@@ -94,6 +97,7 @@ export const CategoryPurity = LiteralKit(["pure", "effectful", "mixed"]).pipe(
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -103,7 +107,8 @@ export type CategoryPurity = typeof CategoryPurity.Type;
  * A single member of the closed taxonomy used to classify
  * TypeScript code elements in the knowledge graph.
  *
- * @example
+ * **Example** (Looking up Utility category)
+ *
  * ```ts
  * import { getCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  * import * as O from "effect/Option"
@@ -111,6 +116,7 @@ export type CategoryPurity = typeof CategoryPurity.Type;
  * const category = getCategory("Utility")
  * console.log(O.getOrUndefined(category)?._tag)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -210,7 +216,8 @@ export class TSCategoryDefinition extends S.Class<TSCategoryDefinition>($I`TSCat
 /**
  * Runtime encoded shape for TS category metadata.
  *
- * @example
+ * **Example** (Accepting TSCategory type)
+ *
  * ```ts
  * import type { TSCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
@@ -218,6 +225,7 @@ export class TSCategoryDefinition extends S.Class<TSCategoryDefinition>($I`TSCat
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -232,7 +240,8 @@ const EncodedTSCategoryDefinition = S.toEncoded(TSCategoryDefinition).pipe(
 /**
  * The payload type stored in the `tsCategoryMetadata` annotation key.
  *
- * @example
+ * **Example** (Accepting annotation payload type)
+ *
  * ```ts
  * import type { TSCategoryAnnotationPayload } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
@@ -240,6 +249,7 @@ const EncodedTSCategoryDefinition = S.toEncoded(TSCategoryDefinition).pipe(
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -256,9 +266,8 @@ declare module "effect/Schema" {
 /**
  * Retrieve TS category metadata annotation from a schema, if present.
  *
- * @param schema - Any Effect schema.
- * @returns The TSCategoryDefinition metadata when present.
- * @example
+ * **Example** (Reading schema category metadata)
+ *
  * ```ts
  * import { getCategory, getTSCategoryMetadata, make } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  * import * as O from "effect/Option"
@@ -269,6 +278,9 @@ declare module "effect/Schema" {
  *   console.log(O.getOrUndefined(getTSCategoryMetadata(tagSchema))?._tag)
  * }
  * ```
+ *
+ * @param schema - Any Effect schema.
+ * @returns The TSCategoryDefinition metadata when present.
  * @category models
  * @since 0.0.0
  */
@@ -278,13 +290,13 @@ export const getTSCategoryMetadata = (schema: S.Top): O.Option<TSCategoryAnnotat
 /**
  * Build a TS category fibration schema for a concrete category tag.
  *
+ * **Details**
+ *
  * Validates full taxonomy metadata with {@link TSCategoryDefinition} and
  * projects to a lean literal schema suitable for category value usage.
  *
- * @param _tag - Canonical TS category discriminator.
- * @param meta - Category metadata payload without the discriminator.
- * @returns Literal category schema annotated with validated metadata.
- * @example
+ * **Example** (Building category fibration schema)
+ *
  * ```ts
  * import { getCategory, getTSCategoryMetadata, make } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  * import * as O from "effect/Option"
@@ -295,6 +307,10 @@ export const getTSCategoryMetadata = (schema: S.Top): O.Option<TSCategoryAnnotat
  *   console.log(O.getOrUndefined(getTSCategoryMetadata(tagSchema))?._tag)
  * }
  * ```
+ *
+ * @param _tag - Canonical TS category discriminator.
+ * @param meta - Category metadata payload without the discriminator.
+ * @returns Literal category schema annotated with validated metadata.
  * @category models
  * @since 0.0.0
  */
@@ -309,12 +325,14 @@ export const make: {
 /**
  * Confidence threshold where deterministic classification can skip LLM inference.
  *
- * @example
+ * **Example** (Comparing threshold to 0.8)
+ *
  * ```ts
  * import { DETERMINISTIC_CLASSIFICATION_THRESHOLD } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(DETERMINISTIC_CLASSIFICATION_THRESHOLD > 0.8)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -323,7 +341,8 @@ export const DETERMINISTIC_CLASSIFICATION_THRESHOLD = 0.85;
 /**
  * Guardrail threshold used to route low-confidence matches to `Uncategorized`.
  *
- * @example
+ * **Example** (Comparing guardrail thresholds)
+ *
  * ```ts
  * import {
  *   DETERMINISTIC_CLASSIFICATION_THRESHOLD,
@@ -332,6 +351,7 @@ export const DETERMINISTIC_CLASSIFICATION_THRESHOLD = 0.85;
  *
  * console.log(UNCATEGORIZED_GUARDRAIL_THRESHOLD < DETERMINISTIC_CLASSIFICATION_THRESHOLD)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -343,13 +363,15 @@ export const UNCATEGORIZED_GUARDRAIL_THRESHOLD = 0.45;
  * or route them to a dedicated test-handling path before applying
  * the main taxonomy.
  *
- * @example
+ * **Example** (Matching test file patterns)
+ *
  * ```ts
  * import { TESTING_FILE_PATTERNS } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * const matchesTests = TESTING_FILE_PATTERNS.some((pattern) => pattern.includes("test"))
  * console.log(matchesTests)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -373,12 +395,14 @@ export const TESTING_FILE_PATTERNS = [
  * Used as a secondary signal when file paths are ambiguous
  * (e.g., test utilities not in a conventional test directory).
  *
- * @example
+ * **Example** (Check testing import pattern)
+ *
  * ```ts
  * import { TESTING_IMPORT_PATTERNS } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(TESTING_IMPORT_PATTERNS.includes("vitest*"))
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -990,13 +1014,15 @@ type Uncategorized = typeof Uncategorized.Type;
 /**
  * Strict literal union for all supported TypeDoc `@category` values.
  *
- * @example
+ * **Example** (Use category tag enum)
+ *
  * ```ts
  * import { TSCategoryTag } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * const tag = TSCategoryTag.Enum.Utility
  * console.log(TSCategoryTag.is.Utility(tag))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1022,7 +1048,8 @@ export const TSCategoryTag = LiteralKit([
 /**
  * Inferred type for {@link TSCategoryTag}.
  *
- * @example
+ * **Example** (Constrain with category type)
+ *
  * ```ts
  * import type { TSCategoryTag } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
@@ -1030,6 +1057,7 @@ export const TSCategoryTag = LiteralKit([
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1080,12 +1108,14 @@ const CATEGORY_TAG_SCHEMAS = [
 /**
  * Closed category taxonomy used by `@category` tags.
  *
- * @example
+ * **Example** (Logging taxonomy length)
+ *
  * ```ts
  * import { CATEGORY_TAXONOMY } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(CATEGORY_TAXONOMY.length)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -1103,7 +1133,8 @@ export const CATEGORY_TAXONOMY: ReadonlyArray<TSCategory> = pipe(
 /**
  * All valid category tag values.
  *
- * @example
+ * **Example** (Accepting CategoryTag type)
+ *
  * ```ts
  * import type { CategoryTag } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
@@ -1111,6 +1142,7 @@ export const CATEGORY_TAXONOMY: ReadonlyArray<TSCategory> = pipe(
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1120,6 +1152,8 @@ const UNCATEGORIZED_CATEGORY_TAG: CategoryTag = "Uncategorized";
 
 /**
  * Deterministic precedence for external classifier conflict resolution.
+ *
+ * **Details**
  *
  * Ordering rationale - most-specific signals win:
  *   1. Library-specific imports (Validation, DataAccess, Integration) -
@@ -1135,12 +1169,14 @@ const UNCATEGORIZED_CATEGORY_TAG: CategoryTag = "Uncategorized";
  * This policy is intentionally separate from `getCandidateCategories`,
  * which preserves canonical sorting by confidence and `_tag`.
  *
- * @example
+ * **Example** (Checking Validation precedence)
+ *
  * ```ts
  * import { CATEGORY_PRECEDENCE } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(CATEGORY_PRECEDENCE.includes("Validation"))
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -1163,12 +1199,14 @@ export const CATEGORY_PRECEDENCE: ReadonlyArray<CategoryTag> = [
  * Explicit fallback policy for non-declaration nodes where direct classification
  * is ambiguous without structural context.
  *
- * @example
+ * **Example** (Reading fallback category)
+ *
  * ```ts
  * import { CONTEXT_FALLBACK_POLICY } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(CONTEXT_FALLBACK_POLICY.fallbackCategory)
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -1187,12 +1225,14 @@ export const CONTEXT_FALLBACK_POLICY = {
  * Complete routing table from `ApplicableTo` node intent to candidate categories.
  * This makes taxonomy completeness auditable against HasJSDoc surfaces.
  *
- * @example
+ * **Example** (Reading function routing entry)
+ *
  * ```ts
  * import { APPLICABLE_TO_CATEGORY_ROUTING } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(APPLICABLE_TO_CATEGORY_ROUTING.function[0])
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -1256,14 +1296,16 @@ const combineSignalConfidences: (confidences: ReadonlyArray<number>) => number =
 /**
  * Get deterministic conflict precedence rank for a category tag.
  *
- * @param tag - Category tag to rank by conflict precedence.
- * @returns Zero-based precedence index, or the list length when absent.
- * @example
+ * **Example** (Ranking Validation precedence)
+ *
  * ```ts
  * import { getCategoryPrecedence } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(getCategoryPrecedence("Validation"))
  * ```
+ *
+ * @param tag - Category tag to rank by conflict precedence.
+ * @returns Zero-based precedence index, or the list length when absent.
  * @category utilities
  * @since 0.0.0
  */
@@ -1278,15 +1320,17 @@ export function getCategoryPrecedence(tag: CategoryTag): number {
 /**
  * Lookup a category by `_tag`.
  *
- * @param tag - Category tag identifier to resolve.
- * @returns Matching category definition, when present.
- * @example
+ * **Example** (Resolving Utility category tag)
+ *
  * ```ts
  * import { getCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  * import * as O from "effect/Option"
  *
  * console.log(O.getOrUndefined(getCategory("Utility"))?._tag)
  * ```
+ *
+ * @param tag - Category tag identifier to resolve.
+ * @returns Matching category definition, when present.
  * @category utilities
  * @since 0.0.0
  */
@@ -1300,14 +1344,16 @@ export function getCategory(tag: TSCategoryTag): O.Option<TSCategory> {
 /**
  * Get categories by purity classification.
  *
- * @param purity - Purity value used to filter the taxonomy.
- * @returns Categories whose `purity` matches the requested value.
- * @example
+ * **Example** (Counting pure categories)
+ *
  * ```ts
  * import { getCategoriesByPurity } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(getCategoriesByPurity("pure").length)
  * ```
+ *
+ * @param purity - Purity value used to filter the taxonomy.
+ * @returns Categories whose `purity` matches the requested value.
  * @category utilities
  * @since 0.0.0
  */
@@ -1321,14 +1367,16 @@ export function getCategoriesByPurity(purity: TSCategory["purity"]): ReadonlyArr
 /**
  * Get categories by architectural layer.
  *
- * @param layer - Architectural layer used to filter taxonomy members.
- * @returns Categories mapped to the provided architectural layer.
- * @example
+ * **Example** (Counting Core layer categories)
+ *
  * ```ts
  * import { getCategoriesByArchLayer } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(getCategoriesByArchLayer("Core").length)
  * ```
+ *
+ * @param layer - Architectural layer used to filter taxonomy members.
+ * @returns Categories mapped to the provided architectural layer.
  * @category utilities
  * @since 0.0.0
  */
@@ -1347,14 +1395,16 @@ export function getCategoriesByArchLayer(layer: ArchitecturalLayerValue): Readon
 /**
  * Get categories by Effect or monad analog.
  *
- * @param analog - Effect or monad analog label to match.
- * @returns Categories whose `effectAnalog` equals the provided label.
- * @example
+ * **Example** (Counting Reader analog categories)
+ *
  * ```ts
  * import { getCategoriesByEffectAnalog } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(getCategoriesByEffectAnalog("Reader").length)
  * ```
+ *
+ * @param analog - Effect or monad analog label to match.
+ * @returns Categories whose `effectAnalog` equals the provided label.
  * @category utilities
  * @since 0.0.0
  */
@@ -1368,14 +1418,16 @@ export function getCategoriesByEffectAnalog(analog: string): ReadonlyArray<TSCat
 /**
  * Get ordered candidate categories for an `ApplicableTo` node intent.
  *
- * @param applicableTo - Node intent routed to taxonomy candidates.
- * @returns Categories in routing-table order, excluding unknown tags.
- * @example
+ * **Example** (Counting function candidates)
+ *
  * ```ts
  * import { getCategoriesForApplicableTo } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * console.log(getCategoriesForApplicableTo("function").length)
  * ```
+ *
+ * @param applicableTo - Node intent routed to taxonomy candidates.
+ * @returns Categories in routing-table order, excluding unknown tags.
  * @category utilities
  * @since 0.0.0
  */
@@ -1386,12 +1438,14 @@ export function getCategoriesForApplicableTo(applicableTo: ApplicableTo): Readon
 /**
  * Category signal tuple consumed by candidate resolution.
  *
- * @example
+ * **Example** (Creating validation signal)
+ *
  * ```ts
  * import { CategorySignal } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  * const signal = CategorySignal.make({ category: "Validation", confidence: 0.9 })
  * console.log(signal.category)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1412,7 +1466,8 @@ export class CategorySignal extends S.Class<CategorySignal>($I`CategorySignal`)(
 /**
  * Scored category candidate shape produced by candidate resolution.
  *
- * @example
+ * **Example** (Building scored candidate)
+ *
  * ```ts
  * import { ScoredCategoryCandidate, getCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  * import * as O from "effect/Option"
@@ -1422,6 +1477,7 @@ export class CategorySignal extends S.Class<CategorySignal>($I`CategorySignal`)(
  * })
  * console.log(candidate.combinedConfidence)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1455,6 +1511,8 @@ const scoredCategoryCandidateOrder = Order.make<ScoredCategoryCandidate>((left, 
  * Get categories whose AST signals could match a code element.
  * Unknown categories are ignored.
  *
+ * **Details**
+ *
  * Sorting policy:
  * 1) `combinedConfidence` descending
  * 2) `_tag` ascending
@@ -1465,15 +1523,17 @@ const scoredCategoryCandidateOrder = Order.make<ScoredCategoryCandidate>((left, 
  * Combined confidence formula:
  *   1 - Π(1 - c_i)
  *
- * @param signals - Category signal tuples with confidence values.
- * @returns Candidate categories sorted by confidence and tag.
- * @example
+ * **Example** (Scoring Validation candidates)
+ *
  * ```ts
  * import { getCandidateCategories } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * const candidates = getCandidateCategories([{ category: "Validation", confidence: 0.9 }])
  * console.log(candidates[0]?.category._tag)
  * ```
+ *
+ * @param signals - Category signal tuples with confidence values.
+ * @returns Candidate categories sorted by confidence and tag.
  * @category utilities
  * @since 0.0.0
  */
@@ -1514,6 +1574,8 @@ export function getCandidateCategories(signals: ReadonlyArray<CategorySignal>): 
 /**
  * Resolve category for non-declaration AST nodes using context fallback policy.
  *
+ * **Details**
+ *
  * Resolution order:
  * 1. Classify by nearest exportable ancestor symbol
  * 2. Fall back to source-file dominant category
@@ -1523,58 +1585,74 @@ export function getCandidateCategories(signals: ReadonlyArray<CategorySignal>): 
  * traversal that depends on the extraction pipeline architecture.
  * The stub documents the contract and makes the fallback policy executable.
  *
- * @param scoredCandidates - Ranked category candidates derived from AST signals.
- * @param ancestorCategory - Nearest ancestor category, if available.
- * @param sourceFileDominantCategory - Dominant category inferred from the source file.
- * @returns Resolved category tag using fallback precedence and guardrail policy.
- * @example
+ * **Example** (Resolving Utility fallback)
+ *
  * ```ts
  * import { resolveContextFallback } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
  * const category = resolveContextFallback([], undefined, "Utility")
  * console.log(category)
  * ```
+ *
+ * @param scoredCandidates - Ranked category candidates derived from AST signals.
+ * @param ancestorCategory - Nearest ancestor category, if available.
+ * @param sourceFileDominantCategory - Dominant category inferred from the source file.
+ * @returns Resolved category tag using fallback precedence and guardrail policy.
  * @category utilities
  * @since 0.0.0
  */
-export function resolveContextFallback(
-  scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>,
-  ancestorCategory?: CategoryTag,
-  sourceFileDominantCategory?: CategoryTag
-): CategoryTag {
-  const resolvedAncestor = pipe(
-    ancestorCategory,
-    O.fromUndefinedOr,
-    O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
-  );
+export const resolveContextFallback: {
+  (
+    ancestorCategory?: CategoryTag,
+    sourceFileDominantCategory?: CategoryTag
+  ): (scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>) => CategoryTag;
+  (
+    scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>,
+    ancestorCategory?: CategoryTag,
+    sourceFileDominantCategory?: CategoryTag
+  ): CategoryTag;
+} = dual(
+  (args) => A.isArray(args[0]),
+  (
+    scoredCandidates: ReadonlyArray<ScoredCategoryCandidate>,
+    ancestorCategory?: CategoryTag,
+    sourceFileDominantCategory?: CategoryTag
+  ): CategoryTag => {
+    const resolvedAncestor = pipe(
+      ancestorCategory,
+      O.fromUndefinedOr,
+      O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
+    );
 
-  if (O.isSome(resolvedAncestor)) {
-    return resolvedAncestor.value;
+    if (O.isSome(resolvedAncestor)) {
+      return resolvedAncestor.value;
+    }
+
+    const resolvedSourceFileDominant = pipe(
+      sourceFileDominantCategory,
+      O.fromUndefinedOr,
+      O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
+    );
+
+    if (O.isSome(resolvedSourceFileDominant)) {
+      return resolvedSourceFileDominant.value;
+    }
+
+    return pipe(
+      scoredCandidates,
+      A.head,
+      O.filter((candidate) => candidate.combinedConfidence >= UNCATEGORIZED_GUARDRAIL_THRESHOLD),
+      O.map((candidate) => candidate.category._tag),
+      O.getOrElse(() => UNCATEGORIZED_CATEGORY_TAG)
+    );
   }
-
-  const resolvedSourceFileDominant = pipe(
-    sourceFileDominantCategory,
-    O.fromUndefinedOr,
-    O.filter((category) => category !== UNCATEGORIZED_CATEGORY_TAG)
-  );
-
-  if (O.isSome(resolvedSourceFileDominant)) {
-    return resolvedSourceFileDominant.value;
-  }
-
-  return pipe(
-    scoredCandidates,
-    A.head,
-    O.filter((candidate) => candidate.combinedConfidence >= UNCATEGORIZED_GUARDRAIL_THRESHOLD),
-    O.map((candidate) => candidate.category._tag),
-    O.getOrElse(() => UNCATEGORIZED_CATEGORY_TAG)
-  );
-}
+);
 
 /**
  * The TypeScript Category Tag
  *
- * @example
+ * **Example** (Decoding Utility category tag)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Category } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
@@ -1582,6 +1660,7 @@ export function resolveContextFallback(
  * const category = S.decodeUnknownSync(Category)("Utility")
  * console.log(category)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1598,7 +1677,8 @@ export const Category = S.Union(CATEGORY_TAG_SCHEMAS).pipe(
 /**
  * Type for {@link Category}.
  *
- * @example
+ * **Example** (Accepting Category type)
+ *
  * ```ts
  * import type { Category } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
  *
@@ -1606,6 +1686,7 @@ export const Category = S.Union(CATEGORY_TAG_SCHEMAS).pipe(
  * const accept = <A extends Example>(value: A): A => value
  * console.log(accept)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

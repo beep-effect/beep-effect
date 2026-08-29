@@ -6,6 +6,7 @@
  */
 
 import * as Md from "@beep/md/Md.model";
+import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -16,7 +17,8 @@ const decodeWorkspaceIdValue = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId
  * Decode an unknown value into a validated {@link WorkspaceIdentity.WorkspaceId}
  * for use in fixture data.
  *
- * @example
+ * **Example** (Decode workspace ID)
+ *
  * ```ts
  * import { decodeWorkspaceId } from "@/chat/ChatFixtures"
  *
@@ -33,7 +35,8 @@ export const decodeWorkspaceId = (input: unknown): WorkspaceIdentity.WorkspaceId
  * Build a single-paragraph `@beep/md` {@link Md.Document.Type} fixture from a
  * plain string, for chat smoke and contract-test message content.
  *
- * @example
+ * **Example** (Build single-paragraph document)
+ *
  * ```ts
  * import { userDocument } from "@/chat/ChatFixtures"
  *
@@ -44,14 +47,15 @@ export const decodeWorkspaceId = (input: unknown): WorkspaceIdentity.WorkspaceId
  * @category fixtures
  * @since 0.0.0
  */
-export const userDocument = (text: string): Md.Document.Type =>
-  Md.Document.make({ children: [Md.P.make({ children: [Md.Text.make({ value: text })] })] });
+export const userDocument = (text: string): SafeDocument =>
+  SafeDocument.make(Md.Document.make({ children: [Md.P.make({ children: [Md.Text.make({ value: text })] })] }));
 
 /**
  * Build a multi-paragraph `@beep/md` {@link Md.Document.Type} fixture, one
  * paragraph per input string, for chat smoke and contract-test message content.
  *
- * @example
+ * **Example** (Build multi-paragraph document)
+ *
  * ```ts
  * import { userParagraphDocument } from "@/chat/ChatFixtures"
  *
@@ -62,7 +66,9 @@ export const userDocument = (text: string): Md.Document.Type =>
  * @category fixtures
  * @since 0.0.0
  */
-export const userParagraphDocument = (paragraphs: ReadonlyArray<string>): Md.Document.Type =>
-  Md.Document.make({
-    children: A.map(paragraphs, (text) => Md.P.make({ children: [Md.Text.make({ value: text })] })),
-  });
+export const userParagraphDocument = (paragraphs: ReadonlyArray<string>): SafeDocument =>
+  SafeDocument.make(
+    Md.Document.make({
+      children: A.map(paragraphs, (text) => Md.P.make({ children: [Md.Text.make({ value: text })] })),
+    })
+  );

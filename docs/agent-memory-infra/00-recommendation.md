@@ -189,6 +189,10 @@ session-to-permanent bridge, and lighter posture.
   alone, not a return to Graphiti.
 - Graphiti is decommissioned only **after** the bitemporal primitives port
   lands; until then it stays read-available but stops being written to.
+  *(2026-07-25: the port landed via `goals/epistemic-bitemporal-edge-core`;
+  the retirement trigger fired — see the 2026-07-25 entry in
+  `standards/memory-architecture/04-decision-log.md`. The cleanup list below
+  is now actionable at the operator level.)*
 
 **Drafted cleanup (NOT applied):**
 1. `CLAUDE.md`: replace the "Graphiti Memory" primary-knowledge-base section

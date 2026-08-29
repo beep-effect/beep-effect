@@ -33,20 +33,22 @@ const Uint64BigInt = S.BigInt.check(Uint64Range);
 /**
  * Branded schema for protobuf `uint64` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs writes and can expose `uint64` from `Long`, `number`, decimal
  * `string`, or `bigint` values. This schema accepts those protobufjs-compatible
  * input shapes and normalizes them to `bigint` before enforcing the unsigned
  * 64-bit range.
  *
- * @example
- * ```ts
+ * **Example** (Decode max uint64 string)
+ *
+ * ```ts import.meta.vitest name="Decode max uint64 string"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Uint64 } from "@beep/schema/Uint64"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Uint64)("18446744073709551615"))
- * console.log(value.toString()) // "18446744073709551615"
+ * value.toString() // => "18446744073709551615"
  * ```
  *
  * @invariant Values are bigints from 0 through 18446744073709551615.
@@ -67,8 +69,9 @@ export const Uint64 = ProtobufInt64Input.pipe(S.decodeTo(Uint64BigInt, decodePro
 /**
  * Type-level value inferred from {@link Uint64}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow bigint to Uint64)
+ *
+ * ```ts import.meta.vitest name="Narrow bigint to Uint64"
  * import * as S from "effect/Schema"
  * import { Uint64 } from "@beep/schema/Uint64"
  * import type { Uint64 as Uint64Value } from "@beep/schema/Uint64"
@@ -76,7 +79,7 @@ export const Uint64 = ProtobufInt64Input.pipe(S.decodeTo(Uint64BigInt, decodePro
  * const input: unknown = BigInt(42)
  * if (S.is(Uint64)(input)) {
  *   const value: Uint64Value = input
- *   console.log(value.toString()) // "42"
+ *   value.toString() // => "42"
  * }
  * ```
  *

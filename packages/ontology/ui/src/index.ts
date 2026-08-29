@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/ontology-ui`.
  *
- * @example
+ * **Example** (Log package version)
+ *
  * ```ts
  * import { VERSION } from "@beep/ontology-ui"
  *
@@ -22,9 +23,21 @@
 export const VERSION = "0.0.0" as const;
 
 /**
- * Ontology workbench UI components.
+ * Curated ontology workbench exports.
  *
  * @category components
  * @since 0.0.0
  */
-export * from "./aggregates/Session/index.js";
+export {
+  OntologyChangeLogRegion,
+  OntologyDocumentRegion,
+  OntologyExplorerRegion,
+  OntologyGraphRegion,
+  OntologyInspectorRegion,
+  OntologyMetricsRegion,
+  OntologySourceRegion,
+  OntologySparqlRegion,
+  OntologyValidationRegion,
+  OntologyWorkbench,
+  ontologyTreeItemsFor,
+} from "./aggregates/Session/index.ts";

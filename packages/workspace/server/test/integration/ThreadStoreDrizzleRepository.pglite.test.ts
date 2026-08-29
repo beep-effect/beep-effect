@@ -4,13 +4,14 @@ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { CuidState } from "@beep/schema/Cuid";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
+import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
 import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread";
 import { DbSchema } from "@beep/workspace-tables";
 import { toThreadInsert } from "@beep/workspace-tables/entities/Thread";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -18,7 +19,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
-const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis, makePgliteLayer } = makePgliteIntegrationGate();
+const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
+
+// The db-admin drizzle folder now contains `CREATE EXTENSION btree_gist`, which
+// the shared external pglite-socket lane cannot load, so suites that apply it
+// are pinned to the in-process driver with the bundled extension registered.
+const makeMigrationCapableLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const decodeWorkspaceId = S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);
 const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
@@ -39,7 +46,7 @@ const migrateWorkspaceThread = Effect.fnUntraced(function* () {
 });
 
 const ThreadStoreDrizzleRepositoryLayer = makeDrizzleLayer().pipe(
-  Layer.provideMerge(makePgliteLayer()),
+  Layer.provideMerge(makeMigrationCapableLayer()),
   Layer.provideMerge(CuidTestLayer)
 );
 
@@ -167,7 +174,7 @@ if (!shouldRunPgliteIntegration) {
           const db = yield* makeDrizzle();
           const store = yield* makeDrizzleThreadStore();
           const workspaceId = yield* decodeWorkspaceId(4);
-          const legacy = yield* S.decodeUnknownEffect(Thread)({
+          const legacy = yield* S.decodeEffect(Thread)({
             createdAt: 1,
             createdByPrincipal: { component: "Runtime", kind: "System" },
             entityType: "WorkspaceThread",

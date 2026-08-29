@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,20 +18,8 @@ the outcome-decomposition half is the next stage.
 
 ## Next Open Question
 
-What direction should this baseline ground (the next instruction)? The three
-doctrine-hygiene calls the centerpiece teed up (`synthesis/00` §5) are now **done
-(2026-06-17)**: the `standards/memory-architecture/` standard was amended ("L3 = moat"
-retired), `effect-capability-kg` was **parked**, and this packet was **renamed**
-`baseline-synthesis → atlas-synthesis`. The product-shaped open question remains: which
-**first IP-law workflow** (office-action review / intake / drafting / contract review),
-and should `law-practice` graduate from domain-only to a full slice now? **Resolved (2026-06-17):** dad-tool-first
-(ambition ladder; rung-3 firm aggregation bracketed); migrate only the thin v3 slice
-(`EvidenceSpan`). The office-action wedge is chosen and **graduated into two goal packets** —
-[`goals/epistemic-claim-lifecycle-gate`](../../goals/epistemic-claim-lifecycle-gate/README.md)
-(the reusable boundary) and
-[`goals/law-practice-office-action-spike`](../../goals/law-practice-office-action-spike/README.md)
-(the IP-law vertical + loop). **Next:** build them — the epistemic boundary first, then the
-law-practice vertical that composes it.
+None. The two promised-now goals are completed-retained. A future synthesis
+pass reopens this packet at `decompose` or starts a fresh exploration packet.
 
 ## Read This First
 
@@ -44,6 +32,16 @@ law-practice vertical that composes it.
 
 ## Trail
 
+- 2026-08-13: **Holding-pen flip ratified** — the two promised-now goals are
+  completed-retained, so the packet is `graduated`. A future synthesis pass
+  reopens this packet at `decompose` or opens a fresh packet.
+- 2026-07-14: **Frontier re-drawn by the graduation campaign** — 16 exploration
+  packets dispositioned in one run (~18 goals graduated, incl. the law-practice
+  docketing/time/citation/doc-structure arc, the epistemic bitemporal core, the
+  retrieval fusion core, and the workflow-engine spike). The gap map
+  (`synthesis/00-baseline-gap-map.md`) is stale by design; the next synthesis
+  pass fires after the first vertical loop turns (office-action wedge ships).
+  Packet stays `active` as the standing synthesis vehicle.
 - 2026-06-17: **Foundation-gaps analysis** (`synthesis/60-foundation-gaps.md`). Grilled the
   placement; recommends a shared **`@beep/provenance`** anchor (`TextAnchor`/`SourceRef`) in
   `foundation/modeling` as the keystone fill-in. Coordination: `epistemic-claim-lifecycle-gate`'s

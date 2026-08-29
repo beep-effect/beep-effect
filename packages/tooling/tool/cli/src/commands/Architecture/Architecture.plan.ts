@@ -18,21 +18,21 @@ import {
   EnsureFileOperation,
   WriteFileOperation,
   WritePackageJsonOperation,
-} from "./Architecture.schemas.js";
-import { acceptedProofFiles, legacyFixturePaths } from "./internal/AcceptedProofManifest.js";
+} from "./Architecture.schemas.ts";
+import { acceptedProofFiles, legacyFixturePaths } from "./internal/AcceptedProofManifest.ts";
 import {
   packageShellFileOperationsFor,
   packageShellRolePlanFor,
   packageShellTargetFor,
   shellPackageJsonOperationFor,
-} from "./internal/PackageShell.js";
-import { isStageIncluded, roleAllowedForTarget, rolePlanFor } from "./internal/RoleTopology.js";
+} from "./internal/PackageShell.ts";
+import { isStageIncluded, roleAllowedForTarget, rolePlanFor } from "./internal/RoleTopology.ts";
 import {
   isPackageLevelFile,
   proofFileMatchesDomainKind,
   renderAcceptedTemplateForPlan,
   targetPathFor,
-} from "./internal/TemplateRetarget.js";
+} from "./internal/TemplateRetarget.ts";
 import type {
   ArchitectureOperation,
   ArchitectureOperationConflictPolicy,
@@ -42,8 +42,8 @@ import type {
   ArchitecturePackageRole,
   ArchitectureSliceRole,
   ArchitectureSliceRolePlan,
-} from "./Architecture.schemas.js";
-import type { AcceptedProofFile } from "./internal/AcceptedProofManifest.js";
+} from "./Architecture.schemas.ts";
+import type { AcceptedProofFile } from "./internal/AcceptedProofManifest.ts";
 
 const defaultPlanTarget = defaultArchitecturePlanTarget;
 
@@ -167,14 +167,16 @@ const validateRequestedRoles = Effect.fn(function* (
 /**
  * Build the canonical architecture lab WorkItem operation plan.
  *
- * @returns Schema-versioned operations for the canonical WorkItem proof slice.
- * @example
+ * **Example** (Build WorkItem operation plan)
+ *
  * ```ts
  * import { makeCanonicalSliceOperationPlan } from "@beep/repo-cli/commands/Architecture"
  *
  * const plan = makeCanonicalSliceOperationPlan()
  * console.log(plan.target.concept) // "WorkItem"
  * ```
+ *
+ * @returns Schema-versioned operations for the canonical WorkItem proof slice.
  * @category constructors
  * @since 0.0.0
  */
@@ -220,8 +222,8 @@ export const makeCanonicalSliceOperationPlan = (): CanonicalSliceOperationPlan =
 /**
  * Build a write-capable operation plan from the accepted WorkItem proof files.
  *
- * @effects Reads accepted architecture proof files and existing package-level files under the provided repository root.
- * @example
+ * **Example** (Build write-capable plan)
+ *
  * ```ts
  * import { makeArchitectureOperationPlan } from "@beep/repo-cli/commands/Architecture"
  * import { NodeServices } from "@effect/platform-node"
@@ -236,6 +238,8 @@ export const makeCanonicalSliceOperationPlan = (): CanonicalSliceOperationPlan =
  *
  * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
  * ```
+ *
+ * @effects Reads accepted architecture proof files and existing package-level files under the provided repository root.
  * @category constructors
  * @since 0.0.0
  */
@@ -306,8 +310,8 @@ export const makeArchitectureOperationPlan = Effect.fn(function* (
 /**
  * Build a shell-only slice role package operation plan.
  *
- * @effects Builds the shell package plan in memory; filesystem writes happen only when the plan is later applied.
- * @example
+ * **Example** (Build shell package plan)
+ *
  * ```ts
  * import { makeArchitecturePackageOperationPlan } from "@beep/repo-cli/commands/Architecture/index"
  * import { Effect } from "effect"
@@ -319,6 +323,8 @@ export const makeArchitectureOperationPlan = Effect.fn(function* (
  *
  * Effect.runPromise(program).then(console.log)
  * ```
+ *
+ * @effects Builds the shell package plan in memory; filesystem writes happen only when the plan is later applied.
  * @category constructors
  * @since 0.0.0
  */

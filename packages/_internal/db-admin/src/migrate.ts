@@ -1,10 +1,11 @@
 /**
  * db-admin migration application against a live Postgres-backed Drizzle database.
  *
- * Owns the location of the repo's drizzle-kit migrations so consumers (the
- * desktop chat sidecar, integration harnesses) apply them through a single
- * exported entry point instead of reaching into `db-admin/drizzle` with fragile
- * relative paths.
+ * Owns the location of the repo's drizzle migrations so integration harnesses
+ * apply them through a single exported entry point instead of reaching into
+ * `db-admin/drizzle` with fragile relative paths. The desktop chat sidecar does
+ * NOT depend on this package: `apps/professional-desktop/scripts/sync-migration-bundle.ts`
+ * copies the SQL into a generated data module the compiled sidecar embeds.
  *
  * @packageDocumentation
  * @category configuration
@@ -20,7 +21,8 @@ import type { PostgresError } from "@beep/postgres";
  * Absolute path to the db-admin drizzle-kit migrations folder, resolved from
  * this package so callers never hand-roll a relative path.
  *
- * @example
+ * **Example** (Check folder ends with drizzle)
+ *
  * ```ts
  * import { migrationsFolder } from "@beep/db-admin"
  *
@@ -36,7 +38,8 @@ export const migrationsFolder: string = fileURLToPath(new URL("../drizzle", impo
 /**
  * Default schema the db-admin drizzle migration journal is applied into.
  *
- * @example
+ * **Example** (Confirm default journal schema)
+ *
  * ```ts
  * import { migrationsSchema } from "@beep/db-admin"
  *
@@ -54,7 +57,8 @@ export const migrationsSchema = "drizzle" as const;
  * {@link PostgresDrizzle} database. Idempotent: the drizzle journal skips
  * already-applied migrations on subsequent runs.
  *
- * @example
+ * **Example** (Compose boot migration Effect)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { migrateOnBoot } from "@beep/db-admin"
@@ -69,7 +73,6 @@ export const migrationsSchema = "drizzle" as const;
  * - Requires {@link PostgresDrizzle} when executed.
  * - Reads db-admin Drizzle migration files from {@link migrationsFolder}.
  * - Applies pending migrations into {@link migrationsSchema} and logs success.
- *
  * @category workflows
  * @since 0.0.0
  */

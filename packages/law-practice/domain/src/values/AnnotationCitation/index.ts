@@ -9,9 +9,8 @@
 /**
  * AnnotationCitation model exports.
  *
- * **Example**
+ * **Example** (Import AnnotationCitation)
  *
- * @example
  * ```ts
  * import { AnnotationCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./AnnotationCitation.model.js";
+export * from "./AnnotationCitation.model.ts";

@@ -6,7 +6,7 @@
  */
 
 import { $SanityId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, thunkFalse, thunkUndefined } from "@beep/utils";
 import { pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -56,7 +56,8 @@ const SanityErrorReasonBase = LiteralKit([
 /**
  * Technical error reasons emitted by the Sanity driver.
  *
- * @example
+ * **Example** (Decode known reason values)
+ *
  * ```ts
  * import { SanityErrorReason } from "@beep/sanity"
  * import * as O from "effect/Option"
@@ -82,7 +83,8 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
 /**
  * Type for {@link SanityErrorReason}.
  *
- * @example
+ * **Example** (Annotate typed reason value)
+ *
  * ```ts
  * import type { SanityErrorReason } from "@beep/sanity"
  *
@@ -99,7 +101,8 @@ export type SanityErrorReason = typeof SanityErrorReason.Type;
 /**
  * Technical failure raised by the Sanity driver boundary.
  *
- * @example
+ * **Example** (Create status-based error)
+ *
  * ```ts
  * import { SanityError } from "@beep/sanity"
  *
@@ -114,7 +117,7 @@ export type SanityErrorReason = typeof SanityErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
+export class SanityError extends S.TaggedError<SanityError>($I`SanityError`)(
   "SanityError",
   {
     cause: S.optionalKey(S.String).annotateKey({
@@ -130,14 +133,15 @@ export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
       description: "Sanity request URL associated with the failure when available.",
     }),
   },
-  $I.annote("SanityError", {
+  $I.annoteError<SanityError>("SanityError", {
     description: "Redacted technical failure raised by the Sanity API driver boundary.",
   })
 ) {
   /**
    * Create a Sanity driver error.
    *
-   * @example
+   * **Example** (Create error with cause)
+   *
    * ```ts
    * import { SanityError } from "@beep/sanity"
    *
@@ -165,7 +169,8 @@ export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
 /**
  * Options used when constructing Sanity driver errors.
  *
- * @example
+ * **Example** (Make options with status)
+ *
  * ```ts
  * import { SanityErrorOptions } from "@beep/sanity"
  *
@@ -182,7 +187,7 @@ export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
  */
 export class SanityErrorOptions extends S.Class<SanityErrorOptions>($I`SanityErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
       description: "Original unknown cause used to derive a redacted diagnostic label.",
     }),
     status: S.optionalKey(SanityHttpStatus).annotateKey({
@@ -198,7 +203,7 @@ export class SanityErrorOptions extends S.Class<SanityErrorOptions>($I`SanityErr
 ) {}
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- safe reflection keeps unknown API causes inside the Sanity boundary
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -227,7 +232,7 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
     : O.none();
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- Sanity cause normalization preserves provider-specific HTTP labels
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()

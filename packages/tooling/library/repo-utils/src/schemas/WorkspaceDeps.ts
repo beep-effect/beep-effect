@@ -9,19 +9,21 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { NonEmptyStringValue, NpmPackageName, RepoPackageName } from "./PackageJson.js";
+import { NonEmptyStringValue, NpmPackageName, RepoPackageName } from "./PackageJson.ts";
 
 const $I = $RepoUtilsId.create("schemas/WorkspaceDeps");
 
 /**
  * A record mapping package names to version specifiers.
  *
- * @example
+ * **Example** (Import and log schema)
+ *
  * ```ts
  * import { DependencyRecord } from "@beep/repo-utils/schemas/WorkspaceDeps"
  * const isRecord = DependencyRecord
  * console.log(isRecord)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -34,7 +36,8 @@ export const DependencyRecord = S.Record(NpmPackageName, NonEmptyStringValue).pi
 /**
  * A record mapping package names to version specifiers.
  *
- * @example
+ * **Example** (Type a dependency map)
+ *
  * ```ts
  * import type { DependencyRecord } from "@beep/repo-utils/schemas/WorkspaceDeps"
  * const deps: DependencyRecord = {
@@ -42,6 +45,7 @@ export const DependencyRecord = S.Record(NpmPackageName, NonEmptyStringValue).pi
  * }
  * console.log(deps)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -70,16 +74,20 @@ class WorkspaceDependencyBuckets extends S.Class<WorkspaceDependencyBuckets>($I`
 /**
  * Classified dependencies for a single workspace package.
  *
+ * **Details**
+ *
  * Dependencies are separated into workspace-internal and external (NPM)
  * categories, each further divided by dependency type (runtime, dev, peer,
  * optional).
  *
- * @example
+ * **Example** (Create empty workspace deps)
+ *
  * ```ts
  * import { emptyWorkspaceDeps } from "@beep/repo-utils/schemas/WorkspaceDeps"
  * const deps = emptyWorkspaceDeps("@beep/example")
  * console.log(deps.packageName)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -104,14 +112,16 @@ export class WorkspaceDeps extends S.Class<WorkspaceDeps>($I`WorkspaceDeps`)(
 /**
  * Create an empty WorkspaceDeps for a given package name.
  *
- * @param packageName - Package name to initialize.
- * @returns Empty dependency structure for the package.
- * @example
+ * **Example** (Initialize empty deps structure)
+ *
  * ```ts
  * import { emptyWorkspaceDeps } from "@beep/repo-utils/schemas/WorkspaceDeps"
  * const deps = emptyWorkspaceDeps("@beep/example")
  * console.log(deps.workspace.dependencies)
  * ```
+ *
+ * @param packageName - Package name to initialize.
+ * @returns Empty dependency structure for the package.
  * @category constructors
  * @since 0.0.0
  */

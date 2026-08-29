@@ -21,28 +21,50 @@ Capability cites (what already exists and moves or is consumed):
   superseded by pretext's real APIs).
 - `scratchpad/computable-layout/full-circle.test.ts` — the integration proof
   pattern (metrics → minimum lookup → dock geometry).
-- `~/YeeBois/dev/pretext` — upstream clone for API reference; npm
+- the machine-local `pretext` upstream clone — API reference; npm
   `@chenglou/pretext` is the actual dependency (catalog).
 - `standards/architecture/03-driver-boundaries.md` — dev-safe driver duties
   (typed services, centralized technical errors, test layers, no product
   vocabulary).
 
-## Goal 2 — `thread-virtualization` (coordination-gated)
+## Goal 2 — [`thread-virtualization`](../../goals/thread-virtualization/README.md) (GRADUATED 2026-08-13)
 
 Exact-height virtualization for the thread renderer in the editor stack.
-**Gate:** coordinate with the beep-effect6 write lane (it owns the
-professional-desktop/editor surfaces) before opening the packet. Consumes
-`@beep/pretext` root surface + a capture pass in the client.
+**Gate:** coordinate with the beep-effect6 write lane, secure an explicit
+ownership agreement, and complete the pretext-driver handoff before opening
+the packet. Consumes `@beep/pretext` root surface + a capture pass in the
+client. **Gate status 2026-07-14:** the beep-effect6 write-gate on
+`apps/professional-desktop` shell surfaces was RELEASED (owner confirmation;
+lane rotated off desktop) for
+[`goals/dock-substrate-landing`](../../goals/dock-substrate-landing/README.md);
+the editor-stack (thread renderer) surface is distinct. **Gate resolved
+2026-08-13:** the operator confirmed ownership clear for the thread renderer
+surface and authorized the goal scaffold.
+
+## Goal 3 — `dock-substrate-landing` (OPENED 2026-07-14)
+
+Graduate the dock kernel/adapter into `@beep/dock` + `@beep/dock-react`
+(`packages/foundation/ui-system/`) and land the dock workspace as the root
+shell of `apps/professional-desktop`. Owned by
+[`goals/dock-substrate-landing`](../../goals/dock-substrate-landing/README.md);
+plan-of-record lives in that packet's SPEC/PLAN, not here.
+
+## Routed residue (2026-07-14 sibling review)
+
+- Q2 v2 contract residue — segment kinds, emoji correction, font-descriptor
+  normalization, and `PreparedText` alignment — is **ROUTED** to
+  [`goals/pretext-driver`](../../goals/pretext-driver/README.md).
+- Dock-kernel max constraints, `LayoutPriority`, and snap-to-collapse are
+  **ROUTED** to
+  [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md).
 
 ## Later candidates (unsequenced)
 
-- **Dock-adapter minima wiring** — panels measure tab titles via the driver
-  and feed `makeDockGeometryAtoms.minimaAtom` (kernel + atom already landed
-  2026-07-12; adapter wiring only).
-- **Bubble shrinkwrap** — `measureLineStats`/`walkLineRanges` shrinkwrap for
-  chat bubbles.
 - **Layout-as-unit-tests doctrine** — promote the fixture-oracle pattern into
   a documented testing practice once the driver's test layers exist.
+
+(Landed and removed from this list: dock-adapter minima wiring — PR #396,
+2026-07-14; bubble shrinkwrap — PR #399, 2026-07-14.)
 
 ## Sequencing rationale
 

@@ -51,7 +51,8 @@ const SanityApiVersion = S.String.check(S.isPattern(/^\d{4}-\d{2}-\d{2}$/u)).pip
 /**
  * Default Sanity API version used when callers do not provide one.
  *
- * @example
+ * **Example** (Logging default API version)
+ *
  * ```ts
  * import { SANITY_API_VERSION } from "@beep/sanity"
  *
@@ -66,7 +67,8 @@ export const SANITY_API_VERSION = "2025-05-14";
 /**
  * Runtime configuration accepted by {@link Sanity.makeLayer}.
  *
- * @example
+ * **Example** (Creating config with make)
+ *
  * ```ts
  * import { SANITY_API_VERSION, SanityConfigInput } from "@beep/sanity"
  *

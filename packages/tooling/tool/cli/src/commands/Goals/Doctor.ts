@@ -16,43 +16,47 @@
  * @since 0.0.0
  */
 
+import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Order, Path, SchemaGetter } from "effect";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { diffMembership } from "../../internal/ratchet/RatchetDiff.js";
-import { runGitOutput } from "../../internal/repo-run/index.js";
-import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.js";
-import { GoalsGitError } from "./Goals.errors.js";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
+import { runGitOutput } from "../../internal/repo-run/index.ts";
+import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
+import { GoalsGitError } from "./Goals.errors.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
 import {
   goalManifestPhases,
   isJsonRecord,
   listGoalPackets,
   parseGoalManifestText,
   readmeLifecycleToken,
-} from "./Inventory.js";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.js";
-import type { GoalManifest } from "./Goals.schemas.js";
-import type { GoalPacketRecord } from "./Inventory.js";
+} from "./Inventory.ts";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
+import type { GoalManifest } from "./Goals.schemas.ts";
+import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Doctor");
 
 /**
  * Repo-relative path of the committed doctor baseline.
  *
- * @example
+ * **Example** (Log baseline path constant)
+ *
  * ```ts
  * import { GOALS_DOCTOR_BASELINE_PATH } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(GOALS_DOCTOR_BASELINE_PATH) // "goals/goals-doctor.baseline.jsonc"
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -61,12 +65,14 @@ export const GOALS_DOCTOR_BASELINE_PATH = "goals/goals-doctor.baseline.jsonc";
 /**
  * Hard maximum `GOAL.md` launcher size in characters.
  *
- * @example
+ * **Example** (Log max character limit)
+ *
  * ```ts
  * import { GOAL_MD_MAX_CHARS } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(GOAL_MD_MAX_CHARS) // 4000
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -77,12 +83,14 @@ const STALE_ACTIVE_DAYS = 21;
 /**
  * Finding kinds emitted by `beep goals doctor`.
  *
- * @example
+ * **Example** (Check finding kind membership)
+ *
  * ```ts
  * import { GoalDoctorFindingKind } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(GoalDoctorFindingKind.is["manifest-invalid"]("manifest-invalid"))
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,22 +108,34 @@ export const GoalDoctorFindingKind = LiteralKit([
   "completion-gate-unsatisfied",
   "superseded-without-pointer",
   "exploration-backlink-missing",
+  "packet-stream-fork",
+  "packet-stream-integrity",
+  "packet-status-drift",
+  "packet-trace-stale",
+  "packet-trace-missing",
+  "packet-fleet-duplicate-slug",
+  "packet-fleet-dependency-cycle",
+  "packet-fleet-unreachable",
+  "packet-fleet-unmigrated-reference",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
-    description: "Finding kinds emitted by beep goals doctor (blocking and advisory).",
+    description:
+      "Finding kinds emitted by beep goals doctor and beep explore --check (blocking and advisory; the packet-* kinds are the explore check's stream findings).",
   })
 );
 
 /**
  * Finding kind emitted by `beep goals doctor`.
  *
- * @example
+ * **Example** (Type a finding kind)
+ *
  * ```ts
  * import type { GoalDoctorFindingKind } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * const kind: GoalDoctorFindingKind = "lifecycle-mismatch"
  * console.log(kind)
  * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -130,10 +150,13 @@ const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
 /**
  * One goals-doctor finding.
  *
+ * **Details**
+ *
  * `key` is the stable identity used for baseline membership; it never embeds
  * volatile detail so a finding keeps its identity across runs.
  *
- * @example
+ * **Example** (Make a doctor finding)
+ *
  * ```ts
  * import { GoalDoctorFinding } from "@beep/repo-cli/commands/Goals/Doctor"
  *
@@ -146,6 +169,7 @@ const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
  * })
  * console.log(finding.key)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -195,13 +219,15 @@ const finding = (
 /**
  * Result of ratcheting current blocking findings against the baseline.
  *
- * @example
+ * **Example** (Make empty classification result)
+ *
  * ```ts
  * import { GoalDoctorClassification } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * const result = GoalDoctorClassification.make({ introduced: [], inherited: [], resolved: [] })
  * console.log(result.introduced.length) // 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -219,14 +245,14 @@ export class GoalDoctorClassification extends S.Class<GoalDoctorClassification>(
 /**
  * Classify current blocking findings against the committed baseline keys.
  *
+ * **Details**
+ *
  * Pure fallow-ratchet core: `introduced` (not in the baseline) is the failure
  * signal, `inherited` stays advisory, `resolved` is the shrink-the-baseline
  * nudge.
  *
- * @param current - Current blocking findings.
- * @param baselineKeys - Committed baseline finding keys.
- * @returns Introduced/inherited findings plus resolved baseline keys.
- * @example
+ * **Example** (Classify against empty baseline)
+ *
  * ```ts
  * import { classifyGoalDoctorFindings, GoalDoctorFinding } from "@beep/repo-cli/commands/Goals/Doctor"
  *
@@ -240,13 +266,17 @@ export class GoalDoctorClassification extends S.Class<GoalDoctorClassification>(
  * const result = classifyGoalDoctorFindings([current], [])
  * console.log(result.introduced.length) // 1
  * ```
+ *
+ * @param current - Current blocking findings.
+ * @param baselineKeys - Committed baseline finding keys.
+ * @returns Introduced/inherited findings plus resolved baseline keys.
  * @category utilities
  * @since 0.0.0
  */
-export const classifyGoalDoctorFindings = (
-  current: ReadonlyArray<GoalDoctorFinding>,
-  baselineKeys: ReadonlyArray<string>
-): GoalDoctorClassification => {
+export const classifyGoalDoctorFindings: {
+  (baselineKeys: ReadonlyArray<string>): (current: ReadonlyArray<GoalDoctorFinding>) => GoalDoctorClassification;
+  (current: ReadonlyArray<GoalDoctorFinding>, baselineKeys: ReadonlyArray<string>): GoalDoctorClassification;
+} = dual(2, (current: ReadonlyArray<GoalDoctorFinding>, baselineKeys: ReadonlyArray<string>) => {
   const diff = diffMembership({
     current: A.map(current, (item) => item.key),
     baseline: baselineKeys,
@@ -259,7 +289,7 @@ export const classifyGoalDoctorFindings = (
     inherited: A.filter(current, (item) => !HashSet.has(introducedKeys, item.key)),
     resolved: diff.resolved,
   });
-};
+});
 
 const stringAt = (value: Readonly<Record<string, unknown>>, key: string): O.Option<string> =>
   pipe(R.get(value, key), O.filter(P.isString));
@@ -415,12 +445,30 @@ const explorationBacklinkFindings = Effect.fn("Goals.explorationBacklinkFindings
   raw: Readonly<Record<string, unknown>>
 ) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const provenance = pipe(R.get(raw, "provenance"), O.filter(isJsonRecord));
   const exploration = O.flatMap(provenance, (block) => stringAt(block, "exploration"));
   if (O.isNone(exploration)) {
     return A.empty<GoalDoctorFinding>();
   }
-  const exists = yield* fs.exists(exploration.value).pipe(Effect.orElseSucceed(thunkFalse));
+  const repoRoot = yield* findRepoRoot();
+  const resolvedExploration = path.resolve(repoRoot, exploration.value);
+  const pathEscapesRepo =
+    path.isAbsolute(exploration.value) ||
+    Str.startsWith("//")(exploration.value) ||
+    Str.startsWith("\\\\")(exploration.value) ||
+    !isPathWithinRoot(repoRoot, resolvedExploration);
+  if (pathEscapesRepo) {
+    return A.of(
+      finding(
+        record.slug,
+        "exploration-backlink-missing",
+        "advisory",
+        `provenance.exploration "${exploration.value}" is an invalid path; expected a path contained within the repository root.`
+      )
+    );
+  }
+  const exists = yield* fs.exists(resolvedExploration).pipe(Effect.orElseSucceed(thunkFalse));
   if (exists) {
     return A.empty<GoalDoctorFinding>();
   }
@@ -631,13 +679,15 @@ const findingLine = (item: GoalDoctorFinding): string => `- ${item.slug} [${item
  * Run the goals doctor: collect findings, ratchet blocking ones against the
  * committed baseline, and fail on new blocking findings.
  *
- * @example
+ * **Example** (Verify doctor returns Effect)
+ *
  * ```ts
  * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -719,13 +769,15 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
  * Run the goals doctor: collect findings, ratchet blocking ones against the
  * committed baseline, and fail on new blocking findings.
  *
- * @example
+ * **Example** (Verify doctor returns Effect)
+ *
  * ```ts
  * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -774,18 +826,21 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
 });
 
 const writeBaselineFlag = Flag.boolean("write-baseline").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Capture the current blocking findings as the committed baseline (may only shrink)")
 );
 
 /**
  * `bun run beep goals doctor` — packet-drift findings with a baseline ratchet.
  *
- * @example
+ * **Example** (Log doctor command name)
+ *
  * ```ts
  * import { goalsDoctorCommand } from "@beep/repo-cli/commands/Goals/Doctor"
  *
  * console.log(goalsDoctorCommand.name)
  * ```
+ *
  * @category commands
  * @since 0.0.0
  */

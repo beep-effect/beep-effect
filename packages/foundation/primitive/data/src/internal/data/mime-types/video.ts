@@ -12,15 +12,16 @@
  * Record of `video/*` MIME type definitions, each containing a source
  * registry and an array of associated file extensions.
  *
- * @since 0.0.0
- * @category models
- * @example
- * ```typescript
- * import { video } from "@beep/data/mime-types/video"
+ * **Example** (Accessing video/mp4 MIME type)
  *
- * video["video/mp4"]
- * // { source: "iana", extensions: ["mp4", "mp4v", "mpg4"] }
+ * ```ts import.meta.vitest name="Accessing video/mp4 MIME type"
+ * import { video } from "@beep/data/MimeTypes"
+ *
+ * video["video/mp4"].extensions.includes("mp4") // => true
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export const video = {
   "video/3gpp": {

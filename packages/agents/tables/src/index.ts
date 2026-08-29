@@ -9,7 +9,8 @@
 /**
  * Package version for `@beep/agents-tables`.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/agents-tables"
  *
@@ -24,11 +25,12 @@ export const VERSION = "0.0.0" as const;
 /**
  * Agents entity table metadata namespaces.
  *
- * @example
+ * **Example** (Log entity table name)
+ *
  * ```ts
  * import { Entities } from "@beep/agents-tables"
  *
- * console.log(Entities.ProviderInstance.providerInstanceTable.definition.tableName)
+ * console.log(Entities.ProviderInstance.PROVIDER_INSTANCE_TABLE_NAME)
  * ```
  *
  * @category tables
@@ -41,4 +43,4 @@ export * as Entities from "./entities/index.ts";
  * @category tables
  * @since 0.0.0
  */
-export * from "./tables.js";
+export * from "./tables.ts";

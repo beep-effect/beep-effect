@@ -6,8 +6,9 @@
  */
 
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
@@ -21,7 +22,8 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.rpc");
  * Workspace-scoped payload shared by the vault sync trigger, status, and
  * conflict-listing RPCs.
  *
- * @example
+ * **Example** (Make workspace payload)
+ *
  * ```ts
  * import { VaultSyncWorkspacePayload } from "@beep/documents-use-cases/public"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
@@ -50,9 +52,10 @@ export class VaultSyncWorkspacePayload extends S.Class<VaultSyncWorkspacePayload
 /**
  * Payload for marking one vault sync drift record as reviewed.
  *
- * @example
+ * **Example** (Make conflict reviewed payload)
+ *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { MarkVaultSyncConflictReviewedPayload } from "@beep/documents-use-cases/public"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
@@ -84,9 +87,50 @@ export class MarkVaultSyncConflictReviewedPayload extends S.Class<MarkVaultSyncC
 ) {}
 
 /**
+ * Payload for reading vault sync status, optionally forcing a fresh mirror
+ * probe.
+ *
+ * **Details**
+ *
+ * `forceProbe` defaults to `false` for both construction and missing-key
+ * decoding, so pre-forceProbe peers stay wire-compatible and keep the cached
+ * probe path. An operator's explicit "retry connection" sends `true`, which
+ * makes the sidecar discard any cached probe failure and ask the provider now.
+ *
+ * **Example** (Make status payload with defaults)
+ *
+ * ```ts
+ * import { GetVaultSyncStatusPayload } from "@beep/documents-use-cases/public"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import * as S from "effect/Schema"
+ *
+ * const payload = GetVaultSyncStatusPayload.make({
+ *   workspaceId: S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1)
+ * })
+ * console.log(payload.forceProbe) // false
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export class GetVaultSyncStatusPayload extends VaultSyncWorkspacePayload.extend<GetVaultSyncStatusPayload>(
+  $I`GetVaultSyncStatusPayload`
+)(
+  {
+    forceProbe: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "When true, the status read bypasses the cached mirror probe and asks the provider now.",
+    }),
+  },
+  $I.annote("GetVaultSyncStatusPayload", {
+    description: "Payload for reading vault sync status, optionally forcing a fresh mirror probe.",
+  })
+) {}
+
+/**
  * RPC used by the desktop webview to trigger one vault sync pass.
  *
- * @example
+ * **Example** (Verify trigger RPC registration)
+ *
  * ```ts
  * import { TriggerVaultSyncRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -106,7 +150,8 @@ export const TriggerVaultSyncRpc = Rpc.make("TriggerVaultSync", {
 /**
  * RPC used by the desktop webview to read the current vault sync status.
  *
- * @example
+ * **Example** (Verify status RPC registration)
+ *
  * ```ts
  * import { GetVaultSyncStatusRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -118,7 +163,7 @@ export const TriggerVaultSyncRpc = Rpc.make("TriggerVaultSync", {
  * @since 0.0.0
  */
 export const GetVaultSyncStatusRpc = Rpc.make("GetVaultSyncStatus", {
-  payload: VaultSyncWorkspacePayload,
+  payload: GetVaultSyncStatusPayload,
   success: VaultSyncStatus,
   error: VaultSyncActionError,
 });
@@ -126,7 +171,8 @@ export const GetVaultSyncStatusRpc = Rpc.make("GetVaultSyncStatus", {
 /**
  * RPC used by the desktop webview to list open vault sync drift records.
  *
- * @example
+ * **Example** (Verify list conflicts registration)
+ *
  * ```ts
  * import { ListVaultSyncConflictsRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -146,7 +192,8 @@ export const ListVaultSyncConflictsRpc = Rpc.make("ListVaultSyncConflicts", {
 /**
  * RPC used by the desktop webview to mark one drift record as reviewed.
  *
- * @example
+ * **Example** (Verify mark reviewed registration)
+ *
  * ```ts
  * import { MarkVaultSyncConflictReviewedRpc, VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *
@@ -166,7 +213,8 @@ export const MarkVaultSyncConflictReviewedRpc = Rpc.make("MarkVaultSyncConflictR
 /**
  * Vault sync RPC group exposed by the professional desktop server.
  *
- * @example
+ * **Example** (Check trigger request exists)
+ *
  * ```ts
  * import { VaultSyncRpcs } from "@beep/documents-use-cases/public"
  *

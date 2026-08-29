@@ -1,6 +1,8 @@
 /**
  * Shared SSRF guard for outbound HTTP(S) requests.
  *
+ * **Details**
+ *
  * Classifies the *literal* hostname or IP of a target URL before any
  * `HttpClient` request is issued and rejects loopback, link-local, RFC1918/ULA
  * private, and cloud-metadata (`169.254.169.254`) targets. This bounds the SSRF
@@ -14,7 +16,8 @@
  * {@link BlockedHostError}. An optional allowlist permits explicitly trusted
  * hosts (matched case-insensitively against the normalized hostname).
  *
- * @remarks
+ * **Gotchas**
+ *
  * By default the guard only inspects the literal hostname/IP and does **not**
  * perform DNS resolution: a public DNS name that resolves to `127.0.0.1` or
  * `169.254.169.254` is not caught unless a resolver is supplied. To close that
@@ -35,7 +38,6 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { Effect, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -43,6 +45,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Defect } from "./Opaque.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");
@@ -64,9 +67,12 @@ type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<stri
  * Typed failure raised when a hostname or URL targets internal network space
  * or cannot be parsed into a hostname.
  *
+ * **Details**
+ *
  * Fails closed: an unparseable URL is treated as blocked rather than allowed.
  *
- * @example
+ * **Example** (Constructing a BlockedHostError)
+ *
  * ```ts
  * import { BlockedHostError } from "@beep/schema"
  * import * as O from "effect/Option"
@@ -83,7 +89,7 @@ type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<stri
  * @category errors
  * @since 0.0.0
  */
-export class BlockedHostError extends TaggedErrorClass<BlockedHostError>($I`BlockedHostError`)(
+export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`BlockedHostError`)(
   "BlockedHostError",
   {
     host: S.String.annotateKey({
@@ -98,14 +104,14 @@ export class BlockedHostError extends TaggedErrorClass<BlockedHostError>($I`Bloc
     message: S.String.annotateKey({
       description: "Safe diagnostic message explaining why the host was blocked.",
     }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Underlying parse failure when the URL could not be decoded.",
       })
     ),
   },
-  $I.annote("BlockedHostError", {
+  $I.annoteError<BlockedHostError>("BlockedHostError", {
     description: "Raised when an outbound request targets internal network space or an unparseable URL.",
   })
 ) {}
@@ -172,12 +178,12 @@ const extractMappedIpv4 = (host: string): O.Option<string> =>
 // them behind abstraction would obscure which ranges are blocked. IPv4-mapped
 // IPv6 is decoded back to its IPv4 form (extractMappedIpv4) so mapped private
 // ranges classify through the same isInternalIpv4 checks.
-// fallow-ignore-next-line complexity
+// fallow-ignore-next-line complexity -- flat SSRF checks keep every blocked network class independently auditable
 const isInternalHost = (host: string): boolean =>
   // SSRF guard duplicated with @beep/nlp-mcp DatasetLoader.isBlockedRemoteHost by
   // design: each slice owns a self-contained, independently auditable blocklist
   // rather than coupling a foundation schema to a driver's internals.
-  // fallow-ignore-next-line code-duplication
+  // fallow-ignore-next-line code-duplication -- SSRF blocklist mirrors DatasetLoader for independent security auditing
   host === "localhost" ||
   Str.endsWith(".localhost")(host) ||
   host === "0.0.0.0" ||
@@ -250,35 +256,43 @@ const assertResolvedAddressesAllowed: (
  * Report whether a hostname should be blocked as loopback, link-local,
  * private (RFC1918/ULA), or a cloud metadata endpoint.
  *
+ * **Details**
+ *
  * Pure boolean predicate. Hostnames present in `options.allowlist` are never
  * blocked. The input is normalized (lowercased, IPv6 brackets stripped) before
  * matching, so `[::1]`, `::1`, and `LOCALHOST` all classify consistently.
  *
- * @example
- * ```ts
+ * **Example** (Checking blocked hostnames)
+ *
+ * ```ts import.meta.vitest name="Checking blocked hostnames"
  * import { isBlockedRemoteHost } from "@beep/schema"
  *
- * console.log(isBlockedRemoteHost("169.254.169.254")) // true
- * console.log(isBlockedRemoteHost("example.com")) // false
- * console.log(isBlockedRemoteHost("10.0.0.5", { allowlist: ["10.0.0.5"] })) // false
+ * isBlockedRemoteHost("169.254.169.254") // => true
+ * isBlockedRemoteHost("example.com") // => false
+ * isBlockedRemoteHost("10.0.0.5", { allowlist: ["10.0.0.5"] }) // => false
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
-export const isBlockedRemoteHost = (
-  hostname: string,
-  options: { readonly allowlist?: ReadonlyArray<string> | undefined } = {}
-): boolean => {
-  const host = normalizeHost(hostname);
-  if (isAllowlisted(host, options.allowlist)) {
-    return false;
+export const isBlockedRemoteHost: {
+  (options?: { readonly allowlist?: ReadonlyArray<string> | undefined }): (hostname: string) => boolean;
+  (hostname: string, options?: { readonly allowlist?: ReadonlyArray<string> | undefined }): boolean;
+} = dual(
+  (args) => P.isString(args[0]),
+  (hostname: string, options: { readonly allowlist?: ReadonlyArray<string> | undefined } = {}): boolean => {
+    const host = normalizeHost(hostname);
+    if (isAllowlisted(host, options.allowlist)) {
+      return false;
+    }
+    return isInternalHost(host);
   }
-  return isInternalHost(host);
-};
+);
 
 /**
  * Fail-closed assertion that a hostname does not target internal network space.
+ *
+ * **Details**
  *
  * Succeeds with `void` when the host is allowed; fails with a typed
  * {@link BlockedHostError} when the literal host classifies as loopback,
@@ -291,7 +305,8 @@ export const isBlockedRemoteHost = (
  * supplied or when the literal host is allowlisted. See the module
  * `@remarks` for the residual DNS-rebinding TOCTOU limitation.
  *
- * @example
+ * **Example** (Asserting an allowed hostname)
+ *
  * ```ts
  * import { assertAllowedRemoteHost } from "@beep/schema"
  * import * as Effect from "effect/Effect"
@@ -302,7 +317,6 @@ export const isBlockedRemoteHost = (
  *
  * @effects Fails with `BlockedHostError` when the host is blocked; otherwise
  * succeeds with `void`. Emits a `SafeRemoteHost.assertAllowedRemoteHost` span.
- *
  * @category assertions
  * @since 0.0.0
  */
@@ -341,6 +355,8 @@ export const assertAllowedRemoteHost: {
 /**
  * Fail-closed assertion that a full URL does not target internal network space.
  *
+ * **Details**
+ *
  * Parses the URL, extracts its hostname, and delegates to the same
  * classification used by {@link isBlockedRemoteHost}. An unparseable URL fails
  * with a typed {@link BlockedHostError} carrying the parse defect, so callers
@@ -353,7 +369,8 @@ export const assertAllowedRemoteHost: {
  * when no resolver is supplied or the literal host is allowlisted; see the module
  * `@remarks` for the residual DNS-rebinding TOCTOU limitation.
  *
- * @example
+ * **Example** (Asserting an allowed remote URL)
+ *
  * ```ts
  * import { assertAllowedRemoteUrl } from "@beep/schema"
  * import * as Effect from "effect/Effect"
@@ -365,7 +382,6 @@ export const assertAllowedRemoteHost: {
  * @effects Fails with `BlockedHostError` when the URL cannot be parsed or its
  * host is blocked; otherwise succeeds with `void`. Emits a
  * `SafeRemoteHost.assertAllowedRemoteUrl` span.
- *
  * @category assertions
  * @since 0.0.0
  */

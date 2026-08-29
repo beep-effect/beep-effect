@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
@@ -20,7 +20,8 @@ const AES_GCM_NONCE_BYTES = 12;
 /**
  * Error raised by AI metrics encrypted archive helpers.
  *
- * @example
+ * **Example** (Make archive error instance)
+ *
  * ```ts
  * import { AiMetricsArchiveError } from "@beep/repo-ai-metrics"
  * const error = AiMetricsArchiveError.make({
@@ -29,16 +30,17 @@ const AES_GCM_NONCE_BYTES = 12;
  * })
  * console.log(error)
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsArchiveError extends TaggedErrorClass<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
+export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: Defect({ includeStack: true }),
     message: S.String,
   },
-  $I.annote("AiMetricsArchiveError", {
+  $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {
     description: "Typed failure raised while encrypting or reading AI metrics raw archive objects.",
   })
 ) {}
@@ -46,7 +48,8 @@ export class AiMetricsArchiveError extends TaggedErrorClass<AiMetricsArchiveErro
 /**
  * Encrypted raw transcript archive envelope stored on disk.
  *
- * @example
+ * **Example** (Build encrypted archive envelope)
+ *
  * ```ts
  * import { AiMetricsEncryptedRawArchiveEnvelope } from "@beep/repo-ai-metrics"
  *
@@ -62,6 +65,7 @@ export class AiMetricsArchiveError extends TaggedErrorClass<AiMetricsArchiveErro
  * })
  * console.log(envelope.algorithm)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -86,7 +90,8 @@ export class AiMetricsEncryptedRawArchiveEnvelope extends S.Class<AiMetricsEncry
 /**
  * Safe archive object metadata returned after an encrypted write or lookup.
  *
- * @example
+ * **Example** (Create raw archive object)
+ *
  * ```ts
  * import { AiMetricsRawArchiveObject } from "@beep/repo-ai-metrics"
  *
@@ -102,6 +107,7 @@ export class AiMetricsEncryptedRawArchiveEnvelope extends S.Class<AiMetricsEncry
  * })
  * console.log(object.created)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,13 +130,15 @@ export class AiMetricsRawArchiveObject extends S.Class<AiMetricsRawArchiveObject
 /**
  * Redacted base64 AES-256-GCM key used for raw archive encryption.
  *
- * @example
+ * **Example** (Create redacted archive key)
+ *
  * ```ts
  * import { AiMetricsRawArchiveKey } from "@beep/repo-ai-metrics"
  * import { Redacted } from "effect"
  * const key: AiMetricsRawArchiveKey = Redacted.make("base64-32-byte-key")
  * console.log(key)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -144,13 +152,15 @@ export const AiMetricsRawArchiveKey = S.String.pipe(
 /**
  * Type for {@link AiMetricsRawArchiveKey}.
  *
- * @example
+ * **Example** (Type redacted archive key)
+ *
  * ```ts
  * import type { AiMetricsRawArchiveKey } from "@beep/repo-ai-metrics"
  * import { Redacted } from "effect"
  * const key: AiMetricsRawArchiveKey = Redacted.make("base64-32-byte-key")
  * console.log(key)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -248,14 +258,12 @@ const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject
 /**
  * Write one raw transcript file into the encrypted content-addressed archive.
  *
- * @remarks
+ * **Details**
+ *
  * The raw archive key is unwrapped only inside the crypto import boundary.
- * @effects
- * - Reads `globalThis.crypto` for AES-GCM key import, nonce generation, and encryption.
- * - Creates the source-kind archive directory when missing.
- * - Writes one JSON envelope unless the content-addressed object already exists.
- * - Reads and decodes the existing envelope when the object is already archived.
- * @example
+ *
+ * **Example** (Write encrypted raw archive)
+ *
  * ```ts
  * import {
  *   AiMetricsTranscriptSource,
@@ -274,6 +282,12 @@ const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject
  * const archiveObjectId = Effect.runPromise(Effect.map(program, (object) => object.archiveObjectId))
  * console.log(archiveObjectId)
  * ```
+ *
+ * @effects
+ * - Reads `globalThis.crypto` for AES-GCM key import, nonce generation, and encryption.
+ * - Creates the source-kind archive directory when missing.
+ * - Writes one JSON envelope unless the content-addressed object already exists.
+ * - Reads and decodes the existing envelope when the object is already archived.
  * @category services
  * @since 0.0.0
  */
@@ -360,11 +374,13 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
 /**
  * Decrypt an archive envelope for package-level verification.
  *
- * @remarks
+ * **Details**
+ *
  * P2 intentionally does not expose this as a CLI command.
  * Decryption is package-level verification support, not a user-facing CLI path.
- * @effects Reads `globalThis.crypto` for AES-GCM key import and decryption.
- * @example
+ *
+ * **Example** (Decrypt archive envelope)
+ *
  * ```ts
  * import {
  *   AiMetricsEncryptedRawArchiveEnvelope,
@@ -386,6 +402,8 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
  * })
  * console.log(program)
  * ```
+ *
+ * @effects Reads `globalThis.crypto` for AES-GCM key import and decryption.
  * @category services
  * @since 0.0.0
  */
@@ -417,13 +435,15 @@ export const decryptEncryptedRawArchiveEnvelope = Effect.fn("AiMetrics.decryptEn
 /**
  * Read and decode an encrypted raw archive envelope from disk.
  *
- * @effects Reads and decodes one encrypted raw archive envelope JSON file.
- * @example
+ * **Example** (Read envelope from disk)
+ *
  * ```ts
  * import { readEncryptedRawArchiveEnvelope } from "@beep/repo-ai-metrics"
  * const program = readEncryptedRawArchiveEnvelope(".ai-metrics/raw/codex/raw-example.json")
  * console.log(program)
  * ```
+ *
+ * @effects Reads and decodes one encrypted raw archive envelope JSON file.
  * @category services
  * @since 0.0.0
  */

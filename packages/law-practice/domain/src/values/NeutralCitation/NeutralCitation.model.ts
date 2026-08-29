@@ -8,10 +8,10 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { NeutralComponentSpan } from "../ComponentSpan/index.js";
-import { PinciteInfo } from "../PinciteInfo/index.js";
-import { StructuredDate } from "../StructuredDate/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { NeutralComponentSpan } from "../ComponentSpan/index.ts";
+import { PinciteInfo } from "../PinciteInfo/index.ts";
+import { StructuredDate } from "../StructuredDate/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/NeutralCitation/NeutralCitation.model");
 
@@ -19,13 +19,14 @@ const $I = $LawPracticeDomainId.create("values/NeutralCitation/NeutralCitation.m
  * A vendor-neutral (medium-neutral) court citation identified by year, court,
  * and document number.
  *
+ * **Details**
+ *
  * Spreads the shared {@link CitationBase} fields and adds the `neutral`
  * discriminant tag plus its own year, document number, and optional court,
  * database, pincite, date, and component-span metadata.
  *
- * **Example**
+ * **Example** (Make neutral citation)
  *
- * @example
  * ```ts
  * import { NeutralCitation, Span } from "@beep/law-practice-domain"
  * import { NonNegativeInt } from "@beep/schema"
@@ -78,9 +79,7 @@ export class NeutralCitation extends S.Class<NeutralCitation>($I`NeutralCitation
           "Database identifier for vendor-database cites with no inherent court value: WL, LEXIS, BL. Set instead of court (#294).",
       })
     ),
-    unpublished: S.Boolean.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    unpublished: SchemaUtils.BoolKeyDefaultFalse.pipe(
       S.annotateKey({
         description: "True when the citation has an Illinois Rule 23 -U suffix; stripped from documentNumber (#230).",
       })
@@ -129,7 +128,8 @@ export class NeutralCitation extends S.Class<NeutralCitation>($I`NeutralCitation
 /**
  * Companion namespace for `NeutralCitation`.
  *
- * @example
+ * **Example** (Alias Encoded companion type)
+ *
  * ```ts
  * import type { NeutralCitation } from "@beep/law-practice-domain"
  *
@@ -143,9 +143,8 @@ export declare namespace NeutralCitation {
   /**
    * Wire-encoded representation of a decoded {@link NeutralCitation}.
    *
-   * **Example**
+   * **Example** (Declare Encoded wire type)
    *
-   * @example
    * ```ts
    * import type { NeutralCitation } from "@beep/law-practice-domain"
    *

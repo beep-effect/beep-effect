@@ -6,49 +6,57 @@
  */
 
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import { Command, Flag } from "effect/unstable/cli";
-import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.js";
-import { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
-import { SchemaFirstLintOptions } from "./Lint.schemas.js";
+import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
+import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
+import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
 import type * as O from "effect/Option";
 import type { CallExpression } from "ts-morph";
-import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.js";
-import type { SchemaFirstInventoryEntry } from "./Lint.schemas.js";
+import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
+import type { SchemaFirstInventoryEntry } from "./Lint.schemas.ts";
+
+type SchemaFirstDetectorContext = Pick<SchemaFirstInventoryEntry, "file" | "owner">;
 
 /**
  * Literal member equality helper used by schema catalog detection.
  *
- * @example
+ * **Example** (Literal member equality check)
+ *
  * ```ts
  * import { literalMemberEquals } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(literalMemberEquals(["draft", "published"], "published")) // true
  * console.log(literalMemberEquals(["draft", "published"], "archived")) // false
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 /**
  * Detect schema-derived arbitrary property coverage in source text.
  *
- * @example
+ * **Example** (Detect schema arbitrary coverage)
+ *
  * ```ts
  * import { sourceTextHasSchemaArbitraryPropertyCoverage } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(sourceTextHasSchemaArbitraryPropertyCoverage("assertSchemaArbitraryDecodesToSelf(Worker);")) // true
  * console.log(sourceTextHasSchemaArbitraryPropertyCoverage("fc.property(fc.string(), (value) => value.length >= 0);")) // false
  * ```
+ *
  * @category predicates
  * @since 0.0.0
  */
 export {
   literalMemberEquals,
   sourceTextHasSchemaArbitraryPropertyCoverage,
-} from "./internal/SchemaFirstArbitraryCoverage.js";
+} from "./internal/SchemaFirstArbitraryCoverage.ts";
 /**
  * Schema-crispening policy exemption predicate.
  *
- * @example
+ * **Example** (No-policy exemption check)
+ *
  * ```ts
  * import { isSchemaCrispeningPolicyExempt, SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -65,13 +73,15 @@ export {
  * // With no policy document loaded, no entry is exempt.
  * console.log(isSchemaCrispeningPolicyExempt(O.none())(entry)) // false
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 /**
  * Resolve a source file to its schema-crispening policy family.
  *
- * @example
+ * **Example** (Resolve file policy family)
+ *
  * ```ts
  * import { schemaCrispeningFamilyForFile } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -79,14 +89,16 @@ export {
  * console.log(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Foo.ts")) // Option.some("drivers")
  * console.log(O.isNone(schemaCrispeningFamilyForFile("README.md"))) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from "./internal/SchemaFirstPolicy.js";
+export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from "./internal/SchemaFirstPolicy.ts";
 /**
  * Schema-first owner resolver factory.
  *
- * @example
+ * **Example** (Create owner resolver effect)
+ *
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -95,13 +107,15 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  * const program = makeSchemaFirstOwnerResolver("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 /**
  * Schema-first ts-morph project factory.
  *
- * @example
+ * **Example** (Create project factory effect)
+ *
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -109,14 +123,16 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  * const program = makeSchemaFirstProject()
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
-export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal/SchemaFirstProject.js";
+export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal/SchemaFirstProject.ts";
 /**
  * Run schema-first inventory verification.
  *
- * @example
+ * **Example** (Run inventory verification)
+ *
  * ```ts
  * import { runSchemaFirstLint, SchemaFirstLintOptions } from "@beep/repo-cli/commands/Lint"
  * import { Effect } from "effect"
@@ -124,27 +140,31 @@ export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal
  * const program = runSchemaFirstLint(SchemaFirstLintOptions.make({ write: false }))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */
-export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
+export { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 /**
  * Schema-crispening family policy schema.
  *
- * @example
+ * **Example** (Make family policy)
+ *
  * ```ts
  * import { SchemaCrispeningFamilyPolicy } from "@beep/repo-cli/commands/Lint"
  *
  * const policy = SchemaCrispeningFamilyPolicy.make({ blocking: true })
  * console.log(policy.blocking) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 /**
  * Schema-crispening policy document schema.
  *
- * @example
+ * **Example** (Make policy document)
+ *
  * ```ts
  * import { SchemaCrispeningPolicyDocument } from "@beep/repo-cli/commands/Lint"
  *
@@ -156,25 +176,29 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * })
  * console.log(document.families.foundation.blocking) // false
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 /**
  * Included source globs for schema-first scans.
  *
- * @example
+ * **Example** (Check included source globs)
+ *
  * ```ts
  * import { SchemaFirstIncludedGlobs } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(SchemaFirstIncludedGlobs.includes("packages/**\/*.{ts,tsx}")) // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
 /**
  * Schema-first inventory entry schema.
  *
- * @example
+ * **Example** (Make inventory entry)
+ *
  * ```ts
  * import { SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
  * import * as S from "effect/Schema"
@@ -190,18 +214,21 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * })
  * console.log(S.is(SchemaFirstInventoryEntry)(entry)) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 /**
  * Source file globs for schema-first ts-morph projects.
  *
- * @example
+ * **Example** (Check source file globs)
+ *
  * ```ts
  * import { SchemaFirstSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(SchemaFirstSourceFileGlobs.includes("!**\/docs/**")) // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -211,16 +238,13 @@ export {
   SchemaFirstIncludedGlobs,
   SchemaFirstInventoryEntry,
   SchemaFirstSourceFileGlobs,
-} from "./Lint.schemas.js";
+} from "./Lint.schemas.ts";
 
 /**
  * Detect an exported function or arrow function with inline object contracts.
  *
- * @param node - The ts-morph function-like declaration to inspect for inline object contracts.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
- * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
- * @example
+ * **Example** (Detect inline object contracts)
+ *
  * ```ts
  * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -229,26 +253,28 @@ export {
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function updateWidget(input: { id: string; name: string }): void {}")
  * const [node] = sourceFile.getFunctions()
- * const entry = fnSchemaEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
+ * const entry = fnSchemaEntryFromFunctionLike(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("updateWidget")
  * ```
+ *
+ * @param node - The ts-morph function-like declaration to inspect for inline object contracts.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
+ * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @category utilities
  * @since 0.0.0
  */
-export const fnSchemaEntryFromFunctionLike = (
-  node: FunctionLikeDeclarationNode,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(node, file, owner);
+export const fnSchemaEntryFromFunctionLike: {
+  (context: SchemaFirstDetectorContext): (node: FunctionLikeDeclarationNode) => O.Option<SchemaFirstInventoryEntry>;
+  (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(node, context.file, context.owner)
+);
 
 /**
  * Detect an exported function or arrow function with nullish return annotation.
  *
- * @param node - The ts-morph function-like declaration to inspect for a nullish return annotation.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
- * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
- * @example
+ * **Example** (Detect nullish return annotation)
+ *
  * ```ts
  * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -257,26 +283,28 @@ export const fnSchemaEntryFromFunctionLike = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function findUser(id: string): string | null {\n  return null\n}")
  * const [node] = sourceFile.getFunctions()
- * const entry = nullReturnEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
+ * const entry = nullReturnEntryFromFunctionLike(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("findUser")
  * ```
+ *
+ * @param node - The ts-morph function-like declaration to inspect for a nullish return annotation.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
+ * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @category utilities
  * @since 0.0.0
  */
-export const nullReturnEntryFromFunctionLike = (
-  node: FunctionLikeDeclarationNode,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => SchemaFirstDetectors.nullReturnEntryFromFunctionLike(node, file, owner);
+export const nullReturnEntryFromFunctionLike: {
+  (context: SchemaFirstDetectorContext): (node: FunctionLikeDeclarationNode) => O.Option<SchemaFirstInventoryEntry>;
+  (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (node: FunctionLikeDeclarationNode, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.nullReturnEntryFromFunctionLike(node, context.file, context.owner)
+);
 
 /**
  * Detect function-local trim/case normalization in schema-modeled files.
  *
- * @param callExpression - The ts-morph call expression to inspect for function-local trim/case normalization.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
- * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
- * @example
+ * **Example** (Detect local trim normalization)
+ *
  * ```ts
  * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -285,27 +313,28 @@ export const nullReturnEntryFromFunctionLike = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function normalizeName(name: string): string {\n  return name.trim()\n}")
  * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
- * const entry = normalizationEntryFromCallExpression(node, "fixture.ts", "@beep/test")
+ * const entry = normalizationEntryFromCallExpression(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("normalizeName.trim")
  * ```
+ *
+ * @param callExpression - The ts-morph call expression to inspect for function-local trim/case normalization.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
+ * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @category utilities
  * @since 0.0.0
  */
-export const normalizationEntryFromCallExpression = (
-  callExpression: CallExpression,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> =>
-  SchemaFirstDetectors.normalizationEntryFromCallExpression(callExpression, file, owner);
+export const normalizationEntryFromCallExpression: {
+  (context: SchemaFirstDetectorContext): (callExpression: CallExpression) => O.Option<SchemaFirstInventoryEntry>;
+  (callExpression: CallExpression, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (callExpression: CallExpression, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.normalizationEntryFromCallExpression(callExpression, context.file, context.owner)
+);
 
 /**
  * Detect R.getSomes over an inline heterogeneous Option struct.
  *
- * @param callExpression - The ts-morph call expression to inspect for `R.getSomes` over an inline Option struct.
- * @param file - The repo-relative source path recorded on any emitted inventory entry.
- * @param owner - The owning workspace package name recorded on any emitted inventory entry.
- * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
- * @example
+ * **Example** (Detect getSomes Option struct)
+ *
  * ```ts
  * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
@@ -314,23 +343,28 @@ export const normalizationEntryFromCallExpression = (
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile("fixture.ts", "export function pickSomes() {\n  return R.getSomes({ a: 1, b: 2 })\n}")
  * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
- * const entry = getsomesStructEntryFromCallExpression(node, "fixture.ts", "@beep/test")
+ * const entry = getsomesStructEntryFromCallExpression(node, { file: "fixture.ts", owner: "@beep/test" })
  * console.log(O.map(entry, (found) => found.symbol)) // Option.some("pickSomes.R.getSomes")
  * ```
+ *
+ * @param callExpression - The ts-morph call expression to inspect for `R.getSomes` over an inline Option struct.
+ * @param context - Repo-relative source path and owning package recorded on any emitted inventory entry.
+ * @returns `Option.some` with the schema-first inventory entry when a violation is found, otherwise `Option.none`.
  * @category utilities
  * @since 0.0.0
  */
-export const getsomesStructEntryFromCallExpression = (
-  callExpression: CallExpression,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> =>
-  SchemaFirstDetectors.getsomesStructEntryFromCallExpression(callExpression, file, owner);
+export const getsomesStructEntryFromCallExpression: {
+  (context: SchemaFirstDetectorContext): (callExpression: CallExpression) => O.Option<SchemaFirstInventoryEntry>;
+  (callExpression: CallExpression, context: SchemaFirstDetectorContext): O.Option<SchemaFirstInventoryEntry>;
+} = dual(2, (callExpression: CallExpression, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.getsomesStructEntryFromCallExpression(callExpression, context.file, context.owner)
+);
 
 /**
  * Repo-wide schema-first lint command.
  *
- * @example
+ * **Example** (Run schema-first command)
+ *
  * ```ts
  * import { lintSchemaFirstCommand } from "@beep/repo-cli/commands/Lint"
  * import { Command } from "effect/unstable/cli"
@@ -339,13 +373,17 @@ export const getsomesStructEntryFromCallExpression = (
  * const run = Command.run(lintSchemaFirstCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
 export const lintSchemaFirstCommand = Command.make(
   "schema-first",
   {
-    write: Flag.boolean("write").pipe(Flag.withDescription("Refresh standards/schema-first.inventory.jsonc")),
+    write: Flag.boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Refresh standards/schema-first.inventory.jsonc")
+    ),
   },
   Effect.fn(function* ({ write }) {
     yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write }));

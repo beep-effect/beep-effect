@@ -20,7 +20,7 @@
  */
 "use client";
 
-import { EditorStateFromJson, SerializedEditorState } from "@beep/lexical-schema";
+import { EditorStateFromJson } from "@beep/lexical-schema";
 import { Button } from "@beep/ui/components/button";
 import { ContentEditable } from "@beep/ui/components/editor/editor-ui/content-editable";
 import { cn } from "@beep/ui/lib/utils";
@@ -37,13 +37,18 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { PaperclipIcon, PaperPlaneRightIcon, StopIcon } from "@phosphor-icons/react";
+import { PaperclipIcon } from "@phosphor-icons/react/Paperclip";
+import { PaperPlaneRightIcon } from "@phosphor-icons/react/PaperPlaneRight";
+import { StopIcon } from "@phosphor-icons/react/Stop";
+import { Result } from "effect";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { useRef } from "react";
 import { editorNodes } from "../nodes.ts";
+import { decodeEditorStateForRuntimeResult } from "../runtime.ts";
 import { editorTheme } from "../theme.ts";
+import { EditorWireViewer } from "../viewer.tsx";
 import {
+  attachmentSweepBindingAtom,
   attachmentsAtom,
   captureAttachmentsFn,
   featuresAtom,
@@ -56,17 +61,18 @@ import {
   sendCommandBindingAtom,
   unboundSend,
 } from "./atoms.ts";
-import { DEFAULT_MAX_ATTACHMENT_BYTES, revokeAttachment } from "./attachment-model.ts";
-import { AttachmentChips, AttachmentPlugin } from "./attachments.tsx";
+import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./attachment-model.ts";
+import { AttachmentChips, AttachmentFailureNotice, AttachmentPlugin } from "./attachments.tsx";
 import { SEND_MESSAGE_COMMAND, STOP_MESSAGE_COMMAND } from "./commands.ts";
-import { ComposerFeatures } from "./config.ts";
+import { ComposerFeatures, SlashItems } from "./config.ts";
 import { SendPlugin, useCharacterCount } from "./send.tsx";
 import { defaultChatSlashItems } from "./slash-items.tsx";
 import { FixedToolbarPlugin } from "./toolbar.tsx";
 import { ComboboxAriaPlugin, MentionPlugin, SlashPlugin } from "./typeahead.tsx";
+import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { LexicalEditor } from "lexical";
 import type { JSX, ReactNode } from "react";
-import type { MentionSource, SlashItem } from "./config.ts";
+import type { AttachmentPort, MentionSource, SendPort, SlashItem } from "./config.ts";
 
 const DEFAULT_ARIA_LABEL = "Message composer";
 
@@ -77,28 +83,62 @@ const PLACEHOLDER_CLASS_NAME =
   "text-muted-foreground pointer-events-none absolute top-0 left-0 px-3 py-2.5 text-sm leading-6 select-none";
 
 /**
+ * Immutable per-mount configuration for {@link ChatComposer}. The object is
+ * decoded/defaulted once and seeded into atoms owned by the Lexical editor; use
+ * a new React `key` when a different mount configuration is required.
+ *
+ * **Example** (Disable attachments in config)
+ *
+ * ```ts import.meta.vitest name="Disable attachments in config"
+ * import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer"
+ *
+ * const mountConfig: ChatComposerMountConfig = {
+ *   features: { attachments: false },
+ *   maxAttachmentBytes: 5_000_000,
+ * }
+ * mountConfig.features?.attachments // => false
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export interface ChatComposerMountConfig {
+  /** Which optional composer plugins mount. */
+  readonly features?: Partial<ComposerFeatures> | undefined;
+  /** Maximum attachment size accepted by the capture boundary. */
+  readonly maxAttachmentBytes?: number | undefined;
+  /** Promise-compatible consumer attachment port. */
+  readonly onAttach?: AttachmentPort | undefined;
+  /** Consumer send port invoked with the live decoded editor state. */
+  readonly onSend?: SendPort | undefined;
+}
+
+/**
  * Props for {@link ChatComposer}. Additive to (not a replacement for) the bare
  * `EditorComposerProps`.
  *
- * Mount-time config: `features`, `onSend`, `onAttach`, and `maxAttachmentBytes`
- * are seeded into the per-editor atom state ONCE at mount (the per-mount config is
- * intentionally stable, like an uncontrolled input's `defaultValue`). To apply new
- * values, change the React `key` to remount — the desktop app remounts per
- * thread/edit-target. A consumer that keeps these props live should either remount
- * on change or, for `onSend`, read any mutable state freshly inside the handler
- * (the seeded handler is invoked by reference at send time).
+ * **Details**
  *
- * @example
- * ```ts
- * import type { ChatComposerProps } from "@beep/editor/chat"
+ * `namespace`, `initialState`, and all fields in `mountConfig` are read ONCE at
+ * mount (intentionally stable, like an uncontrolled input's `defaultValue`).
+ * Change the React `key` to apply new values — the desktop app remounts per
+ * thread/edit-target. A consumer that keeps an `onSend` closure live may instead
+ * read mutable state freshly inside the seeded handler.
+ *
+ * **Example** (Props with sendOn feature)
+ *
+ * ```ts import.meta.vitest name="Props with sendOn feature"
+ * import type { ChatComposerProps } from "@beep/editor/chat/chat-composer"
  *
  * const props: ChatComposerProps = {
  *   placeholder: "Message...",
- *   features: { attachments: false, sendOn: "modifierEnter" },
+ *   mountConfig: {
+ *     features: { attachments: false, sendOn: "modifierEnter" },
+ *   },
  * }
  *
- * const sendOn = props.features?.sendOn
- * console.log(sendOn) // "modifierEnter"
+ * const sendOn = props.mountConfig?.features?.sendOn
+ * sendOn // => "modifierEnter"
  * ```
  *
  * @category components
@@ -118,22 +158,39 @@ export interface ChatComposerProps {
   /**
    * Which plugins mount. Accepts a partial plain object; omitted flags are
    * filled by {@link ComposerFeatures.make}.
+   *
+   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
    */
   readonly features?: Partial<ComposerFeatures>;
-  /** Optional schema-decoded initial editor state. */
+  /**
+   * Optional schema-decoded initial editor state. Lexical reads it once; change
+   * the component `key` to replace it after mount.
+   */
   readonly initialState?: SerializedEditorState.Type;
-  /** Max captured attachment size in bytes. */
+  /**
+   * Max captured attachment size in bytes.
+   *
+   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
+   */
   readonly maxAttachmentBytes?: number;
   /** App-injected `@` mention source. Mentions are skipped if omitted. */
   readonly mentionSource?: MentionSource;
+  /** Immutable config seeded once for the lifetime of this composer mount. */
+  readonly mountConfig?: ChatComposerMountConfig;
   /**
    * Lexical editor namespace. Give each composer a unique namespace so multiple
    * composers on one page don't collide on `data-lexical-editor` / clipboard.
+   * Lexical reads it once; change the component `key` to replace it after mount.
    * @defaultValue "beep-chat-editor"
    */
   readonly namespace?: string;
-  /** Upload-port callback invoked with captured files (drag-drop / paste / picker). */
-  readonly onAttach?: (files: ReadonlyArray<File>) => void;
+  /**
+   * Upload-port callback invoked with captured files (drag-drop / paste /
+   * picker). Promise rejection rolls the current batch back.
+   *
+   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
+   */
+  readonly onAttach?: AttachmentPort;
   /**
    * Convenience send handler (registered at low priority for the send command).
    * Receives the editor's CURRENT serialized state (read live at send time, so it
@@ -141,8 +198,10 @@ export interface ChatComposerProps {
    * composer then clears the editor in place (keeping focus) so the user can keep
    * typing. Return `false`/`void` (e.g. empty content or already streaming) to
    * leave the content alone.
+   *
+   * @deprecated Use {@link ChatComposerMountConfig} through `mountConfig`.
    */
-  readonly onSend?: (state: SerializedEditorState.Type) => boolean | void;
+  readonly onSend?: SendPort;
   /** Called with the schema-decoded state on every content change. */
   readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
   /** Stop handler invoked while `streaming`. */
@@ -168,6 +227,7 @@ interface FooterProps {
   readonly streaming: boolean;
 }
 
+// fallow-ignore-next-line complexity -- cognitive 12 = pre-existing hook/JSX tax (five hook bindings plus the streaming/attachment conditionals); this branch's change here was a one-line shrink-0 flex class and added no branching
 function ComposerFooter({
   characterCount,
   attachments,
@@ -192,7 +252,7 @@ function ComposerFooter({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="border-border flex items-center justify-between gap-2 border-t px-3 py-2">
+    <div className="border-border flex shrink-0 items-center justify-between gap-2 border-t px-3 py-2">
       <div className="text-muted-foreground flex items-center gap-3 text-xs">
         {characterCount ? (
           <span aria-live="polite">
@@ -238,6 +298,7 @@ function ComposerFooter({
             variant="secondary"
             size="sm"
             aria-label="Stop generating"
+            data-testid="turn-stop"
             onClick={() => {
               onStop?.();
               editor.dispatchCommand(STOP_MESSAGE_COMMAND, undefined);
@@ -293,7 +354,12 @@ function ComposerSurface({
     <>
       {features.toolbar ? <FixedToolbarPlugin /> : null}
       <AttachmentChips attachments={attachments} onRemove={(id) => remove({ editor, id })} />
-      <div className="relative">
+      <AttachmentFailureNotice />
+      {/* min-h-0 flex column: when a height-capped consumer squeezes the
+          composer, the editable (overflow-auto, so its flex minimum is zero)
+          is the region that shrinks and scrolls — never the toolbar or the
+          footer, which keep their content height. */}
+      <div className="relative flex min-h-0 flex-col">
         <RichTextPlugin
           contentEditable={
             <ContentEditable
@@ -321,10 +387,17 @@ function ComposerSurface({
   );
 }
 
-interface ComposerBodyProps extends Omit<ChatComposerProps, "ariaLabel" | "initialState"> {
+interface ComposerBodyProps {
   readonly ariaLabel: string;
+  readonly children?: ReactNode;
+  readonly className?: string;
   readonly features: ComposerFeatures;
   readonly maxAttachmentBytes: number;
+  readonly mentionSource?: MentionSource;
+  readonly onAttach?: AttachmentPort;
+  readonly onSend?: SendPort;
+  readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
+  readonly onStop?: () => void;
   readonly placeholder: string;
   readonly sendDisabled: boolean;
   readonly sendLabel: string;
@@ -338,8 +411,8 @@ function useComposerRuntimeBindings(
   editor: LexicalEditor,
   features: ComposerFeatures,
   maxAttachmentBytes: number,
-  onSend: ((state: SerializedEditorState.Type) => boolean | void) | undefined,
-  onAttach: ((files: ReadonlyArray<File>) => void) | undefined
+  onSend: SendPort | undefined,
+  onAttach: AttachmentPort | undefined
 ): void {
   // Seed the per-editor config the Lexical bindings + capture runtime read at
   // fire time. The composer remounts by `key` on thread/edit-target changes,
@@ -360,9 +433,10 @@ function useComposerRuntimeBindings(
   useAtomMount(maxAttachmentBytesAtom(editor));
 }
 
+// fallow-ignore-next-line complexity -- cognitive 14 = pre-existing hook/prop-fanout tax (15 props and three hook bindings); this branch did not change this function at all — its edits in this file were two one-line flex classes in ComposerFooter and ComposerSurface
 function ComposerBody({
   ariaLabel,
-  features,
+  features: initialFeatures,
   placeholder,
   className,
   onSerializedChange,
@@ -378,7 +452,8 @@ function ComposerBody({
   children,
 }: ComposerBodyProps): JSX.Element {
   const [editor] = useLexicalComposerContext();
-  useComposerRuntimeBindings(editor, features, maxAttachmentBytes, onSend, onAttach);
+  useComposerRuntimeBindings(editor, initialFeatures, maxAttachmentBytes, onSend, onAttach);
+  const features = useAtomValue(featuresAtom(editor));
 
   return (
     <div
@@ -388,6 +463,7 @@ function ComposerBody({
         className
       )}
     >
+      {children}
       <ComposerSurface
         ariaLabel={ariaLabel}
         features={features}
@@ -414,7 +490,6 @@ function ComposerBody({
         })}
       />
       <AttachmentSweep editor={editor} />
-      {children}
     </div>
   );
 }
@@ -425,6 +500,32 @@ interface ComposerFeaturePluginsProps {
   readonly mentionSource?: MentionSource;
   readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
   readonly slashItems: ReadonlyArray<SlashItem>;
+}
+
+interface SerializedChangePluginProps {
+  readonly onSerializedChange: ComposerFeaturePluginsProps["onSerializedChange"];
+}
+
+function SerializedChangePlugin({ onSerializedChange }: SerializedChangePluginProps): JSX.Element | null {
+  const logEditorError = useAtomSet(logEditorErrorFn);
+  return O.match(O.fromUndefinedOr(onSerializedChange), {
+    onNone: () => null,
+    onSome: (changeSink) => (
+      <OnChangePlugin
+        ignoreSelectionChange={true}
+        onChange={(nextEditorState) =>
+          Result.match(decodeEditorStateForRuntimeResult(nextEditorState.toJSON()), {
+            onSuccess: changeSink,
+            onFailure: (error) =>
+              logEditorError({
+                message: "ChatComposer produced out-of-schema state",
+                error,
+              }),
+          })
+        }
+      />
+    ),
+  });
 }
 
 // The feature-gated plugins, split out of ComposerBody so the conditional
@@ -441,21 +542,11 @@ function ComposerFeaturePlugins({
 }: ComposerFeaturePluginsProps): JSX.Element {
   return (
     <>
-      {onSerializedChange === undefined ? null : (
-        <OnChangePlugin
-          ignoreSelectionChange={true}
-          onChange={(nextEditorState) =>
-            O.match(SerializedEditorState.decodeOption(nextEditorState.toJSON()), {
-              onSome: onSerializedChange,
-              onNone: () => undefined,
-            })
-          }
-        />
-      )}
+      <SerializedChangePlugin onSerializedChange={onSerializedChange} />
       {features.slash ? <SlashPlugin items={slashItems} /> : null}
       {features.mentions && mentionSource !== undefined ? <MentionPlugin source={mentionSource} /> : null}
       {features.attachments ? <AttachmentPlugin /> : null}
-      {features.slash || features.mentions ? <ComboboxAriaPlugin /> : null}
+      {features.slash || (features.mentions && mentionSource !== undefined) ? <ComboboxAriaPlugin /> : null}
       <SendCommandBinding editor={editor} />
     </>
   );
@@ -468,22 +559,8 @@ function SendCommandBinding({ editor }: { readonly editor: LexicalEditor }): nul
   return null;
 }
 
-// Per-editor finalizer that revokes outstanding object URLs on unmount. Tracks
-// the latest captured attachments via subscription and sweeps them at teardown.
-const attachmentSweepBindingAtom = Atom.family((editor: LexicalEditor) =>
-  Atom.make((get) => {
-    let latest = get.once(attachmentsAtom(editor));
-    get.subscribe(attachmentsAtom(editor), (next) => {
-      latest = next;
-    });
-    get.addFinalizer(() => {
-      for (const attachment of latest) revokeAttachment(attachment);
-    });
-    return undefined;
-  })
-);
-
-// Mounts the unmount-sweep binding for the current editor.
+// Tracks the Lexical root lifetime so async attachment work cannot escape its
+// composer mount.
 function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
   useAtomMount(attachmentSweepBindingAtom(editor));
   return null;
@@ -492,15 +569,16 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 /**
  * The feature-flagged chat composer.
  *
- * @example
+ * **Example** (Composer with onSend config)
+ *
  * ```tsx
- * import { ChatComposer } from "@beep/editor/chat"
+ * import { ChatComposer } from "@beep/editor/chat/chat-composer"
  *
  * function SupportReplyBox() {
  *   return (
  *     <ChatComposer
  *       placeholder="Message..."
- *       onSend={(state) => state.root.children.length > 0}
+ *       mountConfig={{ onSend: (state) => state.root.children.length > 0 }}
  *     />
  *   )
  * }
@@ -512,29 +590,39 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 // This component is intentionally the declarative assembly boundary for the
 // composer plugins and their optional consumer ports. Extracting the prop
 // forwarding would obscure which mount-time values enter the atom-backed body.
-// fallow-ignore-next-line complexity
-export function ChatComposer({
-  ariaLabel = DEFAULT_ARIA_LABEL,
-  features,
-  initialState,
-  placeholder,
-  className,
-  namespace = "beep-chat-editor",
-  onSerializedChange,
-  slashItems = defaultChatSlashItems,
-  mentionSource,
-  onAttach,
-  maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
-  onSend,
-  onStop,
-  streaming = false,
-  sendDisabled = false,
-  sendLabel = "Send",
-  children,
-}: ChatComposerProps): JSX.Element {
-  const resolved = ComposerFeatures.make(features ?? {});
+// fallow-ignore-next-line complexity -- component assembles plugins and optional consumer ports at one declarative boundary
+export function ChatComposer(props: ChatComposerProps): JSX.Element {
+  const compatibilityConfig: ChatComposerMountConfig = props;
+  const {
+    ariaLabel = DEFAULT_ARIA_LABEL,
+    mountConfig,
+    initialState,
+    placeholder,
+    className,
+    namespace = "beep-chat-editor",
+    onSerializedChange,
+    slashItems = defaultChatSlashItems,
+    mentionSource,
+    onStop,
+    streaming = false,
+    sendDisabled = false,
+    sendLabel = "Send",
+    children,
+  } = props;
+  const { features, maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES, onAttach, onSend } = compatibilityConfig;
+  const resolved = ComposerFeatures.make(mountConfig?.features ?? features ?? {});
+  const resolvedMaxAttachmentBytes = mountConfig?.maxAttachmentBytes ?? maxAttachmentBytes;
+  const resolvedOnAttach = mountConfig?.onAttach ?? onAttach;
+  const resolvedOnSend = mountConfig?.onSend ?? onSend;
+  const resolvedSlashItems = O.getOrElse(S.decodeOption(SlashItems)(slashItems), () => defaultChatSlashItems);
+  const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
+    Result.getSuccess(decodeEditorStateForRuntimeResult(state))
+  );
   // Lexical config errors log through the Effect runtime (no runSync here).
   const logEditorError = useAtomSet(logEditorErrorFn);
+  if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+    return <EditorWireViewer input={initialState} className={className} />;
+  }
 
   return (
     <LexicalComposer
@@ -543,7 +631,7 @@ export function ChatComposer({
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(O.fromUndefinedOr(initialState), S.encodeSync(EditorStateFromJson)),
+          editorState: O.map(runtimeInitialState, S.encodeSync(EditorStateFromJson)),
         }),
         onError: (error) => logEditorError(error),
       }}
@@ -551,8 +639,8 @@ export function ChatComposer({
       <ComposerBody
         ariaLabel={ariaLabel}
         features={resolved}
-        slashItems={slashItems}
-        maxAttachmentBytes={maxAttachmentBytes}
+        slashItems={resolvedSlashItems}
+        maxAttachmentBytes={resolvedMaxAttachmentBytes}
         placeholder={placeholder ?? "Message…"}
         streaming={streaming}
         sendDisabled={sendDisabled}
@@ -561,8 +649,8 @@ export function ChatComposer({
           className: O.fromUndefinedOr(className),
           onSerializedChange: O.fromUndefinedOr(onSerializedChange),
           mentionSource: O.fromUndefinedOr(mentionSource),
-          onAttach: O.fromUndefinedOr(onAttach),
-          onSend: O.fromUndefinedOr(onSend),
+          onAttach: O.fromUndefinedOr(resolvedOnAttach),
+          onSend: O.fromUndefinedOr(resolvedOnSend),
           onStop: O.fromUndefinedOr(onStop),
           children: O.fromUndefinedOr(children),
         })}

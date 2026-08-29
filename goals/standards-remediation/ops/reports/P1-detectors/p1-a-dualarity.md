@@ -120,7 +120,7 @@ Command: `npx vitest run test/dual-arity.test.ts` (from
 `packages/tooling/tool/cli`).
 
 ```
- RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect7/packages/tooling/tool/cli
+ RUN  v4.1.10 <checkout-root>/packages/tooling/tool/cli
 
  Test Files  1 passed (1)
       Tests  14 passed (14)

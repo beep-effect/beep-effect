@@ -22,9 +22,9 @@ import { FastCheck as fc } from "effect/testing";
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
-const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name);
-const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies);
-const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta);
+const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name)(fc);
+const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies)(fc);
+const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta)(fc);
 // `PublishConfig`'s `exports` field is a recursive suspend()-based schema
 // without a finite arbitrary generation path (pre-existing, unrelated to the
 // `PublishConfigBase` field-literal conversion below); this arbitrary covers
@@ -37,7 +37,7 @@ const PublishConfigCoreArbitrary = S.toArbitrary(
     registry: S.optionalKey(S.String),
     provenance: S.optionalKey(S.Boolean),
   })
-);
+)(fc);
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {
@@ -57,7 +57,7 @@ describe("PackageJson schema", () => {
       fc.assert(
         fc.property(PackageJsonDependenciesArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(PackageJson.fields.dependencies)(value);
-          const decoded = S.decodeUnknownSync(PackageJson.fields.dependencies)(encoded);
+          const decoded = S.decodeSync(PackageJson.fields.dependencies)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -69,7 +69,7 @@ describe("PackageJson schema", () => {
       fc.assert(
         fc.property(NpmPackageJsonPeerDependenciesMetaArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta)(value);
-          const decoded = S.decodeUnknownSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
+          const decoded = S.decodeSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -82,7 +82,7 @@ describe("PackageJson schema", () => {
         fc.property(PublishConfigCoreArbitrary, (core) => {
           const value = O.some(core);
           const encoded = S.encodeSync(PackageJson.fields.publishConfig)(value);
-          const decoded = S.decodeUnknownSync(PackageJson.fields.publishConfig)(encoded);
+          const decoded = S.decodeSync(PackageJson.fields.publishConfig)(encoded);
 
           expect(decoded).toEqual(value);
         }),
@@ -341,6 +341,15 @@ describe("PackageJson schema", () => {
       );
     });
 
+    it("decodes Bun trusted dependencies", () => {
+      const result = decodePackageJson({
+        name: "@beep/infra",
+        trustedDependencies: ["@pulumi/ghaRunners"],
+      });
+
+      expect(result.trustedDependencies).toEqual(O.some(["@pulumi/ghaRunners"]));
+    });
+
     it("decodes repo-local beep package metadata", () => {
       const driverResult = decodePackageJson({
         name: "@beep/drizzle",
@@ -365,9 +374,17 @@ describe("PackageJson schema", () => {
         },
       });
 
+      const ecosystemResult = decodePackageJson({
+        name: "@beep/effect-drizzle",
+        beep: {
+          family: "ecosystem",
+        },
+      });
+
       expect(driverResult.beep).toEqual(O.some({ family: "drivers" }));
       expect(foundationResult.beep).toEqual(O.some({ family: "foundation", kind: "modeling" }));
       expect(toolingResult.beep).toEqual(O.some({ family: "tooling", kind: "library" }));
+      expect(ecosystemResult.beep).toEqual(O.some({ family: "ecosystem" }));
     });
 
     it("keeps npm-only schema separate from repo-only extensions", () => {
@@ -514,6 +531,18 @@ describe("PackageJson schema", () => {
             name: "pkg",
             dependencies: {
               "Invalid Name": "catalog:",
+            },
+          })
+        )
+      ).toBe(true);
+
+      expect(
+        Exit.isFailure(
+          decodePackageJsonExit({
+            name: "pkg",
+            beep: {
+              family: "ecosystem",
+              kind: "modeling",
             },
           })
         )
@@ -853,7 +882,7 @@ describe("PackageJson schema", () => {
       const packageJsonDefinitionName = decodeJsonPointerSegment(packageJsonSchema.$ref.slice("#/$defs/".length));
       const packageJsonDefinition = packageJsonJsonSchema.definitions[packageJsonDefinitionName];
 
-      expect(packageJsonSchema.$ref).toMatch(/^#\/\$defs\/.+PackageJson$/);
+      expect(packageJsonSchema.$ref).toMatch(/^#\/\$defs\/.+PackageJsonEncoded$/);
       expect(packageJsonDefinition?.additionalProperties).toBe(false);
     });
 
@@ -917,7 +946,7 @@ describe("PackageJson schema", () => {
         ] as const;
 
         for (const testCase of cases) {
-          const issues = yield* S.decodeUnknownEffect(PackageJson)(testCase.input, {
+          const issues = yield* S.decodeEffect(PackageJson)(testCase.input, {
             onExcessProperty: "error",
             errors: "all",
           }).pipe(Effect.flip, Effect.map(getPackageJsonSchemaIssues));

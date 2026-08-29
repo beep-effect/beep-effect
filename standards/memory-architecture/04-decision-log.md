@@ -4,6 +4,137 @@ Dated decision log for the memory architecture standard. Records decisions as th
 
 ---
 
+## 2026-08-06: Operator Dev-Memory Role Passes to basic-memory + codegraph (Cognee Role Retirement)
+
+**Context:** An external bake-off dated 2026-08-06 — twelve adversarial
+code-level dossiers with `path:line` evidence, a practitioner sentiment
+sweep, and live trials against this repository at `a1550127dc` (180
+packages, 5,336 TypeScript files) — tested the durable dev-memory and
+codebase-KG candidates against the standing keyless constraint and the
+"shared across all four coding agents" requirement. Verdict memo:
+the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md`, evidence under
+`.../_research/bakeoff/`. Cognee failed the shared-store requirement
+structurally: its MCP memory fragments are agent-scoped, its locks are
+process-local and unsafe across concurrent agent processes, and it phones
+home with a persistent id.
+
+**Decision (role retirement, not boundary supersession):** Cognee's
+always-on operator dev-memory role — assigned by the 2026-07-08 entry and
+restated on 2026-07-25 and 2026-08-01 — passes to two tools. **basic-memory**
+(AGPL-3.0, internal tooling only) is the durable cross-agent dev-memory:
+one shared store outside the repo (machine-local), project `beep-shared`,
+read and written by Claude Code, Codex CLI, Grok CLI, and Cursor.
+**codegraph** (MIT) is the deterministic code knowledge graph, run as
+`codegraph serve --mcp` with `DO_NOT_TRACK=1` and
+`CODEGRAPH_NO_UPDATE_CHECK=1`. Both are keyless end to end. Cognee remains
+installed and available for document-KG experiments and loses no other role;
+its user-level configuration is not deleted. Graphiti stays retired per
+2026-07-25 and does not return — its LLM-mandatory ingestion violates the
+keyless rule structurally. Adoption detail, store conventions, wiring, and
+the pilot review live in
+[`07-shared-memory-adoption.md`](./07-shared-memory-adoption.md).
+
+**Boundary (not superseded):** the 2026-08-01 operator/product authority
+boundary is unchanged and remains binding. This entry moves operator memory
+between operator-level tools only. Product tables stay the professional
+runtime's sole authority and never become an operator-memory backend;
+operator memory — now basic-memory rather than Cognee — never becomes
+product authority.
+
+**Consequences:**
+
+- `06-agent-memory-operations.md` is amended: basic-memory (project
+  `beep-shared`) is the durable dev-memory recall path, codegraph is the
+  code-structure query path, and Cognee moves to "available for document-KG
+  experiments, not the default". The 2026-07-08 role-update blockquote in
+  `05-context-graph-capability-assessment.md` carries a supersession
+  pointer.
+- The repository `.mcp.json` gains its first memory servers (`basic-memory`,
+  `codegraph`); the equivalent Codex, Grok, and Cursor registrations are
+  machine-local operator configuration and are documented rather than
+  tracked.
+- No memory data is migrated; `beep-shared` starts empty. The store is
+  local-only and carries a hard confidentiality rule against any
+  pre-publication patent or OIP client material.
+- The pilot is reviewed 2026-08-20 on cross-CLI recall, codegraph replacing
+  grep-storms, and zero store corruption; the fallback on failure is Layer-1
+  file memory alone.
+- An Effect-native `@beep/memory` port of basic-memory's store model plus
+  Graphiti's temporal schema is recorded as medium-term intent, not
+  scheduled work.
+- Origin: `goals/shared-memory-code-kg-wiring`
+
+## 2026-08-01: Drafting Episodes Are Product Records; Cognee May Project Them (Clarification)
+
+**Context:** The legal-patent-kg-deepening campaign's /adhd
+remove-assumption lens surfaced a challenge: a law-practice `DraftingEpisode`
+ledger whose beep store is authoritative and whose Cognee memory is a
+rebuildable lossy projection with recent-raw-episode fallback — read by the
+campaign as demoting Cognee against the 2026-07-25 entry's "sole always-on
+dev-memory incumbent" wording.
+
+**Decision (clarification, not supersession):** Replayable drafting/derivation
+episode ledgers are **product records** owned by the professional runtime's
+product tables — repo-native, authoritative, append-only. Cognee's always-on
+operator dev-memory role is unchanged. Cognee MAY additionally carry lossy,
+disposable projections of committed product events for retrieval ergonomics,
+rebuilt from the ledger at any time, and is never their authority. This is the
+mirror image of the 2026-07-25 binding boundary: product tables never become an
+operator-memory backend, and operator memory never becomes product authority —
+projection traffic from product ledgers into Cognee crosses neither line.
+
+**Consequences:**
+
+- "Sole always-on dev-memory" describes operator recall, not product
+  retrieval; future research passes should not read it as a product-retrieval
+  monopoly.
+- Product surfaces that adopt a Cognee projection must ship a
+  rebuild-from-ledger path and a deterministic fallback (e.g. recent raw
+  episode tails) so Cognee unavailability degrades reads, never truth.
+- Origin: `explorations/legal-patent-kg-deepening/DECISIONS.md`
+  (2026-08-01 reconciliation grill, episode-ledger entry).
+
+## 2026-07-25: Bitemporal Port Landed — Graphiti Retirement Trigger Fires
+
+**Context:** The 2026-07-08 entry below conditioned graphiti-memory's
+decommissioning on the `@beep/epistemic-tables` bitemporal port landing. That
+milestone ships with `goals/epistemic-bitemporal-edge-core`: the epistemic
+slice now owns the Postgres bitemporal claim/edge authority (immutable
+`epistemic_edge_version` history with half-open `[valid_from, valid_to)` /
+`[recorded_at, expired_at)` axes, durable `epistemic_claim_disposition`,
+atomic close-and-insert supersession, canonical `asOf(validAt, knownAt)`
+reads, and restart/migration proof), reimplementing the Graphiti temporal-edge
+contract repo-natively under Apache-2.0 attribution
+(`THIRD_PARTY_NOTICES.md`, `licenses/Apache-2.0.txt`).
+
+**Decision:** The write-frozen operator-level Graphiti deployment is retired.
+Its sole surviving differentiator (the bitemporal edge model) is now owned
+repo-natively, so the read-available window closes: operators may remove the
+`graphiti-memory` MCP server, proxy helpers, and hooks from their
+configurations at leisure; no repo surface depends on them. Cognee remains the
+sole always-on dev-memory incumbent per the 2026-07-08 entry, and Layer-1 file
+memory remains the fallback.
+
+**Boundary restated (binding):** product tables are the professional
+runtime's authority and NEVER become an operator-memory backend. Retiring
+Graphiti transfers no operator-memory traffic onto
+`@beep/epistemic-tables`; operator memory stays in operator-level tooling
+(Cognee + file memory), and the product authority stays product-only.
+
+**Consequences:**
+
+- The `mcp-graphiti-memory` skill's deprecation notice becomes a retirement
+  notice; read workflows against the old deployment are no longer part of any
+  documented procedure.
+- Operator-level cleanup (MCP config, `graphiti:*` proxy scripts, hooks)
+  follows the drafted-cleanup list in
+  `docs/agent-memory-infra/00-recommendation.md` § "Drafted cleanup".
+- Queued epistemic lanes (`epistemic-contradiction-triage`,
+  `epistemic-memory-retention-projections`) build on the landed core; none
+  reopen the operator/product boundary.
+
+---
+
 ## 2026-07-08: External Memory Stack — Donor Portfolio Confirmed; Cognee Is the Sole Dev-Memory Incumbent; Doctrine Phrasing Sharpened
 
 **Context:** Six products (OriginTrail DKG, TrustGraph, Graphiti/Zep, Cognee,

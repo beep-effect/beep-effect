@@ -5,18 +5,19 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
-import { PatentAssetStatus } from "./PatentAsset.values.js";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
+import { PatentAssetStatus } from "./PatentAsset.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model");
+const pg = ProductEntity.pg;
 
 /**
  * Patent asset entity managed inside a prosecution matter.
  *
- * @example
+ * **Example** (Decoding a PatentAsset)
+ *
  * ```ts
  * import { PatentAsset } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -45,37 +46,20 @@ const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model")
  * @category entities
  * @since 0.0.0
  */
-export class PatentAsset extends BaseEntity.Class<PatentAsset>($I`PatentAsset`)(
-  LawPractice.PatentAssetId,
+export class PatentAsset extends ProductEntity.Entity<PatentAsset>()(LawPractice.PatentAssetId)(
   {
-    fields: {
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the patent asset.",
-      }),
-      matterFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the matter this patent asset belongs to.",
-      }),
-      status: PatentAssetStatus.annotateKey({
-        description: "Patent asset lifecycle status.",
-      }),
-      title: LawPracticeText.annotateKey({
-        description: "Human-readable patent asset title.",
-      }),
-    },
-    persisted: {
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      matterFixtureKey: EntitySchema.persist.text({
-        columnName: "matter_fixture_key",
-      }),
-      status: EntitySchema.persist.literal({
-        columnName: "status",
-      }),
-      title: EntitySchema.persist.text({
-        columnName: "title",
-      }),
-    },
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the patent asset.",
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
+    matterFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the matter this patent asset belongs to.",
+    }).pipe(pg.text(), pg.columnName("matter_fixture_key")),
+    status: PatentAssetStatus.annotateKey({
+      description: "Patent asset lifecycle status.",
+    }).pipe(pg.text()),
+    title: LawPracticeText.annotateKey({
+      description: "Human-readable patent asset title.",
+    }).pipe(pg.text()),
   },
   $I.annote("PatentAsset", {
     description: "Patent asset entity managed inside a prosecution matter.",

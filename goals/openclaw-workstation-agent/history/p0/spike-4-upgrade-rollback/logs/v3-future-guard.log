@@ -1,0 +1,6 @@
+Your OpenClaw config was written by version 2099.1.1, but this command is running 2026.7.1-2.
+Check: `openclaw --version`, `which openclaw`, and `openclaw gateway status --deep`.
+If unexpected, update PATH so `openclaw` points to the version you want, or reinstall the Gateway service from that same OpenClaw install.
+Refusing to run automatic gateway startup migrations because this OpenClaw binary (2026.7.1-2) is older than the config last written by OpenClaw 2099.1.1.
+Run the newer openclaw binary on PATH, or reinstall the intended gateway service from the newer install.
+Set OPENCLAW_ALLOW_OLDER_BINARY_DESTRUCTIVE_ACTIONS=1 only for an intentional downgrade or recovery action.

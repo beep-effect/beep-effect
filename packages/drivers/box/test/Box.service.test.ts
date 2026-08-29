@@ -182,7 +182,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
   fc.assert(
-    fc.property(S.toArbitrary(schema), (value) => {
+    fc.property(S.toArbitrary(schema)(fc), (value) => {
       expectRoundTrip(schema, value);
     }),
     fcRuns(25)
@@ -201,7 +201,7 @@ const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unkno
   );
 };
 
-const UploadBigFilePayloadArbitrary = S.toArbitrary(NonNegativeInt).map((fileSize) =>
+const UploadBigFilePayloadArbitrary = S.toArbitrary(NonNegativeInt)(fc).map((fileSize) =>
   B.BoxUploadBigFilePayload.make({
     file: new Uint8Array([1, 2, 3]),
     fileName: "large-document.txt",
@@ -214,7 +214,7 @@ describe("@beep/box", () => {
   it.effect(
     "accepts future Box enum values generated as open unions",
     Effect.fnUntraced(function* () {
-      const eventType = yield* S.decodeUnknownEffect(B.EventEventTypeField)("FUTURE_BOX_EVENT");
+      const eventType = yield* S.decodeEffect(B.EventEventTypeField)("FUTURE_BOX_EVENT");
 
       expect(eventType).toBe("FUTURE_BOX_EVENT");
     })
@@ -234,7 +234,7 @@ describe("@beep/box", () => {
     expectRoundTrip(B.BoxGetZipDownloadContentPayload, zipPayload);
     expect(
       O.isNone(
-        S.decodeUnknownOption(B.BoxGetZipDownloadContentPayload)({
+        S.decodeOption(B.BoxGetZipDownloadContentPayload)({
           downloadUrl: "http://example.com/content",
         })
       )
@@ -335,7 +335,7 @@ describe("@beep/box", () => {
     "rejects CCG config without an enterprise or user subject",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(
-        S.decodeUnknownEffect(B.BoxCcgConfig)({
+        S.decodeEffect(B.BoxCcgConfig)({
           clientId: "client-id",
           clientSecret: Redacted.make("client-secret"),
         })
@@ -605,10 +605,14 @@ describe("@beep/box", () => {
       })
     )
   )((it) => {
-    it.effect(
-      "preserves direct caller cancellation tokens for generated methods",
-      Effect.fnUntraced(function* () {
-        const callerController = new AbortController();
+    it.effect("preserves direct caller cancellation tokens for generated methods", () => {
+      // The controller is the caller's, which is the whole point of the test:
+      // `Effect.abortSignal` would hand the driver Effect's own signal and prove
+      // nothing about a token supplied from outside. Built here rather than in
+      // the generator so it reads as fixture setup, not effectful work.
+      const callerController = new AbortController();
+
+      return Effect.gen(function* () {
         const box = yield* B.Box;
         const fiber = yield* box.users
           .getUserMe(B.UsersGetUserMePayload.make({ cancellationToken: callerController.signal }))
@@ -620,8 +624,8 @@ describe("@beep/box", () => {
         yield* Effect.promise(() => generatedDirectCancellationProbe.aborted.promise);
         generatedDirectCancellationProbe.pending.resolve(userFull);
         yield* Fiber.join(fiber);
-      })
-    );
+      });
+    });
   });
 
   const generatedOptionalsCancellationProbe: {
@@ -658,10 +662,11 @@ describe("@beep/box", () => {
       })
     )
   )((it) => {
-    it.effect(
-      "preserves optionalsInput caller cancellation tokens for generated methods",
-      Effect.fnUntraced(function* () {
-        const callerController = new AbortController();
+    it.effect("preserves optionalsInput caller cancellation tokens for generated methods", () => {
+      // Caller-supplied on purpose, as above.
+      const callerController = new AbortController();
+
+      return Effect.gen(function* () {
         const box = yield* B.Box;
         const fiber = yield* box.downloads
           .getDownloadFileUrl(
@@ -678,8 +683,8 @@ describe("@beep/box", () => {
         yield* Effect.promise(() => generatedOptionalsCancellationProbe.aborted.promise);
         generatedOptionalsCancellationProbe.pending.resolve(undefined);
         expect(yield* Fiber.join(fiber)).toBe("https://box.example/file-id");
-      })
-    );
+      });
+    });
   });
 
   const eventStream = new FakeEventStream([

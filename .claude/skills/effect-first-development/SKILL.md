@@ -45,7 +45,7 @@ Two checks with no law counterpart below:
 5. No nullish leak in domain logic; convert nullish to `Option` at boundaries.
 6. No direct `typeof` checks when `effect/Predicate` covers the case.
 7. No native `Object/Map/Set/Date/String` helpers in domain logic.
-8. For tooling source, use `TaggedErrorClass` from `@beep/schema`.
+8. For typed errors, extend `S.TaggedError` from `effect/Schema` directly. Use a package `$I` composer for a distinct namespaced identifier; otherwise omit the identifier, and never pass a bare identifier equal to the tag. Cause-carrying errors declare `cause: S.Defect({ includeStack: true })` explicitly.
 9. Exported APIs need JSDoc and docgen-clean examples.
 10. Do not finish with failing `check`, `lint`, `test`, or `docgen`.
 11. Do not suffix schema constants with `Schema`; use the domain name.
@@ -115,13 +115,13 @@ Two checks with no law counterpart below:
 
 ## Source of Truth References
 
-- [Effect LLMS guide](../../../.repos/effect-v4/LLMS.md)
-- [Effect ai-docs index](../../../.repos/effect-v4/ai-docs/src/index.md)
-- [Effect migration notes](../../../.repos/effect-v4/MIGRATION.md)
-- [Effect Schema docs](../../../.repos/effect-v4/packages/effect/SCHEMA.md)
-- [Effect core API source](../../../.repos/effect-v4/packages/effect/src/Effect.ts)
-- [Effect Config source](../../../.repos/effect-v4/packages/effect/src/Config.ts)
-- [Effect Fiber source](../../../.repos/effect-v4/packages/effect/src/Fiber.ts)
+- [Effect LLMS guide](../../../.repos/effect/LLMS.md)
+- [Effect ai-docs index](../../../.repos/effect/ai-docs/src/index.md)
+- [Effect migration notes](../../../.repos/effect/MIGRATION.md)
+- [Effect Schema docs](../../../.repos/effect/packages/effect/SCHEMA.md)
+- [Effect core API source](../../../.repos/effect/packages/effect/src/Effect.ts)
+- [Effect Config source](../../../.repos/effect/packages/effect/src/Config.ts)
+- [Effect Fiber source](../../../.repos/effect/packages/effect/src/Fiber.ts)
 
 ## Verify
 

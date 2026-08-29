@@ -123,13 +123,13 @@ jobs:
             updater-suffixes: '[".msi.zip",".nsis.zip"]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.version) || github.ref }}
 
       - name: Verify release tag checkout
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const { execFileSync } = require("node:child_process");
@@ -177,7 +177,7 @@ jobs:
             libssl-dev
 
       - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
         with:
           toolchain: stable
           target: ${{ matrix.rust-target }}
@@ -241,7 +241,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Stage desktop bundle artifact
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           ARTIFACT_PATHS: ${{ steps.tauri.outputs.artifactPaths }}
           RELEASE_DESKTOP_ASSET_ARCH: ${{ matrix.asset-arch }}
@@ -367,7 +367,7 @@ jobs:
       RELEASE_DESKTOP_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 1
 

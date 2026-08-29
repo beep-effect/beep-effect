@@ -7,11 +7,11 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { layerNodeSdkServerTraces, ServerObservabilityConfig } from "@beep/observability/server";
 import {
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
   AiMetricsConfigSnapshotInput,
+  AiMetricsDataRootInput,
   AiMetricsDeployTarget,
   AiMetricsForwarderInput,
   AiMetricsForwarderOtlpExported,
@@ -27,6 +27,7 @@ import {
   AiMetricsMirrorBundleManifest,
   AiMetricsOtlpEndpointSpec,
   AiMetricsOtlpExportInput,
+  AiMetricsOtlpSpanSender,
   AiMetricsOutcomeLabelInput,
   AiMetricsParquetExportMode,
   AiMetricsPrivacyMode,
@@ -55,7 +56,6 @@ import {
   aiMetricsWeeklyReportToJson,
   buildAiMetricsMirrorBundle,
   configSnapshotToJson,
-  DEFAULT_AI_METRICS_DATA_ROOT,
   decryptEncryptedRawArchiveEnvelope,
   discoverAiMetricsSources,
   enforceAiMetricsRetentionPolicy,
@@ -63,6 +63,7 @@ import {
   generateAiMetricsWeeklyReport,
   hashPublicTextSha256,
   listAiMetricsBenchmarkCases,
+  listAiMetricsDirectoryFileInfo,
   listAiMetricsRetentionInventory,
   locateLatestAiMetricsMirrorBundle,
   makeAiMetricsConfigSnapshot,
@@ -74,14 +75,14 @@ import {
   otlpExportResultToJson,
   privacyCheckToJson,
   queueAiMetricsLabels,
-  readAiMetricsOtlpSpanProjections,
   readEncryptedRawArchiveEnvelope,
   recordAiMetricsBenchmarkRun,
   renderAiMetricsForwarderTimerPlan,
   renderAiMetricsLocalPhoenixCompose,
+  requireAbsoluteAiMetricsDataRoot,
+  resolveAiMetricsDataRoot,
   runAiMetricsForwarder,
   runAiMetricsOtlpExport,
-  runAiMetricsOtlpProjectionBatchExport,
   runAiMetricsRetentionCompact,
   runAiMetricsRetentionDelete,
   runAiMetricsRetentionRestoreDrill,
@@ -92,6 +93,7 @@ import {
   upsertAiMetricsBenchmarkCase,
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -106,14 +108,16 @@ import {
   FileSystem,
   flow,
   Layer,
+  Match,
   Order,
   Path,
   pipe,
   Redacted,
 } from "effect";
 import * as S from "effect/Schema";
-import { printLines } from "../../../internal/cli/Printer.js";
-import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.js";
+import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
+import { printLines } from "../../../internal/cli/Printer.ts";
+import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.ts";
 import type {
   AiMetricsForwarderOtlpExport,
   AiMetricsInstallDoctorResult,
@@ -124,10 +128,9 @@ import type {
 
 const $I = $RepoCliId.create("commands/AIMetrics/internal/Programs");
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeMirrorManifestJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirrorBundleManifest));
 const encodeInstallSpecJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallSpec));
-const localCollectorDataRoot = DEFAULT_AI_METRICS_DATA_ROOT;
 const defaultP7MirrorRemoteRoot = "/srv/data/ai-metrics/p7-derived-mirror";
 // cspell:words yubi
 const defaultP7MirrorSshHost = "dankserver-yubi";
@@ -155,7 +158,9 @@ const readInputFile = Effect.fn("AIMetrics.readInputFile")(function* (input: str
   const absolutePath = path.resolve(input);
   const content = yield* fs
     .readFileString(absolutePath)
-    .pipe(AiMetricsCommandError.mapError("Failed to read transcript input."));
+    .pipe(
+      Effect.mapError((cause) => AiMetricsCommandError.make({ cause, message: "Failed to read transcript input." }))
+    );
 
   return {
     absolutePath,
@@ -165,19 +170,25 @@ const readInputFile = Effect.fn("AIMetrics.readInputFile")(function* (input: str
 
 const encodeCommandJson = flow(
   encodeJson,
-  AiMetricsCommandError.mapError("Failed to encode AI metrics command output as JSON.")
+  Effect.mapError((cause) =>
+    AiMetricsCommandError.make({ cause, message: "Failed to encode AI metrics command output as JSON." })
+  )
 );
 
 const encodeInstallSpecCommandJson = flow(
   encodeInstallSpecJson,
-  AiMetricsCommandError.mapError("Failed to encode AI metrics install spec as JSON.")
+  Effect.mapError((cause) =>
+    AiMetricsCommandError.make({ cause, message: "Failed to encode AI metrics install spec as JSON." })
+  )
 );
 
 const readOptionalConfigString: (key: string) => Effect.Effect<O.Option<string>, AiMetricsCommandError> = Effect.fn(
   "AIMetrics.readOptionalConfigString"
 )((key) =>
   ConfigProvider.ConfigProvider.use(pipe(Config.string(key), Config.option).parse).pipe(
-    AiMetricsCommandError.mapError(`Failed to read ${key} from the Effect config provider.`)
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: `Failed to read ${key} from the Effect config provider.` })
+    )
   )
 );
 
@@ -187,16 +198,25 @@ const readOptionalRedactedConfigString: (
   "AIMetrics.readOptionalRedactedConfigString"
 )((key) =>
   ConfigProvider.ConfigProvider.use(pipe(key, Config.redacted, Config.option).parse).pipe(
-    AiMetricsCommandError.mapError(`Failed to read ${key} from the Effect config provider.`)
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: `Failed to read ${key} from the Effect config provider.` })
+    )
   )
 );
 
+const nonBlankOption = (value: O.Option<string>): O.Option<string> => O.filter(value, flow(Str.trim, Str.isNonEmpty));
+
 const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir: O.Option<string>) {
-  if (O.isSome(homeDir)) {
-    return homeDir.value;
+  const supplied = nonBlankOption(homeDir);
+  if (O.isSome(supplied)) {
+    return supplied.value;
   }
 
-  const envHome = yield* readOptionalConfigString("HOME");
+  // `Config.string` accepts an exported-but-empty variable, so a blank `HOME`
+  // has to be rejected here; letting it through resolves the canonical store to
+  // `/.local/state/beep/ai-metrics`, which is absolute and therefore invisible
+  // to every downstream absolute-path guard.
+  const envHome = nonBlankOption(yield* readOptionalConfigString("HOME"));
   if (O.isSome(envHome)) {
     return envHome.value;
   }
@@ -210,6 +230,90 @@ const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir:
 const resolveRepoRoot = Effect.fn("AIMetrics.resolveRepoRoot")(function* (repoRoot: O.Option<string>) {
   const path = yield* Path.Path;
   return path.resolve(O.isSome(repoRoot) ? repoRoot.value : process.cwd());
+});
+
+const requireAbsoluteDataRoot = (path: string) =>
+  requireAbsoluteAiMetricsDataRoot(path).pipe(
+    Effect.mapError((error) =>
+      AiMetricsCommandError.make({
+        cause: error.cause,
+        message: `${error.message} Pass an absolute --data-root or ${aiMetricsDataRootEnvVar}.`,
+      })
+    )
+  );
+
+/**
+ * Resolve the AI metrics data root every `ai-metrics` program reads and writes.
+ *
+ * **Details**
+ *
+ * Precedence is `--data-root`, then `BEEP_AI_METRICS_DATA_ROOT`, then the deploy
+ * target's default, where `local` means `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
+ * and `dankserver` means `/srv/data/ai-metrics`. The flag carries the
+ * environment rung through `Flag.withFallbackConfig`, and the environment is
+ * also read here into the schema's `envDataRoot` key, so callers that pass
+ * `O.none()` directly — `install preview` and `install compose` — still honor
+ * `BEEP_AI_METRICS_DATA_ROOT` instead of silently rendering the target default.
+ *
+ * **Gotchas**
+ *
+ * The home directory is resolved lazily: the first pass omits it, and only a
+ * `None` — which the resolver returns exactly when the XDG rung won and had no
+ * state home to hang beneath — costs a `HOME` read. Reading `HOME` eagerly
+ * would fail `--target dankserver` runs in environments that have none, and
+ * restating the precedence table here to decide would leave two copies of it to
+ * drift apart. Relative values are refused here, for every command: a relative
+ * root would rebind the store to each process working directory, splitting the
+ * canonical store back into clone-local trees and letting destructive retention
+ * target a tree the operator never meant.
+ *
+ * **Example** (Resolving an operator flag)
+ *
+ * ```ts
+ * import { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
+ * import { resolveDataRoot } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
+ * import * as O from "@beep/utils/Option"
+ * import { Effect } from "effect"
+ *
+ * const program = resolveDataRoot(O.some("/srv/store"), AiMetricsDeployTarget.Enum.local)
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param dataRoot - `--data-root`, already carrying the `BEEP_AI_METRICS_DATA_ROOT` fallback.
+ * @param target - Deploy target whose default applies when no root is supplied.
+ * @returns The resolved data root path.
+ * @category utilities
+ * @since 0.0.0
+ */
+const resolveDataRoot = Effect.fn("AIMetrics.resolveDataRoot")(function* (
+  dataRoot: O.Option<string>,
+  target: AiMetricsDeployTarget
+) {
+  const flagDataRoot = nonBlankOption(dataRoot);
+  const envDataRoot = yield* readOptionalConfigString(aiMetricsDataRootEnvVar);
+  const stateHome = yield* readOptionalConfigString("XDG_STATE_HOME");
+  const makeInput = (homeDir: O.Option<string>) =>
+    AiMetricsDataRootInput.make({
+      ...O.getSomesStruct({ envDataRoot, flagDataRoot, homeDir, stateHome }),
+      target,
+    });
+  const missingHomeDir = O.none<string>();
+  const probe = pipe(missingHomeDir, makeInput, resolveAiMetricsDataRoot);
+  if (O.isSome(probe)) {
+    return yield* requireAbsoluteDataRoot(probe.value.path);
+  }
+
+  const homeDir = O.some(yield* resolveHomeDir(missingHomeDir));
+  const resolved = pipe(homeDir, makeInput, resolveAiMetricsDataRoot);
+  if (O.isNone(resolved)) {
+    return yield* AiMetricsCommandError.make({
+      cause: "HOME",
+      message: "Unable to resolve a home directory. Pass --home-dir explicitly.",
+    });
+  }
+
+  return yield* requireAbsoluteDataRoot(resolved.value.path);
 });
 
 const resolveHashSalt = Effect.fn("AIMetrics.resolveHashSalt")(function* (hashSalt: O.Option<string>) {
@@ -258,12 +362,14 @@ const resolveRawArchiveKeySecretRef = Effect.fn("AIMetrics.resolveRawArchiveKeyS
 /**
  * Option schema for the RequireHashSaltForTarget AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the RequireHashSaltForTargetOptions schema)
+ *
  * ```ts
  * import { RequireHashSaltForTargetOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(RequireHashSaltForTargetOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -296,12 +402,14 @@ const requireHashSaltForTarget = Effect.fn("AIMetrics.requireHashSaltForTarget")
 /**
  * Option schema for the RequireHashSaltSecretRefForTarget AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the RequireHashSaltSecretRefForTargetOptions schema)
+ *
  * ```ts
  * import { RequireHashSaltSecretRefForTargetOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(RequireHashSaltSecretRefForTargetOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -338,12 +446,14 @@ const requireHashSaltSecretRefForTarget = Effect.fn("AIMetrics.requireHashSaltSe
 /**
  * Option schema for the RequireRawArchiveKeySecretRefForTarget AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the RequireRawArchiveKeySecretRefForTargetOptions schema)
+ *
  * ```ts
  * import { RequireRawArchiveKeySecretRefForTargetOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(RequireRawArchiveKeySecretRefForTargetOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -423,12 +533,14 @@ const parseOptionalEpochMillis = Effect.fn("AIMetrics.parseOptionalEpochMillis")
 /**
  * Option schema for the ParseWindow AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ParseWindowOptions schema)
+ *
  * ```ts
  * import { ParseWindowOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ParseWindowOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -469,12 +581,14 @@ const parseWindow = Effect.fn("AIMetrics.parseWindow")(function* ({ since, until
 /**
  * Option schema for the ParseRetentionSelector AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ParseRetentionSelectorOptions schema)
+ *
  * ```ts
  * import { ParseRetentionSelectorOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ParseRetentionSelectorOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -501,7 +615,9 @@ const parseRetentionSelector = Effect.fn("AIMetrics.parseRetentionSelector")(fun
   const untilEpochMillis = yield* parseOptionalEpochMillis("until", until);
 
   return AiMetricsRetentionSelector.make({
-    dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
+    // Retention is a local-first operator surface with no `--target` flag, so the
+    // fallback rung is always the workstation's XDG store.
+    dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
     ...O.getSomesStruct({
       beforeEpochMillis,
       sinceEpochMillis,
@@ -530,18 +646,17 @@ const hasOrderedRetentionMutationWindow = (selector: AiMetricsRetentionSelector)
 const parseChecks = (checks: string): ReadonlyArray<string> =>
   pipe(Str.split(checks, ","), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
-const p6aCollectorDataRoot = (dataRoot: O.Option<string>, target: AiMetricsDeployTarget): O.Option<string> =>
-  O.isSome(dataRoot) || target === AiMetricsDeployTarget.Enum.local ? dataRoot : O.some(localCollectorDataRoot);
-
 /**
  * Option schema for the MakeCommandInstallInput AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeCommandInstallInputOptions schema)
+ *
  * ```ts
  * import { MakeCommandInstallInputOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeCommandInstallInputOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -549,23 +664,28 @@ class MakeCommandInstallInputOptions extends S.Class<MakeCommandInstallInputOpti
   $I`MakeCommandInstallInputOptions`
 )(
   {
-    dataRoot: S.Option(S.String),
+    dataRoot: S.String,
+    defaultTool: S.optionalKey(AiMetricsTool),
     hashSaltSecretRef: S.Option(S.String),
+    privacyMode: S.optionalKey(AiMetricsPrivacyMode),
     rawArchiveKeySecretRef: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("MakeCommandInstallInputOptions", {
-    description: "CLI install flags before environment-backed secret references are resolved.",
+    description: "CLI install flags, with the data root already resolved, before secret references are resolved.",
   })
 ) {}
 
+// `defaultTool` and `privacyMode` are the only divergences among the install-shaped
+// commands; omitting them keeps `AiMetricsInstallInput`'s own constructor defaults.
 const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(function* ({
   dataRoot,
+  defaultTool,
   hashSaltSecretRef,
+  privacyMode,
   rawArchiveKeySecretRef,
   target,
 }: MakeCommandInstallInputOptions) {
-  const resolvedDataRoot = O.getOrUndefined(dataRoot);
   const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
     hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
     target,
@@ -576,9 +696,13 @@ const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(f
   });
 
   return AiMetricsInstallInput.make({
-    ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
-    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
+    dataRoot,
+    ...O.getSomesStruct({
+      defaultTool: O.fromUndefinedOr(defaultTool),
+      hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef),
+      privacyMode: O.fromUndefinedOr(privacyMode),
+      rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef),
+    }),
     target,
   });
 });
@@ -586,41 +710,35 @@ const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(f
 /**
  * Option schema for the MakeCommandInstallSpec AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeCommandInstallSpecOptions schema)
+ *
  * ```ts
  * import { MakeCommandInstallSpecOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeCommandInstallSpecOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
 class MakeCommandInstallSpecOptions extends S.Class<MakeCommandInstallSpecOptions>($I`MakeCommandInstallSpecOptions`)(
   {
-    dataRoot: S.Option(S.String),
+    dataRoot: S.String,
+    defaultTool: S.optionalKey(AiMetricsTool),
     hashSaltSecretRef: S.Option(S.String),
+    privacyMode: S.optionalKey(AiMetricsPrivacyMode),
     rawArchiveKeySecretRef: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("MakeCommandInstallSpecOptions", {
-    description: "CLI install flags used to build a concrete AI metrics install spec.",
+    description: "CLI install flags, with the data root already resolved, used to build a concrete install spec.",
   })
 ) {}
 
-const makeCommandInstallSpec = Effect.fn("AIMetrics.makeCommandInstallSpec")(function* ({
-  dataRoot,
-  hashSaltSecretRef,
-  rawArchiveKeySecretRef,
-  target,
-}: MakeCommandInstallSpecOptions) {
-  return yield* makeAiMetricsInstallSpec(
-    yield* makeCommandInstallInput({
-      dataRoot,
-      hashSaltSecretRef,
-      rawArchiveKeySecretRef,
-      target,
-    })
-  );
+const makeCommandInstallSpec = Effect.fn("AIMetrics.makeCommandInstallSpec")(function* (
+  options: MakeCommandInstallSpecOptions
+) {
+  return yield* makeAiMetricsInstallSpec(yield* makeCommandInstallInput(options));
 });
 
 const renderInstallSpec = Effect.fn("AIMetrics.renderInstallSpec")(function* (
@@ -673,32 +791,17 @@ const defaultServiceEndpoint = Effect.fn("AIMetrics.defaultServiceEndpoint")(fun
   });
 });
 
-const serverObservabilityConfigFor = (
-  target: AiMetricsDeployTarget,
-  endpoint: AiMetricsOtlpEndpointSpec
-): ServerObservabilityConfig =>
-  ServerObservabilityConfig.make({
-    devtoolsEnabled: false,
-    devtoolsUrl: "ws://localhost:34437",
-    environment: target,
-    minLogLevel: "Info",
-    otlpBaseUrl: endpoint.baseUrl,
-    otlpEnabled: true,
-    otlpResourceAttributes: endpoint.resourceAttributes,
-    prometheusPrefix: "beep_ai_metrics",
-    serviceName: "beep-ai-metrics",
-    serviceVersion: "0.0.0",
-  });
-
 /**
  * Option schema for the MakeInstallPreviewProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallPreviewProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallPreviewProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallPreviewProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -724,23 +827,14 @@ const makeInstallPreviewProgram = Effect.fn("AIMetrics.makeInstallPreviewProgram
   target,
   tool,
 }: MakeInstallPreviewProgramOptions) {
-  const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
-    hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
+  const spec = yield* makeCommandInstallSpec({
+    dataRoot: yield* resolveDataRoot(O.none(), target),
+    defaultTool: tool,
+    hashSaltSecretRef,
+    privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
+    rawArchiveKeySecretRef,
     target,
   });
-  const resolvedRawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRefForTarget({
-    rawArchiveKeySecretRef: yield* resolveRawArchiveKeySecretRef(rawArchiveKeySecretRef),
-    target,
-  });
-  const spec = yield* makeAiMetricsInstallSpec(
-    AiMetricsInstallInput.make({
-      defaultTool: tool,
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
-      privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
-      target,
-    })
-  );
 
   yield* renderInstallSpec(spec, json);
 });
@@ -748,12 +842,14 @@ const makeInstallPreviewProgram = Effect.fn("AIMetrics.makeInstallPreviewProgram
 /**
  * Option schema for the MakeInstallComposeProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallComposeProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallComposeProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallComposeProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -777,6 +873,7 @@ const makeInstallComposeProgram = Effect.fn("AIMetrics.makeInstallComposeProgram
 }: MakeInstallComposeProgramOptions) {
   const spec = yield* makeAiMetricsInstallSpec(
     AiMetricsInstallInput.make({
+      dataRoot: yield* resolveDataRoot(O.none(), target),
       defaultTool: tool,
       privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
       target,
@@ -818,12 +915,14 @@ const renderInstallPlan = Effect.fn("AIMetrics.renderInstallPlan")(function* (
 /**
  * Option schema for the MakeInstallPlanProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallPlanProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallPlanProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallPlanProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -848,7 +947,7 @@ const makeInstallPlanProgram = Effect.fn("AIMetrics.makeInstallPlanProgram")(fun
   target,
 }: MakeInstallPlanProgramOptions) {
   const input = yield* makeCommandInstallInput({
-    dataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -876,12 +975,14 @@ const renderInstallDoctor = Effect.fn("AIMetrics.renderInstallDoctor")(function*
 /**
  * Option schema for the MakeInstallDoctorProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallDoctorProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallDoctorProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallDoctorProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -924,7 +1025,7 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
   target,
 }: MakeInstallDoctorProgramOptions) {
   const install = yield* makeCommandInstallInput({
-    dataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -962,12 +1063,14 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
 /**
  * Option schema for the MakeInstallApplyProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeInstallApplyProgramOptions schema)
+ *
  * ```ts
  * import { MakeInstallApplyProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeInstallApplyProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1004,7 +1107,7 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
   }
 
   const input = yield* makeCommandInstallInput({
-    dataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -1026,12 +1129,14 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
 /**
  * Option schema for the MakeIngestProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeIngestProgramOptions schema)
+ *
  * ```ts
  * import { MakeIngestProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeIngestProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1088,7 +1193,11 @@ const collectJsonlInputFiles = Effect.fn("AIMetrics.collectJsonlInputFiles")(fun
 ): Effect.fn.Return<ReadonlyArray<string>, AiMetricsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const stat = yield* fs.stat(inputPath).pipe(AiMetricsCommandError.mapError("Failed to inspect privacy input."));
+  const stat = yield* fs
+    .stat(inputPath)
+    .pipe(
+      Effect.mapError((cause) => AiMetricsCommandError.make({ cause, message: "Failed to inspect privacy input." }))
+    );
 
   if (stat.type === "File") {
     return [inputPath];
@@ -1118,12 +1227,9 @@ const collectJsonlInputFiles = Effect.fn("AIMetrics.collectJsonlInputFiles")(fun
     }
 
     const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    let files = A.empty<string>();
-    for (const entry of entries) {
-      files = A.appendAll(files, yield* walk(path.join(currentPath, entry)));
-    }
+    const childPaths = A.map(entries, (entry) => path.join(currentPath, entry));
 
-    return files;
+    return A.flatten(yield* Effect.forEach(childPaths, walk));
   });
 
   return pipe(yield* walk(inputPath), A.sort(Order.String));
@@ -1136,7 +1242,12 @@ const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (inpu
   const files = yield* collectJsonlInputFiles(absolutePath);
   const chunks = yield* Effect.forEach(
     files,
-    (filePath) => fs.readFileString(filePath).pipe(AiMetricsCommandError.mapError("Failed to read transcript input.")),
+    (filePath) =>
+      fs
+        .readFileString(filePath)
+        .pipe(
+          Effect.mapError((cause) => AiMetricsCommandError.make({ cause, message: "Failed to read transcript input." }))
+        ),
     { concurrency: 8 }
   );
 
@@ -1149,12 +1260,14 @@ const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (inpu
 /**
  * Option schema for the MakeSourcesDiscoverProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeSourcesDiscoverProgramOptions schema)
+ *
  * ```ts
  * import { MakeSourcesDiscoverProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeSourcesDiscoverProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1229,12 +1342,14 @@ const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgr
 /**
  * Option schema for the MakeConfigSnapshotProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeConfigSnapshotProgramOptions schema)
+ *
  * ```ts
  * import { MakeConfigSnapshotProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeConfigSnapshotProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1275,12 +1390,14 @@ const makeConfigSnapshotProgram = Effect.fn("AIMetrics.makeConfigSnapshotProgram
 /**
  * Option schema for the MakePrivacyCheckProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakePrivacyCheckProgramOptions schema)
+ *
  * ```ts
  * import { MakePrivacyCheckProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakePrivacyCheckProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1374,10 +1491,16 @@ const forwarderRunCommandToJson = Effect.fn("AIMetrics.forwarderRunCommandToJson
   });
 });
 
-const forwarderOtlpExported = (result: AiMetricsOtlpExportResult): AiMetricsForwarderOtlpExported =>
+// The run id comes from the forwarder pass, not from the export result. Export no longer
+// carries one: it drains every pending turn regardless of which run committed it, so a run
+// id on the result would have described the request rather than the batch.
+const forwarderOtlpExported = (
+  ingestRunId: string,
+  result: AiMetricsOtlpExportResult
+): AiMetricsForwarderOtlpExported =>
   AiMetricsForwarderOtlpExported.make({
     endpointTraceUrl: result.endpointTraceUrl,
-    ingestRunId: result.ingestRunId,
+    ingestRunId,
     sessionSpanCount: result.sessionSpanCount,
     spanCount: result.spanCount,
     status: "exported",
@@ -1385,17 +1508,20 @@ const forwarderOtlpExported = (result: AiMetricsOtlpExportResult): AiMetricsForw
     turnSpanCount: result.turnSpanCount,
   });
 
-const forwarderOtlpExportFailureMessage = "OTLP export did not complete after the forwarder run.";
+const forwarderOtlpExportFailureMessage =
+  "OTLP export did not complete after the forwarder run. Pending spans remain uncheckpointed for retry.";
 
 /**
  * Option schema for the ForwarderOtlpExportFailed AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ForwarderOtlpExportFailedOptions schema)
+ *
  * ```ts
  * import { ForwarderOtlpExportFailedOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ForwarderOtlpExportFailedOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1430,12 +1556,14 @@ const forwarderOtlpExportFailed = ({
 /**
  * Option schema for the ExportForwarderDerivedOtlp AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the ExportForwarderDerivedOtlpOptions schema)
+ *
  * ```ts
  * import { ExportForwarderDerivedOtlpOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(ExportForwarderDerivedOtlpOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1461,7 +1589,6 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
     AiMetricsOtlpExportInput.make({
       duckDbPath: forwarderResult.duckDbPath,
       endpoint,
-      ingestRunId: forwarderResult.ingestRunId,
       target,
     })
   ).pipe(
@@ -1477,7 +1604,7 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
           target,
         });
       }),
-      onSuccess: (result) => Effect.succeed(forwarderOtlpExported(result)),
+      onSuccess: (result) => Effect.succeed(forwarderOtlpExported(forwarderResult.ingestRunId, result)),
     })
   );
 });
@@ -1485,12 +1612,14 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
 /**
  * Option schema for the MakeForwarderRunProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeForwarderRunProgramOptions schema)
+ *
  * ```ts
  * import { MakeForwarderRunProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeForwarderRunProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1546,30 +1675,24 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
     hashSalt: yield* resolveHashSalt(hashSalt),
     target,
   });
-  const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
-    hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
+  const resolvedDataRoot = yield* resolveDataRoot(dataRoot, target);
+  // The install input carries the target-guarded secret references forward: both keys are
+  // `optionalKey` with no constructor default, so reading them back off the input yields
+  // exactly what the guards produced, `undefined` included.
+  const installInput = yield* makeCommandInstallInput({
+    dataRoot: resolvedDataRoot,
+    hashSaltSecretRef,
+    rawArchiveKeySecretRef,
     target,
   });
-  const resolvedRawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRefForTarget({
-    rawArchiveKeySecretRef: yield* resolveRawArchiveKeySecretRef(rawArchiveKeySecretRef),
-    target,
-  });
-  const resolvedDataRoot = O.getOrUndefined(p6aCollectorDataRoot(dataRoot, target));
-  const spec = yield* makeAiMetricsInstallSpec(
-    AiMetricsInstallInput.make({
-      ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
-      target,
-    })
-  );
+  const spec = yield* makeAiMetricsInstallSpec(installInput);
   const resolvedRawArchiveKey = yield* resolveRawArchiveKey();
   const sinceEpochMillis = all ? undefined : yield* parseSinceEpochMillis(since);
   const forwarderInput = AiMetricsForwarderInput.make({
-    ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
+    dataRoot: resolvedDataRoot,
     ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(resolvedHashSalt) }),
-    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
+    ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(installInput.hashSaltSecretRef) }),
+    ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(installInput.rawArchiveKeySecretRef) }),
     homeDir: yield* resolveHomeDir(homeDir),
     includeAll: all,
     ...(O.isSome(maxFileBytes) ? { maxFileBytes: maxFileBytes.value } : {}),
@@ -1591,9 +1714,10 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
   if (otlp) {
     const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
     const otlpExit = yield* Effect.scoped(
-      Layer.build(
-        Layer.mergeAll(duckDbLayer, layerNodeSdkServerTraces(serverObservabilityConfigFor(target, endpoint)))
-      ).pipe(
+      // The Node SDK trace layer used to stand here so `Effect.withSpan` had somewhere to
+      // emit. Export now goes straight to the collector through the OTLP protobuf sender,
+      // which reports whether the spans actually landed -- the whole point of the change.
+      Layer.build(Layer.mergeAll(duckDbLayer, AiMetricsOtlpSpanSender.layer)).pipe(
         Effect.flatMap((context) =>
           exportForwarderDerivedOtlp({
             endpoint,
@@ -1674,12 +1798,14 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
 /**
  * Option schema for the MakeForwarderTimerProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeForwarderTimerProgramOptions schema)
+ *
  * ```ts
  * import { MakeForwarderTimerProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeForwarderTimerProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1721,13 +1847,24 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
   retentionMaxSnapshotExports,
   target,
 }: MakeForwarderTimerProgramOptions) {
-  const resolvedDataRoot = p6aCollectorDataRoot(dataRoot, target);
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: resolvedDataRoot,
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
   });
+  // `statusPath` and `--data-root` are both interpolated into the unit's
+  // `ExecStart`, where a relative path would bind to `WorkingDirectory` -- the
+  // exact mechanism that put the canonical store inside a clone. Refuse to render
+  // anything before the root is proven absolute.
+  yield* requireAbsoluteAiMetricsDataRoot(spec.storage.dataRoot).pipe(
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({
+        cause,
+        message: "AI metrics forwarder timer units require an absolute --data-root.",
+      })
+    )
+  );
   const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
   const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
     hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
@@ -1796,12 +1933,14 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
 /**
  * Option schema for the MakeOtlpExportProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeOtlpExportProgramOptions schema)
+ *
  * ```ts
  * import { MakeOtlpExportProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeOtlpExportProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1809,63 +1948,46 @@ class MakeOtlpExportProgramOptions extends S.Class<MakeOtlpExportProgramOptions>
   {
     dataRoot: S.Option(S.String),
     hashSaltSecretRef: S.Option(S.String),
-    ingestRunId: S.String,
     json: S.Boolean,
     otlpBaseUrl: S.Option(S.String),
     rawArchiveKeySecretRef: S.Option(S.String),
     target: AiMetricsDeployTarget,
   },
   $I.annote("MakeOtlpExportProgramOptions", {
-    description: "CLI flags for exporting one derived ingest run to the configured OTLP endpoint.",
+    description: "CLI flags for exporting every pending derived AI metrics turn to the configured OTLP endpoint.",
   })
 ) {}
 
 const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
-  ingestRunId,
   json,
   otlpBaseUrl,
   rawArchiveKeySecretRef,
   target,
 }: MakeOtlpExportProgramOptions) {
-  const resolvedDataRoot = O.getOrUndefined(p6aCollectorDataRoot(dataRoot, target));
-  const resolvedHashSaltSecretRef = yield* requireHashSaltSecretRefForTarget({
-    hashSaltSecretRef: yield* resolveHashSaltSecretRef(hashSaltSecretRef),
+  const spec = yield* makeCommandInstallSpec({
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
+    hashSaltSecretRef,
+    rawArchiveKeySecretRef,
     target,
   });
-  const resolvedRawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRefForTarget({
-    rawArchiveKeySecretRef: yield* resolveRawArchiveKeySecretRef(rawArchiveKeySecretRef),
-    target,
-  });
-  const spec = yield* makeAiMetricsInstallSpec(
-    AiMetricsInstallInput.make({
-      ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(resolvedDataRoot) }),
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(resolvedHashSaltSecretRef) }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(resolvedRawArchiveKeySecretRef) }),
-      target,
-    })
-  );
   const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
   const input = AiMetricsOtlpExportInput.make({
     duckDbPath: spec.storage.duckDbPath,
     endpoint,
-    ingestRunId,
     target,
   });
-  const batch = yield* readAiMetricsOtlpSpanProjections(input).pipe(withAiMetricsDuckDb(spec.storage.duckDbPath));
-  const resolvedInput = AiMetricsOtlpExportInput.make({
-    duckDbPath: spec.storage.duckDbPath,
-    endpoint,
-    ingestRunId: batch.ingestRunId,
-    target,
-  });
+  // The same entry point the forwarder uses. Reading, delivering, and marking used to be
+  // spelled out separately here, which is how marking ended up wired into this command
+  // only and never into the forwarder. One path now, and it cannot be half-used.
   const result = yield* Effect.scoped(
-    Layer.build(layerNodeSdkServerTraces(serverObservabilityConfigFor(target, endpoint))).pipe(
-      Effect.flatMap((context) =>
-        runAiMetricsOtlpProjectionBatchExport(resolvedInput, batch).pipe(Effect.provide(context))
+    Layer.build(
+      Layer.mergeAll(
+        DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath })),
+        AiMetricsOtlpSpanSender.layer
       )
-    )
+    ).pipe(Effect.flatMap((context) => runAiMetricsOtlpExport(input).pipe(Effect.provide(context))))
   );
 
   if (json) {
@@ -1875,7 +1997,6 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
 
   yield* printLines([
     `ai-metrics otlp export: target=${target}`,
-    `ingest run: ${result.ingestRunId}`,
     `spans: ${result.spanCount}`,
     `sessions: ${result.sessionSpanCount}`,
     `turns: ${result.turnSpanCount}`,
@@ -1886,12 +2007,14 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
 /**
  * Option schema for the MakeBenchmarkRunProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeBenchmarkRunProgramOptions schema)
+ *
  * ```ts
  * import { MakeBenchmarkRunProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeBenchmarkRunProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1930,7 +2053,7 @@ const makeBenchmarkRunProgram = Effect.fn("AIMetrics.makeBenchmarkRunProgram")(f
   target,
 }: MakeBenchmarkRunProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -1980,12 +2103,14 @@ const makeBenchmarkCompareProgram = Effect.fn("AIMetrics.makeBenchmarkComparePro
 /**
  * Option schema for the MakeLabelQueueProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeLabelQueueProgramOptions schema)
+ *
  * ```ts
  * import { MakeLabelQueueProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeLabelQueueProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2016,7 +2141,7 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
   until,
 }: MakeLabelQueueProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2049,12 +2174,14 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
 /**
  * Option schema for the MakeLabelAddProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeLabelAddProgramOptions schema)
+ *
  * ```ts
  * import { MakeLabelAddProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeLabelAddProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2093,7 +2220,7 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
   taskId,
 }: MakeLabelAddProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2125,12 +2252,14 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
 /**
  * Option schema for the MakeBenchmarkCaseAddProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeBenchmarkCaseAddProgramOptions schema)
+ *
  * ```ts
  * import { MakeBenchmarkCaseAddProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeBenchmarkCaseAddProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2167,7 +2296,7 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
   title,
 }: MakeBenchmarkCaseAddProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2196,12 +2325,14 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
 /**
  * Option schema for the MakeBenchmarkCaseListProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeBenchmarkCaseListProgramOptions schema)
+ *
  * ```ts
  * import { MakeBenchmarkCaseListProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeBenchmarkCaseListProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2228,7 +2359,7 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
   target,
 }: MakeBenchmarkCaseListProgramOptions) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2249,12 +2380,14 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
 /**
  * Option schema for the MakeWeeklyReportProgram AI metrics helper.
  *
- * @example
+ * **Example** (Inspect the MakeWeeklyReportProgramOptions schema)
+ *
  * ```ts
  * import { MakeWeeklyReportProgramOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  *
  * console.log(MakeWeeklyReportProgramOptions.ast !== undefined) // true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2286,7 +2419,7 @@ const makeWeeklyReportProgram = Effect.fn("AIMetrics.makeWeeklyReportProgram")(f
 }: MakeWeeklyReportProgramOptions) {
   const path = yield* Path.Path;
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2368,24 +2501,32 @@ const commandText = (command: string, args: ReadonlyArray<string>): string =>
 const resolveMirrorBundleDir = Effect.fn("AIMetrics.resolveMirrorBundleDir")(function* ({
   bundle,
   dataRoot,
+  target,
 }: {
   readonly bundle: string;
   readonly dataRoot: O.Option<string>;
+  readonly target: AiMetricsDeployTarget;
 }) {
   if (bundle !== "latest") {
     return bundle;
   }
 
-  return yield* locateLatestAiMetricsMirrorBundle(O.getOrElse(dataRoot, () => localCollectorDataRoot));
+  return yield* locateLatestAiMetricsMirrorBundle(yield* resolveDataRoot(dataRoot, target));
 });
 
 const readMirrorManifest = Effect.fn("AIMetrics.readMirrorManifest")(function* (manifestPath: string) {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs
     .readFileString(manifestPath)
-    .pipe(AiMetricsCommandError.mapError("Failed to read AI metrics mirror manifest JSON."));
+    .pipe(
+      Effect.mapError((cause) =>
+        AiMetricsCommandError.make({ cause, message: "Failed to read AI metrics mirror manifest JSON." })
+      )
+    );
   return yield* decodeMirrorManifestJson(content).pipe(
-    AiMetricsCommandError.mapError("Failed to parse AI metrics mirror manifest JSON.")
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: "Failed to parse AI metrics mirror manifest JSON." })
+    )
   );
 });
 
@@ -2442,29 +2583,24 @@ const isAllowedMirrorBundleFile = (relativePath: string): boolean =>
   (Str.startsWith("parquet/")(relativePath) && Str.endsWith(".parquet")(relativePath));
 
 const listMirrorBundleFiles = Effect.fn("AIMetrics.listMirrorBundleFiles")(function* (bundleDir: string) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const walk = Effect.fnUntraced(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, AiMetricsCommandError, FileSystem.FileSystem | Path.Path> {
-    const stat = yield* fs
-      .stat(currentPath)
-      .pipe(AiMetricsCommandError.mapError("Failed to inspect AI metrics mirror bundle file inventory."));
-    if (stat.type === "File") {
-      return [pipe(path.relative(bundleDir, currentPath), Str.replace(/\\/gu, "/"))];
-    }
-    if (stat.type !== "Directory") {
-      return A.empty<string>();
-    }
-
-    const entries = yield* fs
-      .readDirectory(currentPath)
-      .pipe(AiMetricsCommandError.mapError("Failed to read AI metrics mirror bundle file inventory."));
-    const nested = yield* Effect.forEach(entries, (entry) => walk(path.join(currentPath, entry)), { concurrency: 8 });
-    return A.flatten(nested);
-  });
-
-  return pipe(yield* walk(bundleDir), A.sort(Order.String));
+  const files = yield* listAiMetricsDirectoryFileInfo(bundleDir).pipe(
+    Effect.mapError((error) =>
+      AiMetricsCommandError.make({
+        cause: error.cause,
+        message: Match.value(error.operation).pipe(
+          Match.when("inspect", () => "Failed to inspect AI metrics mirror bundle file inventory."),
+          Match.when("read", () => "Failed to read AI metrics mirror bundle file inventory."),
+          Match.exhaustive
+        ),
+      })
+    )
+  );
+  return pipe(
+    files,
+    A.map(([absolutePath]) => pipe(path.relative(bundleDir, absolutePath), Str.replace(/\\/gu, "/"))),
+    A.sort(Order.String)
+  );
 });
 
 const validateLocalMirrorBundle = Effect.fn("AIMetrics.validateLocalMirrorBundle")(function* ({
@@ -2533,7 +2669,7 @@ const makeMirrorBuildProgram = Effect.fn("AIMetrics.makeMirrorBuildProgram")(fun
 }) {
   const result = yield* buildAiMetricsMirrorBundle(
     AiMetricsMirrorBundleInput.make({
-      dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
+      dataRoot: yield* resolveDataRoot(dataRoot, target),
       remoteRoot,
       target,
     })
@@ -2578,6 +2714,7 @@ const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(funct
   const bundleDir = yield* resolveMirrorBundleDir({
     bundle,
     dataRoot,
+    target,
   });
   yield* validateLocalMirrorBundle({
     bundleDir,
@@ -2655,7 +2792,9 @@ const makeMirrorStatusProgram = Effect.fn("AIMetrics.makeMirrorStatusProgram")(f
   const manifestPath = `${remoteRoot}/manifest.json`;
   const captured = yield* runCapturedCommand("ssh", [host, `cat ${shellQuote(manifestPath)}`]);
   const manifest = yield* decodeMirrorManifestJson(captured.stdout).pipe(
-    AiMetricsCommandError.mapError("Failed to parse remote AI metrics mirror manifest JSON.")
+    Effect.mapError((cause) =>
+      AiMetricsCommandError.make({ cause, message: "Failed to parse remote AI metrics mirror manifest JSON." })
+    )
   );
   yield* requireSafeMirrorManifest({
     manifest,
@@ -2837,7 +2976,9 @@ const makeRetentionEnforceProgram = Effect.fn("AIMetrics.makeRetentionEnforcePro
 
   const result = yield* enforceAiMetricsRetentionPolicy(
     AiMetricsRetentionEnforcementPolicy.make({
-      dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
+      // Retention enforce has no `--target` flag; the fallback rung is the
+      // workstation's XDG store, matching `parseRetentionSelector`.
+      dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
       dryRun: O.isNone(confirm),
       maxSnapshotExports,
     })
@@ -2921,7 +3062,7 @@ const makeArchiveDrillProgram = Effect.fn("AIMetrics.makeArchiveDrillProgram")(f
   readonly target: AiMetricsDeployTarget;
 }) {
   const spec = yield* makeCommandInstallSpec({
-    dataRoot: p6aCollectorDataRoot(dataRoot, target),
+    dataRoot: yield* resolveDataRoot(dataRoot, target),
     hashSaltSecretRef,
     rawArchiveKeySecretRef,
     target,
@@ -2936,9 +3077,18 @@ const makeArchiveDrillProgram = Effect.fn("AIMetrics.makeArchiveDrillProgram")(f
               FROM ai_metrics_raw_archive_objects
               ORDER BY encrypted_at_epoch_ms
                 DESC LIMIT 1`)
-      .pipe(AiMetricsCommandError.mapError("Failed to select an AI metrics archive object for the decrypt drill."));
+      .pipe(
+        Effect.mapError((cause) =>
+          AiMetricsCommandError.make({
+            cause,
+            message: "Failed to select an AI metrics archive object for the decrypt drill.",
+          })
+        )
+      );
     const decoded = yield* decodeArchiveDrillRows(rows).pipe(
-      AiMetricsCommandError.mapError("Failed to decode AI metrics archive drill rows.")
+      Effect.mapError((cause) =>
+        AiMetricsCommandError.make({ cause, message: "Failed to decode AI metrics archive drill rows." })
+      )
     );
     const row = A.head(decoded);
     if (O.isNone(row)) {
@@ -2989,7 +3139,6 @@ export {
   hasBoundedRetentionMutationWindow,
   hasOrderedRetentionMutationWindow,
   hasRetentionWindow,
-  localCollectorDataRoot,
   MakeBenchmarkCaseAddProgramOptions,
   MakeBenchmarkCaseListProgramOptions,
   MakeBenchmarkRunProgramOptions,
@@ -3057,6 +3206,7 @@ export {
   requireHashSaltForTarget,
   requireHashSaltSecretRefForTarget,
   requireRawArchiveKeySecretRefForTarget,
+  resolveDataRoot,
   resolveHashSalt,
   resolveHashSaltSecretRef,
   resolveHomeDir,

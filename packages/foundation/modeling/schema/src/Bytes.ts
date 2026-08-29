@@ -26,19 +26,21 @@ const BytesLength = S.makeFilter<globalThis.Uint8Array<ArrayBufferLike>>(
 /**
  * Branded schema for protobuf `bytes` values.
  *
- * @remarks
+ * **Details**
+ *
  * Protobufjs reads `bytes` as `Uint8Array` and writes `bytes` from
  * `Uint8Array` or base64 strings. This schema models the decoded binary value
  * as a branded `Uint8Array`.
  *
- * @example
- * ```ts
+ * **Example** (Decode Uint8Array bytes)
+ *
+ * ```ts import.meta.vitest name="Decode Uint8Array bytes"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { Bytes } from "@beep/schema/Bytes"
  *
  * const value = await Effect.runPromise(S.decodeUnknownEffect(Bytes)(new Uint8Array([1, 2, 3])))
- * console.log(value.byteLength) // 3
+ * value.byteLength // => 3
  * ```
  *
  * @invariant Values are Uint8Array instances with protobuf length-delimited size.
@@ -59,8 +61,9 @@ export const Bytes = S.Uint8Array.annotate({
 /**
  * Type-level value inferred from {@link Bytes}.
  *
- * @example
- * ```ts
+ * **Example** (Narrow unknown to Bytes)
+ *
+ * ```ts import.meta.vitest name="Narrow unknown to Bytes"
  * import * as S from "effect/Schema"
  * import { Bytes } from "@beep/schema/Bytes"
  * import type { Bytes as BytesValue } from "@beep/schema/Bytes"
@@ -68,7 +71,7 @@ export const Bytes = S.Uint8Array.annotate({
  * const input: unknown = new Uint8Array([1, 2, 3])
  * if (S.is(Bytes)(input)) {
  *   const value: BytesValue = input
- *   console.log(value.byteLength) // 3
+ *   value.byteLength // => 3
  * }
  * ```
  *

@@ -11,7 +11,14 @@
  * @category models
  * @since 0.1.0
  */
-export * from "./_generated/Runpod.generated.ts";
+export * from "./_generated/Runpod.models.gen.ts";
+/**
+ * Generated Runpod request models and operation descriptors.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export * from "./_generated/Runpod.operations.gen.ts";
 /**
  * Runtime configuration models and constants.
  *
@@ -44,7 +51,8 @@ export * from "./RunpodDocs.service.ts";
 /**
  * Package version.
  *
- * @example
+ * **Example** (Import and log VERSION)
+ *
  * ```ts
  * import { VERSION } from "@beep/runpod"
  *

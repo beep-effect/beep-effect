@@ -2,6 +2,8 @@
  * Safe, bounded redaction for raw errors and Effect causes destined for logs,
  * telemetry, and client-visible channels.
  *
+ * **Details**
+ *
  * Diagnostic helpers in {@link CauseDiagnostics} preserve the raw primary
  * message and a full `Cause.pretty` rendering, both of which can leak secrets,
  * tokens, and home-directory paths, and the latter of which exposes internal
@@ -14,23 +16,24 @@
  * for internal logs and traces, while `"client"` drops all internal detail and
  * keeps only the stable tag, fingerprint, and a sanitized one-line message.
  *
- * @example
- * ```typescript
+ * **Example** (Redact cause for safe logs)
+ *
+ * ```ts import.meta.vitest name="Redact cause for safe logs"
  * import { Cause } from "effect"
  * import { redactCause } from "@beep/observability"
  *
  * const cause = Cause.fail(new Error("connect ECONNREFUSED token=sk-EXAMPLEKEY00"))
  * const safe = redactCause(cause)
  *
- * console.log(safe.tag) // "failure"
- * console.log(safe.message) // "connect ECONNREFUSED token=[REDACTED]"
+ * safe.tag // => "failure"
+ * safe.message // => "connect ECONNREFUSED token=[REDACTED]"
  * ```
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Cause, Effect, flow, Match, Result } from "effect";
 import { dual } from "effect/Function";
@@ -44,29 +47,31 @@ const $I = $ObservabilityId.create("CauseRedaction");
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 const decodeNonNegativeInt = (input: number): NonNegativeInt =>
-  Result.getOrThrowWith(S.decodeUnknownResult(NonNegativeInt)(input), schemaIssueToError);
+  Result.getOrThrowWith(S.decodeResult(NonNegativeInt)(input), schemaIssueToError);
 
 /**
  * Placeholder substituted for any redacted secret-shaped token or home path.
  *
- * @example
- * ```typescript
+ * **Example** (Check redaction placeholder presence)
+ *
+ * ```ts import.meta.vitest name="Check redaction placeholder presence"
  * import { REDACTION_PLACEHOLDER, sanitizeSensitiveText } from "@beep/observability"
  *
  * const sanitized = sanitizeSensitiveText("Authorization: Bearer sk-EXAMPLEKEY00")
- * console.log(sanitized.includes(REDACTION_PLACEHOLDER)) // true
+ * sanitized.includes(REDACTION_PLACEHOLDER) // => true
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const REDACTION_PLACEHOLDER = "[REDACTED]" as const;
 
 /**
  * Default maximum length for a sanitized message before truncation.
  *
- * @example
- * ```typescript
+ * **Example** (Use default message limit)
+ *
+ * ```ts import.meta.vitest name="Use default message limit"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DEFAULT_MESSAGE_LIMIT, RedactCauseOptions } from "@beep/observability"
@@ -74,19 +79,20 @@ export const REDACTION_PLACEHOLDER = "[REDACTED]" as const;
  * const options = RedactCauseOptions.make({
  *   messageLimit: S.decodeUnknownSync(NonNegativeInt)(DEFAULT_MESSAGE_LIMIT)
  * })
- * console.log(options.messageLimit) // 256
+ * options.messageLimit // => 256
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_MESSAGE_LIMIT = 256 as const;
 
 /**
  * Default maximum length for a sanitized diagnostic detail before truncation.
  *
- * @example
- * ```typescript
+ * **Example** (Use default detail limit)
+ *
+ * ```ts import.meta.vitest name="Use default detail limit"
  * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DEFAULT_DETAIL_LIMIT, RedactCauseOptions } from "@beep/observability"
@@ -94,11 +100,11 @@ export const DEFAULT_MESSAGE_LIMIT = 256 as const;
  * const options = RedactCauseOptions.make({
  *   detailLimit: S.decodeUnknownSync(NonNegativeInt)(DEFAULT_DETAIL_LIMIT)
  * })
- * console.log(options.detailLimit) // 2048
+ * options.detailLimit // => 2048
  * ```
  *
- * @since 0.0.0
  * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_DETAIL_LIMIT = 2048 as const;
 
@@ -107,16 +113,17 @@ export const DEFAULT_DETAIL_LIMIT = 2048 as const;
  * keeps only the stable tag, fingerprint, and a sanitized one-line message;
  * `"diagnostic"` additionally keeps a bounded, sanitized detail.
  *
- * @example
- * ```typescript
+ * **Example** (List redaction channel values)
+ *
+ * ```ts import.meta.vitest name="List redaction channel values"
  * import { RedactionChannel } from "@beep/observability"
  *
- * console.log(RedactionChannel.Enum.client) // "client"
- * console.log(RedactionChannel.Enum.diagnostic) // "diagnostic"
+ * RedactionChannel.Enum.client // => "client"
+ * RedactionChannel.Enum.diagnostic // => "diagnostic"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const RedactionChannel = LiteralKit(["client", "diagnostic"]).pipe(
   $I.annoteSchema("RedactionChannel", {
@@ -127,7 +134,8 @@ export const RedactionChannel = LiteralKit(["client", "diagnostic"]).pipe(
 /**
  * Runtime type for {@link RedactionChannel}.
  *
- * @example
+ * **Example** (Assign redaction channel type)
+ *
  * ```typescript
  * import type { RedactionChannel } from "@beep/observability"
  *
@@ -169,12 +177,15 @@ const applyRedactionSteps = (input: string): string => A.reduce(redactionSteps, 
 /**
  * Strip secret-shaped tokens and home-directory paths from a single string.
  *
+ * **Details**
+ *
  * Redacts secret/token assignments, `Authorization`/`Cookie` headers, bearer
  * and basic credentials, OpenAI-style keys, JWTs, and POSIX/Windows home paths,
  * collapses runs of horizontal whitespace, and trims the result. Length is not
  * bounded here; use {@link redactString} for a bounded variant.
  *
- * @example
+ * **Example** (Redact tokens and home paths)
+ *
  * ```typescript
  * import { sanitizeSensitiveText } from "@beep/observability"
  *
@@ -184,8 +195,8 @@ const applyRedactionSteps = (input: string): string => A.reduce(redactionSteps, 
  * // "at /home/[REDACTED]/app/index.ts:10"
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const sanitizeSensitiveText: (input: string) => string = flow(
   applyRedactionSteps,
@@ -196,9 +207,12 @@ export const sanitizeSensitiveText: (input: string) => string = flow(
 /**
  * Sanitize a string and cap it to `maxLength` characters with an ellipsis.
  *
+ * **Details**
+ *
  * Supports data-first and data-last call forms.
  *
- * @example
+ * **Example** (Sanitize and truncate string)
+ *
  * ```typescript
  * import { redactString } from "@beep/observability"
  *
@@ -206,8 +220,8 @@ export const sanitizeSensitiveText: (input: string) => string = flow(
  * // "token=[REDACTED]..."
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const redactString: {
   (input: string, maxLength: number): string;
@@ -218,23 +232,26 @@ export const redactString: {
  * Transport-safe redaction of a cause: a stable tag and fingerprint plus a
  * bounded, sanitized message and optional bounded, sanitized detail.
  *
+ * **Details**
+ *
  * The `tag` mirrors {@link CauseClassification} so diagnostics stay stable
  * across redaction. `detail` is present only for the `"diagnostic"` channel and
  * never contains raw stack or defect text beyond the bounded sanitized pretty
  * rendering.
  *
- * @example
- * ```typescript
+ * **Example** (Inspect redacted cause fields)
+ *
+ * ```ts import.meta.vitest name="Inspect redacted cause fields"
  * import { Cause } from "effect"
  * import { redactCause } from "@beep/observability"
  *
  * const redacted = redactCause(Cause.fail(new Error("token=sk-EXAMPLEKEY00")))
- * console.log(redacted.tag) // "failure"
- * console.log(redacted.message) // "token=[REDACTED]"
+ * redacted.tag // => "failure"
+ * redacted.message // => "token=[REDACTED]"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class RedactedCause extends S.Class<RedactedCause>($I`RedactedCause`)(
   {
@@ -262,16 +279,17 @@ export class RedactedCause extends S.Class<RedactedCause>($I`RedactedCause`)(
 /**
  * Options controlling how a cause is redacted.
  *
- * @example
- * ```typescript
+ * **Example** (Make client channel options)
+ *
+ * ```ts import.meta.vitest name="Make client channel options"
  * import { RedactCauseOptions } from "@beep/observability"
  *
  * const options = RedactCauseOptions.make({ channel: "client" })
- * console.log(options.channel) // "client"
+ * options.channel // => "client"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class RedactCauseOptions extends S.Class<RedactCauseOptions>($I`RedactCauseOptions`)(
   {
@@ -314,18 +332,19 @@ const detailForChannel = (summary: CauseSummary, options: RedactCauseOptions): O
  * Redact a normalized {@link CauseSummary} into a transport-safe
  * {@link RedactedCause}.
  *
- * @example
- * ```typescript
+ * **Example** (Redact summarized cause)
+ *
+ * ```ts import.meta.vitest name="Redact summarized cause"
  * import { Cause } from "effect"
  * import { redactCauseSummary, summarizeCause } from "@beep/observability"
  *
  * const summary = summarizeCause(Cause.fail(new Error("boom")))
  * const safe = redactCauseSummary(summary)
- * console.log(safe.tag) // "failure"
+ * safe.tag // => "failure"
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptions = defaultOptions): RedactedCause => {
   const messageTruncated = wasTruncated(summary.primaryMessage, options.messageLimit);
@@ -352,14 +371,15 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
 /**
  * Redact a cause summary's message, detail, and fingerprint for safe logging.
  *
- * @example
- * ```typescript
+ * **Example** (Redact cause summary safely)
+ *
+ * ```ts import.meta.vitest name="Redact cause summary safely"
  * import { Cause } from "effect"
  * import { redactCauseSummary, summarizeCause } from "@beep/observability"
  *
  * const summary = summarizeCause(Cause.fail(new Error("boom")))
  * const safe = redactCauseSummary(summary)
- * console.log(safe.tag) // "failure"
+ * safe.tag // => "failure"
  * ```
  *
  * @category utilities
@@ -367,7 +387,7 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
  */
 export const redactCauseSummary: {
   (summary: CauseSummary, options?: RedactCauseOptions): RedactedCause;
-  (options: RedactCauseOptions): (summary: CauseSummary) => RedactedCause;
+  (options?: RedactCauseOptions): (summary: CauseSummary) => RedactedCause;
 } = dual(isRedactionDataFirst, redactCauseSummaryImpl);
 
 const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) ? input : Cause.fail(input));
@@ -376,12 +396,15 @@ const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) 
  * Redact an unknown error or {@link Cause} into a transport-safe
  * {@link RedactedCause}.
  *
+ * **Details**
+ *
  * Anything that is not already a `Cause` is normalized via `Cause.fail`. The
  * result strips secrets, tokens, and home-directory paths, caps message and
  * detail length, and drops all internal detail on the `"client"` channel while
  * preserving a stable tag and fingerprint for diagnostics.
  *
- * @example
+ * **Example** (Redact cause for channels)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { RedactCauseOptions, redactCause } from "@beep/observability"
@@ -395,13 +418,13 @@ const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) 
  * console.log(external.detail) // Option.none()
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const redactCause: {
   // Data-last first: the catch-all `(input: unknown, ...)` overload would
   // otherwise absorb a lone options argument and hide the curried form.
-  (options: RedactCauseOptions): (input: unknown) => RedactedCause;
+  (options?: RedactCauseOptions): (input: unknown) => RedactedCause;
   (input: unknown, options?: RedactCauseOptions): RedactedCause;
 } = dual(
   isRedactionDataFirst,
@@ -414,7 +437,8 @@ export const redactCause: {
  * dropping all internal detail and keeping only the stable tag, fingerprint,
  * and a sanitized one-line message.
  *
- * @example
+ * **Example** (Redact cause for clients)
+ *
  * ```typescript
  * import { Cause } from "effect"
  * import { redactCauseForClient } from "@beep/observability"
@@ -424,8 +448,8 @@ export const redactCause: {
  * console.log(safe.detail) // Option.none()
  * ```
  *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const redactCauseForClient = (input: unknown): RedactedCause =>
   redactCause(input, RedactCauseOptions.make({ channel: RedactionChannel.Enum.client }));
@@ -433,27 +457,30 @@ export const redactCauseForClient = (input: unknown): RedactedCause =>
 /**
  * Failure raised when a redacted cause is rendered for a boundary.
  *
+ * **Details**
+ *
  * Carries only the already-sanitized {@link RedactedCause}, so the error itself
  * is safe to log, serialize, and surface across a boundary.
  *
- * @example
- * ```typescript
+ * **Example** (Make redacted cause error)
+ *
+ * ```ts import.meta.vitest name="Make redacted cause error"
  * import { Cause } from "effect"
  * import { RedactedCauseError, redactCause } from "@beep/observability"
  *
  * const error = RedactedCauseError.make({ redacted: redactCause(Cause.fail("boom")) })
- * console.log(error._tag) // "RedactedCauseError"
+ * error._tag // => "RedactedCauseError"
  * ```
  *
- * @since 0.0.0
  * @category error-handling
+ * @since 0.0.0
  */
-export class RedactedCauseError extends TaggedErrorClass<RedactedCauseError>($I`RedactedCauseError`)(
+export class RedactedCauseError extends S.TaggedError<RedactedCauseError>($I`RedactedCauseError`)(
   "RedactedCauseError",
   {
     redacted: RedactedCause,
   },
-  $I.annote("RedactedCauseError", {
+  $I.annoteError<RedactedCauseError>("RedactedCauseError", {
     description: "Boundary failure carrying only a sanitized, bounded representation of the originating cause.",
   })
 ) {}
@@ -461,29 +488,31 @@ export class RedactedCauseError extends TaggedErrorClass<RedactedCauseError>($I`
 /**
  * Effect-friendly, traced redaction of an unknown error or {@link Cause}.
  *
+ * **Details**
+ *
  * Annotates the active span with the stable tag and fingerprint (never the raw
  * message) and returns the transport-safe {@link RedactedCause}. Use this inside
  * Effect pipelines that log or report failures so the redaction itself appears
  * in traces.
  *
- * @example
- * ```typescript
+ * **Example** (Redact cause inside Effect)
+ *
+ * ```ts import.meta.vitest name="Redact cause inside Effect"
  * import { Cause, Effect } from "effect"
  * import { redactCauseEffect } from "@beep/observability"
  *
  * const safe = Effect.runSync(redactCauseEffect(Cause.fail(new Error("boom"))))
  *
- * console.log(safe.tag) // "failure"
+ * safe.tag // => "failure"
  * ```
  *
  * @effects Annotates the active span with the sanitized cause tag and fingerprint while keeping raw messages out of telemetry.
- *
- * @since 0.0.0
  * @category utilities
+ * @since 0.0.0
  */
 export const redactCauseEffect: {
   (input: unknown, options?: RedactCauseOptions): Effect.Effect<RedactedCause>;
-  (options: RedactCauseOptions): (input: unknown) => Effect.Effect<RedactedCause>;
+  (options?: RedactCauseOptions): (input: unknown) => Effect.Effect<RedactedCause>;
 } = dual(
   isRedactionDataFirst,
   Effect.fn("observability.redact_cause")(function* (input: unknown, options: RedactCauseOptions = defaultOptions) {
@@ -499,15 +528,16 @@ export const redactCauseEffect: {
 /**
  * Runtime-controlled levels supported by redacted boundary logging.
  *
- * @example
- * ```typescript
+ * **Example** (Read log level enum value)
+ *
+ * ```ts import.meta.vitest name="Read log level enum value"
  * import { RedactedCauseLogLevel } from "@beep/observability"
  *
- * console.log(RedactedCauseLogLevel.Enum.Warn) // "Warn"
+ * RedactedCauseLogLevel.Enum.Warn // => "Warn"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const RedactedCauseLogLevel = LiteralKit(["Info", "Warn", "Error"]).pipe(
   $I.annoteSchema("RedactedCauseLogLevel", {
@@ -518,7 +548,8 @@ export const RedactedCauseLogLevel = LiteralKit(["Info", "Warn", "Error"]).pipe(
 /**
  * Runtime type for {@link RedactedCauseLogLevel}.
  *
- * @example
+ * **Example** (Assign log level type)
+ *
  * ```typescript
  * import type { RedactedCauseLogLevel } from "@beep/observability"
  *
@@ -526,24 +557,25 @@ export const RedactedCauseLogLevel = LiteralKit(["Info", "Warn", "Error"]).pipe(
  * console.log(level)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type RedactedCauseLogLevel = typeof RedactedCauseLogLevel.Type;
 
 /**
  * Options for logging one redacted Cause at an Effect runtime-controlled level.
  *
- * @example
- * ```typescript
+ * **Example** (Make log options defaults)
+ *
+ * ```ts import.meta.vitest name="Make log options defaults"
  * import { LogRedactedCauseOptions } from "@beep/observability"
  *
  * const options = LogRedactedCauseOptions.make({ message: "request failed" })
- * console.log(options.level) // "Error"
+ * options.level // => "Error"
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class LogRedactedCauseOptions extends S.Class<LogRedactedCauseOptions>($I`LogRedactedCauseOptions`)(
   {
@@ -567,11 +599,16 @@ const logAtRedactedCauseLevel = (level: RedactedCauseLogLevel, message: string):
 /**
  * Log a Cause with bounded, sanitized diagnostic attributes.
  *
+ * **Details**
+ *
  * The active span receives only the stable Cause tag and sanitized fingerprint.
  * The log receives the sanitized message and optional bounded detail. Runtime
- * minimum log level filtering remains authoritative.
+ * minimum log level filtering remains authoritative. Call data-first as
+ * `logRedactedCause(cause, options)`, or partially apply
+ * `logRedactedCause(options)` for `Effect.tapCause` and `Effect.catchCause`.
  *
- * @example
+ * **Example** (Log sanitized cause attributes)
+ *
  * ```typescript
  * import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability"
  * import { Cause } from "effect"
@@ -583,34 +620,38 @@ const logAtRedactedCauseLevel = (level: RedactedCauseLogLevel, message: string):
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
-export const logRedactedCause = Effect.fn("observability.log_redacted_cause")(function* (
-  input: unknown,
-  options: LogRedactedCauseOptions
-) {
-  const redacted = yield* redactCauseEffect(input);
-  const baseAttributes = {
-    ...(options.attributes ?? {}),
-    cause_classification: redacted.tag,
-    cause_fingerprint: redacted.fingerprint,
-    cause_message: redacted.message,
-    cause_truncated: `${redacted.truncated}`,
-  };
-  const attributes = O.match(redacted.detail, {
-    onNone: () => baseAttributes,
-    onSome: (causeDetail) => ({ ...baseAttributes, cause_detail: causeDetail }),
-  });
+export const logRedactedCause: {
+  (input: unknown, options: LogRedactedCauseOptions): Effect.Effect<void>;
+  (options: LogRedactedCauseOptions): (input: unknown) => Effect.Effect<void>;
+} = dual(
+  2,
+  Effect.fn("observability.log_redacted_cause")(function* (input: unknown, options: LogRedactedCauseOptions) {
+    const redacted = yield* redactCauseEffect(input);
+    const baseAttributes = {
+      ...(options.attributes ?? {}),
+      cause_classification: redacted.tag,
+      cause_fingerprint: redacted.fingerprint,
+      cause_message: redacted.message,
+      cause_truncated: `${redacted.truncated}`,
+    };
+    const attributes = O.match(redacted.detail, {
+      onNone: () => baseAttributes,
+      onSome: (causeDetail) => ({ ...baseAttributes, cause_detail: causeDetail }),
+    });
 
-  return yield* logAtRedactedCauseLevel(options.level, options.message).pipe(Effect.annotateLogs(attributes));
-});
+    return yield* logAtRedactedCauseLevel(options.level, options.message).pipe(Effect.annotateLogs(attributes));
+  })
+);
 
 /**
  * Observe every failing exit of an Effect with sanitized Cause logging while
  * preserving the original Cause unchanged.
  *
- * @example
+ * **Example** (Tap failures with redacted logs)
+ *
  * ```typescript
  * import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability"
  * import { Effect } from "effect"
@@ -621,12 +662,12 @@ export const logRedactedCause = Effect.fn("observability.log_redacted_cause")(fu
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const tapRedactedCause: {
   <A, E, R>(effect: Effect.Effect<A, E, R>, options: LogRedactedCauseOptions): Effect.Effect<A, E, R>;
   (options: LogRedactedCauseOptions): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 } = dual(2, <A, E, R>(effect: Effect.Effect<A, E, R>, options: LogRedactedCauseOptions) =>
-  effect.pipe(Effect.tapCause((cause) => logRedactedCause(cause, options)))
+  effect.pipe(Effect.tapCause(logRedactedCause(options)))
 );

@@ -1,0 +1,352 @@
+// Regenerate with: bun run beep lint package-test-typecheck --write-baseline
+// Shrink-only ratchet: a package listed here has test/ sources its own `check` script never typechecks.
+// Remediate by adding tsconfig.test.json plus a beep:check:tests step wired into beep:check, then regenerate.
+// Hand-authored `notes` entries are preserved across regeneration; `findings` are always regenerated.
+{
+  "schema_version": 1,
+  "command": "bun run beep lint package-test-typecheck",
+  "regeneration_command": "bun run beep lint package-test-typecheck --write-baseline",
+  "comparison": "fail-on-growth: every blind-spot package must already be listed in the committed baseline",
+  "new_package_handling": "New packages scaffolded with `beep create-package` or `beep architecture` already wire `beep:check:tests` into `beep:check`; keep new packages out of this baseline rather than regenerating it.",
+  "notes": {
+    "@beep/repo-cli": "Deferred deliberately: the CLI owns the repo's largest test surface. Its test/tsconfig.json narrows include to ./**/*.test.ts, which leaves test/global-cleanup.ts and test/support/CommandTest.ts unselected, so no project it owns covers the whole test tree. Remediate as its own packet.",
+    "@beep/infra": "Test project lives at test/tsconfig.json (not tsconfig.test.json) and check runs only tsgo -b tsconfig.json; its ./**/*.test.ts include also leaves infra/test/schemaParity.ts unselected."
+  },
+  "check": {
+    "total_findings": 66,
+    "missing_test_tsconfig": 65,
+    "unwired_test_tsconfig": 1
+  },
+  "findings": [
+    {
+      "package": "@beep/agents-client",
+      "directory": "packages/agents/client",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/agents-domain",
+      "directory": "packages/agents/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/agents-server",
+      "directory": "packages/agents/server",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/agents-use-cases",
+      "directory": "packages/agents/use-cases",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/ai-provider-cli",
+      "directory": "packages/drivers/ai-provider-cli",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/anthropic",
+      "directory": "packages/drivers/anthropic",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-client",
+      "directory": "packages/architecture-lab/client",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-config",
+      "directory": "packages/architecture-lab/config",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-domain",
+      "directory": "packages/architecture-lab/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-proof",
+      "directory": "apps/architecture-lab-proof",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-server",
+      "directory": "packages/architecture-lab/server",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-tables",
+      "directory": "packages/architecture-lab/tables",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-ui",
+      "directory": "packages/architecture-lab/ui",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/architecture-lab-use-cases",
+      "directory": "packages/architecture-lab/use-cases",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/chalk",
+      "directory": "packages/foundation/capability/chalk",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/colors",
+      "directory": "packages/foundation/capability/colors",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/cosmos",
+      "directory": "packages/drivers/cosmos",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/data",
+      "directory": "packages/foundation/primitive/data",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/discord",
+      "directory": "packages/drivers/discord",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/documents-tables",
+      "directory": "packages/documents/tables",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/drizzle",
+      "directory": "packages/drivers/drizzle",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/duckdb",
+      "directory": "packages/drivers/duckdb",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/epistemic-domain",
+      "directory": "packages/epistemic/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/face-detection",
+      "directory": "packages/drivers/face-detection",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/ffmpeg",
+      "directory": "packages/drivers/ffmpeg",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/graph-3d",
+      "directory": "packages/drivers/graph-3d",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/hubspot",
+      "directory": "packages/drivers/hubspot",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/identity",
+      "directory": "packages/foundation/modeling/identity",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/infra",
+      "directory": "infra",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/infra-turbo-cache-lambda",
+      "directory": "infra/lambda/turbo-cache",
+      "kind": "unwired-test-tsconfig"
+    },
+    {
+      "package": "@beep/law-practice-domain",
+      "directory": "packages/law-practice/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/law-practice-server",
+      "directory": "packages/law-practice/server",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/law-practice-use-cases",
+      "directory": "packages/law-practice/use-cases",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/md",
+      "directory": "packages/foundation/modeling/md",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/n3",
+      "directory": "packages/drivers/n3",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/nlp",
+      "directory": "packages/foundation/modeling/nlp",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/nlp-processing",
+      "directory": "packages/foundation/capability/nlp-processing",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/observability",
+      "directory": "packages/foundation/capability/observability",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/onepassword-cli",
+      "directory": "packages/drivers/onepassword-cli",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/ontology-domain",
+      "directory": "packages/ontology/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/ontology-server",
+      "directory": "packages/ontology/server",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/ontology-use-cases",
+      "directory": "packages/ontology/use-cases",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/openai-compat",
+      "directory": "packages/drivers/openai-compat",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/oxigraph",
+      "directory": "packages/drivers/oxigraph",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/phoenix",
+      "directory": "packages/drivers/phoenix",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/postgres",
+      "directory": "packages/drivers/postgres",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/rdf-canonize",
+      "directory": "packages/drivers/rdf-canonize",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/repo-ai-metrics",
+      "directory": "packages/tooling/library/ai-metrics",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/repo-cli",
+      "directory": "packages/tooling/tool/cli",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/repo-docgen",
+      "directory": "packages/tooling/tool/docgen",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/repo-utils",
+      "directory": "packages/tooling/library/repo-utils",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/runpod",
+      "directory": "packages/drivers/runpod",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/sanity",
+      "directory": "packages/drivers/sanity",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/schema",
+      "directory": "packages/foundation/modeling/schema",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/semantic-web",
+      "directory": "packages/foundation/capability/semantic-web",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/shacl",
+      "directory": "packages/drivers/shacl",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/shared-domain",
+      "directory": "packages/shared/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/shared-tables",
+      "directory": "packages/shared/tables",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/test-utils",
+      "directory": "packages/tooling/test-kit/test-utils",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/types",
+      "directory": "packages/foundation/primitive/types",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/ui",
+      "directory": "packages/foundation/ui-system/ui",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/utils",
+      "directory": "packages/foundation/modeling/utils",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/workspace-domain",
+      "directory": "packages/workspace/domain",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/workspace-server",
+      "directory": "packages/workspace/server",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/workspace-tables",
+      "directory": "packages/workspace/tables",
+      "kind": "missing-test-tsconfig"
+    },
+    {
+      "package": "@beep/workspace-use-cases",
+      "directory": "packages/workspace/use-cases",
+      "kind": "missing-test-tsconfig"
+    }
+  ]
+}

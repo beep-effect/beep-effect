@@ -9,9 +9,8 @@
 /**
  * LegislativeMaterialCitation model exports.
  *
- * **Example**
+ * **Example** (Import model from values)
  *
- * @example
  * ```ts
  * import { LegislativeMaterialCitation } from "@beep/law-practice-domain/values";
  * ```
@@ -19,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LegislativeMaterialCitation.model.js";
+export * from "./LegislativeMaterialCitation.model.ts";

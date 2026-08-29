@@ -17,7 +17,7 @@ import {
 } from "@beep/semantic-web/services/shacl-validation";
 import { A, O, P, Str } from "@beep/utils";
 import { Effect, Layer, Match, pipe } from "effect";
-import { ShaclEngineError } from "./Shacl.errors.js";
+import { ShaclEngineError } from "./Shacl.errors.ts";
 import type {
   ShaclNodeShape,
   ShaclPropertyShape,
@@ -427,12 +427,14 @@ const validateShacl = Effect.fn("Shacl.validate")(function* (request: ShaclValid
 /**
  * Live SHACL service Layer backed by shacl-engine.
  *
- * @remarks
+ * **Details**
+ *
  * `shacl-engine` and RDFJS support packages are imported lazily during
  * validation so this Layer remains safe to import in browser bundles and
  * workers before a validation run actually starts.
  *
- * @example
+ * **Example** (Import the live Layer)
+ *
  * ```ts
  * import { ShaclValidationServiceLive } from "@beep/shacl"
  *

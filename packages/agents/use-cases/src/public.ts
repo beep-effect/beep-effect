@@ -8,7 +8,8 @@
 /**
  * Provider-instance commands, queries, actionable errors, and RPC contracts.
  *
- * @example
+ * **Example** (Check provider instance RPC)
+ *
  * ```ts
  * import { ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.has("ListProviderInstances")) // true
@@ -17,11 +18,12 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./entities/ProviderInstance/index.js";
+export * from "./entities/ProviderInstance/index.ts";
 /**
  * Assistant-turn generation kernel contracts, errors, and port tag.
  *
- * @example
+ * **Example** (Decode turn history item)
+ *
  * ```ts
  * import { TurnHistoryItem } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -33,12 +35,13 @@ export * from "./entities/ProviderInstance/index.js";
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./processes/AssistantTurn/index.js";
+export * from "./processes/AssistantTurn/index.ts";
 /**
  * Chat wire contract: rpc declarations, the `ChatRpcs` group, and the
  * client-safe `ChatActionError` carried on every chat request.
  *
- * @example
+ * **Example** (Make chat action error)
+ *
  * ```ts
  * import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public"
  *
@@ -49,11 +52,12 @@ export * from "./processes/AssistantTurn/index.js";
  * @category protocols
  * @since 0.0.0
  */
-export * from "./processes/Chat/index.js";
+export * from "./processes/Chat/index.ts";
 /**
  * Candidate output command contracts accepted by the runtime SDK.
  *
- * @example
+ * **Example** (Validate candidate output command)
+ *
  * ```ts
  * import { ProposeCandidateOutputSet } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -65,11 +69,12 @@ export * from "./processes/Chat/index.js";
  * @category commands
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.commands.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.commands.ts";
 /**
  * Client-safe runtime DTO and context packet contracts.
  *
- * @example
+ * **Example** (Create runtime scope)
+ *
  * ```ts
  * import { RuntimeScope } from "@beep/agents-use-cases/public"
  *
@@ -84,11 +89,12 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.commands.js";
  * @category protocols
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.contracts.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts";
 /**
  * Client-safe runtime validation errors.
  *
- * @example
+ * **Example** (Make validation error)
+ *
  * ```ts
  * import { ProfessionalRuntimeValidationError } from "@beep/agents-use-cases/public"
  *
@@ -98,11 +104,12 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.contracts.js"
  * @category errors
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.errors.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts";
 /**
  * Context packet query contracts accepted by the runtime SDK.
  *
- * @example
+ * **Example** (Build context packet query)
+ *
  * ```ts
  * import { GetContextPacket, RuntimeScope } from "@beep/agents-use-cases/public"
  *
@@ -121,11 +128,12 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.errors.js";
  * @category queries
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.queries.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.queries.ts";
 /**
  * Client-safe runtime literal vocabularies.
  *
- * @example
+ * **Example** (Check lifecycle literal)
+ *
  * ```ts
  * import { RuntimeCandidateLifecycle } from "@beep/agents-use-cases/public"
  * import * as S from "effect/Schema"
@@ -136,20 +144,26 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.queries.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.values.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.values.ts";
 /**
  * Client-safe SDK facade interface.
  *
- * @example
+ * **Example** (Type in-memory runtime SDK)
+ *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
  * import type { ProfessionalRuntimeSdk } from "@beep/agents-use-cases/public"
+ * import { Effect } from "effect"
  *
- * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk([])
+ * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * console.log(typeof sdk.proposeCandidateOutputSet) // "function"
  * ```
  *
  * @category services
  * @since 0.0.0
  */
-export type { ProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.service.js";
+export type { ProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.service.ts";

@@ -7,17 +7,16 @@
  */
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
-import { WorkItemId, WorkItemStatus } from "./WorkItem.values.js";
-import type { TaggedErrorNewInput } from "@beep/schema";
+import { WorkItemId, WorkItemStatus } from "./WorkItem.values.ts";
 
 const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors");
 
 /**
  * Failure raised when a command attempts to mutate an archived WorkItem.
  *
- * @example
+ * **Example** (Make archived WorkItem failure)
+ *
  * ```ts
  * import { WorkItemAlreadyArchived, WorkItemId } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -34,14 +33,14 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors"
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemAlreadyArchived extends TaggedErrorClass<WorkItemAlreadyArchived>($I`WorkItemAlreadyArchived`)(
+export class WorkItemAlreadyArchived extends S.TaggedError<WorkItemAlreadyArchived>($I`WorkItemAlreadyArchived`)(
   "WorkItemAlreadyArchived",
   {
     workItemId: WorkItemId.annotateKey({
       description: "WorkItem aggregate id that is already archived.",
     }),
   },
-  $I.annote("WorkItemAlreadyArchived", {
+  $I.annoteError<WorkItemAlreadyArchived>("WorkItemAlreadyArchived", {
     title: "WorkItem already archived",
     description: "The WorkItem is archived and no further lifecycle transition is allowed.",
   })
@@ -50,7 +49,8 @@ export class WorkItemAlreadyArchived extends TaggedErrorClass<WorkItemAlreadyArc
 /**
  * Failure raised when a command attempts an unsupported lifecycle transition.
  *
- * @example
+ * **Example** (Build invalid transition failure)
+ *
  * ```ts
  * import { WorkItemId, WorkItemInvalidTransition } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -69,9 +69,7 @@ export class WorkItemAlreadyArchived extends TaggedErrorClass<WorkItemAlreadyArc
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidTransition>(
-  $I`WorkItemInvalidTransition`
-)(
+export class WorkItemInvalidTransition extends S.TaggedError<WorkItemInvalidTransition>($I`WorkItemInvalidTransition`)(
   "WorkItemInvalidTransition",
   {
     workItemId: WorkItemId.annotateKey({
@@ -84,7 +82,7 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
       description: "Requested WorkItem lifecycle status.",
     }),
   },
-  $I.annote("WorkItemInvalidTransition", {
+  $I.annoteError<WorkItemInvalidTransition>("WorkItemInvalidTransition", {
     title: "WorkItem invalid transition",
     description: "The requested lifecycle transition is not valid for the current WorkItem state.",
   })
@@ -92,7 +90,8 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
   /**
    * Create a typed WorkItem transition failure from lifecycle values.
    *
-   * @example
+   * **Example** (Create failure from statuses)
+   *
    * ```ts
    * import { WorkItemId, WorkItemInvalidTransition } from "@beep/architecture-lab-domain/aggregates/WorkItem"
    * import * as S from "effect/Schema"
@@ -111,7 +110,7 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
    * @category factories
    * @since 0.0.0
    */
-  static fromStatus(input: TaggedErrorNewInput<typeof WorkItemInvalidTransition>) {
+  static fromStatus(input: (typeof WorkItemInvalidTransition)["~type.make.in"]) {
     return WorkItemInvalidTransition.make({
       workItemId: input.workItemId,
       from: input.from,
@@ -123,7 +122,8 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
 /**
  * Failure raised when an assignment command omits a valid assignee.
  *
- * @example
+ * **Example** (Make assignee required failure)
+ *
  * ```ts
  * import { WorkItemAssigneeRequired, WorkItemId } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -140,14 +140,14 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemAssigneeRequired extends TaggedErrorClass<WorkItemAssigneeRequired>($I`WorkItemAssigneeRequired`)(
+export class WorkItemAssigneeRequired extends S.TaggedError<WorkItemAssigneeRequired>($I`WorkItemAssigneeRequired`)(
   "WorkItemAssigneeRequired",
   {
     workItemId: WorkItemId.annotateKey({
       description: "WorkItem aggregate id that requires an assignee.",
     }),
   },
-  $I.annote("WorkItemAssigneeRequired", {
+  $I.annoteError<WorkItemAssigneeRequired>("WorkItemAssigneeRequired", {
     title: "WorkItem assignee required",
     description: "Assigning a WorkItem requires a valid Worker identity.",
   })
@@ -156,7 +156,8 @@ export class WorkItemAssigneeRequired extends TaggedErrorClass<WorkItemAssigneeR
 /**
  * WorkItem aggregate domain failure schema.
  *
- * @example
+ * **Example** (Decode domain error schema)
+ *
  * ```ts
  * import { WorkItemDomainError } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -190,7 +191,8 @@ export const WorkItemDomainError = S.Union([
 /**
  * Runtime type for {@link WorkItemDomainError}.
  *
- * @example
+ * **Example** (Type domain error union member)
+ *
  * ```ts
  * import { WorkItemAssigneeRequired, WorkItemId, type WorkItemDomainError } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import * as S from "effect/Schema"

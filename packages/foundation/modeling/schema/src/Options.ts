@@ -14,6 +14,8 @@ import * as S from "effect/Schema";
  * Decodes an optional object key whose value may also be `null` or `undefined`
  * into a required `Option`.
  *
+ * **Details**
+ *
  * This helper is a repository-named wrapper around
  * {@link S.OptionFromOptionalNullOr}. It is intended for object and class
  * fields where the boundary allows all common "missing" shapes:
@@ -31,13 +33,13 @@ import * as S from "effect/Schema";
  * - `null`: encode `None` as `null`
  * - `undefined`: encode `None` as `undefined`
  *
- * @remarks
  * Use this when an object boundary treats an omitted key, `undefined`, and
  * `null` as the same absence case but the decoded domain model should always
  * carry an explicit `Option`.
  *
- * @example
- * ```ts
+ * **Example** (Decode optional nullish key)
+ *
+ * ```ts import.meta.vitest name="Decode optional nullish key"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OptionFromOptionalNullishKey } from "@beep/schema"
@@ -52,19 +54,20 @@ import * as S from "effect/Schema";
  * const nullish = decode({ nickname: null })
  * const present = decode({ nickname: "beep" })
  *
- * console.log(O.isNone(missing.nickname)) // true
- * console.log(O.isNone(nullish.nickname)) // true
- * console.log(O.getOrUndefined(present.nickname)) // "beep"
+ * O.isNone(missing.nickname) // => true
+ * O.isNone(nullish.nickname) // => true
+ * O.getOrUndefined(present.nickname) // => "beep"
  * ```
  *
- * @example
- * ```ts
+ * **Example** (Encode None as null)
+ *
+ * ```ts import.meta.vitest name="Encode None as null"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { OptionFromOptionalNullishKey } from "@beep/schema"
  *
  * const Payload = S.Struct({
- *   homepage: OptionFromOptionalNullishKey(S.URLFromString, { onNoneEncoding: null })
+ *   homepage: OptionFromOptionalNullishKey({ schema: S.URLFromString, onNoneEncoding: null })
  * })
  *
  * const encode = S.encodeSync(Payload)
@@ -72,20 +75,26 @@ import * as S from "effect/Schema";
  * const encodedNone = encode({ homepage: O.none() })
  * const encodedSome = encode({ homepage: O.some(new URL("https://example.com")) })
  *
- * console.log(encodedNone) // { homepage: null }
- * console.log(encodedSome) // { homepage: "https://example.com/" }
+ * encodedNone // => { homepage: null }
+ * encodedSome // => { homepage: "https://example.com/" }
  * ```
  *
  * @typeParam Schema - Schema used when the key is present with a non-nullish value.
- * @param schema - Schema used to decode `Some` values.
- * @param options - Controls how `None` is represented during encoding.
+ * @param schemaOrOptions - The `Some` schema, or an options object carrying that
+ *   schema plus the `None` encoding.
  * @returns A schema that decodes optional nullish keys into `Option` values.
  * @category schemas
  * @since 0.0.0
  */
-export const OptionFromOptionalNullishKey = <Schema extends S.Top>(
-  schema: Schema,
-  options?: {
-    readonly onNoneEncoding: "omit" | null | undefined;
-  }
-): S.OptionFromOptionalNullOr<Schema> => S.OptionFromOptionalNullOr(schema, options);
+export function OptionFromOptionalNullishKey<Schema extends S.Top>(schema: Schema): S.OptionFromOptionalNullOr<Schema>;
+export function OptionFromOptionalNullishKey<Schema extends S.Top>(options: {
+  readonly schema: Schema;
+  readonly onNoneEncoding: "omit" | null | undefined;
+}): S.OptionFromOptionalNullOr<Schema>;
+export function OptionFromOptionalNullishKey<Schema extends S.Top>(
+  schemaOrOptions: Schema | { readonly schema: Schema; readonly onNoneEncoding: "omit" | null | undefined }
+): S.OptionFromOptionalNullOr<Schema> {
+  return S.isSchema(schemaOrOptions)
+    ? S.OptionFromOptionalNullOr(schemaOrOptions)
+    : S.OptionFromOptionalNullOr(schemaOrOptions.schema, { onNoneEncoding: schemaOrOptions.onNoneEncoding });
+}

@@ -7,14 +7,15 @@
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { CandidateOutputSet, RuntimeScope } from "./ProfessionalRuntime.contracts.js";
+import { CandidateOutputSet, RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.commands");
 
 /**
  * Command for proposing candidate work through the SDK facade.
  *
- * @example
+ * **Example** (Propose from runtime fixture)
+ *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
  * import { ProposeCandidateOutputSet, RuntimeScope } from "@beep/agents-use-cases/public"
@@ -34,6 +35,7 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",

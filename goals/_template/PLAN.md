@@ -11,9 +11,27 @@ Status: `pending`
 | P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
 | P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Close | pending | Prepare PR, review response, write the closeout reflection, and final readiness if requested. | Packet status and evidence are updated; a closeout reflection exists. |
+| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
-## P3 Closeout Checklist
+<!--
+Phase ids MUST match ops/manifest.json `phases[]` exactly. Until 2026-08-06 this
+table listed four phases ending at `P3 Close` while the manifest listed five
+(P3 Yeet, P4 Close), so every packet scaffolded from it inherited a plan that
+disagreed with its own machine state — an executor following both could close
+out before the PR was mergeable, or skip P4 entirely.
+
+Audited 2026-08-06 across all 112 packets carrying both files: exactly **four**
+had inherited this contradiction (identity-iri-core, law-docketing-patent-spine,
+law-docketing-reliability, law-time-capture-spine) and all four are now fixed.
+A packet may legitimately use its own scheme — M1–M4 milestones, P1a/P1b
+sub-phases, bolded ids, or prose instead of a table — so equality of phase-id
+sequences is NOT the rule; the rule is that a plan must not contradict its own
+manifest. A naive id-sequence comparison flags 8 packets, half of them false
+positives, which is why this is a review concern rather than an automated gate.
+-->
+
+## P4 Closeout Checklist
 
 Before marking the packet closed (and `status` → `completed-retained` / `complete`):
 

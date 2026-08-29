@@ -2,6 +2,7 @@ import { $RepoConfigsId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -11,12 +12,14 @@ const $I = $RepoConfigsId.create("internal/eslint/RuleAstSchemas");
 /**
  * Import-kind literals reflected by ESTree import nodes.
  *
- * @example
+ * **Example** (Satisfy type import kind)
+ *
  * ```ts
  * import { ImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas"
  * const kind = "type" satisfies ImportKind
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -29,12 +32,14 @@ export const ImportKind = LiteralKit(["type", "value"]).pipe(
 /**
  * Import-kind literals reflected by ESTree import nodes.
  *
- * @example
+ * **Example** (Assign value import kind)
+ *
  * ```ts
  * import type { ImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas"
  * const kind: ImportKind = "value"
  * console.log(kind)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -158,8 +163,12 @@ export class BlockCommentNode extends S.Class<BlockCommentNode>($I`BlockCommentN
   static readonly decodeOption = S.decodeUnknownOption(BlockCommentNode);
 }
 
-export const decodeImportDeclarationNode = ImportDeclarationNode.decodeOption;
-export const decodeImportNamespaceSpecifierNode = ImportNamespaceSpecifierNode.decodeOption;
+// unary by contract: `options` stays reachable through the `decodeOption` statics these alias;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeImportDeclarationNode: (input: unknown) => O.Option<ImportDeclarationNode> =
+  ImportDeclarationNode.decodeOption;
+export const decodeImportNamespaceSpecifierNode: (input: unknown) => O.Option<ImportNamespaceSpecifierNode> =
+  ImportNamespaceSpecifierNode.decodeOption;
 
 /**
  * Decode an import specifier AST node fragment, returning `None` for other nodes.
@@ -167,7 +176,10 @@ export const decodeImportNamespaceSpecifierNode = ImportNamespaceSpecifierNode.d
  * @since 0.0.0
  * @category utilities
  */
-export const decodeImportSpecifierNode = ImportSpecifierNode.decodeOption;
+// unary by contract: `options` stays reachable through `ImportSpecifierNode.decodeOption`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeImportSpecifierNode: (input: unknown) => O.Option<ImportSpecifierNode> =
+  ImportSpecifierNode.decodeOption;
 
 /**
  * Resolve the nearest import kind for an import specifier node.
@@ -175,23 +187,30 @@ export const decodeImportSpecifierNode = ImportSpecifierNode.decodeOption;
  * @since 0.0.0
  * @category utilities
  */
-export const resolveImportSpecifierImportKind = (
-  node: unknown,
-  importDeclarationKind?: ImportKind
-): O.Option<ImportKind> => {
-  const fallback = O.fromNullishOr(importDeclarationKind);
+export const resolveImportSpecifierImportKind: {
+  (importDeclarationKind?: ImportKind): (node: unknown) => O.Option<ImportKind>;
+  (node: unknown, importDeclarationKind?: ImportKind): O.Option<ImportKind>;
+} = dual(
+  (args) => args.length === 2 || (P.isNotUndefined(args[0]) && !isImportKind(args[0])),
+  (node: unknown, importDeclarationKind?: ImportKind): O.Option<ImportKind> => {
+    const fallback = O.fromNullishOr(importDeclarationKind);
 
-  if (!P.isObject(node) || !("importKind" in node)) {
-    return fallback;
+    if (!P.isObject(node) || !("importKind" in node)) {
+      return fallback;
+    }
+
+    return pipe(
+      O.fromNullishOr(Reflect.get(node, "importKind")),
+      O.filter(isImportKind),
+      O.orElse(() => fallback)
+    );
   }
+);
 
-  return pipe(
-    O.fromNullishOr(Reflect.get(node, "importKind")),
-    O.filter(isImportKind),
-    O.orElse(() => fallback)
-  );
-};
-
-export const decodeNamedDeclarationNode = NamedDeclarationNode.decodeOption;
-export const decodeVariableDeclarationNode = VariableDeclarationNode.decodeOption;
-export const decodeBlockCommentNode = BlockCommentNode.decodeOption;
+// unary by contract: `options` stays reachable through the `decodeOption` statics these alias;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeNamedDeclarationNode: (input: unknown) => O.Option<NamedDeclarationNode> =
+  NamedDeclarationNode.decodeOption;
+export const decodeVariableDeclarationNode: (input: unknown) => O.Option<VariableDeclarationNode> =
+  VariableDeclarationNode.decodeOption;
+export const decodeBlockCommentNode: (input: unknown) => O.Option<BlockCommentNode> = BlockCommentNode.decodeOption;

@@ -1,8 +1,16 @@
 {
-  "schema_version": 1,
-  "fallow_version": "2.89.0",
-  "timestamp": "2026-06-11T10:30:36Z",
-  "git_sha": "a113080ef10807ec2fc8b98b643beab5eb092ed2",
+  "schema_version": 2,
+  "fallow_version": "3.15.0",
+  "timestamp": "2026-08-16T21:21:18Z",
+  "git_sha": "48b0a590d66961b237a532c61a2358e6529660d6",
+  "analysis_identity": {
+    "mode": "syntactic",
+    "semantic_schema_version": 1,
+    "capabilities": [],
+    "project_config_hash": "",
+    "backend_family": "",
+    "completeness": "complete"
+  },
   "check": {
     "total_issues": 0,
     "unused_files": 0,
@@ -13,6 +21,16 @@
     "unused_optional_dependencies": 0,
     "unused_enum_members": 0,
     "unused_class_members": 0,
+    "unused_store_members": 0,
+    "unprovided_injects": 0,
+    "unrendered_components": 0,
+    "unused_component_props": 0,
+    "unused_component_emits": 0,
+    "unused_component_inputs": 0,
+    "unused_component_outputs": 0,
+    "unused_svelte_events": 0,
+    "unused_server_actions": 0,
+    "unused_load_data_keys": 0,
     "unresolved_imports": 0,
     "unlisted_dependencies": 0,
     "duplicate_exports": 0,
@@ -20,6 +38,10 @@
     "re_export_cycles": 0,
     "type_only_dependencies": 0,
     "test_only_dependencies": 0,
-    "boundary_violations": 0
+    "dev_dependencies_in_production": 0,
+    "boundary_violations": 0,
+    "boundary_coverage_violations": 0,
+    "boundary_call_violations": 0,
+    "policy_violations": 0
   }
 }

@@ -8,8 +8,9 @@
 /**
  * Internal generated data modules.
  *
- * @example
- * ```typescript
+ * **Example** (Importing Calendar month values)
+ *
+ * ```ts import.meta.vitest name="Importing Calendar month values"
  * import { Calendar } from "@beep/data/internal"
  *
  * console.assert(Calendar.MonthNameValues[0] === "january")

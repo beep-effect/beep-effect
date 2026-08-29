@@ -22,7 +22,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
-const sessionId = S.decodeUnknownSync(SessionId)("session-1");
+const sessionId = S.decodeSync(SessionId)("session-1");
 
 const openSession = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: makeDataset([]) }));
 

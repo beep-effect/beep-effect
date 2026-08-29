@@ -4,30 +4,37 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Fibered } from "@beep/identity/Fibered";
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { ArrayOfStrings } from "@beep/schema";
-import { Effect, Result, SchemaGetter } from "effect";
+import { Effect, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 /* cspell:ignore Derivability derivability */
-import { ApplicableTo } from "./ApplicableTo.model.js";
-import { ASTDerivability } from "./ASTDerivability.model.js";
-import "./JSDocTagAnnotation.model.js";
-import { Specification } from "./Specification.model.js";
-import { TagKind } from "./TagKind.model.js";
-import { TagParameters } from "./TagParameters.model.js";
-import { TagValue } from "./TagValue.model.js";
-import type { TagName } from "./TagValue.model.js";
+import { ApplicableTo } from "./ApplicableTo.model.ts";
+import { ASTDerivability } from "./ASTDerivability.model.ts";
+import "./JSDocTagAnnotation.model.ts";
+import { Specification } from "./Specification.model.ts";
+import { TagKind } from "./TagKind.model.ts";
+import { TagParameters } from "./TagParameters.model.ts";
+import { TagValue } from "./TagValue.model.ts";
+import type { TagName } from "./TagValue.model.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/JSDocTagDefinition.model");
 
 const defaultIsDeprecated = (): boolean => false;
 
+const singletonRecord = <Key extends string, Value>(key: Key, value: Value): Readonly<Record<Key, Value>> =>
+  R.set(R.empty<Key, Value>(), key, value);
+
 /**
  * Complete metadata for a single JSDoc/TSDoc tag.
  * Designed as a discriminated union member via `_tag`.
  *
- * @example
+ * **Example** (Make param tag definition)
+ *
  * ```ts
  * import * as O from "effect/Option"
  * import { JSDocTagDefinition } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
@@ -55,6 +62,7 @@ const defaultIsDeprecated = (): boolean => false;
  * })
  * console.log(definition._tag)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,7 +135,8 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
 /**
  * JSDoc model export.
  *
- * @example
+ * **Example** (Encode param tag definition)
+ *
  * ```ts
  * import { JSDocTagDefinition } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  *
@@ -151,6 +160,7 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
  * }
  * console.log(encoded._tag)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -182,8 +192,8 @@ export declare namespace JSDocTagDefinition {
 /**
  * Asserts that a value matches the encoded JSDoc tag definition shape.
  *
- * @param input - Encoded JSDoc tag definition candidate to refine.
- * @example
+ * **Example** (Assert encoded tag shape)
+ *
  * ```ts
  * import { JSDocTagDefinition, assertJsDoc } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  *
@@ -208,6 +218,8 @@ export declare namespace JSDocTagDefinition {
  * assertJsDoc(encoded)
  * console.log(encoded._tag)
  * ```
+ *
+ * @param input - Encoded JSDoc tag definition candidate to refine.
  * @category models
  * @since 0.0.0
  */
@@ -220,10 +232,8 @@ export const assertJsDoc: <const Def extends JSDocTagDefinition.Encoded>(input: 
 /**
  * Builds a JSDoc tag definition schema for a concrete tag payload.
  *
- * @param _tag - Canonical tag discriminator.
- * @param meta - Tag metadata payload without the discriminator.
- * @returns Specialized schema for the provided tag metadata payload.
- * @example
+ * **Example** (Build param tag schema)
+ *
  * ```ts
  * import { JSDocTagDefinition, make } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  *
@@ -247,6 +257,10 @@ export const assertJsDoc: <const Def extends JSDocTagDefinition.Encoded>(input: 
  * const tagSchema = make("param", meta)
  * console.log(tagSchema.ast.annotations?.jsDocTagMetadata?._tag)
  * ```
+ *
+ * @param _tag - Canonical tag discriminator.
+ * @param meta - Tag metadata payload without the discriminator.
+ * @returns Specialized schema for the provided tag metadata payload.
  * @category models
  * @since 0.0.0
  */
@@ -263,11 +277,14 @@ export const make: {
   <const Tag extends TagName, const Def extends typeof JSDocTagDefinition.Encoded>(
     _tag: Tag,
     meta: Omit<JSDocTagDefinition.Instance<Tag, Def>, "_tag">
-  ) => {
-    const def = Result.getOrThrow(S.decodeResult(JSDocTagDefinition)({ _tag, ...meta }));
-    return JSDocTagDefinition.mapFields((_) => ({
-      _tag: S.tag(_tag),
-      value: TagValue.cases[_tag],
-    })).annotate({ jsDocTagMetadata: def });
-  }
+  ) =>
+    Fibered.make({
+      base: S.Literals([_tag]),
+      fibers: singletonRecord(_tag, TagValue.cases[_tag]),
+      section: {
+        schema: JSDocTagDefinition,
+        values: singletonRecord(_tag, { _tag, ...meta }),
+      },
+      annotationKey: "jsDocTagMetadata",
+    }).member(_tag)
 );

@@ -2,35 +2,31 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-Graduated (partial):
+Graduated:
 [`goals/llm-provider-subscription-auth`](../../goals/llm-provider-subscription-auth/README.md)
-— the CLI subscription-auth leg of Q5's user>CLI>env precedence chain
-(2026-07-11). Dispatch/registry/fallback and the precedence resolver itself
-remain here.
+— the shipped vendor-CLI subscription-auth leg (2026-07-11). The honest runtime
+dispatch remainder is retained in [`MAP.md`](./MAP.md) as the demand-gated
+`llm-runtime-dispatch` candidate; no new goal was scaffolded.
 
 ## Spark
 
-beep already ships the four per-provider LLM drivers (`@beep/anthropic`,
-`@beep/openai-compat`, `@beep/xai`, `@beep/venice-ai`) but nothing owns the
-layer above them: a shared Effect dispatch Layer that resolves keys by
-user-key > env > CLI precedence, falls back across providers with
-`Layer.orElse` + retry, and resolves each provider's OWN default model so a
-fallback never inherits an incompatible model name.
+beep ships four provider drivers and vendored ordered fallback through
+`ExecutionPlan`. The remaining question is consumer demand: when two compatible,
+credential-resolvable runtime targets are genuinely required, the owning
+consumer may incubate an ordered dispatch policy at the agents server
+composition boundary.
 
 ## Next Open Question
 
-**Q1 (highest-leverage):** Does this packet own only the declarative
-dispatch/registry surface ABOVE `ExecutionPlan`, or also the shared retry/
-`Schedule` policy library plus round-robin + circuit-breaker? This root scope
-fork gates the whole packet — including its sequencing dependency on sibling
-`effect-orchestration-patterns` (Q1), build-vs-buy (Q2), and V1 resilience scope
-(Q7). Recommended answer pre-drafted in [`DECISIONS.md`](./DECISIONS.md); resolve
-the full set with `/grill-with-docs multi-provider-llm-dispatch-fallback`.
+**Demand trigger:** Does a real consumer require two compatible,
+credential-resolvable runtime targets? Until yes, `llm-runtime-dispatch` remains
+named in [`MAP.md`](./MAP.md) but unscaffolded. Candidate consumer:
+`AnthropicTurnKernel` successor work.
 
 ## Sources & provenance
 
@@ -52,6 +48,10 @@ gold-intake cluster "Multi-provider LLM dispatch + graceful fallback"
 
 ## Trail
 
+- 2026-07-14: closure — Q1-Q7 ratified; packet graduated on its shipped auth
+  leg. Runtime ordered dispatch remains an explicit demand-gated candidate
+  triggered only when a real consumer requires two compatible,
+  credential-resolvable runtime targets; no goal scaffold created.
 - 2026-07-11: partial graduation — CLI subscription-auth leg (vendor-CLI delegation, t3code methodology) graduated to `goals/llm-provider-subscription-auth` via /grill-with-docs; Q5's precedence resolver and all dispatch/fallback questions remain open here. `links.goals` updated.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Multi-provider LLM dispatch + graceful fallback' (8 nuggets).

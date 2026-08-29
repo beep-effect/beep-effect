@@ -6,15 +6,16 @@
  */
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { RuntimeScope } from "./ProfessionalRuntime.contracts.js";
-import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
+import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
+import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.queries");
 
 /**
  * Request for an evidence-bounded context packet.
  *
- * @example
+ * **Example** (Make scoped context packet)
+ *
  * ```ts
  * import { GetContextPacket, RuntimeScope } from "@beep/agents-use-cases/public"
  *

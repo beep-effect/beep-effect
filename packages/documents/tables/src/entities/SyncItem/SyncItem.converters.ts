@@ -8,12 +8,13 @@
 
 import { SyncItem } from "@beep/documents-domain/entities/SyncItem";
 import * as S from "effect/Schema";
-import type { syncItemTable } from "./SyncItem.table.js";
+import type { syncItemTable } from "./SyncItem.table.ts";
 
 /**
  * Selected documents SyncItem row.
  *
- * @example
+ * **Example** (Row type matches select)
+ *
  * ```ts
  * import type { syncItemTable, SyncItemRow } from "@beep/documents-tables/entities/SyncItem"
  *
@@ -31,7 +32,8 @@ export type SyncItemRow = typeof syncItemTable.$inferSelect;
 /**
  * Insertable documents SyncItem row.
  *
- * @example
+ * **Example** (Insert type matches table)
+ *
  * ```ts
  * import type { syncItemTable, SyncItemInsert } from "@beep/documents-tables/entities/SyncItem"
  *
@@ -52,12 +54,15 @@ const decodeSyncItemRow = S.decodeUnknownSync(SyncItem);
 /**
  * Convert a SyncItem entity into its persistence insert row.
  *
+ * **Details**
+ *
  * The schema-first entity is its own row codec: encoding yields the field-key
  * shape accepted by {@link syncItemTable}, whose metadata carries the physical
  * SQL column names. The database-managed `id` (SERIAL) is dropped so the
  * insert defers to the sequence.
  *
- * @example
+ * **Example** (Insert omits database id)
+ *
  * ```ts
  * import { fromSyncItemRow, toSyncItemInsert } from "@beep/documents-tables/entities/SyncItem"
  * import type { SyncItemRow } from "@beep/documents-tables/entities/SyncItem"
@@ -105,7 +110,8 @@ export const toSyncItemInsert = (syncItem: SyncItem): SyncItemInsert => {
 /**
  * Convert a selected persistence row into a SyncItem entity.
  *
- * @example
+ * **Example** (Decode row to entity)
+ *
  * ```ts
  * import { fromSyncItemRow } from "@beep/documents-tables/entities/SyncItem"
  * import type { SyncItemRow } from "@beep/documents-tables/entities/SyncItem"

@@ -14,11 +14,11 @@ import { Dataset } from "@beep/rdf/Rdf";
 // BrowserWorkerImportGraph.test.ts guards exactly this.
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
-import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.js";
-import { OntologySnapshot } from "./Session.projections.js";
-import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.js";
+import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.ts";
+import { OntologySnapshot } from "./Session.projections.ts";
+import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.ts";
+import type * as Result from "effect/Result";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 
@@ -33,7 +33,8 @@ const WorkerCommandKind = LiteralKit([
 /**
  * Worker command envelope.
  *
- * @example
+ * **Example** (Construct a parseTurtle worker command)
+ *
  * ```ts
  * import { ParseTurtleRequest, WorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -47,7 +48,8 @@ const WorkerCommandKind = LiteralKit([
  * console.log(command.kind)
  * ```
  *
- * @example
+ * **Example** (Construct a computeSnapshot worker command)
+ *
  * ```ts
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { WorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
@@ -67,8 +69,8 @@ const WorkerCommandKind = LiteralKit([
  * console.log(command.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
   parseTurtle: {
@@ -101,7 +103,8 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
 /**
  * Type for {@link WorkerCommand}.
  *
- * @example
+ * **Example** (Construct a parseTurtle worker command)
+ *
  * ```ts
  * import { ParseTurtleRequest, WorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -115,15 +118,16 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
  * console.log(command.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WorkerCommand = typeof WorkerCommand.Type;
 
 /**
  * Diff worker result.
  *
- * @example
+ * **Example** (Construct a diff worker result)
+ *
  * ```ts
  * import { DiffWorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -134,8 +138,8 @@ export type WorkerCommand = typeof WorkerCommand.Type;
  * console.log(result.operations.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class DiffWorkerResult extends S.Class<DiffWorkerResult>($I`DiffWorkerResult`)(
   {
@@ -157,7 +161,8 @@ const WorkerResultKind = LiteralKit([
 /**
  * Worker result envelope.
  *
- * @example
+ * **Example** (Construct a parseTurtleSucceeded worker result)
+ *
  * ```ts
  * import { ParseTurtleResult, WorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -172,7 +177,8 @@ const WorkerResultKind = LiteralKit([
  * console.log(result.kind)
  * ```
  *
- * @example
+ * **Example** (Construct a computeSnapshotSucceeded worker result)
+ *
  * ```ts
  * import { OntologyMetrics, OntologySnapshot, WorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -197,8 +203,8 @@ const WorkerResultKind = LiteralKit([
  * console.log(result.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
   parseTurtleSucceeded: {
@@ -226,7 +232,8 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
 /**
  * Type for {@link WorkerResult}.
  *
- * @example
+ * **Example** (Construct a diffDatasetsSucceeded worker result)
+ *
  * ```ts
  * import { DiffWorkerResult, WorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -240,14 +247,14 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
  * console.log(result.kind)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type WorkerResult = typeof WorkerResult.Type;
 
 // The exported encoders below wrap these rather than being them: `S.encodeSync`
 // returns a function carrying an optional options parameter, which the repo's
-// dual-arity law reads as a public two-parameter helper that ought to be `dual`.
+// This stays local because callers never need a data-last form.
 // Nobody passes encode options across a worker boundary.
 const encodeWorkerCommandSync = S.encodeSync(WorkerCommand);
 const encodeWorkerResultSync = S.encodeSync(WorkerResult);
@@ -266,7 +273,8 @@ const encodeWorkerResultSync = S.encodeSync(WorkerResult);
  * Both ends must therefore speak the *encoded* form, and both must go through
  * these four functions. Encoding at the boundary is what makes the wire the wire.
  *
- * @example
+ * **Example** (Reference the command codec pair)
+ *
  * ```ts
  * import { encodeWorkerCommand, decodeWorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -283,7 +291,8 @@ export const encodeWorkerCommand = (command: WorkerCommand): typeof WorkerComman
 /**
  * Decode a `WorkerCommand` that has crossed the worker boundary.
  *
- * @example
+ * **Example** (Reference the command decoder)
+ *
  * ```ts
  * import { decodeWorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -293,7 +302,10 @@ export const encodeWorkerCommand = (command: WorkerCommand): typeof WorkerComman
  * @category codecs
  * @since 0.0.0
  */
-export const decodeWorkerCommand = S.decodeUnknownResult(WorkerCommand);
+// unary by contract: `options` stays reachable through `S.decodeUnknownResult(WorkerCommand)`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeWorkerCommand: (input: unknown) => Result.Result<WorkerCommand, S.SchemaError> =
+  S.decodeUnknownResult(WorkerCommand);
 
 /**
  * Encode a `WorkerResult` for the trip back across the worker boundary.
@@ -302,7 +314,8 @@ export const decodeWorkerCommand = S.decodeUnknownResult(WorkerCommand);
  * decoded result and the parent never decoded it, so the projection arrived
  * de-prototyped — a plain object wearing the shape of a domain value.
  *
- * @example
+ * **Example** (Reference the result encoder)
+ *
  * ```ts
  * import { encodeWorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -317,7 +330,8 @@ export const encodeWorkerResult = (result: WorkerResult): typeof WorkerResult.En
 /**
  * Decode a `WorkerResult` received from the worker.
  *
- * @example
+ * **Example** (Reference the result decoder)
+ *
  * ```ts
  * import { decodeWorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -327,7 +341,10 @@ export const encodeWorkerResult = (result: WorkerResult): typeof WorkerResult.En
  * @category codecs
  * @since 0.0.0
  */
-export const decodeWorkerResult = S.decodeUnknownResult(WorkerResult);
+// unary by contract: `options` stays reachable through `S.decodeUnknownResult(WorkerResult)`;
+// a dual is undecidable here because `input` is `unknown`.
+export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult, S.SchemaError> =
+  S.decodeUnknownResult(WorkerResult);
 
 /**
  * A command the graph worker could not decode.
@@ -337,7 +354,8 @@ export const decodeWorkerResult = S.decodeUnknownResult(WorkerResult);
  * error to show and no way to find out why. Thrown from the worker, this surfaces as
  * an `error` event on the parent and fails the graph out loud.
  *
- * @example
+ * **Example** (Read an ontology worker undecodable command entry)
+ *
  * ```ts
  * import { OntologyWorkerUndecodableCommand } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -347,12 +365,12 @@ export const decodeWorkerResult = S.decodeUnknownResult(WorkerResult);
  * @category errors
  * @since 0.0.0
  */
-export class OntologyWorkerUndecodableCommand extends TaggedErrorClass<OntologyWorkerUndecodableCommand>(
+export class OntologyWorkerUndecodableCommand extends S.TaggedError<OntologyWorkerUndecodableCommand>(
   $I`OntologyWorkerUndecodableCommand`
 )(
   "OntologyWorkerUndecodableCommand",
   { reason: S.String },
-  $I.annote("OntologyWorkerUndecodableCommand", {
+  $I.annoteError<OntologyWorkerUndecodableCommand>("OntologyWorkerUndecodableCommand", {
     description: "The graph worker received a message it could not decode as a WorkerCommand.",
   })
 ) {}

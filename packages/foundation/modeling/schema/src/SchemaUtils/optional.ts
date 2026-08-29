@@ -16,14 +16,16 @@ const $I = $SchemaId.create("SchemaUtils/optional");
  * Creates an optional encoded object key whose decoded value may be
  * `undefined`.
  *
- * @remarks
+ * **Details**
+ *
  * Use this for wire objects where absent fields should stay as plain
  * `T | undefined` values in the decoded model. Prefer
  * `S.OptionFromOptionalKey` when the decoded domain should carry an explicit
  * `Option`.
  *
- * @example
- * ```ts
+ * **Example** (Optional key decoding to undefined)
+ *
+ * ```ts import.meta.vitest name="Optional key decoding to undefined"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import { optional } from "@beep/schema/SchemaUtils/optional"
@@ -33,7 +35,7 @@ const $I = $SchemaId.create("SchemaUtils/optional");
  * })
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(Patch)({}))
- * console.log(decoded.file) // undefined
+ * decoded.file // => undefined
  * ```
  *
  * @typeParam TSchema - Schema used when the optional key is present.

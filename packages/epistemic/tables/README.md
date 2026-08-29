@@ -11,7 +11,7 @@ real UsageRecord sink used by the desktop chat surface.
 - Epistemic slice table metadata projected from epistemic domain entity schemas.
 - Read-model and table shapes when they are epistemic product language.
 - Metadata-only Drizzle table definitions created with
-  `EntityTable.pgTableFrom(entity)`.
+  `toPgTable(entity)` from `@beep/effect-drizzle/pg`.
 
 ## Does Not Belong Here
 
@@ -26,7 +26,12 @@ real UsageRecord sink used by the desktop chat surface.
 | --- | --- |
 | `@beep/epistemic-tables` | Entry point exposing `Entities` and `DbSchema`. |
 | `@beep/epistemic-tables/entities` | Epistemic entity table namespaces. |
+| `@beep/epistemic-tables/entities/EvidenceVerification` | Append-only verified-evidence sidecar metadata and row converters. |
 | `@beep/epistemic-tables/entities/UsageRecord` | `UsageRecord.Table` metadata and row converters. |
+
+The raw-SQL migration owns the `EvidenceVerification` foreign key, denial of
+`UPDATE`/`DELETE`, and unique `(org_id, manifestation_key)` constraint. This
+package intentionally publishes only the schema-derived column projection.
 
 ## Development
 
@@ -37,7 +42,7 @@ bun run docgen
 bun run lint
 ```
 
-Tests and dtslint files import package source through
+Tests import package source through
 `@beep/epistemic-tables` or other `@beep/*` aliases. Use relative imports only
 for local helpers, fixtures, and snapshots.
 

@@ -22,9 +22,7 @@ const isDevelopment = !configStringEqualsSync("NODE_ENV", "production");
 const developmentScriptSources = isDevelopment ? " 'unsafe-eval' https://unpkg.com" : "";
 const developmentStyleSources = isDevelopment ? " https://fonts.googleapis.com" : "";
 const developmentFontSources = isDevelopment ? " https://fonts.gstatic.com" : "";
-const developmentConnectSources = isDevelopment
-  ? " http://localhost:* https://*.localhost:* ws: wss: https://react-grab.com https://www.react-grab.com"
-  : "";
+const developmentConnectSources = isDevelopment ? " ws: wss: https://react-grab.com https://www.react-grab.com" : "";
 const vercelLiveSource = " https://vercel.live";
 
 const buildCspHeader = (nonce: string): string =>
@@ -60,7 +58,8 @@ const withCsp = (cspHeader: string) => (response: NextResponse) => {
 /**
  * Adds a per-request CSP nonce to OIP document responses.
  *
- * @example
+ * **Example** (Assigning proxy handler)
+ *
  * ```ts
  * import type { NextRequest, NextResponse } from "next/server"
  * import { proxy } from "@beep/oip-web/proxy"
@@ -93,7 +92,8 @@ export function proxy(request: NextRequest): NextResponse {
 /**
  * Route matcher for the OIP CSP proxy.
  *
- * @example
+ * **Example** (Logging matcher source)
+ *
  * ```ts
  * import { config } from "@beep/oip-web/proxy"
  *

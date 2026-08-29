@@ -52,13 +52,13 @@ The hosted proof completed a three-packet Codex baseline using
 The source report used for the attempted run:
 
 ```sh
-bun run beep docgen quality --all --json --score codex --packet-limit 50 --output /tmp/beep-jsdoc-quality-all-2026-05-12.json
+bun run beep docgen quality --all --json --score codex --packet-limit 50 --output <scratch-dir>/beep-jsdoc-quality-all-2026-05-12.json
 ```
 
 The attempted local-provider eval used the pre-genericized command name:
 
 ```sh
-bun run beep docgen quality-local-eval --input /tmp/beep-jsdoc-quality-all-2026-05-12.json --provider ollama --model qwen3-coder:30b --packet-limit 10 --output goals/jsdoc-local-worker-eval/history/outputs/2026-05-12-ollama-qwen3-coder-30b-local-eval.json
+bun run beep docgen quality-local-eval --input <scratch-dir>/beep-jsdoc-quality-all-2026-05-12.json --provider ollama --model qwen3-coder:30b --packet-limit 10 --output goals/jsdoc-local-worker-eval/history/outputs/2026-05-12-ollama-qwen3-coder-30b-local-eval.json
 ```
 
 The eval was stopped after the local model caused interactive slowdown. No

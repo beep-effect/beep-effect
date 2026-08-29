@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -9,10 +9,12 @@ import { Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, Result
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { Node } from "ts-morph";
-import { collectText } from "../../../internal/process/index.js";
+import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
+import { runCaptured } from "../../../internal/process/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+
+export { fencedLineState, jsdocCommentsFromSource } from "../../../internal/jsdoc/JSDocSections.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/QualityArtifactSupport");
 
@@ -28,7 +30,7 @@ type QualityArtifactGeneratorErrorOptions = {
  * @category errors
  * @since 0.0.0
  */
-export class QualityArtifactGeneratorError extends TaggedErrorClass<QualityArtifactGeneratorError>(
+export class QualityArtifactGeneratorError extends S.TaggedError<QualityArtifactGeneratorError>(
   $I`QualityArtifactGeneratorError`
 )(
   "QualityArtifactGeneratorError",
@@ -37,9 +39,9 @@ export class QualityArtifactGeneratorError extends TaggedErrorClass<QualityArtif
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     filePath: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(Defect({ includeStack: true })),
   },
-  $I.annote("QualityArtifactGeneratorError", {
+  $I.annoteError<QualityArtifactGeneratorError>("QualityArtifactGeneratorError", {
     description: "Typed failure raised by repo quality artifact generators.",
   })
 ) {
@@ -91,8 +93,31 @@ export const JsonRecord = S.Record(S.String, S.Unknown).pipe(
  */
 export type JsonRecord = typeof JsonRecord.Type;
 
+// Dependency names mapped to version specifiers for one package.json bucket.
+const PackageJsonDependencyRecord = S.Record(S.String, S.String);
+
 /**
  * Package manifest fields consumed by Quality artifact generators.
+ *
+ * **Details**
+ *
+ * The four dependency buckets are read so coverage scope planning can follow
+ * workspace-internal edges to dependents; every bucket is optional because a
+ * manifest may omit any of them.
+ *
+ * **Example** (Describe a manifest with one workspace dependency)
+ *
+ * ```ts
+ * import { PackageJson } from "@beep/repo-cli/commands/Quality/internal/QualityArtifactSupport"
+ * import * as R from "effect/Record"
+ *
+ * const manifest = PackageJson.make({
+ *   name: "@beep/pandoc-ast",
+ *   scripts: { coverage: "vitest run --coverage" },
+ *   dependencies: { "@beep/md": "workspace:^" }
+ * })
+ * console.log(R.keys(manifest.dependencies ?? {})) // ["@beep/md"]
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -103,6 +128,10 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
     scripts: S.optionalKey(S.Record(S.String, S.String)),
     workspaces: S.optionalKey(S.Unknown),
     exports: S.optionalKey(S.Unknown),
+    dependencies: S.optionalKey(PackageJsonDependencyRecord),
+    devDependencies: S.optionalKey(PackageJsonDependencyRecord),
+    peerDependencies: S.optionalKey(PackageJsonDependencyRecord),
+    optionalDependencies: S.optionalKey(PackageJsonDependencyRecord),
   },
   $I.annote("PackageJson", {
     description: "Package manifest fields used by repo CLI support scripts.",
@@ -334,6 +363,7 @@ export const expandWorkspacePattern: {
     repoRoot: string,
     path: Path.Path
   ): Effect.Effect<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> =>
+    // fallow-ignore-next-line complexity -- pre-existing workspace-glob walker; the segment/candidate double loop mirrors the glob grammar and predates this change
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const segments = A.filter(Str.split("/")(normalizeSlashes(pattern)), Str.isNonEmpty);
@@ -475,18 +505,11 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
   FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const command = "bun run topo-sort";
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make("bun", ["run", "topo-sort"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* collectText(handle.all);
-      const exitCode = yield* handle.exitCode;
-      return { exitCode, output };
-    })
-  ).pipe(QualityArtifactGeneratorError.mapError(`Failed to run ${command}.`, { command, filePath: repoRoot }));
+  const result = yield* runCaptured({
+    command: "bun",
+    args: ["run", "topo-sort"],
+    cwd: repoRoot,
+  }).pipe(QualityArtifactGeneratorError.mapError(`Failed to run ${command}.`, { command, filePath: repoRoot }));
 
   if (result.exitCode !== 0) {
     return yield* QualityArtifactGeneratorError.make({
@@ -536,7 +559,7 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
   // Path-safe recursive directory walk: every branch (canonical re-resolution,
   // symlink-cycle guard, excluded dirs, extension/suffix filtering) is a
   // security-relevant gate; flattening the traversal would risk dropping a check.
-  // fallow-ignore-next-line complexity
+  // fallow-ignore-next-line complexity -- path-safe walk keeps canonicalization, cycle, exclusion, and suffix gates together
   const visit = Effect.fn("QualityArtifactSupport.listSourceFiles.visit")(function* (
     current: string
   ): Effect.fn.Return<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> {
@@ -632,7 +655,13 @@ export const summaryFromComment = (commentText: string): O.Option<string> => {
  */
 export const tagsFromComment = (commentText: string): ReadonlyArray<string> => {
   const tags: Array<string> = [];
+  let openFence: string | undefined;
   for (const line of stripCommentFraming(commentText)) {
+    const [nextOpenFence, isFenced] = fencedLineState(line, openFence);
+    openFence = nextOpenFence;
+    if (isFenced) {
+      continue;
+    }
     const match = /^\s*@([A-Za-z][\w-]*)\b/.exec(line);
     if (match !== null) {
       A.appendInPlace(tags, `@${match[1]}`);

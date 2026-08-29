@@ -9,7 +9,6 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -25,7 +24,8 @@ const PrefixMapWithEmptyDefault = PrefixMap.pipe(
 /**
  * Filesystem path for sidecar ontology documents.
  *
- * @example
+ * **Example** (Decode ontology file path)
+ *
  * ```ts
  * import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -35,8 +35,8 @@ const PrefixMapWithEmptyDefault = PrefixMap.pipe(
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const OntologyFilePath = S.NonEmptyString.pipe(
   S.brand("OntologyFilePath"),
@@ -49,7 +49,8 @@ export const OntologyFilePath = S.NonEmptyString.pipe(
 /**
  * Type for {@link OntologyFilePath}.
  *
- * @example
+ * **Example** (Annotate decoded path type)
+ *
  * ```ts
  * import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -59,15 +60,16 @@ export const OntologyFilePath = S.NonEmptyString.pipe(
  * console.log(path)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type OntologyFilePath = typeof OntologyFilePath.Type;
 
 /**
  * Turtle source text.
  *
- * @example
+ * **Example** (Decode Turtle source text)
+ *
  * ```ts
  * import { TurtleDocumentText } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -77,8 +79,8 @@ export type OntologyFilePath = typeof OntologyFilePath.Type;
  * console.log(source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export const TurtleDocumentText = S.String.pipe(
   $I.annoteSchema("TurtleDocumentText", {
@@ -90,7 +92,8 @@ export const TurtleDocumentText = S.String.pipe(
 /**
  * Type for {@link TurtleDocumentText}.
  *
- * @example
+ * **Example** (Annotate Turtle source type)
+ *
  * ```ts
  * import { TurtleDocumentText } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -99,15 +102,16 @@ export const TurtleDocumentText = S.String.pipe(
  * console.log(source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TurtleDocumentText = typeof TurtleDocumentText.Type;
 
 /**
  * Turtle codec failure reason.
  *
- * @example
+ * **Example** (Decode parse failure reason)
+ *
  * ```ts
  * import { TurtleCodecErrorReason } from "@beep/ontology-use-cases/aggregates/Session/server"
  * import * as S from "effect/Schema"
@@ -117,8 +121,8 @@ export type TurtleDocumentText = typeof TurtleDocumentText.Type;
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const TurtleCodecErrorReason = LiteralKit([
   "parseFailed",
@@ -134,7 +138,8 @@ export const TurtleCodecErrorReason = LiteralKit([
 /**
  * Type for {@link TurtleCodecErrorReason}.
  *
- * @example
+ * **Example** (Annotate unsupported graph reason)
+ *
  * ```ts
  * import type { TurtleCodecErrorReason } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -143,15 +148,16 @@ export const TurtleCodecErrorReason = LiteralKit([
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type TurtleCodecErrorReason = typeof TurtleCodecErrorReason.Type;
 
 /**
  * Typed Turtle codec error exposed at the use-case boundary.
  *
- * @example
+ * **Example** (Make parse failed error)
+ *
  * ```ts
  * import { TurtleCodecError } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -163,16 +169,16 @@ export type TurtleCodecErrorReason = typeof TurtleCodecErrorReason.Type;
  * console.log(error.reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class TurtleCodecError extends TaggedErrorClass<TurtleCodecError>($I`TurtleCodecError`)(
+export class TurtleCodecError extends S.TaggedError<TurtleCodecError>($I`TurtleCodecError`)(
   "TurtleCodecError",
   {
     reason: TurtleCodecErrorReason,
     message: S.String,
   },
-  $I.annote("TurtleCodecError", {
+  $I.annoteError<TurtleCodecError>("TurtleCodecError", {
     description: "Typed Turtle codec error exposed at the use-case boundary.",
   })
 ) {}
@@ -180,7 +186,8 @@ export class TurtleCodecError extends TaggedErrorClass<TurtleCodecError>($I`Turt
 /**
  * Turtle parse request.
  *
- * @example
+ * **Example** (Make Turtle parse request)
+ *
  * ```ts
  * import { ParseTurtleRequest } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -191,8 +198,8 @@ export class TurtleCodecError extends TaggedErrorClass<TurtleCodecError>($I`Turt
  * console.log(request.source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ParseTurtleRequest extends S.Class<ParseTurtleRequest>($I`ParseTurtleRequest`)(
   {
@@ -207,7 +214,8 @@ export class ParseTurtleRequest extends S.Class<ParseTurtleRequest>($I`ParseTurt
 /**
  * Turtle parse result.
  *
- * @example
+ * **Example** (Make empty dataset result)
+ *
  * ```ts
  * import { ParseTurtleResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -219,8 +227,8 @@ export class ParseTurtleRequest extends S.Class<ParseTurtleRequest>($I`ParseTurt
  * console.log(result.dataset.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ParseTurtleResult extends S.Class<ParseTurtleResult>($I`ParseTurtleResult`)(
   {
@@ -235,7 +243,8 @@ export class ParseTurtleResult extends S.Class<ParseTurtleResult>($I`ParseTurtle
 /**
  * Turtle serialize request.
  *
- * @example
+ * **Example** (Make serialize dataset request)
+ *
  * ```ts
  * import { SerializeTurtleRequest } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
@@ -247,8 +256,8 @@ export class ParseTurtleResult extends S.Class<ParseTurtleResult>($I`ParseTurtle
  * console.log(request.dataset.quads.length)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SerializeTurtleRequest extends S.Class<SerializeTurtleRequest>($I`SerializeTurtleRequest`)(
   {
@@ -263,7 +272,8 @@ export class SerializeTurtleRequest extends S.Class<SerializeTurtleRequest>($I`S
 /**
  * Turtle serialize result.
  *
- * @example
+ * **Example** (Make serialized Turtle result)
+ *
  * ```ts
  * import { SerializeTurtleResult } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -274,8 +284,8 @@ export class SerializeTurtleRequest extends S.Class<SerializeTurtleRequest>($I`S
  * console.log(result.source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class SerializeTurtleResult extends S.Class<SerializeTurtleResult>($I`SerializeTurtleResult`)(
   {
@@ -300,7 +310,8 @@ interface TurtleCodecShape {
 /**
  * Turtle codec service tag.
  *
- * @example
+ * **Example** (Yield TurtleCodec service)
+ *
  * ```ts
  * import { TurtleCodec } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -313,15 +324,16 @@ interface TurtleCodecShape {
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class TurtleCodec extends Context.Service<TurtleCodec, TurtleCodecShape>()($I`TurtleCodec`) {}
 
 /**
  * Ontology sidecar file-store failure reason.
  *
- * @example
+ * **Example** (Decode read failed reason)
+ *
  * ```ts
  * import { OntologyFileStoreErrorReason } from "@beep/ontology-use-cases/aggregates/Session/server"
  * import * as S from "effect/Schema"
@@ -331,8 +343,8 @@ export class TurtleCodec extends Context.Service<TurtleCodec, TurtleCodecShape>(
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed", "writeFailed"]).pipe(
   $I.annoteSchema("OntologyFileStoreErrorReason", {
@@ -344,7 +356,8 @@ export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed"
 /**
  * Type for {@link OntologyFileStoreErrorReason}.
  *
- * @example
+ * **Example** (Annotate write failed reason)
+ *
  * ```ts
  * import type { OntologyFileStoreErrorReason } from "@beep/ontology-use-cases/aggregates/Session"
  *
@@ -353,15 +366,16 @@ export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed"
  * console.log(reason)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
 export type OntologyFileStoreErrorReason = typeof OntologyFileStoreErrorReason.Type;
 
 /**
  * Typed sidecar file-store error.
  *
- * @example
+ * **Example** (Make read failed store error)
+ *
  * ```ts
  * import { OntologyFilePath, OntologyFileStoreError } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -375,17 +389,17 @@ export type OntologyFileStoreErrorReason = typeof OntologyFileStoreErrorReason.T
  * console.log(error.path)
  * ```
  *
- * @since 0.0.0
  * @category errors
+ * @since 0.0.0
  */
-export class OntologyFileStoreError extends TaggedErrorClass<OntologyFileStoreError>($I`OntologyFileStoreError`)(
+export class OntologyFileStoreError extends S.TaggedError<OntologyFileStoreError>($I`OntologyFileStoreError`)(
   "OntologyFileStoreError",
   {
     reason: OntologyFileStoreErrorReason,
     path: OntologyFilePath,
     message: S.String,
   },
-  $I.annote("OntologyFileStoreError", {
+  $I.annoteError<OntologyFileStoreError>("OntologyFileStoreError", {
     description: "Typed sidecar file-store error.",
   })
 ) {}
@@ -393,7 +407,8 @@ export class OntologyFileStoreError extends TaggedErrorClass<OntologyFileStoreEr
 /**
  * Read ontology file request.
  *
- * @example
+ * **Example** (Make read file request)
+ *
  * ```ts
  * import { OntologyFilePath, ReadOntologyFileRequest } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -405,8 +420,8 @@ export class OntologyFileStoreError extends TaggedErrorClass<OntologyFileStoreEr
  * console.log(request.path)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ReadOntologyFileRequest extends S.Class<ReadOntologyFileRequest>($I`ReadOntologyFileRequest`)(
   {
@@ -420,7 +435,8 @@ export class ReadOntologyFileRequest extends S.Class<ReadOntologyFileRequest>($I
 /**
  * Read ontology file result.
  *
- * @example
+ * **Example** (Make read file result)
+ *
  * ```ts
  * import { OntologyFilePath, ReadOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -433,8 +449,8 @@ export class ReadOntologyFileRequest extends S.Class<ReadOntologyFileRequest>($I
  * console.log(result.source)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class ReadOntologyFileResult extends S.Class<ReadOntologyFileResult>($I`ReadOntologyFileResult`)(
   {
@@ -449,7 +465,8 @@ export class ReadOntologyFileResult extends S.Class<ReadOntologyFileResult>($I`R
 /**
  * Write ontology file request.
  *
- * @example
+ * **Example** (Make write file request)
+ *
  * ```ts
  * import { OntologyFilePath, WriteOntologyFileRequest } from "@beep/ontology-use-cases/aggregates/Session"
  * import * as S from "effect/Schema"
@@ -462,8 +479,8 @@ export class ReadOntologyFileResult extends S.Class<ReadOntologyFileResult>($I`R
  * console.log(request.path)
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export class WriteOntologyFileRequest extends S.Class<WriteOntologyFileRequest>($I`WriteOntologyFileRequest`)(
   {
@@ -478,7 +495,8 @@ export class WriteOntologyFileRequest extends S.Class<WriteOntologyFileRequest>(
 /**
  * Ontology file-store service shape.
  *
- * @example
+ * **Example** (Implement file-store shape)
+ *
  * ```ts
  * import { ReadOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import type { OntologyFileStoreShape } from "@beep/ontology-use-cases/aggregates/Session"
@@ -498,8 +516,8 @@ export class WriteOntologyFileRequest extends S.Class<WriteOntologyFileRequest>(
  * console.log(fileStore)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export interface OntologyFileStoreShape {
   readonly read: (request: ReadOntologyFileRequest) => Effect.Effect<ReadOntologyFileResult, OntologyFileStoreError>;
@@ -509,7 +527,8 @@ export interface OntologyFileStoreShape {
 /**
  * Ontology file-store service tag.
  *
- * @example
+ * **Example** (Yield OntologyFileStore service)
+ *
  * ```ts
  * import { OntologyFileStore } from "@beep/ontology-use-cases/aggregates/Session"
  * import { Effect } from "effect"
@@ -522,8 +541,8 @@ export interface OntologyFileStoreShape {
  * console.log(program)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class OntologyFileStore extends Context.Service<OntologyFileStore, OntologyFileStoreShape>()(
   $I`OntologyFileStore`

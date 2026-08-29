@@ -44,8 +44,7 @@ just preceded by a stray `// cspell:words ...` (and, for `Pglite.ts`, an
 `/// <reference>` directive too), which blocked the same-anchor regex. Fixed
 by moving the existing block to the true top and folding the cspell
 directive into it as a plain prose line — the convention already used
-elsewhere in the repo (`packages/foundation/modeling/utils/src/Function.ts`,
-`packages/drivers/runpod/src/_generated/Runpod.generated.ts`), rather than
+elsewhere in the repo (`packages/foundation/modeling/utils/src/Function.ts`), rather than
 leaving a redundant second comment. No content was invented for these two;
 only reordered plus the reference directive kept immediately below the doc
 block (comments/triple-slash directives may be preceded by other comments

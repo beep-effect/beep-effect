@@ -7,27 +7,36 @@
 import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
+import { Effect, Exit, Layer, Runtime } from "effect";
 import { Command } from "effect/unstable/cli";
-import { docgenCommand } from "./CLI.js";
-import * as Domain from "./Domain.js";
-import * as InternalVersion from "./internal/version.js";
+import { docgenCommand } from "./CLI.ts";
+import * as Domain from "./Domain.ts";
+import * as Version from "./Version.ts";
 
 const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
 
-const DerivedLayers = Layer.mergeAll(NodeChildProcessSpawner.layer, FsUtilsLive).pipe(Layer.provideMerge(BaseLayers));
+const DerivedLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
 
 const program = Effect.scoped(
   Layer.build(DerivedLayers).pipe(
     Effect.flatMap(
       Effect.fnUntraced(function* (context) {
-        return yield* Command.run(docgenCommand, { version: `v${InternalVersion.moduleVersion}` }).pipe(
-          Effect.provide(context)
-        );
+        const version = yield* Version.readModuleVersion().pipe(Effect.provide(context));
+        return yield* Command.run(docgenCommand, { version: `v${version}` }).pipe(Effect.provide(context));
       })
     )
   )
 );
 
-BunRuntime.runMain(program);
+// The platform runner only hard-exits on failure or signal; a successful run
+// relies on the event loop draining, so a leaked handle wedges the process
+// after docgen completes (the "✓ succeeded"-then-hang CI class). Exit
+// explicitly on success.
+BunRuntime.runMain(program, {
+  teardown: (exit, onExit) => {
+    Runtime.defaultTeardown(exit, onExit);
+    if (Exit.isSuccess(exit)) {
+      process.exit(0);
+    }
+  },
+});

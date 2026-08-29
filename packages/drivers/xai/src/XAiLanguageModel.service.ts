@@ -14,7 +14,9 @@ import {
 } from "@beep/openai-compat";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { Effect, Layer, pipe, Stream } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -35,7 +37,8 @@ const $I = $XaiId.create("XAiLanguageModel.service");
 /**
  * Non-empty xAI model identifier accepted by the language-model adapter.
  *
- * @example
+ * **Example** (Decode model name)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  * import * as S from "effect/Schema"
@@ -57,7 +60,8 @@ export const XAiModelName = S.NonEmptyString.pipe(
 /**
  * Type for {@link XAiModelName}.
  *
- * @example
+ * **Example** (Type annotate model name)
+ *
  * ```ts
  * import type { XAiLanguageModel } from "@beep/xai"
  *
@@ -73,7 +77,8 @@ export type XAiModelName = typeof XAiModelName.Type;
 /**
  * Options accepted by the xAI Effect AI language-model adapter.
  *
- * @example
+ * **Example** (Create language model options)
+ *
  * ```ts
  * import type { XAiLanguageModel } from "@beep/xai"
  * import * as O from "effect/Option"
@@ -113,7 +118,7 @@ const errorDescription = (error: XAiError): string =>
   })}.`;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
+// fallow-ignore-next-line code-duplication -- adapter maps xAI transport failures locally to Effect AI network errors
 const networkTransportError = (error: XAiError): AiError.NetworkError =>
   AiError.NetworkError.make({
     description: errorDescription(error),
@@ -215,7 +220,8 @@ const streamChatCompletion = (
 /**
  * Builds an xAI Effect AI language-model service.
  *
- * @example
+ * **Example** (Build language model service)
+ *
  * ```ts
  * import { Effect } from "effect"
  * import { XAi, XAiLanguageModel } from "@beep/xai"
@@ -234,7 +240,6 @@ const streamChatCompletion = (
  * Reads the `XAi` service from context and builds an Effect AI language-model
  * adapter. The returned service sends future chat completion and streaming
  * requests through xAI and maps driver failures into Effect AI errors.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -258,7 +263,8 @@ export const make: (options: XAiLanguageModelOptionsInput) => Effect.Effect<Lang
 /**
  * Builds an xAI Effect AI language-model layer.
  *
- * @example
+ * **Example** (Create language model layer)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  *
@@ -276,7 +282,8 @@ export const layer = (options: XAiLanguageModelOptionsInput): Layer.Layer<Langua
 /**
  * Builds an Effect AI model value for xAI.
  *
- * @example
+ * **Example** (Build Effect AI model)
+ *
  * ```ts
  * import { XAiLanguageModel } from "@beep/xai"
  *
@@ -288,12 +295,24 @@ export const layer = (options: XAiLanguageModelOptionsInput): Layer.Layer<Langua
  * @category constructors
  * @since 0.0.0
  */
-export const model = (
-  modelName: XAiModelName,
-  config?: OpenAiCompatLanguageModelConfig | undefined
-): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi> =>
-  AiModel.make(
-    "xai",
-    modelName,
-    layer(config === undefined ? { model: modelName } : { config: O.some(config), model: modelName })
-  );
+// fallow-ignore-next-line code-duplication -- provider adapters intentionally mirror the shared Effect AI model surface
+export const model: {
+  (
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): (modelName: XAiModelName) => AiModel.Model<"xai", LanguageModel.LanguageModel, XAi>;
+  (
+    modelName: XAiModelName,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi>;
+} = dual(
+  (args) => Str.isString(args[0]),
+  (
+    modelName: XAiModelName,
+    config?: OpenAiCompatLanguageModelConfig | undefined
+  ): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi> =>
+    AiModel.make(
+      "xai",
+      modelName,
+      layer(config === undefined ? { model: modelName } : { config: O.some(config), model: modelName })
+    )
+);

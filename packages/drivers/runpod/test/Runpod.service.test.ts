@@ -84,7 +84,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
-  arbitrary = S.toArbitrary(schema)
+  arbitrary = S.toArbitrary(schema)(fc)
 ): void => {
   fc.assert(
     fc.property(arbitrary, (value) => {
@@ -94,7 +94,7 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   );
 };
 
-const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest).map((request) =>
+const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest)(fc).map((request) =>
   RunpodRawRequest.make({
     ...request,
     path: normalizeRawPathForTest(request.path),
@@ -417,7 +417,7 @@ describe("@beep/runpod", () => {
   layer(makeRunpodUnitLayer())((it) =>
     it("round-trips schema-derived config, error, raw, and docs models", () => {
       fc.assert(
-        fc.property(S.toArbitrary(RunpodConfigInput), (value) => {
+        fc.property(S.toArbitrary(RunpodConfigInput)(fc), (value) => {
           expectRoundTrip(RunpodConfigInput, value);
         }),
         { numRuns: 25 }

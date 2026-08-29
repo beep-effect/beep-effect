@@ -7,12 +7,14 @@
  */
 
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
-import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
+import { TABLE_NAME as USAGE_RECORD_TABLE_NAME } from "@beep/epistemic-tables/entities/UsageRecord";
+import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
  * Epistemic usage migration target used to prove usage-record persistence.
  *
- * @example
+ * **Example** (Logging migration target tables)
+ *
  * ```ts
  * import { EpistemicUsageMigrationTarget } from "@beep/db-admin/migrations/EpistemicUsage"
  *
@@ -25,7 +27,7 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
 export const EpistemicUsageMigrationTarget: DbAdminMigrationTarget = DbAdminMigrationTarget.make({
   name: "epistemic-usage",
   schemaName: "epistemic",
-  tables: [EpistemicDbSchema.usageRecord.definition.tableName],
+  tables: [USAGE_RECORD_TABLE_NAME],
   drizzleSchema: {
     usageRecord: EpistemicDbSchema.usageRecord,
   },

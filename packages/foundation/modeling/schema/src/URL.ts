@@ -14,7 +14,7 @@ import { NonEmptyTrimmedStr } from "./String.ts";
 const $I = $SchemaId.create("URL");
 
 const isURLStr = (u: unknown): u is URLStr =>
-  S.is(NonEmptyTrimmedStr)(u) && O.isSome(S.decodeUnknownOption(S.URLFromString)(u));
+  S.is(NonEmptyTrimmedStr)(u) && O.isSome(S.decodeOption(S.URLFromString)(u));
 
 const filterURLStr = S.makeFilter(isURLStr, {
   message: "URL must be a valid URL encoded string",
@@ -25,7 +25,8 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
 /**
  * A branded schema for URL-encoded strings validated against `new URL()`.
  *
- * @example
+ * **Example** (Decode URL-encoded string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { URLStr } from "@beep/schema/URL"
@@ -39,6 +40,7 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  */
 export const URLStr = NonEmptyTrimmedStr.pipe(
   S.fromBrand("URLStr", urlStr),
+  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({
     filter: filterURLStr,
     is: isURLStr,
@@ -46,13 +48,15 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
   })),
   $I.annoteSchema("URLStr", {
     description: "A URL encoded as a string",
+    toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
   })
 );
 
 /**
  * Type for {@link URLStr}.
  *
- * @example
+ * **Example** (Type annotated URL string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { URLStr } from "@beep/schema/URL"
@@ -81,10 +85,13 @@ const filterHttpsUrl = S.makeFilter(
   }
 );
 
+const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
+
 /**
  * Branded schema for absolute URL strings that use the `https:` protocol.
  *
- * @example
+ * **Example** (Decode HTTPS URL string)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpsUrl } from "@beep/schema/URL"
@@ -96,18 +103,20 @@ const filterHttpsUrl = S.makeFilter(
  * @category validation
  * @since 0.0.0
  */
-export const HttpsUrl = S.String.pipe(
-  S.check(filterHttpsUrl),
-  S.brand("HttpsUrl"),
+export const HttpsUrl = HttpsUrlDefinition.pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",
+    toArbitrary: () => (fc) =>
+      fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
   })
 );
 
 /**
  * Type for {@link HttpsUrl}.
  *
- * @example
+ * **Example** (Type annotated HTTPS URL)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { HttpsUrl } from "@beep/schema/URL"
@@ -124,7 +133,8 @@ export type HttpsUrl = typeof HttpsUrl.Type;
 /**
  * Namespace members for {@link HttpsUrl}.
  *
- * @example
+ * **Example** (Satisfy Encoded type)
+ *
  * ```ts
  * import { HttpsUrl } from "@beep/schema/URL"
  *
@@ -139,7 +149,8 @@ export declare namespace HttpsUrl {
   /**
    * Encoded representation accepted by {@link HttpsUrl}.
    *
-   * @example
+   * **Example** (Satisfy Encoded type)
+   *
    * ```ts
    * import { HttpsUrl } from "@beep/schema/URL"
    *

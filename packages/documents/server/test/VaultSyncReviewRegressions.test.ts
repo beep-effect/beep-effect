@@ -34,7 +34,7 @@ const RegressionTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(21);
+const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(21);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const syncInput = (vaultRootPath: string) => SyncOnceInput.make({ vaultRootPath, workspaceId });
 const listConflictsInput = ListOpenConflictsInput.make({ workspaceId });
@@ -91,8 +91,9 @@ const listOperationsByStatus = (status: "failed" | "leased" | "queued") =>
   );
 
 describe("@beep/documents-server VaultSyncEngine review regressions", () => {
-  it.effect("does not self-conflict when a file is moved and renamed between scans", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "does not self-conflict when a file is moved and renamed between scans",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const root = yield* makeVaultRoot();
       yield* writeVaultFile(root, "inbox/scan.pdf", "scan body");
@@ -109,11 +110,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       const moved = yield* findTrackedItem("matters/acme-complaint.pdf");
       expect(O.getOrNull(moved.remoteName)).toBe("acme-complaint.pdf");
       expect(moved.syncState).toBe("current");
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("uploads a new file created at a previously vacated path", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "uploads a new file created at a previously vacated path",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -134,11 +136,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       expect(Object.keys(tree)).toContain("matters/scan.pdf");
       const second = yield* findTrackedItem("inbox/scan.pdf");
       expect(second.syncState).toBe("current");
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("fails the operation instead of wedging the pass when a queued upload's file vanished", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails the operation instead of wedging the pass when a queued upload's file vanished",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const itemRepository = yield* SyncItemRepository;
       const operationRepository = yield* SyncOperationRepository;
@@ -182,11 +185,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       const again = yield* engine.syncOnce(syncInput(root));
       expect(again.queuedOperations).toBe(0);
       expect(again.failedOperations).toBe(1);
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("surfaces a foreign in-place remote edit as drift even when name and parent match", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "surfaces a foreign in-place remote edit as drift even when name and parent match",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -214,11 +218,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       const conflict = yield* Effect.fromOption(A.head(conflicts));
       expect(conflict.conflictKind).toBe("remoteEdit");
       expect(O.contains(conflict.remoteEventId, "foreign-in-place-edit")).toBe(true);
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("revives terminally failed operations once the mirror is reachable again", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "revives terminally failed operations once the mirror is reachable again",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -237,11 +242,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       expect(recovered.currentItems).toBe(1);
       const tree = yield* handle.snapshotTree;
       expect(Object.keys(tree)).toContain("resilient.txt");
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("skips symlinks entirely: no mirror leak and no scan abort on dangling links", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "skips symlinks entirely: no mirror leak and no scan abort on dangling links",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const fs = yield* FileSystem.FileSystem;
@@ -259,11 +265,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       expect(status.errorItems).toBe(0);
       const tree = yield* handle.snapshotTree;
       expect(Object.keys(tree)).toEqual(["tracked.txt"]);
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("ignores unknown remote events outside the mirror and records those under the root", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "ignores unknown remote events outside the mirror and records those under the root",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -299,11 +306,12 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       const conflict = yield* Effect.fromOption(A.head(conflicts));
       expect(O.contains(conflict.remoteEventId, "under-root-create")).toBe(true);
       expect(conflict.conflictKind).toBe("remoteCreate");
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 
-  it.effect("truncates oversized drift payload snapshots", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "truncates oversized drift payload snapshots",
+    Effect.fnUntraced(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
       const root = yield* makeVaultRoot();
@@ -327,6 +335,6 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
       const conflict = yield* Effect.fromOption(A.head(conflicts));
       expect(conflict.remotePayload.truncated).toBe(true);
       expect(String(conflict.remotePayload.head).length).toBeLessThanOrEqual(8192);
-    }).pipe(provideScopedLayer(RegressionTestLayer))
+    }, provideScopedLayer(RegressionTestLayer))
   );
 });
