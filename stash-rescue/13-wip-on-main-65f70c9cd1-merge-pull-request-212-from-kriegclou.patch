@@ -1,0 +1,126 @@
+diff --git a/.codex/config.toml b/.codex/config.toml
+index 21c8f43758..b8c1ed20f8 100644
+--- a/.codex/config.toml
++++ b/.codex/config.toml
+@@ -17,11 +17,6 @@ args = ["-y", "shadcn@4.7.0", "mcp"]
+ # npx can spend a few seconds revalidating the cache before the MCP handshake.
+ startup_timeout_sec = 90
+ 
+-[mcp_servers.next-devtools]
+-# This is inherited from the user-global config but is only needed for active
+-# Next.js debugging. Keeping it disabled here avoids npm/network work on startup.
+-enabled = false
+-
+ [mcp_servers.serena]
+ command = "serena"
+ args = [
+diff --git a/packages/foundation/modeling/ontology/src/create.ts b/packages/foundation/modeling/ontology/src/create.ts
+index 14bb35d0d9..02c61ecfaa 100644
+--- a/packages/foundation/modeling/ontology/src/create.ts
++++ b/packages/foundation/modeling/ontology/src/create.ts
+@@ -12,8 +12,9 @@ import { makeOntologyDefinitionMetadata, makeTermIri } from "./model.js";
+ import { parseJsonLdOntology, projectJsonLdOntology } from "./projections/jsonld.js";
+ import { projectTurtle } from "./projections/turtle.js";
+ import { makeReferenceTarget, normalizeIriInput, normalizeTermNameInput } from "./references.js";
+-import type { Effect } from "effect";
+-import type * as A from "effect/Array";
++import type { IdentityAnyAnnotationExtras, IdentityComposer, KeyAnnotationExtras } from "@beep/identity";
++import type { A } from "@beep/utils";
++import type { Effect, Result } from "effect";
+ import type * as S from "effect/Schema";
+ import type {
+   OntologyClassAnnotationInput,
+@@ -24,14 +25,59 @@ import type {
+ import type {
+   AssembledOntology,
+   IRI,
++  JsonLdOntologyDocument,
+   OntologyAssemblyError,
+   OntologyClassAnnotationDraft,
+   OntologyDatatypePredicateAnnotationDraft,
++  OntologyDefinitionMetadata,
+   OntologyObjectPredicateAnnotationDraft,
++  OntologyPredicateAnnotationDraft,
+   OntologyReferenceTarget,
++  OntologyTermName,
+ } from "./model.js";
+ import type { OntologyIriInput, OntologyReferenceTargetInput, OntologyTermNameInput } from "./references.js";
+ 
++export interface OntConstructor {
++  readonly build: (schema: A.NonEmptyReadonlyArray<S.Top>) => Effect.Effect<AssembledOntology, OntologyAssemblyError>;
++  readonly child: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly class: (classInput: OntologyClassAnnotationInput) => OntologyClassAnnotationDraft;
++  readonly closeMatch: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly dataPredicate: (
++    predicate: OntologyDatatypePredicateAnnotationInput
++  ) => OntologyDatatypePredicateAnnotationDraft;
++  readonly equivalentClass: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly exact: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly exactMatch: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly fromJsonLD: (input: unknown) => Result.Result<AssembledOntology, S.SchemaError | OntologyAssemblyError>;
++  readonly iri: (value: OntologyIriInput, termName?: OntologyTermNameInput) => IRI;
++  readonly objectPredicate: (
++    predicate: OntologyObjectPredicateAnnotationInput
++  ) => OntologyObjectPredicateAnnotationDraft;
++  readonly parent: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly ref: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly sameAs: (target: OntologyReferenceTargetInput) => OntologyReferenceTarget;
++  readonly termName: (value: OntologyTermNameInput) => OntologyTermName;
++  readonly toJsonLD: (ontology: AssembledOntology) => JsonLdOntologyDocument.Encoded;
++  readonly toTurtle: (ontology: AssembledOntology) => string;
++}
++
++export type OntologyIdentityComposer = IdentityComposer<string> & {
++  readonly annote: {
++    (identifier: string, draft: OntologyClassAnnotationDraft): S.Annotations.Annotations;
++    (identifier: string, extras?: undefined | IdentityAnyAnnotationExtras<unknown>): S.Annotations.Annotations;
++  };
++  readonly annoteKey: {
++    (
++      identifier: string,
++      draft: OntologyPredicateAnnotationDraft
++    ): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
++    (
++      identifier: string,
++      extras?: undefined | KeyAnnotationExtras<unknown>
++    ): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
++  };
++};
++
+ /**
+  * Creates an ontology authoring scope with identity-aware annotation helpers,
+  * reference combinators, schema assembly, and JSON-LD/Turtle projections.
+@@ -40,7 +86,13 @@ import type { OntologyIriInput, OntologyReferenceTargetInput, OntologyTermNameIn
+  * @since 0.0.0
+  */
+ export const Ontology = {
+-  create: (input: OntologyCreateInput) => {
++  create: (
++    input: OntologyCreateInput
++  ): {
++    readonly Ont: OntConstructor;
++    readonly $I: OntologyIdentityComposer;
++    readonly metadata: OntologyDefinitionMetadata;
++  } => {
+     const baseIri = normalizeIriInput(input.baseIri);
+     const metadata = makeOntologyDefinitionMetadata({
+       kind: "ontology",
+diff --git a/packages/foundation/modeling/ontology/src/index.ts b/packages/foundation/modeling/ontology/src/index.ts
+index c1f3a5a7b6..d915188a81 100644
+--- a/packages/foundation/modeling/ontology/src/index.ts
++++ b/packages/foundation/modeling/ontology/src/index.ts
+@@ -5,14 +5,6 @@
+  * @since 0.0.0
+  */
+ 
+-/**
+- * Package version.
+- *
+- * @category configuration
+- * @since 0.0.0
+- */
+-export const VERSION = "0.0.0" as const;
+-
+ /**
+  * Ontology authoring scope factory.
+  *
