@@ -1,4 +1,4 @@
-import { Sha256Hex } from "@beep/schema";
+import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Crypto, Effect, FileSystem, Layer, Order, Path, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -14,8 +14,16 @@ import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
-const GoldFileJson = S.fromJsonString(GoldFileEncoded);
-const GoldRefJson = S.fromJsonString(GoldRef);
+const GoldFileJson = S.fromJsonString(GoldFileEncoded).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeEffect(schema),
+  }))
+);
+const GoldRefJson = S.fromJsonString(GoldRef).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeEffect(schema),
+  }))
+);
 const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
 const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
@@ -37,7 +45,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("read-failed", "The gold-v1 reference is unavailable.");
     }
     return yield* fs.readFileString(referencePath).pipe(
-      Effect.flatMap(S.decodeEffect(GoldRefJson)),
+      Effect.flatMap(GoldRefJson.decodeEffect),
       Effect.mapError(() => unavailable("read-failed", "The gold-v1 reference could not be read or decoded."))
     );
   });
@@ -54,7 +62,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("stale-reference", "The gold-v1 reference covers a missing label file.");
     }
     const file = yield* fs.readFileString(filePath).pipe(
-      Effect.flatMap(S.decodeEffect(GoldFileJson)),
+      Effect.flatMap(GoldFileJson.decodeEffect),
       Effect.mapError(() => unavailable("read-failed", "A covered gold-v1 file could not be read or decoded."))
     );
     if (!Str.Equivalence(file.paperId, paperId) || !Str.Equivalence(file.subset, subset)) {

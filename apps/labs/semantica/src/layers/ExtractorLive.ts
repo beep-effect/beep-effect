@@ -279,7 +279,7 @@ const structureDepth = (extraction: GroundedExtraction): NonNegativeInt =>
   extraction.attributes.pipe(
     O.flatMap((attributes) => R.get(attributes, "depth")),
     O.flatMap(N.parse),
-    O.filter(S.is(NonNegativeInt)),
+    O.filter(NonNegativeInt.is),
     O.map(NonNegativeInt.make),
     O.getOrElse(() => NonNegativeInt.make(0))
   );
@@ -463,7 +463,7 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
 ) {
   const start = entity.span.start;
   const end = entity.span.end;
-  const validOffsets = S.is(NonNegativeInt)(start) && S.is(NonNegativeInt)(end) && start < end;
+  const validOffsets = NonNegativeInt.is(start) && NonNegativeInt.is(end) && start < end;
   const quote = validOffsets ? Str.slice(start, end)(canonical.text) : Str.empty;
   if (
     !validOffsets ||

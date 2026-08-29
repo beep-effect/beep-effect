@@ -7,8 +7,10 @@
 
 import { $ApiDocsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Data } from "effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import type { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
 import type { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
 
@@ -28,10 +30,19 @@ const $I = $ApiDocsId.create("Catalog.models");
  * @category schemas
  * @since 0.0.0
  */
-export const ApiAudience = LiteralKit(["served", "consumed"]).annotate(
-  $I.annote("ApiAudience", {
+export const ApiAudience = LiteralKit(["served", "consumed"]).pipe(
+  $I.annoteSchema("ApiAudience", {
     description: "Whether this repository serves an API or consumes an external API.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    makeCatalogEntryMetaMember: <T extends typeof schema.Type>({ literal }: S.Literal<T>) =>
+      S.Struct({
+        audience: S.tag(literal),
+        slug: CatalogSlug,
+        title: S.NonEmptyString,
+        description: S.NonEmptyString,
+      }),
+  }))
 );
 
 /** On-disk serialization format for a committed specification. */
@@ -111,17 +122,16 @@ export type CatalogSlug = typeof CatalogSlug.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class CatalogEntryMeta extends S.Class<CatalogEntryMeta>($I`CatalogEntryMeta`)(
-  {
-    slug: CatalogSlug,
-    title: S.NonEmptyString,
-    description: S.NonEmptyString,
-    audience: ApiAudience,
-  },
-  $I.annote("CatalogEntryMeta", {
+export const CatalogEntryMeta = ApiAudience.mapMembers(
+  Tuple.evolve([ApiAudience.makeCatalogEntryMetaMember, ApiAudience.makeCatalogEntryMetaMember])
+).pipe(
+  S.toTaggedUnion("audience"),
+  $I.annoteSchema("CatalogEntryMeta", {
     description: "Route identity and index-page copy for one API docs catalog entry.",
   })
-) {}
+);
+
+export type CatalogEntryMeta = typeof CatalogEntryMeta.Type;
 
 /**
  * Runtime source variants for generated `HttpApi` contracts and committed specification files.

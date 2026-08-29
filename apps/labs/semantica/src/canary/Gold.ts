@@ -143,7 +143,19 @@ interface GoldProposalOptions {
  * @category models
  * @since 0.0.0
  */
-class GoldProposalResult extends S.Class<GoldProposalResult>($I`GoldProposalResult`)(
+type GoldProposalResultFields = {
+  readonly accepted: typeof NonNegativeInt;
+  readonly files: S.$Array<typeof GoldFile>;
+  readonly fraction: typeof UnitInterval;
+  readonly reference: typeof GoldReferenceOutcome;
+  readonly total: typeof NonNegativeInt;
+};
+
+const GoldProposalResultBase: S.Class<
+  GoldProposalResult,
+  S.Struct<GoldProposalResultFields>,
+  {}
+> = S.Class<GoldProposalResult>($I`GoldProposalResult`)<GoldProposalResultFields>(
   {
     accepted: NonNegativeInt,
     files: S.Array(GoldFile),
@@ -154,7 +166,9 @@ class GoldProposalResult extends S.Class<GoldProposalResult>($I`GoldProposalResu
   $I.annote("GoldProposalResult", {
     description: "Gold proposal counts, files written in this invocation, and reference-write disposition.",
   })
-) {}
+);
+
+class GoldProposalResult extends GoldProposalResultBase {}
 
 const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUnavailable =>
   GoldUnavailable.make({ message, reason });
