@@ -1,0 +1,11 @@
+diff --git a/.gitignore b/.gitignore
+index 52f08006c4..19f6567860 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -78,5 +78,4 @@ sst-env.d.ts
+ **/.beep
+ 
+ # subtrees
+-.repos/*
+-
++.repos/
