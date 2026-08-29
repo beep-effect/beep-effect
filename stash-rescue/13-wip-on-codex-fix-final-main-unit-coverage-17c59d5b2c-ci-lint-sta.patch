@@ -1,0 +1,176 @@
+diff --git a/packages/drivers/venice-ai/dtslint/VeniceAI.tst.ts b/packages/drivers/venice-ai/dtslint/VeniceAI.tst.ts
+index c47e570d07..d847b6bab4 100644
+--- a/packages/drivers/venice-ai/dtslint/VeniceAI.tst.ts
++++ b/packages/drivers/venice-ai/dtslint/VeniceAI.tst.ts
+@@ -1,4 +1,4 @@
+-import { URLStr } from "@beep/schema/URL";
++import { HttpsUrl } from "@beep/schema/URL";
+ import {
+   VENICE_AI_OPERATION_DESCRIPTORS,
+   VENICE_API_URL,
+@@ -10,6 +10,7 @@ import {
+ } from "@beep/venice-ai";
+ import { Redacted } from "effect";
+ import * as O from "effect/Option";
++import * as S from "effect/Schema";
+ import { describe, expect, it } from "tstyche";
+ import type {
+   VeniceAIError,
+@@ -62,7 +63,10 @@ describe("VeniceAI", () => {
+     expect(VENICE_AI_OPERATION_DESCRIPTORS).type.toBeAssignableTo<ReadonlyArray<VeniceAIOperationDescriptor>>();
+     expect(
+       VeniceAI.makeLayer(
+-        VeniceAIConfigInput.make({ apiKey: O.some(Redacted.make("test-key")), baseUrl: URLStr.make(VENICE_API_URL) })
++        VeniceAIConfigInput.make({
++          apiKey: O.some(Redacted.make("test-key")),
++          baseUrl: S.decodeUnknownSync(HttpsUrl)(VENICE_API_URL),
++        })
+       )
+     ).type.toBeAssignableTo<Layer.Layer<VeniceAI, never, HttpClient.HttpClient>>();
+     expect(VeniceAI.layer).type.toBeAssignableTo<Layer.Layer<VeniceAI, VeniceAIError>>();
+diff --git a/packages/drivers/venice-ai/src/VeniceAI.service.ts b/packages/drivers/venice-ai/src/VeniceAI.service.ts
+index 6058d38822..77471475ca 100644
+--- a/packages/drivers/venice-ai/src/VeniceAI.service.ts
++++ b/packages/drivers/venice-ai/src/VeniceAI.service.ts
+@@ -10,7 +10,7 @@ import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+ import { HttpStatus } from "@beep/schema/HttpStatus";
+ import { decodeJsonString } from "@beep/schema/Json";
+ import { NonNegativeInt } from "@beep/schema/Number";
+-import { URLStr } from "@beep/schema/URL";
++import { HttpsUrl } from "@beep/schema/URL";
+ import { A, O, Str } from "@beep/utils";
+ import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
+ import { dual } from "effect/Function";
+@@ -57,7 +57,7 @@ export const VENICE_API_URL = "https://api.venice.ai/api/v1";
+ export const VENICE_CHAT_MODEL = "venice-uncensored-1-2";
+ 
+ const normalizeBaseUrl = Str.replace(/\/+$/, "");
+-const makeVeniceAIBaseUrl = flow(normalizeBaseUrl, URLStr.make);
++const makeVeniceAIBaseUrl = flow(normalizeBaseUrl, S.decodeUnknownSync(HttpsUrl));
+ const defaultVeniceAIBaseUrl = makeVeniceAIBaseUrl(VENICE_API_URL);
+ const VeniceAIHttpStatusArbitraryValues = R.values(HttpStatus.From.Enum) as [HttpStatus, ...Array<HttpStatus>];
+ const isVeniceAIHttpStatus = (status: number): status is HttpStatus =>
+@@ -72,7 +72,7 @@ const VeniceAIHttpStatus = S.Literals(VeniceAIHttpStatusArbitraryValues).pipe(
+   })
+ );
+ 
+-const VeniceAIBaseUrl = URLStr.pipe(
++const VeniceAIBaseUrl = HttpsUrl.pipe(
+   S.decode({
+     decode: SchemaGetter.transform(makeVeniceAIBaseUrl),
+     encode: SchemaGetter.transform(makeVeniceAIBaseUrl),
+@@ -389,12 +389,13 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
+  * ```ts
+  * import { Redacted } from "effect"
+  * import * as O from "effect/Option"
+- * import { URLStr } from "@beep/schema/URL"
++ * import * as S from "effect/Schema"
++ * import { HttpsUrl } from "@beep/schema/URL"
+  * import { VeniceAIConfigInput } from "@beep/venice-ai"
+  *
+  * const config = VeniceAIConfigInput.make({
+  *   apiKey: O.some(Redacted.make("test-key")),
+- *   baseUrl: URLStr.make("https://api.venice.ai/api/v1")
++ *   baseUrl: S.decodeUnknownSync(HttpsUrl)("https://api.venice.ai/api/v1")
+  * })
+  *
+  * console.log(config)
+diff --git a/packages/drivers/venice-ai/test/VeniceAI.service.test.ts b/packages/drivers/venice-ai/test/VeniceAI.service.test.ts
+index 3f10047066..fe561f4058 100644
+--- a/packages/drivers/venice-ai/test/VeniceAI.service.test.ts
++++ b/packages/drivers/venice-ai/test/VeniceAI.service.test.ts
+@@ -3,7 +3,7 @@ import { LiteralKit } from "@beep/schema";
+ import { HttpStatus } from "@beep/schema/HttpStatus";
+ import { decodeJsonString } from "@beep/schema/Json";
+ import { NonNegativeInt } from "@beep/schema/Number";
+-import { URLStr } from "@beep/schema/URL";
++import { HttpsUrl } from "@beep/schema/URL";
+ import { parseYaml } from "@beep/schema/Yaml";
+ import { fcRuns } from "@beep/test-utils";
+ import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
+@@ -128,7 +128,17 @@ const PromptBodyArbitrary = S.toArbitrary(PromptBody);
+ 
+ const decodeVeniceAIConfigInput = S.decodeUnknownEffect(VeniceAIConfigInput);
+ const encodeVeniceAIConfigInput = S.encodeEffect(VeniceAIConfigInput);
+-const VeniceAIConfigInputArbitrary = S.toArbitrary(VeniceAIConfigInput);
++const makeHttpsUrl = S.decodeUnknownSync(HttpsUrl);
++const VeniceAIConfigInputArbitrary = fc
++  .record({
++    baseUrl: fc.constantFrom(
++      makeHttpsUrl(VENICE_API_URL),
++      makeHttpsUrl("https://example.test"),
++      makeHttpsUrl("https://example.test/api/v1")
++    ),
++    headers: fc.constantFrom({}, { "x-test-header": "test-value" }),
++  })
++  .map((input) => VeniceAIConfigInput.make(input));
+ const decodeVeniceAIRequestOptions = S.decodeUnknownEffect(VeniceAIRequestOptions);
+ const encodeVeniceAIRequestOptions = S.encodeEffect(VeniceAIRequestOptions);
+ const VeniceAIRequestOptionsArbitrary = S.toArbitrary(VeniceAIRequestOptions);
+@@ -366,7 +376,7 @@ const TestHttpClientLayer = Layer.effect(
+ const makeVeniceAIUnitLayer = (
+   config = VeniceAIConfigInput.make({
+     apiKey: O.some(Redacted.make("test-key")),
+-    baseUrl: URLStr.make(VENICE_API_URL),
++    baseUrl: S.decodeUnknownSync(HttpsUrl)(VENICE_API_URL),
+   })
+ ) => VeniceAI.makeLayer(config).pipe(Layer.provide(TestHttpClientLayer), Layer.provideMerge(VeniceAITestHttpLayer));
+ 
+diff --git a/packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts b/packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts
+index 8aded3b43d..4ceb5e8bb1 100644
+--- a/packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts
++++ b/packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts
+@@ -1,9 +1,10 @@
+-import { URLStr } from "@beep/schema/URL";
++import { HttpsUrl } from "@beep/schema/URL";
+ import { Str } from "@beep/utils";
+ import { VENICE_API_URL, VeniceAI, VeniceAIConfigInput } from "@beep/venice-ai";
+ import { describe, expect, it, layer } from "@effect/vitest";
+ import { Effect, Layer, pipe, Redacted } from "effect";
+ import * as O from "effect/Option";
++import * as S from "effect/Schema";
+ import { FetchHttpClient } from "effect/unstable/http";
+ 
+ // Skip when the key is absent, blank, or an unresolved `op://` reference (present
+@@ -18,7 +19,7 @@ const makeLiveLayer = (key: string) =>
+   VeniceAI.makeLayer(
+     VeniceAIConfigInput.make({
+       apiKey: O.some(Redacted.make(key)),
+-      baseUrl: URLStr.make(VENICE_API_URL),
++      baseUrl: S.decodeUnknownSync(HttpsUrl)(VENICE_API_URL),
+     })
+   ).pipe(Layer.provide(FetchHttpClient.layer));
+ 
+diff --git a/packages/foundation/modeling/schema/src/URL.ts b/packages/foundation/modeling/schema/src/URL.ts
+index 18a9904fed..573b4bf876 100644
+--- a/packages/foundation/modeling/schema/src/URL.ts
++++ b/packages/foundation/modeling/schema/src/URL.ts
+@@ -96,11 +96,13 @@ const filterHttpsUrl = S.makeFilter(
+  * @category validation
+  * @since 0.0.0
+  */
+-export const HttpsUrl = S.String.pipe(
++export const HttpsUrl = URLStr.pipe(
+   S.check(filterHttpsUrl),
+   S.brand("HttpsUrl"),
+   $I.annoteSchema("HttpsUrl", {
+     description: "An absolute URL string constrained to the https protocol.",
++    toArbitrary: () => (fc) =>
++      fc.webUrl({ validSchemes: ["https"] }).map((value) => value as Brand.Branded<URLStr, "HttpsUrl">),
+   })
+ );
+ 
+diff --git a/packages/tooling/tool/cli/vitest.config.ts b/packages/tooling/tool/cli/vitest.config.ts
+index fb91528721..522943acb7 100644
+--- a/packages/tooling/tool/cli/vitest.config.ts
++++ b/packages/tooling/tool/cli/vitest.config.ts
+@@ -5,6 +5,9 @@ import shared, { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../
+ export default mergeConfig(
+   shared,
+   defineConfig({
++    oxc: {
++      target: "esnext",
++    },
+     test: {
+       exclude: ["test/fixtures/**"],
+       fileParallelism: false,
