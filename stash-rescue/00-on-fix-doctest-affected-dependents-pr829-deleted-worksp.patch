@@ -1,0 +1,209 @@
+diff --git a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+index 6aa5bec7ee..de737622c5 100644
+--- a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
++++ b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+@@ -12,8 +12,9 @@
+  */
+ 
+ import { $RepoCliId } from "@beep/identity/packages";
+-import { findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
++import { decodePackageJsonEffect, findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
+ import { LiteralKit } from "@beep/schema";
++import { Unknown } from "@beep/schema/Unknown";
+ import { A, Str, thunkFalse } from "@beep/utils";
+ import * as O from "@beep/utils/Option";
+ import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
+@@ -1279,27 +1280,61 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
+     )
+   );
+   const orderedWorkspaces = A.sort(workspaces, byDoctestWorkspaceDirLengthDescending);
+-  const deletedPackageDirs = pipe(changedPaths, A.filter(Str.endsWith("/package.json")), A.map(path.dirname));
++  const changedManifestPaths = A.filter(changedPaths, Str.endsWith("/package.json"));
++  const deletedPackageDirs = A.map(changedManifestPaths, path.dirname);
++  const deletedManifestPaths = A.filter(
++    changedManifestPaths,
++    (manifestPath) => !A.contains(manifestPaths, manifestPath)
++  );
++  const deletedPackageNames = yield* Effect.forEach(deletedManifestPaths, (manifestPath) =>
++    runCaptured({
++      command: "git",
++      args: ["show", `${base}:${manifestPath}`],
++      cwd: repoRoot,
++      source: "stdout",
++    }).pipe(
++      CiCommandError.mapError(`Failed to read deleted Doctest workspace manifest ${manifestPath}.`),
++      Effect.flatMap((baseManifestResult) => {
++        if (baseManifestResult.exitCode !== 0) {
++          return Console.log(
++            `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (git show exited ${baseManifestResult.exitCode})`
++          ).pipe(Effect.as(O.none<string>()));
++        }
++        return Unknown.decodeUnknownEffectFromJsonString(baseManifestResult.output).pipe(
++          Effect.flatMap(decodePackageJsonEffect),
++          Effect.map((manifest) => O.some(manifest.name)),
++          Effect.catch(() =>
++            Console.log(
++              `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (base content did not decode)`
++            ).pipe(Effect.as(O.none<string>()))
++          )
++        );
++      })
++    )
++  ).pipe(Effect.map(A.getSomes));
+   const changedPackageNames = HashSet.fromIterable(
+-    A.flatMap(changedPaths, (file) => {
+-      const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
+-      const deletedPackageOwner = pipe(
+-        orderedWorkspaces,
+-        A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
+-        O.filter(() =>
+-          A.some(
+-            deletedPackageDirs,
+-            (deletedPackageDir) =>
+-              file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
++    A.appendAll(
++      A.flatMap(changedPaths, (file) => {
++        const directOwner = A.findFirst(orderedWorkspaces, ([, packageDir]) => isDoctestPackageInput(packageDir, file));
++        const deletedPackageOwner = pipe(
++          orderedWorkspaces,
++          A.findFirst(([, packageDir]) => Str.startsWith(`${packageDir}/`)(file)),
++          O.filter(() =>
++            A.some(
++              deletedPackageDirs,
++              (deletedPackageDir) =>
++                file === `${deletedPackageDir}/package.json` || Str.startsWith(`${deletedPackageDir}/`)(file)
++            )
+           )
+-        )
+-      );
+-      return pipe(
+-        directOwner,
+-        O.orElse(() => deletedPackageOwner),
+-        O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
+-      );
+-    })
++        );
++        return pipe(
++          directOwner,
++          O.orElse(() => deletedPackageOwner),
++          O.match({ onNone: A.empty<string>, onSome: ([name]) => [name] })
++        );
++      }),
++      deletedPackageNames
++    )
+   );
+   const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
+   const affectedPackageDirs = pipe(
+diff --git a/packages/tooling/tool/cli/test/ci-lane.test.ts b/packages/tooling/tool/cli/test/ci-lane.test.ts
+index 8a275975f8..a61462d5c3 100644
+--- a/packages/tooling/tool/cli/test/ci-lane.test.ts
++++ b/packages/tooling/tool/cli/test/ci-lane.test.ts
+@@ -40,7 +40,8 @@ const doctestCiLayer = (
+   changedFiles: ReadonlyArray<string>,
+   sources: ReadonlyArray<readonly [string, string]>,
+   spawned: Array<string>,
+-  lsFilesExitCode = 0
++  lsFilesExitCode = 0,
++  gitShowResults: ReadonlyArray<readonly [revisionPath: string, content: string, exitCode?: number]> = A.empty()
+ ) => {
+   const fileSystemLayer = FileSystem.layerNoop({
+     exists: (file) =>
+@@ -71,16 +72,25 @@ const doctestCiLayer = (
+       }
+       const rendered = A.join([command.command, ...command.args], " ");
+       spawned.push(rendered);
++      const gitShowResult = A.findFirst(
++        gitShowResults,
++        ([revisionPath]) => command.args[0] === "show" && command.args[1] === revisionPath
++      );
+       const output =
+         command.command === "git"
+           ? command.args[0] === "diff"
+             ? A.join(changedFiles, "\n")
+-            : A.join(
+-                A.map(sources, ([file]) => file),
+-                "\n"
+-              )
++            : command.args[0] === "show"
++              ? O.match(gitShowResult, { onNone: () => "", onSome: ([, content]) => content })
++              : A.join(
++                  A.map(sources, ([file]) => file),
++                  "\n"
++                )
+           : "";
+-      const exitCode = command.command === "git" && command.args[0] === "ls-files" ? lsFilesExitCode : 0;
++      const exitCode =
++        command.command === "git" && command.args[0] === "ls-files"
++          ? lsFilesExitCode
++          : O.match(gitShowResult, { onNone: () => 0, onSome: ([, , code]) => code ?? 0 });
+       return Effect.succeed(commandHandle(output, exitCode));
+     })
+   );
+@@ -808,6 +818,67 @@ layer(
+       );
+       expect(lastOf(deletedNestedPackageDoctestCommands)).not.toContain("packages/c/src/marked.ts");
+       expect(lastOf(deletedNestedPackageDoctestCommands)).not.toContain("packages/a/nested/");
++      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
++        "[ci] doctest: skipped deleted workspace manifest packages/a/nested/package.json (base content did not decode)"
++      );
++    })
++  );
++});
++
++const deletedWorkspaceDoctestCommands = A.empty<string>();
++const survivingDeletedWorkspaceSources: ReadonlyArray<readonly [string, string]> = [
++  ["packages/b/package.json", '{"name":"@beep/b","dependencies":{"@beep/x":"workspace:*"}}'],
++  ["packages/b/src/marked.tsx", "const markedB = import.meta.vitest;"],
++  ["packages/c/package.json", '{"name":"@beep/c"}'],
++  ["packages/c/src/marked.ts", "const markedC = import.meta.vitest;"],
++];
++
++layer(
++  doctestCiLayer(
++    ["packages/x/package.json", "packages/x/src/helper.ts"],
++    survivingDeletedWorkspaceSources,
++    deletedWorkspaceDoctestCommands,
++    0,
++    [["origin/main:packages/x/package.json", '{"name":"@beep/x"}']]
++  )
++)("deleted workspace Doctest CI lane", (it) => {
++  it.effect("expands surviving dependents from the deleted workspace base manifest", () =>
++    Effect.gen(function* () {
++      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
++
++      expect(deletedWorkspaceDoctestCommands).toHaveLength(4);
++      expect(deletedWorkspaceDoctestCommands[2]).toBe("git show origin/main:packages/x/package.json");
++      expect(lastOf(deletedWorkspaceDoctestCommands)).toContain(
++        "bunx vitest run --config vitest.docs.ts packages/b/src/marked.tsx"
++      );
++      expect(lastOf(deletedWorkspaceDoctestCommands)).not.toContain("packages/c/src/marked.ts");
++      expect(lastOf(deletedWorkspaceDoctestCommands)).not.toContain("packages/x/");
++    })
++  );
++});
++
++const unreadableDeletedWorkspaceDoctestCommands = A.empty<string>();
++
++layer(
++  doctestCiLayer(
++    ["packages/x/package.json", "packages/x/src/helper.ts", "packages/c/src/marked.ts"],
++    survivingDeletedWorkspaceSources,
++    unreadableDeletedWorkspaceDoctestCommands,
++    0,
++    [["origin/main:packages/x/package.json", "", 128]]
++  )
++)("unreadable deleted workspace Doctest CI lane", (it) => {
++  it.effect("continues direct attributable work when the deleted base manifest cannot be read", () =>
++    Effect.gen(function* () {
++      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
++
++      expect(lastOf(unreadableDeletedWorkspaceDoctestCommands)).toContain(
++        "bunx vitest run --config vitest.docs.ts packages/c/src/marked.ts"
++      );
++      expect(lastOf(unreadableDeletedWorkspaceDoctestCommands)).not.toContain("packages/b/src/marked.tsx");
++      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
++        "[ci] doctest: skipped deleted workspace manifest packages/x/package.json (git show exited 128)"
++      );
+     })
+   );
+ });
