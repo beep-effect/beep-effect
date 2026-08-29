@@ -109,22 +109,19 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 ## Agent Memory
 
-- basic-memory (project `beep-shared`) is the durable always-on dev-memory
-  shared by all coding agents; file memory (`CLAUDE.md` / `MEMORY.md`) remains
-  Layer 1. codegraph answers code-structure questions (symbols, callers,
-  blast radius) before grep. All memory decisions and operational detail
-  live in `standards/memory-architecture/`.
-- Fresh machine / clone / worktree: run `bash scripts/setup-agent-memory.sh`
-  once so the shared store and per-checkout `.codegraph/` index exist (see
-  `standards/memory-architecture/07-shared-memory-adoption.md` §Bootstrap).
-- If memory is unavailable in-session, fall back to repo-local docs, code
-  search, and this file.
+- File memory is the memory layer: each agent's own durable files
+  (`CLAUDE.md` / `MEMORY.md` auto-memory) plus repo docs. There is no shared
+  external memory service and no code-KG index; basic-memory and codegraph
+  were removed on 2026-08-29 (`standards/memory-architecture/04-decision-log.md`).
+  Do not reintroduce either or wire a successor without a new decision there.
+- If context is missing, fall back to repo-local docs, code search, and this
+  file.
 
 ## Tool Routing
 
 - effect v3↔v4 differences: validate against the Effect reference checkout
   (`.repos/effect`, a machine-local symlink provisioned by
-  `scripts/setup-agent-memory.sh`), never training-data priors.
+  `scripts/setup-effect-ref.sh`), never training-data priors.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA
@@ -140,7 +137,7 @@ If you touch this, load or run this first. Do not hand-author around it.
   enabled tools before working, not mid-task.
 - Always-loaded files (this file, skill frontmatter, settings) are the prompt
   cache prefix: batch edits to them, keep them lean; durable cross-session
-  knowledge belongs in file-memory or the shared basic-memory store, not here.
+  knowledge belongs in file-memory, not here.
 - Continue related follow-ups on an existing subagent (SendMessage) instead
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as
