@@ -1,0 +1,764 @@
+diff --git a/goals/dedup-clone-engine/PLAN.md b/goals/dedup-clone-engine/PLAN.md
+new file mode 100644
+index 0000000000..5d902c2345
+--- /dev/null
++++ b/goals/dedup-clone-engine/PLAN.md
+@@ -0,0 +1,49 @@
++# Dedup Clone Engine Plan
++
++## Phase 1 — Detector + read-only baseline
++
++- Add `structural-clone` to `ReuseCandidateKind`
++  (`packages/tooling/library/repo-utils/src/Reuse/Reuse.model.ts`).
++- Add a clone-detection capability in
++  `packages/tooling/library/repo-utils/src/Reuse/` (new `Reuse.clones.ts`
++  service + Live layer, merged into `ReuseServiceSuiteLive`):
++  - reuse `discoverWorkspaceScopes`, `collectScopeFiles`,
++    `PRODUCTION_FILE_IGNORE_PATTERNS`, and the `getCachedOrCompute` caches;
++  - per scope, call `TSMorphService.inspectProject`, take the package's source
++    files, and enumerate `getExportedDeclarations()`;
++  - normalize each declaration body (strip comments/whitespace, alpha-rename
++    identifiers by first appearance, blank literal values) into a stable token
++    string used directly as the cluster key (no hashing → fully deterministic);
++  - cluster keys with size ≥ floor appearing across ≥2 packages;
++  - emit `ReuseCandidate { kind: "structural-clone" }` per cluster.
++- Add `beep reuse clones [--scope] [--json]`
++  (`packages/tooling/tool/cli/src/commands/Reuse/Reuse.command.ts`), registered
++  in `reuseCommand` subcommands and `printReuseIndex`.
++- Deliverable: run once for the first real duplication baseline.
++
++## Phase 2 — Baseline + ratchet gate
++
++- Commit `standards/clone.inventory.jsonc` (clusters only; deterministic).
++- Add `--check` to `beep reuse clones` using the
++  `Lint/SchemaFirst.ts` generate→diff→`failWithReportedExit` idiom, with an
++  allowlist escape hatch like `standards/effect-laws.allowlist.jsonc`.
++- Wire `repoCliStep("lint:clones", ["reuse", "clones", "--check"])` into
++  `rootRepoLintPolicySteps` (`Quality/Tasks.ts`); warn-first → error.
++
++## Phase 3 — Later
++
++- Type-3 near-miss behind a flag.
++- `importedBy` inbound-edge index for blast-radius ranking.
++- Codemod-assisted extraction via `TSMorphService.updateSourceFile`.
++
++## Tests
++
++- `@beep/repo-utils` fixtures: two packages sharing an identical-after-rename
++  declaration (clustered); a near-but-distinct declaration (not clustered); a
++  sub-threshold declaration (ignored).
++- CLI: `beep reuse clones --json` shape; `--check` green/red transitions.
++
++## Current Slice
++
++- Goal packet scaffolded.
++- `ReuseCandidateKind` extension + detector module: in progress.
+diff --git a/goals/dedup-clone-engine/README.md b/goals/dedup-clone-engine/README.md
+new file mode 100644
+index 0000000000..bd29be6bae
+--- /dev/null
++++ b/goals/dedup-clone-engine/README.md
+@@ -0,0 +1,64 @@
++# Dedup Clone Engine
++
++## Status
++
++Active — Phase 1 in progress.
++
++## Mission
++
++Give the repo a real instrument for **finding and removing code duplication**,
++then keep duplication from returning by gating it in CI. The engine detects
++declaration-level clones across packages, records a committed baseline, and
++graduates to a blocking gate using the repo's existing ratchet pattern.
++
++This packet exists because duplication reduction is the one quality goal that
++has **not** stuck across three prior attempts (`beep reuse`, `repo-codegraph`,
++`repo-exports.catalog`). The verified reason is narrow: the repo already
++enforces redundant-wrapper laws (`beep laws terse-effect/dual-arity/...` run in
++`bun run lint`), but it has **no detector for general copy-paste** — the only
++duplication detector is three hand-coded regexes
++(`packages/tooling/library/repo-utils/src/Reuse/Reuse.service.ts`), and it is the
++one quality tool absent from the lint policy group. You cannot reduce what you
++cannot measure.
++
++## Approach (detect → baseline → enforce)
++
++1. **Detect** — declaration-anchored structural hashing. Walk exported
++   declarations via `TSMorphService.inspectProject`, normalize each body
++   (whitespace/comments stripped, identifiers alpha-renamed, literal values
++   blanked → catches exact + renamed copies, i.e. Type-1/Type-2 clones), and
++   cluster identical normalized bodies that recur across ≥2 packages.
++2. **Baseline** — emit clusters as `ReuseCandidate` (the existing model, new
++   `structural-clone` kind), surfaced via `beep reuse clones`. Commit a
++   `standards/clone.inventory.jsonc` baseline using the proven
++   generate→diff→fail-on-drift idiom from `Lint/SchemaFirst.ts`.
++3. **Enforce** — `beep reuse clones --check` fails on *new* clones above the
++   baseline, wired as one step into `rootRepoLintPolicySteps`
++   (`Quality/Tasks.ts`). Land warn-first; graduate to error after the baseline
++   is triaged down — the same ratchet the laws already use.
++
++## Non-Goals (V1)
++
++- No near-miss (Type-3) fuzzy matching yet — exact-after-normalization only,
++  so the gate stays deterministic and false-positive-free.
++- No automated refactoring/codemod execution yet (reachable later via
++  `TSMorphService.updateSourceFile`).
++- Does not replace `repo-codegraph` lookup or the `repo-exports.catalog`.
++
++## Relationship To Existing Packets
++
++- **`repo-codegraph`** — owns agent-facing deterministic *lookup*. Its Phase 3
++  plans ts-morph extraction of exported-declaration facts; this engine shares
++  that declaration-walking concern. To avoid re-duplicating AST extraction (in a
++  dedup goal, no less), the engine reuses `@beep/repo-utils` ts-morph
++  infrastructure now and should converge on a shared extraction layer when
++  codegraph Phase 3 lands.
++- **`repo-context-topology`** — owns the generated export catalog. A later phase
++  here may add `importedBy` edges to that catalog for blast-radius ranking.
++- **Lint-policy harness** (`rootRepoLintPolicySteps`) — owns enforcement; this
++  engine adds one gate step to it.
++
++## Reading Order
++
++- [SPEC.md](./SPEC.md) — binding contract and completion condition
++- [PLAN.md](./PLAN.md) — phased delivery plan
+diff --git a/goals/dedup-clone-engine/SPEC.md b/goals/dedup-clone-engine/SPEC.md
+new file mode 100644
+index 0000000000..423d4fcf88
+--- /dev/null
++++ b/goals/dedup-clone-engine/SPEC.md
+@@ -0,0 +1,96 @@
++# Dedup Clone Engine Specification
++
++## Status
++
++**Active**
++
++## Owner
++
++@beep-team
++
++## Created / Updated
++
++- **Created:** 2026-05-29
++- **Updated:** 2026-05-29
++
++## Mission
++
++Detect, baseline, and enforce **declaration-level code duplication** so the repo
++can drive copy-paste down and keep it down. Every answer must be grounded in
++deterministic ts-morph facts (source path + line) — no heuristics that cannot
++cite the duplicated declarations.
++
++## Source Of Truth
++
++- Workspace package topology and per-package `tsconfig.json` (via
++  `discoverWorkspaceScopes` / `TSMorphService`).
++- Exported declarations and their normalized AST bodies, extracted with
++  `TSMorphService.inspectProject` over production source files
++  (`PRODUCTION_FILE_IGNORE_PATTERNS` excludes tests/stories/dist/`.d.ts`).
++- The committed `standards/clone.inventory.jsonc` baseline is the drift
++  reference for the gate.
++
++## Definitions
++
++- **Normalized body** — a declaration's token stream with comments/whitespace
++  removed, identifiers alpha-renamed by first-appearance order, and literal
++  values blanked. Two declarations are clones iff their normalized bodies are
++  identical (Type-1/Type-2).
++- **Clone cluster** — a set of ≥2 declarations sharing a normalized body, above
++  a configurable minimum size, spanning ≥2 packages (cross-package first slice).
++
++## Non-Goals
++
++- No Type-3 (near-miss/fuzzy) matching in V1 — keeps the gate deterministic.
++- No automated refactor execution in V1.
++- Do not block on intra-package-only clones in V1 (report later).
++- Do not depend on external services for detection or its tests.
++
++## Phase 1 Contract (detector + baseline)
++
++- A `structural-clone` member added to `ReuseCandidateKind`.
++- A clone-detection capability in `@beep/repo-utils/Reuse` that:
++  - reuses workspace-scope discovery, file globbing, ignore patterns, caching;
++  - emits one `ReuseCandidate` per cross-package cluster with `sourceSymbols`,
++    `sourceScopes`, `file:line` evidence, a recommended consolidation action,
++    a heuristic destination, and a size-derived confidence;
++  - is deterministic (no timestamps or randomness in the cluster key).
++- `beep reuse clones [--scope <sel>] [--json]` surfaces clusters via
++  `ReuseInventoryService` output shape.
++- Running it once produces the first real repo duplication baseline.
++
++## Phase 2 Contract (enforcement)
++
++- `standards/clone.inventory.jsonc` committed via generate→diff→fail-on-drift
++  (mirroring `Lint/SchemaFirst.ts`, comparing candidates only — `generatedAt`
++  excluded).
++- `beep reuse clones --check` exits non-zero on clusters not present in the
++  baseline, with an allowlist escape hatch modeled on
++  `standards/effect-laws.allowlist.jsonc`.
++- One `repoCliStep("lint:clones", ["reuse", "clones", "--check"])` added to
++  `rootRepoLintPolicySteps`; warn-first, then graduated to error.
++
++## Phase 3 Contract (later)
++
++- Type-3 near-miss behind an explicit flag.
++- `importedBy` inbound edges for blast-radius ranking.
++- Optional codemod-assisted extraction via `TSMorphService.updateSourceFile`.
++
++## Completion Standard (V1)
++
++V1 is done only when all are true:
++
++- `beep reuse clones --json` reports cross-package clone clusters with citations.
++- `standards/clone.inventory.jsonc` is committed and `--check` is green against it.
++- Introducing a new cross-package duplicate declaration makes `--check` fail; an
++  allowlist entry makes it pass.
++- `lint:clones` participates in `bun run lint` (and thus the CI Lint lane).
++- The engine's own source passes the existing lint-policy laws and schema-first
++  checks.
++
++## Verification
++
++- `bunx turbo run check test --filter=@beep/repo-utils --filter=@beep/repo-cli`
++- `bun run beep reuse clones --json`
++- `bun run beep reuse clones --check`
++- `bun run lint` (exercises `lint:clones`)
+diff --git a/packages/foundation/capability/chalk/src/internal/SupportsColor.ts b/packages/foundation/capability/chalk/src/internal/SupportsColor.ts
+index 9adfb0413d..f528c817fa 100644
+--- a/packages/foundation/capability/chalk/src/internal/SupportsColor.ts
++++ b/packages/foundation/capability/chalk/src/internal/SupportsColor.ts
+@@ -135,23 +135,20 @@ const decodeSupportsColorOptions = S.decodeUnknownOption(SupportsColorOptionsMod
+ 
+ const decodeRuntimeProcessLike = S.decodeUnknownOption(RuntimeProcessLikeModel);
+ 
+-const normalizeStreamLike = (stream: StreamLike): StreamLikeModel =>
+-  pipe(
+-    decodeStreamLike(stream),
+-    O.getOrElse(() => StreamLikeModel.make({}))
+-  );
++const normalizeStreamLike = flow(
++  decodeStreamLike,
++  O.getOrElse(() => StreamLikeModel.make({}))
++);
+ 
+-const normalizeSupportsColorOptions = (options: SupportsColorOptions): SupportsColorOptionsModel =>
+-  pipe(
+-    decodeSupportsColorOptions(options),
+-    O.getOrElse(() => SupportsColorOptionsModel.make({}))
+-  );
++const normalizeSupportsColorOptions = flow(
++  decodeSupportsColorOptions,
++  O.getOrElse(() => SupportsColorOptionsModel.make({}))
++);
+ 
+-const normalizeRuntimeProcessLike = (runtimeProcessLike: RuntimeProcessLike): RuntimeProcessLikeModel =>
+-  pipe(
+-    decodeRuntimeProcessLike(runtimeProcessLike),
+-    O.getOrElse(() => RuntimeProcessLikeModel.make({}))
+-  );
++const normalizeRuntimeProcessLike = flow(
++  decodeRuntimeProcessLike,
++  O.getOrElse(() => RuntimeProcessLikeModel.make({}))
++);
+ 
+ const level0: ColorSupportLevelType = 0;
+ 
+diff --git a/packages/tooling/library/repo-codegraph/src/RepoCodegraphLookup.model.ts b/packages/tooling/library/repo-codegraph/src/RepoCodegraphLookup.model.ts
+index 76ba00f953..df605ca533 100644
+--- a/packages/tooling/library/repo-codegraph/src/RepoCodegraphLookup.model.ts
++++ b/packages/tooling/library/repo-codegraph/src/RepoCodegraphLookup.model.ts
+@@ -86,8 +86,8 @@ export type RepoCodegraphFreshnessStatus = typeof RepoCodegraphFreshnessStatus.T
+  * @category models
+  * @since 0.0.0
+  */
+-export const RepoCodegraphBoundaryStatus = LiteralKit(["allowed", "advisory", "blocked", "unknown"]).annotate(
+-  $I.annote("RepoCodegraphBoundaryStatus", {
++export const RepoCodegraphBoundaryStatus = LiteralKit(["allowed", "advisory", "blocked", "unknown"]).pipe(
++  $I.annoteSchema("RepoCodegraphBoundaryStatus", {
+     description: "Advisory architecture-boundary status for a candidate import.",
+   })
+ );
+diff --git a/packages/tooling/library/repo-utils/src/Reuse/Reuse.model.ts b/packages/tooling/library/repo-utils/src/Reuse/Reuse.model.ts
+index 84e2e8a166..ddefb92693 100644
+--- a/packages/tooling/library/repo-utils/src/Reuse/Reuse.model.ts
++++ b/packages/tooling/library/repo-utils/src/Reuse/Reuse.model.ts
+@@ -101,6 +101,7 @@ export const ReuseCandidateKind = S.Union([
+   S.Literal("extract-schema"),
+   S.Literal("extract-type"),
+   S.Literal("replace-with-existing"),
++  S.Literal("structural-clone"),
+ ]).pipe(
+   S.annotate(
+     $I.annote("ReuseCandidateKind", {
+diff --git a/packages/tooling/library/repo-utils/src/Reuse/Reuse.service.ts b/packages/tooling/library/repo-utils/src/Reuse/Reuse.service.ts
+index d7b6c3e31c..df257d30d5 100644
+--- a/packages/tooling/library/repo-utils/src/Reuse/Reuse.service.ts
++++ b/packages/tooling/library/repo-utils/src/Reuse/Reuse.service.ts
+@@ -25,11 +25,13 @@ import {
+ import * as O from "effect/Option";
+ import * as R from "effect/Record";
+ import * as S from "effect/Schema";
++import { SyntaxKind } from "ts-morph";
+ import { FsUtils } from "../FsUtils.js";
+ import { findRepoRoot } from "../Root.js";
+ import {
+   TSMorphService,
+   TsMorphFileOutlineRequest,
++  TsMorphProjectInspectionRequest,
+   TsMorphProjectScopeRequest,
+   TsMorphSymbolLookupRequest,
+ } from "../TSMorph/index.js";
+@@ -43,6 +45,7 @@ import {
+   ReuseSourceSymbolRef,
+   ReuseWorkUnit,
+ } from "./Reuse.model.js";
++import type { Node } from "ts-morph";
+ import type { Symbol as TsMorphSymbol } from "../TSMorph/index.js";
+ import type { ReuseCandidateKind } from "./Reuse.model.js";
+ 
+@@ -155,6 +158,7 @@ export class ReuseCandidateNotFoundError extends TaggedErrorClass<ReuseCandidate
+ const decodeJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+ const decodeWorkspacePackageManifest = S.decodeUnknownEffect(WorkspacePackageManifest);
+ const decodeFileOutlineRequest = S.decodeUnknownEffect(TsMorphFileOutlineRequest);
++const decodeInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
+ const decodeProjectScopeRequest = S.decodeUnknownEffect(TsMorphProjectScopeRequest);
+ const decodeSymbolLookupRequest = S.decodeUnknownEffect(TsMorphSymbolLookupRequest);
+ const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
+@@ -545,6 +549,156 @@ const candidateFromPattern = (
+   });
+ };
+ 
++const CLONE_MIN_TOKENS = 40;
++
++type CloneRecord = {
++  readonly key: string;
++  readonly size: number;
++  readonly packagePath: string;
++  readonly filePath: string;
++  readonly symbolName: string;
++  readonly symbolKind: string;
++  readonly startLine: number;
++};
++
++const LITERAL_SYNTAX_KINDS: ReadonlySet<SyntaxKind> = new Set([
++  SyntaxKind.StringLiteral,
++  SyntaxKind.NumericLiteral,
++  SyntaxKind.BigIntLiteral,
++  SyntaxKind.NoSubstitutionTemplateLiteral,
++  SyntaxKind.RegularExpressionLiteral,
++  SyntaxKind.TrueKeyword,
++  SyntaxKind.FalseKeyword,
++]);
++
++const FNV_OFFSET_BASIS = 2166136261;
++const FNV_PRIME = 16777619;
++
++const fnv1aStep = (hash: number, token: string): number => {
++  let next = hash;
++  for (let index = 0; index < token.length; index += 1) {
++    next = (next ^ token.charCodeAt(index)) >>> 0;
++    next = Math.imul(next, FNV_PRIME) >>> 0;
++  }
++  return next;
++};
++
++// Normalize a declaration to a structural signature that ignores formatting,
++// identifier names (alpha-renamed by first appearance), and literal values, so
++// exact + renamed copies (Type-1/Type-2 clones) collapse to the same key.
++const normalizedDeclarationSignature = (node: Node): { readonly key: string; readonly size: number } => {
++  const renames = new Map<string, number>();
++  let hash = FNV_OFFSET_BASIS >>> 0;
++  let size = 0;
++
++  node.forEachDescendant((descendant) => {
++    const kind = descendant.getKind();
++    let token: string;
++    if (kind === SyntaxKind.Identifier) {
++      const text = descendant.getText();
++      let index = renames.get(text);
++      if (index === undefined) {
++        index = renames.size;
++        renames.set(text, index);
++      }
++      token = `I${index}`;
++    } else if (LITERAL_SYNTAX_KINDS.has(kind)) {
++      token = "L";
++    } else {
++      token = `K${kind}`;
++    }
++    hash = fnv1aStep(hash, token);
++    hash = fnv1aStep(hash, ",");
++    size += 1;
++  });
++
++  return { key: `${size}:${hash.toString(16)}`, size };
++};
++
++const isExcludedCloneFile = (relativePath: string): boolean =>
++  Str.endsWith(".d.ts")(relativePath) ||
++  Str.includes(".test.")(relativePath) ||
++  Str.includes(".spec.")(relativePath) ||
++  Str.includes(".stories.")(relativePath) ||
++  Str.includes("/test/")(relativePath) ||
++  Str.includes("/tests/")(relativePath) ||
++  Str.includes("/dist/")(relativePath) ||
++  Str.includes("/docs/")(relativePath) ||
++  Str.includes("/storybook-static/")(relativePath);
++
++const distinctPackageCount = (records: ReadonlyArray<CloneRecord>): number =>
++  pipe(
++    records,
++    A.map((record) => record.packagePath),
++    A.dedupe,
++    A.length
++  );
++
++const cloneCandidateFromCluster = (records: ReadonlyArray<CloneRecord>): ReuseCandidate => {
++  const ordered = A.sort(
++    records,
++    Order.mapInput(Order.String, (record: CloneRecord) => `${record.filePath}:${record.startLine}`)
++  );
++  const sourceSymbols = pipe(
++    ordered,
++    A.map((record) =>
++      ReuseSourceSymbolRef.make({
++        symbolId: `${record.filePath}#${record.symbolName}`,
++        filePath: record.filePath,
++        symbolName: record.symbolName,
++        symbolKind: record.symbolKind,
++      })
++    )
++  );
++  const sourceScopes = uniqueSortedStrings(
++    pipe(
++      ordered,
++      A.map((record) => record.packagePath)
++    )
++  );
++  const evidence = pipe(
++    ordered,
++    A.map(
++      (record) =>
++        `${record.filePath}:${record.startLine} ${record.symbolKind} ${record.symbolName} (${record.size} normalized tokens)`
++    )
++  );
++  const headSymbol = pipe(
++    A.head(ordered),
++    O.map((record) => record.symbolName),
++    O.getOrElse(() => "declaration")
++  );
++  const headKey = pipe(
++    A.head(ordered),
++    O.map((record) => record.key),
++    O.getOrElse(() => "unknown")
++  );
++
++  return ReuseCandidate.make({
++    candidateId: `reuse-clone:${headKey}`,
++    kind: "structural-clone",
++    title: `Structural clone of ${headSymbol} across ${A.length(sourceScopes)} packages`,
++    sourceSymbols,
++    sourceScopes,
++    recommendedAction:
++      "Consolidate these structurally identical declarations into one shared/foundation home and replace the copies with an import.",
++    proposedDestinationPackage: "@beep/utils",
++    proposedDestinationModule: "packages/foundation/modeling/utils/src",
++    confidence: confidenceFromOccurrenceCount(A.length(ordered)),
++    evidence,
++    blockingConcerns: [
++      "Confirm the copies are semantically identical and pick the architecturally correct shared/foundation home before consolidating.",
++    ],
++    implementationSteps: [
++      "Pick the canonical home for the shared declaration following specific-home-first routing.",
++      "Move one copy to the chosen home and export it.",
++      "Replace the remaining copies with imports of the shared declaration.",
++    ],
++    verificationCommands: ["bun run check", "bun run test", "bun run lint"],
++    catalogMatchIds: [],
++  });
++};
++
+ const scopeSelectorLabel = (scopeSelector: O.Option<string>, scopes: ReadonlyArray<WorkspaceScope>): string => {
+   if (O.isSome(scopeSelector)) {
+     const tokens = parseScopeSelector(scopeSelector);
+@@ -686,6 +840,8 @@ type ReuseAnalysisContextShape = {
+   readonly patternMatchCountsByScope: MutableHashMap.MutableHashMap<string, PatternMatchCountsById>;
+   readonly catalogBySelector: MutableHashMap.MutableHashMap<SelectorCacheKey, ReadonlyArray<ReuseCatalogEntry>>;
+   readonly candidatesBySelector: MutableHashMap.MutableHashMap<SelectorCacheKey, ReadonlyArray<ReuseCandidate>>;
++  readonly cloneRecordsByScope: MutableHashMap.MutableHashMap<string, ReadonlyArray<CloneRecord>>;
++  readonly cloneCandidatesBySelector: MutableHashMap.MutableHashMap<SelectorCacheKey, ReadonlyArray<ReuseCandidate>>;
+ };
+ 
+ class ReuseAnalysisContext extends Context.Service<ReuseAnalysisContext, ReuseAnalysisContextShape>()(
+@@ -1088,6 +1244,8 @@ const ReuseAnalysisContextLive = Layer.effect(
+       patternMatchCountsByScope: MutableHashMap.empty(),
+       catalogBySelector: MutableHashMap.empty(),
+       candidatesBySelector: MutableHashMap.empty(),
++      cloneRecordsByScope: MutableHashMap.empty(),
++      cloneCandidatesBySelector: MutableHashMap.empty(),
+     });
+   })
+ );
+@@ -1498,6 +1656,173 @@ export const ReuseInventoryServiceLive = Layer.effect(
+   })
+ );
+ 
++const collectCloneRecordsForScope = (analysisContext: ReuseAnalysisContextShape, scope: WorkspaceScope) =>
++  getCachedOrCompute(
++    analysisContext.cloneRecordsByScope,
++    scope.packagePath,
++    Effect.gen(function* () {
++      const runtime = analysisContext.runtime;
++      const srcPrefix = `${scope.srcPath}/`;
++      const inspectionRequest = yield* decodeInspectionRequest({
++        entrypoint: { _tag: "tsconfig", tsConfigPath: scope.tsConfigPath },
++        repoRootPath: runtime.repoRoot,
++        mode: "syntax",
++        referencePolicy: "workspaceOnly",
++        filePaths: [],
++        sourceFileGlobs: [runtime.path.join(runtime.repoRoot, scope.srcPath, "**", "*.ts")],
++      }).pipe(
++        Effect.mapError(
++          mapAnalysisError("collectCloneRecordsForScope", `Failed to build inspection request for ${scope.packagePath}`)
++        )
++      );
++
++      return yield* runtime.tsmorph
++        .inspectProject(inspectionRequest, ({ sourceFiles }) => {
++          const seen = new Set<string>();
++          const collected: Array<CloneRecord> = [];
++
++          for (const sourceFile of sourceFiles) {
++            const relativeSource = normalizeRelativePath(
++              runtime.path.relative(runtime.repoRoot, sourceFile.getFilePath())
++            );
++            if (!Str.startsWith(srcPrefix)(relativeSource) || isExcludedCloneFile(relativeSource)) {
++              continue;
++            }
++
++            for (const [symbolName, declarations] of sourceFile.getExportedDeclarations()) {
++              for (const declaration of declarations) {
++                const declarationFile = normalizeRelativePath(
++                  runtime.path.relative(runtime.repoRoot, declaration.getSourceFile().getFilePath())
++                );
++                if (!Str.startsWith(srcPrefix)(declarationFile) || isExcludedCloneFile(declarationFile)) {
++                  continue;
++                }
++
++                const startLine = declaration.getStartLineNumber();
++                const dedupeId = `${declarationFile}#${startLine}#${symbolName}`;
++                if (seen.has(dedupeId)) {
++                  continue;
++                }
++                seen.add(dedupeId);
++
++                const signature = normalizedDeclarationSignature(declaration);
++                if (signature.size < CLONE_MIN_TOKENS) {
++                  continue;
++                }
++
++                collected.push({
++                  key: signature.key,
++                  size: signature.size,
++                  packagePath: scope.packagePath,
++                  filePath: declarationFile,
++                  symbolName,
++                  symbolKind: declaration.getKindName(),
++                  startLine,
++                });
++              }
++            }
++          }
++
++          return collected as ReadonlyArray<CloneRecord>;
++        })
++        .pipe(
++          Effect.mapError(
++            mapAnalysisError(
++              "collectCloneRecordsForScope",
++              `Failed to inspect ts-morph project for ${scope.packagePath}`
++            )
++          )
++        );
++    })
++  );
++
++/**
++ * Service contract for declaration-anchored structural clone detection.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++type ReuseCloneServiceShape = {
++  readonly detectClones: (
++    scopeSelector?: O.Option<string>
++  ) => Effect.Effect<ReadonlyArray<ReuseCandidate>, ReuseAnalysisError>;
++};
++
++/**
++ * Service tag for declaration-anchored structural clone detection.
++ *
++ * @example
++ * ```ts
++ * import { Effect } from "effect"
++ * import { ReuseCloneService } from "@beep/repo-utils/Reuse/Reuse.service"
++ * const program = Effect.gen(function* () {
++ *   const service = yield* ReuseCloneService
++ *   return service
++ * })
++ * void program
++ * ```
++ * @category models
++ * @since 0.0.0
++ */
++export class ReuseCloneService extends Context.Service<ReuseCloneService, ReuseCloneServiceShape>()(
++  $I`ReuseCloneService`
++) {}
++
++/**
++ * Default live layer for declaration-anchored structural clone detection.
++ *
++ * @example
++ * ```ts
++ * import { ReuseCloneServiceLive } from "@beep/repo-utils/Reuse/Reuse.service"
++ * const layer = ReuseCloneServiceLive
++ * void layer
++ * ```
++ * @category constructors
++ * @since 0.0.0
++ */
++export const ReuseCloneServiceLive = Layer.effect(
++  ReuseCloneService,
++  Effect.gen(function* () {
++    const analysisContext = yield* ReuseAnalysisContext;
++
++    const detectClones: ReuseCloneServiceShape["detectClones"] = Effect.fn(function* (scopeSelector = O.none()) {
++      return yield* getCachedOrCompute(
++        analysisContext.cloneCandidatesBySelector,
++        selectorCacheKey(scopeSelector),
++        Effect.gen(function* () {
++          const scopes = yield* discoverWorkspaceScopes(analysisContext, scopeSelector);
++          let records = A.empty<CloneRecord>();
++          for (const scope of scopes) {
++            const scopeRecords = yield* collectCloneRecordsForScope(analysisContext, scope);
++            records = A.appendAll(records, scopeRecords);
++          }
++
++          const grouped = A.groupBy(records, (record) => record.key);
++          let candidates = A.empty<ReuseCandidate>();
++          for (const key of R.keys(grouped)) {
++            const cluster = grouped[key] ?? A.empty<CloneRecord>();
++            if (A.length(cluster) >= 2 && distinctPackageCount(cluster) >= 2) {
++              candidates = A.append(candidates, cloneCandidateFromCluster(cluster));
++            }
++          }
++
++          return pipe(
++            candidates,
++            A.sort(
++              Order.combine(
++                Order.mapInput(Order.Number, (candidate: ReuseCandidate) => -candidate.confidence),
++                Order.mapInput(Order.String, (candidate: ReuseCandidate) => candidate.candidateId)
++              )
++            )
++          );
++        })
++      );
++    });
++
++    return ReuseCloneService.of({ detectClones });
++  })
++);
++
+ const ReuseCatalogAndDiscoveryLive = Layer.mergeAll(
+   ReuseCatalogServiceLive,
+   ReuseDiscoveryServiceLive.pipe(Layer.provideMerge(ReuseCatalogServiceLive))
+@@ -1518,5 +1843,6 @@ const ReuseCatalogAndDiscoveryLive = Layer.mergeAll(
+ export const ReuseServiceSuiteLive = Layer.mergeAll(
+   ReuseCatalogAndDiscoveryLive,
+   ReusePartitionPlannerServiceLive.pipe(Layer.provideMerge(ReuseCatalogServiceLive)),
+-  ReuseInventoryServiceLive.pipe(Layer.provide(ReuseCatalogAndDiscoveryLive))
++  ReuseInventoryServiceLive.pipe(Layer.provide(ReuseCatalogAndDiscoveryLive)),
++  ReuseCloneServiceLive
+ ).pipe(Layer.provideMerge(ReuseAnalysisContextLive));
+diff --git a/packages/tooling/tool/cli/src/commands/Reuse/Reuse.command.ts b/packages/tooling/tool/cli/src/commands/Reuse/Reuse.command.ts
+index 378d30d0e3..fc55b03869 100644
+--- a/packages/tooling/tool/cli/src/commands/Reuse/Reuse.command.ts
++++ b/packages/tooling/tool/cli/src/commands/Reuse/Reuse.command.ts
+@@ -15,6 +15,8 @@ import {
+ import {
+   DomainError,
+   findRepoRoot,
++  ReuseCandidate,
++  ReuseCloneService,
+   ReuseDiscoveryService,
+   ReuseFindResult,
+   ReuseInventory,
+@@ -201,6 +203,7 @@ type ReuseProgramDependencies =
+   | FsUtils
+   | Path.Path
+   | ChildProcessSpawner.ChildProcessSpawner
++  | ReuseCloneService
+   | ReuseDiscoveryService
+   | ReuseInventoryService
+   | ReusePartitionPlannerService
+@@ -533,11 +536,49 @@ const reuseCodexSmokeCommand = Command.make(
+     )
+ ).pipe(Command.withDescription("Validate the Codex SDK adapter and thread startup path without running a loop"));
+ 
++const printClones = Effect.fn(function* (candidates: ReadonlyArray<ReuseCandidate>) {
++  yield* Console.log(`Structural clone clusters: ${A.length(candidates)}`);
++  yield* Effect.forEach(
++    candidates,
++    Effect.fn(function* (candidate) {
++      yield* Console.log(`- ${candidate.candidateId} (confidence=${candidate.confidence.toFixed(2)})`);
++      yield* Console.log(`  ${candidate.title}`);
++      yield* Effect.forEach(candidate.evidence, (line) => Console.log(`    ${line}`), {
++        concurrency: 1,
++        discard: true,
++      });
++    }),
++    { concurrency: 1, discard: true }
++  );
++});
++
++const reuseClonesCommand = Command.make(
++  "clones",
++  {
++    scope: scopeFlag,
++    json: jsonFlag,
++  },
++  ({ scope, json }) =>
++    runReuseProgram(
++      Effect.gen(function* () {
++        const cloneService = yield* ReuseCloneService;
++        const candidates = yield* cloneService.detectClones(scope);
++
++        yield* printSelectedOutput(
++          json,
++          S.encodeEffect(S.Array(ReuseCandidate))(candidates).pipe(Effect.flatMap(printCommandJson)),
++          printClones(candidates)
++        );
++      })
++    )
++).pipe(Command.withDescription("Detect declaration-anchored structural clones across packages"));
++
+ const printReuseIndex = () =>
+   printLines([
+     "Reuse commands:",
+     "- bun run beep reuse partitions --scope packages/tooling/tool/cli,packages/tooling/library/repo-utils --json",
+     "- bun run beep reuse inventory --scope packages/tooling/tool/cli,packages/tooling/library/repo-utils --json",
++    "- bun run beep reuse clones --json",
+     "- bun run beep reuse find --file packages/tooling/tool/cli/src/commands/Docgen/index.ts --query json --json",
+     "- bun run beep reuse lookup --query UnknownRecord --from packages/tooling/tool/cli --json",
+     "- bun run beep reuse packet --candidate-id reuse-pattern:schema-json-encode-sync --json",
+@@ -556,6 +597,7 @@ export const reuseCommand = Command.make("reuse", {}, printReuseIndex).pipe(
+     reusePartitionsCommand,
+     reuseFindCommand,
+     reuseInventoryCommand,
++    reuseClonesCommand,
+     reuseLookupCommand,
+     reusePacketCommand,
+     reuseCodexSmokeCommand,
