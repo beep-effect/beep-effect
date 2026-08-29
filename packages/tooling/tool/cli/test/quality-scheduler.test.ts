@@ -14,6 +14,7 @@ import {
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
   reapAdmissionState,
+  releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
   YeetAdmissionLease,
 } from "@beep/repo-cli/test/RepoRun";
@@ -21,7 +22,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Clock, ConfigProvider, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { ConfigProvider, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -363,7 +364,7 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("fails the append while the journal lock is held and reaps a stale lock", () =>
+  it("fails the append under a live lock holder and reaps dead or malformed locks", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -373,16 +374,38 @@ describe("quality-scheduler", () => {
             const path = yield* Path.Path;
             const lockPath = path.join(tempRoot.root, "journal.lock");
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
-            yield* fs.writeFileString(lockPath, `${process.pid}\n`);
+            yield* fs.writeFileString(lockPath, `${process.pid}:live-holder`);
             const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
             expect(busy.message).toContain("stayed busy");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
-            const staleSeconds = ((yield* Clock.currentTimeMillis) - 61_000) / 1_000;
-            yield* fs.utimes(lockPath, staleSeconds, staleSeconds);
+            yield* fs.writeFileString(lockPath, `${DEAD_PID}:dead-holder`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
+            yield* fs.writeFileString(lockPath, "not-a-pid");
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
+            expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
             const events = yield* readJournalEvents(tempRoot.root);
-            expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+            expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1", "nonce-2"]);
+          })
+        );
+      })
+    ));
+
+  it("releases only the owned journal lock generation", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, "999:replacement-owner");
+            yield* releaseAdmissionJournalLockForTesting(lockPath, `${process.pid}:mine`);
+            expect(O.isSome(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, "999:replacement-owner");
+            expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
           })
         );
       })
@@ -464,7 +487,9 @@ describe("quality-scheduler", () => {
         const decoded = S.decodeSync(S.fromJsonString(AdmissionJournalEvent))(encoded);
         expect(decoded._tag).toBe(event._tag);
         expect(decoded.nonce).toBe(event.nonce);
-        expect(decoded.pid).toBe(event.pid);
+        // JSON drops the sign of -0, so the codec law is encode-stability
+        // rather than Object.is identity on numeric fields.
+        expect(S.encodeSync(S.fromJsonString(AdmissionJournalEvent))(decoded)).toBe(encoded);
       }),
       fcRuns(32)
     );
