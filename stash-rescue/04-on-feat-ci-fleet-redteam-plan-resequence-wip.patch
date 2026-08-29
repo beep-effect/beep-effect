@@ -1,0 +1,54 @@
+diff --git a/goals/ci-fleet-endgame/PLAN.md b/goals/ci-fleet-endgame/PLAN.md
+index acb269f867..12a43a3f1e 100644
+--- a/goals/ci-fleet-endgame/PLAN.md
++++ b/goals/ci-fleet-endgame/PLAN.md
+@@ -9,16 +9,46 @@ Status: `active`
+ The module deploy is hours-scale, not a weeks-scale program. It comes first;
+ the performance layer follows on its own track without becoming subordinate.
+ 
++**Resequenced 2026-08-10 — cache and image now precede cutover.** The original
++order put P2 cutover ahead of the cache and AMI work. That order regresses
++heavy-lane wall time. The manual burst workers are non-ephemeral: they serve
++many jobs across their TTL and accumulate a warm Turbo cache, a warm bun store,
++and a reused checkout. One-job-one-VM discards all of it on every job, so
++cutting over before a remote cache exists means every heavy job starts cold.
++The security and cost wins are real, but they would land alongside a speed
++loss. Cache and image are therefore prerequisites of cutover, not its sequel.
++
+ | Phase | Status | Goal | Exit criteria |
+ | --- | --- | --- | --- |
+ | P0 Ratify + docs | complete | Graduate the signed decision record and bind decisions 57–63. | Active packet exists with co-primary charter and adoption contract. |
+ | P1 Bridge spike + deploy | pending | Mint the repo-scoped GitHub App, spike the Pulumi terraform-module bridge, and deploy a non-serving shadow label. | Module deploys through Pulumi, or the recorded fallback condition justifies a minimal Terraform root. |
+-| P2 Cutover | pending | Serve `beep-ec2-heavy` with ephemeral one-job-one-VM workers and demote manual burst scripts to break-glass. | Live worker passes lifecycle, teardown, trust, and red-team acceptance. |
+-| P3 Cache | pending | Ship trusted-write/PR-read-only asymmetric Turbo cache access. | Real PR jobs consume cache without obtaining write authority. |
+-| P4 Baked AMI | pending | Ship lockfile-keyed worker images with the complete hosted toolbelt. | Setup floor and cross-runner tool-cache poisoning are removed. |
++| P2 Cache | pending | Ship trusted-write/PR-read-only asymmetric Turbo cache access. | Real PR jobs consume cache without obtaining write authority. |
++| P3 Baked AMI | pending | Ship lockfile-keyed worker images with the complete hosted toolbelt. | Setup floor and cross-runner tool-cache poisoning are removed. |
++| P4 Cutover | pending | Serve `beep-ec2-heavy` with ephemeral one-job-one-VM workers and demote manual burst scripts to break-glass. | Live worker passes lifecycle, teardown, trust, and red-team acceptance, and heavy-lane wall time does not regress against the burst baseline. |
+ | P5 Performance + ops | pending | Ratchet resource weight, shard where measured, and expose pickup/cost/RSS/wall-time telemetry. | No required job waits 20 minutes and evidence supports ongoing right-sizing. |
+ | P6 Yeet + close | pending | Drive the final PR mergeable, reflect, and close the packet. | Required checks green, zero unresolved threads, reflection valid, lifecycle completed-retained. |
+ 
++### Why the asymmetric cache needs the ephemeral worker
++
++P2 and P4 are two halves of one argument, not independent phases. If PR jobs
++can write the shared cache, a hostile PR poisons an artifact a later `main`
++build consumes — supply-chain compromise by way of the build cache. The fix is
++a read-write token for `main` and a read-only token for PRs. That asymmetry is
++only enforceable on one-job-one-VM workers: on a shared persistent runner a
++write token can outlive its job on disk and be picked up by whatever runs next.
++Ephemeral workers are what make the asymmetric cache trustworthy.
++
++### Measured startup budget
++
++Probe run `31352410248` took **77 seconds** from instance launch to first job
++step. That time is spent on EC2 boot, four sequential `dnf` rounds installing
++docker, git, jq, curl and the CloudWatch agent, and a 226 MB runner tarball
++pulled from S3 and extracted — repeated on every job. P3 bakes all of it,
++targeting roughly 25–35s where boot and agent registration dominate. Going
++below that needs `pool_config`, which trades idle cost for instant pickup: one
++idle `m7i.2xlarge` on spot is roughly $70–110/mo against a $100 projection, so
++a business-hours schedule is the affordable shape, not a 24/7 pool.
++
+ ## Immediate next action
+ 
+ P1 deploy is DONE (2026-08-08): App minted/installed, secrets in KMS-backed
