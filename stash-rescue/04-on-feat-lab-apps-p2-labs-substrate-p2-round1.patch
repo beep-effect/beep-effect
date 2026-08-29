@@ -1,0 +1,3787 @@
+diff --git a/.github/workflows/check.yml b/.github/workflows/check.yml
+index e3793e6d62..a618a08580 100644
+--- a/.github/workflows/check.yml
++++ b/.github/workflows/check.yml
+@@ -400,6 +400,86 @@ jobs:
+         if: always()
+         run: bun run beep ci append-turbo-summary
+ 
++  labs:
++    # lab-apps-lifecycle P2 (D10): labs (apps/labs/*) are excluded from every
++    # required lane and surface only through this visible family context.
++    # Lands NON-required; the required flip (ruleset 10240248 addition) is a
++    # later branch-ruleset action after a stable green history. No TURBO_*
++    # remote-cache env on purpose: the lane is local-cache-only, keeping the
++    # workflow's push-guarded remote-cache surface unchanged.
++    name: Labs
++    runs-on: ubuntu-24.04
++    timeout-minutes: 45
++    permissions:
++      contents: read
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
++        with:
++          fetch-depth: 0
++          persist-credentials: false
++
++      - name: Fetch pull request base
++        if: github.event_name == 'pull_request'
++        shell: bash
++        run: |
++          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
++
++      - name: Determine lane execution
++        id: lane-gate
++        shell: bash
++        run: |
++          set -euo pipefail
++          should_run=true
++
++          # Zero-lab tree (also the delete-last-lab state): nothing to verify.
++          # turbo 2.10.9 rejects any apps/labs filter while the directory is
++          # absent, and the lane body would no-op anyway.
++          if ! compgen -G "apps/labs/*/package.json" > /dev/null; then
++            should_run=false
++          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
++            base_ref="origin/${GITHUB_BASE_REF:-main}"
++            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
++
++            if [[ -z "$changed_files" ]]; then
++              should_run=false
++            elif ! grep -Eq '^apps/labs/' <<< "$changed_files"; then
++              should_run=false
++            fi
++          fi
++
++          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
++
++      - name: Setup monorepo CI
++        if: steps.lane-gate.outputs.should_run == 'true'
++        uses: ./.github/actions/setup-monorepo-ci
++        with:
++          cache-turbo: "true"
++          cache-write: "false"
++
++      - name: Run labs lane
++        if: steps.lane-gate.outputs.should_run == 'true'
++        shell: bash
++        run: |
++          set -euo pipefail
++          shape_args=()
++
++          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
++            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
++          fi
++
++          shape_args+=(--summarize)
++
++          bun run beep ci lane labs "${shape_args[@]}"
++
++      - name: Append Turbo summary
++        if: steps.lane-gate.outputs.should_run == 'true' && always()
++        run: bun run beep ci append-turbo-summary
++
++      - name: Skip lane
++        if: steps.lane-gate.outputs.should_run != 'true'
++        run: echo "Skipping Labs for this change set."
++
+   fallow-advisory:
+     name: Fallow Advisory Envelopes
+     runs-on: ubuntu-24.04
+diff --git a/docs/README.md b/docs/README.md
+index 9a51076735..0a00f9101b 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -9,6 +9,7 @@ Tracked, authored documentation for the beep-effect monorepo.
+ | `docs/*.md` | yes | Repo-level identity documents (mission, story). |
+ | `docs/ROADMAP.md` | yes | Canonical cross-portfolio priority layer (lanes, horizons, resume conditions); lifecycle status truth stays in `goals/INDEX.md`. |
+ | `docs/product/` | yes | Per-product specs and PRDs (one named file per product — no generic `PRD.md`). |
++| `docs/runbooks/` | yes | Operator runbooks: step-by-step documented processes with exact commands (first entry: lab promotion, D10). |
+ | `docs/generated/` | **no** (gitignored) | Docgen aggregate output. Produced by `bun run docgen` / `bun run docs:aggregate`; safe to delete, regenerable. |
+ | `docs/_internal/` | **no** (gitignored) | Private working notes. This repository is public — never commit anything under `_internal/`. |
+ 
+diff --git a/docs/runbooks/lab-promotion.md b/docs/runbooks/lab-promotion.md
+new file mode 100644
+index 0000000000..a82f5ee55c
+--- /dev/null
++++ b/docs/runbooks/lab-promotion.md
+@@ -0,0 +1,114 @@
++# Lab Promotion Runbook
++
++Operator runbook for promoting a lab app out of `apps/labs/*` into its durable
++lawful home (D10: v1 is a documented process — there is no `beep labs promote`
++command). Doctrine lives in
++[`standards/architecture/14-lab-apps.md`](../../standards/architecture/14-lab-apps.md);
++this file is the step list. The common case promotes a whole lab into a
++production app at `apps/<name>`; step 9 covers the other homes.
++
++Everything below lands in **one PR**: the move, full registration and ceremony
++onboarding, consumer migration, and removal of every residual lab surface.
++
++## 1. Flip the disposition first
++
++Edit `apps/labs/<name>/lab.manifest.json` and set
++`"disposition": "promote"`. This records operator intent before the move; it
++may land with the lab's last change or at the start of the promotion PR.
++
++## 2. Choose the smallest lawful durable home
++
++An app under `apps/`, the owning slice, a shared-kernel promotion, a driver,
++a foundation package, a tooling package, or an ecosystem package. A promotion
++that creates or changes a shared export follows that home's admission and
++decision-record requirements — lab status never waives them. The rest of this
++runbook assumes the `apps/<name>` case.
++
++## 3. Move the tree
++
++```sh
++git mv apps/labs/<name> apps/<name>
++```
++
++No root workspace edit is needed: the root `package.json` `"apps/*"` glob
++already covers the new path, and the `"apps/labs/*"` glob simply stops
++matching.
++
++## 4. Delete the lab entry
++
++- `git rm apps/<name>/lab.manifest.json` — promoted apps carry no lab
++  manifest.
++- Remove the lab notice line from the app's `AGENTS.md`.
++
++## 5. Rename the portless hostname
++
++Labs serve at `<name>.labs.beep.localhost:1355`; production apps at
++`<name>.beep.localhost:1355`. Update:
++
++- the `dev` script in `apps/<name>/package.json`:
++  `portless <name>.labs.beep …` → `portless <name>.beep …`;
++- any `allowedDevOrigins` entry in `next.config.ts` (nextjs kind);
++- the URL in the app's `README.md`.
++
++## 6. Recompute relative hops
++
++The tree is now one directory level shallower. Fix every path that hopped out
++of `apps/labs/<name>`:
++
++- `tsconfig.json` `extends`: `../../../tsconfig.base.json` (was
++  `../../../../`);
++- `vitest.config.ts` shared-config import: `../../vitest.shared.ts`-style hops
++  drop one `../`;
++- any other `../../../../` reference emitted by the lab template.
++
++## 7. Full registration and ceremony onboarding
++
++Labs are ceremony-exempt by path; at `apps/<name>` the exemption ends. Add:
++
++- **Docgen**: an `apps/<name>/docgen.json` (model:
++  `apps/practice-kg-mcp/docgen.json`; fix `$schema` hops and `srcLink`) plus a
++  `"docgen": "bun run ../../packages/tooling/tool/docgen/src/bin.ts"` script.
++  Prove with `bun run docgen:local`.
++- **Coverage**: a `"coverage": "bunx vitest run --coverage"` script (matches
++  `apps/oip-web/package.json`).
++- **Root TS references**: run `bun run beep tsconfig-sync` — the labs
++  exclusion no longer applies, so the app re-enters `tsconfig.packages.json`.
++  Prove with `bun run beep tsconfig-sync --check`.
++- **Changesets**: the package now participates. Author a changeset for the
++  promotion (`bunx changeset`) and prove with
++  `bun run beep quality changeset-status` — the labs-path exemption must no
++  longer be what makes it pass.
++
++## 8. Move the identity composer (identity is KEPT)
++
++In `packages/foundation/modeling/identity/src/packages.ts`, move the app's
++composer entry out of the `generatedLabComposers` region (fenced by
++`// GENERATED LAB EXPORTS START` / `// GENERATED LAB EXPORTS END`) into the
++authored `generatedComposers` package group. Keep the same accessor
++(`$<PascalName>Id`) — promotion preserves package identity unless semantic
++ownership actually changed, in which case record an explicit identity
++transition. If this was the last lab, remove the fenced region entirely: the
++generated labs region is absent in the zero-lab state.
++
++## 9. Promotion into a non-app home
++
++When the durable home is a package, mint it with the factory
++(`bun run beep create-package …` or `bun run beep architecture` for slice
++files), move the earned code in, migrate all consumers in the same PR, then
++delete the remaining lab shell:
++
++```sh
++bun run beep delete-package @beep/<name>
++```
++
++If the lab's manifest declared a `postgresSchema`, the delete drops it only
++with the explicit `--drop-data` consent flag; without consent it prints the
++manual drop steps and leaves data intact.
++
++## 10. Verify clean
++
++- `rg -n "labs/<name>"` — hits only in historical records
++  (`goals/`, `research/`, changelogs), never in live config or code;
++- `bun run beep tsconfig-sync --check` and
++  `bun run beep quality changeset-status` pass;
++- `bun run beep yeet verify` green before publish.
+diff --git a/packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts b/packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts
+index 7faa917100..6eaf4e9abf 100644
+--- a/packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts
++++ b/packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts
+@@ -69,6 +69,9 @@ export const DocsESLintConfig: DocsESLintConfigShape = [
+       "**/.next/**",
+       ".repos/**",
+       ".sst/**",
++      // Lab apps are TSDoc-ceremony-exempt (goals/lab-apps-lifecycle SPEC D5);
++      // the deprecated-apis law profile keeps linting them via its own config.
++      "apps/labs/**",
+       "coverage/**",
+       "**/coverage/**",
+       "dist/**",
+diff --git a/packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts b/packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts
+index a21c66d732..80d12ea795 100644
+--- a/packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts
++++ b/packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts
+@@ -15,4 +15,15 @@ describe("docs-eslint-config", () => {
+     expect(configIncludesPlugin("beep-jsdoc")).toBe(true);
+     expect(configIncludesPlugin("eslint-plugin-tsdoc")).toBe(true);
+   });
++
++  it("keeps lab apps out of the docs lint surface via a global ignore", () => {
++    // Labs are TSDoc-ceremony-exempt (goals/lab-apps-lifecycle SPEC D5); the
++    // deprecated-apis law profile still lints them through its own config.
++    const hasLabsGlobalIgnore = A.some(
++      DocsESLintConfig,
++      (entry) => entry.files === undefined && entry.ignores !== undefined && A.contains(entry.ignores, "apps/labs/**")
++    );
++
++    expect(hasLabsGlobalIgnore).toBe(true);
++  });
+ });
+diff --git a/packages/tooling/tool/cli/package.json b/packages/tooling/tool/cli/package.json
+index 5d7f9f07a7..2b119396be 100644
+--- a/packages/tooling/tool/cli/package.json
++++ b/packages/tooling/tool/cli/package.json
+@@ -38,6 +38,7 @@
+     "./commands/Goals": "./src/commands/Goals/index.ts",
+     "./commands/Image": "./src/commands/Image/index.ts",
+     "./commands/Knowledge": "./src/commands/Knowledge/index.ts",
++    "./commands/Labs": "./src/commands/Labs/index.ts",
+     "./commands/Laws": "./src/commands/Laws/index.ts",
+     "./commands/Lint": "./src/commands/Lint/index.ts",
+     "./commands/Purge": "./src/commands/Purge/index.ts",
+@@ -64,6 +65,7 @@
+     "./internal/*": null,
+     "./test/*": "./src/test/*.test-kit.ts",
+     "./test/DeletePackage": "./src/test/DeletePackage.test-kit.ts",
++    "./test/Labs": "./src/test/Labs.test-kit.ts",
+     "./bin": null
+   },
+   "files": [
+@@ -100,6 +102,7 @@
+       "./commands/Goals": "./dist/commands/Goals/index.js",
+       "./commands/Image": "./dist/commands/Image/index.js",
+       "./commands/Knowledge": "./dist/commands/Knowledge/index.js",
++      "./commands/Labs": "./dist/commands/Labs/index.js",
+       "./commands/Laws": "./dist/commands/Laws/index.js",
+       "./commands/Lint": "./dist/commands/Lint/index.js",
+       "./commands/Purge": "./dist/commands/Purge/index.js",
+@@ -125,6 +128,7 @@
+       "./internal/*": null,
+       "./test/*": null,
+       "./test/DeletePackage": null,
++      "./test/Labs": null,
+       "./bin": null
+     }
+   },
+diff --git a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+index acb7e0146e..f9b417d198 100644
+--- a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
++++ b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+@@ -14,13 +14,14 @@
+ import { $RepoCliId } from "@beep/identity/packages";
+ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+ import { LiteralKit } from "@beep/schema";
+-import { A, Str } from "@beep/utils";
++import { A, Str, thunkFalse } from "@beep/utils";
+ import * as O from "@beep/utils/Option";
+ import { Console, Duration, Effect, FileSystem, Match, Path, pipe } from "effect";
+ import { dual } from "effect/Function";
+ import * as S from "effect/Schema";
+ import { Argument, Command, Flag } from "effect/unstable/cli";
+ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
++import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/LabsPath.ts";
+ import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+ import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
+ import { CiCommandError } from "./Ci.errors.ts";
+@@ -166,6 +167,7 @@ export const CI_LANE_ID_VALUES = [
+   "fallow",
+   "jsdoc-ratchet",
+   "knip",
++  "labs",
+   "lint",
+   "lint-policy",
+   "nix",
+@@ -309,6 +311,16 @@ export class CiLaneDescriptor extends S.Class<CiLaneDescriptor>($I`CiLaneDescrip
+ 
+ const TURBO_SHAPE_FLAGS = ["--affected", "--base", "--summarize"] as const;
+ 
++// Required turbo lanes exclude the labs family (lab-apps-lifecycle SPEC D10):
++// labs surface only through the non-required labs lane. turbo 2.10.9 rejects
++// any ./apps/labs directory filter while the directory is absent ("Directory
++// ... specified in filter does not exist"), and the zero-lab tree has no
++// apps/labs at all — so both filters apply only when a lab workspace exists
++// (CiLaneRunOptions.labsPresent, detected per run). With zero labs the bare
++// shape is already labs-free, so nothing is lost by omitting the filter then.
++const LABS_EXCLUDE_TURBO_FILTER = `--filter=!./${LABS_WORKSPACE_ROOT}/**`;
++const LABS_INCLUDE_TURBO_FILTER = `--filter=./${LABS_WORKSPACE_ROOT}/**`;
++
+ /**
+  * Full lane inventory for check.yml, including CI-only residue.
+  *
+@@ -533,6 +545,19 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
+     notes:
+       "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history.",
+   }),
++  // This visible family context lands non-required; promotion is a later
++  // branch-ruleset action (ruleset 10240248) after it establishes a stable
++  // green history.
++  CiLaneDescriptor.make({
++    id: "labs",
++    contextName: "Labs",
++    required: false,
++    laneClass: "cli-runnable",
++    replay: "exact",
++    flags: [...TURBO_SHAPE_FLAGS],
++    notes:
++      "Runs check, lint, and test for apps/labs/* workspaces, which every required lane excludes (lab-apps-lifecycle D10); no-ops while no labs exist.",
++  }),
+ ];
+ 
+ /**
+@@ -574,6 +599,7 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
+     validateEnvelopes: S.Boolean,
+     runs: S.optionalKey(S.String),
+     seed: S.optionalKey(S.String),
++    labsPresent: S.optionalKey(S.Boolean),
+   },
+   $I.annote("CiLaneRunOptions", {
+     description: "Shape options for running one CI lane body.",
+@@ -592,6 +618,26 @@ const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
+   ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+ ];
+ 
++const labsExcludeFilterArgs = (options: CiLaneRunOptions): ReadonlyArray<string> =>
++  options.labsPresent === true ? [LABS_EXCLUDE_TURBO_FILTER] : A.empty<string>();
++
++// A lab workspace is a direct child of apps/labs carrying a package.json,
++// mirroring the root workspace glob "apps/labs/*". A missing labs root reads
++// as zero labs so every lane stays green on the zero-lab (and delete-last-lab)
++// tree, where turbo would reject any apps/labs filter outright.
++const detectLabsWorkspacePresence = Effect.fn("CiLane.detectLabsWorkspacePresence")(function* (
++  repoRoot: string
++): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const labsRoot = path.join(repoRoot, LABS_WORKSPACE_ROOT);
++  const entries = yield* fs.readDirectory(labsRoot).pipe(Effect.orElseSucceed(A.empty<string>));
++  const manifestFlags = yield* Effect.forEach(entries, (entry) =>
++    fs.exists(path.join(labsRoot, entry, "package.json")).pipe(Effect.orElseSucceed(thunkFalse))
++  );
++  return A.contains(manifestFlags, true);
++});
++
+ // Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
+ // whitespace-only `--runs` (e.g. `--runs ""`) would otherwise reach the
+ // lane as `BEEP_FC_NUM_RUNS=""`, which the parsers treat as absent — the
+@@ -803,7 +849,9 @@ export const ciLaneStepsForTesting: {
+       ],
+       // Fresh Check graphs can overlap the largest tsgo processes and OOM even
+       // on 32GB fleet workers, so this lane stays serial.
+-      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
++      check: () => [
++        turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1", ...labsExcludeFilterArgs(options)], options),
++      ],
+       codegen: () => [
+         QualityTaskStep.make({
+           label: "ci:codegen:generate",
+@@ -898,10 +946,46 @@ export const ciLaneStepsForTesting: {
+         ]),
+       ],
+       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
++      // Labs family lane (lab-apps-lifecycle D10): positive-filtered turbo over
++      // apps/labs/*. turbo 2.10.9 intersects --affected with explicit filters,
++      // so the PR shape narrows to affected labs only. The plan is empty while
++      // no lab workspace exists (runCiStepLane's skip path), keeping the
++      // zero-lab and delete-last-lab trees green — turbo rejects any filter
++      // naming an absent directory. Direct turbo invocation on hosted 16GB
++      // runners keeps the 16GB-survival concurrency cap.
++      labs: () =>
++        options.labsPresent === true
++          ? [
++              QualityTaskStep.make({
++                label: "ci:labs",
++                command: "bunx",
++                args: [
++                  "turbo",
++                  "run",
++                  "check",
++                  "lint",
++                  "test",
++                  HOSTED_16GB_TURBO_CONCURRENCY_ARG,
++                  LABS_INCLUDE_TURBO_FILTER,
++                  ...turboShapeArgs(options),
++                ],
++                cwd: repoRoot,
++                ...(options.affected ? { env: { TURBO_SCM_BASE: options.base } } : {}),
++              }),
++            ]
++          : A.empty<QualityTaskStep>(),
+       // Required Lint Policy owns the repo-policy battery. The Lint context
+       // therefore runs only the package Turbo graph instead of duplicating
+       // that battery through the root `bun run lint` aggregate.
+-      lint: () => [turboTaskLaneStep(repoRoot, "lint", "lint", [HOSTED_16GB_TURBO_CONCURRENCY_ARG], options)],
++      lint: () => [
++        turboTaskLaneStep(
++          repoRoot,
++          "lint",
++          "lint",
++          [HOSTED_16GB_TURBO_CONCURRENCY_ARG, ...labsExcludeFilterArgs(options)],
++          options
++        ),
++      ],
+       "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
+       nix: () => [
+         QualityTaskStep.make({
+@@ -939,9 +1023,23 @@ export const ciLaneStepsForTesting: {
+       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
+       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
+       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
+-      "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
++      "test-integration": () => [
++        turboRootLaneStep(
++          repoRoot,
++          "test-integration",
++          "test",
++          ["--integration", ...labsExcludeFilterArgs(options)],
++          options
++        ),
++      ],
+       "test-unit": () => [
+-        turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", HOSTED_16GB_TURBO_CONCURRENCY_ARG], options),
++        turboRootLaneStep(
++          repoRoot,
++          "test-unit",
++          "test",
++          ["--unit", HOSTED_16GB_TURBO_CONCURRENCY_ARG, ...labsExcludeFilterArgs(options)],
++          options
++        ),
+       ],
+     })
+ );
+@@ -1071,11 +1169,15 @@ export const runCiLane = Effect.fn("CiLane.runCiLane")(function* (
+   options: CiLaneRunOptions
+ ): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
+   const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
++  // Lane plans are pure; the one tree-state input (does a lab workspace
++  // exist?) is detected here once and threaded through the options.
++  const labsPresent = yield* detectLabsWorkspacePresence(repoRoot);
++  const resolvedOptions = CiLaneRunOptions.make({ ...options, labsPresent });
+ 
+   yield* pipe(
+     Match.value(laneId),
+-    Match.when("fallow", () => runCiFallowLane(repoRoot, options)),
+-    Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, options))
++    Match.when("fallow", () => runCiFallowLane(repoRoot, resolvedOptions)),
++    Match.orElse((stepLaneId) => runCiStepLane(repoRoot, stepLaneId, resolvedOptions))
+   );
+ });
+ 
+@@ -1217,6 +1319,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
+   "build",
+   "test-unit",
+   "ecosystem",
++  "labs",
+   "test-integration",
+   "property",
+   "docgen",
+@@ -1319,6 +1422,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
+     fallow: () => ["--base", plan.base, "--validate-envelopes"],
+     "jsdoc-ratchet": A.empty<string>,
+     knip: A.empty<string>,
++    labs: () => affectedFlags,
+     lint: () => affectedFlags,
+     "lint-policy": A.empty<string>,
+     nix: A.empty<string>,
+diff --git a/packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts b/packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts
+index 088423af91..cc92028716 100644
+--- a/packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts
++++ b/packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts
+@@ -6,10 +6,12 @@
+  */
+ 
+ import { DomainError, getWorkspaceDir, resolveWorkspaceDirs, TSMorphService } from "@beep/repo-utils";
++import { normalizePath } from "@beep/schema";
+ import { A, Str, Text } from "@beep/utils";
+ import * as O from "@beep/utils/Option";
+ import { Effect, FileSystem, Order, Path, pipe } from "effect";
+ import { Project, SyntaxKind } from "ts-morph";
++import { isLabsWorkspaceDir } from "../../../internal/cli/Labs/LabsPath.ts";
+ import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
+ 
+ /**
+@@ -126,6 +128,15 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
+ /**
+  * Add a package segment and typed identity export to `@beep/identity`.
+  *
++ * **Details**
++ *
++ * Registration is group-aware: lab workspaces (`apps/labs/<name>`) are owned
++ * by the whole-region labs writer (`syncLabsIdentitySegment`), so passing a
++ * lab's repo-relative directory refuses loudly instead of silently appending
++ * the slug to the package compose group. Membership is checked across every
++ * compose group so a slug already owned by the generated labs group is never
++ * duplicated into the package group.
++ *
+  * **Example** (Register package identity export)
+  *
+  * ```ts
+@@ -143,17 +154,23 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
+  * @category utilities
+  * @since 0.0.0
+  */
+-const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesFilePath: string, packageName: string) {
++const ensureIdentityPackageRegistration = Effect.fn(function* (
++  identityPackagesFilePath: string,
++  packageName: string,
++  packageRelativeDir?: string
++) {
++  if (packageRelativeDir !== undefined && isLabsWorkspaceDir(packageRelativeDir)) {
++    return yield* DomainError.make({
++      message: `Lab workspace "@beep/${packageName}" (${packageRelativeDir}) registers through the generated labs identity segment; run syncLabsIdentitySegment instead of appending to the package compose group.`,
++    });
++  }
++
+   const tsMorphService = yield* TSMorphService;
+   return yield* tsMorphService.updateSourceFile(identityPackagesFilePath, (sourceFile) => {
+     const composersDeclaration =
+       sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers");
+     const composersCall = composersDeclaration.getInitializerIfKindOrThrow(SyntaxKind.CallExpression);
+-    const existingSegments = pipe(
+-      composersCall.getArguments(),
+-      A.flatMap((argument) => pipe(O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)), O.toArray)),
+-      A.map((literal) => literal.getLiteralText())
+-    );
++    const existingSegments = A.flatMap(composeCallExpressions(sourceFile), stringLiteralArgumentTexts);
+ 
+     if (!A.some(existingSegments, Str.equivalence(packageName))) {
+       composersCall.addArgument(`"${packageName}"`);
+@@ -175,6 +192,23 @@ const composeCallExpressions = (sourceFile: SourceFile): ReadonlyArray<CallExpre
+     )
+   );
+ 
++/**
++ * Read every string-literal argument text from one call expression.
++ *
++ * @param call - Call expression whose arguments are inspected.
++ * @returns The literal texts of the call's string-literal arguments.
++ * @category getters
++ * @since 0.0.0
++ */
++const stringLiteralArgumentTexts = (call: CallExpression): ReadonlyArray<string> =>
++  A.flatMap(call.getArguments(), (argument) =>
++    pipe(
++      O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)),
++      O.map((literal) => literal.getLiteralText()),
++      O.toArray
++    )
++  );
++
+ const removeComposeSlugArguments = (call: CallExpression, packageName: string): void => {
+   const arguments_ = call.getArguments();
+   for (let index = A.length(arguments_) - 1; index >= 0; index -= 1) {
+@@ -208,14 +242,207 @@ const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: str
+   }
+ };
+ 
++// ── Generated labs identity segment ──────────────────────────────────────────
++//
++// Lab workspaces (`apps/labs/<name>`) never register through per-slug appends:
++// one writer derives the ENTIRE labs region — the `generatedLabComposers`
++// compose group, its spread in the merged `composers` object, and the
++// marker-fenced export block — from the live workspace catalog and replaces it
++// atomically. With zero labs the region is absent and the registry is
++// byte-identical to its pre-labs shape.
++
++/**
++ * Variable name anchoring the generated labs compose group.
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++const LABS_COMPOSE_GROUP_NAME = "generatedLabComposers";
++/**
++ * Comment line rendered directly above the generated labs compose group.
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++const LABS_COMPOSE_GROUP_COMMENT = "// GENERATED from workspace package manifests under apps/labs/*.";
++/**
++ * Opening fence marker of the generated lab export block.
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++const LAB_EXPORTS_START_MARKER = "// GENERATED LAB EXPORTS START";
++/**
++ * Closing fence marker of the generated lab export block.
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++const LAB_EXPORTS_END_MARKER = "// GENERATED LAB EXPORTS END";
++/** Merge-object anchor the labs compose region is inserted above. */
++const COMPOSERS_MERGE_ANCHOR = "const composers = {";
++/** Spread line the labs spread is inserted below. */
++const PACKAGE_COMPOSERS_SPREAD_LINE = "  ...generatedComposers,";
++/** Spread line binding the labs compose group into the merged composers. */
++const LABS_COMPOSERS_SPREAD_LINE = "  ...generatedLabComposers,";
++/** Widest generated line before the compose group renders one slug per line. */
++const MAX_GENERATED_LINE_WIDTH = 120;
++
++// Strip patterns tolerate drift (missing comment, reformatted arguments) so a
++// re-sync always converges back onto the canonical shapes rendered below.
++const LABS_COMPOSE_REGION_PATTERN =
++  /(?:\/\/ GENERATED from workspace package manifests under apps\/labs\/\*\.\n)?const generatedLabComposers = \$I\.compose\([^)]*\);\n\n?/;
++const LABS_SPREAD_LINE_PATTERN = /\n {2}\.\.\.generatedLabComposers,/;
++const LABS_EXPORT_BLOCK_PATTERN = /\n?\/\/ GENERATED LAB EXPORTS START\n[\s\S]*?\/\/ GENERATED LAB EXPORTS END\n?/;
++const LABS_EXPORT_BLOCK_INNER_PATTERN = /\/\/ GENERATED LAB EXPORTS START\n([\s\S]*?)\/\/ GENERATED LAB EXPORTS END/;
++
++const quotedSlug = (slug: string): string => `"${slug}"`;
++
++const renderLabsComposeDeclaration = (labSlugs: ReadonlyArray<string>): string => {
++  const inline = `const ${LABS_COMPOSE_GROUP_NAME} = $I.compose(${A.join(A.map(labSlugs, quotedSlug), ", ")});`;
++  return Str.length(inline) <= MAX_GENERATED_LINE_WIDTH
++    ? inline
++    : Text.joinLines([
++        `const ${LABS_COMPOSE_GROUP_NAME} = $I.compose(`,
++        A.join(
++          A.map(labSlugs, (slug) => `  ${quotedSlug(slug)}`),
++          ",\n"
++        ),
++        ");",
++      ]);
++};
++
++const labIdentityExportLine = (slug: string): string => {
++  const accessorName = toIdentityAccessorName(slug);
++  return `export const ${accessorName}: Identity.IdentityComposer<"@beep/${slug}"> = composers.${accessorName};`;
++};
++
++const renderLabsExportBlock = (labSlugs: ReadonlyArray<string>): string =>
++  Text.joinLines([LAB_EXPORTS_START_MARKER, ...A.map(labSlugs, labIdentityExportLine), LAB_EXPORTS_END_MARKER]);
++
++const stripLabsIdentityRegions = (registryContent: string): string =>
++  pipe(
++    registryContent,
++    Str.replace(LABS_COMPOSE_REGION_PATTERN, Str.empty),
++    Str.replace(LABS_SPREAD_LINE_PATTERN, Str.empty),
++    Str.replace(LABS_EXPORT_BLOCK_PATTERN, Str.empty)
++  );
++
++const hasLabsInsertionAnchors = (registryContent: string): boolean =>
++  Str.includes(COMPOSERS_MERGE_ANCHOR)(registryContent) && Str.includes(PACKAGE_COMPOSERS_SPREAD_LINE)(registryContent);
++
++const insertLabsIdentityRegions = (registryContent: string, labSlugs: ReadonlyArray<string>): string =>
++  pipe(
++    registryContent,
++    Str.replace(
++      COMPOSERS_MERGE_ANCHOR,
++      `${LABS_COMPOSE_GROUP_COMMENT}\n${renderLabsComposeDeclaration(labSlugs)}\n\n${COMPOSERS_MERGE_ANCHOR}`
++    ),
++    Str.replace(PACKAGE_COMPOSERS_SPREAD_LINE, `${PACKAGE_COMPOSERS_SPREAD_LINE}\n${LABS_COMPOSERS_SPREAD_LINE}`),
++    (content) => `${content}\n${renderLabsExportBlock(labSlugs)}\n`
++  );
++
++/**
++ * Compute the registry content with the generated labs region synced to the
++ * given lab slugs: the previous region (compose group, composers spread, and
++ * marker-fenced export block) is stripped and, when at least one lab exists,
++ * re-rendered sorted by slug. Zero labs restore the pre-labs bytes exactly.
++ *
++ * @param registryContent - Current text of the identity `packages.ts` file.
++ * @param labSlugs - Lab workspace slugs to materialize (deduped and sorted).
++ * @returns The registry content with the labs region synced.
++ * @category utilities
++ * @since 0.0.0
++ */
++const syncedLabsIdentityRegistryContent = (registryContent: string, labSlugs: ReadonlyArray<string>): string => {
++  const stripped = stripLabsIdentityRegions(registryContent);
++  const sorted = A.sort(A.dedupe(labSlugs), Order.String);
++  return A.isReadonlyArrayNonEmpty(sorted) ? insertLabsIdentityRegions(stripped, sorted) : stripped;
++};
++
++const labsComposeGroupSlugsOf = (sourceFile: SourceFile): O.Option<ReadonlyArray<string>> =>
++  pipe(
++    O.fromNullishOr(sourceFile.getVariableDeclaration(LABS_COMPOSE_GROUP_NAME)),
++    O.flatMap((declaration) => O.fromNullishOr(declaration.getInitializerIfKind(SyntaxKind.CallExpression))),
++    O.map(stringLiteralArgumentTexts)
++  );
++
++/**
++ * Read the slugs declared by the `generatedLabComposers` compose group, or an
++ * empty array when the labs group is absent.
++ *
++ * @param registryContent - Current text of the identity `packages.ts` file.
++ * @returns Sorted slugs declared inside the labs compose group.
++ * @category getters
++ * @since 0.0.0
++ */
++const labIdentityComposerGroupSlugs = (registryContent: string): ReadonlyArray<string> => {
++  const project = new Project({ useInMemoryFileSystem: true });
++  const sourceFile = project.createSourceFile("packages.ts", registryContent);
++  return pipe(labsComposeGroupSlugsOf(sourceFile), O.map(A.sort(Order.String)), O.getOrElse(A.empty<string>));
++};
++
++/**
++ * Read composer slugs declared by every compose group EXCEPT the generated
++ * labs group — the package-side placement universe for the labs lint.
++ *
++ * @param registryContent - Current text of the identity `packages.ts` file.
++ * @returns Sorted composer slugs found outside the labs compose group.
++ * @category getters
++ * @since 0.0.0
++ */
++const packageIdentityComposerGroupSlugs = (registryContent: string): ReadonlyArray<string> => {
++  const project = new Project({ useInMemoryFileSystem: true });
++  const sourceFile = project.createSourceFile("packages.ts", registryContent);
++  return A.sort(
++    A.flatMap(sourceFile.getVariableDeclarations(), (declaration) =>
++      Str.equivalence(declaration.getName(), LABS_COMPOSE_GROUP_NAME)
++        ? A.empty<string>()
++        : pipe(
++            O.fromNullishOr(declaration.getInitializerIfKind(SyntaxKind.CallExpression)),
++            O.filter((call) => Str.endsWith(".compose")(call.getExpression().getText())),
++            O.map(stringLiteralArgumentTexts),
++            O.getOrElse(A.empty<string>)
++          )
++    ),
++    Order.String
++  );
++};
++
++/**
++ * Read package slugs exported inside the GENERATED LAB EXPORTS markers, or an
++ * empty array when the marker block is absent.
++ *
++ * @param registryContent - Current text of the identity `packages.ts` file.
++ * @returns Sorted package slugs exported inside the labs marker block.
++ * @category getters
++ * @since 0.0.0
++ */
++const labIdentityExportBlockSlugs = (registryContent: string): ReadonlyArray<string> =>
++  pipe(
++    Str.match(LABS_EXPORT_BLOCK_INNER_PATTERN)(registryContent),
++    O.flatMap((matched) => O.fromNullishOr(matched[1])),
++    O.map(registeredIdentityExportSlugs),
++    O.getOrElse(A.empty<string>)
++  );
++
++const labsIdentityEntryFilter =
++  (repoRoot: string, path: Path.Path) =>
++  ([, dir]: readonly [slug: string, dir: string]): boolean =>
++    isLabsWorkspaceDir(normalizePath(path.relative(repoRoot, dir)));
++
+ /**
+  * Remove a package segment and every dedicated identity export from `@beep/identity`.
+  *
+  * **Details**
+  *
+- * The removal visits every `$I.compose(...)` declaration so it also supports the
+- * generated labs group when that P2 writer lands. Dedicated exports and manual
+- * casing aliases are removed by their package identity or composer initializer.
++ * Slugs owned by the `generatedLabComposers` group are removed by rewriting
++ * the whole generated labs region (statement-level surgery would take the
++ * fence markers with it as leading trivia); removing the last lab collapses
++ * the region entirely, restoring the pre-labs registry bytes. Every other
++ * slug follows the package path: the removal visits every `$I.compose(...)`
++ * declaration, and dedicated exports and manual casing aliases are removed by
++ * their package identity or composer initializer.
+  *
+  * **Example** (Build an identity removal effect)
+  *
+@@ -237,6 +464,18 @@ const removeIdentityPackageRegistration = Effect.fn("IdentityRegistration.remove
+   function* (identityPackagesFilePath: string, packageName: string) {
+     const tsMorphService = yield* TSMorphService;
+     return yield* tsMorphService.updateSourceFile(identityPackagesFilePath, (sourceFile) => {
++      const labsGroup = labsComposeGroupSlugsOf(sourceFile);
++
++      if (O.isSome(labsGroup) && A.some(labsGroup.value, Str.equivalence(packageName))) {
++        sourceFile.replaceWithText(
++          syncedLabsIdentityRegistryContent(
++            sourceFile.getFullText(),
++            A.filter(labsGroup.value, (slug) => !Str.equivalence(slug, packageName))
++          )
++        );
++        return;
++      }
++
+       for (const call of composeCallExpressions(sourceFile)) removeComposeSlugArguments(call, packageName);
+       removeAccessorExportStatements(sourceFile, packageName);
+     });
+@@ -325,23 +564,6 @@ const missingIdentityRegistrations = (
+     (name) => !Str.includes(`"${name}"`)(registryContent) || !accessorExportPattern(name).test(registryContent)
+   );
+ 
+-/**
+- * Read every string-literal argument text from one call expression.
+- *
+- * @param call - Call expression whose arguments are inspected.
+- * @returns The literal texts of the call's string-literal arguments.
+- * @category getters
+- * @since 0.0.0
+- */
+-const stringLiteralArgumentTexts = (call: CallExpression): ReadonlyArray<string> =>
+-  A.flatMap(call.getArguments(), (argument) =>
+-    pipe(
+-      O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)),
+-      O.map((literal) => literal.getLiteralText()),
+-      O.toArray
+-    )
+-  );
+-
+ /**
+  * Read composer slugs declared by every `$I.compose(...)` group in registry source.
+  *
+@@ -431,10 +653,70 @@ const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectW
+   );
+ });
+ 
++/**
++ * Sync the generated labs identity segment from the live workspace catalog.
++ *
++ * **Details**
++ *
++ * Derives the lab slugs (workspace directories exactly one level under
++ * `apps/labs/`), then atomically replaces, creates, or removes the entire
++ * generated labs region in the identity registry via
++ * `syncedLabsIdentityRegistryContent`. Fails with a `DomainError` when labs
++ * exist but the registry lacks the merged `composers` anchors the region is
++ * spliced around. Returns the sorted lab slugs the region now declares.
++ *
++ * **Example** (Sync the labs identity segment)
++ *
++ * ```ts
++ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
++ * import { Effect } from "effect"
++ *
++ * const program = CreatePackageIdentityRegistration.syncLabsIdentitySegment("/repo")
++ * console.log(Effect.isEffect(program)) // true
++ * ```
++ *
++ * @category utilities
++ * @since 0.0.0
++ */
++const syncLabsIdentitySegment = Effect.fn("IdentityRegistration.syncLabsIdentitySegment")(function* (repoRoot: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const identityPackagesFilePath = yield* resolveIdentityPackagesFilePath(repoRoot);
++  const entries = yield* collectWorkspaceIdentityEntries(repoRoot);
++  const isLabsEntry = labsIdentityEntryFilter(repoRoot, path);
++  const labSlugs = A.flatMap(entries, (entry) => (isLabsEntry(entry) ? A.of(entry[0]) : A.empty<string>()));
++  const absolutePath = path.join(repoRoot, identityPackagesFilePath);
++  const original = yield* fs
++    .readFileString(absolutePath)
++    .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${absolutePath}"`)));
++
++  if (A.isReadonlyArrayNonEmpty(labSlugs) && !hasLabsInsertionAnchors(stripLabsIdentityRegions(original))) {
++    return yield* DomainError.make({
++      message: `Unable to sync the generated labs identity segment: "${identityPackagesFilePath}" is missing the "${COMPOSERS_MERGE_ANCHOR}" merge object with a "${Str.trim(PACKAGE_COMPOSERS_SPREAD_LINE)}" spread.`,
++    });
++  }
++
++  const next = syncedLabsIdentityRegistryContent(original, labSlugs);
++
++  if (!Str.equivalence(next, original)) {
++    yield* fs
++      .writeFileString(absolutePath, next)
++      .pipe(Effect.mapError(DomainError.newCause(`Failed to write "${absolutePath}"`)));
++  }
++
++  return labSlugs;
++});
++
+ /**
+  * Register every workspace package missing from the identity composer
+  * registry, returning the slugs that were registered.
+  *
++ * **Details**
++ *
++ * Lab workspaces are partitioned out of the per-slug append path and
++ * materialized by `syncLabsIdentitySegment` (whole-region rewrite), so a
++ * missing lab can never land in the package compose group.
++ *
+  * **Example** (Register missing workspace packages)
+  *
+  * ```ts
+@@ -459,16 +741,23 @@ const registerMissingWorkspaceIdentityPackages = Effect.fn(
+   const registryContent = yield* fs
+     .readFileString(absolutePath)
+     .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${absolutePath}"`)));
++  const isLabsEntry = labsIdentityEntryFilter(repoRoot, path);
+   const missing = missingIdentityRegistrations(
+     registryContent,
+-    A.map(entries, ([slug]) => slug)
++    A.flatMap(entries, (entry) => (isLabsEntry(entry) ? A.empty<string>() : A.of(entry[0])))
++  );
++  const missingLabs = missingIdentityRegistrations(
++    registryContent,
++    A.flatMap(entries, (entry) => (isLabsEntry(entry) ? A.of(entry[0]) : A.empty<string>()))
+   );
+ 
+   for (const slug of missing) {
+     yield* ensureIdentityPackageRegistration(identityPackagesFilePath, slug);
+   }
+ 
+-  return missing;
++  yield* syncLabsIdentitySegment(repoRoot);
++
++  return A.appendAll(missing, missingLabs);
+ });
+ 
+ /**
+@@ -490,12 +779,21 @@ export const CreatePackageIdentityRegistration = {
+   collectWorkspaceIdentityEntries,
+   ensureIdentityPackageRegistration,
+   identityPackageRegistrationNeeded,
++  LAB_EXPORTS_END_MARKER,
++  LAB_EXPORTS_START_MARKER,
++  labIdentityComposerGroupSlugs,
++  labIdentityExportBlockSlugs,
++  LABS_COMPOSE_GROUP_COMMENT,
++  LABS_COMPOSE_GROUP_NAME,
+   missingIdentityRegistrations,
++  packageIdentityComposerGroupSlugs,
+   registeredIdentityComposerSlugs,
+   registeredIdentityExportSlugs,
+   registerMissingWorkspaceIdentityPackages,
+   removeIdentityPackageRegistration,
+   resolveIdentityPackagesFilePath,
++  syncedLabsIdentityRegistryContent,
++  syncLabsIdentitySegment,
+   toIdentityAccessorName,
+   typedIdentityExportBlock,
+ } as const;
+diff --git a/packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts b/packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts
+index 1374d96d86..35ec078162 100644
+--- a/packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts
++++ b/packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts
+@@ -27,6 +27,9 @@ const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
+ 
+ const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.json", "infra/docgen.json"] as const;
+ const DOCGEN_CONFIG_SCAN_IGNORES = [
++  // Lab apps are docgen-exempt (goals/lab-apps-lifecycle SPEC D5): a stray lab
++  // docgen.json neither registers for docgen nor reports as an orphan.
++  "apps/labs/**",
+   "**/.git/**",
+   "**/.turbo/**",
+   "**/build/**",
+diff --git a/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts b/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts
+new file mode 100644
+index 0000000000..1290e9eddc
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts
+@@ -0,0 +1,67 @@
++/**
++ * Lab-app lifecycle command group.
++ *
++ * `beep labs list` renders every lab under `apps/labs/*` from its decoded
++ * `lab.manifest.json` (SPEC D9): name, disposition, purpose, and creation
++ * date, stable-sorted by lab directory. A lab with a missing or invalid
++ * manifest is reported as a failing row and the command exits nonzero; the
++ * zero-lab tree (also the delete-last-lab state) prints a friendly empty state
++ * and exits zero.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { findRepoRoot } from "@beep/repo-utils";
++import { A } from "@beep/utils";
++import { Console, DateTime, Effect } from "effect";
++import { Command } from "effect/unstable/cli";
++import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
++import { LAB_MANIFEST_FILE_NAME } from "../../internal/cli/Labs/LabManifest.schemas.ts";
++import { isFailedLabRow, LabListRow, listLabRows } from "../../internal/cli/Labs/LabsDiscovery.ts";
++import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/LabsPath.ts";
++import { printLines } from "../../internal/cli/Printer.ts";
++
++const renderLabRow = LabListRow.match({
++  decoded: (row) =>
++    `- ${row.lab.packageName} ${row.lab.dir} [${row.manifest.disposition}] created ${DateTime.formatIso(
++      row.manifest.created
++    )} purpose: ${row.manifest.purpose}`,
++  failed: (row) => `- ${row.lab.packageName} ${row.lab.dir} MANIFEST ERROR: ${row.reason}`,
++});
++
++const listHandler = Effect.fn("Labs.list")(function* () {
++  const repoRoot = yield* findRepoRoot();
++  const rows = yield* listLabRows(repoRoot);
++  if (A.isReadonlyArrayEmpty(rows)) {
++    yield* Console.log(`[labs] no labs exist under ${LABS_WORKSPACE_ROOT}.`);
++    return;
++  }
++  yield* Console.log(`[labs] ${A.length(rows)} lab(s) under ${LABS_WORKSPACE_ROOT}:`);
++  yield* printLines(A.map(rows, renderLabRow));
++  const failures = A.filter(rows, isFailedLabRow);
++  if (A.isReadonlyArrayNonEmpty(failures)) {
++    yield* Console.error(`[labs] ${A.length(failures)} lab(s) have a missing or invalid ${LAB_MANIFEST_FILE_NAME}.`);
++    return yield* failWithReportedExit("labs list: manifest failures found.");
++  }
++});
++
++const labsListCommand = Command.make("list", {}, listHandler).pipe(
++  Command.withDescription("List every lab under apps/labs with its decoded manifest")
++);
++
++/**
++ * `bun run beep labs` — lab-app lifecycle command group.
++ *
++ * **Example** (List labs)
++ *
++ * ```ts
++ * console.log("bun run beep labs list")
++ * ```
++ *
++ * @category cli-commands
++ * @since 0.0.0
++ */
++export const labsCommand = Command.make("labs", {}, () =>
++  printLines(["Labs commands:", "- bun run beep labs list"])
++).pipe(Command.withDescription("Lab-app lifecycle tooling (list)"), Command.withSubcommands([labsListCommand]));
+diff --git a/packages/tooling/tool/cli/src/commands/Labs/index.ts b/packages/tooling/tool/cli/src/commands/Labs/index.ts
+new file mode 100644
+index 0000000000..1ac1b78a9b
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/commands/Labs/index.ts
+@@ -0,0 +1,14 @@
++/**
++ * Labs command facade.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++/**
++ * Public labs command export.
++ *
++ * @category cli-commands
++ * @since 0.0.0
++ */
++export * from "./Labs.command.ts";
+diff --git a/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts b/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts
+index be5061f40f..8cb0d948d7 100644
+--- a/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts
++++ b/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts
+@@ -6,7 +6,9 @@
+  * `$I.compose(...)` call and a dedicated `export const $XxxId` block in
+  * `packages/foundation/modeling/identity/src/packages.ts`, and no package
+  * outside `@beep/identity` constructs a local root composer via the
+- * identity `make(...)` export.
++ * identity `make(...)` export. Lab workspaces (`apps/labs/*`) additionally
++ * must be placed inside the generated labs segment (`generatedLabComposers`
++ * group plus the GENERATED LAB EXPORTS marker block) and nowhere else.
+  *
+  * @packageDocumentation
+  * @since 0.0.0
+@@ -22,6 +24,7 @@ import * as S from "effect/Schema";
+ import { Command, Flag } from "effect/unstable/cli";
+ import { Node, Project } from "ts-morph";
+ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
++import { isLabsWorkspaceDir } from "../../internal/cli/Labs/LabsPath.ts";
+ import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
+ 
+ const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
+@@ -228,6 +231,63 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
+     });
+   });
+ 
++  // Labs placement: lab workspaces belong inside the generated labs segment
++  // (generatedLabComposers group + GENERATED LAB EXPORTS markers) and nowhere
++  // else — missing, extra, and wrong-group entries all fail in both directions.
++  const labsGroupName = CreatePackageIdentityRegistration.LABS_COMPOSE_GROUP_NAME;
++  const labSlugs = A.map(
++    A.filter(slugsToDirs, ([, dir]) => isLabsWorkspaceDir(normalizePath(path.relative(repoRoot, dir)))),
++    ([slug]) => slug
++  );
++  const labSlugSet = HashSet.fromIterable(labSlugs);
++  const labGroupSlugs = CreatePackageIdentityRegistration.labIdentityComposerGroupSlugs(registryContent);
++  const labExportSlugs = CreatePackageIdentityRegistration.labIdentityExportBlockSlugs(registryContent);
++  const labGroupSlugSet = HashSet.fromIterable(labGroupSlugs);
++  const labExportSlugSet = HashSet.fromIterable(labExportSlugs);
++  const packageGroupSlugSet = HashSet.fromIterable(
++    CreatePackageIdentityRegistration.packageIdentityComposerGroupSlugs(registryContent)
++  );
++  const labsRegionSlugs = A.sort(A.dedupe(A.appendAll(labGroupSlugs, labExportSlugs)), Order.String);
++  const labMissingViolations = A.map(
++    A.filter(labSlugs, (slug) => !HashSet.has(labGroupSlugSet, slug) || !HashSet.has(labExportSlugSet, slug)),
++    (slug) =>
++      IdentityRegistryViolation.make({
++        kind: "lab-missing-registration",
++        subject: `@beep/${slug}`,
++        detail: `Add "${slug}" to the ${labsGroupName} group and its export between the GENERATED LAB EXPORTS markers in ${identityPackagesFilePath}. ${FIX_HINT}`,
++      })
++  );
++  const labWrongGroupViolations = A.appendAll(
++    A.map(
++      A.filter(labSlugs, (slug) => HashSet.has(packageGroupSlugSet, slug)),
++      (slug) =>
++        IdentityRegistryViolation.make({
++          kind: "lab-wrong-group",
++          subject: `@beep/${slug}`,
++          detail: `Remove "${slug}" from the package $I.compose(...) group in ${identityPackagesFilePath}; lab workspaces register only inside ${labsGroupName}.`,
++        })
++    ),
++    A.map(
++      A.filter(labsRegionSlugs, (slug) => HashSet.has(liveSlugs, slug) && !HashSet.has(labSlugSet, slug)),
++      (slug) =>
++        IdentityRegistryViolation.make({
++          kind: "lab-wrong-group",
++          subject: `@beep/${slug}`,
++          detail: `Remove "${slug}" from the generated labs identity segment in ${identityPackagesFilePath}; it is not an apps/labs workspace. ${FIX_HINT}`,
++        })
++    )
++  );
++  const labOrphanViolations = A.map(
++    A.filter(labsRegionSlugs, (slug) => !HashSet.has(liveSlugs, slug)),
++    (slug) =>
++      IdentityRegistryViolation.make({
++        kind: "lab-orphan-registration",
++        subject: `@beep/${slug}`,
++        detail: `Remove "${slug}" from the generated labs identity segment in ${identityPackagesFilePath}; no live lab workspace owns it. ${FIX_HINT}`,
++      })
++  );
++  const labsViolations = A.appendAll(A.appendAll(labMissingViolations, labWrongGroupViolations), labOrphanViolations);
++
+   const project = new Project({ skipAddingFilesFromTsConfig: true });
+   let localRootViolations = A.empty<IdentityRegistryViolation>();
+ 
+@@ -253,7 +313,10 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
+     }
+   }
+ 
+-  const violations = A.appendAll(A.appendAll(completenessViolations, orphanViolations), localRootViolations);
++  const violations = A.appendAll(
++    A.appendAll(A.appendAll(completenessViolations, orphanViolations), labsViolations),
++    localRootViolations
++  );
+ 
+   if (A.isReadonlyArrayNonEmpty(violations)) {
+     yield* Console.error(`[lint:identity-registry] found ${A.length(violations)} violation(s).`);
+diff --git a/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts b/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+index 530ad92b68..63b25687ff 100644
+--- a/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
++++ b/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+@@ -10,11 +10,12 @@
+ import { $RepoCliId } from "@beep/identity/packages";
+ import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+ import { normalizePath } from "@beep/schema";
+-import { A, Str, thunkEmptyStr } from "@beep/utils";
++import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
+ import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
+ import * as S from "effect/Schema";
+ import { Command, Flag } from "effect/unstable/cli";
+ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
++import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/LabsPath.ts";
+ import { printLines } from "../../internal/cli/Printer.ts";
+ import { runToExit } from "../../internal/process/StepExec.ts";
+ import { runGoalsDoctor } from "../Goals/Doctor.ts";
+@@ -49,6 +50,7 @@ const DEPRECATED_API_LINT_ESLINT_BIN = "node_modules/.bin/eslint";
+ const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=8192";
+ const DEPRECATED_API_LINT_SHARDS = [
+   "apps/architecture-lab-proof",
++  LABS_WORKSPACE_ROOT,
+   "apps/oip-web",
+   "apps/professional-desktop",
+   "infra",
+@@ -470,6 +472,24 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
+     return;
+   }
+ 
++  // The labs root holds workspaces only between lab creation and deletion
++  // (goals/lab-apps-lifecycle SPEC D5), and ESLint 9 fails a positional target
++  // matching no files — so the apps/labs shard participates only while
++  // lintable TypeScript sources exist beneath it (zero-lab and delete-last-lab
++  // trees stay green). Every ratified lab kind ships root-level `.ts` configs
++  // (vite/next/vitest), so `collectTypeScriptFiles` skipping `.tsx` cannot
++  // hide a real lab from the law.
++  if (shard === LABS_WORKSPACE_ROOT) {
++    const hasLintableSources = yield* collectTypeScriptFiles(shard).pipe(
++      Effect.map(A.isReadonlyArrayNonEmpty),
++      Effect.orElseSucceed(thunkFalse)
++    );
++    if (!hasLintableSources) {
++      yield* Console.log(`[lint:deprecated-apis] skipping sourceless labs shard: ${shard}`);
++      return;
++    }
++  }
++
+   const hasLocalEslint = yield* fs.exists(DEPRECATED_API_LINT_ESLINT_BIN).pipe(Effect.orElseSucceed(() => false));
+   const command = hasLocalEslint ? `./${DEPRECATED_API_LINT_ESLINT_BIN}` : "bunx";
+   const eslintArgs = [
+diff --git a/packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts b/packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts
+index 4bcb675a53..a1f96374dc 100644
+--- a/packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts
++++ b/packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts
+@@ -65,20 +65,29 @@ export const qaRootPath: {
+ /**
+  * Portless URL of a repo dev-server app.
+  *
+- * **Example** (Building app portless URL)
++ * **Details**
++ *
++ * The `--app` value mirrors the workspace path under `apps/`: its path
++ * segments, reversed, become the host labels. Single-segment apps keep their
++ * existing `<name>.beep.localhost` hostnames, while labs (`labs/<name>`)
++ * expand to `<name>.labs.beep.localhost`.
++ *
++ * **Example** (Building app portless URLs)
+  *
+  * ```ts
+  * import { portlessUrlForApp } from "@beep/repo-cli/commands/Qa/Qa.session"
+  *
+  * console.log(portlessUrlForApp("storybook")) // "http://storybook.beep.localhost:1355"
++ * console.log(portlessUrlForApp("labs/graph-play")) // "http://graph-play.labs.beep.localhost:1355"
+  * ```
+  *
+- * @param app - Portless app name, for example storybook.
++ * @param app - Portless app path under `apps/`, for example `storybook` or `labs/graph-play`.
+  * @returns The app's canonical portless dev-server URL.
+  * @category utilities
+  * @since 0.0.0
+  */
+-export const portlessUrlForApp = (app: string): string => `http://${app}.beep.localhost:${PORTLESS_PORT}`;
++export const portlessUrlForApp = (app: string): string =>
++  `http://${pipe(app, Str.split("/"), A.reverse, A.join("."))}.beep.localhost:${PORTLESS_PORT}`;
+ 
+ /**
+  * The page a capture round drives, with the CORS origins its witness may post from.
+@@ -145,7 +154,8 @@ export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`Captu
+     app: S.OptionFromOptionalKey(S.String).pipe(
+       SchemaUtils.withNoneDefault,
+       $I.annoteKey("CaptureTargetRequest.app", {
+-        description: "Portless app name to expand into a dev-server URL.",
++        description:
++          "Portless app path under `apps/` (`storybook`, or `labs/<name>` for labs) to expand into a dev-server URL.",
+       })
+     ),
+     url: S.OptionFromOptionalKey(S.String).pipe(
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts b/packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts
+index c2ace695d4..a1c2279b58 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts
+@@ -21,6 +21,7 @@ import { FetchHttpClient } from "effect/unstable/http";
+ import { XMLParser } from "fast-xml-parser";
+ import { parse } from "jsonc-parser";
+ import { configStringEqualsSync } from "../../internal/cli/EnvConfig.ts";
++import { isLabsOwnedPath } from "../../internal/cli/Labs/LabsPath.ts";
+ import { printLines } from "../../internal/cli/Printer.ts";
+ import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
+ import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
+@@ -2076,7 +2077,11 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
+       return yield* withExitCode("lint:jsdoc-module-tags", "git", ["ls-files"], result.exitCode);
+     }
+ 
++    // Lab apps are ceremony-exempt (goals/lab-apps-lifecycle SPEC D5): the
++    // module-tag grammar does not govern apps/labs/**. Law-side scans (e.g.
++    // effect-diagnostics directives) keep labs in scope.
+     const isScannedPath = (filePath: string): boolean =>
++      !isLabsOwnedPath(filePath) &&
+       A.some(moduleTagScannedRoots, (root) => filePath === root || Str.startsWith(`${root}/`)(filePath)) &&
+       A.contains(moduleTagScannedExtensions as ReadonlyArray<string>, path.extname(filePath));
+     const violations = yield* Effect.forEach(
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+index 6f47c69c91..8b9e99818d 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+@@ -33,6 +33,7 @@ import {
+   isUnresolvedSecretReference,
+   turboEnvOverrides,
+ } from "../../internal/cli/EnvConfig.ts";
++import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/LabsPath.ts";
+ import {
+   formatCommandLine,
+   QualityTaskStep,
+@@ -45,6 +46,7 @@ import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+ import {
+   cleanCoverageRegressionOutputs,
+   compareCoverageRegressionBaseline,
++  coveragePlannerChangedFilesForTesting,
+   writeCoverageRegressionBaseline,
+ } from "./internal/CoverageRegression.ts";
+ import { CoverageScopeOwner, planCoverageAffectedScope, planCoverageFullShards } from "./internal/CoverageScope.ts";
+@@ -622,8 +624,12 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
+       })
+     )
+   );
+-  const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
+-    QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
++  // Labs-owned paths are invisible to the coverage planner (lab-apps-lifecycle
++  // D10): lab-only changes plan as noop instead of forcing a full fallback.
++  const changedFiles = coveragePlannerChangedFilesForTesting(
++    yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
++      QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
++    )
+   );
+   const path = yield* Path.Path;
+   const owners = yield* workspaceTaskOwners(repoRoot);
+@@ -673,7 +679,14 @@ const stripLintFixAggregateArgs: (args: ReadonlyArray<string>) => ReadonlyArray<
+ 
+ const shouldForceAggregateLintFix = (args: ReadonlyArray<string>): boolean => A.some(args, isLintFixAggregateArg);
+ 
+-const shouldRunRepoWideSteps = (args: ReadonlyArray<string>): boolean => !A.some(args, isExplicitTurboScopeArg);
++// The CI-required lanes exclude the labs family with exactly this negative
++// filter (CiLane.ts LABS_EXCLUDE_TURBO_FILTER). It narrows the turbo graph
++// without narrowing the repo, so the repo-wide tsgo steps must keep running
++// when it is the only scope argument in the stream.
++const LABS_EXCLUDE_TURBO_FILTER_ARG = `--filter=!./${LABS_WORKSPACE_ROOT}/**`;
++
++const shouldRunRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
++  !A.some(args, (arg) => isExplicitTurboScopeArg(arg) && arg !== LABS_EXCLUDE_TURBO_FILTER_ARG);
+ const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
+   !A.some(args, isExplicitTurboAffectedOrScopeArg);
+ 
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts b/packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts
+index 33a0357e86..96a358e826 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts
+@@ -30,6 +30,7 @@ import * as O from "effect/Option";
+ import * as R from "effect/Record";
+ import * as S from "effect/Schema";
+ import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
++import { isLabsOwnedPath, isLabsWorkspaceDir } from "../../../internal/cli/Labs/LabsPath.ts";
+ import { runCaptured } from "../../../internal/process/index.ts";
+ import { enforceRatchet } from "../../../internal/ratchet/index.ts";
+ import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
+@@ -39,6 +40,11 @@ import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
+ 
+ const $I = $RepoCliId.create("commands/Quality/internal/CoverageRegression");
+ 
++// Re-exported so test fixtures can construct the same workspace metadata this
++// module's coverage-universe seams consume (the Quality test-kit barrel does
++// not surface QualityArtifactSupport's classes directly).
++export { PackageJson, WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
++
+ /**
+  * Path to the committed coverage regression baseline.
+  *
+@@ -575,6 +581,53 @@ const metricNames = CoverageMetricName.Options;
+ const hasCoverageScript = (info: WorkspacePackageInfo): boolean =>
+   pipe(info.packageJson.scripts ?? {}, R.get("coverage"), O.isSome);
+ 
++// Labs (apps/labs/*) sit outside the coverage-regression universe entirely
++// (lab-apps-lifecycle SPEC D10): a lab that ships a coverage script is still
++// never snapshotted, never admitted by a baseline replacement write, and never
++// demanded as a disposition exemption entry.
++const isCoverageUniverseWorkspace = (info: WorkspacePackageInfo): boolean => !isLabsWorkspaceDir(info.path);
++
++/**
++ * Select the workspace packages the coverage disposition policy governs:
++ * every non-root workspace outside the labs family.
++ *
++ * @category testing
++ * @since 0.0.0
++ */
++export const coverageDispositionUniverseForTesting = (
++  workspacePackages: ReadonlyArray<WorkspacePackageInfo>
++): ReadonlyArray<WorkspacePackageInfo> =>
++  A.filter(workspacePackages, (info) => info.path !== "." && isCoverageUniverseWorkspace(info));
++
++/**
++ * Select and order the coverage-owning packages used for snapshot collection,
++ * baseline comparison, and replacement baseline writes: coverage-script owners
++ * outside the labs family.
++ *
++ * @category testing
++ * @since 0.0.0
++ */
++export const workspaceCoveragePackagesForTesting = (
++  workspacePackages: ReadonlyArray<WorkspacePackageInfo>
++): ReadonlyArray<WorkspacePackageInfo> =>
++  pipe(
++    workspacePackages,
++    A.filter((info) => hasCoverageScript(info) && isCoverageUniverseWorkspace(info)),
++    A.sort(Order.mapInput(Order.String, (info: WorkspacePackageInfo) => info.name))
++  );
++
++/**
++ * Drop labs-owned paths from the changed-file stream the affected coverage
++ * planner consumes, so lab-only changes (including lab deletions, whose paths
++ * no longer resolve to any workspace owner) can never force a full coverage
++ * fallback or select a lab for coverage.
++ *
++ * @category testing
++ * @since 0.0.0
++ */
++export const coveragePlannerChangedFilesForTesting = (changedFiles: ReadonlyArray<string>): ReadonlyArray<string> =>
++  A.filter(changedFiles, (filePath) => !isLabsOwnedPath(filePath));
++
+ /**
+  * Find workspace packages that have neither a coverage script nor a named exemption.
+  *
+@@ -613,10 +666,7 @@ const workspaceCoverageDispositionGaps = Effect.fn("CoverageRegression.workspace
+   const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
+     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage policy.")
+   );
+-  const workspacePackages = pipe(
+-    A.fromIterable(MutableHashMap.values(packageMap)),
+-    A.filter((info) => info.path !== ".")
+-  );
++  const workspacePackages = coverageDispositionUniverseForTesting(A.fromIterable(MutableHashMap.values(packageMap)));
+ 
+   return coverageDispositionGapsForTesting(
+     A.map(workspacePackages, (info) => info.name),
+@@ -765,11 +815,7 @@ const workspaceCoveragePackages = Effect.fn("CoverageRegression.workspaceCoverag
+     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage.")
+   );
+ 
+-  return pipe(
+-    A.fromIterable(MutableHashMap.values(packageMap)),
+-    A.filter(hasCoverageScript),
+-    A.sort(Order.mapInput(Order.String, (info: WorkspacePackageInfo) => info.name))
+-  );
++  return workspaceCoveragePackagesForTesting(A.fromIterable(MutableHashMap.values(packageMap)));
+ });
+ 
+ const readCoverageSummary = Effect.fn("CoverageRegression.readCoverageSummary")(function* (
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts b/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts
+index 207436d531..a8fdaf08ab 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts
+@@ -8,6 +8,7 @@ import * as R from "effect/Record";
+ import * as S from "effect/Schema";
+ import { Node, SyntaxKind } from "ts-morph";
+ import { formatJsonc } from "../../../internal/artifacts/index.ts";
++import { isLabsOwnedPath } from "../../../internal/cli/Labs/LabsPath.ts";
+ import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
+ import { runGitLines } from "../../../internal/repo-run/index.ts";
+ import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
+@@ -1478,11 +1479,12 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
+   // Ecosystem members are documented to the published-package grammar and
+   // gated by their own package docgen lane; the repo carrier grammar this
+   // inventory enforces does not govern them (standards/architecture/
+-  // 14-ecosystem-packages.md, Style-Law Scoping).
++  // 14-ecosystem-packages.md, Style-Law Scoping). Lab apps under apps/labs
++  // are ceremony-exempt disposable spikes (goals/lab-apps-lifecycle SPEC D5).
+   const inventoriedNames = A.filter(topoNames, (packageName) =>
+     O.match(MutableHashMap.get(packageByName, packageName), {
+       onNone: () => true,
+-      onSome: (info) => !Str.startsWith("packages/ecosystem/")(info.path),
++      onSome: (info) => !Str.startsWith("packages/ecosystem/")(info.path) && !isLabsOwnedPath(info.path),
+     })
+   );
+   const packages = yield* Effect.forEach(
+diff --git a/packages/tooling/tool/cli/src/commands/Root.ts b/packages/tooling/tool/cli/src/commands/Root.ts
+index 1315a7acf1..0ae5feace9 100644
+--- a/packages/tooling/tool/cli/src/commands/Root.ts
++++ b/packages/tooling/tool/cli/src/commands/Root.ts
+@@ -23,6 +23,7 @@ import { filesCommand } from "./Files/index.ts";
+ import { goalsCommand } from "./Goals/index.ts";
+ import { imageCommand } from "./Image/index.ts";
+ import { knowledgeCommand } from "./Knowledge/index.ts";
++import { labsCommand } from "./Labs/index.ts";
+ import { lawsCommand } from "./Laws/index.ts";
+ import { lintCommand } from "./Lint/index.ts";
+ import { purgeCommand } from "./Purge/index.ts";
+@@ -79,6 +80,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
+     goalsCommand as Command.Command<"goals", {}, {}, never, never>,
+     imageCommand,
+     knowledgeCommand,
++    labsCommand,
+     lintCommand,
+     lawsCommand,
+     qualityCommand,
+diff --git a/packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts b/packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts
+index 62cba695c6..16290241ed 100644
+--- a/packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts
++++ b/packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts
+@@ -35,6 +35,7 @@ import * as P from "effect/Predicate";
+ import * as R from "effect/Record";
+ import * as S from "effect/Schema";
+ import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
++import { isLabsWorkspaceDir } from "../../internal/cli/Labs/LabsPath.ts";
+ import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
+ import {
+   byPlannedChangeAscending,
+@@ -431,6 +432,16 @@ const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyA
+ /**
+  * Plan root tsconfig package-reference edits.
+  *
++ * **Details**
++ *
++ * Lab workspaces (`apps/labs/<name>`) are workspace members but never join
++ * the root `tsconfig.packages.json` solution: each lab carries its own local
++ * check instead. Because the expected reference set is rebuilt from the
++ * non-lab workspaces on every run, a hand-added lab reference surfaces (and
++ * is synced away) as drift. Labs stay visible to workspace discovery, the
++ * dependency index, package-local reference planning, and syncpack source
++ * derivation — only this root planner filters them.
++ *
+  * **Example** (Plan tsconfig synchronization)
+  *
+  * ```ts
+@@ -451,10 +462,16 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces:
+   const original = yield* readFileString(filePath);
+   const parsed = yield* parseJsonc(original, filePath, TsconfigWithReferences);
+ 
++  // `relativeDir` is already repo-relative POSIX (buildWorkspaceDescriptors),
++  // which is exactly the input contract the shared labs-path guard expects.
+   const expected = uniqueSorted(
+     pipe(
+       workspaces,
+-      A.flatMap((workspace) => (workspace.hasProjectTsconfig ? A.make(workspace.relativeDir) : A.empty<string>()))
++      A.flatMap((workspace) =>
++        workspace.hasProjectTsconfig && !isLabsWorkspaceDir(workspace.relativeDir)
++          ? A.make(workspace.relativeDir)
++          : A.empty<string>()
++      )
+     )
+   );
+ 
+diff --git a/packages/tooling/tool/cli/src/index.ts b/packages/tooling/tool/cli/src/index.ts
+index a8b7d103bc..a693e4ee03 100644
+--- a/packages/tooling/tool/cli/src/index.ts
++++ b/packages/tooling/tool/cli/src/index.ts
+@@ -199,6 +199,13 @@ export {
+    */
+   knowledgeCommand,
+ } from "./commands/Knowledge/index.ts";
++/**
++ * Lab-app lifecycle command group.
++ *
++ * @category cli-commands
++ * @since 0.0.0
++ */
++export { labsCommand } from "./commands/Labs/index.ts";
+ /**
+  * Effect laws command group.
+  *
+diff --git a/packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.schemas.ts b/packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.schemas.ts
+new file mode 100644
+index 0000000000..650b7b26ed
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.schemas.ts
+@@ -0,0 +1,63 @@
++/**
++ * Schema-first contracts for the lab-app manifest (`lab.manifest.json`).
++ *
++ * Every lab workspace under `apps/labs/<name>` carries one schema-validated
++ * manifest at its root (SPEC D9). The manifest is the machine-readable record
++ * of why the lab exists, when it was created, what the operator intends for it
++ * (disposition), and which local Postgres schema it owns, if any (SPEC D12 —
++ * delete-package reads that field to print the manual drop step). All reads go
++ * through {@link LabManifestJson}; the manifest is never hand-parsed.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $RepoCliId } from "@beep/identity/packages";
++import { LiteralKit } from "@beep/schema";
++import * as S from "effect/Schema";
++import { JsonStringCodec } from "../../schema/JsonCodec.ts";
++
++const $I = $RepoCliId.create("internal/cli/Labs/LabManifest");
++
++/** File name of the schema-validated manifest at every lab workspace root (SPEC D9). */
++export const LAB_MANIFEST_FILE_NAME = "lab.manifest.json";
++
++/**
++ * Operator-declared lab lifecycle intent (SPEC D9): `active` (in use),
++ * `promote` (earned a lawful durable home), `expired` (ready for deletion).
++ * States are inventory, not TTL — nothing acts on them automatically.
++ */
++export const LabDisposition = LiteralKit(["active", "promote", "expired"]).pipe(
++  $I.annoteSchema("LabDisposition", {
++    description: "Operator-declared lab lifecycle intent: active, promote, or expired.",
++  })
++);
++export type LabDisposition = typeof LabDisposition.Type;
++
++/** Guard derived from {@link LabDisposition}. */
++export const isLabDisposition = S.is(LabDisposition);
++
++/**
++ * Decoded `lab.manifest.json` contract. The encoded `created` field is a UTC
++ * ISO 8601 string; `postgresSchema` is an optional key that decodes to an
++ * `Option` (absent for labs without a local data resource).
++ */
++export class LabManifest extends S.Class<LabManifest>($I`LabManifest`)(
++  {
++    purpose: S.NonEmptyString,
++    created: S.DateTimeUtcFromString,
++    disposition: LabDisposition,
++    postgresSchema: S.OptionFromOptionalKey(S.NonEmptyString),
++  },
++  $I.annote("LabManifest", {
++    description:
++      "Schema-validated lab manifest: purpose, ISO creation date, disposition, and optional owned Postgres schema.",
++  })
++) {}
++
++/**
++ * JSON-string codec for {@link LabManifest}. `decode` fails with a
++ * `SchemaError` on malformed JSON or a manifest mismatch; `encode` produces the
++ * compact JSON text written to {@link LAB_MANIFEST_FILE_NAME}.
++ */
++export const LabManifestJson = JsonStringCodec(LabManifest);
+diff --git a/packages/tooling/tool/cli/src/internal/cli/Labs/LabsDiscovery.ts b/packages/tooling/tool/cli/src/internal/cli/Labs/LabsDiscovery.ts
+new file mode 100644
+index 0000000000..d75e7e0be1
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/internal/cli/Labs/LabsDiscovery.ts
+@@ -0,0 +1,138 @@
++/**
++ * Lab workspace discovery and manifest reading for `beep labs` tooling.
++ *
++ * Discovery reuses `resolveWorkspaceDirs` from `@beep/repo-utils` — the same
++ * workspace catalog the RegistrationGeometry probes use — rather than
++ * `discoverWorkspacePackages`, because that helper lives under
++ * `commands/Quality/internal` and internal/cli modules must not depend on
++ * `commands/**`. Absolute workspace directories are relativized against the
++ * repo root before the {@link isLabsWorkspaceDir} guard is applied, per the
++ * LabsPath contract. A lab whose manifest is missing or invalid is reported as
++ * a failed row instead of failing the whole listing, so `beep labs list` can
++ * render every lab and exit nonzero afterwards (SPEC D9 gate).
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $RepoCliId } from "@beep/identity/packages";
++import { resolveWorkspaceDirs } from "@beep/repo-utils";
++import { LiteralKit, normalizePath } from "@beep/schema";
++import { A, Str, thunkFalse } from "@beep/utils";
++import { Effect, FileSystem, Path, pipe, Tuple } from "effect";
++import * as O from "effect/Option";
++import * as S from "effect/Schema";
++import { LAB_MANIFEST_FILE_NAME, LabManifest, LabManifestJson } from "./LabManifest.schemas.ts";
++import { isLabsWorkspaceDir, LabsWorkspaceDir } from "./LabsPath.ts";
++
++const $I = $RepoCliId.create("internal/cli/Labs/LabsDiscovery");
++
++/** One discovered lab workspace: package name plus repo-relative lab directory. */
++export class LabWorkspaceRef extends S.Class<LabWorkspaceRef>($I`LabWorkspaceRef`)(
++  {
++    packageName: S.NonEmptyString,
++    dir: LabsWorkspaceDir,
++  },
++  $I.annote("LabWorkspaceRef", {
++    description: "One discovered lab workspace: package name plus repo-relative lab directory.",
++  })
++) {}
++
++/** A lab whose manifest decoded cleanly. */
++export class DecodedLabRow extends S.Class<DecodedLabRow>($I`DecodedLabRow`)(
++  {
++    kind: S.tag("decoded"),
++    lab: LabWorkspaceRef,
++    manifest: LabManifest,
++  },
++  $I.annote("DecodedLabRow", {
++    description: "A lab workspace paired with its successfully decoded manifest.",
++  })
++) {}
++
++/** A lab whose manifest is missing, unreadable, or schema-invalid. */
++export class FailedLabRow extends S.Class<FailedLabRow>($I`FailedLabRow`)(
++  {
++    kind: S.tag("failed"),
++    lab: LabWorkspaceRef,
++    reason: S.NonEmptyString,
++  },
++  $I.annote("FailedLabRow", {
++    description: "A lab workspace whose manifest is missing, unreadable, or schema-invalid.",
++  })
++) {}
++
++/** Tagged union of `beep labs list` rows: a decoded manifest or a reported failure. */
++export const LabListRow = LiteralKit(["decoded", "failed"])
++  .mapMembers(Tuple.evolve([() => DecodedLabRow, () => FailedLabRow]))
++  .pipe(
++    S.toTaggedUnion("kind"),
++    $I.annoteSchema("LabListRow", {
++      description: "One labs listing row: a decoded manifest or a reported manifest failure.",
++    })
++  );
++export type LabListRow = typeof LabListRow.Type;
++
++/** Guard derived from {@link FailedLabRow}. */
++export const isFailedLabRow = S.is(FailedLabRow);
++
++/**
++ * Enumerate lab workspaces from the root workspace catalog, sorted by lab
++ * directory for stable rendering. Safe on the zero-lab tree: with no
++ * `apps/labs/<name>` workspaces the result is empty.
++ */
++export const discoverLabWorkspaces = Effect.fn("Labs.discoverLabWorkspaces")(function* (repoRoot: string) {
++  const path = yield* Path.Path;
++  const workspaces = A.fromIterable(yield* resolveWorkspaceDirs(repoRoot));
++  // v4 `A.filterMap` takes a `Result`-returning callback (an `Option` one
++  // silently yields `[]`), so the Option pipeline goes through `A.getSomes`.
++  return pipe(
++    workspaces,
++    A.map(([packageName, dir]) =>
++      pipe(
++        normalizePath(path.relative(repoRoot, dir)),
++        O.liftPredicate(isLabsWorkspaceDir),
++        O.map((relativeDir) => LabWorkspaceRef.make({ packageName, dir: relativeDir }))
++      )
++    ),
++    A.getSomes,
++    A.sortWith((lab) => lab.dir, Str.Order)
++  );
++});
++
++/**
++ * Read and decode one lab's `lab.manifest.json` into a {@link LabListRow}.
++ * Missing, unreadable, and schema-invalid manifests each become a
++ * {@link FailedLabRow} so the caller can render every lab before failing.
++ */
++export const readLabManifestRow = Effect.fn("Labs.readLabManifestRow")(function* (
++  repoRoot: string,
++  lab: LabWorkspaceRef
++) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const file = path.join(repoRoot, lab.dir, LAB_MANIFEST_FILE_NAME);
++  const exists = yield* fs.exists(file).pipe(Effect.orElseSucceed(thunkFalse));
++  if (!exists) {
++    return FailedLabRow.make({ lab, reason: `missing ${LAB_MANIFEST_FILE_NAME}` });
++  }
++  const content = yield* fs.readFileString(file).pipe(Effect.option);
++  if (O.isNone(content)) {
++    return FailedLabRow.make({ lab, reason: `unreadable ${LAB_MANIFEST_FILE_NAME}` });
++  }
++  return yield* LabManifestJson.decode(content.value).pipe(
++    Effect.map((manifest) => DecodedLabRow.make({ lab, manifest })),
++    Effect.catchTag("SchemaError", (error) =>
++      Effect.succeed(FailedLabRow.make({ lab, reason: `invalid ${LAB_MANIFEST_FILE_NAME}: ${error.message}` }))
++    )
++  );
++});
++
++/**
++ * Discover every lab workspace and decode each manifest into a stable-sorted
++ * row list — the single read surface behind `beep labs list`.
++ */
++export const listLabRows = Effect.fn("Labs.listLabRows")(function* (repoRoot: string) {
++  const labs = yield* discoverLabWorkspaces(repoRoot);
++  return yield* Effect.forEach(labs, (lab) => readLabManifestRow(repoRoot, lab));
++});
+diff --git a/packages/tooling/tool/cli/src/internal/cli/Labs/LabsPath.ts b/packages/tooling/tool/cli/src/internal/cli/Labs/LabsPath.ts
+new file mode 100644
+index 0000000000..e20a36bd20
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/internal/cli/Labs/LabsPath.ts
+@@ -0,0 +1,52 @@
++/**
++ * Shared schema-first predicates for the `apps/labs/*` lab-app root.
++ *
++ * Every consumer of "is this workspace a lab?" (tsconfig root-reference
++ * scoping, identity labs segment, ceremony inventory exclusions, CI lane
++ * filters, create/delete lab behavior) derives its answer from these branded
++ * schemas so the labs boundary has exactly one definition. Paths are
++ * repo-relative POSIX paths; relativize absolute directories against the repo
++ * root before applying the guards.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $RepoCliId } from "@beep/identity/packages";
++import * as S from "effect/Schema";
++
++const $I = $RepoCliId.create("internal/cli/Labs");
++
++/** Repo-relative root directory that owns every lab app workspace. */
++export const LABS_WORKSPACE_ROOT = "apps/labs";
++
++const LABS_WORKSPACE_DIR_PATTERN = /^apps\/labs\/[^/]+$/;
++const LABS_OWNED_PATH_PATTERN = /^apps\/labs\//;
++
++/**
++ * Branded schema for a repo-relative lab workspace directory
++ * (`apps/labs/<name>`). Labs live exactly one level below the labs root;
++ * nested groupings are not part of the ratified geometry (SPEC D1/D5).
++ */
++export const LabsWorkspaceDir = S.String.check(S.isPattern(LABS_WORKSPACE_DIR_PATTERN)).pipe(
++  S.brand("LabsWorkspaceDir"),
++  $I.annoteSchema("LabsWorkspaceDir", {
++    description: "Repo-relative workspace directory exactly one level under apps/labs.",
++  })
++);
++export type LabsWorkspaceDir = typeof LabsWorkspaceDir.Type;
++
++/** Guard derived from {@link LabsWorkspaceDir}. */
++export const isLabsWorkspaceDir = S.is(LabsWorkspaceDir);
++
++/** Branded schema for any repo-relative path owned by the labs root. */
++export const LabsOwnedPath = S.String.check(S.isPattern(LABS_OWNED_PATH_PATTERN)).pipe(
++  S.brand("LabsOwnedPath"),
++  $I.annoteSchema("LabsOwnedPath", {
++    description: "Repo-relative path underneath the apps/labs lab root.",
++  })
++);
++export type LabsOwnedPath = typeof LabsOwnedPath.Type;
++
++/** Guard derived from {@link LabsOwnedPath}. */
++export const isLabsOwnedPath = S.is(LabsOwnedPath);
+diff --git a/packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts b/packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts
+index fd522e7168..3990460f27 100644
+--- a/packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts
++++ b/packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts
+@@ -2,6 +2,7 @@ import { Glob } from "@beep/schema/Glob";
+ import { PosixPath } from "@beep/schema/PosixPath";
+ import { A, Str } from "@beep/utils";
+ import * as O from "effect/Option";
++import { isLabsWorkspaceDir } from "../Labs/LabsPath.ts";
+ import {
+   AuthoredReferenceSurface,
+   DerivedRebuildSurface,
+@@ -51,7 +52,9 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
+       packageName: target.packageName,
+       slug,
+       accessor: `$${Str.pascalCase(slug)}Id`,
+-      generatedGroup: O.none(),
++      // Lab identity slugs live in the generated labs compose group; every
++      // other package registers flat in the package group (SPEC D5/row 3).
++      generatedGroup: isLabsWorkspaceDir(target.packagePath) ? O.some("generatedLabComposers") : O.none(),
+     }),
+     DerivedRebuildSurface.make({
+       id: "tsconfig-sync",
+diff --git a/packages/tooling/tool/cli/src/test/Labs.test-kit.ts b/packages/tooling/tool/cli/src/test/Labs.test-kit.ts
+new file mode 100644
+index 0000000000..89864bbf40
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/test/Labs.test-kit.ts
+@@ -0,0 +1,11 @@
++/**
++ * Source-only test kit for the labs command and private labs modules.
++ *
++ * @internal
++ * @since 0.0.0
++ */
++
++export * from "../commands/Labs/Labs.command.ts";
++export * from "../internal/cli/Labs/LabManifest.schemas.ts";
++export * from "../internal/cli/Labs/LabsDiscovery.ts";
++export * from "../internal/cli/Labs/LabsPath.ts";
+diff --git a/packages/tooling/tool/cli/test/ci-lane.test.ts b/packages/tooling/tool/cli/test/ci-lane.test.ts
+index 6d31ecf26d..58d99d663b 100644
+--- a/packages/tooling/tool/cli/test/ci-lane.test.ts
++++ b/packages/tooling/tool/cli/test/ci-lane.test.ts
+@@ -6,6 +6,7 @@ import {
+   ciLaneStepsForTesting,
+   ciLocalStepsForTesting,
+ } from "@beep/repo-cli/commands/Ci";
++import { parseQualityTaskInvocation, rootQualityStepsForTesting } from "@beep/repo-cli/test/Quality";
+ import { A } from "@beep/utils";
+ import { Order, pipe } from "effect";
+ import * as O from "effect/Option";
+@@ -34,6 +35,11 @@ const prShapeOptions = CiLaneRunOptions.make({
+   summarize: true,
+ });
+ 
++// Tree-state variants: runCiLane resolves labsPresent from apps/labs before
++// planning, so these mirror the same shapes on a tree with >= 1 lab workspace.
++const labsBaseOptions = CiLaneRunOptions.make({ ...baseOptions, labsPresent: true });
++const labsPrShapeOptions = CiLaneRunOptions.make({ ...prShapeOptions, labsPresent: true });
++
+ // The 16 required-check context names read from ruleset 10240248 on 2026-08-13.
+ const REQUIRED_CONTEXT_NAMES = [
+   "Check",
+@@ -58,7 +64,7 @@ describe("CI lane descriptors", () => {
+   it("enumerates every check.yml lane exactly once", () => {
+     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
+     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
+-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(23);
++    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(24);
+   });
+ 
+   it("covers every runnable lane id", () => {
+@@ -90,6 +96,14 @@ describe("CI lane descriptors", () => {
+     expect(descriptor.required).toBe(false);
+   });
+ 
++  it("keeps the labs family context visible but non-required", () => {
++    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "labs"));
++    expect(descriptor.contextName).toBe("Labs");
++    expect(descriptor.required).toBe(false);
++    expect(descriptor.laneClass).toBe("cli-runnable");
++    expect(descriptor.replay).toBe("exact");
++  });
++
+   it("marks the CI-only residue as unreplayable", () => {
+     const residue = pipe(
+       CI_LANE_DESCRIPTORS,
+@@ -305,6 +319,126 @@ describe("ciLaneStepsForTesting", () => {
+     );
+     expect([...summarized.args]).toEqual(["run", "build", "--", "--summarize"]);
+   });
++
++  it("excludes the labs family from the PR-shape required turbo lanes once labs exist", () => {
++    const check = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", labsPrShapeOptions));
++    expect([...check.args]).toEqual([
++      "run",
++      "check",
++      "--",
++      "--concurrency=1",
++      "--filter=!./apps/labs/**",
++      "--affected",
++      "--summarize",
++    ]);
++    expect(check.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
++
++    const lint = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", labsPrShapeOptions));
++    expect([...lint.args]).toEqual([
++      "turbo",
++      "run",
++      "lint",
++      "--concurrency=2",
++      "--filter=!./apps/labs/**",
++      "--affected",
++      "--summarize",
++    ]);
++
++    const unit = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-unit", labsPrShapeOptions));
++    expect([...unit.args]).toEqual([
++      "run",
++      "test",
++      "--",
++      "--unit",
++      "--concurrency=2",
++      "--filter=!./apps/labs/**",
++      "--affected",
++      "--summarize",
++    ]);
++
++    const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", labsPrShapeOptions));
++    expect([...integration.args]).toEqual([
++      "run",
++      "test",
++      "--",
++      "--integration",
++      "--filter=!./apps/labs/**",
++      "--affected",
++      "--summarize",
++    ]);
++  });
++
++  it("excludes the labs family from the push-shape required turbo lanes once labs exist", () => {
++    const check = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", labsBaseOptions));
++    expect([...check.args]).toEqual(["run", "check", "--", "--concurrency=1", "--filter=!./apps/labs/**"]);
++
++    const lint = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", labsBaseOptions));
++    expect([...lint.args]).toEqual(["turbo", "run", "lint", "--concurrency=2", "--filter=!./apps/labs/**"]);
++
++    const unit = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-unit", labsBaseOptions));
++    expect([...unit.args]).toEqual(["run", "test", "--", "--unit", "--concurrency=2", "--filter=!./apps/labs/**"]);
++
++    const integration = firstOf(ciLaneStepsForTesting(REPO_ROOT, "test-integration", labsBaseOptions));
++    expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--filter=!./apps/labs/**"]);
++  });
++
++  it("keeps coverage free of raw labs filters: exclusion lives in the coverage planner", () => {
++    const withLabs = firstOf(ciLaneStepsForTesting(REPO_ROOT, "coverage", labsPrShapeOptions));
++    const withoutLabs = firstOf(ciLaneStepsForTesting(REPO_ROOT, "coverage", prShapeOptions));
++    expect([...withLabs.args]).toEqual([...withoutLabs.args]);
++    expect([...withLabs.args]).toEqual(["run", "coverage", "--", "--concurrency=3", "--affected", "--summarize"]);
++  });
++
++  it("no-ops the labs lane on the zero-lab tree", () => {
++    expect(ciLaneStepsForTesting(REPO_ROOT, "labs", prShapeOptions)).toEqual([]);
++    expect(ciLaneStepsForTesting(REPO_ROOT, "labs", baseOptions)).toEqual([]);
++  });
++
++  it("runs the positive-filtered labs family battery once labs exist", () => {
++    const prStep = firstOf(ciLaneStepsForTesting(REPO_ROOT, "labs", labsPrShapeOptions));
++    expect(prStep.command).toBe("bunx");
++    expect(prStep.label).toBe("ci:labs");
++    expect([...prStep.args]).toEqual([
++      "turbo",
++      "run",
++      "check",
++      "lint",
++      "test",
++      "--concurrency=2",
++      "--filter=./apps/labs/**",
++      "--affected",
++      "--summarize",
++    ]);
++    expect(prStep.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
++
++    const pushStep = firstOf(ciLaneStepsForTesting(REPO_ROOT, "labs", labsBaseOptions));
++    expect([...pushStep.args]).toEqual([
++      "turbo",
++      "run",
++      "check",
++      "lint",
++      "test",
++      "--concurrency=2",
++      "--filter=./apps/labs/**",
++    ]);
++    expect(pushStep.env).toBeUndefined();
++  });
++
++  it("keeps the repo-wide tsgo steps when the labs exclusion is the only filter", () => {
++    const invocation = O.getOrThrow(
++      parseQualityTaskInvocation(["check", "--filter=!./apps/labs/**", "--affected", "--summarize"])
++    );
++    const labels = A.map(rootQualityStepsForTesting(REPO_ROOT, invocation), (step) => step.label);
++    expect(labels).toEqual(["check", "check:tsgo:tests", "check:tsgo:smoke"]);
++  });
++
++  it("still drops the repo-wide tsgo steps for genuinely narrowing filters", () => {
++    const invocation = O.getOrThrow(
++      parseQualityTaskInvocation(["check", "--filter=!./apps/labs/**", "--filter=@beep/schema"])
++    );
++    const labels = A.map(rootQualityStepsForTesting(REPO_ROOT, invocation), (step) => step.label);
++    expect(labels).toEqual(["check"]);
++  });
+ });
+ 
+ describe("ciLocalStepsForTesting", () => {
+@@ -315,6 +449,15 @@ describe("ciLocalStepsForTesting", () => {
+     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
+   });
+ 
++  it("replays the labs lane in the local battery with the affected shape", () => {
++    const full = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], branchPlan));
++    expect([...full.args]).toEqual(["run", "beep", "ci", "lane", "labs"]);
++
++    const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
++    const affected = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], affectedPlan));
++    expect([...affected.args]).toEqual(["run", "beep", "ci", "lane", "labs", "--affected", "--base", "origin/main"]);
++  });
++
+   it("forwards the affected shape to turbo-backed lanes", () => {
+     const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
+     const lint = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint"], affectedPlan));
+diff --git a/packages/tooling/tool/cli/test/coverage-regression-labs.test.ts b/packages/tooling/tool/cli/test/coverage-regression-labs.test.ts
+new file mode 100644
+index 0000000000..79cc43a914
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/coverage-regression-labs.test.ts
+@@ -0,0 +1,78 @@
++import {
++  coverageDispositionGapsForTesting,
++  coverageDispositionUniverseForTesting,
++  coveragePlannerChangedFilesForTesting,
++  PackageJson,
++  WorkspacePackageInfo,
++  workspaceCoveragePackagesForTesting,
++} from "@beep/repo-cli/test/Quality";
++import { A } from "@beep/utils";
++import { describe, expect, it } from "vitest";
++
++const workspaceInfo = (name: string, path: string, scripts?: Readonly<Record<string, string>>): WorkspacePackageInfo =>
++  WorkspacePackageInfo.make({
++    name,
++    path,
++    absolutePath: path === "." ? "/repo" : `/repo/${path}`,
++    packageJson: PackageJson.make({ name, ...(scripts === undefined ? {} : { scripts }) }),
++  });
++
++const rootWorkspace = workspaceInfo("beep", ".", { coverage: "beep-cli coverage" });
++const coveredProduct = workspaceInfo("@beep/schema", "packages/foundation/modeling/schema", {
++  coverage: "vitest run --coverage",
++});
++const uncoveredProduct = workspaceInfo("@beep/storybook", "apps/storybook", { test: "vitest run" });
++// A lab that (wrongly) ships a coverage script must still stay outside the
++// coverage universe: exclusion is by labs path, never by script presence.
++const coveredLab = workspaceInfo("@beep/trustgraph-workbench", "apps/labs/trustgraph-workbench", {
++  coverage: "vitest run --coverage",
++});
++const uncoveredLab = workspaceInfo("@beep/orbit-lab", "apps/labs/orbit-lab", { test: "vitest run" });
++
++describe("coverage regression labs scoping", () => {
++  it("keeps labs out of the coverage-owning package universe", () => {
++    const selected = workspaceCoveragePackagesForTesting([coveredLab, coveredProduct, uncoveredProduct, rootWorkspace]);
++    expect(A.map(selected, (info) => info.name)).toEqual(["@beep/schema", "beep"]);
++  });
++
++  it("keeps labs and the root out of the disposition-gap universe", () => {
++    const universe = coverageDispositionUniverseForTesting([
++      rootWorkspace,
++      coveredProduct,
++      uncoveredProduct,
++      coveredLab,
++      uncoveredLab,
++    ]);
++    expect(A.map(universe, (info) => info.name)).toEqual(["@beep/schema", "@beep/storybook"]);
++  });
++
++  it("never turns a lab into a disposition gap or an exemption demand", () => {
++    const universe = coverageDispositionUniverseForTesting([
++      coveredProduct,
++      uncoveredProduct,
++      coveredLab,
++      uncoveredLab,
++    ]);
++    const gaps = coverageDispositionGapsForTesting(
++      A.map(universe, (info) => info.name),
++      A.map(workspaceCoveragePackagesForTesting(universe), (info) => info.name),
++      A.empty<string>()
++    );
++    expect(gaps).toEqual(["@beep/storybook"]);
++  });
++
++  it("drops labs-owned paths from the affected coverage planner input", () => {
++    const changed = coveragePlannerChangedFilesForTesting([
++      "apps/labs/trustgraph-workbench/package.json",
++      "apps/labs/trustgraph-workbench/src/main.ts",
++      "apps/storybook/src/index.ts",
++      "packages/foundation/modeling/schema/src/index.ts",
++    ]);
++    expect(changed).toEqual(["apps/storybook/src/index.ts", "packages/foundation/modeling/schema/src/index.ts"]);
++  });
++
++  it("treats only apps/labs/ as labs-owned in the planner input", () => {
++    const changed = coveragePlannerChangedFilesForTesting(["apps/labside/src/index.ts", "apps/labs/x/file.ts"]);
++    expect(changed).toEqual(["apps/labside/src/index.ts"]);
++  });
++});
+diff --git a/packages/tooling/tool/cli/test/docgen.test.ts b/packages/tooling/tool/cli/test/docgen.test.ts
+index dcfd8742b7..2925bc3fe7 100644
+--- a/packages/tooling/tool/cli/test/docgen.test.ts
++++ b/packages/tooling/tool/cli/test/docgen.test.ts
+@@ -938,6 +938,39 @@ export const ProofFixture = 1;
+       )
+     ));
+ 
++  it("ignores lab-app docgen configs under apps/labs while still reporting real orphans", () =>
++    Effect.runPromise(
++      withTempRepo(
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          const path = yield* Path.Path;
++          const tmpDir = process.cwd();
++          yield* fs.writeFileString(
++            path.join(tmpDir, "package.json"),
++            encodeJson({
++              name: "@beep/test-root",
++              private: true,
++              workspaces: ["packages/foundation/*/*"],
++            })
++          );
++
++          // Labs are docgen-exempt (goals/lab-apps-lifecycle SPEC D5): a stray
++          // lab docgen.json neither registers nor reports as an orphan.
++          const labDocgenPath = path.join(tmpDir, "apps", "labs", "graph-play", "docgen.json");
++          yield* fs.makeDirectory(path.dirname(labDocgenPath), { recursive: true });
++          yield* fs.writeFileString(labDocgenPath, encodeJson({ srcDir: "src" }));
++
++          const staleDocgenPath = path.join(tmpDir, "packages", "retired", "runtime", "docgen.json");
++          yield* fs.makeDirectory(path.dirname(staleDocgenPath), { recursive: true });
++          yield* fs.writeFileString(staleDocgenPath, encodeJson({ srcDir: "src" }));
++
++          const orphaned = yield* discoverOrphanDocgenConfigPaths(tmpDir);
++
++          expect(orphaned).toEqual(["packages/retired/runtime/docgen.json"]);
++        })
++      )
++    ));
++
+   it("supports clean aggregation when stale docs paths conflict with nested package docs", () =>
+     Effect.runPromise(
+       withTempRepo(
+diff --git a/packages/tooling/tool/cli/test/identity-labs-segment.test.ts b/packages/tooling/tool/cli/test/identity-labs-segment.test.ts
+new file mode 100644
+index 0000000000..cfa0577aed
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/identity-labs-segment.test.ts
+@@ -0,0 +1,287 @@
++import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration";
++import { IdentitySegmentSurface, RegistrationTarget, surfacesForTarget } from "@beep/repo-cli/test/DeletePackage";
++import { TSMorphServiceLive } from "@beep/repo-utils";
++import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
++import { PosixPath } from "@beep/schema/PosixPath";
++import { provideScopedLayer } from "@beep/test-utils";
++import { A } from "@beep/utils";
++import { NodeServices } from "@effect/platform-node";
++import { Effect, FileSystem, Layer, Path } from "effect";
++import * as O from "effect/Option";
++import * as S from "effect/Schema";
++import { describe, expect, it } from "vitest";
++import { withTempWorkingDirectory } from "./support/CommandTest.ts";
++
++const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
++
++const labsLayer = Layer.mergeAll(
++  NodeServices.layer,
++  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer)),
++  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
++);
++
++const IDENTITY_REGISTRY_PATH = "packages/identity/src/packages.ts";
++
++const BASE_REGISTRY = [
++  'const generatedComposers = $I.compose("identity", "widget");',
++  "",
++  "const composers = {",
++  "  ...generatedComposers,",
++  "};",
++  "",
++  'export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composers.$IdentityId;',
++  'export const $WidgetId: Identity.IdentityComposer<"@beep/widget"> = composers.$WidgetId;',
++  "",
++].join("\n");
++
++const syncContent = CreatePackageIdentityRegistration.syncedLabsIdentityRegistryContent;
++
++describe("labs identity registry content sync", () => {
++  it("creates the whole labs region for the first lab", () => {
++    const next = syncContent(BASE_REGISTRY, ["lab-a"]);
++    expect(next).toContain(CreatePackageIdentityRegistration.LABS_COMPOSE_GROUP_COMMENT);
++    expect(next).toContain('const generatedLabComposers = $I.compose("lab-a");');
++    expect(next).toContain("  ...generatedComposers,\n  ...generatedLabComposers,");
++    expect(next).toContain(
++      [
++        CreatePackageIdentityRegistration.LAB_EXPORTS_START_MARKER,
++        'export const $LabAId: Identity.IdentityComposer<"@beep/lab-a"> = composers.$LabAId;',
++        CreatePackageIdentityRegistration.LAB_EXPORTS_END_MARKER,
++      ].join("\n")
++    );
++  });
++
++  it("inserts subsequent labs deterministically in slug order", () => {
++    const oneThenTwo = syncContent(syncContent(BASE_REGISTRY, ["lab-b"]), ["lab-b", "lab-a"]);
++    const bothAtOnce = syncContent(BASE_REGISTRY, ["lab-a", "lab-b"]);
++    expect(oneThenTwo).toBe(bothAtOnce);
++    expect(bothAtOnce).toContain('const generatedLabComposers = $I.compose("lab-a", "lab-b");');
++  });
++
++  it("removes the entire region when the last lab disappears", () => {
++    expect(syncContent(syncContent(BASE_REGISTRY, ["lab-a"]), [])).toBe(BASE_REGISTRY);
++  });
++
++  it("is a byte-level no-op for a zero-lab registry", () => {
++    expect(syncContent(BASE_REGISTRY, [])).toBe(BASE_REGISTRY);
++  });
++
++  it("reads group-scoped and marker-scoped slugs", () => {
++    const synced = syncContent(BASE_REGISTRY, ["lab-b", "lab-a"]);
++    expect(CreatePackageIdentityRegistration.labIdentityComposerGroupSlugs(synced)).toEqual(["lab-a", "lab-b"]);
++    expect(CreatePackageIdentityRegistration.labIdentityExportBlockSlugs(synced)).toEqual(["lab-a", "lab-b"]);
++    expect(CreatePackageIdentityRegistration.packageIdentityComposerGroupSlugs(synced)).toEqual(["identity", "widget"]);
++    expect(CreatePackageIdentityRegistration.labIdentityComposerGroupSlugs(BASE_REGISTRY)).toEqual([]);
++    expect(CreatePackageIdentityRegistration.labIdentityExportBlockSlugs(BASE_REGISTRY)).toEqual([]);
++  });
++});
++
++const writeLabsWorkspaceFixture = Effect.fn("writeLabsWorkspaceFixture")(function* (options: {
++  readonly registryContent: string;
++  readonly labs: ReadonlyArray<string>;
++}) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++
++  yield* fs.writeFileString("bun.lock", "");
++  yield* fs.writeFileString(
++    "package.json",
++    `${encodeJson({
++      name: "fixture-root",
++      private: true,
++      type: "module",
++      workspaces: ["packages/*", "apps/labs/*"],
++    })}\n`
++  );
++
++  yield* fs.makeDirectory(path.join("packages", "identity", "src"), { recursive: true });
++  yield* fs.writeFileString(
++    path.join("packages", "identity", "package.json"),
++    `${encodeJson({ name: "@beep/identity", version: "0.0.0", type: "module" })}\n`
++  );
++  yield* fs.writeFileString(
++    path.join("packages", "identity", "tsconfig.json"),
++    `${encodeJson({ compilerOptions: {} })}\n`
++  );
++  yield* fs.writeFileString(IDENTITY_REGISTRY_PATH, options.registryContent);
++
++  yield* fs.makeDirectory(path.join("packages", "widget", "src"), { recursive: true });
++  yield* fs.writeFileString(
++    path.join("packages", "widget", "package.json"),
++    `${encodeJson({ name: "@beep/widget", version: "0.0.0", type: "module" })}\n`
++  );
++
++  for (const lab of options.labs) {
++    yield* fs.makeDirectory(path.join("apps", "labs", lab, "src"), { recursive: true });
++    yield* fs.writeFileString(
++      path.join("apps", "labs", lab, "package.json"),
++      `${encodeJson({ name: `@beep/${lab}`, version: "0.0.0", type: "module" })}\n`
++    );
++  }
++});
++
++describe("syncLabsIdentitySegment", { concurrent: false }, () => {
++  it("materializes the labs region from the live workspace catalog", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* writeLabsWorkspaceFixture({ registryContent: BASE_REGISTRY, labs: ["lab-b", "lab-a"] });
++
++          const synced = yield* CreatePackageIdentityRegistration.syncLabsIdentitySegment(".");
++
++          expect(synced).toEqual(["lab-a", "lab-b"]);
++          const next = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
++          expect(next).toBe(syncContent(BASE_REGISTRY, ["lab-a", "lab-b"]));
++        })
++      ).pipe(provideScopedLayer(labsLayer))
++    ));
++
++  it("removes the labs region when the last lab is deleted", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* writeLabsWorkspaceFixture({
++            registryContent: syncContent(BASE_REGISTRY, ["lab-a"]),
++            labs: [],
++          });
++
++          const synced = yield* CreatePackageIdentityRegistration.syncLabsIdentitySegment(".");
++
++          expect(synced).toEqual([]);
++          const next = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
++          expect(next).toBe(BASE_REGISTRY);
++        })
++      ).pipe(provideScopedLayer(labsLayer))
++    ));
++
++  it("leaves a pristine zero-lab registry byte-identical", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* writeLabsWorkspaceFixture({ registryContent: BASE_REGISTRY, labs: [] });
++
++          yield* CreatePackageIdentityRegistration.syncLabsIdentitySegment(".");
++
++          const next = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
++          expect(next).toBe(BASE_REGISTRY);
++        })
++      ).pipe(provideScopedLayer(labsLayer))
++    ));
++
++  it("fails loudly when the composers merge anchors are missing", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeLabsWorkspaceFixture({
++            registryContent: [
++              'const composers = $I.compose("identity", "widget");',
++              "export const $IdentityId = composers.$IdentityId;",
++              "export const $WidgetId = composers.$WidgetId;",
++              "",
++            ].join("\n"),
++            labs: ["lab-a"],
++          });
++
++          const exit = yield* Effect.exit(CreatePackageIdentityRegistration.syncLabsIdentitySegment("."));
++
++          expect(exit._tag).toBe("Failure");
++        })
++      ).pipe(provideScopedLayer(labsLayer))
++    ));
++
++  it("registers lab workspaces only through the labs segment", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* writeLabsWorkspaceFixture({ registryContent: BASE_REGISTRY, labs: ["lab-a"] });
++
++          const registered = yield* CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages(".");
++
++          expect(registered).toEqual(["lab-a"]);
++          const next = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
++          expect(next).toBe(syncContent(BASE_REGISTRY, ["lab-a"]));
++          expect(CreatePackageIdentityRegistration.packageIdentityComposerGroupSlugs(next)).toEqual([
++            "identity",
++            "widget",
++          ]);
++        })
++      ).pipe(provideScopedLayer(labsLayer))
++    ));
++});
++
++const runEnsure = (registryContent: string, packageName: string, packageRelativeDir?: string) =>
++  withTempWorkingDirectory(
++    Effect.gen(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      yield* fs.writeFileString("bun.lock", "");
++      yield* fs.writeFileString("tsconfig.json", '{ "compilerOptions": {} }\n');
++      yield* fs.writeFileString("packages.ts", registryContent);
++      yield* CreatePackageIdentityRegistration.ensureIdentityPackageRegistration(
++        "packages.ts",
++        packageName,
++        packageRelativeDir
++      );
++      return yield* fs.readFileString("packages.ts");
++    })
++  ).pipe(provideScopedLayer(labsLayer));
++
++describe("ensureIdentityPackageRegistration labs guard", { concurrent: false }, () => {
++  it("refuses to append a lab slug into the package compose group", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const exit = yield* Effect.exit(runEnsure(BASE_REGISTRY, "lab-a", "apps/labs/lab-a"));
++        expect(exit._tag).toBe("Failure");
++      })
++    ));
++
++  it("does not duplicate a slug already owned by the labs group", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const synced = syncContent(BASE_REGISTRY, ["lab-a"]);
++        const next = yield* runEnsure(synced, "lab-a");
++        expect(next).toBe(synced);
++      })
++    ));
++
++  it("keeps non-lab registration in the package group", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const synced = syncContent(BASE_REGISTRY, ["lab-a"]);
++        const next = yield* runEnsure(synced, "gizmo");
++        expect(
++          A.some(CreatePackageIdentityRegistration.packageIdentityComposerGroupSlugs(next), (slug) => slug === "gizmo")
++        ).toBe(true);
++        expect(CreatePackageIdentityRegistration.labIdentityComposerGroupSlugs(next)).toEqual(["lab-a"]);
++        expect(next).toContain("export const $GizmoId");
++      })
++    ));
++});
++
++describe("registration geometry labs identity grouping", () => {
++  const identityGroupsOf = (target: RegistrationTarget): ReadonlyArray<O.Option<string>> =>
++    A.flatMap(surfacesForTarget(target), (surface) =>
++      surface instanceof IdentitySegmentSurface ? A.of(surface.generatedGroup) : A.empty<O.Option<string>>()
++    );
++
++  it("routes labs targets into the generated labs compose group", () => {
++    const target = RegistrationTarget.make({
++      packageName: "@beep/trustgraph-workbench",
++      packagePath: PosixPath.make("apps/labs/trustgraph-workbench"),
++      private: true,
++    });
++    expect(identityGroupsOf(target)).toEqual([O.some("generatedLabComposers")]);
++  });
++
++  it("keeps package targets groupless", () => {
++    const target = RegistrationTarget.make({
++      packageName: "@beep/widget",
++      packagePath: PosixPath.make("packages/common/widget"),
++      private: true,
++    });
++    expect(identityGroupsOf(target)).toEqual([O.none()]);
++  });
++});
+diff --git a/packages/tooling/tool/cli/test/identity-registration-removal.test.ts b/packages/tooling/tool/cli/test/identity-registration-removal.test.ts
+index 53ce077ee7..333c3be9cf 100644
+--- a/packages/tooling/tool/cli/test/identity-registration-removal.test.ts
++++ b/packages/tooling/tool/cli/test/identity-registration-removal.test.ts
+@@ -26,18 +26,20 @@ const REGISTRY_FIXTURE = [
+   "",
+ ].join("\n");
+ 
+-const runRemoval = (packageName: string) =>
++const runRemovalWith = (registryContent: string, packageName: string) =>
+   withTempWorkingDirectory(
+     Effect.gen(function* () {
+       const fs = yield* FileSystem.FileSystem;
+       yield* fs.writeFileString("bun.lock", "");
+       yield* fs.writeFileString("tsconfig.json", '{ "compilerOptions": {} }\n');
+-      yield* fs.writeFileString("packages.ts", REGISTRY_FIXTURE);
++      yield* fs.writeFileString("packages.ts", registryContent);
+       yield* CreatePackageIdentityRegistration.removeIdentityPackageRegistration("packages.ts", packageName);
+       return yield* fs.readFileString("packages.ts");
+     })
+   ).pipe(provideScopedLayer(removalLayer));
+ 
++const runRemoval = (packageName: string) => runRemovalWith(REGISTRY_FIXTURE, packageName);
++
+ describe("identity registration removal", () => {
+   it("removes the compose slug, typed export, and nothing else", () =>
+     Effect.runPromise(
+@@ -118,3 +120,48 @@ describe("identity registration removal", () => {
+       ).pipe(provideScopedLayer(removalLayer))
+     ));
+ });
++
++const LABS_BASE_REGISTRY = [
++  'const generatedComposers = $I.compose("alpha", "widget");',
++  "",
++  "const composers = {",
++  "  ...generatedComposers,",
++  "};",
++  "",
++  'export const $AlphaId: Identity.IdentityComposer<"@beep/alpha"> = composers.$AlphaId;',
++  'export const $WidgetId: Identity.IdentityComposer<"@beep/widget"> = composers.$WidgetId;',
++  "",
++].join("\n");
++
++const syncContent = CreatePackageIdentityRegistration.syncedLabsIdentityRegistryContent;
++
++describe("identity registration removal for lab slugs", () => {
++  it("removes a lab slug by rewriting the labs region", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const next = yield* runRemovalWith(syncContent(LABS_BASE_REGISTRY, ["lab-a", "lab-b"]), "lab-a");
++        expect(next).toBe(syncContent(LABS_BASE_REGISTRY, ["lab-b"]));
++      })
++    ));
++
++  it("collapses the entire labs region when the last lab is removed", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const next = yield* runRemovalWith(syncContent(LABS_BASE_REGISTRY, ["lab-a"]), "lab-a");
++        expect(next).toBe(LABS_BASE_REGISTRY);
++      })
++    ));
++
++  it("keeps the labs region canonical when removing a non-lab package", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const next = yield* runRemovalWith(syncContent(LABS_BASE_REGISTRY, ["lab-a"]), "widget");
++        expect(Str.includes('"widget"')(next)).toBe(false);
++        expect(Str.includes("$WidgetId")(next)).toBe(false);
++        expect(CreatePackageIdentityRegistration.labIdentityComposerGroupSlugs(next)).toEqual(["lab-a"]);
++        expect(CreatePackageIdentityRegistration.labIdentityExportBlockSlugs(next)).toEqual(["lab-a"]);
++        expect(Str.includes(CreatePackageIdentityRegistration.LAB_EXPORTS_START_MARKER)(next)).toBe(true);
++        expect(Str.includes(CreatePackageIdentityRegistration.LAB_EXPORTS_END_MARKER)(next)).toBe(true);
++      })
++    ));
++});
+diff --git a/packages/tooling/tool/cli/test/jsdoc-module-tags.test.ts b/packages/tooling/tool/cli/test/jsdoc-module-tags.test.ts
+new file mode 100644
+index 0000000000..28342c8fc5
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/jsdoc-module-tags.test.ts
+@@ -0,0 +1,77 @@
++import { runJSDocModuleTagsCheck } from "@beep/repo-cli/test/Quality";
++import { provideScopedLayer } from "@beep/test-utils";
++import { A, Str } from "@beep/utils";
++import { NodeServices } from "@effect/platform-node";
++import { Effect, Exit, FileSystem, Layer, Path } from "effect";
++import * as P from "effect/Predicate";
++import * as TestConsole from "effect/testing/TestConsole";
++import { ChildProcess } from "effect/unstable/process";
++import { describe, expect, it } from "vitest";
++import { withTempWorkingDirectory } from "./support/CommandTest.ts";
++
++const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
++
++const runGit = Effect.fn("JSDocModuleTagsTest.runGit")(function* (args: ReadonlyArray<string>) {
++  const handle = yield* ChildProcess.make("git", [...args], {
++    cwd: process.cwd(),
++    stdin: "ignore",
++    stdout: "ignore",
++    stderr: "ignore",
++  });
++  expect(yield* handle.exitCode).toBe(0);
++});
++
++const moduleTagSource = "/**\n * @module legacy\n */\nexport const widget = 1;\n";
++
++const writeFixtureFile = Effect.fn("JSDocModuleTagsTest.writeFixtureFile")(function* (relativePath: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  yield* fs.makeDirectory(path.dirname(relativePath), { recursive: true });
++  yield* fs.writeFileString(relativePath, moduleTagSource);
++});
++
++describe("jsdoc module tags command", { concurrent: false }, () => {
++  it(
++    "exempts lab-app files under apps/labs from the module-tag scan",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* runGit(["init"]);
++            // Labs are ceremony-exempt (goals/lab-apps-lifecycle SPEC D5): a
++            // tracked lab file with `@module` must not fail the check.
++            yield* writeFixtureFile("apps/labs/graph-play/src/Widget.ts");
++            yield* runGit(["add", "."]);
++
++            yield* runJSDocModuleTagsCheck();
++
++            expect(A.filter(yield* TestConsole.logLines, P.isString)).toContain(
++              "[check:jsdoc-module-tags] verified tracked fileoverview comments do not use @module"
++            );
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    15_000
++  );
++
++  it(
++    "still flags module tags in scanned roots outside apps/labs",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* runGit(["init"]);
++            yield* writeFixtureFile("packages/demo/src/Widget.ts");
++            yield* runGit(["add", "."]);
++
++            const exit = yield* Effect.exit(runJSDocModuleTagsCheck());
++
++            expect(Exit.isFailure(exit)).toBe(true);
++            const errorLines = A.filter(yield* TestConsole.errorLines, P.isString);
++            expect(A.some(errorLines, Str.includes("packages/demo/src/Widget.ts:2"))).toBe(true);
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    15_000
++  );
++});
+diff --git a/packages/tooling/tool/cli/test/labs-list.test.ts b/packages/tooling/tool/cli/test/labs-list.test.ts
+new file mode 100644
+index 0000000000..9a02cde4b1
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/labs-list.test.ts
+@@ -0,0 +1,168 @@
++import { labsCommand } from "@beep/repo-cli/test/Labs";
++import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
++import { provideScopedLayer } from "@beep/test-utils";
++import { A, Str } from "@beep/utils";
++import { NodeServices } from "@effect/platform-node";
++import { Effect, FileSystem, Layer, Path } from "effect";
++import * as O from "effect/Option";
++import * as P from "effect/Predicate";
++import * as TestConsole from "effect/testing/TestConsole";
++import { Command } from "effect/unstable/cli";
++import { describe, expect, it } from "vitest";
++import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
++
++const commandLayer = Layer.mergeAll(
++  NodeServices.layer,
++  TestConsole.layer,
++  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
++);
++const runLabs = Command.runWith(labsCommand, { version: "0.0.0" });
++
++const writeRepoRoot = (workspaces: ReadonlyArray<string>) =>
++  Effect.gen(function* () {
++    const fs = yield* FileSystem.FileSystem;
++    const workspaceLiterals = A.join(
++      A.map(workspaces, (workspace) => `"${workspace}"`),
++      ", "
++    );
++    yield* fs.writeFileString("bun.lock", "");
++    yield* fs.writeFileString(
++      "package.json",
++      `{ "name": "fixture", "private": true, "workspaces": [${workspaceLiterals}] }\n`
++    );
++  });
++
++const writeLab = (name: string, manifestJson: O.Option<string>) =>
++  Effect.gen(function* () {
++    const fs = yield* FileSystem.FileSystem;
++    const path = yield* Path.Path;
++    const dir = path.join("apps", "labs", name);
++    yield* fs.makeDirectory(dir, { recursive: true });
++    yield* fs.writeFileString(path.join(dir, "package.json"), `{ "name": "@beep/${name}", "private": true }\n`);
++    if (O.isSome(manifestJson)) {
++      yield* fs.writeFileString(path.join(dir, "lab.manifest.json"), manifestJson.value);
++    }
++  });
++
++const stringLogLines = Effect.gen(function* () {
++  const lines = yield* TestConsole.logLines;
++  return A.filter(lines, P.isString);
++});
++
++const lineIndexContaining = (lines: ReadonlyArray<string>, needle: string): O.Option<number> =>
++  A.findFirstIndex(lines, Str.includes(needle));
++
++describe("beep labs list", () => {
++  it("renders every decoded lab row stable-sorted by lab directory", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeRepoRoot(["apps/labs/*", "packages/*"]);
++          const fs = yield* FileSystem.FileSystem;
++          const path = yield* Path.Path;
++          yield* fs.makeDirectory(path.join("packages", "not-a-lab"), { recursive: true });
++          yield* fs.writeFileString(
++            path.join("packages", "not-a-lab", "package.json"),
++            '{ "name": "@beep/not-a-lab", "private": true }\n'
++          );
++          yield* writeLab(
++            "zeta-lab",
++            O.some(
++              '{ "purpose": "Probe zeta ideas", "created": "2026-08-02T09:00:00.000Z", "disposition": "promote" }\n'
++            )
++          );
++          yield* writeLab(
++            "alpha-lab",
++            O.some(
++              '{ "purpose": "Explore alpha", "created": "2026-08-01T12:30:00.000Z", "disposition": "active", "postgresSchema": "lab_alpha" }\n'
++            )
++          );
++
++          yield* runLabs(["list"]);
++          const lines = yield* stringLogLines;
++
++          expect(A.some(lines, Str.includes("2 lab(s) under apps/labs"))).toBe(true);
++          const alphaIndex = lineIndexContaining(lines, "@beep/alpha-lab");
++          const zetaIndex = lineIndexContaining(lines, "@beep/zeta-lab");
++          expect(O.isSome(alphaIndex)).toBe(true);
++          expect(O.isSome(zetaIndex)).toBe(true);
++          expect(O.getOrThrow(alphaIndex)).toBeLessThan(O.getOrThrow(zetaIndex));
++
++          const alphaRow = O.getOrThrow(A.findFirst(lines, Str.includes("@beep/alpha-lab")));
++          expect(alphaRow).toContain("apps/labs/alpha-lab");
++          expect(alphaRow).toContain("[active]");
++          expect(alphaRow).toContain("created 2026-08-01T12:30:00.000Z");
++          expect(alphaRow).toContain("purpose: Explore alpha");
++          const zetaRow = O.getOrThrow(A.findFirst(lines, Str.includes("@beep/zeta-lab")));
++          expect(zetaRow).toContain("[promote]");
++          expect(A.some(lines, Str.includes("@beep/not-a-lab"))).toBe(false);
++        })
++      ).pipe(provideScopedLayer(commandLayer))
++    ));
++
++  it("reports an invalid manifest as a failing row and exits nonzero", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeRepoRoot(["apps/labs/*"]);
++          yield* writeLab(
++            "good-lab",
++            O.some('{ "purpose": "Fine", "created": "2026-08-01T00:00:00.000Z", "disposition": "active" }\n')
++          );
++          yield* writeLab(
++            "bad-lab",
++            O.some('{ "purpose": "Broken", "created": "2026-08-01T00:00:00.000Z", "disposition": "abandoned" }\n')
++          );
++
++          const exit = yield* Effect.exit(runLabs(["list"]));
++          expectReportedExit(exit);
++
++          const lines = yield* stringLogLines;
++          expect(A.some(lines, Str.includes("@beep/good-lab"))).toBe(true);
++          const badRow = O.getOrThrow(A.findFirst(lines, Str.includes("@beep/bad-lab")));
++          expect(badRow).toContain("MANIFEST ERROR");
++          expect(badRow).toContain("invalid lab.manifest.json");
++          const errors = A.filter(yield* TestConsole.errorLines, P.isString);
++          expect(A.some(errors, Str.includes("1 lab(s) have a missing or invalid lab.manifest.json"))).toBe(true);
++        })
++      ).pipe(provideScopedLayer(commandLayer))
++    ));
++
++  it("reports a missing manifest as a failing row and exits nonzero", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeRepoRoot(["apps/labs/*"]);
++          yield* writeLab("bare-lab", O.none());
++
++          const exit = yield* Effect.exit(runLabs(["list"]));
++          expectReportedExit(exit);
++
++          const lines = yield* stringLogLines;
++          const bareRow = O.getOrThrow(A.findFirst(lines, Str.includes("@beep/bare-lab")));
++          expect(bareRow).toContain("MANIFEST ERROR");
++          expect(bareRow).toContain("missing lab.manifest.json");
++        })
++      ).pipe(provideScopedLayer(commandLayer))
++    ));
++
++  it("prints a friendly empty state and exits zero when no labs exist", () =>
++    Effect.runPromise(
++      withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeRepoRoot(["apps/labs/*", "packages/*"]);
++          const fs = yield* FileSystem.FileSystem;
++          const path = yield* Path.Path;
++          yield* fs.makeDirectory(path.join("packages", "not-a-lab"), { recursive: true });
++          yield* fs.writeFileString(
++            path.join("packages", "not-a-lab", "package.json"),
++            '{ "name": "@beep/not-a-lab", "private": true }\n'
++          );
++
++          yield* runLabs(["list"]);
++          const lines = yield* stringLogLines;
++          expect(A.some(lines, Str.includes("no labs exist under apps/labs"))).toBe(true);
++        })
++      ).pipe(provideScopedLayer(commandLayer))
++    ));
++});
+diff --git a/packages/tooling/tool/cli/test/labs-manifest.test.ts b/packages/tooling/tool/cli/test/labs-manifest.test.ts
+new file mode 100644
+index 0000000000..96d0cf55f4
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/labs-manifest.test.ts
+@@ -0,0 +1,96 @@
++import {
++  isLabDisposition,
++  LAB_MANIFEST_FILE_NAME,
++  LabDisposition,
++  LabManifest,
++  LabManifestJson,
++} from "@beep/repo-cli/test/Labs";
++import { Str } from "@beep/utils";
++import { DateTime, Effect } from "effect";
++import * as O from "effect/Option";
++import * as S from "effect/Schema";
++import { describe, expect, it } from "vitest";
++
++const decodeDisposition = S.decodeUnknownEffect(LabDisposition);
++const encodeDisposition = S.encodeUnknownEffect(LabDisposition);
++
++describe("lab manifest schemas", () => {
++  it("names the manifest file lab.manifest.json", () => {
++    expect(LAB_MANIFEST_FILE_NAME).toBe("lab.manifest.json");
++  });
++
++  it.each(["active", "promote", "expired"] as const)("round-trips the %s disposition", (disposition) =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const decoded = yield* decodeDisposition(disposition);
++        expect(decoded).toBe(disposition);
++        expect(yield* encodeDisposition(decoded)).toBe(disposition);
++        expect(isLabDisposition(disposition)).toBe(true);
++      })
++    )
++  );
++
++  it("rejects a disposition outside the ratified literal domain", () => {
++    expect(isLabDisposition("abandoned")).toBe(false);
++    expect(isLabDisposition("")).toBe(false);
++  });
++
++  it("round-trips a manifest with an owned Postgres schema through JSON text", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const manifest = LabManifest.make({
++          purpose: "Explore alpha",
++          created: DateTime.makeUnsafe("2026-08-01T12:30:00.000Z"),
++          disposition: "active",
++          postgresSchema: O.some("lab_alpha"),
++        });
++        const text = yield* LabManifestJson.encode(manifest);
++        const decoded = yield* LabManifestJson.decode(text);
++        expect(decoded.purpose).toBe("Explore alpha");
++        expect(decoded.disposition).toBe("active");
++        expect(DateTime.formatIso(decoded.created)).toBe("2026-08-01T12:30:00.000Z");
++        expect(O.getOrThrow(decoded.postgresSchema)).toBe("lab_alpha");
++      })
++    ));
++
++  it("omits an absent postgresSchema from the encoded JSON and decodes it back to none", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const manifest = LabManifest.make({
++          purpose: "Probe zeta ideas",
++          created: DateTime.makeUnsafe("2026-08-02T09:00:00.000Z"),
++          disposition: "promote",
++          postgresSchema: O.none(),
++        });
++        const text = yield* LabManifestJson.encode(manifest);
++        expect(Str.includes("postgresSchema")(text)).toBe(false);
++        const decoded = yield* LabManifestJson.decode(text);
++        expect(O.isNone(decoded.postgresSchema)).toBe(true);
++      })
++    ));
++
++  it("decodes an ISO created string into a DateTime.Utc", () =>
++    Effect.runPromise(
++      Effect.gen(function* () {
++        const decoded = yield* LabManifestJson.decode(
++          '{ "purpose": "Fine", "created": "2026-08-01T00:00:00.000Z", "disposition": "expired" }'
++        );
++        expect(DateTime.isDateTime(decoded.created)).toBe(true);
++        expect(DateTime.formatIso(decoded.created)).toBe("2026-08-01T00:00:00.000Z");
++      })
++    ));
++
++  it.each([
++    ["malformed JSON", "{ not json"],
++    ["empty purpose", '{ "purpose": "", "created": "2026-08-01T00:00:00.000Z", "disposition": "active" }'],
++    ["missing created", '{ "purpose": "Fine", "disposition": "active" }'],
++    ["invalid created", '{ "purpose": "Fine", "created": "yesterday-ish", "disposition": "active" }'],
++    ["invalid disposition", '{ "purpose": "Fine", "created": "2026-08-01T00:00:00.000Z", "disposition": "abandoned" }'],
++    [
++      "empty postgresSchema",
++      '{ "purpose": "Fine", "created": "2026-08-01T00:00:00.000Z", "disposition": "active", "postgresSchema": "" }',
++    ],
++  ])("refuses to decode a manifest with %s", (_label, text) => {
++    expect(O.isNone(LabManifestJson.decodeOption(text))).toBe(true);
++  });
++});
+diff --git a/packages/tooling/tool/cli/test/lint-command.test.ts b/packages/tooling/tool/cli/test/lint-command.test.ts
+index 2acaf60846..d73c427a2b 100644
+--- a/packages/tooling/tool/cli/test/lint-command.test.ts
++++ b/packages/tooling/tool/cli/test/lint-command.test.ts
+@@ -145,7 +145,10 @@ describe("deprecated-apis lint command", { concurrent: false }, () => {
+               A.map(invocationLines, (line) => argumentAfter(line, "--cache-location"))
+             );
+ 
+-            expect(logLines).toContain("[lint:deprecated-apis] running 24 shards with concurrency 4");
++            expect(logLines).toContain("[lint:deprecated-apis] running 25 shards with concurrency 4");
++            // Zero-lab tree: the apps/labs shard skips instead of handing
++            // ESLint 9 a positional target that matches no files.
++            expect(logLines).toContain("[lint:deprecated-apis] skipping missing shard: apps/labs");
+             expect(invocationLines).toHaveLength(24);
+             expect(A.dedupe(cacheLocations)).toHaveLength(24);
+             expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
+@@ -177,6 +180,70 @@ describe("deprecated-apis lint command", { concurrent: false }, () => {
+       ),
+     10_000
+   );
++
++  it(
++    "skips the labs shard when apps/labs holds no lintable sources",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            const fs = yield* FileSystem.FileSystem;
++            yield* writeDeprecatedApiLintFixture();
++            // Delete-last-lab residue: the labs root survives with only
++            // non-TypeScript leftovers, so the shard must stay skipped.
++            yield* fs.makeDirectory("apps/labs", { recursive: true });
++            yield* fs.writeFileString("apps/labs/README.md", "# labs\n");
++
++            yield* runLintCommand(["deprecated-apis"]);
++
++            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
++            const invocationLines = A.filter(
++              logLines,
++              (line) =>
++                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
++            );
++
++            expect(logLines).toContain("[lint:deprecated-apis] skipping sourceless labs shard: apps/labs");
++            expect(invocationLines).toHaveLength(24);
++            expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    10_000
++  );
++
++  it(
++    "lints the labs shard once a lab contributes TypeScript sources",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            const fs = yield* FileSystem.FileSystem;
++            yield* writeDeprecatedApiLintFixture();
++            yield* fs.makeDirectory("apps/labs/graph-play", { recursive: true });
++            yield* fs.writeFileString("apps/labs/graph-play/vite.config.ts", "export default {};\n");
++
++            yield* runLintCommand(["deprecated-apis"]);
++
++            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
++            const invocationLines = A.filter(
++              logLines,
++              (line) =>
++                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
++            );
++            const cacheLocations = A.getSomes(
++              A.map(invocationLines, (line) => argumentAfter(line, "--cache-location"))
++            );
++
++            expect(logLines).toContain("[lint:deprecated-apis] running 25 shards with concurrency 4");
++            expect(invocationLines).toHaveLength(25);
++            expect(A.some(cacheLocations, Str.endsWith(".eslintcache-apps__labs"))).toBe(true);
++            expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    10_000
++  );
+ });
+ 
+ const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(function* (
+diff --git a/packages/tooling/tool/cli/test/lint-identity-registry.test.ts b/packages/tooling/tool/cli/test/lint-identity-registry.test.ts
+index cecbea4b40..aee149f59a 100644
+--- a/packages/tooling/tool/cli/test/lint-identity-registry.test.ts
++++ b/packages/tooling/tool/cli/test/lint-identity-registry.test.ts
+@@ -1,4 +1,5 @@
+ import { lintCommand } from "@beep/repo-cli";
++import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration";
+ import { TSMorphServiceLive } from "@beep/repo-utils";
+ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+ import { provideScopedLayer } from "@beep/test-utils";
+@@ -292,3 +293,209 @@ describe("identity-registry lint command", { concurrent: false }, () => {
+     LINT_TIMEOUT
+   );
+ });
++
++const syncContent = CreatePackageIdentityRegistration.syncedLabsIdentityRegistryContent;
++
++const mergedRegistryContentFor = (slugs: ReadonlyArray<string>): string =>
++  A.join(
++    [
++      `const generatedComposers = $I.compose(${A.join(
++        A.map(slugs, (slug) => `"${slug}"`),
++        ", "
++      )});`,
++      "",
++      "const composers = {",
++      "  ...generatedComposers,",
++      "};",
++      "",
++      ...A.map(
++        slugs,
++        (slug) =>
++          `export const $${Str.pascalCase(slug)}Id: Identity.IdentityComposer<"@beep/${slug}"> = composers.$${Str.pascalCase(slug)}Id;`
++      ),
++      "",
++    ],
++    "\n"
++  );
++
++const writeLabsWorkspaceFixture = Effect.fn("writeLabsWorkspaceFixture")(function* (options: {
++  readonly registryContent: string;
++  readonly labs: ReadonlyArray<string>;
++}) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++
++  yield* fs.writeFileString("bun.lock", "");
++  yield* fs.writeFileString(
++    "package.json",
++    `${encodeJson({
++      name: "fixture-root",
++      private: true,
++      type: "module",
++      workspaces: ["packages/*", "apps/labs/*"],
++    })}\n`
++  );
++
++  yield* fs.makeDirectory(path.join("packages", "identity", "src"), { recursive: true });
++  yield* fs.writeFileString(
++    path.join("packages", "identity", "package.json"),
++    `${encodeJson({ name: "@beep/identity", version: "0.0.0", type: "module" })}\n`
++  );
++  yield* fs.writeFileString(
++    path.join("packages", "identity", "tsconfig.json"),
++    `${encodeJson({ compilerOptions: {} })}\n`
++  );
++  yield* fs.writeFileString(IDENTITY_REGISTRY_PATH, options.registryContent);
++
++  yield* fs.makeDirectory(path.join("packages", "widget", "src"), { recursive: true });
++  yield* fs.writeFileString(
++    path.join("packages", "widget", "package.json"),
++    `${encodeJson({ name: "@beep/widget", version: "0.0.0", type: "module" })}\n`
++  );
++
++  for (const lab of options.labs) {
++    yield* fs.makeDirectory(path.join("apps", "labs", lab, "src"), { recursive: true });
++    yield* fs.writeFileString(
++      path.join("apps", "labs", lab, "package.json"),
++      `${encodeJson({ name: `@beep/${lab}`, version: "0.0.0", type: "module" })}\n`
++    );
++  }
++});
++
++describe("identity-registry lint labs placement", { concurrent: false }, () => {
++  it(
++    "passes when a lab is placed inside the generated labs segment",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* writeLabsWorkspaceFixture({
++              registryContent: syncContent(mergedRegistryContentFor(["identity", "widget"]), ["lab-a"]),
++              labs: ["lab-a"],
++            });
++
++            yield* runLintCommand(["identity-registry"]);
++
++            const logLines = yield* TestConsole.logLines;
++            expect(logLines).toContain(
++              "[lint:identity-registry] OK: 3 workspace packages registered; no orphan or local root composers."
++            );
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    LINT_TIMEOUT
++  );
++
++  it(
++    "reports a lab slug registered in the package group",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* writeLabsWorkspaceFixture({
++              registryContent: mergedRegistryContentFor(["identity", "widget", "lab-a"]),
++              labs: ["lab-a"],
++            });
++
++            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
++
++            expectReportedExit(exit);
++            const errorLines = yield* TestConsole.errorLines;
++            expect(
++              A.some(errorLines, (line) => P.isString(line) && Str.startsWith("@beep/lab-a [lab-wrong-group]")(line))
++            ).toBe(true);
++            expect(
++              A.some(
++                errorLines,
++                (line) => P.isString(line) && Str.startsWith("@beep/lab-a [lab-missing-registration]")(line)
++              )
++            ).toBe(true);
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    LINT_TIMEOUT
++  );
++
++  it(
++    "reports a non-lab slug placed inside the labs segment",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* writeLabsWorkspaceFixture({
++              registryContent: syncContent(mergedRegistryContentFor(["identity"]), ["lab-a", "widget"]),
++              labs: ["lab-a"],
++            });
++
++            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
++
++            expectReportedExit(exit);
++            const errorLines = yield* TestConsole.errorLines;
++            expect(
++              A.some(errorLines, (line) => P.isString(line) && Str.startsWith("@beep/widget [lab-wrong-group]")(line))
++            ).toBe(true);
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    LINT_TIMEOUT
++  );
++
++  it(
++    "reports a labs segment entry with no live lab workspace",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* writeLabsWorkspaceFixture({
++              registryContent: syncContent(mergedRegistryContentFor(["identity", "widget"]), ["ghost-lab", "lab-a"]),
++              labs: ["lab-a"],
++            });
++
++            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
++
++            expectReportedExit(exit);
++            const errorLines = yield* TestConsole.errorLines;
++            expect(
++              A.some(
++                errorLines,
++                (line) => P.isString(line) && Str.startsWith("@beep/ghost-lab [lab-orphan-registration]")(line)
++              )
++            ).toBe(true);
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    LINT_TIMEOUT
++  );
++
++  it(
++    "rewrites the labs segment from the live catalog with --fix",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            const fs = yield* FileSystem.FileSystem;
++            yield* writeLabsWorkspaceFixture({
++              registryContent: mergedRegistryContentFor(["identity", "widget"]),
++              labs: ["lab-a"],
++            });
++
++            yield* runLintCommand(["identity-registry", "--fix"]);
++
++            const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
++            expect(registryContent).toContain('const generatedLabComposers = $I.compose("lab-a");');
++            expect(registryContent).toContain(CreatePackageIdentityRegistration.LAB_EXPORTS_START_MARKER);
++            expect(registryContent).toContain(
++              'export const $LabAId: Identity.IdentityComposer<"@beep/lab-a"> = composers.$LabAId;'
++            );
++
++            const logLines = yield* TestConsole.logLines;
++            expect(A.some(logLines, (line) => P.isString(line) && Str.includes('registered "lab-a"')(line))).toBe(true);
++            expect(logLines).toContain(
++              "[lint:identity-registry] OK: 3 workspace packages registered; no orphan or local root composers."
++            );
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    LINT_TIMEOUT
++  );
++});
+diff --git a/packages/tooling/tool/cli/test/qa-pure.test.ts b/packages/tooling/tool/cli/test/qa-pure.test.ts
+index cb8f69597d..218fc92dda 100644
+--- a/packages/tooling/tool/cli/test/qa-pure.test.ts
++++ b/packages/tooling/tool/cli/test/qa-pure.test.ts
+@@ -123,6 +123,13 @@ describe("commands/Qa Qa.session pure helpers", () => {
+     expect(PORTLESS_PORT).toBe(1355);
+   });
+ 
++  it("expands a labs app path onto the labs portless hostname", () => {
++    expect(portlessUrlForApp("labs/graph-play")).toBe(`http://graph-play.labs.beep.localhost:${PORTLESS_PORT}`);
++    expect(portlessUrlForApp("labs/trustgraph-workbench")).toBe(
++      `http://trustgraph-workbench.labs.beep.localhost:${PORTLESS_PORT}`
++    );
++  });
++
+   it("stamps a session id from the round and start time", () => {
+     expect(makeSessionId(2, 1754000000000)).toBe("qa-round-2-1754000000000");
+   });
+@@ -152,6 +159,17 @@ describe("commands/Qa Qa.session pure helpers", () => {
+       )
+     ));
+ 
++  it("expands a labs --app path when no --url is supplied", () =>
++    Effect.runPromise(
++      Effect.map(
++        resolveCaptureTarget(CaptureTargetRequest.make({ app: O.some("labs/graph-play"), url: O.none() })),
++        (target) => {
++          expect(target.url).toBe(`http://graph-play.labs.beep.localhost:${PORTLESS_PORT}`);
++          expect(target.allowedOrigins).toContain(`http://graph-play.labs.beep.localhost:${PORTLESS_PORT}`);
++        }
++      )
++    ));
++
+   it.effect("fails when neither --url nor --app is supplied", () =>
+     Effect.gen(function* () {
+       const exit = yield* Effect.exit(
+diff --git a/packages/tooling/tool/cli/test/quality-artifact-generators.test.ts b/packages/tooling/tool/cli/test/quality-artifact-generators.test.ts
+index a01f0f985f..484849ea42 100644
+--- a/packages/tooling/tool/cli/test/quality-artifact-generators.test.ts
++++ b/packages/tooling/tool/cli/test/quality-artifact-generators.test.ts
+@@ -116,6 +116,31 @@ const acquireFixtureRepo = Effect.fnUntraced(function* () {
+   return repoRoot;
+ });
+ 
++// Rewrites the fixture root to also expose a lab-app workspace under
++// apps/labs so inventory scoping can prove the labs exemption
++// (goals/lab-apps-lifecycle SPEC D5).
++const addLabWorkspaceFixture = Effect.fnUntraced(function* (repoRoot: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const labRoot = path.join(repoRoot, "apps", "labs", "lab-demo");
++
++  yield* fs.makeDirectory(path.join(labRoot, "src"), { recursive: true });
++  yield* writeJsonFile(path.join(repoRoot, "package.json"), {
++    name: "fixture-root",
++    scripts: {
++      "topo-sort": "printf '@beep/demo\\n@beep/lab-demo\\n'",
++    },
++    workspaces: ["packages/*", "apps/labs/*"],
++  });
++  yield* writeJsonFile(path.join(labRoot, "package.json"), {
++    name: "@beep/lab-demo",
++    exports: {
++      ".": "./src/index.ts",
++    },
++  });
++  yield* fs.writeFileString(path.join(labRoot, "src", "index.ts"), packageSource);
++});
++
+ const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {
+   return yield* Effect.acquireUseRelease(
+     acquireFixtureRepo(),
+@@ -162,6 +187,33 @@ describe("quality artifact generators", () => {
+       )
+     ));
+ 
++  it("excludes lab-app workspaces under apps/labs from the JSDoc inventory", () =>
++    Effect.runPromise(
++      withFixtureRepo(
++        Effect.fnUntraced(function* (repoRoot) {
++          const fs = yield* FileSystem.FileSystem;
++          const path = yield* Path.Path;
++          const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
++          const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
++
++          yield* addLabWorkspaceFixture(repoRoot);
++          yield* writeJSDocDocumentationInventory({
++            rootDir: repoRoot,
++            outputJsonPath,
++            outputMarkdownPath,
++            generatedAt: fixedGeneratedAt,
++          });
++          const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
++            readonly packages: ReadonlyArray<{ readonly packageName: string }>;
++          };
++          const markdown = yield* fs.readFileString(outputMarkdownPath);
++
++          expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
++          expect(markdown).not.toContain("@beep/lab-demo");
++        })
++      )
++    ));
++
+   it("summarizes Turbo affected query output with banner text", () =>
+     Effect.runPromise(
+       Effect.gen(function* () {
+diff --git a/packages/tooling/tool/cli/test/tsconfig-sync.test.ts b/packages/tooling/tool/cli/test/tsconfig-sync.test.ts
+index e1576bfea4..1f7fef8633 100644
+--- a/packages/tooling/tool/cli/test/tsconfig-sync.test.ts
++++ b/packages/tooling/tool/cli/test/tsconfig-sync.test.ts
+@@ -179,6 +179,43 @@ const bootstrapWorkspace = Effect.fn(function* (
+   }
+ });
+ 
++// Lab manifests are non-exporting by ratified template shape (SPEC D5): no
++// `exports` field, so root alias derivation stays quiet without a code path
++// for labs in planRootAliasSync.
++const bootstrapLabWorkspace = Effect.fn(function* (
++  rootDir: string,
++  options: {
++    readonly relativeDir: string;
++    readonly packageName: string;
++    readonly dependencies?: Record<string, string>;
++    readonly references?: ReadonlyArray<string>;
++  }
++) {
++  const path = yield* Path.Path;
++  const workspaceDir = path.join(rootDir, options.relativeDir);
++
++  yield* writeJsonFile(path.join(workspaceDir, "package.json"), {
++    name: options.packageName,
++    version: "0.0.0",
++    ...O.getSomesStruct({ dependencies: O.fromUndefinedOr(options.dependencies) }),
++  });
++  yield* writeJsonFile(path.join(workspaceDir, "tsconfig.json"), {
++    ...O.getSomesStruct({
++      references: O.map(O.fromUndefinedOr(options.references), (references) =>
++        A.map(references, (referencePath) => ({ path: referencePath }))
++      ),
++    }),
++    compilerOptions: {
++      outDir: "dist",
++      rootDir: "src",
++    },
++  });
++  yield* writeTextFile(
++    path.join(workspaceDir, "src", "index.ts"),
++    `export const workspaceName = "${options.packageName}";\n`
++  );
++});
++
+ describe("tsconfig-sync", () => {
+   it("round-trips arbitrary tsconfig reference documents", () => {
+     fc.assert(
+@@ -880,3 +917,157 @@ describe("tsconfig-sync", () => {
+     20_000
+   );
+ });
++
++describe("tsconfig-sync labs scoping", () => {
++  it(
++    "excludes labs workspaces from root references while sibling apps remain",
++    () =>
++      Effect.runPromise(
++        withTempRepo(
++          Effect.gen(function* () {
++            const path = yield* Path.Path;
++            const rootDir = process.cwd();
++
++            yield* bootstrapRootConfig(rootDir, {
++              workspaces: ["apps/example-app", "apps/labs/*"],
++              references: [],
++              paths: {},
++              syncpackSources: ["package.json", "apps/example-app/package.json", "apps/labs/*/package.json"],
++            });
++            yield* bootstrapWorkspace(rootDir, {
++              relativeDir: "apps/example-app",
++              packageName: "@beep/example-app",
++            });
++            yield* bootstrapLabWorkspace(rootDir, {
++              relativeDir: "apps/labs/example-lab",
++              packageName: "@beep/example-lab",
++            });
++
++            yield* syncTsconfigAtRoot(rootDir, {
++              mode: "sync",
++              filter: undefined,
++              verbose: false,
++            });
++
++            const refs = decodeTsconfigReferences(yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json")));
++            expect(A.map(refs.references, (entry) => entry.path)).toEqual(["apps/example-app"]);
++
++            // Non-exporting lab manifests also stay out of root alias
++            // derivation with zero labs-specific code in planRootAliasSync.
++            const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
++            expect(paths.compilerOptions.paths).toMatchObject({
++              "@beep/example-app": ["./apps/example-app/src/index.ts"],
++              "@beep/example-app/*": ["./apps/example-app/src/*"],
++            });
++            expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/example-lab");
++          })
++        )
++      ),
++    20_000
++  );
++
++  it(
++    "plans package-local references for labs workspaces",
++    () =>
++      Effect.runPromise(
++        withTempRepo(
++          Effect.gen(function* () {
++            const path = yield* Path.Path;
++            const rootDir = process.cwd();
++
++            yield* bootstrapRootConfig(rootDir, {
++              workspaces: ["packages/example-domain", "apps/labs/*"],
++              references: ["packages/example-domain"],
++              paths: {
++                "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
++                "@beep/example-domain/*": ["./packages/example-domain/src/*"],
++              },
++              syncpackSources: ["package.json", "packages/example-domain/package.json", "apps/labs/*/package.json"],
++            });
++            yield* bootstrapWorkspace(rootDir, {
++              relativeDir: "packages/example-domain",
++              packageName: "@beep/example-domain",
++            });
++            yield* bootstrapLabWorkspace(rootDir, {
++              relativeDir: "apps/labs/example-lab",
++              packageName: "@beep/example-lab",
++              dependencies: {
++                "@beep/example-domain": "workspace:*",
++              },
++            });
++
++            const result = yield* syncTsconfigAtRoot(rootDir, {
++              mode: "sync",
++              filter: "@beep/example-lab",
++              verbose: false,
++            });
++
++            expect(A.map(result.changes, (change) => change.section)).toEqual(["package-references"]);
++
++            const labRefs = decodeTsconfigReferences(
++              yield* readJsoncFile(path.join(rootDir, "apps", "labs", "example-lab", "tsconfig.json"))
++            );
++            expect(A.map(labRefs.references, (entry) => entry.path)).toEqual([
++              "../../../packages/example-domain/tsconfig.json",
++            ]);
++
++            const rootRefs = decodeTsconfigReferences(
++              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
++            );
++            expect(A.map(rootRefs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
++          })
++        )
++      ),
++    20_000
++  );
++
++  it(
++    "keeps zero-lab root references byte-identical with the labs glob member present",
++    () =>
++      Effect.runPromise(
++        withTempRepo(
++          Effect.gen(function* () {
++            const fs = yield* FileSystem.FileSystem;
++            const path = yield* Path.Path;
++            const rootDir = process.cwd();
++
++            yield* bootstrapRootConfig(rootDir, {
++              workspaces: ["apps/example-app", "apps/labs/*"],
++              references: ["apps/example-app"],
++              paths: {
++                "@beep/example-app": ["./apps/example-app/src/index.ts"],
++                "@beep/example-app/*": ["./apps/example-app/src/*"],
++              },
++              syncpackSources: ["package.json", "apps/example-app/package.json", "apps/labs/*/package.json"],
++            });
++            yield* bootstrapWorkspace(rootDir, {
++              relativeDir: "apps/example-app",
++              packageName: "@beep/example-app",
++            });
++
++            const rootRefsPath = path.join(rootDir, "tsconfig.packages.json");
++            const before = yield* fs.readFileString(rootRefsPath);
++
++            // The zero-lab tree (also the delete-last-lab state) must be
++            // drift-free in check mode even with the zero-match labs glob.
++            yield* syncTsconfigAtRoot(rootDir, {
++              mode: "check",
++              filter: undefined,
++              verbose: false,
++            });
++
++            const syncResult = yield* syncTsconfigAtRoot(rootDir, {
++              mode: "sync",
++              filter: undefined,
++              verbose: false,
++            });
++            expect(syncResult.changes).toEqual([]);
++
++            const after = yield* fs.readFileString(rootRefsPath);
++            expect(after).toBe(before);
++          })
++        )
++      ),
++    20_000
++  );
++});
+diff --git a/standards/ARCHITECTURE.md b/standards/ARCHITECTURE.md
+index 8cdcdcb528..3dae433fe2 100644
+--- a/standards/ARCHITECTURE.md
++++ b/standards/ARCHITECTURE.md
+@@ -65,6 +65,11 @@ API, root `src/index.ts`, package exports, or docgen surface. Runtime proof apps
+ package-like when the app exists to prove a runtime contract from a public
+ workspace API.
+ 
++Law-abiding experimental apps live under `apps/labs/*`: they are
++production-shaped, durable while useful, and mechanically deletable without
++per-app shared-registration edits. They obey
++[14-lab-apps.md](architecture/14-lab-apps.md).
++
+ The core vocabulary is deliberately small at the entry point: slice, domain,
+ use-cases, adapter, driver, shared kernel, foundation, config contract, Layer,
+ and canonical subpath name. More specialized terms remain canonical, but use the
+diff --git a/standards/architecture/14-lab-apps.md b/standards/architecture/14-lab-apps.md
+new file mode 100644
+index 0000000000..346580014d
+--- /dev/null
++++ b/standards/architecture/14-lab-apps.md
+@@ -0,0 +1,157 @@
++# 14 — Lab Apps
++
++Lab apps are law-abiding experimental applications under `apps/labs/*`. They
++exist to make an uncertain product or integration idea cheap to prove without
++making the proof structurally unlike production code.
++
++A lab app is durable while it is useful and disposable when it is not. It is a
++real private workspace app, not a scratch file, package family, slice role, or
++feature flag. Its path carries the lifecycle class so tooling can apply the
++same policy to every lab without accumulating package-name lists.
++
++## Law Posture
++
++Lab apps obey the full code law:
++
++- schema-first and Effect-first modeling
++- typecheck and test typecheck
++- Biome, Effect language-service, and native-runtime rules
++- import boundaries, circular-dependency checks, dead-code analysis, and
++  identity registration
++- secret scanning, SAST, and dependency security
++- portless dev-server naming: every lab serves at
++  `http://<name>.labs.beep.localhost:1355`, never a raw numeric localhost port
++
++Labs are exempt only from package ceremony, by path construction. They do not
++publish docgen surfaces, enter JSDoc or coverage ratchets, require changesets,
++or register Storybook stories. These are not waivers for code quality. A new or
++changed lab must pass the labs CI lane on its own PR; the lane remains
++non-required for unrelated product work.
++
++The Scratchpad Lane remains the home for throwaway, law-relaxed exploration. A
++lab is the next step: production-shaped enough to test architecture and
++integration claims honestly, with deletion cheap enough that compliance does
++not turn an experiment into permanent topology.
++
++## Registration Without Per-Lab Root Churn
++
++The repository carries one workspace glob (`apps/labs/*`) and one set of
++path-scoped gate rules for the labs root. Creating or deleting a lab MUST NOT
++add or remove a lab-specific row in root workspace, changeset, coverage,
++docgen, Storybook, or CI configuration.
++
++Registration is declared as geometry shared by create-package,
++delete-package, and doctor:
++
++- create interprets each declared surface forward;
++- delete interprets the same surface inversely;
++- doctor compares the declaration with the live tree and reports missing,
++  stale, or residual state.
++
++Derived configuration is rebuilt by its owning writer. A lab is not added to
++the root TypeScript solution reference list; its package-local check and the
++labs lane own typechecking. Identity composers remain real package composers
++and live in the mechanically generated `generatedLabComposers` segment of the
++identity registry
++(`packages/foundation/modeling/identity/src/packages.ts`), fenced by
++`// GENERATED LAB EXPORTS START` / `// GENERATED LAB EXPORTS END` markers. The
++sync writer owns that entire region atomically; when zero labs exist the
++region is absent. Changeset status runs through the
++`beep quality changeset-status` wrapper, which excludes lab-owned diffs by
++resolved workspace path, not by a growing ignore-name list.
++
++No lab publishes a public `@beep/*` API. Framework-local imports use the app's
++local alias. A component that earns reusable consumers must promote into its
++lawful package or slice home before other workspaces import it.
++
++## Manifest And Disposition
++
++Every lab owns a schema-decoded manifest at `lab.manifest.json` in its
++workspace root. The manifest records:
++
++- purpose
++- creation date
++- disposition: `active`, `promote`, or `expired`
++- optional manifest-owned local data resources (`postgresSchema`)
++
++`active` means the lab is still a proving ground. `promote` means its result has
++earned a durable non-lab home and must follow the promotion runbook. `expired`
++means the proof no longer justifies its footprint and should be deleted. These
++states are inventory and operator intent, not a TTL or CI nag.
++
++## Lifecycle
++
++### Create
++
++Create through the repo package factory's lab mode:
++
++```sh
++bun run beep create-package <name> --type app --app-kind <nextjs|vite|service> --lab
++```
++
++The selected app kind must produce a private, portless, testable workspace with
++a decoded `lab.manifest.json`, a real identity composer in the generated labs
++segment, and no public exports or ceremony surfaces. The one-time labs
++registration makes creation free of per-lab shared-config edits.
++
++### Promote
++
++Promotion is a reviewed runbook
++([docs/runbooks/lab-promotion.md](../../docs/runbooks/lab-promotion.md)), not a
++rename command:
++
++1. Choose the smallest lawful durable home: an app, owning slice, shared-kernel
++   promotion, driver, foundation package, tooling package, or ecosystem
++   package.
++2. Move the code and apply that home's full registration and ceremony.
++3. Migrate consumers in the same change; product code never imports the lab
++   path.
++4. Preserve the package identity when the promoted package keeps the same
++   semantic ownership. Record an explicit identity transition when it does
++   not.
++5. Remove every residual lab surface and finish with doctor clean.
++
++A promotion that creates or changes a shared export follows the owning
++doctrine's admission and decision-record requirements. Lab status alone never
++waives a promotion gate.
++
++### Delete And Retire
++
++Delete through `beep delete-package`. The command refuses live dependents,
++inverts every declared registration surface, rebuilds writer-owned derived
++state, removes ignored artifacts, and runs doctor. `--force` never overrides a
++dependent.
++
++Labs use the pre-v1 retirement class: consumer migration and removal happen in
++the same PR, with no sunset window. This is the narrow D14 waiver to the general
++evolution procedure in [11-evolution-and-deprecation.md](11-evolution-and-deprecation.md).
++A DECISIONS entry is required only when the lab had promoted a shared export or
++when deletion changes an architecture-wide promise. Historical research and
++shipped records remain intact.
++
++Manifest-owned Postgres state is namespaced to the lab. Delete may drop it only
++when the operator passes the explicit destructive consent flag (`--drop-data`)
++and the schema name is proven uniquely derived from and owned by the target
++lab. Without consent, deletion prints the manual drop steps and leaves data
++intact.
++
++## Labs Must Never
++
++A lab MUST NOT:
++
++- publish a reusable `@beep/*` TypeScript API, root public index, package
++  exports, or docgen surface;
++- add tables or migrations to `packages/*/tables`;
++- be imported by a product slice, shared kernel, foundation package, driver,
++  tooling package, ecosystem package, or production app;
++- add per-lab rows to root registration or ceremony configuration;
++- use raw numeric localhost dev-server URLs instead of its portless
++  `<name>.labs.beep.localhost:1355` hostname;
++- rely on a path waiver to escape schema-first, Effect-first, security, import,
++  or testing laws;
++- cascade deletion into non-lab packages;
++- rewrite historical evidence merely to erase a retired lab name.
++
++If an experiment needs any of these, it has outgrown the lab lifecycle or has
++chosen the wrong home. Promote it, split out the durable capability, or delete
++it.
+diff --git a/standards/architecture/DECISIONS.md b/standards/architecture/DECISIONS.md
+index 2066762a65..4cffe1e59e 100644
+--- a/standards/architecture/DECISIONS.md
++++ b/standards/architecture/DECISIONS.md
+@@ -1373,6 +1373,39 @@ fixture acceptance implementation and no production acceptance composition
+ root; promotion therefore proves that existing boundary and the fail-closed
+ vertical adapter without claiming live product protection.
+ 
++## 2026-08-16: Establish `apps/labs/*` And Zero-Root-Churn Lab Registration
++
++- **Status:** Active
++
++Decision:
++
++Law-abiding experimental applications live under `apps/labs/*`. Labs are
++private executable workspaces, not a fifth non-slice family, architecture role,
++Scratchpad sublane, or feature-flag experiment. They obey the full code law and
++are exempt only from package ceremony through one-time path-scoped rules.
++
++The labs root uses zero-root-churn registration: one workspace glob and one set
++of gate scopes replace per-lab workspace, changeset, coverage, docgen,
++Storybook, and CI rows. Registration geometry is the single declared surface
++set interpreted forward by create-package, inversely by delete-package, and as
++declared-versus-actual probes by doctor. Root TypeScript solution references
++exclude labs; package-local checks and a visible non-required labs lane own
++their typechecking. Lab identity composers remain real package composers in a
++mechanically generated labs segment. Labs never publish `@beep/*` APIs, add
++tables to `packages/*/tables`, or become dependencies of product slices.
++
++Rationale:
++
++The architecture north star already requires experiments to be easy to create,
++easy to delete, and production-shaped. Scratchpad makes creation cheap by
++relaxing laws; ordinary apps preserve laws but accumulate shared registration
++and deletion ceremony. The labs convention combines full code-law fidelity
++with path-derived ceremony exemption, while registration geometry makes
++deletion completeness testable instead of relying on a parallel hand-written
++checklist. Keeping the CI lane non-required prevents a stale lab from blocking
++unrelated upstream work, while requiring the lab's own PR to pass preserves the
++claim that it is a faithful proving ground.
++
+ ## Known Unknowns
+ 
+ Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
+diff --git a/standards/architecture/GLOSSARY.md b/standards/architecture/GLOSSARY.md
+index 21ccb61d7b..1be69fe0b1 100644
+--- a/standards/architecture/GLOSSARY.md
++++ b/standards/architecture/GLOSSARY.md
+@@ -224,6 +224,16 @@ A technical failure that should be logged, traced, retried, or translated at a
+ boundary, but should not directly drive product behavior in domain/use-case
+ code.
+ 
++## Lab App
++
++A private, law-abiding experimental application under `apps/labs/*`. A lab app
++is production-shaped and durable while useful, but path-scoped out of package
++ceremony so create and delete do not accumulate per-app shared configuration.
++It is not a doctrine-11 feature-flag experiment inside a product runtime, and it
++is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
++package surfaces must not import a lab app; promotion moves earned work into its
++lawful durable home.
++
+ ## Modeling Package
+ 
+ A `foundation` kind for reusable schemas, brands, identity contracts, and
