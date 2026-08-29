@@ -1,0 +1,276 @@
+diff --git a/scratchpad/Reasoner/Reasoner.errors.ts b/scratchpad/Reasoner/Reasoner.errors.ts
+new file mode 100644
+index 0000000000..d568b5e076
+--- /dev/null
++++ b/scratchpad/Reasoner/Reasoner.errors.ts
+@@ -0,0 +1,40 @@
++import * as S from "effect/Schema";
++import { $ScratchpadId } from "@beep/identity";
++import { TaggedErrorClass } from "@beep/schema";
++
++const $I = $ScratchpadId.create("errors/reasoning");
++
++export class MaxDepthExceededError extends TaggedErrorClass<MaxDepthExceededError>($I`MaxDepthExceededError`)(
++  "MaxDepthExceededError",
++  {
++    message: S.String,
++    limit: S.Number,
++    iterations: S.Number,
++  },
++  $I.annote("MaxDepthExceededError", {
++    description: "Reasoning depth limit exceeded to prevent infinite loops",
++  })
++) {}
++
++export class MaxInferencesExceededError extends TaggedErrorClass<MaxInferencesExceededError>(
++  $I`MaxInferencesExceededError`
++)(
++  "MaxInferencesExceededError",
++  {
++    message: S.String,
++    limit: S.Number,
++    inferencesGenerated: S.Number,
++  },
++  $I.annote("MaxInferencesExceededError", {
++    description: "Maximum number of inferences exceeded",
++  })
++) {}
++
++export const ReasoningError = S.Union([MaxDepthExceededError, MaxInferencesExceededError]).pipe(
++  S.toTaggedUnion("_tag"),
++  $I.annoteSchema("ReasoningError", {
++    description: "Union of all reasoning error types",
++  })
++)
++
++export type ReasoningError = typeof ReasoningError.Type;
+diff --git a/scratchpad/Reasoner/Reasoner.models.ts b/scratchpad/Reasoner/Reasoner.models.ts
+new file mode 100644
+index 0000000000..39d7bb06f1
+--- /dev/null
++++ b/scratchpad/Reasoner/Reasoner.models.ts
+@@ -0,0 +1,204 @@
++import { $ScratchpadId } from "@beep/identity";
++import * as S from "effect/Schema";
++import { Tuple } from "effect";
++import { PosInt, NonNegativeInt, LiteralKit, SchemaUtils, MutableHashSet as MutableHashSetSchema, MutableHashMap as MutableHashMapSchema} from "@beep/schema";
++import {Quad, Literal} from "@beep/semantic-web/rdf";
++import {IRI} from "@beep/semantic-web";
++import { A } from "@beep/utils";
++import {pipe, MutableHashMap, MutableHashSet} from "effect";
++
++const $I = $ScratchpadId.create("Reasoner.models");
++
++export const Predicate = IRI.pipe(
++  S.brand("Predicate"),
++  $I.annoteSchema("Predicate", {
++    description: "RDF predicate (IRI only)"
++  })
++)
++
++export type Predicate = typeof Predicate.Type;
++
++export const ReasoningProfile = LiteralKit(
++  [
++    "rdfs_full",
++    "rdfs_subclass",
++    "rdfs_domain_range",
++    "owl_sameas",
++    "owl_full",
++    "custom"
++  ]
++).pipe(
++  $I.annoteSchema("ReasoningProfile", {
++    description: "Supported reasoning profiles for the inference engine."
++  })
++);
++
++export type ReasoningProfile = typeof ReasoningProfile.Type;
++
++export class ReasoningConfigBase extends S.Class<ReasoningConfigBase>($I`ReasoningConfigBase`)(
++  {
++    maxDepth: PosInt.pipe(
++      SchemaUtils.withKeyDefaults(PosInt.make(10))
++    ),
++    maxInferences: PosInt.pipe(
++      SchemaUtils.withKeyDefaults(PosInt.make(10_000))
++    ),
++  },
++  $I.annote("ReasoningConfigBase", {
++    description: "The base configuration for the reasoner."
++  })
++) {}
++
++export const ReasoningConifg = ReasoningProfile.mapMembers(Tuple.evolve(
++  [
++    () => S.Struct({
++      ...ReasoningConfigBase.fields,
++      profile: S.tag(ReasoningProfile.Enum.rdfs_full)
++    }),
++    () => S.Struct({
++      ...ReasoningConfigBase.fields,
++      profile: S.tag(ReasoningProfile.Enum.rdfs_subclass)
++    }),
++    () => S.Struct({
++  ...ReasoningConfigBase.fields,
++  profile: S.tag(ReasoningProfile.Enum.rdfs_domain_range)
++}),
++() => S.Struct({
++  ...ReasoningConfigBase.fields,
++  profile: S.tag(ReasoningProfile.Enum.owl_sameas)
++}),
++() => S.Struct({
++  ...ReasoningConfigBase.fields,
++  profile: S.tag(ReasoningProfile.Enum.owl_full)
++}),
++() => S.Struct({
++  ...ReasoningConfigBase.fields,
++  profile: S.tag(ReasoningProfile.Enum.custom)
++})
++  ]
++)).pipe(
++  S.toTaggedUnion("profile"),
++  SchemaUtils.withStatics((schema) => ({
++    default: schema.make({profile: ReasoningProfile.Enum.rdfs_full})
++  })),
++  $I.annoteSchema("ReasoningConfig", {
++    description: "The configuration for the Reasoner."
++  })
++)
++
++
++export class InferenceProvenance extends S.Class<InferenceProvenance>($I`InferenceProvenance`)({
++  ruleId: S.String.annotateKey({
++    title: "Rule ID",
++    description: "Identifier of the inference rule that was applied",
++  }),
++
++  sourceQuads: S.Array(S.String).annotateKey({
++    title: "Source Quads",
++    description: "Identifiers of quads that triggered this inference",
++  }),
++}) {}
++
++export class InferenceStats extends S.Class<InferenceStats>($I`InferenceStats`)({
++  iterations: NonNegativeInt.annotateKey({
++    title: "Iterations",
++    description: "Number of rule application iterations",
++  }),
++
++  triplesInferred: NonNegativeInt.annotateKey({
++    title: "Triples Inferred",
++    description: "Total number of new triples generated",
++  }),
++
++  durationMs: NonNegativeInt.annotateKey({
++    title: "Duration (ms)",
++    description: "Execution time in milliseconds",
++  }),
++}) {}
++
++export class InferenceResult extends S.Class<InferenceResult>($I`InferenceResult`)({
++  derivedTriples: S.Array(Quad).annotateKey({
++    title: "Derived Triples",
++    description: "RDF quads generated through inference",
++  }),
++
++  provenance: S.Record(S.String,  InferenceProvenance ).annotateKey({
++    title: "Provenance",
++    description: "Maps derived triple IDs to their inference provenance",
++  }),
++
++  stats: InferenceStats.annotateKey({
++    title: "Statistics",
++    description: "Execution statistics for the reasoning operation",
++  }),
++}) {
++  static readonly empty = InferenceResult.make({
++    derivedTriples: [],
++    provenance: {},
++    stats: InferenceStats.make({
++      iterations: NonNegativeInt.make(0),
++      triplesInferred:NonNegativeInt.make(0),
++      durationMs:NonNegativeInt.make(0),
++    }),
++  })
++}
++
++export class RuleInference extends S.Class<RuleInference>($I`RuleInference`)(
++  {
++    quad: Quad,
++    ruleId: S.String,
++    sourceQuadIds: S.Array(S.String),
++  },
++  $I.annote("RuleInference", {
++    description: "Single inferred quad produced by an RDFS rule application (with rule id and source quad ids).",
++  })
++) {}
++
++export const quadId = (q: Quad): string => {
++  const objectStr = S.is(Literal)(q.object)
++    ? `"${q.object.value}"${q.object.datatype ?? ""}${q.object.language ?? ""}`
++    : `${q.object}`;
++  return `${q.subject}|${q.predicate}|${objectStr}|${q.graph ?? ""}`;
++};
++
++export class ChainState extends S.Class<ChainState>($I`ChainState`)(
++  {
++  knownQuadIds: MutableHashSetSchema(S.String),
++  allQuads: S.Array(Quad).pipe(S.mutable),
++  derivedQuads: S.Array(Quad).pipe(S.mutable),
++  provenance: MutableHashMapSchema({ key: S.String, value: InferenceProvenance }),
++  totalInferences: S.Number,
++  iterations: S.Number,
++},
++  $I.annote("ChainState", {
++    description: "The state of the inference chain."
++  })
++) {
++  static readonly initial =(initialQuads: ReadonlyArray<Quad>): ChainState => {
++    const knownQuadIds = MutableHashSet.empty<string>();
++    const allQuads = A.empty<Quad>();
++
++    const uniqueQuads = pipe(
++      initialQuads,
++      A.filter((quad) => {
++        const id = quadId(quad);
++        if (MutableHashSet.has(knownQuadIds, id)) {
++          return false;
++        }
++        MutableHashSet.add(knownQuadIds, id);
++        return true;
++      })
++    );
++
++    A.forEach(uniqueQuads, (quad) => allQuads.push(quad));
++
++    return {
++      knownQuadIds,
++      allQuads,
++      derivedQuads: [],
++      provenance: MutableHashMap.empty<string, InferenceProvenance>(),
++      totalInferences: 0,
++      iterations: 0,
++    };
++  }
++}
+diff --git a/scratchpad/Reasoner/Reasoner.service.ts b/scratchpad/Reasoner/Reasoner.service.ts
+new file mode 100644
+index 0000000000..80672308ee
+--- /dev/null
++++ b/scratchpad/Reasoner/Reasoner.service.ts
+@@ -0,0 +1,11 @@
++// import { $ScratchpadId } from '@beep/identity';
++// import * as S from "effect/Schema";
++// import { Effect, Context, Layer,pipe } from "effect";
++// import { dual } from "@beep/utils";
++//
++// const $I = $ScratchpadId.create("Reasonser/Reasoner.service")
++//
++// export interface ReasonerServiceShape {}
++//
++// export class ReasonerService extends Context.Service<ReasonerService, ReasonerServiceShape>()($I`ReasonerService`) {}
++//
+diff --git a/scratchpad/Reasoner/index.ts b/scratchpad/Reasoner/index.ts
+new file mode 100644
+index 0000000000..e69de29bb2
