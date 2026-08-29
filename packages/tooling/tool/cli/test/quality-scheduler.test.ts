@@ -433,6 +433,33 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("keeps admission green when the journal cannot be written", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const journalPath = yield* admissionJournalPath(tempRoot.root);
+            // A directory squatting on the journal path fails every append;
+            // admission and release must still complete and clean up.
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.makeDirectory(journalPath, { mode: 0o700 });
+            const during = yield* withQualityAdmission(
+              request(),
+              noAdmissionOriginGate,
+              admissionStatus(fastConfig),
+              fastConfig
+            );
+            expect(during.leases).toHaveLength(1);
+            expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
+            expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+          })
+        );
+      })
+    ));
+
   it("property: admission journal events round-trip through the NDJSON codec", () => {
     const EventArbitrary = S.toArbitrary(AdmissionJournalEvent)(fc);
     fc.assert(

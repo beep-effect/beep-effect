@@ -14,7 +14,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Clock, Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -194,17 +194,15 @@ const tryAcquireCompactionLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
+  // Any create failure (typically AlreadyExists contention) skips this round;
+  // the stale inspection reaps an abandoned lock so the next append compacts.
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs.open(lockPath, { flag: "wx" });
       yield* file.writeAll(textEncoder.encode(`${process.pid}\n`));
       return true;
     })
-  ).pipe(
-    Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "AlreadyExists" ? inspectStaleCompactionLock(lockPath) : Effect.succeed(false)
-    )
-  );
+  ).pipe(Effect.catch(() => inspectStaleCompactionLock(lockPath)));
 });
 
 const compactLocked = Effect.fnUntraced(function* (
@@ -213,13 +211,7 @@ const compactLocked = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(journalPath)
-    .pipe(
-      Effect.catchTag("PlatformError", (error) =>
-        error.reason._tag === "NotFound"
-          ? Effect.succeed(Str.empty)
-          : Effect.fail(QualitySchedulerError.new(`Failed to read admission journal "${journalPath}".`)(error))
-      )
-    );
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to read admission journal "${journalPath}".`)));
   const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
   const probed = yield* Effect.forEach(rawLines, (line) =>
     decodeAdmissionJournalEvent(line).pipe(Effect.option, Effect.map(O.map((event) => ({ event, line }))))
@@ -240,12 +232,7 @@ const compactLocked = Effect.fnUntraced(function* (
   const firstRetainedIndex =
     A.length(admittedIndexes) <= RETAINED_ADMISSIONS
       ? 0
-      : pipe(
-          admittedIndexes,
-          A.takeRight(RETAINED_ADMISSIONS),
-          A.head,
-          O.getOrElse(() => 0)
-        );
+      : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
   if (droppedCount === 0 && firstRetainedIndex === 0) {
     return;
   }
