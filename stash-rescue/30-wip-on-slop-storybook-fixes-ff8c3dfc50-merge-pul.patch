@@ -1,0 +1,12 @@
+diff --git a/packages/foundation/ui-system/ui/package.json b/packages/foundation/ui-system/ui/package.json
+index 68bc0916b1..c855aebbb1 100644
+--- a/packages/foundation/ui-system/ui/package.json
++++ b/packages/foundation/ui-system/ui/package.json
+@@ -9,6 +9,7 @@
+     "build": "bun run beep:build",
+     "storybook": "storybook dev -p 6006",
+     "build-storybook": "storybook build",
++    "storybook:start": "bun run build-storybook && bunx --bun http-server storybook-static -p 6006",
+     "check": "bun run beep:check",
+     "test": "bun run beep:test",
+     "coverage": "bunx --bun vitest run --coverage",
