@@ -509,7 +509,7 @@ jobs:
 
       - name: Upload Fallow envelopes
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}
           path: .beep/fallow/**
@@ -818,7 +818,7 @@ jobs:
 
       - name: Dependency review
         if: github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           deny-licenses: AGPL-3.0, GPL-3.0
@@ -849,14 +849,14 @@ jobs:
 
       - name: Setup Cachix (read-only)
         if: github.event_name != 'push'
-        uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # v15
+        uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
           name: beep-effect
         continue-on-error: true
 
       - name: Setup Cachix (trusted push)
         if: github.event_name == 'push'
-        uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # v15
+        uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
           name: beep-effect
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
