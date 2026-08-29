@@ -1,5 +1,8 @@
 # Hybrid AST-JSDoc knowledge graphs: a genuinely novel approach with real risks
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 **The combination of deterministic AST code property graphs enriched with JSDoc-derived semantic metadata is genuinely novel — no existing tool or published system treats documentation tags as first-class, queryable graph properties.** This matters because every current code intelligence tool falls into one of two camps (embedding-based or structural-graph), and neither captures developer-authored domain intent. The approach has strong theoretical backing: Google DeepMind's LIMIT paper proved fundamental retrieval limits of single-vector embeddings, and a 2024 structured code representations study showed deterministic structures consistently outperform base models by ≥5 CodeBLEU points. The key risk isn't technical feasibility — it's JSDoc coverage discipline. The system should be designed as progressive enhancement: valuable with zero JSDoc (pure AST graph), better with partial coverage, and exceptional with comprehensive semantic tags.
 
 ## Nobody has combined code property graphs with documentation-derived metadata

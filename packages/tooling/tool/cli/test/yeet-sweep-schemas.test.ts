@@ -82,6 +82,7 @@ describe("sweep step ids", () => {
       "delete-remote-branch",
       "lockfile-install",
       "end-state",
+      "tmpfs-worktrees",
     ]);
   });
 });

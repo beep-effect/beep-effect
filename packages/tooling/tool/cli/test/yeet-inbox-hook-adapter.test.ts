@@ -173,9 +173,9 @@ const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
 
 describe("Yeet inbox harness adapter", () => {
   itEffect(
-    "fences a live non-owner and CAS-takes over a dead published-PR owner",
+    "fences a live non-owner and CAS-takes over a dead published-PR owner without inbox evidence",
     () =>
-      withInbox(({ root }) =>
+      withInbox(({ ack, root }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -231,24 +231,22 @@ describe("Yeet inbox harness adapter", () => {
             expect.stringContaining("lost lease generation live")
           );
 
+          yield* ack("coverage-live");
+          yield* ack("thread-live");
+          yield* ack("drift-live");
           const deadLease = yield* encodeUnknown(lease(999_999, "dead", "gone", "dead-owner"));
           yield* fs.writeFileString(leasePath, `${deadLease}\n`);
-          const takeover = yield* runHookUntil(
-            root,
-            "claude",
-            {
-              cwd: root,
-              hook_event_name: "SessionStart",
-              session_id: "warm-fixer",
-            },
-            (result) => result.stdout.includes("Fix this now")
-          );
+          const takeover = yield* runHook(root, "claude", {
+            cwd: root,
+            hook_event_name: "SessionStart",
+            session_id: "warm-fixer",
+          });
           const updated = decodeObject(yield* fs.readFileString(leasePath));
-          expect(takeover.stdout).toContain("Fix this now");
+          expect(takeover).toMatchObject({ exitCode: 0, stderr: "", stdout: "" });
           expect(updated).toMatchObject({
             sessionId: "claude:warm-fixer",
             takeoverOf: "dead-owner",
-            takeoverReason: "stale-unacked-dead-or-frozen",
+            takeoverReason: "stale-dead-or-frozen",
           });
         })
       ).pipe(provideTestLayer),

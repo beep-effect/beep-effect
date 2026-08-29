@@ -59,6 +59,9 @@ workflows in skills.
   back. Use `--quick` only when the touched surface justifies the lint+check
   subset. The default runs the package audit and docgen; failures arm the same
   checkout P0 inbox used by Yeet.
+- Full git checkouts and tool clones never go under `/tmp` (tmpfs is zram-backed
+  memory): agent worktrees belong in the sibling `-worktrees` root, disposable
+  installs under `~/.cache/beep/`. `beep quality tmpfs-reap` is the janitor.
 
 ## Touch → Skill / Command
 

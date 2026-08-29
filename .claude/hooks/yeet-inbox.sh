@@ -404,12 +404,13 @@ if load_pr_lease; then
   observed_generation="$lease_generation"
   if [ "$lease_owned_by_current" = true ]; then
     write_pr_lease_generation "$observed_generation"
-  elif [ -n "$first_p0" ] && [ "$lease_owner_stale" = true ] && {
+  elif [ "$lease_owner_stale" = true ] && {
     [ "$lease_owner_alive" = false ] || [ "$lease_owner_frozen" = true ];
   }; then
-    # This hook invocation is the warm fixer: the hook mutex is the CAS
-    # boundary, and the next P0 branch below injects the accumulated capsules.
-    write_pr_lease_generation "$observed_generation" "stale-unacked-dead-or-frozen"
+    # This hook invocation is the resumed owner: the hook mutex is the CAS
+    # boundary. Recovery must not depend on a hosted failure capsule because a
+    # hard-killed early publisher can strand its lease before any P0 exists.
+    write_pr_lease_generation "$observed_generation" "stale-dead-or-frozen"
   fi
   load_pr_lease || true
 fi
