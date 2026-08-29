@@ -1,0 +1,1969 @@
+diff --git a/goals/packet-convention-migration/research/OPPORTUNITIES.md b/goals/packet-convention-migration/research/OPPORTUNITIES.md
+index e96467ce58..2d95175800 100644
+--- a/goals/packet-convention-migration/research/OPPORTUNITIES.md
++++ b/goals/packet-convention-migration/research/OPPORTUNITIES.md
+@@ -119,3 +119,79 @@
+ - **Disposition:** workflow fix — keep unrelated upstream cleanup out of this
+   PR and publish only the packet receipt.
+ - **Owner:** Yeet repair-scope maintainers.
++
++## 2026-08-27 — Sandboxed package coverage loses child-process pipe output
++
++- **What happened:** `XDG_RUNTIME_DIR=/tmp bun run coverage --
++  --filter=@beep/repo-cli` completed 2,352 tests but failed the package before
++  the coverage comparator because the large-output child-process test received
++  no captured stdout.
++- **Evidence:** `test/step-git-exec.test.ts:102` reported
++  `AssertionError: expected +0 to be 1048576 // Object.is equality`. An earlier
++  run without the runtime-directory override also failed with
++  `EROFS: read-only file system, open
++  '/run/user/1000/beep-yeet-proof-locks-...lock'`; the override removed every
++  coordinator-lock failure.
++- **What would have prevented it:** run package coverage in a host environment
++  that permits child-process pipe capture and a writable runtime directory, or
++  provide an environment-safe capture fixture for the exact-limit test.
++- **Disposition:** environment-only proof friction. The focused migration suite
++  remains green, but this sandbox cannot produce the authoritative package
++  coverage verdict.
++- **Owner:** repo-cli process-test and coverage-lane maintainers.
++
++## 2026-08-27 — Non-recursive `fs.rm` cannot remove-if-empty; the "safe" fix
++
++- **What happened:** a first-pass fix for the Greptile rollback-race finding
++  (`PacketMutation.ts` genesis rollback deleting concurrent event data)
++  replaced a recursive directory remove with a non-recursive
++  `fs.remove(eventsDirectory)`, catching `ENOTEMPTY`/`EEXIST`/`ERR_FS_EISDIR`
++  as a safe no-op. Verified against real Node `fs.rm` semantics: without
++  `recursive: true`, `fs.rm` throws `ERR_FS_EISDIR` for *any* directory
++  target, empty or not — Node cannot distinguish emptiness without the
++  recursive flag. Every rollback therefore always hit the caught branch and
++  never removed the directory, silently orphaning an empty
++  `ops/events/` after any failed genesis seed and permanently blocking retry
++  (`applyPacketGenesisSeed` refuses to reseed when the directory still
++  exists). A pre-existing committed test that asserted full directory removal
++  had been quietly weakened to match the regression instead of catching it.
++- **Evidence:** `node -e 'fs.rmSync(emptyDir)'` throws `ERR_FS_EISDIR` on an
++  empty directory identically to a non-empty one (reproduced directly).
++  `packages/platform/node-shared/src/internal/utils.ts` in the `.repos/effect`
++  checkout confirms `ENOTEMPTY` has no explicit `SystemErrorTag` mapping
++  either (falls through to `Unknown`), so tag-based matching on `_tag` alone
++  cannot even discriminate the case.
++- **What would have prevented it:** empirically test load-bearing `fs`
++  assumptions against the real runtime instead of pattern-matching on error
++  code names, and treat a weakened pre-existing assertion in a "fix" diff as
++  a regression signal, not a simplification.
++- **Disposition:** fixed by removing the owned file, then re-scanning the
++  directory immediately before a recursive remove (safe once confirmed
++  empty) rather than attempting a non-recursive directory remove at all.
++  Narrows the TOCTOU window to two adjacent syscalls; Effect v4's
++  `FileSystem` has no atomic remove-if-empty primitive (no `rmdir(2)`
++  equivalent), so this is the tightest window expressible through the
++  platform service without a direct `node:fs` import.
++- **Owner:** PacketMutation genesis-rollback maintainers.
++
++## 2026-08-27 — Coverage ratchet holds new files to zero uncovered units
++
++- **What happened:** the "Heavy / Coverage Regression" CI failure reported
++  per-metric percentages (e.g. "functions 40.81%") that read like target
++  floors to clear. The actual ratchet rule for a file with no baseline
++  identity (brand new in the PR) is stricter: any uncovered line, branch, or
++  function counts as a regression row, i.e. an effective 100% bar, not the
++  quoted percentage. Reaching a higher percentage without reaching zero
++  uncovered units still fails the gate.
++- **Evidence:** `bun run coverage -- --filter=@beep/repo-cli` continued
++  reporting `[coverage-ratchet]` regression rows such as "new file has 18
++  uncovered unit(s) at 64.7%" for `PacketMutation.ts` even after test
++  additions roughly doubled its function coverage from the original CI
++  failure's baseline.
++- **What would have prevented it:** have the CI failure message state the
++  new-file rule explicitly ("0 uncovered units required") instead of only a
++  percentage, so remediation is scoped correctly on the first pass.
++- **Disposition:** informational — remediation is "close every uncovered
++  unit or get reviewer sign-off on `--write-baseline`," not "raise the
++  percentage."
++- **Owner:** coverage-ratchet lane maintainers.
+diff --git a/packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts b/packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts
+index c7d3883e1d..baebb2c5b8 100644
+--- a/packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts
++++ b/packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts
+@@ -419,25 +419,34 @@ export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(
+   const packetRoot = path.dirname(path.dirname(seed.eventsDirectory));
+   const eventPath = path.join(seed.eventsDirectory, seed.eventFileName);
+   let createdEventsDirectory = false;
++  const removeOwnedGenesisEvent = Effect.fnUntraced(function* (entries: ReadonlyArray<string>) {
++    if (A.length(entries) !== 1 || entries[0] !== seed.eventFileName) {
++      return yield* streamError(seed.slug, "genesis rollback conflict: event directory contains foreign bytes");
++    }
++    const content = yield* fs
++      .readFileString(eventPath)
++      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback read failed: ${error.message}`)));
++    if (content !== seed.eventText) {
++      return yield* streamError(seed.slug, "genesis rollback conflict: event bytes changed after creation");
++    }
++    yield* fs
++      .remove(eventPath)
++      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback remove failed: ${error.message}`)));
++  });
+   const rollback = Effect.fnUntraced(function* () {
+     if (!createdEventsDirectory) return;
+     const entries = yield* fs
+       .readDirectory(seed.eventsDirectory)
+       .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback scan failed: ${error.message}`)));
+-    if (A.isReadonlyArrayNonEmpty(entries)) {
+-      if (A.length(entries) !== 1 || entries[0] !== seed.eventFileName) {
+-        return yield* streamError(seed.slug, "genesis rollback conflict: event directory contains foreign bytes");
+-      }
+-      const content = yield* fs
+-        .readFileString(eventPath)
+-        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback read failed: ${error.message}`)));
+-      if (content !== seed.eventText) {
+-        return yield* streamError(seed.slug, "genesis rollback conflict: event bytes changed after creation");
+-      }
++    if (A.isReadonlyArrayNonEmpty(entries)) yield* removeOwnedGenesisEvent(entries);
++    const remaining = yield* fs
++      .readDirectory(seed.eventsDirectory)
++      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback rescan failed: ${error.message}`)));
++    if (!A.isReadonlyArrayNonEmpty(remaining)) {
++      yield* fs
++        .remove(seed.eventsDirectory, { recursive: true })
++        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback remove failed: ${error.message}`)));
+     }
+-    yield* fs
+-      .remove(seed.eventsDirectory, { recursive: true })
+-      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback remove failed: ${error.message}`)));
+   });
+   const mutation = Effect.gen(function* () {
+     yield* fs
+diff --git a/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts b/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts
+index 601eb999ee..52644d38c7 100644
+--- a/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts
++++ b/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts
+@@ -3,6 +3,7 @@ import {
+   foldPacketEvents,
+   GoalPacketRecord,
+   goalsMigrateConventionsCommand,
++  goalsRepairForkCommand,
+   isJsonRecord,
+   lintGoalFleet,
+   PacketEvent,
+@@ -11,6 +12,7 @@ import {
+   PacketForkRepairApplier,
+   PacketForkRepairApplierLive,
+   PacketGenesisSeed,
++  PacketStreamListing,
+   PacketStreamLocator,
+   packetEventDigest,
+   packetEventFileName,
+@@ -18,10 +20,14 @@ import {
+   planManifestTranslation,
+   planPacketGenesisSeed,
+   renderPacketEventFile,
++  renderTranslationReport,
++  TranslationAssumption,
++  TranslationIssue,
++  TranslationReport,
+ } from "@beep/repo-cli/test/Goals";
+ import { NodeServices } from "@effect/platform-node";
+ import { describe, expect, it, layer } from "@effect/vitest";
+-import { Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
++import { Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+@@ -39,6 +45,7 @@ const FORKED_PATH = new URL("./fixtures/packet-core/forked", import.meta.url).pa
+ const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+ const encodeJson = (value: unknown): string => Result.getOrThrow(encodeJsonResult(value));
+ const runMigration = Command.runWith(goalsMigrateConventionsCommand, { version: "0.0.0" });
++const runRepair = Command.runWith(goalsRepairForkCommand, { version: "0.0.0" });
+ 
+ const record = (slug: string, manifest: Readonly<Record<string, unknown>>): GoalPacketRecord =>
+   GoalPacketRecord.make({
+@@ -57,7 +64,69 @@ const completionGate = {
+   grandfathered: false,
+ };
+ 
++const injectedFileSystemError = (method: string, path: string): PlatformError.PlatformError =>
++  PlatformError.systemError({
++    _tag: "Unknown",
++    module: "FileSystem",
++    method,
++    pathOrDescriptor: path,
++    description: "injected failure",
++  });
++
+ describe("manifest translation", () => {
++  it("rejects missing, invalid, and non-object manifests", () => {
++    const missing = planManifestTranslation(
++      GoalPacketRecord.make({
++        slug: "missing",
++        packetPath: "goals/missing",
++        manifestPath: "goals/missing/ops/manifest.json",
++        readmePath: "goals/missing/README.md",
++      })
++    );
++    expect(missing.issues[0]?.message).toContain("manifest is missing");
++    const invalid = GoalPacketRecord.make({
++      slug: "invalid",
++      packetPath: "goals/invalid",
++      manifestPath: "goals/invalid/ops/manifest.json",
++      readmePath: "goals/invalid/README.md",
++      manifestText: "{",
++    });
++    expect(planManifestTranslation(invalid).issues[0]?.message).toContain("does not parse as a JSON object");
++    const primitive = GoalPacketRecord.make({
++      slug: "primitive",
++      packetPath: "goals/primitive",
++      manifestPath: "goals/primitive/ops/manifest.json",
++      readmePath: "goals/primitive/README.md",
++      manifestText: "42\n",
++    });
++    expect(planManifestTranslation(primitive).issues[0]?.message).toContain("does not parse as a JSON object");
++  });
++
++  it("reports every required-field contradiction and phase shape", () => {
++    const plan = planManifestTranslation(
++      record("demo", {
++        schemaVersion: "initiative-manifest/v1",
++        initiative: { id: "other" },
++        lifecycle: "active",
++        packetPath: "goals/other",
++        phases: 1,
++      })
++    );
++    const messages = A.map(plan.issues, (item) => item.message);
++    expect(plan.probe.phaseShape).toBe("invalid");
++    expect(messages).toContain("initiative.status is missing");
++    expect(messages).toContain('initiative.id declares "other"');
++    expect(messages).toContain("completionGate object is missing");
++    expect(messages).toContain('packetPath declares "goals/other"');
++
++    const missingInitiative = planManifestTranslation(
++      record("demo", { schemaVersion: "initiative-manifest/v1", phases: { P0: "complete" } })
++    );
++    expect(missingInitiative.probe.phaseShape).toBe("record");
++    expect(A.map(missingInitiative.issues, (item) => item.message)).toContain("initiative object is missing");
++    expect(A.map(missingInitiative.issues, (item) => item.message)).toContain("initiative.id is missing");
++  });
++
+   it("probes a versionless half-migrated manifest and preserves bespoke keys", () => {
+     const plan = planManifestTranslation(
+       record("demo", {
+@@ -123,6 +192,51 @@ describe("manifest translation", () => {
+     expect(plan.translation.value.edits).not.toContain("schemaVersion -> initiative-manifest/v2");
+   });
+ 
++  it("preserves an existing v2 declaration while planning compatibility-field repairs", () => {
++    const plan = planManifestTranslation(
++      record("already-v2", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "already-v2", status: "active" },
++        completionGate,
++      })
++    );
++    expect(plan.issues).toStrictEqual([]);
++    expect(O.isSome(plan.translation)).toBe(true);
++    if (O.isNone(plan.translation)) return;
++    expect(plan.translation.value.edits).not.toContain("schemaVersion -> initiative-manifest/v2");
++    expect(plan.translation.value.drift).not.toContain("breaking");
++  });
++
++  it("reports an unreadable translated candidate that disappears after its shape probe", () => {
++    const manifestText = `${encodeJson({
++      schemaVersion: "initiative-manifest/v2",
++      initiative: { id: "unreadable", status: "active" },
++      lifecycle: "active",
++      packetPath: "goals/unreadable",
++      completionGate,
++    })}\n`;
++    const unreadable = record("unreadable", {
++      schemaVersion: "initiative-manifest/v2",
++      initiative: { id: "unreadable", status: "active" },
++      lifecycle: "active",
++      packetPath: "goals/unreadable",
++      completionGate,
++    });
++    let reads = 0;
++    expect(
++      Reflect.defineProperty(unreadable, "manifestText", {
++        configurable: true,
++        get: () => {
++          reads += 1;
++          return reads < 3 ? manifestText : undefined;
++        },
++      })
++    ).toBe(true);
++    const plan = planManifestTranslation(unreadable);
++    expect(O.isNone(plan.translation)).toBe(true);
++    expect(plan.issues[0]?.message).toBe("translated candidate does not parse as a JSON object");
++  });
++
+   it("leaves a complete v2 manifest untouched", () => {
+     const plan = planManifestTranslation(
+       record("demo", {
+@@ -212,6 +326,41 @@ describe("manifest translation", () => {
+     expect(O.isNone(plan.translation)).toBe(true);
+     expect(plan.issues[0]?.message).toContain("disagrees");
+   });
++
++  it("preserves existing compatibility fields and normalizes a missing final newline", () => {
++    const withLifecycle = planManifestTranslation(
++      GoalPacketRecord.make({
++        slug: "demo",
++        packetPath: "goals/demo",
++        manifestPath: "goals/demo/ops/manifest.json",
++        readmePath: "goals/demo/README.md",
++        manifestText: encodeJson({
++          schemaVersion: "initiative-manifest/v1",
++          initiative: { id: "demo", status: "active" },
++          lifecycle: "active",
++          completionGate,
++        }),
++      })
++    );
++    expect(O.isSome(withLifecycle.translation)).toBe(true);
++    if (O.isNone(withLifecycle.translation)) return;
++    expect(withLifecycle.translation.value.edits).not.toContain("add lifecycle from initiative.status");
++    expect(withLifecycle.translation.value.edits).toContain("add packetPath from the scanned directory");
++    expect(withLifecycle.translation.value.content.at(-1)).toBe("\n");
++
++    const withPacketPath = planManifestTranslation(
++      record("demo", {
++        schemaVersion: "initiative-manifest/v1",
++        initiative: { id: "demo", status: "active" },
++        packetPath: "goals/demo",
++        completionGate,
++      })
++    );
++    expect(O.isSome(withPacketPath.translation)).toBe(true);
++    if (O.isNone(withPacketPath.translation)) return;
++    expect(withPacketPath.translation.value.edits).toContain("add lifecycle from initiative.status");
++    expect(withPacketPath.translation.value.edits).not.toContain("add packetPath from the scanned directory");
++  });
+ });
+ 
+ describe("fleet lint", () => {
+@@ -238,9 +387,260 @@ describe("fleet lint", () => {
+         ?.severity
+     ).toBe("warning");
+   });
++
++  it("ignores exploration edges and fully migrated references while skipping malformed records", () => {
++    const records = [
++      record("a", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "a", status: "active" },
++        completionGate,
++        blockedBy: ["goals/b#P1", "explorations/idea", 42],
++      }),
++      record("b", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "b", status: "active" },
++        completionGate,
++      }),
++      GoalPacketRecord.make({
++        slug: "missing",
++        packetPath: "goals/missing",
++        manifestPath: "goals/missing/ops/manifest.json",
++        readmePath: "goals/missing/README.md",
++      }),
++      GoalPacketRecord.make({
++        slug: "invalid",
++        packetPath: "goals/invalid",
++        manifestPath: "goals/invalid/ops/manifest.json",
++        readmePath: "goals/invalid/README.md",
++        manifestText: "null",
++      }),
++      record("missing-id", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { status: "active" },
++        lifecycle: "active",
++        packetPath: "goals/missing-id",
++        completionGate,
++      }),
++    ];
++    expect(lintGoalFleet(records)).toStrictEqual([]);
++  });
++
++  it("accepts bare packet references when the target exists", () => {
++    expect(
++      lintGoalFleet([
++        record("a", {
++          schemaVersion: "initiative-manifest/v2",
++          initiative: { id: "a", status: "active" },
++          completionGate,
++          blockedBy: ["b"],
++        }),
++        record("b", {
++          schemaVersion: "initiative-manifest/v2",
++          initiative: { id: "b", status: "active" },
++          completionGate,
++        }),
++      ])
++    ).toStrictEqual([]);
++  });
++
++  it("excludes exploration-prefixed blockedBy references from dangling-reference findings", () => {
++    const findings = lintGoalFleet([
++      record("demo", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "demo", status: "active" },
++        completionGate,
++        blockedBy: ["explorations/ungraduated-idea"],
++      }),
++    ]);
++    expect(A.filter(findings, (finding) => finding.kind === "unreachable-packet")).toStrictEqual([]);
++  });
++
++  it("reports a blockedBy slug that is absent from the fleet", () => {
++    const findings = lintGoalFleet([
++      record("demo", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "demo", status: "active" },
++        completionGate,
++        blockedBy: ["goals/absent"],
++      }),
++    ]);
++    const dangling = A.filter(findings, (finding) => finding.kind === "unreachable-packet");
++    expect(dangling).toHaveLength(1);
++    expect(dangling[0]?.related).toStrictEqual(["absent"]);
++  });
++
++  it("emits one dependency-cycle finding when duplicate member edges rediscover the same cycle", () => {
++    const findings = lintGoalFleet([
++      record("a", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "a", status: "active" },
++        completionGate,
++        blockedBy: ["goals/b"],
++      }),
++      record("b", {
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "b", status: "active" },
++        completionGate,
++        blockedBy: ["goals/a", "goals/a"],
++      }),
++    ]);
++    expect(A.filter(findings, (finding) => finding.kind === "dependency-cycle")).toHaveLength(1);
++  });
++});
++
++describe("migration report rendering", () => {
++  it("renders populated translations, issues, assumptions, and fleet findings", () => {
++    const plan = planManifestTranslation(
++      record("demo", {
++        schemaVersion: "initiative-manifest/v1",
++        initiative: { id: "demo", status: "active" },
++        completionGate,
++      })
++    );
++    expect(O.isSome(plan.translation)).toBe(true);
++    if (O.isNone(plan.translation)) return;
++    const report = TranslationReport.make({
++      schemaVersion: "packet-convention-report/v1",
++      mode: "preview",
++      probes: [plan.probe],
++      translations: [plan.translation.value],
++      issues: [TranslationIssue.make({ slug: "demo", severity: "violation", message: "blocked" })],
++      assumptions: [TranslationAssumption.make({ slug: "demo", message: "known shape" })],
++      fleetFindings: lintGoalFleet([
++        record("demo", {
++          initiative: { id: "demo", status: "active" },
++          completionGate,
++          blockedBy: ["goals/missing"],
++        }),
++      ]),
++      seeds: [],
++    });
++    const rendered = renderTranslationReport(report);
++    expect(rendered).toContain("schemaVersion -> initiative-manifest/v2");
++    expect(rendered).toContain("violation: `demo` — blocked");
++    expect(rendered).toContain("known shape");
++    expect(rendered).toContain("Unreachable packet references: 1");
++  });
+ });
+ 
+ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
++  it.effect(
++    "rejects invalid genesis seed inputs through PacketStreamError",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-invalid-" });
++      const makePacket = (slug: string) =>
++        GoalPacketRecord.make({
++          slug,
++          packetPath: `${root}/${slug}`,
++          manifestPath: `${root}/${slug}/ops/manifest.json`,
++          readmePath: `${root}/${slug}/README.md`,
++        });
++      const validManifest = encodeJson({
++        schemaVersion: "initiative-manifest/v2",
++        initiative: { id: "demo", status: "active" },
++        lifecycle: "active",
++        packetPath: "goals/demo",
++        completionGate,
++      });
++      const invalidJson = yield* Effect.exit(
++        planPacketGenesisSeed(makePacket("demo"), "{", "2026-08-26T00:00:00.000Z")
++      );
++      expect(Exit.isFailure(invalidJson) ? invalidJson.cause.toString() : "").toContain("invalid JSON");
++      const invalidSlug = yield* Effect.exit(
++        planPacketGenesisSeed(makePacket("Not Valid"), validManifest, "2026-08-26T00:00:00.000Z")
++      );
++      expect(Exit.isFailure(invalidSlug) ? invalidSlug.cause.toString() : "").toContain("not a valid packet slug");
++      const invalidTimestamp = yield* Effect.exit(planPacketGenesisSeed(makePacket("demo"), validManifest, "nope"));
++      expect(Exit.isFailure(invalidTimestamp) ? invalidTimestamp.cause.toString() : "").toContain(
++        "not a full ISO-8601"
++      );
++      const invalidManifest = yield* Effect.exit(
++        planPacketGenesisSeed(makePacket("demo"), "{}", "2026-08-26T00:00:00.000Z")
++      );
++      expect(Exit.isFailure(invalidManifest) ? invalidManifest.cause.toString() : "").toContain(
++        "schema decoding failed"
++      );
++    })
++  );
++
++  it.effect(
++    "maps genesis inspection and directory creation failures without touching existing bytes",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-boundary-" });
++      const eventsDirectory = `${root}/demo/ops/events`;
++      const seed = PacketGenesisSeed.make({
++        slug: "demo",
++        eventsDirectory,
++        eventFileName: "00001-owned.json",
++        eventText: "owned\n",
++        tracePath: `${root}/demo/ops/trace.json`,
++        traceText: "trace\n",
++      });
++      yield* fs.makeDirectory(eventsDirectory, { recursive: true });
++      const appeared = yield* Effect.exit(applyPacketGenesisSeed(seed));
++      expect(Exit.isFailure(appeared) ? appeared.cause.toString() : "").toContain("appeared after preview");
++      yield* fs.remove(eventsDirectory, { recursive: true });
++
++      const inspectionFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(seed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            exists: (target) =>
++              target === eventsDirectory ? Effect.fail(injectedFileSystemError("exists", target)) : fs.exists(target),
++          })
++        )
++      );
++      expect(Exit.isFailure(inspectionFailure) ? inspectionFailure.cause.toString() : "").toContain(
++        "genesis stream inspection failed"
++      );
++
++      const directoryFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(seed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            makeDirectory: (target, options) =>
++              target === eventsDirectory
++                ? Effect.fail(injectedFileSystemError("makeDirectory", target))
++                : fs.makeDirectory(target, options),
++          })
++        )
++      );
++      expect(Exit.isFailure(directoryFailure) ? directoryFailure.cause.toString() : "").toContain(
++        "genesis directory write failed"
++      );
++    })
++  );
++
++  it.effect(
++    "reports an event-write failure after rollback removes the empty events directory",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-event-failure-" });
++      const eventsDirectory = `${root}/demo/ops/events`;
++      yield* fs.makeDirectory(`${root}/demo/ops`, { recursive: true });
++      const seed = PacketGenesisSeed.make({
++        slug: "demo",
++        eventsDirectory,
++        eventFileName: "00001-owned.json",
++        eventText: "owned\n",
++        tracePath: `${root}/demo/ops/trace.json`,
++        traceText: "trace\n",
++      });
++      const exit = yield* Effect.exit(
++        applyPacketGenesisSeed(seed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            makeTempFileScoped: () => Effect.fail(injectedFileSystemError("makeTempFileScoped", eventsDirectory)),
++          })
++        )
++      );
++      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis event write failed");
++      expect(yield* fs.exists(eventsDirectory)).toBe(false);
++    })
++  );
++
+   it.effect(
+     "stages and applies the committed fork fixture, then becomes idempotent",
+     Effect.fnUntraced(function* () {
+@@ -316,6 +716,258 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
+     })
+   );
+ 
++  it.effect(
++    "maps fork-repair staging and survivor-copy failures",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const store = yield* PacketEventStore;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-fork-failures-" });
++      const makeApplier = (fileSystem: FileSystem.FileSystem) =>
++        PacketForkRepairApplier.pipe(
++          Effect.provide(
++            Layer.fresh(PacketForkRepairApplierLive).pipe(
++              Layer.provide(
++                Layer.mergeAll(
++                  Layer.succeed(PacketEventStore, store),
++                  Layer.succeed(FileSystem.FileSystem, fileSystem),
++                  Layer.succeed(Path.Path, path)
++                )
++              )
++            )
++          )
++        );
++
++      const stagingPacketPath = `${root}/staging/forked`;
++      yield* fs.makeDirectory(`${root}/staging`);
++      yield* fs.copy(FORKED_PATH, stagingPacketPath);
++      const stagingLocator = PacketStreamLocator.make({
++        packet: "forked",
++        root: "goals",
++        packetPath: stagingPacketPath,
++      });
++      const stagingApplier = yield* makeApplier({
++        ...fs,
++        makeTempDirectory: () => Effect.fail(injectedFileSystemError("makeTempDirectory", stagingPacketPath)),
++      });
++      expect(O.isSome(yield* stagingApplier.preview(stagingLocator))).toBe(true);
++      const stagingFailure = yield* Effect.exit(stagingApplier.apply(stagingLocator));
++      expect(Exit.isFailure(stagingFailure) ? stagingFailure.cause.toString() : "").toContain("repair staging failed");
++
++      const copyPacketPath = `${root}/copy/forked`;
++      yield* fs.makeDirectory(`${root}/copy`);
++      yield* fs.copy(FORKED_PATH, copyPacketPath);
++      const copyLocator = PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath: copyPacketPath });
++      const copyApplier = yield* makeApplier({
++        ...fs,
++        copyFile: (source, target) => Effect.fail(injectedFileSystemError("copyFile", `${source}:${target}`)),
++      });
++      const copyFailure = yield* Effect.exit(copyApplier.apply(copyLocator));
++      expect(Exit.isFailure(copyFailure) ? copyFailure.cause.toString() : "").toContain("event copy failed");
++    })
++  );
++
++  it.effect(
++    "preserves the original fork-repair error when cleanup existence checks fail",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const store = yield* PacketEventStore;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-fork-cleanup-exists-" });
++      const packetPath = `${root}/forked`;
++      yield* fs.copy(FORKED_PATH, packetPath);
++      const locator = PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath });
++      const failingFileSystem: FileSystem.FileSystem = {
++        ...fs,
++        copyFile: (_source, target) => Effect.fail(injectedFileSystemError("copyFile", target)),
++        exists: (target) => Effect.fail(injectedFileSystemError("exists", target)),
++      };
++      const applier = yield* PacketForkRepairApplier.pipe(
++        Effect.provide(
++          Layer.fresh(PacketForkRepairApplierLive).pipe(
++            Layer.provide(
++              Layer.mergeAll(
++                Layer.succeed(PacketEventStore, store),
++                Layer.succeed(FileSystem.FileSystem, failingFileSystem),
++                Layer.succeed(Path.Path, path)
++              )
++            )
++          )
++        )
++      );
++      const exit = yield* Effect.exit(applier.apply(locator));
++      expect(Exit.isFailure(exit)).toBe(true);
++      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("event copy failed");
++    })
++  );
++
++  it.effect(
++    "rejects fork-repair integrity races and restores bytes after promotion failures",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const store = yield* PacketEventStore;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-fork-boundaries-" });
++      const makeFixture = Effect.fnUntraced(function* (label: string) {
++        const packetPath = `${root}/${label}/forked`;
++        yield* fs.makeDirectory(`${root}/${label}`);
++        yield* fs.copy(FORKED_PATH, packetPath);
++        return PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath });
++      });
++      const makeApplier = (fileSystem: FileSystem.FileSystem, eventStore: typeof store = store) =>
++        PacketForkRepairApplier.pipe(
++          Effect.provide(
++            Layer.fresh(PacketForkRepairApplierLive).pipe(
++              Layer.provide(
++                Layer.mergeAll(
++                  Layer.succeed(PacketEventStore, eventStore),
++                  Layer.succeed(FileSystem.FileSystem, fileSystem),
++                  Layer.succeed(Path.Path, path)
++                )
++              )
++            )
++          )
++        );
++      const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
++        Exit.isFailure(exit) ? exit.cause.toString() : "";
++
++      const invalidLocator = yield* makeFixture("invalid-original");
++      yield* fs.writeFileString(`${invalidLocator.packetPath}/ops/events/invalid.json`, "not json\n");
++      const defaultApplier = yield* makeApplier(fs);
++      expect(failureMessage(yield* Effect.exit(defaultApplier.preview(invalidLocator)))).toContain(
++        "stream has integrity issues"
++      );
++      expect(failureMessage(yield* Effect.exit(defaultApplier.apply(invalidLocator)))).toContain(
++        "stream has integrity issues"
++      );
++
++      const writeLocator = yield* makeFixture("draft-write");
++      const writeApplier = yield* makeApplier({
++        ...fs,
++        writeFileString: (target, content, options) => Effect.fail(injectedFileSystemError("writeFileString", target)),
++      });
++      expect(failureMessage(yield* Effect.exit(writeApplier.apply(writeLocator)))).toContain(
++        "rebased event write failed"
++      );
++
++      const directoryLocator = yield* makeFixture("staged-directory");
++      const directoryApplier = yield* makeApplier({
++        ...fs,
++        makeDirectory: (target) => Effect.fail(injectedFileSystemError("makeDirectory", target)),
++      });
++      expect(failureMessage(yield* Effect.exit(directoryApplier.apply(directoryLocator)))).toContain(
++        "repair staging failed"
++      );
++
++      const stagedIntegrityLocator = yield* makeFixture("staged-integrity");
++      const stagedIntegrityApplier = yield* makeApplier({
++        ...fs,
++        writeFileString: (target, _content, options) => fs.writeFileString(target, "not json\n", options),
++      });
++      expect(failureMessage(yield* Effect.exit(stagedIntegrityApplier.apply(stagedIntegrityLocator)))).toContain(
++        "staged repair does not pass event integrity checks"
++      );
++
++      const noProgressLocator = yield* makeFixture("no-progress");
++      const noProgressListing = yield* store.list(noProgressLocator);
++      const noProgressStore = {
++        ...store,
++        list: (locator: PacketStreamLocator) =>
++          locator.packetPath === noProgressLocator.packetPath
++            ? store.list(locator)
++            : Effect.succeed(
++                PacketStreamListing.make({ events: noProgressListing.events, issues: noProgressListing.issues })
++              ),
++      };
++      const noProgressApplier = yield* makeApplier(fs, noProgressStore);
++      expect(failureMessage(yield* Effect.exit(noProgressApplier.apply(noProgressLocator)))).toContain(
++        "staged repair did not remove the targeted fork"
++      );
++
++      const raceLocator = yield* makeFixture("stream-race");
++      const raceEvents = `${raceLocator.packetPath}/ops/events`;
++      const raceApplier = yield* makeApplier({
++        ...fs,
++        copyFile: (source, target) =>
++          fs
++            .copyFile(source, target)
++            .pipe(Effect.tap(() => fs.writeFileString(`${raceEvents}/concurrent.json`, "not json\n"))),
++      });
++      expect(failureMessage(yield* Effect.exit(raceApplier.apply(raceLocator)))).toContain(
++        "stream changed during repair staging"
++      );
++
++      const moveLocator = yield* makeFixture("move-failure");
++      const moveEvents = `${moveLocator.packetPath}/ops/events`;
++      const moveApplier = yield* makeApplier({
++        ...fs,
++        rename: (source, target) =>
++          source === moveEvents ? Effect.fail(injectedFileSystemError("rename", source)) : fs.rename(source, target),
++      });
++      expect(failureMessage(yield* Effect.exit(moveApplier.apply(moveLocator)))).toContain(
++        "existing stream move failed"
++      );
++
++      const promotionLocator = yield* makeFixture("promotion-failure");
++      const promotionEvents = `${promotionLocator.packetPath}/ops/events`;
++      const promotionApplier = yield* makeApplier({
++        ...fs,
++        rename: (source, target) =>
++          target === promotionEvents && source !== promotionEvents
++            ? Effect.fail(injectedFileSystemError("rename", source))
++            : fs.rename(source, target),
++      });
++      expect(failureMessage(yield* Effect.exit(promotionApplier.apply(promotionLocator)))).toContain(
++        "staged stream promotion failed"
++      );
++      expect((yield* store.list(promotionLocator)).issues).toStrictEqual([]);
++
++      const verificationLocator = yield* makeFixture("verification-failure");
++      const verificationEvents = `${verificationLocator.packetPath}/ops/events`;
++      let verificationPromotions = 0;
++      const verificationApplier = yield* makeApplier({
++        ...fs,
++        rename: (source, target) =>
++          fs.rename(source, target).pipe(
++            Effect.tap(() =>
++              target !== verificationEvents
++                ? Effect.void
++                : Effect.sync(() => {
++                    verificationPromotions += 1;
++                    return verificationPromotions;
++                  }).pipe(
++                    Effect.flatMap((promotions) =>
++                      promotions === 1
++                        ? fs.writeFileString(`${verificationEvents}/invalid.json`, "not json\n")
++                        : Effect.void
++                    )
++                  )
++            )
++          ),
++      });
++      expect(failureMessage(yield* Effect.exit(verificationApplier.apply(verificationLocator)))).toContain(
++        "promoted stream failed verification"
++      );
++      expect((yield* store.list(verificationLocator)).issues).toStrictEqual([]);
++
++      const traceLocator = yield* makeFixture("trace-write-failure");
++      const tracePath = `${traceLocator.packetPath}/ops/trace.json`;
++      yield* fs.writeFileString(tracePath, "previous trace\n");
++      const traceApplier = yield* makeApplier({
++        ...fs,
++        writeFileString: (target, content, options) =>
++          target === tracePath
++            ? Effect.fail(injectedFileSystemError("writeFileString", target))
++            : fs.writeFileString(target, content, options),
++      });
++      expect(failureMessage(yield* Effect.exit(traceApplier.apply(traceLocator)))).toContain(
++        "repaired trace write failed"
++      );
++      expect(yield* fs.readFileString(tracePath)).toBe("previous trace\n");
++      expect((yield* store.list(traceLocator)).issues).toStrictEqual([]);
++    })
++  );
++
+   it.effect(
+     "seeds exactly one honest current-snapshot event and trace",
+     Effect.fnUntraced(function* () {
+@@ -392,9 +1044,675 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
+       expect(yield* fs.readFileString(`${packetPath}/ops/trace-parent`)).toBe("blocks trace directory\n");
+     })
+   );
++
++  it.effect(
++    "preserves a concurrent event that arrives after rollback validation",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-race-" });
++      const packetPath = `${root}/demo`;
++      const eventsDirectory = `${packetPath}/ops/events`;
++      const eventFileName = "00001-packet-created-owned.json";
++      const eventPath = `${eventsDirectory}/${eventFileName}`;
++      const foreignPath = `${eventsDirectory}/00002-concurrent.json`;
++      const foreignBytes = "concurrent event bytes\n";
++      yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
++      yield* fs.writeFileString(`${packetPath}/ops/trace-parent`, "blocks trace directory\n");
++      const seed = PacketGenesisSeed.make({
++        slug: "demo",
++        eventsDirectory,
++        eventFileName,
++        eventText: "owned event bytes\n",
++        tracePath: `${packetPath}/ops/trace-parent/trace.json`,
++        traceText: "trace bytes\n",
++      });
++      const remove: FileSystem.FileSystem["remove"] = (target, options) =>
++        target === eventPath
++          ? fs.writeFileString(foreignPath, foreignBytes).pipe(Effect.andThen(fs.remove(target, options)))
++          : fs.remove(target, options);
++      const exit = yield* Effect.exit(
++        applyPacketGenesisSeed(seed).pipe(Effect.provideService(FileSystem.FileSystem, { ...fs, remove }))
++      );
++      expect(Exit.isFailure(exit)).toBe(true);
++      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace write failed");
++      expect(yield* fs.exists(eventPath)).toBe(false);
++      expect(yield* fs.readFileString(foreignPath)).toBe(foreignBytes);
++    })
++  );
++
++  it.effect(
++    "reports precise rollback scan, read, and removal failures",
++    Effect.fnUntraced(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-rollback-errors-" });
++      const makeSeed = Effect.fnUntraced(function* (label: string) {
++        const packetPath = `${root}/${label}`;
++        const eventsDirectory = `${packetPath}/ops/events`;
++        const eventFileName = "00001-owned.json";
++        yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
++        yield* fs.writeFileString(`${packetPath}/ops/trace-parent`, "blocks trace directory\n");
++        return PacketGenesisSeed.make({
++          slug: label,
++          eventsDirectory,
++          eventFileName,
++          eventText: "owned\n",
++          tracePath: `${packetPath}/ops/trace-parent/trace.json`,
++          traceText: "trace\n",
++        });
++      });
++
++      const scanSeed = yield* makeSeed("scan-failure");
++      const scanFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(scanSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            readDirectory: (target, options) =>
++              target === scanSeed.eventsDirectory
++                ? Effect.fail(injectedFileSystemError("readDirectory", target))
++                : fs.readDirectory(target, options),
++          })
++        )
++      );
++      expect(Exit.isFailure(scanFailure) ? scanFailure.cause.toString() : "").toContain("genesis rollback scan failed");
++
++      const rescanSeed = yield* makeSeed("rescan-failure");
++      let rescanCalls = 0;
++      const rescanFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(rescanSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            readDirectory: (target, options) => {
++              if (target !== rescanSeed.eventsDirectory) return fs.readDirectory(target, options);
++              rescanCalls += 1;
++              return rescanCalls === 1
++                ? fs.readDirectory(target, options)
++                : Effect.fail(injectedFileSystemError("readDirectory", target));
++            },
++          })
++        )
++      );
++      expect(Exit.isFailure(rescanFailure) ? rescanFailure.cause.toString() : "").toContain(
++        "genesis rollback rescan failed"
++      );
++
++      const readSeed = yield* makeSeed("read-failure");
++      const readEventPath = `${readSeed.eventsDirectory}/${readSeed.eventFileName}`;
++      const readFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(readSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            readFileString: (target, encoding) =>
++              target === readEventPath
++                ? Effect.fail(injectedFileSystemError("readFileString", target))
++                : fs.readFileString(target, encoding),
++          })
++        )
++      );
++      expect(Exit.isFailure(readFailure) ? readFailure.cause.toString() : "").toContain("genesis rollback read failed");
++
++      const foreignSeed = yield* makeSeed("foreign-conflict");
++      const foreignPath = `${foreignSeed.eventsDirectory}/00002-foreign.json`;
++      const foreignFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(foreignSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            readDirectory: (target, options) =>
++              target === foreignSeed.eventsDirectory
++                ? fs.writeFileString(foreignPath, "foreign\n").pipe(Effect.andThen(fs.readDirectory(target, options)))
++                : fs.readDirectory(target, options),
++          })
++        )
++      );
++      expect(Exit.isFailure(foreignFailure) ? foreignFailure.cause.toString() : "").toContain(
++        "genesis rollback conflict: event directory contains foreign bytes"
++      );
++      expect(yield* fs.readFileString(foreignPath)).toBe("foreign\n");
++      expect(yield* fs.exists(`${foreignSeed.eventsDirectory}/${foreignSeed.eventFileName}`)).toBe(true);
++
++      const changedSeed = yield* makeSeed("changed-conflict");
++      const changedPath = `${changedSeed.eventsDirectory}/${changedSeed.eventFileName}`;
++      const changedFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(changedSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            readDirectory: (target, options) =>
++              target === changedSeed.eventsDirectory
++                ? fs
++                    .readDirectory(target, options)
++                    .pipe(Effect.tap(() => fs.writeFileString(changedPath, "concurrent replacement\n")))
++                : fs.readDirectory(target, options),
++          })
++        )
++      );
++      expect(Exit.isFailure(changedFailure) ? changedFailure.cause.toString() : "").toContain(
++        "genesis rollback conflict: event bytes changed after creation"
++      );
++      expect(yield* fs.readFileString(changedPath)).toBe("concurrent replacement\n");
++
++      const eventRemoveSeed = yield* makeSeed("event-remove-failure");
++      const eventRemovePath = `${eventRemoveSeed.eventsDirectory}/${eventRemoveSeed.eventFileName}`;
++      const eventRemoveFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(eventRemoveSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            remove: (target, options) =>
++              target === eventRemovePath
++                ? Effect.fail(injectedFileSystemError("remove", target))
++                : fs.remove(target, options),
++          })
++        )
++      );
++      expect(Exit.isFailure(eventRemoveFailure) ? eventRemoveFailure.cause.toString() : "").toContain(
++        "genesis rollback remove failed"
++      );
++
++      const directoryRemoveSeed = yield* makeSeed("directory-remove-failure");
++      const directoryRemoveFailure = yield* Effect.exit(
++        applyPacketGenesisSeed(directoryRemoveSeed).pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            remove: (target, options) =>
++              target === directoryRemoveSeed.eventsDirectory
++                ? Effect.fail(injectedFileSystemError("remove", target))
++                : fs.remove(target, options),
++          })
++        )
++      );
++      expect(Exit.isFailure(directoryRemoveFailure) ? directoryRemoveFailure.cause.toString() : "").toContain(
++        "genesis rollback remove failed"
++      );
++      expect(yield* fs.exists(`${directoryRemoveSeed.eventsDirectory}/${directoryRemoveSeed.eventFileName}`)).toBe(
++        false
++      );
++    })
++  );
+ });
+ 
+ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
++  it.effect(
++    "previews, applies, and reports no-op fork repairs through the command boundary",
++    Effect.fnUntraced(function* () {
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* fs.makeDirectory("goals", { recursive: true });
++          yield* fs.copy(FORKED_PATH, "goals/forked");
++          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--preview"])))).toBe(true);
++          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--apply"])))).toBe(true);
++          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--preview"])))).toBe(true);
++          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--apply"])))).toBe(true);
++          yield* fs.writeFileString("goals/forked/ops/events/invalid.json", "not json\n");
++          expectReportedExit(yield* Effect.exit(runRepair(["forked", "--preview"])));
++        })
++      );
++    })
++  );
++
++  it.effect(
++    "previews with the clock timestamp and preserves an already conforming fleet",
++    Effect.fnUntraced(function* () {
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeProjectFile(
++            "goals/demo/ops/manifest.json",
++            `${encodeJson({
++              schemaVersion: "initiative-manifest/v2",
++              initiative: { id: "demo", status: "active" },
++              lifecycle: "active",
++              packetPath: "goals/demo",
++              completionGate,
++            })}\n`
++          );
++          expect(Exit.isSuccess(yield* Effect.exit(runMigration(["--preview"])))).toBe(true);
++          expect(
++            Exit.isSuccess(
++              yield* Effect.exit(
++                runMigration([
++                  "--apply",
++                  "--at",
++                  "2026-08-26T00:00:00.000Z",
++                  "--report",
++                  "goals/packet-convention-migration/history/report.md",
++                ])
++              )
++            )
++          ).toBe(true);
++        })
++      );
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeProjectFile(
++            "goals/demo/ops/manifest.json",
++            `${encodeJson({
++              schemaVersion: "initiative-manifest/v1",
++              initiative: { id: "demo", status: "active" },
++              completionGate,
++            })}\n`
++          );
++          const fs = yield* FileSystem.FileSystem;
++          yield* fs.makeDirectory("goals/demo/ops/events", { recursive: true });
++          expect(
++            Exit.isSuccess(yield* Effect.exit(runMigration(["--preview", "--at", "2026-08-26T00:00:00.000Z"])))
++          ).toBe(true);
++        })
++      );
++    })
++  );
++
++  it.effect(
++    "rejects invalid fleet directories and violation-bearing apply reports",
++    Effect.fnUntraced(function* () {
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeProjectFile(
++            "goals/Not Valid/ops/manifest.json",
++            `${encodeJson({
++              schemaVersion: "initiative-manifest/v2",
++              initiative: { id: "Not Valid", status: "active" },
++              lifecycle: "active",
++              packetPath: "goals/Not Valid",
++              completionGate,
++            })}\n`
++          );
++          expectReportedExit(yield* Effect.exit(runMigration(["--preview", "--at", "2026-08-26T00:00:00.000Z"])));
++        })
++      );
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          yield* writeProjectFile(
++            "goals/demo/ops/manifest.json",
++            `${encodeJson({
++              schemaVersion: "initiative-manifest/v1",
++              initiative: { id: "demo", status: "active" },
++            })}\n`
++          );
++          expectReportedExit(
++            yield* Effect.exit(
++              runMigration([
++                "--apply",
++                "--at",
++                "2026-08-26T00:00:00.000Z",
++                "--report",
++                "goals/packet-convention-migration/history/report.md",
++              ])
++            )
++          );
++        })
++      );
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          for (const slug of ["a", "b"] as const) {
++            yield* writeProjectFile(
++              `goals/${slug}/ops/manifest.json`,
++              `${encodeJson({
++                schemaVersion: "initiative-manifest/v2",
++                initiative: { id: slug, status: "active" },
++                lifecycle: "active",
++                packetPath: `goals/${slug}`,
++                completionGate,
++                blockedBy: [slug === "a" ? "goals/b" : "goals/a"],
++              })}\n`
++            );
++          }
++          expectReportedExit(
++            yield* Effect.exit(
++              runMigration([
++                "--apply",
++                "--at",
++                "2026-08-26T00:00:00.000Z",
++                "--report",
++                "goals/packet-convention-migration/history/report.md",
++              ])
++            )
++          );
++        })
++      );
++    })
++  );
++
++  it.effect(
++    "maps migration snapshot and promotion filesystem failures",
++    Effect.fnUntraced(function* () {
++      const manifestText = `${encodeJson({
++        schemaVersion: "initiative-manifest/v1",
++        initiative: { id: "demo", status: "active" },
++        completionGate,
++      })}\n`;
++      const args = [
++        "--apply",
++        "--at",
++        "2026-08-26T00:00:00.000Z",
++        "--report",
++        "goals/packet-convention-migration/history/report.md",
++      ];
++      const exercise = (makeFileSystem: (fs: FileSystem.FileSystem, path: Path.Path) => FileSystem.FileSystem) =>
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            const fs = yield* FileSystem.FileSystem;
++            const path = yield* Path.Path;
++            yield* writeProjectFile("goals/demo/ops/manifest.json", manifestText);
++            return yield* Effect.exit(
++              runMigration(args).pipe(Effect.provideService(FileSystem.FileSystem, makeFileSystem(fs, path)))
++            );
++          })
++        );
++
++      let reads = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/manifest.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            reads += 1;
++            return reads === 2
++              ? Effect.fail(injectedFileSystemError("readFileString", target))
++              : fs.readFileString(target, encoding);
++          },
++        }))
++      );
++
++      reads = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/manifest.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            reads += 1;
++            return reads === 2 ? Effect.succeed("changed after planning\n") : fs.readFileString(target, encoding);
++          },
++        }))
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) =>
++            path.resolve(target) === path.resolve("goals/demo/ops/trace.json")
++              ? Effect.fail(injectedFileSystemError("readFileString", target))
++              : fs.readFileString(target, encoding),
++        }))
++      );
++
++      let inspections = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          exists: (target) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/events")) return fs.exists(target);
++            inspections += 1;
++            return inspections === 2 ? Effect.fail(injectedFileSystemError("exists", target)) : fs.exists(target);
++          },
++        }))
++      );
++
++      inspections = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          exists: (target) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/events")) return fs.exists(target);
++            inspections += 1;
++            return inspections === 2 ? Effect.succeed(true) : fs.exists(target);
++          },
++        }))
++      );
++
++      reads = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/manifest.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            reads += 1;
++            return reads === 3
++              ? Effect.fail(injectedFileSystemError("readFileString", target))
++              : fs.readFileString(target, encoding);
++          },
++        }))
++      );
++
++      reads = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/manifest.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            reads += 1;
++            return reads === 3 ? Effect.succeed("changed before promotion\n") : fs.readFileString(target, encoding);
++          },
++        }))
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          rename: (source, target) =>
++            path.resolve(target) === path.resolve("goals/demo/ops/manifest.json")
++              ? Effect.fail(injectedFileSystemError("rename", target))
++              : fs.rename(source, target),
++        }))
++      );
++    })
++  );
++
++  it.effect(
++    "maps fleet rollback conflicts and filesystem failures",
++    Effect.fnUntraced(function* () {
++      const manifestText = `${encodeJson({
++        schemaVersion: "initiative-manifest/v1",
++        initiative: { id: "demo", status: "active" },
++        completionGate,
++      })}\n`;
++      const args = [
++        "--apply",
++        "--at",
++        "2026-08-26T00:00:00.000Z",
++        "--report",
++        "goals/packet-convention-migration/history/report-parent/report.md",
++      ];
++      const exercise = (
++        makeFileSystem: (fs: FileSystem.FileSystem, path: Path.Path) => FileSystem.FileSystem,
++        previousTrace = false
++      ) =>
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            const fs = yield* FileSystem.FileSystem;
++            const path = yield* Path.Path;
++            yield* writeProjectFile("goals/demo/ops/manifest.json", manifestText);
++            yield* writeProjectFile(
++              "goals/packet-convention-migration/ops/manifest.json",
++              `${encodeJson({
++                schemaVersion: "initiative-manifest/v2",
++                initiative: { id: "packet-convention-migration", status: "active" },
++                lifecycle: "active",
++                packetPath: "goals/packet-convention-migration",
++                completionGate,
++              })}\n`
++            );
++            yield* writeProjectFile(
++              "goals/packet-convention-migration/history/report-parent",
++              "blocks report directory\n"
++            );
++            if (previousTrace) yield* writeProjectFile("goals/demo/ops/trace.json", "previous trace\n");
++            return yield* Effect.exit(
++              runMigration(args).pipe(Effect.provideService(FileSystem.FileSystem, makeFileSystem(fs, path)))
++            );
++          })
++        );
++      const expectRollbackFailure = (exit: Exit.Exit<unknown, unknown>, message: string): void => {
++        expectReportedExit(exit);
++        expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(message);
++      };
++
++      let manifestReads = 0;
++      expectRollbackFailure(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/manifest.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            manifestReads += 1;
++            return manifestReads === 5
++              ? Effect.fail(injectedFileSystemError("readFileString", target))
++              : fs.readFileString(target, encoding);
++          },
++        })),
++        "manifest rollback read failed"
++      );
++
++      let manifestWrites = 0;
++      expectRollbackFailure(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          rename: (source, target) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/manifest.json")) {
++              return fs.rename(source, target);
++            }
++            manifestWrites += 1;
++            return manifestWrites === 2
++              ? Effect.fail(injectedFileSystemError("rename", target))
++              : fs.rename(source, target);
++          },
++        })),
++        "manifest rollback restore failed"
++      );
++
++      expectRollbackFailure(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readDirectory: (target, options) =>
++            path.resolve(target) === path.resolve("goals/demo/ops/events")
++              ? Effect.fail(injectedFileSystemError("readDirectory", target))
++              : fs.readDirectory(target, options),
++        })),
++        "seed rollback scan failed"
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readDirectory: (target, options) =>
++            path.resolve(target) === path.resolve("goals/demo/ops/events")
++              ? fs
++                  .writeFileString(path.join(target, "foreign.json"), "foreign\n")
++                  .pipe(Effect.andThen(fs.readDirectory(target, options)))
++              : fs.readDirectory(target, options),
++        }))
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) =>
++            path.resolve(path.dirname(target)) === path.resolve("goals/demo/ops/events")
++              ? Effect.fail(injectedFileSystemError("readFileString", target))
++              : fs.readFileString(target, encoding),
++        }))
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) =>
++            path.resolve(path.dirname(target)) === path.resolve("goals/demo/ops/events")
++              ? Effect.succeed("changed event bytes\n")
++              : fs.readFileString(target, encoding),
++        }))
++      );
++
++      let traceReads = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/trace.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            traceReads += 1;
++            return traceReads === 2
++              ? Effect.fail(injectedFileSystemError("readFileString", target))
++              : fs.readFileString(target, encoding);
++          },
++        }))
++      );
++
++      traceReads = 0;
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          readFileString: (target, encoding) => {
++            if (path.resolve(target) !== path.resolve("goals/demo/ops/trace.json")) {
++              return fs.readFileString(target, encoding);
++            }
++            traceReads += 1;
++            return traceReads === 2 ? Effect.succeed("changed trace bytes\n") : fs.readFileString(target, encoding);
++          },
++        }))
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          remove: (target, options) =>
++            path.resolve(target) === path.resolve("goals/demo/ops/trace.json")
++              ? Effect.fail(injectedFileSystemError("remove", target))
++              : fs.remove(target, options),
++        }))
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => {
++          let traceWrites = 0;
++          return {
++            ...fs,
++            rename: (source, target) => {
++              if (path.resolve(target) !== path.resolve("goals/demo/ops/trace.json")) {
++                return fs.rename(source, target);
++              }
++              traceWrites += 1;
++              return traceWrites === 2
++                ? Effect.fail(injectedFileSystemError("rename", target))
++                : fs.rename(source, target);
++            },
++          };
++        }, true)
++      );
++
++      expectReportedExit(
++        yield* exercise((fs, path) => ({
++          ...fs,
++          remove: (target, options) =>
++            path.resolve(target) === path.resolve("goals/demo/ops/events")
++              ? Effect.fail(injectedFileSystemError("remove", target))
++              : fs.remove(target, options),
++        }))
++      );
++    })
++  );
++
++  it.effect(
++    "rejects ambiguous modes and missing repair targets",
++    Effect.fnUntraced(function* () {
++      expectReportedExit(yield* Effect.exit(runMigration([])));
++      expectReportedExit(yield* Effect.exit(runMigration(["--preview", "--apply"])));
++      expectReportedExit(yield* Effect.exit(runRepair(["--preview"])));
++      expectReportedExit(yield* Effect.exit(runRepair(["not valid", "--preview"])));
++      yield* withTempWorkingDirectory(
++        Effect.gen(function* () {
++          expectReportedExit(yield* Effect.exit(runRepair(["missing", "--preview"])));
++        })
++      );
++    })
++  );
+   it.effect(
+     "rejects an invalid adoption timestamp through the controlled CLI error path",
+     Effect.fnUntraced(function* () {
+diff --git a/standards/coverage.regression-baseline.jsonc b/standards/coverage.regression-baseline.jsonc
+index 5100e94d09..68ca96656d 100644
+--- a/standards/coverage.regression-baseline.jsonc
++++ b/standards/coverage.regression-baseline.jsonc
+@@ -20410,15 +20410,15 @@
+     },
+     "@beep/repo-cli": {
+       "path": "packages/tooling/tool/cli",
+-      "lines": 74.55,
+-      "statements": 74.32,
+-      "branches": 61.27,
+-      "functions": 67.96,
++      "lines": 75.54,
++      "statements": 75.33,
++      "branches": 62.5,
++      "functions": 69.2,
+       "uncovered": {
+-        "lines": 8255,
+-        "statements": 8683,
+-        "branches": 4692,
+-        "functions": 3104
++        "lines": 8157,
++        "statements": 8585,
++        "branches": 4672,
++        "functions": 3079
+       },
+       "files": {
+         "packages/tooling/tool/cli/src/bin-main.ts": {
+@@ -20854,15 +20854,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
+-          "lines": 84.1,
+-          "statements": 84.3,
+-          "branches": 80.76,
+-          "functions": 79.83,
++          "lines": 85.26,
++          "statements": 85.47,
++          "branches": 81.7,
++          "functions": 81.61,
+           "uncovered": {
+-            "lines": 41,
+-            "statements": 43,
++            "lines": 42,
++            "statements": 44,
+             "branches": 15,
+-            "functions": 24
++            "functions": 25
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts": {
+@@ -21910,14 +21910,14 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Explore/Check.ts": {
+-          "lines": 97.36,
+-          "statements": 97.43,
+-          "branches": 94.59,
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
+           "functions": 100,
+           "uncovered": {
+-            "lines": 2,
+-            "statements": 2,
+-            "branches": 2,
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
+             "functions": 0
+           }
+         },
+@@ -22402,9 +22402,9 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts": {
+-          "lines": 98.7,
+-          "statements": 98.71,
+-          "branches": 95.65,
++          "lines": 98.87,
++          "statements": 98.9,
++          "branches": 96.07,
+           "functions": 100,
+           "uncovered": {
+             "lines": 1,
+@@ -22425,6 +22425,54 @@
+             "functions": 12
+           }
+         },
++        "packages/tooling/tool/cli/src/commands/Goals/Migration/ManifestTranslation.ts": {
++          "lines": 99.37,
++          "statements": 99.44,
++          "branches": 96,
++          "functions": 98.24,
++          "uncovered": {
++            "lines": 1,
++            "statements": 1,
++            "branches": 3,
++            "functions": 1
++          }
++        },
++        "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts": {
++          "lines": 98.69,
++          "statements": 98,
++          "branches": 95.45,
++          "functions": 98.59,
++          "uncovered": {
++            "lines": 3,
++            "statements": 5,
++            "branches": 4,
++            "functions": 1
++          }
++        },
++        "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts": {
++          "lines": 95.09,
++          "statements": 94.79,
++          "branches": 98.3,
++          "functions": 82.35,
++          "uncovered": {
++            "lines": 8,
++            "statements": 9,
++            "branches": 1,
++            "functions": 9
++          }
++        },
+         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.errors.ts": {
+           "lines": 100,
+           "statements": 100,
+@@ -22462,34 +22510,34 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts": {
+-          "lines": 92.3,
+-          "statements": 91.66,
+-          "branches": 88.46,
++          "lines": 93.9,
++          "statements": 93.18,
++          "branches": 93.33,
+           "functions": 78.94,
+           "uncovered": {
+-            "lines": 6,
+-            "statements": 7,
+-            "branches": 3,
++            "lines": 5,
++            "statements": 6,
++            "branches": 2,
+             "functions": 4
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketFold.ts": {
+-          "lines": 93.54,
+-          "statements": 93.75,
+-          "branches": 88.7,
+-          "functions": 93.02,
++          "lines": 94.68,
++          "statements": 94.87,
++          "branches": 90.32,
++          "functions": 93.33,
+           "uncovered": {
+-            "lines": 12,
+-            "statements": 12,
+-            "branches": 7,
++            "lines": 10,
++            "statements": 10,
++            "branches": 6,
+             "functions": 3
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts": {
+-          "lines": 97.56,
+-          "statements": 97.59,
++          "lines": 98.18,
++          "statements": 98.19,
+           "branches": 100,
+-          "functions": 88.88,
++          "functions": 92,
+           "uncovered": {
+             "lines": 2,
+             "statements": 2,
+@@ -22522,15 +22570,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts": {
+-          "lines": 63.95,
+-          "statements": 63.21,
+-          "branches": 42.68,
+-          "functions": 54.83,
++          "lines": 66.29,
++          "statements": 66.66,
++          "branches": 46.51,
++          "functions": 67.74,
+           "uncovered": {
+-            "lines": 62,
+-            "statements": 64,
+-            "branches": 47,
+-            "functions": 14
++            "lines": 60,
++            "statements": 60,
++            "branches": 46,
++            "functions": 10
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Goals/index.ts": {
+@@ -22834,14 +22882,14 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts": {
+-          "lines": 92.76,
+-          "statements": 92.83,
+-          "branches": 83.61,
++          "lines": 93.12,
++          "statements": 93.18,
++          "branches": 86.59,
+           "functions": 97.18,
+           "uncovered": {
+-            "lines": 23,
+-            "statements": 23,
+-            "branches": 29,
++            "lines": 22,
++            "statements": 22,
++            "branches": 24,
+             "functions": 2
+           }
+         },
+@@ -23422,15 +23470,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
+-          "lines": 29.23,
+-          "statements": 29.07,
+-          "branches": 12.19,
+-          "functions": 15.43,
++          "lines": 33.61,
++          "statements": 33.38,
++          "branches": 17.68,
++          "functions": 22.56,
+           "uncovered": {
+-            "lines": 414,
+-            "statements": 422,
+-            "branches": 144,
+-            "functions": 137
++            "lines": 391,
++            "statements": 399,
++            "branches": 135,
++            "functions": 127
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
+@@ -23494,15 +23542,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
+-          "lines": 72.4,
+-          "statements": 73.21,
+-          "branches": 66.98,
+-          "functions": 77.98,
++          "lines": 80.02,
++          "statements": 80.56,
++          "branches": 71.77,
++          "functions": 83.27,
+           "uncovered": {
+-            "lines": 207,
+-            "statements": 210,
+-            "branches": 105,
+-            "functions": 59
++            "lines": 155,
++            "statements": 158,
++            "branches": 92,
++            "functions": 46
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Quality/index.ts": {
+@@ -23568,7 +23616,7 @@
+         "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts": {
+           "lines": 100,
+           "statements": 100,
+-          "branches": 94.11,
++          "branches": 94.87,
+           "functions": 100,
+           "uncovered": {
+             "lines": 0,
+@@ -23578,14 +23626,14 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts": {
+-          "lines": 85.71,
+-          "statements": 87.5,
+-          "branches": 83.33,
+-          "functions": 76.47,
++          "lines": 86.2,
++          "statements": 88.05,
++          "branches": 100,
++          "functions": 77.77,
+           "uncovered": {
+             "lines": 8,
+             "statements": 8,
+-            "branches": 1,
++            "branches": 0,
+             "functions": 8
+           }
+         },
+@@ -24804,7 +24852,7 @@
+         "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts": {
+           "lines": 100,
+           "statements": 100,
+-          "branches": 75,
++          "branches": 92.85,
+           "functions": 100,
+           "uncovered": {
+             "lines": 0,
+@@ -24886,14 +24934,14 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": {
+-          "lines": 29.66,
+-          "statements": 28.53,
+-          "branches": 30,
+-          "functions": 18.62,
+-          "uncovered": {
+-            "lines": 249,
+-            "statements": 273,
+-            "branches": 119,
++          "lines": 32.05,
++          "statements": 31.13,
++          "branches": 30.45,
++          "functions": 21.69,
++          "uncovered": {
++            "lines": 248,
++            "statements": 272,
++            "branches": 121,
+             "functions": 83
+           }
+         },
+@@ -25042,15 +25090,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts": {
+-          "lines": 86,
+-          "statements": 86.66,
+-          "branches": 89.39,
+-          "functions": 75,
++          "lines": 88.98,
++          "statements": 89.51,
++          "branches": 90.32,
++          "functions": 81.42,
+           "uncovered": {
+-            "lines": 14,
+-            "statements": 14,
+-            "branches": 7,
+-            "functions": 14
++            "lines": 13,
++            "statements": 13,
++            "branches": 6,
++            "functions": 13
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts": {
+@@ -25078,15 +25126,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
+-          "lines": 49.54,
+-          "statements": 48.64,
+-          "branches": 17.64,
+-          "functions": 35.71,
++          "lines": 86.22,
++          "statements": 85.96,
++          "branches": 63.63,
++          "functions": 81.35,
+           "uncovered": {
+-            "lines": 55,
+-            "statements": 57,
+-            "branches": 28,
+-            "functions": 18
++            "lines": 31,
++            "statements": 32,
++            "branches": 32,
++            "functions": 11
+           }
+         },
+         "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts": {
+@@ -25462,15 +25510,15 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts": {
+-          "lines": 82.67,
+-          "statements": 81.55,
++          "lines": 83.66,
++          "statements": 82.52,
+           "branches": 80,
+-          "functions": 62.74,
++          "functions": 66.66,
+           "uncovered": {
+-            "lines": 35,
+-            "statements": 38,
++            "lines": 33,
++            "statements": 36,
+             "branches": 18,
+-            "functions": 19
++            "functions": 17
+           }
+         },
+         "packages/tooling/tool/cli/src/internal/cli/Json.ts": {
+@@ -25966,10 +26014,10 @@
+           }
+         },
+         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts": {
+-          "lines": 88.88,
+-          "statements": 88.88,
++          "lines": 90,
++          "statements": 90,
+           "branches": 100,
+-          "functions": 75,
++          "functions": 80,
+           "uncovered": {
+             "lines": 1,
+             "statements": 1,
