@@ -1,0 +1,13 @@
+diff --git a/flake.nix b/flake.nix
+index 694327bff9..50361aec20 100644
+--- a/flake.nix
++++ b/flake.nix
+@@ -36,7 +36,7 @@
+             worktree_name="$(basename "$repo_root")"
+             echo "beep-effect dev shell loaded for $worktree_name"
+             export BUN_INSTALL="$HOME/.bun"
+-            export BUN_INSTALL_CACHE_DIR="/tmp/$USER-$worktree_name-bun-install-cache"
++            export BUN_INSTALL_CACHE_DIR="''${XDG_CACHE_HOME:-$HOME/.cache}/beep-effect/bun-install-cache"
+             mkdir -p "$BUN_INSTALL_CACHE_DIR"
+             export PATH="$BUN_INSTALL/bin:$PATH"
+             export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libsecret pkgs.glib ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
