@@ -1,0 +1,348 @@
+diff --git a/packages/common/identity/src/packages.ts b/packages/common/identity/src/packages.ts
+index 33c4991694..16728f4018 100644
+--- a/packages/common/identity/src/packages.ts
++++ b/packages/common/identity/src/packages.ts
+@@ -11,7 +11,7 @@
+  *
+  * @since 0.0.0
+  * @module @beep/identity/packages
+- */
++ **/
+ import * as Identity from "./Identity.js";
+ 
+ /**
+@@ -19,113 +19,199 @@ import * as Identity from "./Identity.js";
+  *
+  * @since 0.0.0
+  * @category root
+- */
++ **/
+ export const $I = Identity.make("beep").$BeepId;
+ 
+-// --- common ---
+-
+-/**
+- * @since 0.0.0
+- * @category common
+- */
+-export const $DataId = $I.compose("data");
+-
+-/**
+- * @since 0.0.0
+- * @category common
+- */
+-export const $IdentityId = $I.compose("identity");
+-
+-/**
+- * @since 0.0.0
+- * @category common
+- */
+-export const $MessagesId = $I.compose("messages");
+-
+-/**
+- * @since 0.0.0
+- * @category common
+- */
+-export const $OntologyId = $I.compose("ontology");
+-
+-/**
++const Packages = $I.compose(
++  "data", // @beep/data
++  "messages", // @beep/messages
++  "schema", // @beep/schema
++  "ontology", // @beep/ontology
++  "repo-utils", // @beep/repo-utils
++  "utils", // @beep/utils
++  "shared-domain", // @beep/shared-domain
++  "shared-env", // @beep/shared-env
++  "web", // @beep/web
++  "ui", // @beep/ui
++  "repo-cli", // @beep/repo-cli
++  "claude" // @beep/claude
++);
++/**
++ * Identity composer for the `@beep/data` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $DataId } from "@beep/identity/packages"
++ *
++ * const $I = $DataId.create("Mexican")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category common
+- */
+-export const $SchemaId = $I.compose("schema");
++ **/
++export const $DataId = Packages.$DataId;
+ 
+ /**
++ * Identity composer for the `@beep/ui` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $UiId } from "@beep/identity/packages"
++ *
++ * const $I = $UiId.create("Card")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category common
+  */
+-export const $TypesId = $I.compose("types");
++export const $UiId = Packages.$UiId;
+ 
+ /**
++ * Identity composer for the `@beep/messages` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $MessagesId } from "@beep/identity/packages"
++ *
++ * const $I = $MessagesId.create("Hello")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category common
+- */
+-export const $UtilsId = $I.compose("utils");
+-
+-// --- shared ---
++ **/
++export const $MessagesId = Packages.$MessagesId;
+ 
+ /**
++ * Identity composer for the `@beep/ontology` namespace.
++ *
++ * @example
++ * import { $OntologyId } from "@beep/identity/packages"
++ *
++ * const $I = $OntologyId.create("Hello")
++ *
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category shared
+- */
+-export const $SharedDomainId = $I.compose("shared-domain");
++ *
++ **/
++export const $OntologyId = Packages.$OntologyId;
+ 
+ /**
++ * Identity composer for the `@beep/web` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $WebId } from "@beep/identity/packages"
++ *
++ * const $I = $WebId.create("HomePage")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category shared
+- */
+-export const $SharedEnvId = $I.compose("shared-env");
+-
+-// --- ui ---
++ **/
++export const $WebId = Packages.$WebId;
+ 
+ /**
++ * Identity composer for the `@beep/schema` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $SchemaId } from "@beep/identity/packages"
++ *
++ * const $I = $SchemaId.create("TenantSchema")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category ui
+- */
+-export const $UiId = $I.compose("ui");
+-
+-// --- apps ---
++ **/
++export const $SchemaId = Packages.$SchemaId;
+ 
+ /**
++ * Identity composer for the `@beep/utils` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $UtilsId } from "@beep/identity/packages"
++ *
++ * const $I = $UtilsId.create("StringUtils")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category apps
+- */
+-export const $WebId = $I.compose("web");
+-
+-// --- tooling ---
++ **/
++export const $UtilsId = Packages.$UtilsId;
+ 
+ /**
++ * Identity composer for the `@beep/repo-cli` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $RepoCliId } from "@beep/identity/packages"
++ *
++ * const $I = $RepoCliId.create("SyncCommand")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category tooling
+- */
+-export const $BeepSyncId = $I.compose("beep-sync");
++ **/
++export const $RepoCliId = Packages.$RepoCliId;
+ 
+ /**
++ * Identity composer for the `@beep/repo-cli` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $RepoUtilsId } from "@beep/identity/packages"
++ *
++ * const $I = $RepoUtilsId.create("GetRepoRoot")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category tooling
+- */
+-export const $RepoCliId = $I.compose("repo-cli");
++ **/
++export const $RepoUtilsId = Packages.$RepoUtilsId;
+ 
+ /**
++ * Identity composer for the `@beep/shared-domain` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $SharedDomainId } from "@beep/identity/packages"
++ *
++ * const $I = $SharedDomainId.create("BaseEntity")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category tooling
+- */
+-export const $CodebaseSearchId = $I.compose("codebase-search");
++ **/
++export const $SharedDomainId = Packages.$SharedDomainId;
+ 
+ /**
++ * Identity composer for the `@beep/shared-domain` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $SharedEnvId } from "@beep/identity/packages"
++ *
++ * const $I = $SharedEnvId.create("BaseEntity")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category tooling
+- */
+-export const $RepoUtilsId = $I.compose("repo-utils");
+-
+-// --- claude ---
++ **/
++export const $SharedEnvId = Packages.$SharedEnvId;
+ 
+ /**
++ * Identity composer for the `@beep/claude` namespace.
++ *
++ * @example
++ * ```typescript
++ * import { $ClaudeId } from "@beep/identity/packages"
++ *
++ * const $I = $ClaudeId.create("BeepBoop")
++ * ```
++ *
++ * @category symbols
+  * @since 0.0.0
+- * @category claude
+- */
+-export const $ClaudeId = $I.compose("claude");
++ **/
++export const $ClaudeId = Packages.$ClaudeId;
+diff --git a/specs/completed/semantic-codebase-search/outputs/docgen-enforcement-research.md b/specs/completed/semantic-codebase-search/outputs/docgen-enforcement-research.md
+index 7dc6a74363..aae0b65009 100644
+--- a/specs/completed/semantic-codebase-search/outputs/docgen-enforcement-research.md
++++ b/specs/completed/semantic-codebase-search/outputs/docgen-enforcement-research.md
+@@ -946,7 +946,7 @@ A documentation format that enables both human reading and machine extraction:
+  * assert.strictEqual(resolved.dependencies.effect, "^3.12.0");
+  * ```
+  *
+- * @since 0.1.0
++ * @since 0.0.0
+  * @category Resolution
+  */
+ ```
+@@ -1072,7 +1072,7 @@ Beyond standard tags, custom tags can carry project-specific structured metadata
+ /**
+  * Validates and normalizes a SemVer version string.
+  *
+- * @since 0.1.0
++ * @since 0.0.0
+  * @category Validation
+  * @complexity O(1)
+  * @purity pure
+diff --git a/specs/completed/semantic-codebase-search/outputs/jsdoc-strategy-research.md b/specs/completed/semantic-codebase-search/outputs/jsdoc-strategy-research.md
+index 7a743d3b3f..80baa1d819 100644
+--- a/specs/completed/semantic-codebase-search/outputs/jsdoc-strategy-research.md
++++ b/specs/completed/semantic-codebase-search/outputs/jsdoc-strategy-research.md
+@@ -381,7 +381,7 @@ A file-level doc comment should answer these questions for both humans and searc
+  * @see {@link writePackageJson} - primary write function
+  * @see {@link resolveWorkspaceCatalog} - catalog resolution
+  *
+- * @since 0.1.0
++ * @since 0.0.0
+  * @category Package Management
+  * @domain package-management
+  * @depends FileSystem, Path
+@@ -413,14 +413,14 @@ but typically contain no logic.
+  * @see {@link PackageJson} for package manifest operations
+  * @see {@link WorkspaceGraph} for dependency graph operations
+  *
+- * @since 0.1.0
++ * @since 0.0.0
+  * @packageDocumentation
+  */
+ 
+-/** @since 0.1.0 */
++/** @since 0.0.0 */
+ export * as PackageJson from "./PackageJson.js"
+ 
+-/** @since 0.1.0 */
++/** @since 0.0.0 */
+ export * as WorkspaceGraph from "./WorkspaceGraph.js"
+ ```
+ 
+@@ -555,7 +555,7 @@ function readFile(path: string): string
+  * @see {@link resolveWorkspaceCatalog} for catalog resolution
+  *
+  * @category Package Management
+- * @since 0.1.0
++ * @since 0.0.0
+  */
+ ```
+ 
