@@ -39,6 +39,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
+import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
   AdmissionRequest,
@@ -889,6 +890,8 @@ const stageSelfLease = Effect.fnUntraced(function* (
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     admittedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
+    enqueuedAtMillis: ticket.enqueuedAtMillis,
+    nonce: ticket.nonce,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const created = yield* tryCreateExclusive(leasePath, `${yield* encodeLeaseText(lease)}\n`);
@@ -962,6 +965,22 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   if (O.isNone(attempt.admitted)) {
     return { admitted: O.none(), info, originBusy: attempt.originBusy };
   }
+  yield* appendAdmissionJournalEvent(
+    directories.root,
+    AdmissionJournalAdmitted.make({
+      schemaVersion: "yeet-admission-journal/v1",
+      _tag: "admission-admitted",
+      nonce: ticket.nonce,
+      pid: ticket.pid,
+      procStart: ticket.procStart,
+      kind: ticket.kind,
+      weightTokens: ticket.weightTokens,
+      priority: ticket.priority,
+      originKey: ticket.originKey,
+      enqueuedAtMillis: ticket.enqueuedAtMillis,
+      admittedAtMillis: attempt.admitted.value.lease.admittedAtMillis,
+    })
+  ).pipe(Effect.catch((error) => Console.warn(`[yeet] admission journal append failed: ${error.message}`)));
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
   return { admitted: attempt.admitted, info, originBusy: false };
@@ -1056,6 +1075,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
 });
 
 const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequirements, OriginLease, GateRequirements>(
+  directories: AdmissionDirectories,
   admitted: AdmittedState<OriginLease>,
   releaseOrigin: (lease: OriginLease) => Effect.Effect<void, never, GateRequirements>,
   use: Effect.Effect<Success, UseError, UseRequirements>,
@@ -1066,13 +1086,24 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
 ): Effect.fn.Return<
   Success,
   UseError | QualitySchedulerError,
-  UseRequirements | FileSystem.FileSystem | GateRequirements
+  UseRequirements | FileSystem.FileSystem | Path.Path | GateRequirements
 > {
   return yield* Effect.acquireUseRelease(
     Effect.forkChild(heartbeatLoop(admitted.leasePath, admitted.lease, config)),
     () => restore(use),
     Effect.fnUntraced(function* (heartbeat) {
       yield* Fiber.interrupt(heartbeat);
+      const releasedAtMillis = yield* Clock.currentTimeMillis;
+      yield* appendAdmissionJournalEvent(
+        directories.root,
+        AdmissionJournalReleased.make({
+          schemaVersion: "yeet-admission-journal/v1",
+          _tag: "admission-released",
+          nonce: admitted.lease.nonce,
+          pid: admitted.lease.pid,
+          releasedAtMillis,
+        })
+      ).pipe(Effect.catch((error) => Console.warn(`[yeet] admission journal append failed: ${error.message}`)));
       const fs = yield* FileSystem.FileSystem;
       yield* fs.remove(admitted.leasePath, { force: true }).pipe(Effect.ignore);
       yield* releaseOrigin(admitted.originLease);
@@ -1187,7 +1218,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
           resolved,
           restore
         );
-        return yield* runAdmitted(admitted, gate.release, use, resolved, restore);
+        return yield* runAdmitted(directories, admitted, gate.release, use, resolved, restore);
       }),
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
