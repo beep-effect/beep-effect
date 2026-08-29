@@ -1,0 +1,93 @@
+diff --git a/packages/common/schema/src/Bool.ts b/packages/common/schema/src/Bool.ts
+new file mode 100644
+index 0000000000..557af85633
+--- /dev/null
++++ b/packages/common/schema/src/Bool.ts
+@@ -0,0 +1,26 @@
++import { $SchemaId } from "@beep/identity";
++import {thunkFalse, thunkSomeFalse, thunkSomeTrue, thunkTrue} from "@beep/utils";
++import * as S from "effect/Schema";
++
++const $I = $SchemaId.create("Bool");
++
++export const BoolFalse = S.Boolean.pipe(
++	S.withDecodingDefault(thunkFalse),
++	S.withConstructorDefault(thunkSomeFalse),
++	S.withDecodingDefaultKey(thunkFalse)
++).annotate(
++	$I.annote("BoolFalse", {
++		description: "Boolean schema default is false in all scenarios"
++	})
++)
++
++export const BoolTrue = S.Boolean.pipe(
++	S.withDecodingDefault(thunkTrue),
++	S.withConstructorDefault(thunkSomeTrue),
++	S.withDecodingDefaultKey(thunkTrue)
++).annotate(
++	$I.annote("BoolTrue", {
++		description: "Boolean schema default is true in all scenarios"
++	})
++)
++
+diff --git a/packages/common/schema/src/Str.ts b/packages/common/schema/src/Str.ts
+new file mode 100644
+index 0000000000..abe6f143cf
+--- /dev/null
++++ b/packages/common/schema/src/Str.ts
+@@ -0,0 +1,18 @@
++import { $SchemaId } from "@beep/identity";
++import { thunk, thunkSome} from "@beep/utils";
++import * as S from "effect/Schema";
++
++const $I = $SchemaId.create("Str");
++
++export const StrWithDefault = (value: string) => S.String.pipe(
++	S.withDecodingDefault(thunk(value)),
++	S.withConstructorDefault(thunkSome(value)),
++	S.withDecodingDefaultKey(thunk(value))
++).annotate(
++	$I.annote("StrWithDefault", {
++		description: `String schema with default value: ${value}`,
++		default: value
++	})
++)
++
++export const StrEmpty = StrWithDefault("");
+\ No newline at end of file
+diff --git a/packages/common/schema/src/index.ts b/packages/common/schema/src/index.ts
+index be33217a65..9a6c83d63f 100644
+--- a/packages/common/schema/src/index.ts
++++ b/packages/common/schema/src/index.ts
+@@ -38,3 +38,17 @@ export * from "./MimeType.js";
+  * @category Validation
+  */
+ export * from "./Number.js";
++
++
++/**
++ * @since 0.0.0
++ * @category Validation
++ */
++export * from "./Bool.js";
++
++
++/**
++ * @since 0.0.0
++ * @category Validation
++ */
++export * from "./Str.js";
+\ No newline at end of file
+diff --git a/packages/common/utils/src/thunk.ts b/packages/common/utils/src/thunk.ts
+index 6a7bc26cab..5e667c20b0 100644
+--- a/packages/common/utils/src/thunk.ts
++++ b/packages/common/utils/src/thunk.ts
+@@ -123,5 +123,6 @@ export const thunkEmptyRecord = <K extends string | symbol = never, V = never>()
+ export const thunkSome = <A>(value: A): () => O.Option<A> => () => O.some(value);
+ 
+ export const thunkSomeEmptyStr = thunkSome("");
+-
++export const thunkSomeFalse = thunkSome(false);
++export const thunkSomeTrue = thunkSome(true);
+ export const thunkNegative1 = thunk(-1);
+\ No newline at end of file
