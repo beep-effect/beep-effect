@@ -1,0 +1,167 @@
+diff --git a/initiatives/agentic-professional-runtime/BRAINSTORM.md b/initiatives/agentic-professional-runtime/BRAINSTORM.md
+new file mode 100644
+index 0000000000..c5cd5ec5d3
+--- /dev/null
++++ b/initiatives/agentic-professional-runtime/BRAINSTORM.md
+@@ -0,0 +1,19 @@
++Bellow is a list of ideas, thoughts & stuff that I'm thinking about for the agentic-professional-runtime initiative.
++
++1. Infrastructure as Code (IaC) - use pulumi to manage infrastructure
++2. How does openclaw fold into this?
++3. How do we automate setting up individual workspaces?
++   - scenario: MacOS, Windows 
++   - scenario: Anthropic Native with Claude Desktop
++   - scenario: OpenAI Native with Codex App
++   - scenario: Hybrid with Claude Desktop and Codex App
++4. How do we automate setting up the organizational brain layer?
++5. In addition to an organizational layer aggregating data and metrics across all workspaces whether scoped to individual or team level what does it look like for every employee to have their own aggregation layer? Think openclaw, plus codex, plus claude desktop for the individual
++6. What does the flow look like for aggregating data across individuals without becoming a "big brother" or employee surveillance stack?
++7. What tools, 3rd party SaaS, and open source solutions can we leverage to build a privacy-preserving, employee-centric data aggregation layer?
++8. What is our strategy for dealing with Colorado Senate Bill 24-205 (SB24-205), also known as the Colorado Artificial Intelligence Act (CAIA)?
++9. For wealth management & legal how do we deal with privacy concerns and regulatory compliance (PII)?
++10. How do I test & QA the installer application when I have no MacOS?
++11. What does the installer flow look like? e.g Do we ask for example, "do you have an existing Claude Plan or ChatGPT plan?"
++12. What is a schema we can use that is interoperable between the SKILL's for codex, chatgpt, claude, are skills an Open Standard?
++13. 
+diff --git a/packages/drivers/venice-ai/src/VeniceAI.service.ts b/packages/drivers/venice-ai/src/VeniceAI.service.ts
+index ea1030bea8..cfa641c717 100644
+--- a/packages/drivers/venice-ai/src/VeniceAI.service.ts
++++ b/packages/drivers/venice-ai/src/VeniceAI.service.ts
+@@ -7,6 +7,7 @@
+ 
+ import { $VeniceAiId } from "@beep/identity";
+ import { LiteralKit, TaggedErrorClass } from "@beep/schema";
++import { thunkEmptyStr, thunkEffectVoid } from "@beep/utils";
+ import { Config, Context, Effect, Layer, pipe, Redacted, Stream } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -1450,7 +1451,7 @@ const ensureSseResponse = (
+     O.filter(isSseContentType),
+     O.match({
+       onNone: () => Effect.fail(VeniceAIError.fromDescriptor(descriptor, "sse decoding", { status: response.status })),
+-      onSome: () => Effect.void,
++      onSome: thunkEffectVoid,
+     })
+   );
+ 
+@@ -1459,7 +1460,7 @@ const decodeResponse = Effect.fn("VeniceAI.decodeResponse")(function* (
+   response: HttpClientResponse.HttpClientResponse
+ ) {
+   const successfulResponse = yield* ensureSuccessStatus(descriptor, response);
+-  const contentType = O.getOrElse(responseContentType(successfulResponse), () => "");
++  const contentType = O.getOrElse(responseContentType(successfulResponse), thunkEmptyStr);
+ 
+   if (isJsonContentType(contentType)) {
+     const body = yield* successfulResponse.json.pipe(
+@@ -1524,10 +1525,15 @@ const sseBlockData = (block: string): O.Option<string> => {
+   return Str.isEmpty(Str.trim(block)) ? O.none() : O.some("");
+ };
+ 
+-type SseDataEvent = {
+-  readonly data: string;
+-  readonly index: number;
+-};
++class SseDataEvent extends S.Class<SseDataEvent>($I`SseDataEvent`)(
++  {
++    data: S.String,
++    index: S.Number,
++  },
++  $I.annote("SseDataEvent", {
++    description: "Event data with associated index for streaming responses",
++  })
++) {}
+ 
+ type SseDecodeState = {
+   readonly buffer: string;
+@@ -1555,11 +1561,7 @@ const splitSseText = (
+     ? { blocks: parts, remainder: "" }
+     : {
+         blocks: A.dropRight(parts, 1),
+-        remainder: pipe(
+-          parts,
+-          A.last,
+-          O.getOrElse(() => "")
+-        ),
++        remainder: pipe(parts, A.last, O.getOrElse(thunkEmptyStr)),
+       };
+ };
+ 
+diff --git a/packages/drivers/xai/src/XAi.errors.ts b/packages/drivers/xai/src/XAi.errors.ts
+index a81d75315b..e287f2ef62 100644
+--- a/packages/drivers/xai/src/XAi.errors.ts
++++ b/packages/drivers/xai/src/XAi.errors.ts
+@@ -142,7 +142,13 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
+     });
+ }
+ 
+-type XAiErrorOptions = {
+-  readonly cause?: unknown;
+-  readonly status?: number;
+-};
++export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
++  {
++    cause: S.optionalKey(S.DefectWithStack),
++    status: S.optionalKey(S.Number),
++  },
++  $I.annote("XAiErrorOptions", {
++    description: "Options for creating XAiError instances",
++  })
++) {}
++
+diff --git a/packages/drivers/xai/src/XAi.service.ts b/packages/drivers/xai/src/XAi.service.ts
+index ff68e9ca81..aada90f73f 100644
+--- a/packages/drivers/xai/src/XAi.service.ts
++++ b/packages/drivers/xai/src/XAi.service.ts
+@@ -510,15 +510,25 @@ const parseSseData = (
+         Effect.mapError((cause) => XAiError.fromDescriptor(descriptor, "sse decoding", { cause }))
+       );
+ 
+-type SseDataChunk = {
+-  readonly data: string;
+-  readonly index: number;
+-};
+-
+-type SseLineState = {
+-  readonly index: number;
+-  readonly lines: ReadonlyArray<string>;
+-};
++export class SseDataChunk extends S.Class<SseDataChunk>($I`SseDataChunk`)(
++	{
++	  data: S.String,
++	  index: S.Number,
++	},
++	$I.annote("SseDataChunk", {
++		description: "Represents a chunk of data with an associated index for streaming responses",
++	})
++) {}
++
++export class SseLineState extends S.Class<SseLineState>($I`SseLineState`)(
++	{
++	  lines: S.Array(S.String),
++	  index: S.Number,
++	},
++	$I.annote("SseLineState", {
++		description: "Represents the state of lines and their associated index for streaming responses",
++	})
++) {}
+ 
+ const emptySseLineState = (index = 0): SseLineState => ({
+   index,
+@@ -584,14 +594,14 @@ const rawDataToText = (data: WebSocket.RawData): string => new TextDecoder().dec
+ 
+ type XAiQueryScalar = boolean | null | number | string;
+ 
+-const queryScalarToString = (value: XAiQueryScalar): string =>
+-  Match.type<XAiQueryScalar>().pipe(
++const queryScalarToString = Match.type<XAiQueryScalar>().pipe(
++		Match.withReturnType<string>(),
+     Match.when(P.isString, (text) => text),
+     Match.when(P.isNumber, (number) => `${number}`),
+     Match.when(P.isBoolean, (boolean) => (boolean ? "true" : "false")),
+     Match.when(null, () => "null"),
+     Match.exhaustive
+-  )(value);
++  );
+ 
+ const decodeQueryScalarOption = S.decodeUnknownOption(S.Union([S.Boolean, S.Null, S.Number, S.String]));
+ 
