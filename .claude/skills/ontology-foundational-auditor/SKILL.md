@@ -76,7 +76,13 @@ from the run manifest; CREATE the layout at step 1 (`mkdir -p` the
 subdirectories `observations/ prose-observations/ hypotheses/ foundational/
 alternative/ proposals/ rejections/`). **Hard stop before anything else: if no
 CQ suite is supplied (cq_count = 0), STOP and run `ontology-requirements`
-first — warrants cannot exist without CQs.** The validator verifies the count
+first — warrants cannot exist without CQs.** In a project-scoped
+installation where `ontology-requirements` is not installed, the
+self-contained fallback is to elicit the CQ suite and scope with the human
+steward directly and write `$ONT/docs/competency-questions.yaml` (>=1
+Must/Should CQ, each answering a named decision) plus `$ONT/docs/scope.md`
+into the pinned corpus — the validator requires those FILES, not the skill that authored
+them. The validator verifies the count
 against the CQ file itself under `--repo`; an asserted count is not a count.
 
 1. **Pin the corpus.** Write `work/run-manifest.yaml` per
@@ -169,7 +175,7 @@ against the CQ file itself under `--repo`; an asserted count is not a count.
    seats on `hypothesis_ref` and computes divergence deterministically.
    Same-context execution voids the pass; the manifest records
    `independent_context`/`blinded` per agent. The adversary may not repair
-   what it attacks — proposed fixes go into the target's `revision_requests`
+   what it attacks — proposed fixes go into the REVIEW's `revision_requests`
    for a NEW synthesis pass, never into `notes`, never applied in place. A
    referent is DISPUTED when the adversary returned non-PASS, the seats'
    categories diverge, or its analysis lists a viable rival.
@@ -366,6 +372,17 @@ if [ -z "$RID" ]; then :; elif [ -e "$AM" ] || [ -e "$AI" ]; then echo "refusing
   cmp -s "$WORK/run-manifest.yaml" "$AM" && cmp -s "$WORK/dispositions.index.yaml" "$AI" && \
   rm "$WORK/run-manifest.yaml" "$WORK/dispositions.index.yaml" && \
   echo "rotated; prior_index: runs/$RID.index.yaml  prior_index_sha256_12: $(sha256sum "$AI" | cut -c1-12)"
+fi
+# OBSERVATIONS ARE RUN-SCOPED: their canonical ids embed the pinned commit
+# and adapter version, so a new run's manifest can never re-validate the old
+# records — left in place they poison the next scan as stale, undispositioned
+# observations. Archive them beside the manifest/index (refuse-if-exists;
+# they are deterministically regenerable from the archived manifest's pin):
+AO=$ONT/runs/$RID.observations
+if [ -z "$RID" ]; then :; elif [ -e "$AO" ]; then echo "refusing: observation archive for $RID exists"; else
+  mkdir -p "$AO" && mv "$WORK/observations" "$WORK/prose-observations" "$AO"/ && \
+  mkdir -p "$WORK/observations" "$WORK/prose-observations" && \
+  echo "observations archived to runs/$RID.observations/"
 fi
 # CARRY-FORWARD POLICY (by design): reviews/analyses are CONTENT-ADDRESSED —
 # a new run reuses them only while their closures still verify; an engine,

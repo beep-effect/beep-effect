@@ -31,7 +31,7 @@
 # an identity card, a warrant, and a rejected-null discriminator to attack);
 # only `taxonomy` may be no_surface, with a concrete reason. A PASS verdict
 # with any attack outcome `landed` is self-contradictory and rejected.
-# Repairs go in revision_requests on the TARGET proposal — never in notes,
+# Repairs go in revision_requests HERE on the review — never in notes,
 # never applied in place.
 target: "otp:REPLACE:001"        # otp: ids only
 target_sha256: "<sha256 of the reviewed proposal file bytes>"
@@ -45,6 +45,11 @@ surfaces:                        # attacked | no_surface — an unlisted surface
   warrant: attacked              # never no_surface
   null_discriminator: attacked   # never no_surface
 no_surface_reasons: {}           # concrete reason when taxonomy is no_surface
+revision_requests: []            # OPTIONAL: the adversary's proposed fixes, as
+                                  # non-blank strings — the ONLY legal channel
+                                  # for repair proposals (the adversary never
+                                  # edits the target); a NEW synthesis pass
+                                  # consumes them
 attacks:
   - surface: taxonomy | identity | warrant | null_discriminator
     rule: ""                     # e.g. anti-rigid-superclass, identity-conflict,

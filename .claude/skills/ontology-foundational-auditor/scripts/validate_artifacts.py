@@ -1,4 +1,4 @@
-"""Machine enforcement for the auditor's artifact contracts (v12).
+"""Machine enforcement for the auditor's artifact contracts (v13).
 
 v3 bound records to id strings and file bytes; round-4 seats proved id-joins
 and lone-file digests are not coherence. v4 binds CONTENT, HISTORY, and
@@ -632,7 +632,12 @@ def check_dh(d, p):
     need(d, ["id", "observation_refs", "representation_status", "confidence"], p)
     check_kind_id(d, p, "dh")
     need_str(d, "proposed_referent.label", p)
-    if "description" in (d.get("proposed_referent") or {}) and \
+    pr_ref = d.get("proposed_referent")
+    if pr_ref is not None and not isinstance(pr_ref, dict):
+        err(p, f"proposed_referent must be a MAPPING, got {pr_ref!r} — a "
+               "scalar here would crash the membership check, and malformed "
+               "input is a violation, never a crash")
+    elif "description" in (pr_ref or {}) and \
             not isinstance(get(d, "proposed_referent.description"), str):
         err(p, "proposed_referent.description must be a STRING")
     need_str(d, "null_hypothesis.label", p)
@@ -1061,6 +1066,17 @@ def check_review(d, p):
         err(p, "verdict FAIL with zero landed attacks is self-contradictory — what "
                "failed, if nothing landed? (and an empty landed set makes the "
                "revision_log join vacuous)")
+    if "revision_requests" in d:
+        rr = d.get("revision_requests")
+        if not isinstance(rr, (list, tuple)):
+            err(p, f"revision_requests must be a LIST of non-blank strings, "
+                   f"got {type(rr).__name__} — it is the adversary's ONLY "
+                   "legal repair channel")
+        else:
+            for x in rr:
+                if not isinstance(x, str) or not x.strip():
+                    err(p, f"revision_requests entry {x!r} is not a non-blank "
+                           "STRING")
     ev = aslist(d.get("evidence"))
     if not ev:
         err(p, "evidence must cite the observation/CQ ids the verdict stands on")
@@ -1373,8 +1389,8 @@ def check_prior_rows(rows, path):
 def cross_check_rejections(rats, rejs, otp_ids=None):
     out = []
     rej_refs = {str(d.get("proposal_ref")) for _, d in rejs}
-    reject_rats = {str(d.get("proposal_ref")) for _, d in rats
-                   if d.get("decision") == "reject"}
+    reject_rats = {str(d.get("proposal_ref")): d.get("rationale")
+                   for _, d in rats if d.get("decision") == "reject"}
     for p, d in rats:
         if d.get("decision") == "reject" and str(d.get("proposal_ref")) not in rej_refs:
             out.append(f"{p}: reject decision with no rejection-ledger record")
@@ -1394,6 +1410,16 @@ def cross_check_rejections(rats, rejs, otp_ids=None):
                        "decision: reject ratification — the ledger records a "
                        "steward rejection; without the ratification it is "
                        "authority nobody authored")
+        else:
+            rat_rationale = reject_rats[ref]
+            led = d.get("rationale")
+            if isinstance(rat_rationale, str) and isinstance(led, str) and \
+                    led.strip() != rat_rationale.strip():
+                out.append(f"{p}: rejection-ledger rationale for {ref} is NOT "
+                           "the ratification's rationale — the ledger must "
+                           "carry the steward's OWN reason; a substituted "
+                           "reason suppresses future proposals on authority "
+                           "the steward never gave")
     return out
 
 
@@ -1469,11 +1495,15 @@ def cross_check_review_binding(reviews, otp_records):
                 rec = otp_records.get(tgt)
                 logged = {}
                 if rec:
-                    logged = {str(e.get("from_sha256")):
-                              {str(a) for a in aslist(e.get("addressed"))
-                               if isinstance(a, str)}
-                              for e in aslist(rec[1].get("revision_log"))
-                              if isinstance(e, dict)}
+                    # UNION entries sharing a digest: the schema permits
+                    # splitting addressed rules across entries, and a
+                    # last-wins dict would erase earlier answers
+                    for e in aslist(rec[1].get("revision_log")):
+                        if isinstance(e, dict):
+                            logged.setdefault(str(e.get("from_sha256")),
+                                              set()).update(
+                                str(a) for a in aslist(e.get("addressed"))
+                                if isinstance(a, str))
                 for fd in failed[tgt]:
                     if fd not in logged:
                         out.append(f"{p}: PASS after FAIL without a revision_log "
@@ -2384,8 +2414,10 @@ def run_gate(root, kinds, primary, alt_ic_by_hyp, alt_fa_by_hyp, index, manifest
                     # without changing the digest
                     h.update(f"{Path(cf).name}\n{len(data)}\n".encode())
                     h.update(data)
-                except Exception:  # noqa: BLE001
-                    pass
+                except Exception as ex:  # noqa: BLE001
+                    err(p, f"GATE: closure member {Path(cf).name!r} cannot be "
+                           f"read ({ex}) — a review digest over a TRUNCATED "
+                           "closure binds nothing; submission refused")
             # the warrant's ground closes the closure: the CQ suite digest is a
             # virtual member — a PASS must not survive its warrant changing
             h.update(f"cq:{get(manifest[1], 'cq_suite.sha256_12') if manifest else ''}\n".encode())
@@ -2402,9 +2434,11 @@ def run_gate(root, kinds, primary, alt_ic_by_hyp, alt_fa_by_hyp, index, manifest
                 logged = {}
                 for e in aslist(d.get("revision_log")):
                     if isinstance(e, dict):
-                        logged[str(e.get("from_sha256"))] = {
+                        # union across entries sharing a digest (see binding)
+                        logged.setdefault(str(e.get("from_sha256")),
+                                          set()).update(
                             str(a) for a in aslist(e.get("addressed"))
-                            if isinstance(a, str)}
+                            if isinstance(a, str))
                 for fd in unlogged:
                     if fd not in logged:
                         err(p, f"GATE: a FAIL was judged at digest {fd[:12]}… and "
@@ -3379,7 +3413,48 @@ def self_test():
             pass  # this is the guaranteed violation point inside validate_dir
         del errors[n:]
 
-    print("SELF-TEST PASS (151 rule families fire: canonical ids, nested closure, "
+
+    # --- PR-review (codex connector) families --------------------------------
+    b = copy.deepcopy(good_dh)
+    b["proposed_referent"] = 1
+    n = len(errors)
+    check_dh(b, "self:scalarref_dh")   # must be a violation, never a crash
+    assert any("proposed_referent must be a MAPPING" in e for e in errors[n:])
+    del errors[n:]
+    b = copy.deepcopy(rev)
+    b["revision_requests"] = "fix it"
+    expect_msg("revision_requests shape", "must be a LIST", check_review, b,
+               "self:rrshape_review")
+    b = copy.deepcopy(rev)
+    b["revision_requests"] = ["tighten the identity criterion to enrollment"]
+    n = len(errors)
+    check_review(b, "self:rrok_review")
+    assert not errors[n:], f"legal revision_requests must pass: {errors[n:]}"
+    out = cross_check_rejections(
+        [("self:rat", {"decision": "reject", "proposal_ref": "otp:Lease:001",
+                        "rationale": "the steward's actual stated reason here"})],
+        [("self:rej", {"proposal_ref": "otp:Lease:001",
+                        "rationale": "a different substituted reason nobody gave"})],
+        otp_ids={"otp:Lease:001"})
+    expect_out("ledger rationale binding", "steward's OWN reason", out)
+    revs_split = [(P("w/otp-x-001.review.yaml"),
+                   {"target": "otp:x:001", "target_sha256": "a" * 64,
+                    "verdict": "FAIL",
+                    "attacks": [{"surface": "identity", "rule": "rule-a",
+                                 "outcome": "landed"},
+                                {"surface": "warrant", "rule": "rule-b",
+                                 "outcome": "landed"}]}),
+                  (P("w/otp-x-001-r2.review.yaml"),
+                   {"target": "otp:x:001", "target_sha256": "b" * 64,
+                    "verdict": "PASS"})]
+    otp_split = {"otp:x:001": ("self:otp", {
+        "revision_log": [{"from_sha256": "a" * 64, "addressed": ["rule-a"]},
+                          {"from_sha256": "a" * 64, "addressed": ["rule-b"]}]})}
+    out, _, _ = cross_check_review_binding(revs_split, otp_split)
+    assert not any("does not address" in m for m in out), \
+        "split revision_log entries for one digest must UNION, not last-win"
+
+    print("SELF-TEST PASS (156 rule families fire: canonical ids, nested closure, "
           "object grammar, mixed-unrep, discriminator, searched-true, warrant-XOR, "
           "parents grammar, id grammars incl. rat digits, crash-hardening, rat "
           "content binding + staleness + freshness, review edge-target/chain/"
@@ -3388,7 +3463,7 @@ def self_test():
           "live-carried bypass, row-evidence join, since-exact, digest-fresh IRI, "
           "identifier pad + negation context + provider agreement incl. "
           "boolean-vs-unresolved, boolean pin_waived, ufo_category required, "
-          "addressed-list shape, #-boundary, config pairing, vacuity-boolean, text exact-type sweep, container shapes, prior-FAIL coverage population, tri-state crash hardening, duplicate-key loader, syntax-aware pairing stripper, glued openers, mid-line bare keys, blank-line continuation, identity precedence, lexical component symlinks, run-id parser, closed shared run-id grammar + rotation parity, exact-hex digest locks, cross-line separator refusal, ini/properties quoted-payload, toml/BOM/form-feed comment boundaries, join quarantine, orphan review/rejection authority, predecessor-local row validation, symlink-loop fail-closed, bounded run-id fractions, CR line-break normalization, half-quote arm refusal, table-filter quarantine, predecessor date/grammar/reason/carried meters, control-escaped authority rendering, unexaminable-path fail-closed)")
+          "addressed-list shape, #-boundary, config pairing, vacuity-boolean, text exact-type sweep, container shapes, prior-FAIL coverage population, tri-state crash hardening, duplicate-key loader, syntax-aware pairing stripper, glued openers, mid-line bare keys, blank-line continuation, identity precedence, lexical component symlinks, run-id parser, closed shared run-id grammar + rotation parity, exact-hex digest locks, cross-line separator refusal, ini/properties quoted-payload, toml/BOM/form-feed comment boundaries, join quarantine, orphan review/rejection authority, predecessor-local row validation, symlink-loop fail-closed, bounded run-id fractions, CR line-break normalization, half-quote arm refusal, table-filter quarantine, predecessor date/grammar/reason/carried meters, control-escaped authority rendering, unexaminable-path fail-closed, referent-mapping guard, review revision-requests channel, ledger-rationale binding, revision-log digest union, closure-read fail-closed)")
 
 
 def print_run_id(ont_root):

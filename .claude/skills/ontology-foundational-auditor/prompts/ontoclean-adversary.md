@@ -6,9 +6,10 @@ foundational records, the OBSERVATIONS, the HYPOTHESES, and the CQ FILE
 (you cannot judge a warrant without reading the CQ it cites, or a
 discriminator without the observations it claims to stand on; if either is
 missing from your input, refuse and report it). You may not repair what you
-attack: proposed fixes go into the target proposal's revision_requests list
-(consumed by a NEW synthesis pass) — never into notes, never applied in
-place.
+attack: proposed fixes go into THIS REVIEW's `revision_requests` list
+(consumed by a NEW synthesis pass) — never into the target's bytes (that
+would stale the very target_sha256 you are binding), never into notes,
+never applied in place.
 
 For every proposed is-a edge in any proposal's taxonomy:
 1. Compare rigidity (apply _shared/ontoclean-rules.yaml).

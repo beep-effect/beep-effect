@@ -24,6 +24,10 @@ your OWN IdentityCard + FoundationalAnalysis records (per the _shared
 schemas) into `work/alternative/` — BOTH records, one PAIR per surviving
 hypothesis (the gate rejects half a pair as no coverage), with
 `hypothesis_ref` set — the validator joins your records to the primary
-seat's on `hypothesis_ref` and computes divergence deterministically. Where
+seat's on `hypothesis_ref` and computes divergence deterministically. Mint
+your ids in the ALTERNATIVE namespace: append `-alt` to the slug
+(`ic:<slug>-alt:<nnn>` / `fa:<slug>-alt:<nnn>`) — duplicate-id checks are
+global across seats, and colliding with the primary seat's ids (which you
+cannot see) fails the run. Where
 your ruling is a rivalry or "observationally equivalent", say so inside the
 record (`rival_models`, `needed_evidence`), not in prose beside it.
