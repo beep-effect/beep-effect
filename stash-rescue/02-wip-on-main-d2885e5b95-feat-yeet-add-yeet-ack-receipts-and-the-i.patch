@@ -1,0 +1,46 @@
+diff --git a/goals/ship-velocity/research/OPPORTUNITIES.md b/goals/ship-velocity/research/OPPORTUNITIES.md
+index c82d4bd05e..09dc4649af 100644
+--- a/goals/ship-velocity/research/OPPORTUNITIES.md
++++ b/goals/ship-velocity/research/OPPORTUNITIES.md
+@@ -500,3 +500,41 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
+   `CoverageRegression.ts` — it just has no entry point below the full lane). Sub-minute
+   feedback instead of four ~11-minute loops; also makes "re-verify after any source edit"
+   cheap enough that stale-tree proofs stop being tempting.
++
++## 2026-08-17 — A2 PR-1: plain `yeet monitor`'s fail-fast watch binds to the superseded head
++
++- What was happening: twice in one session, `yeet publish --monitor` reported "monitor phase
++  failed" immediately after a green proof and successful push, because
++  `gh pr checks --watch --fail-fast` started during the old-head→new-head transition and
++  tripped on the *superseded* head's terminal Coverage Regression red before the new head's
++  checks registered. Both times every check on the actually-pushed head was pending; the
++  verdict and the "rerun one job" guidance pointed at a run that no longer mattered.
++- Evidence: pushes ef60da45f8 and 1099b4cd09 on PR #759; in both cases
++  `gh pr view --json headRefOid` + `gh pr checks` showed all-pending on the new head while
++  the monitor phase exited red citing the prior run (32066802505 / 32077705569).
++- What would have prevented it: the monitor phase should resolve the PR head SHA first and
++  gate the watch on checks *for that SHA* (the A1 watch stream already carries a per-head
++  registration budget — `advanceYeetWatchTick` — the plain monitor's blocking watch predates
++  it). Until then the operator cost is a spurious red verdict plus one manual re-arm per push.
++
++## 2026-08-17 — the success-exit hang recurred on the hosted Docgen lane (post-#748)
++
++- What was happening: PR #759's Docgen check ran 54 minutes before the operator cancelled it.
++  The log tail shows the lane had already *succeeded*: turbo docgen exited 0 after 1m51s
++  ("✓ Docs generation succeeded!", 31/31 packages), the wrapper printed
++  "docgen:local: aggregating 31 package(s) into docs/generated" at 23:39, and the matching
++  "aggregated 31 package(s) in …" line (locally ~3s later) never appeared — ~51 minutes of
++  silence until cancellation, when the runner reaped five orphaned bun processes
++  (pids 5110/5111/5255-5257) that were holding the step's stdio pipes.
++- Why it matters: this is the third recurrence of the success-exit hang class, on a third
++  lane — #718's process-group reap did not close it (recurred on Lint Policy job 95354812245),
++  #748's capture-seam fix did not close it either (this instance is post-#748). Each recurrence
++  costs a full lane timeout budget and an operator cancel + same-SHA rerun.
++- Evidence: run 32080950731 attempt 1, job 95543690619 (Docgen, cancelled); log tail captured
++  before the rerun superseded the attempt.
++- What would have prevented the *cost* (independent of the root fix): the docgen stall watchdog
++  already probes sub-steps locally — a hosted-lane variant that fires when a wrapper phase
++  ("aggregating…") exceeds a generous multiple of its local duration would have converted a
++  54-minute operator-cancelled hang into a ~2-minute self-terminating red with the phase named.
++  Observability first: the fix for the hang is still open, but every instance should at least
++  self-report its stall point.
