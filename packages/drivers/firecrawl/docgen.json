@@ -1,0 +1,394 @@
+{
+  "$schema": "../../../packages/tooling/tool/docgen/schema.json",
+  "exclude": ["src/internal/**/*.ts"],
+  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/drivers/firecrawl/src/",
+  "examplesCompilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "module": "es2022",
+    "target": "es2022",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowJs": false,
+    "erasableSyntaxOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "stripInternal": false,
+    "noErrorTruncation": true,
+    "types": [],
+    "jsx": "react-jsx",
+    "paths": {
+      "@beep/firecrawl": ["../../../packages/drivers/firecrawl/src/index.ts"],
+      "@beep/firecrawl/*": ["../../../packages/drivers/firecrawl/src/*.ts"],
+      "@beep/identity": [
+        "../../../packages/foundation/modeling/identity/src/index.ts"
+      ],
+      "@beep/identity/*": [
+        "../../../packages/foundation/modeling/identity/src/*.ts"
+      ],
+      "@beep/identity/packages": [
+        "../../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
+      "@beep/observability": [
+        "../../../packages/foundation/capability/observability/src/index.ts"
+      ],
+      "@beep/observability/experimental/server": [
+        "../../../packages/foundation/capability/observability/src/experimental/server/index.ts"
+      ],
+      "@beep/observability/server": [
+        "../../../packages/foundation/capability/observability/src/server/index.ts"
+      ],
+      "@beep/observability/web": [
+        "../../../packages/foundation/capability/observability/src/web/index.ts"
+      ],
+      "@beep/schema": [
+        "../../../packages/foundation/modeling/schema/src/index.ts"
+      ],
+      "@beep/schema/AbortSignal": [
+        "../../../packages/foundation/modeling/schema/src/AbortSignal.ts"
+      ],
+      "@beep/schema/Age": [
+        "../../../packages/foundation/modeling/schema/src/Age/index.ts"
+      ],
+      "@beep/schema/ArrayOf": [
+        "../../../packages/foundation/modeling/schema/src/ArrayOf.ts"
+      ],
+      "@beep/schema/BigDecimal": [
+        "../../../packages/foundation/modeling/schema/src/BigDecimal.ts"
+      ],
+      "@beep/schema/BinaryFileExtension": [
+        "../../../packages/foundation/modeling/schema/src/BinaryFileExtension.ts"
+      ],
+      "@beep/schema/BufferEncoding": [
+        "../../../packages/foundation/modeling/schema/src/BufferEncoding.ts"
+      ],
+      "@beep/schema/CardinalDirection": [
+        "../../../packages/foundation/modeling/schema/src/CardinalDirection/index.ts"
+      ],
+      "@beep/schema/CauseTaggedError": [
+        "../../../packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
+      ],
+      "@beep/schema/Color": [
+        "../../../packages/foundation/modeling/schema/src/Color/index.ts"
+      ],
+      "@beep/schema/CommonTextSchemas": [
+        "../../../packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
+      ],
+      "@beep/schema/CrossOriginEmbedderPolicy": [
+        "../../../packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/index.ts"
+      ],
+      "@beep/schema/CrossOriginOpenerPolicy": [
+        "../../../packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/index.ts"
+      ],
+      "@beep/schema/CrossOriginResourcePolicy": [
+        "../../../packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/index.ts"
+      ],
+      "@beep/schema/CryptoTxnHash": [
+        "../../../packages/foundation/modeling/schema/src/CryptoTxnHash/index.ts"
+      ],
+      "@beep/schema/CryptoWalletAddress": [
+        "../../../packages/foundation/modeling/schema/src/CryptoWalletAddress/index.ts"
+      ],
+      "@beep/schema/Csp": [
+        "../../../packages/foundation/modeling/schema/src/Csp/index.ts"
+      ],
+      "@beep/schema/Csv": [
+        "../../../packages/foundation/modeling/schema/src/Csv/index.ts"
+      ],
+      "@beep/schema/CsvCodecOptions": [
+        "../../../packages/foundation/modeling/schema/src/CsvCodecOptions/index.ts"
+      ],
+      "@beep/schema/CsvError": [
+        "../../../packages/foundation/modeling/schema/src/CsvError/index.ts"
+      ],
+      "@beep/schema/CsvFormatter": [
+        "../../../packages/foundation/modeling/schema/src/CsvFormatter/index.ts"
+      ],
+      "@beep/schema/CsvParser": [
+        "../../../packages/foundation/modeling/schema/src/CsvParser/index.ts"
+      ],
+      "@beep/schema/Cuid": [
+        "../../../packages/foundation/modeling/schema/src/Cuid.ts"
+      ],
+      "@beep/schema/CurrencyCode": [
+        "../../../packages/foundation/modeling/schema/src/CurrencyCode.ts"
+      ],
+      "@beep/schema/DateTimeUtcFromValid": [
+        "../../../packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
+      ],
+      "@beep/schema/DomCssProperties": [
+        "../../../packages/foundation/modeling/schema/src/DomCssProperties/index.ts"
+      ],
+      "@beep/schema/DomDragEvent": [
+        "../../../packages/foundation/modeling/schema/src/DomDragEvent/index.ts"
+      ],
+      "@beep/schema/DomEvent": [
+        "../../../packages/foundation/modeling/schema/src/DomEvent/index.ts"
+      ],
+      "@beep/schema/DomHtmlElement": [
+        "../../../packages/foundation/modeling/schema/src/DomHtmlElement/index.ts"
+      ],
+      "@beep/schema/DomMouseEvent": [
+        "../../../packages/foundation/modeling/schema/src/DomMouseEvent/index.ts"
+      ],
+      "@beep/schema/DomReactNode": [
+        "../../../packages/foundation/modeling/schema/src/DomReactNode/index.ts"
+      ],
+      "@beep/schema/DomainModel": [
+        "../../../packages/foundation/modeling/schema/src/DomainModel.ts"
+      ],
+      "@beep/schema/Duration": [
+        "../../../packages/foundation/modeling/schema/src/Duration/index.ts"
+      ],
+      "@beep/schema/EffectSchema": [
+        "../../../packages/foundation/modeling/schema/src/EffectSchema.ts"
+      ],
+      "@beep/schema/Email": [
+        "../../../packages/foundation/modeling/schema/src/Email.ts"
+      ],
+      "@beep/schema/EntitySchema": [
+        "../../../packages/foundation/modeling/schema/src/EntitySchema/index.ts"
+      ],
+      "@beep/schema/EthAmount": [
+        "../../../packages/foundation/modeling/schema/src/EthAmount/index.ts"
+      ],
+      "@beep/schema/EthereumValidatorPublicKey": [
+        "../../../packages/foundation/modeling/schema/src/EthereumValidatorPublicKey/index.ts"
+      ],
+      "@beep/schema/EvmAddress": [
+        "../../../packages/foundation/modeling/schema/src/EvmAddress/index.ts"
+      ],
+      "@beep/schema/ExpectCt": [
+        "../../../packages/foundation/modeling/schema/src/ExpectCt/index.ts"
+      ],
+      "@beep/schema/FileExtension": [
+        "../../../packages/foundation/modeling/schema/src/FileExtension.ts"
+      ],
+      "@beep/schema/FileName": [
+        "../../../packages/foundation/modeling/schema/src/FileName.ts"
+      ],
+      "@beep/schema/FilePath": [
+        "../../../packages/foundation/modeling/schema/src/FilePath/index.ts"
+      ],
+      "@beep/schema/Float16Array": [
+        "../../../packages/foundation/modeling/schema/src/Float16Array.ts"
+      ],
+      "@beep/schema/Float32Array": [
+        "../../../packages/foundation/modeling/schema/src/Float32Array.ts"
+      ],
+      "@beep/schema/Float64Array": [
+        "../../../packages/foundation/modeling/schema/src/Float64Array.ts"
+      ],
+      "@beep/schema/Fn": [
+        "../../../packages/foundation/modeling/schema/src/Fn/index.ts"
+      ],
+      "@beep/schema/ForceHttpsRedirect": [
+        "../../../packages/foundation/modeling/schema/src/ForceHttpsRedirect/index.ts"
+      ],
+      "@beep/schema/FrameGuard": [
+        "../../../packages/foundation/modeling/schema/src/FrameGuard/index.ts"
+      ],
+      "@beep/schema/Glob": [
+        "../../../packages/foundation/modeling/schema/src/Glob/index.ts"
+      ],
+      "@beep/schema/Graph": [
+        "../../../packages/foundation/modeling/schema/src/Graph/index.ts"
+      ],
+      "@beep/schema/Html": [
+        "../../../packages/foundation/modeling/schema/src/Html.ts"
+      ],
+      "@beep/schema/HttpHeaders": [
+        "../../../packages/foundation/modeling/schema/src/HttpHeaders/index.ts"
+      ],
+      "@beep/schema/HttpMethod": [
+        "../../../packages/foundation/modeling/schema/src/HttpMethod/index.ts"
+      ],
+      "@beep/schema/HttpProtocol": [
+        "../../../packages/foundation/modeling/schema/src/HttpProtocol/index.ts"
+      ],
+      "@beep/schema/HttpStatus": [
+        "../../../packages/foundation/modeling/schema/src/HttpStatus/index.ts"
+      ],
+      "@beep/schema/Int": [
+        "../../../packages/foundation/modeling/schema/src/Int.ts"
+      ],
+      "@beep/schema/Json": [
+        "../../../packages/foundation/modeling/schema/src/Json.ts"
+      ],
+      "@beep/schema/Jsonc": [
+        "../../../packages/foundation/modeling/schema/src/Jsonc.ts"
+      ],
+      "@beep/schema/Jsonl": [
+        "../../../packages/foundation/modeling/schema/src/Jsonl.ts"
+      ],
+      "@beep/schema/KebabStr": [
+        "../../../packages/foundation/modeling/schema/src/KebabStr.ts"
+      ],
+      "@beep/schema/LiteralKit": [
+        "../../../packages/foundation/modeling/schema/src/LiteralKit/index.ts"
+      ],
+      "@beep/schema/LocalDate": [
+        "../../../packages/foundation/modeling/schema/src/LocalDate/index.ts"
+      ],
+      "@beep/schema/Logs": [
+        "../../../packages/foundation/modeling/schema/src/Logs.ts"
+      ],
+      "@beep/schema/MappedLiteralKit": [
+        "../../../packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts"
+      ],
+      "@beep/schema/Markdown": [
+        "../../../packages/foundation/modeling/schema/src/Markdown.ts"
+      ],
+      "@beep/schema/MimeType": [
+        "../../../packages/foundation/modeling/schema/src/MimeType.ts"
+      ],
+      "@beep/schema/Model": [
+        "../../../packages/foundation/modeling/schema/src/Model/index.ts"
+      ],
+      "@beep/schema/MutableHashMap": [
+        "../../../packages/foundation/modeling/schema/src/MutableHashMap.ts"
+      ],
+      "@beep/schema/MutableHashSet": [
+        "../../../packages/foundation/modeling/schema/src/MutableHashSet.ts"
+      ],
+      "@beep/schema/NoOpen": [
+        "../../../packages/foundation/modeling/schema/src/NoOpen/index.ts"
+      ],
+      "@beep/schema/NoSniff": [
+        "../../../packages/foundation/modeling/schema/src/NoSniff/index.ts"
+      ],
+      "@beep/schema/Number": [
+        "../../../packages/foundation/modeling/schema/src/Number.ts"
+      ],
+      "@beep/schema/Options": [
+        "../../../packages/foundation/modeling/schema/src/Options.ts"
+      ],
+      "@beep/schema/ParserOptions": [
+        "../../../packages/foundation/modeling/schema/src/ParserOptions/index.ts"
+      ],
+      "@beep/schema/PascalStr": [
+        "../../../packages/foundation/modeling/schema/src/PascalStr.ts"
+      ],
+      "@beep/schema/Percentage": [
+        "../../../packages/foundation/modeling/schema/src/Percentage.ts"
+      ],
+      "@beep/schema/PermissionsPolicy": [
+        "../../../packages/foundation/modeling/schema/src/PermissionsPolicy/index.ts"
+      ],
+      "@beep/schema/PermittedCrossDomainPolicies": [
+        "../../../packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/index.ts"
+      ],
+      "@beep/schema/PosixPath": [
+        "../../../packages/foundation/modeling/schema/src/PosixPath.ts"
+      ],
+      "@beep/schema/Primitive": [
+        "../../../packages/foundation/modeling/schema/src/Primitive.ts"
+      ],
+      "@beep/schema/PromiseSchema": [
+        "../../../packages/foundation/modeling/schema/src/PromiseSchema.ts"
+      ],
+      "@beep/schema/Record": [
+        "../../../packages/foundation/modeling/schema/src/Record/index.ts"
+      ],
+      "@beep/schema/ReferrerPolicy": [
+        "../../../packages/foundation/modeling/schema/src/ReferrerPolicy/index.ts"
+      ],
+      "@beep/schema/RegExp": [
+        "../../../packages/foundation/modeling/schema/src/RegExp.ts"
+      ],
+      "@beep/schema/SchemaUtils": [
+        "../../../packages/foundation/modeling/schema/src/SchemaUtils/index.ts"
+      ],
+      "@beep/schema/SecureHeader": [
+        "../../../packages/foundation/modeling/schema/src/SecureHeader/index.ts"
+      ],
+      "@beep/schema/SecureHeaderError": [
+        "../../../packages/foundation/modeling/schema/src/SecureHeaderError/index.ts"
+      ],
+      "@beep/schema/SecureHeaderOptions": [
+        "../../../packages/foundation/modeling/schema/src/SecureHeaderOptions/index.ts"
+      ],
+      "@beep/schema/SemanticVersion": [
+        "../../../packages/foundation/modeling/schema/src/SemanticVersion.ts"
+      ],
+      "@beep/schema/SeverityLevel": [
+        "../../../packages/foundation/modeling/schema/src/SeverityLevel.ts"
+      ],
+      "@beep/schema/Sex": [
+        "../../../packages/foundation/modeling/schema/src/Sex/index.ts"
+      ],
+      "@beep/schema/Sha256": [
+        "../../../packages/foundation/modeling/schema/src/Sha256.ts"
+      ],
+      "@beep/schema/Slug": [
+        "../../../packages/foundation/modeling/schema/src/Slug.ts"
+      ],
+      "@beep/schema/SnakeStr": [
+        "../../../packages/foundation/modeling/schema/src/SnakeStr.ts"
+      ],
+      "@beep/schema/StatusCauseError": [
+        "../../../packages/foundation/modeling/schema/src/StatusCauseError.ts"
+      ],
+      "@beep/schema/StatusCauseTaggedErrorClass": [
+        "../../../packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/index.ts"
+      ],
+      "@beep/schema/String": [
+        "../../../packages/foundation/modeling/schema/src/String.ts"
+      ],
+      "@beep/schema/TaggedErrorClass": [
+        "../../../packages/foundation/modeling/schema/src/TaggedErrorClass/index.ts"
+      ],
+      "@beep/schema/Thunk": [
+        "../../../packages/foundation/modeling/schema/src/Thunk.ts"
+      ],
+      "@beep/schema/Timestamp": [
+        "../../../packages/foundation/modeling/schema/src/Timestamp/index.ts"
+      ],
+      "@beep/schema/Timezone": [
+        "../../../packages/foundation/modeling/schema/src/Timezone.ts"
+      ],
+      "@beep/schema/Toml": [
+        "../../../packages/foundation/modeling/schema/src/Toml.ts"
+      ],
+      "@beep/schema/Transformations": [
+        "../../../packages/foundation/modeling/schema/src/Transformations.ts"
+      ],
+      "@beep/schema/URL": [
+        "../../../packages/foundation/modeling/schema/src/URL.ts"
+      ],
+      "@beep/schema/VariantSchema": [
+        "../../../packages/foundation/modeling/schema/src/VariantSchema/index.ts"
+      ],
+      "@beep/schema/Xml": [
+        "../../../packages/foundation/modeling/schema/src/Xml.ts"
+      ],
+      "@beep/schema/XssProtection": [
+        "../../../packages/foundation/modeling/schema/src/XssProtection/index.ts"
+      ],
+      "@beep/schema/Yaml": [
+        "../../../packages/foundation/modeling/schema/src/Yaml.ts"
+      ],
+      "@beep/schema/test/Markdown": [
+        "../../../packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts"
+      ],
+      "@beep/schema/test/Yaml": [
+        "../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
+      ],
+      "@beep/utils": [
+        "../../../packages/foundation/modeling/utils/src/index.ts"
+      ],
+      "@beep/utils/*": ["../../../packages/foundation/modeling/utils/src/*.ts"]
+    }
+  }
+}

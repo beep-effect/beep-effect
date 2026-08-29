@@ -1,0 +1,75 @@
+{
+  "name": "@beep/firecrawl",
+  "version": "0.0.0",
+  "description": "Firecrawl driver package",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/kriegcloud/beep-effect/tree/main/packages/drivers/firecrawl",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kriegcloud/beep-effect.git",
+    "directory": "packages/drivers/firecrawl"
+  },
+  "beep": {
+    "family": "drivers"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run type-test && bun run beep:lint",
+    "beep:build": "tsc -b tsconfig.json && bun run babel",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx --bun vitest run --coverage --passWithNoTests --exclude=test/integration/**",
+    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "dtslint": "bunx tstyche --config ../../../tstyche.json --root ../../.. packages/drivers/firecrawl/dtslint/Firecrawl.tst.ts",
+    "lint": "bun run beep:lint",
+    "lint:fix": "bun run beep:lint:fix",
+    "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration",
+    "type-test": "bun run dtslint"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts",
+    "./internal/*": null,
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
+  "sideEffects": [],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": "./dist/index.js",
+      "./*": "./dist/*.js",
+      "./internal/*": null,
+      "./package.json": "./package.json"
+    }
+  },
+  "dependencies": {
+    "@beep/identity": "workspace:^",
+    "@beep/observability": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
+    "firecrawl": "^4.25.2",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:"
+  }
+}

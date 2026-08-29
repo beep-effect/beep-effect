@@ -1122,6 +1122,12 @@
       "@beep/libpff/*": ["./packages/drivers/libpff/src/*"],
       "@beep/repo-cli/commands/Yeet": [
         "./packages/tooling/tool/cli/src/commands/Yeet/index.ts"
+      ],
+      "@beep/firecrawl": [
+        "./packages/drivers/firecrawl/src/index.ts"
+      ],
+      "@beep/firecrawl/*": [
+        "./packages/drivers/firecrawl/src/*"
       ]
     }
   }

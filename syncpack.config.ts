@@ -69,6 +69,7 @@ const config = {
     "packages/drivers/libpff/package.json",
     "apps/canvas/package.json",
     "packages/drivers/box/package.json",
+    "packages/drivers/firecrawl/package.json",
   ],
   customTypes: {
     catalog: {

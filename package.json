@@ -69,7 +69,8 @@
     "packages/drivers/tika",
     "packages/drivers/libpff",
     "apps/canvas",
-    "packages/drivers/box"
+    "packages/drivers/box",
+    "packages/drivers/firecrawl"
   ],
   "repository": {
     "type": "git",

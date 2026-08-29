@@ -1,0 +1,298 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "firecrawl-driver",
+    "title": "Firecrawl Driver",
+    "status": "pending-implementation",
+    "created": "2026-06-04",
+    "updated": "2026-06-04",
+    "packetAnchorDocument": "GOAL.md"
+  },
+  "mission": "Implement @beep/firecrawl as a schema-first, Effect-first technical driver around the modern Firecrawl v2 SDK, including watcher streams, fake/live Layers, tests, docs, quality closure, PR babysitting, and Greptile 5/5 readiness.",
+  "packetPath": "goals/firecrawl-driver",
+  "goalCommandMaxChars": 4000,
+  "targetPackage": {
+    "name": "@beep/firecrawl",
+    "path": "packages/drivers/firecrawl",
+    "family": "drivers",
+    "description": "Firecrawl driver package",
+    "scaffoldCommand": "bun run create-package firecrawl --family drivers --description \"Firecrawl driver package\""
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".claude/skills/grill-with-docs/SKILL.md",
+    ".claude/skills/effect-first-development/SKILL.md",
+    ".claude/skills/schema-first-development/SKILL.md",
+    ".claude/skills/jsdoc-annotation-specialist/SKILL.md",
+    ".claude/skills/quality-review-fix-loop/SKILL.md",
+    "standards/ARCHITECTURE.md",
+    "standards/architecture/03-driver-boundaries.md",
+    "standards/architecture/07-non-slice-families.md",
+    "standards/architecture/09-errors-across-boundaries.md",
+    "standards/architecture/12-observability.md",
+    ".patterns/jsdoc-documentation.md",
+    "goals/firecrawl-driver/SPEC.md"
+  ],
+  "firecrawlSources": {
+    "localClonePath": "/home/elpresidank/YeeBois/dev/firecrawl",
+    "localJsSdkPath": "/home/elpresidank/YeeBois/dev/firecrawl/apps/js-sdk/firecrawl",
+    "observedLocalCloneCommit": "42b46be4f75afbd88cd4161495345e94a04c3148",
+    "observedLocalCloneStatus": "main...origin/main with untracked .idea/",
+    "observedLocalSdkPackageName": "@mendable/firecrawl-js",
+    "observedLocalSdkPackageVersion": "4.25.2",
+    "observedLocalSdkFirecrawlDependency": "4.16.0",
+    "observedNpmPackage": "firecrawl",
+    "observedNpmVersion": "4.25.2",
+    "observedOpenApiVersion": "v2",
+    "references": [
+      "https://docs.firecrawl.dev/llms.txt",
+      "https://docs.firecrawl.dev/llms-full.txt",
+      "https://docs.firecrawl.dev/api-reference/errors.md",
+      "https://docs.firecrawl.dev/api-reference/v2-openapi.json",
+      "https://www.npmjs.com/package/firecrawl"
+    ]
+  },
+  "skills": [
+    {
+      "name": "$grill-with-docs",
+      "path": ".claude/skills/grill-with-docs/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "$effect-first-development",
+      "path": ".claude/skills/effect-first-development/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "$schema-first-development",
+      "path": ".claude/skills/schema-first-development/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "$jsdoc-annotation-specialist",
+      "path": ".claude/skills/jsdoc-annotation-specialist/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "$quality-review-fix-loop",
+      "path": ".claude/skills/quality-review-fix-loop/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "github:yeet",
+      "path": "/home/elpresidank/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/yeet/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "github:gh-fix-ci",
+      "path": "/home/elpresidank/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/gh-fix-ci/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    },
+    {
+      "name": "github:gh-address-comments",
+      "path": "/home/elpresidank/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/gh-address-comments/SKILL.md",
+      "statusDuringPacketAuthoring": "available"
+    }
+  ],
+  "memory": {
+    "graphitiStatusDuringPacketAuthoring": "ok",
+    "graphitiSearchDuringPacketAuthoring": "timed out for scoped firecrawl driver packet query",
+    "groupId": "beep_dev"
+  },
+  "methodSurface": {
+    "inScope": [
+      "scrape",
+      "interact",
+      "stopInteraction",
+      "parse",
+      "search",
+      "map",
+      "startCrawl",
+      "getCrawlStatus",
+      "cancelCrawl",
+      "crawl",
+      "getCrawlErrors",
+      "getActiveCrawls",
+      "crawlParamsPreview",
+      "createMonitor",
+      "listMonitors",
+      "getMonitor",
+      "updateMonitor",
+      "deleteMonitor",
+      "runMonitor",
+      "listMonitorChecks",
+      "getMonitorCheck",
+      "startBatchScrape",
+      "getBatchScrapeStatus",
+      "getBatchScrapeErrors",
+      "cancelBatchScrape",
+      "batchScrape",
+      "startAgent",
+      "getAgentStatus",
+      "agent",
+      "cancelAgent",
+      "browser",
+      "browserExecute",
+      "deleteBrowser",
+      "listBrowsers",
+      "getConcurrency",
+      "getCreditUsage",
+      "getTokenUsage",
+      "getCreditUsageHistorical",
+      "getTokenUsageHistorical",
+      "getQueueStatus",
+      "watcher"
+    ],
+    "excluded": [
+      "scrapeUrl",
+      "crawlUrl",
+      "asyncCrawlUrl",
+      "checkCrawlStatus",
+      "checkCrawlErrors",
+      "mapUrl",
+      "batchScrapeUrls",
+      "asyncBatchScrapeUrls",
+      "checkBatchScrapeStatus",
+      "checkBatchScrapeErrors",
+      "scrapeExecute",
+      "stopInteractiveBrowser",
+      "deleteScrapeBrowser",
+      "startExtract",
+      "getExtractStatus",
+      "extract"
+    ],
+    "excludedRationale": "Deprecated v1 compatibility aliases, deprecated scrape-browser aliases, and maintenance-mode extract methods are intentionally outside the required V1 wrapper surface."
+  },
+  "keyDecisions": [
+    {
+      "id": "driver-family",
+      "decision": "@beep/firecrawl lives in packages/drivers/firecrawl as a flat repo-level driver.",
+      "rationale": "Firecrawl is an external SDK/service boundary, not product language or repo-owned foundation substrate."
+    },
+    {
+      "id": "modern-sdk",
+      "decision": "Use the modern firecrawl npm package by default.",
+      "rationale": "The current npm package is firecrawl; @mendable/firecrawl-js may be used only if the implementation inventory proves firecrawl is not viable."
+    },
+    {
+      "id": "schema-first-surface",
+      "decision": "Every in-scope method requires Payload, Success, and Failure S.Class schemas.",
+      "rationale": "External SDK inputs and outputs are decoded at the technical driver boundary."
+    },
+    {
+      "id": "dual-error-model",
+      "decision": "Method Failure classes model decoded API failure shapes; FirecrawlError variants occupy the Effect error channel.",
+      "rationale": "Technical failures stay typed and sanitized while consumers translate at product boundaries."
+    },
+    {
+      "id": "watcher-as-stream",
+      "decision": "watcher is a first-class Effect Stream of decoded watcher events.",
+      "rationale": "The SDK emits event-driven crawl/batch updates and must preserve finalizer/interruption behavior."
+    },
+    {
+      "id": "extract-deferment",
+      "decision": "startExtract, getExtractStatus, and extract are excluded from V1.",
+      "rationale": "The local SDK marks extract maintenance-mode deprecated even though live OpenAPI still exposes extract paths."
+    },
+    {
+      "id": "closure-gate",
+      "decision": "PR readiness requires local quality, CI green, actionable comments resolved, and Greptile 5/5.",
+      "rationale": "The driver is a broad public technical boundary and must land with high confidence."
+    }
+  ],
+  "phaseStatusMeaning": {
+    "completed": "The phase is documented and its packet-level exit criteria are satisfied.",
+    "pending": "The phase is ready for an implementation agent to execute.",
+    "blocked": "The phase cannot proceed without a named decision, dependency, credential, or external-state change."
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Packet Bootstrap",
+      "status": "completed"
+    },
+    {
+      "id": "P1",
+      "name": "Refresh Firecrawl Inventory",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Scaffold Package",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Schema-First Models And Errors",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Effect Service And Layers",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Watcher Stream",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Tests Docs And Live Smoke",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Export Catalog And Local Quality Closure",
+      "status": "pending"
+    },
+    {
+      "id": "P8",
+      "name": "Commit PR CI Review Greptile",
+      "status": "pending"
+    }
+  ],
+  "qualityCommands": [
+    "bunx turbo run check test lint type-test --filter=@beep/firecrawl",
+    "bunx turbo run test:integration --filter=@beep/firecrawl",
+    "bun run docgen:local",
+    "bun run repo-exports:catalog",
+    "bun run repo-exports:catalog:check",
+    "bun run lint:fix",
+    "bun run audit:github quality"
+  ],
+  "prClosure": {
+    "preferredBranch": "codex/firecrawl-driver",
+    "packetCommit": "feat: add firecrawl driver goal packet",
+    "implementationCommit": "feat: add firecrawl driver",
+    "draftPr": true,
+    "githubSkills": [
+      "github:yeet",
+      "github:gh-fix-ci",
+      "github:gh-address-comments"
+    ],
+    "greptileRetriggerComment": "@greptileai",
+    "requiredGreptileScore": "5/5",
+    "readyWhen": [
+      "local quality green",
+      "GitHub Actions CI green",
+      "actionable review comments resolved",
+      "Greptile reports 5/5"
+    ]
+  },
+  "stopConditions": [
+    "Firecrawl docs/npm/local source drift makes the method surface ambiguous.",
+    "Live integration tests would incur unexpected cost or destructive side effects.",
+    "CI failure is unrelated and cannot be reproduced locally after reasonable investigation.",
+    "Greptile cannot be triggered or score cannot be observed after documented attempts."
+  ],
+  "packetVerificationCommands": [
+    "test -d goals/firecrawl-driver",
+    "find goals/firecrawl-driver -maxdepth 3 -type f | sort",
+    "test \"$(wc -c < goals/firecrawl-driver/GOAL.md)\" -lt 4000",
+    "jq . goals/firecrawl-driver/ops/manifest.json",
+    "rg -n \"@beep/firecrawl|packages/drivers/firecrawl|watcher|extract|quality-review-fix-loop|greptile|5/5|/home/elpresidank/YeeBois/dev/firecrawl|bun run create-package firecrawl --family drivers\" goals/firecrawl-driver",
+    "git diff --check"
+  ]
+}

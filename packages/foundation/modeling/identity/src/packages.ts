@@ -146,7 +146,8 @@ const composers = $I.compose(
   "file-processing",
   "tika",
   "libpff",
-  "box"
+  "box",
+  "firecrawl"
 );
 
 // --- foundation ---
@@ -1543,6 +1544,22 @@ export const $FormId: Identity.IdentityComposer<"@beep/form"> = composers.$FormI
  * @category configuration
  */
 export const $BoxId: Identity.IdentityComposer<"@beep/box"> = composers.$BoxId;
+
+/**
+ * Identity composer for `@beep/firecrawl`.
+ *
+ * @example
+ * ```typescript
+ * import { $FirecrawlId } from "@beep/identity"
+ *
+ * const id = $FirecrawlId.make("Firecrawl")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = composers.$FirecrawlId;
 
 /**
  * Identity composer for `@beep/nlp-mcp`.
