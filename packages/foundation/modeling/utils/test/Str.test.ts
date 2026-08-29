@@ -223,7 +223,7 @@ describe("@beep/utils Str.replaceAllWith", () => {
 
 describe("@beep/utils Str.matchEmpty", () => {
   it("data-first: runs onEmpty for the empty string", () => {
-    expect(Str.matchEmpty("", { onEmpty: () => "<empty>", onNonEmpty: () => 0 })).toBe("<empty>");
+    expect(Str.matchEmpty("", { onEmpty: () => "<empty>", onNonEmpty: (s) => s.length })).toBe("<empty>");
   });
 
   it("data-first: runs onNonEmpty with the string", () => {

@@ -3,7 +3,6 @@
 "@beep/html": patch
 "@beep/utils": patch
 "@beep/law-practice-domain": patch
-"@beep/repo-cli": patch
 "@beep/repo-docgen": patch
 ---
 
