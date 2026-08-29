@@ -1,0 +1,1156 @@
+diff --git a/goals/ship-velocity/PLAN.md b/goals/ship-velocity/PLAN.md
+index d4e8550adf..9921b10813 100644
+--- a/goals/ship-velocity/PLAN.md
++++ b/goals/ship-velocity/PLAN.md
+@@ -21,8 +21,11 @@ phase flips ride the final PR of each phase.
+ - B1 same-argv lanes (`beep ci lane` from yeet).
+ - E1 publish refuses hand-staged INDEX + regenerates from manifests.
+ - C1 local remote-cache read path + checkout env template.
+-- A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
+-  backoff).
++- ~~A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
++  backoff).~~ Done 2026-08-16 (reply exits non-zero on any `failed` outcome; comment cursors
++  persist through a versioned `monitor-comments.json`; comment-poll failures degrade without
++  cancelling the check watch; bounded post-push check-registration backoff. The lane
++  success-exit hang was already closed on main by the `run_lane` process-group reap in #718.)
+ 
+ ## P2 — Backpressure engine
+ 
+diff --git a/goals/ship-velocity/research/OPPORTUNITIES.md b/goals/ship-velocity/research/OPPORTUNITIES.md
+index c20c92f15d..d6559f474f 100644
+--- a/goals/ship-velocity/research/OPPORTUNITIES.md
++++ b/goals/ship-velocity/research/OPPORTUNITIES.md
+@@ -81,3 +81,60 @@ session/machine ids.
+   claiming CI parity must run from the artifact state CI actually has — wipe derived outputs
+   first (the cold-world script now does). Fix: check.dependsOn ^build, making the lane's
+   input explicit instead of inherited from whatever a -b sub-build left behind.
++
++## 2026-08-16 — A7 implementation
++
++- Four new exported helpers were written, typechecked green by the package's own
++  `bunx tsgo -p tsconfig.check.json`, and only then rejected by the same command once the
++  effect language-service rules ran: `TS377101 missingPipeableSignature` on every 2+-parameter
++  export (two renderers, one combinator, one Option-returning formatter). The rule is invisible
++  while authoring — nothing in the editor loop, the law files, or the JSDoc pattern doc says
++  "a new exported function with two or more parameters needs a data-last partner or it will not
++  compile". Cost: a second authoring pass over four symbols plus their call sites and tests.
++  Prevention: state the arity rule in the code laws next to the helper-form law, with its three
++  standard remedies (make it module-private, curry it data-last, or `dual` it) — the remedy is
++  cheap once known and expensive to rediscover.
++- The test-file typecheck lane cannot be run for one package. `bunx tsgo -p test/tsconfig.json`
++  from the package fails immediately with TS6059 (`rootDir` is `src`), because the real lane
++  (`beep quality test-tsgo`) synthesises a per-package config with `rootDir: <repoRoot>` into
++  `node_modules/.tmp/`. Reproducing that by hand was the only way to typecheck three new test
++  files without running the repo-wide lane; a first attempt with the synthetic config outside
++  the repo failed differently (TS2688, `bun`/`node` type roots unresolvable). It found two real
++  classes immediately — `strictEffectProvide` (TS377032) on mid-effect `Effect.provide(layer)`
++  and a `Ref<string[]>` vs `Ref<readonly string[]>` mismatch — so the lane is worth reaching,
++  which is the argument for `beep quality test-tsgo --filter <package>` (or a documented
++  scoped recipe) rather than all-or-nothing.
++- `it.effect` runs under a TestClock, so every timed assertion silently hangs to the 30s vitest
++  timeout instead of failing: four monitor tests wedged with no diagnostic beyond "Test timed
++  out", including one whose only sleep was 30 real milliseconds. `it.live` is the fix and it is
++  in the repo already (`worktree-fleet-scan.test.ts`), but nothing connects the symptom to the
++  cause. Prevention: a testing-patterns line — "a test that sleeps, races, or polls needs
++  `it.live`; `it.effect` gives it a clock that never advances".
++- A monitor comment poll reported `Failed to poll pull request comments during yeet monitor.`
++  and dropped gh's own words on the floor, so the degraded-stream line an operator sees could
++  not distinguish a rate limit from a revoked token. Found only because a test asserted on the
++  surfaced text. Same class as the misattributed-composite-hint receipts above: a failure that
++  is *reported* to a human must carry the underlying tool's message, not just the wrapper's.
++- SPEC A7's optional fifth item (Lint Policy lane success-exit hang) was already closed on main:
++  `.github/workflows/check.yml` runs every lane through a `run_lane` wrapper (`setsid` + `wait`
++  + process-group TERM/KILL) that landed in #718, and `bin-main.ts` already exits explicitly on
++  success for all three entry paths. Re-deriving that cost a full investigation pass. Prevention:
++  when a SPEC item is closed incidentally by another PR, strike it in the SPEC in that PR — the
++  workflow comment cites "ship-velocity SPEC A7" but the SPEC bullet never learned about it.
++  Residual gap worth its own receipt: the post-lane `Append Turbo summary` steps still invoke
++  `bun run beep` directly, outside the reaping wrapper.
++- Ran `bun run beep lint schema-catalog` as a pre-flight, saw it red, and regenerated
++  `standards/schema-catalog.generated.jsonc` into a feature branch — a +170/-458 whole-file
++  diff of which three entries were mine. Wrong call, reverted: `standards/generated-artifacts.
++  policy.md` says whole-repo snapshots are refreshed only in dedicated chore PRs, that these
++  gates are delta/ratchet-based, and that staleness at HEAD is not gating; the same mistake is
++  already recorded there against PR #452. Confirmed the mechanics too — `schema-catalog`
++  appears in no `package.json` script and nowhere in `.github/workflows/check.yml`, and the
++  gating composite in `Quality/Tasks.ts:1699` carries `lint:schema-first` only. The trap is
++  that `beep lint` exposes gating and non-gating scans through one uniform surface with one
++  uniform exit code, so a manual pre-flight sweep of "the cheap lint gates" cannot tell which
++  reds a proof actually enforces. Two preventions: have `beep lint <subcommand>` state whether
++  the scan is gating (and point at the policy when it is not), and separately, the underlying
++  staleness — a package deletion left `packages/drivers/box/src/experimental` entries behind —
++  wants the standing `chore: refresh generated standards artifacts` PR from clean main, not a
++  feature branch.
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+index fd7ce91389..e578f92c87 100644
+--- a/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+@@ -60,6 +60,12 @@ import {
+   writeTextFile,
+ } from "./IssueArtifacts.ts";
+ import { installYeetMergePreview, withYeetMergePreview, yeetMergedPreviewContext } from "./MergedPreview.ts";
++import {
++  awaitYeetCheckRegistration,
++  isAwaitingYeetCheckRegistration,
++  renderYeetCheckRegistrationExhausted,
++  YEET_CHECK_REGISTRATION_BACKOFF,
++} from "./MonitorChecks.ts";
+ import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+ import {
+   buildYeetRunPlanWithMode,
+@@ -665,6 +671,36 @@ const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReview
+   });
+ });
+ 
++// A pushed head whose checks have not registered yet is not a head with
++// nothing to watch. The watch re-attempts on a bounded backoff, and only an
++// exhausted backoff lets the empty answer stand — as a failure naming that
++// condition, never as a pass.
++const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
++  context: RepoRunContext,
++  checkSteps: ReadonlyArray<RepoPlanStep>,
++  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
++  failureMessage: string
++): Effect.fn.Return<
++  void,
++  YeetCommandError,
++  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
++> {
++  const results = yield* runPhase(context, checkSteps, recorder).pipe(
++    awaitYeetCheckRegistration(YEET_CHECK_REGISTRATION_BACKOFF)
++  );
++  if (A.every(results, (result) => result.exitCode === 0)) {
++    return;
++  }
++  return yield* failWithIssueArtifacts(
++    context,
++    checkSteps,
++    results,
++    isAwaitingYeetCheckRegistration(results)
++      ? `${failureMessage} ${renderYeetCheckRegistrationExhausted(YEET_CHECK_REGISTRATION_BACKOFF)}`
++      : failureMessage
++  );
++});
++
+ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
+   context: RepoRunContext,
+   monitorSteps: ReadonlyArray<RepoPlanStep>,
+@@ -700,7 +736,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
+     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
+   );
+   yield* Effect.raceFirst(
+-    runRequiredPhase(context, checkSteps, recorder, failureMessage),
++    runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
+     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
+   );
+ });
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts
+index 914da6f973..55c2242e9a 100644
+--- a/packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts
+@@ -1,12 +1,23 @@
+ /**
+  * Pull request comment streaming for Yeet monitor sessions.
+  *
++ * **Details**
++ *
++ * The stream is durable across runs and independent of the check watcher it is
++ * raced against. Durable: the per-collection watermarks are persisted to a
++ * branch-scoped artifact after every poll that advances them, so a comment
++ * posted while no monitor was attached is printed by the next run instead of
++ * falling into the gap between a process exit and the next process start.
++ * Independent: a poll that fails degrades this stream alone — the surrounding
++ * race can never be decided by a GitHub read error, because the poller's error
++ * channel is `never` by construction.
++ *
+  * @packageDocumentation
+  * @since 0.0.0
+  */
+ 
+ import { $RepoCliId } from "@beep/identity/packages";
+-import { Console, DateTime, Duration, Effect, Match, Order, pipe, Ref } from "effect";
++import { Console, DateTime, Duration, Effect, FileSystem, Match, Order, pipe, Ref, Result } from "effect";
+ import * as A from "effect/Array";
+ import { dual, flow } from "effect/Function";
+ import * as O from "effect/Option";
+@@ -14,7 +25,11 @@ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+ import { GhActor } from "../../../internal/github/index.ts";
+ import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
++import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+ import { YeetCommandError } from "../Yeet.errors.ts";
++import { runArtifactPathForContext } from "./ArtifactPaths.ts";
++import { writeTextFile } from "./IssueArtifacts.ts";
++import type { Path } from "effect";
+ import type { ChildProcessSpawner } from "effect/unstable/process";
+ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+ 
+@@ -201,16 +216,143 @@ export class GhRestIssueComment extends S.Class<GhRestIssueComment>($I`GhRestIss
+   })
+ ) {}
+ 
+-class YeetMonitorCommentWatermark extends S.Class<YeetMonitorCommentWatermark>($I`YeetMonitorCommentWatermark`)(
++/**
++ * The pair of cursors one monitor session advances.
++ *
++ * **Details**
++ *
++ * GitHub exposes inline review comments and conversation comments as two
++ * collections with independent id spaces and independent `since` filters, so
++ * one shared cursor would let a busy collection drag the quiet one forward and
++ * silently skip its comments. They are carried together because they are
++ * advanced and persisted together — one poll, one write.
++ *
++ * **Example** (Start both cursors at the same instant)
++ *
++ * ```ts
++ * import { YeetMonitorCommentCursor, YeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
++ *
++ * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 0 })
++ * const watermark = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor })
++ * console.log(watermark.review.id) // 0
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class YeetMonitorCommentWatermark extends S.Class<YeetMonitorCommentWatermark>($I`YeetMonitorCommentWatermark`)(
+   {
+     issue: YeetMonitorCommentCursor,
+     review: YeetMonitorCommentCursor,
+   },
+   $I.annote("YeetMonitorCommentWatermark", {
+-    description: "In-memory per-collection comment cursors for one pull request monitor session.",
++    description: "Per-collection comment cursors for one pull request monitor session.",
+   })
+ ) {}
+ 
++/**
++ * The persisted comment watermark for one branch's pull request.
++ *
++ * **Details**
++ *
++ * Written next to the other branch-scoped Yeet run artifacts and versioned like
++ * them, so a future shape change is a decode miss — which restarts the stream
++ * from now — rather than a crash inside a monitor session. `prNumber` is part
++ * of the record because the file is keyed by branch: a branch whose pull
++ * request was closed and reopened as a new number must not inherit the old
++ * one's cursors, and comparing the recorded number is what detects that.
++ *
++ * **Example** (Describe a resumable stream position)
++ *
++ * ```ts
++ * import { YeetMonitorCommentCursor, YeetMonitorCommentState, YeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
++ *
++ * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 44 })
++ * const state = YeetMonitorCommentState.make({
++ *   schemaVersion: "yeet-monitor-comments/v1",
++ *   prNumber: 558,
++ *   updatedAt: "2026-08-16T12:00:05.000Z",
++ *   watermark: YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor }),
++ * })
++ * console.log(state.prNumber) // 558
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class YeetMonitorCommentState extends S.Class<YeetMonitorCommentState>($I`YeetMonitorCommentState`)(
++  {
++    schemaVersion: S.Literal("yeet-monitor-comments/v1"),
++    prNumber: S.Int.check(S.isGreaterThan(0)),
++    updatedAt: S.String,
++    watermark: YeetMonitorCommentWatermark,
++  },
++  $I.annote("YeetMonitorCommentState", {
++    description: "Branch-scoped comment stream position carried between Yeet monitor runs.",
++  })
++) {}
++
++/**
++ * JSON-string codec for the persisted comment stream position.
++ *
++ * **Example** (Encode a stream position)
++ *
++ * ```ts
++ * import { YeetMonitorCommentCursor, YeetMonitorCommentState, YeetMonitorCommentStateJson, YeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
++ * import { Effect } from "effect"
++ *
++ * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 44 })
++ * const state = YeetMonitorCommentState.make({
++ *   schemaVersion: "yeet-monitor-comments/v1",
++ *   prNumber: 558,
++ *   updatedAt: "2026-08-16T12:00:05.000Z",
++ *   watermark: YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor }),
++ * })
++ * console.log(Effect.runSync(YeetMonitorCommentStateJson.encode(state)).includes("yeet-monitor-comments/v1"))
++ * ```
++ *
++ * @category codecs
++ * @since 0.0.0
++ */
++export const YeetMonitorCommentStateJson = JsonStringCodec(YeetMonitorCommentState);
++
++/**
++ * File name of the persisted comment stream position inside a Yeet run
++ * directory.
++ *
++ * **Example** (Name the artifact)
++ *
++ * ```ts
++ * import { YEET_MONITOR_COMMENT_STATE_FILE_NAME } from "@beep/repo-cli/test/Yeet"
++ *
++ * console.log(YEET_MONITOR_COMMENT_STATE_FILE_NAME)
++ * ```
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++export const YEET_MONITOR_COMMENT_STATE_FILE_NAME = "monitor-comments.json";
++
++/**
++ * Resolve the branch-scoped comment stream position artifact path.
++ *
++ * **Example** (Resolve the artifact path)
++ *
++ * ```ts
++ * import { yeetMonitorCommentStatePath } from "@beep/repo-cli/test/Yeet"
++ * import { Effect } from "effect"
++ *
++ * console.log(Effect.isEffect(Effect.succeed(yeetMonitorCommentStatePath))) // true
++ * ```
++ *
++ * @param context - Repo run context carrying the artifact directory and branch.
++ * @returns Absolute path to the branch-scoped `monitor-comments.json`.
++ * @category utilities
++ * @since 0.0.0
++ */
++export const yeetMonitorCommentStatePath = (context: RepoRunContext): Effect.Effect<string, never, Path.Path> =>
++  runArtifactPathForContext(context, YEET_MONITOR_COMMENT_STATE_FILE_NAME);
++
+ const commentCursorOrder: Order.Order<YeetMonitorCommentCursor> = Order.combine(
+   Order.mapInput(Order.String, (cursor: YeetMonitorCommentCursor) => cursor.createdAt),
+   Order.mapInput(Order.Number, (cursor: YeetMonitorCommentCursor) => cursor.id)
+@@ -402,7 +544,10 @@ const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>
+     return yield* YeetCommandError.make({
+       command: `gh api --method GET ${endpoint}`,
+       exitCode: result.exitCode === 0 ? 1 : result.exitCode,
+-      message: "Failed to poll pull request comments during yeet monitor.",
++      // The reason travels with the failure: a degraded poll is reported to the
++      // operator by message alone, and "the poll failed" without gh's own words
++      // cannot distinguish a rate limit from a revoked token.
++      message: `Failed to poll pull request comments during yeet monitor: ${excerpt(result.output)}`,
+     });
+   }
+   return yield* decode(result.output).pipe(
+@@ -417,11 +562,104 @@ const nextCursor = (cursor: YeetMonitorCommentCursor, comments: ReadonlyArray<Ye
+       : latest
+   );
+ 
++const writeCommentState = Effect.fn("YeetMonitor.writeCommentState")(function* (
++  context: RepoRunContext,
++  pullRequestNumber: number,
++  watermark: YeetMonitorCommentWatermark
++): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
++  const statePath = yield* yeetMonitorCommentStatePath(context);
++  const updatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
++  const json = yield* YeetMonitorCommentStateJson.encode(
++    YeetMonitorCommentState.make({
++      schemaVersion: "yeet-monitor-comments/v1",
++      prNumber: pullRequestNumber,
++      updatedAt,
++      watermark,
++    })
++  ).pipe(Effect.mapError(YeetCommandError.new("Failed to encode the yeet monitor comment cursor artifact.")));
++  yield* writeTextFile(statePath, `${json}\n`);
++});
++
++/**
++ * Warn that the comment cursor could not be persisted, naming the consequence.
++ *
++ * **Example** (Render the warning)
++ *
++ * ```ts
++ * import { renderYeetMonitorCommentStateWarning } from "@beep/repo-cli/test/Yeet"
++ *
++ * console.log(renderYeetMonitorCommentStateWarning("disk is full"))
++ * ```
++ *
++ * @param reason - Why the write failed.
++ * @returns The operator warning line.
++ * @category formatting
++ * @since 0.0.0
++ */
++export const renderYeetMonitorCommentStateWarning = (reason: string): string =>
++  `[yeet] could not persist the PR comment cursor (${reason}); this session still streams, but the next monitor run will start from its own clock and may miss comments posted before it.`;
++
++// Persisting is best effort by design: the position is an optimisation over
++// "start from now", and losing it costs one run's worth of resumption, while
++// failing the poll over it would cost the whole comment stream.
++const persistCommentState = (
++  context: RepoRunContext,
++  pullRequestNumber: number,
++  watermark: YeetMonitorCommentWatermark
++): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
++  writeCommentState(context, pullRequestNumber, watermark).pipe(
++    Effect.catch((error) => Console.warn(renderYeetMonitorCommentStateWarning(error.message)))
++  );
++
++/**
++ * Read the persisted comment stream position for one pull request.
++ *
++ * **Details**
++ *
++ * Every way the read can go wrong — no artifact yet, an unreadable file, a
++ * shape from an older schema version, a position recorded against a different
++ * pull request — yields `None`, which the caller reads as "start from now".
++ * A monitor session must not be blocked by its own resumption optimisation.
++ *
++ * **Example** (Build the read effect)
++ *
++ * ```ts
++ * import { loadYeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
++ * import { Effect } from "effect"
++ *
++ * console.log(Effect.isEffect(Effect.succeed(loadYeetMonitorCommentWatermark))) // true
++ * ```
++ *
++ * @param context - Repo run context carrying the artifact directory and branch.
++ * @param pullRequestNumber - The pull request the position must belong to.
++ * @returns The persisted watermark, or `None` when there is no usable one.
++ * @category utilities
++ * @since 0.0.0
++ */
++export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommentWatermark")(function* (
++  context: RepoRunContext,
++  pullRequestNumber: number
++): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, FileSystem.FileSystem | Path.Path> {
++  const fs = yield* FileSystem.FileSystem;
++  const statePath = yield* yeetMonitorCommentStatePath(context);
++  const text = yield* Effect.option(fs.readFileString(statePath));
++  return pipe(
++    text,
++    O.flatMap(YeetMonitorCommentStateJson.decodeOption),
++    O.filter((state) => state.prNumber === pullRequestNumber),
++    O.map((state) => state.watermark)
++  );
++});
++
+ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
+   context: RepoRunContext,
+   pullRequestNumber: number,
+   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>
+-): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
++): Effect.fn.Return<
++  void,
++  YeetCommandError,
++  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
++> {
+   const watermark = yield* Ref.get(watermarkRef);
+   const [reviewPayload, issuePayload] = yield* Effect.all(
+     [
+@@ -446,14 +684,115 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
+   const newIssueComments = A.filter(issueComments, (comment) => isYeetMonitorCommentAfter(watermark.issue, comment));
+   const newComments = A.sort([...newReviewComments, ...newIssueComments], commentOrder);
+   yield* Effect.forEach(newComments, (comment) => Console.log(renderYeetMonitorComment(comment)), { concurrency: 1 });
+-  yield* Ref.set(
+-    watermarkRef,
+-    YeetMonitorCommentWatermark.make({
+-      issue: nextCursor(watermark.issue, newIssueComments),
+-      review: nextCursor(watermark.review, newReviewComments),
++  if (A.isReadonlyArrayEmpty(newComments)) {
++    return;
++  }
++  const advanced = YeetMonitorCommentWatermark.make({
++    issue: nextCursor(watermark.issue, newIssueComments),
++    review: nextCursor(watermark.review, newReviewComments),
++  });
++  yield* Ref.set(watermarkRef, advanced);
++  yield* persistCommentState(context, pullRequestNumber, advanced);
++});
++
++/**
++ * How many consecutive failed polls end the comment stream.
++ *
++ * **Details**
++ *
++ * A bound, not a retry budget: each failure is reported as it happens and the
++ * next poll still runs, so a rate limit or a dropped connection costs one tick.
++ * The bound exists for the failure that is not transient — a revoked token, a
++ * deleted pull request — where continuing to print the same error every ten
++ * seconds for the length of a CI run is noise, not signal.
++ *
++ * **Example** (Read the bound)
++ *
++ * ```ts
++ * import { YEET_MONITOR_COMMENT_FAILURE_BUDGET } from "@beep/repo-cli/test/Yeet"
++ *
++ * console.log(YEET_MONITOR_COMMENT_FAILURE_BUDGET)
++ * ```
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++export const YEET_MONITOR_COMMENT_FAILURE_BUDGET = 5;
++
++// Printed by the tick below rather than exported: the line is proven where it
++// is emitted, and a three-parameter renderer has no meaningful data-last
++// partner to satisfy the pipeable-signature rule with.
++const renderCommentPollFailure = (reason: string, failures: number, budget: number): string =>
++  `[yeet] PR comment poll failed (${failures}/${budget}): ${reason} Check watching is unaffected.`;
++
++/**
++ * Report that comment streaming stopped while the session continues.
++ *
++ * **Example** (Render the degraded notice)
++ *
++ * ```ts
++ * import { renderYeetMonitorCommentStreamStopped } from "@beep/repo-cli/test/Yeet"
++ *
++ * console.log(renderYeetMonitorCommentStreamStopped(5))
++ * ```
++ *
++ * @param budget - The consecutive-failure bound that was reached.
++ * @returns The operator line naming the degradation and how to see comments.
++ * @category formatting
++ * @since 0.0.0
++ */
++export const renderYeetMonitorCommentStreamStopped = (budget: number): string =>
++  `[yeet] PR comment streaming stopped after ${budget} consecutive failed polls; this session keeps watching checks. Read comments with \`bun run beep yeet status --remote\` or on the pull request.`;
++
++const pollTick = Effect.fn("YeetMonitor.pollTick")(function* (
++  context: RepoRunContext,
++  pullRequestNumber: number,
++  watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
++  failuresRef: Ref.Ref<number>,
++  budget: number
++): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> {
++  const polled = yield* Effect.result(pollComments(context, pullRequestNumber, watermarkRef));
++  if (Result.isSuccess(polled)) {
++    return yield* Ref.set(failuresRef, 0);
++  }
++  const failures = yield* Ref.updateAndGet(failuresRef, (count) => count + 1);
++  yield* Console.error(renderCommentPollFailure(polled.failure.message, failures, budget));
++  if (failures < budget) {
++    return;
++  }
++  yield* Console.error(renderYeetMonitorCommentStreamStopped(budget));
++  // Parking instead of returning is the whole point: this poller is raced
++  // against the check watcher, so *completing* here — success or failure —
++  // would cancel the checks. A stream that has given up must become a fiber
++  // that never decides the race.
++  return yield* Effect.never;
++});
++
++/**
++ * Report where this session's comment stream starts.
++ *
++ * **Example** (Render a resumed start)
++ *
++ * ```ts
++ * import { renderYeetMonitorCommentStreamStart } from "@beep/repo-cli/test/Yeet"
++ * import * as O from "effect/Option"
++ *
++ * console.log(renderYeetMonitorCommentStreamStart(O.some("2026-08-16T12:00:00.000Z")))
++ * ```
++ *
++ * @param resumedFrom - The persisted position's timestamp, when one was found.
++ * @returns The operator line naming the stream's starting position.
++ * @category formatting
++ * @since 0.0.0
++ */
++export const renderYeetMonitorCommentStreamStart = (resumedFrom: O.Option<string>): string =>
++  pipe(
++    resumedFrom,
++    O.match({
++      onNone: () => "[yeet] streaming new PR comments from now (no saved position for this branch)",
++      onSome: (createdAt) => `[yeet] resuming the PR comment stream from ${createdAt}`,
+     })
+   );
+-});
+ 
+ /**
+  * Poll and stream pull request comments until the surrounding monitor interrupts it.
+@@ -463,6 +802,21 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
+  * Use with the existing hosted-check watcher so comments and pipeline state are
+  * visible during the same Yeet monitor session.
+  *
++ * **Details**
++ *
++ * The session resumes from the branch-scoped position written by the previous
++ * run, so a comment posted between two monitor runs is printed by the second
++ * one. With no usable saved position the stream starts from now — the old
++ * behaviour and the only safe fallback — and writes that starting position
++ * straight away, so even a session that prints nothing leaves the next one a
++ * position to resume from.
++ *
++ * **Gotchas**
++ *
++ * This effect cannot fail. That is a contract, not an accident: it is raced
++ * against the check watcher, and an error channel here would let one failed
++ * GitHub read cancel the checks the operator is actually waiting on.
++ *
+  * **Example** (Create the long-lived monitor effect)
+  *
+  * ```ts
+@@ -482,19 +836,45 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
+  * console.log(Effect.isEffect(runYeetPullRequestCommentMonitor(context, 42))) // true
+  * ```
+  *
++ * @param context - Repo run context carrying the repo root and artifact directory.
++ * @param pullRequestNumber - The pull request whose comments are streamed.
++ * @param budget - Consecutive failed polls that stop the stream; tests pass a
++ * small one to reach the degraded state without waiting.
++ * @returns A fiber that streams until interrupted and never completes.
+  * @category streams
+  * @since 0.0.0
+  */
+ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCommentMonitor")(function* (
+   context: RepoRunContext,
+-  pullRequestNumber: number
+-): Effect.fn.Return<never, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
++  pullRequestNumber: number,
++  budget: number = YEET_MONITOR_COMMENT_FAILURE_BUDGET
++): Effect.fn.Return<never, never, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> {
+   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+   const initialCursor = YeetMonitorCommentCursor.make({ createdAt: startedAt, id: 0 });
+-  const watermarkRef = yield* Ref.make(
++  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
++  // The earlier of the two cursors is where the stream genuinely resumes: the
++  // collections advance independently, so quoting one of them would understate
++  // how far back the other still reaches.
++  yield* Console.log(
++    renderYeetMonitorCommentStreamStart(
++      O.map(persisted, (watermark) => Order.min(commentCursorOrder)(watermark.issue, watermark.review).createdAt)
++    )
++  );
++  const watermark = O.getOrElse(persisted, () =>
+     YeetMonitorCommentWatermark.make({ issue: initialCursor, review: initialCursor })
+   );
++  const watermarkRef = yield* Ref.make(watermark);
++  // A first session on this branch writes its starting position immediately
++  // rather than only when it prints something. Otherwise a quiet session leaves
++  // no position at all, and the next run starts from *its* own clock — which is
++  // precisely the gap a comment posted between the two runs falls into.
++  if (O.isNone(persisted)) {
++    yield* persistCommentState(context, pullRequestNumber, watermark);
++  }
++  const failuresRef = yield* Ref.make(0);
+   return yield* Effect.forever(
+-    pollComments(context, pullRequestNumber, watermarkRef).pipe(Effect.andThen(Effect.sleep(monitorPollInterval)))
++    pollTick(context, pullRequestNumber, watermarkRef, failuresRef, budget).pipe(
++      Effect.andThen(Effect.sleep(monitorPollInterval))
++    )
+   );
+ });
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts
+index bc0b1fc1e1..d7380211b3 100644
+--- a/packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts
+@@ -24,17 +24,21 @@
+ 
+ import { Console, Effect } from "effect";
+ import * as A from "effect/Array";
++import * as O from "effect/Option";
+ import * as Str from "effect/String";
++import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+ import { YeetCommandError } from "../Yeet.errors.ts";
+ import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+ import { mergePr } from "./Merge.ts";
+ import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
+-import { runYeetReply } from "./Reply.ts";
++import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
+ import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
+ import { executeSweep, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
+ import type { FileSystem, Path } from "effect";
+ import type { ChildProcessSpawner } from "effect/unstable/process";
++import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+ import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
++import type { ReplyReport } from "./Reply.schemas.ts";
+ import type { SweepPlan, SweepPlanStep, SweepReport } from "./Sweep.schemas.ts";
+ 
+ /**
+@@ -166,6 +170,18 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
+  * from any worktree. Every draft gets its turn: a denied scope or a deleted
+  * thread becomes that draft's outcome, never an aborted pass.
+  *
++ * **Gotchas**
++ *
++ * The batch running to completion is not the same as the batch succeeding, and
++ * this seam is where the two part company. Any `failed` outcome exits non-zero
++ * through {@link CliReportedExit}, because an unwritten reply leaves its review
++ * thread open — an unresolved thread is a hard merge gate, so an exit-0 pass
++ * would hand `yeet reply && bun run beep yeet monitor` a green it has not
++ * earned. `stale` is not a failure: the thread was already resolved upstream,
++ * so there was nothing to write. The exit is silent by construction — the pass
++ * already printed every outcome and the report path, so the sentinel adds the
++ * code and the verdict line, not a second rendering of the same failure.
++ *
+  * **Example** (Build the reply runner effect)
+  *
+  * ```ts
+@@ -177,7 +193,7 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
+  * ```
+  *
+  * @param options - Parsed `yeet reply` flag values.
+- * @returns Void once every draft outcome has been recorded and reported.
++ * @returns Void once every draft was written; a non-zero exit when any failed.
+  * @category commands
+  * @since 0.0.0
+  */
+@@ -185,10 +201,58 @@ export const runYeetReplyPass = Effect.fn("Yeet.runReplyCommand")(function* (
+   options: YeetPorcelainOptions
+ ): Effect.fn.Return<
+   void,
+-  YeetCommandError,
++  YeetCommandError | CliReportedExit,
+   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+ > {
+-  yield* runYeetReply(yield* hydrateYeetReadOnlyContext(options));
++  const context = yield* hydrateYeetReadOnlyContext(options);
++  const report = yield* runYeetReply(context);
++  yield* failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context));
++});
++
++/**
++ * Exit non-zero when a reply pass left any drafted reply unwritten.
++ *
++ * **Details**
++ *
++ * The report is the accounting and this is the verdict read off it. It is a
++ * separate function because the decision is the interesting part: which
++ * outcomes count as failure (`failed` only — `stale` wrote nothing because
++ * there was nothing to write) and what the operator is told. The exit is
++ * silent, since the pass already printed every outcome; this adds the verdict
++ * line and the code.
++ *
++ * **Example** (A clean report exits normally)
++ *
++ * ```ts
++ * import { failYeetReplyOnFailedOutcomes, ReplyReport } from "@beep/repo-cli/test/Yeet"
++ * import { Effect } from "effect"
++ *
++ * const report = ReplyReport.make({
++ *   schemaVersion: "yeet-reply-report/v1",
++ *   prNumber: 558,
++ *   createdAt: "2026-08-16T00:00:00.000Z",
++ *   outcomes: [],
++ * })
++ * const verdict = failYeetReplyOnFailedOutcomes(report, "reply-report.json").pipe(Effect.as("clean"))
++ * console.log(Effect.runSync(verdict))
++ * ```
++ *
++ * @param report - The report written by one reply pass.
++ * @param reportPath - Where that report was written, quoted in the verdict.
++ * @returns Void when every draft was written; a reported non-zero exit otherwise.
++ * @category commands
++ * @since 0.0.0
++ */
++export const failYeetReplyOnFailedOutcomes = Effect.fn("Yeet.failReplyOnFailedOutcomes")(function* (
++  report: ReplyReport,
++  reportPath: string
++): Effect.fn.Return<void, CliReportedExit> {
++  const verdict = renderYeetReplyFailureVerdict(report, reportPath);
++  if (O.isNone(verdict)) {
++    return;
++  }
++  yield* Console.error(verdict.value);
++  return yield* failWithReportedExit(verdict.value);
+ });
+ 
+ /**
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts
+index 1215cc0b66..36f75a68f3 100644
+--- a/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts
+@@ -28,6 +28,8 @@
+ import { $RepoCliId } from "@beep/identity/packages";
+ import { LiteralKit, SchemaUtils } from "@beep/schema";
+ import { Effect } from "effect";
++import * as A from "effect/Array";
++import { dual } from "effect/Function";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+@@ -322,6 +324,102 @@ export class ReplyReport extends S.Class<ReplyReport>($I`ReplyReport`)(
+   })
+ ) {}
+ 
++/**
++ * Name one reply outcome by the handle its draft used.
++ *
++ * **Details**
++ *
++ * A draft targets a thread either way GitHub exposes one, so the operator-facing
++ * handle has to follow the draft rather than pick a canonical id: printing a
++ * thread id for a draft written against a comment id names something the author
++ * never typed. Shared by the per-draft log line and the run's failure verdict so
++ * both name the same thing.
++ *
++ * **Example** (Name a comment-id target)
++ *
++ * ```ts
++ * import { ReplyDraftOutcome, replyOutcomeTarget } from "@beep/repo-cli/test/Yeet"
++ * import * as O from "effect/Option"
++ *
++ * const outcome = ReplyDraftOutcome.make({
++ *   commentId: O.some(2284119001),
++ *   status: "failed",
++ *   detail: "the reply mutation was denied",
++ * })
++ * console.log(replyOutcomeTarget(outcome))
++ * ```
++ *
++ * @param outcome - The recorded outcome to name.
++ * @returns The thread id when the draft carried one, else its comment handle.
++ * @category formatting
++ * @since 0.0.0
++ */
++export const replyOutcomeTarget = (outcome: ReplyDraftOutcome): string =>
++  O.getOrElse(outcome.threadId, () => `comment ${O.getOrElse(O.map(outcome.commentId, String), () => "?")}`);
++
++/**
++ * Select the outcomes a reply run recorded with one status.
++ *
++ * **Example** (Count the stale outcomes)
++ *
++ * ```ts
++ * import { ReplyDraftOutcome, replyOutcomesWithStatus } from "@beep/repo-cli/test/Yeet"
++ * import * as O from "effect/Option"
++ *
++ * const outcomes = [
++ *   ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "stale", detail: "already resolved" }),
++ * ]
++ * console.log(replyOutcomesWithStatus(outcomes, "stale").length)
++ * ```
++ *
++ * @param outcomes - Every outcome one reply run recorded.
++ * @param status - The status to select.
++ * @returns The outcomes carrying that status, in run order.
++ * @category utilities
++ * @since 0.0.0
++ */
++export const replyOutcomesWithStatus: {
++  (status: ReplyOutcomeStatus): (outcomes: ReadonlyArray<ReplyDraftOutcome>) => ReadonlyArray<ReplyDraftOutcome>;
++  (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): ReadonlyArray<ReplyDraftOutcome>;
++} = dual(
++  2,
++  (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): ReadonlyArray<ReplyDraftOutcome> =>
++    A.filter(outcomes, (outcome) => outcome.status === status)
++);
++
++/**
++ * The drafts a reply run could not write.
++ *
++ * **Details**
++ *
++ * This is the run's verdict surface: a `failed` outcome means a reply the
++ * operator asked for is not on the pull request, which leaves the thread open
++ * and the merge criterion unmet. `stale` is deliberately not a failure — the
++ * thread was already resolved upstream, so there was nothing to write and
++ * nothing to retry.
++ *
++ * **Example** (Read a report's failures)
++ *
++ * ```ts
++ * import { failedReplyOutcomes, ReplyReport } from "@beep/repo-cli/test/Yeet"
++ *
++ * const report = ReplyReport.make({
++ *   schemaVersion: "yeet-reply-report/v1",
++ *   prNumber: 558,
++ *   createdAt: "2026-08-16T00:00:00.000Z",
++ *   outcomes: [],
++ * })
++ * console.log(failedReplyOutcomes(report).length)
++ * ```
++ *
++ * @param report - The written report for one reply run.
++ * @returns Every outcome the run recorded as `failed`.
++ * @category utilities
++ * @since 0.0.0
++ */
++export const failedReplyOutcomes = (report: ReplyReport): ReadonlyArray<ReplyDraftOutcome> =>
++  replyOutcomesWithStatus(report.outcomes, ReplyOutcomeStatus.Enum.failed);
++
+ /**
+  * JSON-string codec for the reply drafts artifact.
+  *
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts
+index 4ac2dc3d8e..777c242285 100644
+--- a/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts
+@@ -58,7 +58,16 @@ import { artifactDirForContext } from "./ArtifactPaths.ts";
+ import { decodeGhRepoView } from "./closeout/Gh.schemas.ts";
+ import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./closeout/WritePlan.ts";
+ import { writeTextFile } from "./IssueArtifacts.ts";
+-import { ReplyDraft, ReplyDraftOutcome, ReplyDraftsJson, ReplyReport, ReplyReportJson } from "./Reply.schemas.ts";
++import {
++  failedReplyOutcomes,
++  ReplyDraft,
++  ReplyDraftOutcome,
++  ReplyDraftsJson,
++  ReplyReport,
++  ReplyReportJson,
++  replyOutcomesWithStatus,
++  replyOutcomeTarget,
++} from "./Reply.schemas.ts";
+ import type { ChildProcessSpawner } from "effect/unstable/process";
+ import type { GhCommandFailure } from "../../../internal/github/index.ts";
+ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+@@ -872,7 +881,7 @@ const executeReplyAction = (
+   );
+ 
+ const countStatus = (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): number =>
+-  A.length(A.filter(outcomes, (outcome) => outcome.status === status));
++  A.length(replyOutcomesWithStatus(outcomes, status));
+ 
+ const replyPreflight = Effect.fn("Yeet.replyPreflight")(function* (
+   context: RepoRunContext,
+@@ -931,10 +940,15 @@ const preflightFailureOutcomes = (drafts: ReplyDrafts, failure: YeetCommandError
+  *
+  * **Gotchas**
+  *
+- * Per-draft failures exit 0 — the batch ran and the report is authoritative.
+- * Only the preflight (nothing attempted) fails the run, and with no drafts
+- * loaded it fails without a report: there is no outcome to attach the failure
+- * to, so an exit-0 empty report would be a silent green.
++ * This engine returns the report for every pass that attempted work; the
++ * *command* turns a report carrying `failed` outcomes into a non-zero exit
++ * (`failedReplyOutcomes` at the `yeet reply` seam). Splitting it that way
++ * keeps the batch semantics — every remaining draft still gets its turn — while
++ * denying a `yeet reply && ...` chain the false green it used to get from a
++ * pass whose replies were all rejected. Only the preflight (nothing attempted)
++ * fails here, and with no drafts loaded it fails without a report: there is no
++ * outcome to attach the failure to, so an exit-0 empty report would be a silent
++ * green.
+  *
+  * **Example** (Build the reply run effect)
+  *
+@@ -981,10 +995,7 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
+     : preflightFailureOutcomes(drafts, preflight.failure);
+   yield* Effect.forEach(
+     outcomes,
+-    (outcome) =>
+-      Console.log(
+-        `[yeet] reply ${outcome.status} ${O.getOrElse(outcome.threadId, () => `comment ${O.getOrElse(O.map(outcome.commentId, String), () => "?")}`)}: ${outcome.detail}`
+-      ),
++    (outcome) => Console.log(`[yeet] reply ${outcome.status} ${replyOutcomeTarget(outcome)}: ${outcome.detail}`),
+     { concurrency: 1 }
+   );
+ 
+@@ -1014,3 +1025,54 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
+ 
+   return report;
+ });
++
++/**
++ * The operator verdict for a reply pass that could not write every draft.
++ *
++ * **Details**
++ *
++ * `None` is the whole contract for a clean pass: nothing failed, so there is
++ * nothing to say and nothing to exit non-zero over. `Some` names how many
++ * drafts failed out of how many ran and which handles they were, then points at
++ * the report — deliberately *not* at a retry command. Failures do not share one
++ * retry: a draft whose post was rejected is retried by re-running the pass,
++ * while a draft that posted and only failed to resolve must never be re-run
++ * that way or the body posts twice. Each outcome's own `detail` already carries
++ * the correct instruction, so the verdict routes the operator to them instead
++ * of overwriting them with a wrong one.
++ *
++ * **Example** (A clean pass has no verdict)
++ *
++ * ```ts
++ * import { renderYeetReplyFailureVerdict, ReplyReport } from "@beep/repo-cli/test/Yeet"
++ *
++ * const report = ReplyReport.make({
++ *   schemaVersion: "yeet-reply-report/v1",
++ *   prNumber: 558,
++ *   createdAt: "2026-08-16T00:00:00.000Z",
++ *   outcomes: [],
++ * })
++ * console.log(renderYeetReplyFailureVerdict(report, ".beep/yeet/reply-report.json"))
++ * ```
++ *
++ * @param report - The report written by one reply pass.
++ * @param reportPath - Where that report was written, quoted in the verdict.
++ * @returns The verdict line when any draft failed, else `None`.
++ * @category formatting
++ * @since 0.0.0
++ */
++export const renderYeetReplyFailureVerdict: {
++  (reportPath: string): (report: ReplyReport) => O.Option<string>;
++  (report: ReplyReport, reportPath: string): O.Option<string>;
++} = dual(
++  2,
++  (report: ReplyReport, reportPath: string): O.Option<string> =>
++    pipe(
++      failedReplyOutcomes(report),
++      O.liftPredicate(A.isReadonlyArrayNonEmpty),
++      O.map(
++        (failed) =>
++          `[yeet] reply failed for ${A.length(failed)} of ${A.length(report.outcomes)} drafts (${A.join(A.map(failed, replyOutcomeTarget), ", ")}); those review threads are still open. Each failed outcome in ${reportPath} carries its own retry.`
++      )
++    )
++);
+diff --git a/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts b/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts
+index 259a55d8dc..64913ecc2f 100644
+--- a/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts
++++ b/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts
+@@ -36,6 +36,7 @@ export * from "../commands/Yeet/internal/IssueClassification.ts";
+ export * from "../commands/Yeet/internal/IssueParser.ts";
+ export * from "../commands/Yeet/internal/Merge.ts";
+ export * from "../commands/Yeet/internal/MergedPreview.ts";
++export * from "../commands/Yeet/internal/MonitorChecks.ts";
+ export * from "../commands/Yeet/internal/MonitorComments.ts";
+ export * from "../commands/Yeet/internal/MonitorLoop.ts";
+ export * from "../commands/Yeet/internal/Planner.ts";
+diff --git a/packages/tooling/tool/cli/test/yeet-reply-engine.test.ts b/packages/tooling/tool/cli/test/yeet-reply-engine.test.ts
+index 744c5cc315..4003786cba 100644
+--- a/packages/tooling/tool/cli/test/yeet-reply-engine.test.ts
++++ b/packages/tooling/tool/cli/test/yeet-reply-engine.test.ts
+@@ -1,10 +1,13 @@
+ import {
++  failedReplyOutcomes,
++  failYeetReplyOnFailedOutcomes,
+   findReplyThread,
+   planReplyActions,
+   REPLY_DRAFTS_FILE_NAME,
+   REPLY_REPORT_FILE_NAME,
+   REPLY_RERUN_COMMAND,
+   ReplyDraft,
++  ReplyDraftOutcome,
+   ReplyDrafts,
+   ReplyDraftsJson,
+   ReplyLiveThread,
+@@ -13,6 +16,7 @@ import {
+   ReplyThreadComment,
+   ReplyThreadCommentConnection,
+   RepoRunContext,
++  renderYeetReplyFailureVerdict,
+   replyDraftsPathForContext,
+   replyReportPathForContext,
+   replyResolveRetryCommand,
+@@ -28,7 +32,8 @@ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+ import * as Str from "effect/String";
+ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+-import type { ReplyAction, ReplyDraftOutcome } from "@beep/repo-cli/test/Yeet";
++import { expectReportedExit } from "./support/CommandTest.ts";
++import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
+ 
+ const OPEN_COMMENT_ID = 2_284_119_001;
+ const RESOLVED_COMMENT_ID = 2_284_119_002;
+@@ -423,3 +428,112 @@ describe("reply operator surfaces", () => {
+     expect(REPLY_RERUN_COMMAND).toBe("bun run beep yeet reply");
+   });
+ });
++
++// A7 (ship-velocity): a pass whose replies were rejected used to exit 0, so
++// `yeet reply && bun run beep yeet monitor` walked straight past threads that
++// are still open — and an unresolved thread is a hard merge gate. The batch
++// still runs to completion; the exit code is what changed.
++const deniedReplyMutationStubs: ReadonlyArray<readonly [string, CommandStub]> = [
++  ["gh repo view", ok(repoViewJson)],
++  ["YeetReplyReviewThreads", ok(reviewThreadsJson)],
++  ["addPullRequestReviewThreadReply", { exitCode: 1, output: "gh: Resource not accessible by integration" }],
++];
++
++const reportOf = (outcomes: ReadonlyArray<ReplyDraftOutcome>): ReplyReport =>
++  ReplyReport.make({
++    schemaVersion: "yeet-reply-report/v1",
++    prNumber: 558,
++    createdAt: "2026-08-16T00:00:00.000Z",
++    outcomes,
++  });
++
++describe("reply run verdict", () => {
++  it("counts only failed outcomes, never stale ones", () => {
++    const report = reportOf([
++      ReplyDraftOutcome.make({ threadId: O.some("PRRT_stale"), status: "stale", detail: "already resolved upstream" }),
++      ReplyDraftOutcome.make({ threadId: O.some("PRRT_posted"), status: "posted", detail: "reply posted" }),
++      ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" }),
++    ]);
++    expect(A.map(failedReplyOutcomes(report), (outcome) => outcome.threadId)).toEqual([O.some("PRRT_open")]);
++  });
++
++  it("names every failed handle, the report, and the still-open threads", () => {
++    const verdict = renderYeetReplyFailureVerdict(
++      reportOf([
++        ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" }),
++        ReplyDraftOutcome.make({ commentId: O.some(OPEN_COMMENT_ID), status: "failed", detail: "denied" }),
++      ]),
++      "/repo/.beep/yeet/reply-report.json"
++    );
++    expect(O.isSome(verdict)).toBe(true);
++    const text = O.getOrElse(verdict, () => "");
++    expect(text).toContain("2 of 2 drafts");
++    expect(text).toContain("PRRT_open");
++    expect(text).toContain(`comment ${OPEN_COMMENT_ID}`);
++    expect(text).toContain("/repo/.beep/yeet/reply-report.json");
++    expect(text).toContain("still open");
++    // The retry is per outcome: a draft that posted and only failed to resolve
++    // must never be told to re-run the pass, which would post the body twice.
++    expect(text).not.toContain(REPLY_RERUN_COMMAND);
++  });
++
++  it("has no verdict for a pass where nothing failed", () => {
++    expect(
++      renderYeetReplyFailureVerdict(
++        reportOf([
++          ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "resolved", detail: "reply posted" }),
++          ReplyDraftOutcome.make({ threadId: O.some("PRRT_b"), status: "stale", detail: "already resolved upstream" }),
++        ]),
++        "reply-report.json"
++      )
++    ).toEqual(O.none());
++  });
++
++  it.effect("exits zero when every outcome is posted, resolved, or stale", () =>
++    failYeetReplyOnFailedOutcomes(
++      reportOf([
++        ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "resolved", detail: "reply posted" }),
++        ReplyDraftOutcome.make({ threadId: O.some("PRRT_b"), status: "stale", detail: "already resolved upstream" }),
++      ]),
++      "reply-report.json"
++    )
++  );
++
++  it.effect("exits non-zero, and silently, when any outcome failed", () =>
++    Effect.gen(function* () {
++      const exit = yield* Effect.exit(
++        failYeetReplyOnFailedOutcomes(
++          reportOf([ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" })]),
++          "reply-report.json"
++        )
++      );
++
++      // Exit code 1, and reported=false: the pass already printed every
++      // outcome, so the sentinel adds the code, not a second rendering.
++      expectReportedExit(exit);
++    })
++  );
++
++  it.effect("fails the whole reply run when a live draft's reply is rejected", () =>
++    withTempDirectory((root) =>
++      Effect.gen(function* () {
++        const context = replyContext(root);
++        yield* writeDrafts(
++          context,
++          draftsOf([
++            ReplyDraft.make({ threadId: O.some("PRRT_open"), body: "Fixed in 0123456." }),
++            ReplyDraft.make({ commentId: O.some(RESOLVED_COMMENT_ID), body: "Already handled." }),
++          ])
++        );
++
++        const report = yield* runYeetReply(context);
++        // The batch still ran: the stale draft was still classified.
++        expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["failed", "stale"]);
++
++        expectReportedExit(
++          yield* Effect.exit(failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context)))
++        );
++      })
++    ).pipe(provideScopedLayer(replyTestLayer(deniedReplyMutationStubs)))
++  );
++});
