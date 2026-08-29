@@ -14,6 +14,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const patentFixture = Md.make([
   Md.h1("TITLE OF THE INVENTION"),
@@ -68,6 +69,18 @@ const dependentClaim = (claimNumber: number, parentClaimNumber: number) =>
   });
 
 describe("PatentDocument", () => {
+  it("round-trips schema-derived patent application sections", () => {
+    const arbitrary = S.toArbitrary(PatentApplicationSection)(fc);
+    const decode = S.decodeUnknownSync(PatentApplicationSection);
+    const encode = S.encodeSync(PatentApplicationSection);
+    const equivalent = S.toEquivalence(PatentApplicationSection);
+
+    fc.assert(
+      fc.property(arbitrary, (section) => equivalent(decode(encode(section)), section)),
+      { numRuns: 20 }
+    );
+  });
+
   it.effect(
     "normalizes one Markdown fixture into ordered sections and structured claims",
     Effect.fnUntraced(function* () {
