@@ -3,7 +3,7 @@
 # Census and snapshot enter this surface by generator/output digest, not by copied triples.
 generated_by: scripts/build_abox.py
 contract: ontology/docs/s6-abox-contract.md
-corpus_commit: 23c56a79123cfd3bc5237c402b6d2947f4502dde
+corpus_commit: 62a5cafd91d3053450e47abc7628075683fac29c
 policy:
   individual: ciops:YeetWeightedAdmissionV1
   instance_of: ciops:AdmissionPolicy

@@ -436,6 +436,16 @@ if _args.s6:
         return _hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
     census_rec = abox_doc.get("census") or {}
+    snapshot_rec_early = abox_doc.get("snapshot") or {}
+    # The digest FIELDS are mandatory — an ABOX record without them would skip
+    # byte binding entirely (PR #919 review).
+    for rec, field in (
+        (census_rec, "sha256_12"),
+        (snapshot_rec_early, "manifest_sha256_12"),
+        (snapshot_rec_early, "redacted_sha256_12"),
+    ):
+        if not rec.get(field):
+            blocker(f"ABOX.yaml generator-digest record omits required digest field {field}")
     census_file = S6 / "CENSUS.yaml"
     census_doc = yaml.safe_load(census_file.read_text()) if census_file.is_file() else {}
     census_ttl = S6 / "graphs/census.ttl"
