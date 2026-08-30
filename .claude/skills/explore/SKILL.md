@@ -6,7 +6,7 @@ description: >
   `/explore`, a new fuzzy idea or brainstorm to capture, "crystallize this",
   "help me break down this vision", decomposing a vision into goal packets,
   triaging explorations/INBOX.md, or resuming any packet under explorations/.
-version: 0.1.0
+version: 0.2.0
 status: active
 ---
 
@@ -25,7 +25,7 @@ procedure, not a copy of the convention.
   up.
 - `/explore new <topic>` — scaffold `explorations/<slug>/` from
   `explorations/_template/` (kebab-case slug; real dates; title from topic),
-  add it to `ATLAS.md` Active, then drop into capture intake.
+  sync its manifest and generated projections, then drop into capture intake.
 - `/explore <slug> [stage]` — read `explorations/<slug>/ops/manifest.json`
   and resume at its `stage`, or at the explicitly given stage override.
 
@@ -36,8 +36,10 @@ procedure, not a copy of the convention.
 2. Work the stage per the behavior table below.
 3. **Always close the loop before ending**: update manifest (`stage`,
    `openQuestions`, `updated`), rewrite the packet README's "Next Open
-   Question" and append a dated Trail line, and sync `ATLAS.md` if stage or
-   status changed. Cold-session resume depends on this.
+   Question" and append a dated Trail line, then run
+   `bun run beep explore atlas --write`. Never hand-edit the marked README
+   Stage/Status region or the ignored Atlas. Cold-session resume depends on
+   this.
 
 ## Stage Behavior
 
@@ -86,8 +88,8 @@ owning stage. Then, per approved candidate: scaffold `goals/<slug>/` from
 `goals/_template/` (per `goals/README.md` rules, GOAL.md launcher included);
 seed `SPEC.md` from the brief (no-gos -> non-goals, rabbit holes ->
 constraints, DECISIONS -> decision log) with back-links to the exploration,
-not copies; cross-link both manifests; update `ATLAS.md` (move packet to
-Graduated with goal links); carry the exploration's `research/SOURCES.md` into
+not copies; cross-link both manifests; carry the exploration's
+`research/SOURCES.md` into
 the goal (`goals/<slug>/research/SOURCES.md`), reproducing the source corpus for
 implementation and linking the exploration's ledger as primary, and register it
 in the goal manifest `researchReports[]` + `currentSourceOfTruth[]` with
@@ -95,12 +97,14 @@ in the goal manifest `researchReports[]` + `currentSourceOfTruth[]` with
 exploration status to `graduated` once every promised-now goal exists —
 gated/queued candidates do NOT hold the packet open; they stay in `MAP.md`
 as re-entry points, and a fired gate reopens the packet at `decompose`
-(ratified 2026-08-13; see `explorations/README.md` Graduation Contract).
+(ratified 2026-08-13; see `explorations/README.md` Graduation Contract). Run
+the Atlas writer after the manifest and authored README changes.
 
 ## Guardrails
 
 - Parking and killing are first-class outcomes. Park with a dated reason in
-  `DECISIONS.md`; kill with a one-line epitaph in `ATLAS.md` Killed. Offer
+  `DECISIONS.md`; kill with a one-line epitaph in tracked `DECISIONS.md` or the
+  README Trail. Offer
   them when momentum or conviction dies — never let a packet rot as fake
   "active".
 - Align asks in frontier rounds per `/grilling`: batch every
@@ -111,7 +115,8 @@ as re-entry points, and a fired gate reopens the packet at `decompose`
   on, and never fabricate a source/URL/license — cite the on-disk RESEARCH
   section when no URL exists, and treat missing/unverified upstream licenses as
   reference-only (clean-room, never vendor).
-- ATLAS is navigation, never doctrine; load-bearing prose goes to
-  `docs/product/` or the goal packet, linked from ATLAS.
+- ATLAS is ignored, generated navigation, never doctrine or tracked GitHub
+  truth; load-bearing prose goes to `docs/product/`, the exploration packet,
+  or the goal packet.
 - Stage loops are normal (align exposes a research gap -> do the research ->
   return). Record the loop in the README Trail.

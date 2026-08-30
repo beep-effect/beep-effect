@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { Bool, Str } from "@beep/utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect, FileSystem, Inspectable, Layer, Path, Result } from "effect";
 import { normalizePath } from "../src/eslint/Shared.ts";
@@ -50,9 +51,14 @@ const program = Effect.gen(function* () {
   const snapshotModule = yield* renderAllowlistSnapshotModule(snapshot);
 
   yield* fs.makeDirectory(outputDirectory, { recursive: true });
-  yield* fs.writeFileString(outputPath, snapshotModule);
+  const outputExists = yield* fs.exists(outputPath);
+  const outputChanged = outputExists
+    ? Bool.not(Str.equivalence(yield* fs.readFileString(outputPath), snapshotModule))
+    : true;
+  yield* fs.writeFileString(outputPath, snapshotModule).pipe(Effect.when(Effect.succeed(outputChanged)), Effect.asVoid);
 
-  yield* Console.log(`[allowlist-codegen] wrote ${SNAPSHOT_OUTPUT_PATH}`);
+  const writeStatus = Bool.match(outputChanged, { onFalse: () => "unchanged", onTrue: () => "wrote" });
+  yield* Console.log(`[allowlist-codegen] ${writeStatus} ${SNAPSHOT_OUTPUT_PATH}`);
   yield* Console.log(`[allowlist-codegen] entries=${snapshot.entries.length}`);
   yield* Console.log(`[allowlist-codegen] diagnostics=${snapshot.diagnostics.length}`);
 });

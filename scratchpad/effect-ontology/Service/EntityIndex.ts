@@ -23,6 +23,9 @@ import { Entity } from "../Domain/Model/Entity.ts";
 import type { EmbeddingServiceMethods } from "./Embedding.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
 import type { Embedding } from "./EmbeddingCache.ts";
+import { cosineSimilarity } from "./EmbeddingProvider.ts";
+
+export { cosineSimilarity };
 
 // =============================================================================
 // Persistent EntityIndex
@@ -30,7 +33,7 @@ import type { Embedding } from "./EmbeddingCache.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/EntityIndex");
 
 import { $ScratchpadId } from "@beep/identity";
-import { dual2, dual3 } from "../Utils/Dual.ts";
+import { dual3 } from "../Utils/Dual.ts";
 import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
@@ -65,50 +68,64 @@ export class PersistentEntityIndexConfigError extends S.TaggedError<PersistentEn
 ) {}
 
 /**
- * Scored entity result from similarity search
+ * Entity plus its cosine-similarity score from k-NN search.
  *
- *
- * **Example** (Use the ScoredEntity contract)
+ * **Example** (Pair an entity with its similarity)
  *
  * ```ts
- * import type { ScoredEntity } from "@effect-ontology/Service/EntityIndex"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { ScoredEntity } from "@effect-ontology/Service/EntityIndex"
+ * import * as S from "effect/Schema"
  *
- * const acceptsScoredEntity = (_value: ScoredEntity): void => undefined
- *
- * console.log(acceptsScoredEntity)
+ * const entity = S.decodeUnknownSync(Entity)({
+ *   id: "ada_lovelace",
+ *   mention: "Ada Lovelace",
+ *   types: ["https://schema.org/Person"]
+ * })
+ * const scored = ScoredEntity.make({ entity, score: 0.92 })
+ * console.log(scored.score) // 0.92
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface ScoredEntity {
-  readonly entity: Entity;
-  readonly score: number;
-}
+export class ScoredEntity extends S.Class<ScoredEntity>($I`ScoredEntity`)(
+  {
+    entity: Entity,
+    score: S.Finite,
+  },
+  $I.annote("ScoredEntity", {
+    description: "Indexed entity paired with its finite cosine-similarity score.",
+  })
+) {}
 
 /**
  * Options for similarity search
  *
- *
- * **Example** (Use the FindSimilarOptions contract)
+ * **Example** (Filter by type and score)
  *
  * ```ts
- * import type { FindSimilarOptions } from "@effect-ontology/Service/EntityIndex"
+ * import { FindSimilarOptions } from "@effect-ontology/Service/EntityIndex"
  *
- * const acceptsFindSimilarOptions = (_value: FindSimilarOptions): void => undefined
- *
- * console.log(acceptsFindSimilarOptions)
+ * const options = FindSimilarOptions.make({
+ *   filterTypes: ["https://schema.org/Person"],
+ *   minScore: 0.8
+ * })
+ * console.log(options.minScore) // 0.8
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface FindSimilarOptions {
-  /** Filter to only entities with any of these types */
-  readonly filterTypes?: ReadonlyArray<string>;
-  /** Minimum similarity score threshold (0-1) */
-  readonly minScore?: number;
-}
+export class FindSimilarOptions extends S.Class<FindSimilarOptions>($I`FindSimilarOptions`)(
+  {
+    filterTypes: S.Array(S.NonEmptyString).pipe(S.optionalKey),
+    minScore: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(S.optionalKey),
+  },
+  $I.annote("FindSimilarOptions", {
+    description: "Optional entity-type filter and minimum similarity threshold for index searches.",
+  })
+) {}
 
 /**
  * Internal index state
@@ -130,7 +147,6 @@ const emptyState: IndexState = {
 
 /**
  * EntityIndex service interface
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -189,68 +205,42 @@ export interface EntityIndexService {
   readonly size: Effect.Effect<number>;
 }
 
-/**
- * Cosine similarity between two vectors
- *
- * **Example** (Inspect cosine similarity)
- *
- * ```ts
- * import { cosineSimilarity } from "@effect-ontology/Service/EntityIndex"
- *
- * console.log(cosineSimilarity)
- * ```
- *
- * @category services
- * @since 0.0.0
- */
-export const cosineSimilarity = dual2((a: Embedding, b: Embedding): number => {
-  if (a.length !== b.length) return 0;
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+const updateTypeIndex = (
+  typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
+  entity: Entity,
+  update: (
+    index: HashMap.HashMap<string, HashSet.HashSet<string>>,
+    typeIri: string
+  ) => HashMap.HashMap<string, HashSet.HashSet<string>>
+): HashMap.HashMap<string, HashSet.HashSet<string>> => {
+  let updated = typeIndex;
+  for (const typeIri of entity.types) {
+    updated = update(updated, typeIri);
   }
-
-  const denominator = Math.sqrt(normA) * Math.sqrt(normB);
-  return denominator === 0 ? 0 : dotProduct / denominator;
-});
+  return updated;
+};
 
 const addToTypeIndex = (
   typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
   entity: Entity
-): HashMap.HashMap<string, HashSet.HashSet<string>> => {
-  let updated = typeIndex;
-  for (const typeIri of entity.types) {
-    const existing = HashMap.get(updated, typeIri);
-    updated = HashMap.set(
-      updated,
-      typeIri,
-      O.isSome(existing) ? HashSet.add(existing.value, entity.id) : HashSet.make(entity.id)
-    );
-  }
-  return updated;
-};
+): HashMap.HashMap<string, HashSet.HashSet<string>> =>
+  updateTypeIndex(typeIndex, entity, (index, typeIri) => {
+    const existing = O.getOrElse(HashMap.get(index, typeIri), HashSet.empty);
+    return HashMap.set(index, typeIri, HashSet.add(existing, entity.id));
+  });
 
 const removeFromTypeIndex = (
   typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
   entity: Entity
-): HashMap.HashMap<string, HashSet.HashSet<string>> => {
-  let updated = typeIndex;
-  for (const typeIri of entity.types) {
-    const existing = HashMap.get(updated, typeIri);
+): HashMap.HashMap<string, HashSet.HashSet<string>> =>
+  updateTypeIndex(typeIndex, entity, (index, typeIri) => {
+    const existing = HashMap.get(index, typeIri);
     if (O.isSome(existing)) {
       const remaining = HashSet.remove(existing.value, entity.id);
-      updated =
-        HashSet.size(remaining) === 0 ? HashMap.remove(updated, typeIri) : HashMap.set(updated, typeIri, remaining);
+      return HashSet.size(remaining) === 0 ? HashMap.remove(index, typeIri) : HashMap.set(index, typeIri, remaining);
     }
-  }
-  return updated;
-};
+    return index;
+  });
 
 const makeEntityIndexMethods = (
   embedding: EmbeddingServiceMethods,
@@ -298,7 +288,7 @@ const makeEntityIndexMethods = (
       const entityEmbedding = HashMap.get(state.embeddings, entityId);
       if (O.isSome(entity) && O.isSome(entityEmbedding)) {
         const score = cosineSimilarity(queryEmbedding, entityEmbedding.value);
-        if (score >= minScore) scored.push({ entity: entity.value, score });
+        if (score >= minScore) scored.push(ScoredEntity.make({ entity: entity.value, score }));
       }
     }
     return A.take(
@@ -348,12 +338,18 @@ const makeEntityIndexMethods = (
 /**
  * EntityIndex - In-memory entity index with embedding-based retrieval
  *
- * **Example** (Inspect entity index)
+ * **Example** (Read index size)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { EntityIndex } from "@effect-ontology/Service/EntityIndex"
  *
- * console.log(EntityIndex)
+ * const program = Effect.gen(function* () {
+ *   const index = yield* EntityIndex
+ *   return yield* index.size
+ * }).pipe(Effect.provide(EntityIndex.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -377,12 +373,18 @@ export class EntityIndex extends Context.Service<EntityIndex>()($I`EntityIndex`,
  *
  * Requires EmbeddingService dependencies to be provided.
  *
- * **Example** (Inspect entity index default)
+ * **Example** (Provide the default index)
  *
  * ```ts
- * import { EntityIndexDefault } from "@effect-ontology/Service/EntityIndex"
+ * import { Effect } from "effect"
+ * import { EntityIndex, EntityIndexDefault } from "@effect-ontology/Service/EntityIndex"
  *
- * console.log(EntityIndexDefault)
+ * const program = Effect.gen(function* () {
+ *   const index = yield* EntityIndex
+ *   return yield* index.size
+ * }).pipe(Effect.provide(EntityIndexDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -393,13 +395,19 @@ export const EntityIndexDefault = EntityIndex.Default;
 /**
  * Serialized entity index format for GCS persistence
  *
- * **Example** (Validate serialized entity index)
+ * **Example** (Decode an empty serialized index)
  *
  * ```ts
- * import { SerializedEntityIndex } from "@effect-ontology/Service/EntityIndex"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { SerializedEntityIndex } from "@effect-ontology/Service/EntityIndex"
  *
- * console.log(S.is(SerializedEntityIndex)({}))
+ * const decoded = S.decodeUnknownOption(SerializedEntityIndex)({
+ *   version: 1,
+ *   indexedAt: 0,
+ *   entities: []
+ * })
+ * console.log(O.isSome(decoded)) // true
  * ```
  *
  * @category schemas
@@ -417,11 +425,14 @@ export const SerializedEntityIndex = S.Struct({
       embedding: S.Array(S.Finite),
     })
   ),
-});
+}).pipe(
+  $I.annoteSchema("SerializedEntityIndex", {
+    description: "Versioned persistence payload for an in-memory entity index.",
+  })
+);
 
 /**
  * Describes the serialized entity index data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -434,7 +445,6 @@ const decodeSerializedEntityIndex = S.decodeOption(SerializedEntityIndexJson);
 
 /**
  * Extended EntityIndex interface with persistence capabilities
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -475,12 +485,18 @@ export interface PersistentEntityIndexService extends EntityIndexService {
 /**
  * PersistentEntityIndex service tag
  *
- * **Example** (Inspect persistent entity index)
+ * **Example** (Read persistent index stats)
  *
  * ```ts
- * import { PersistentEntityIndex } from "@effect-ontology/Service/EntityIndex"
+ * import { Effect } from "effect"
+ * import { PersistentEntityIndex, PersistentEntityIndexLayer } from "@effect-ontology/Service/EntityIndex"
  *
- * console.log(PersistentEntityIndex)
+ * const program = Effect.gen(function* () {
+ *   const index = yield* PersistentEntityIndex
+ *   return yield* index.stats
+ * }).pipe(Effect.provide(PersistentEntityIndexLayer))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -493,12 +509,22 @@ export class PersistentEntityIndex extends Context.Service<PersistentEntityIndex
 /**
  * Create persistent EntityIndex with GCS backing
  *
- * **Example** (Inspect make persistent entity index)
+ * **Example** (Build a persistent index over test storage)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makePersistentEntityIndex } from "@effect-ontology/Service/EntityIndex"
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
+ * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(makePersistentEntityIndex)
+ * const program = Effect.gen(function* () {
+ *   const storage = yield* StorageService
+ *   const embedding = yield* EmbeddingService
+ *   const index = yield* makePersistentEntityIndex(storage, embedding, "entity-index")
+ *   return yield* index.size
+ * }).pipe(Effect.provide(StorageServiceTest))
+ *
+ * console.log(program)
  * ```
  *
  * @param storage - StorageService for GCS operations
@@ -626,12 +652,26 @@ export const makePersistentEntityIndex = dual3(
  * - StorageService (for GCS persistence when entityIndexPath is set)
  * - EmbeddingService (for computing embeddings)
  *
- * **Example** (Inspect persistent entity index layer)
+ * **Example** (Provide the persistent index layer)
  *
  * ```ts
- * import { PersistentEntityIndexLayer } from "@effect-ontology/Service/EntityIndex"
+ * import { Effect, Layer } from "effect"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
+ * import { EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
+ * import { PersistentEntityIndex, PersistentEntityIndexLayer } from "@effect-ontology/Service/EntityIndex"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(PersistentEntityIndexLayer)
+ * const program = Effect.gen(function* () {
+ *   const index = yield* PersistentEntityIndex
+ *   return yield* index.size
+ * }).pipe(
+ *   Effect.provide(PersistentEntityIndexLayer),
+ *   Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)),
+ *   Effect.provide(EmbeddingServiceDefault),
+ *   Effect.provide(StorageServiceTest)
+ * )
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

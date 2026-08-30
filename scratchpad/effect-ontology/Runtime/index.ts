@@ -1,5 +1,5 @@
 /**
- * Runtime Layer Exports
+ * Production HTTP, LLM, health, shutdown, and persistence wiring for effect-ontology.
  *
  * @packageDocumentation
  * @since 0.0.0

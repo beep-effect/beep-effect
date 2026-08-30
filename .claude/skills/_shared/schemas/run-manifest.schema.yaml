@@ -1,0 +1,59 @@
+# RunManifest — reproducibility record; one per auditor run. Pinning is REQUIRED by
+# default; only an explicit user waiver (recorded here) relaxes it. The validator
+# checks this file (required fields, cq_count >= 1, seat flags) and, under --repo,
+# recomputes the CQ digest AND counts the CQ file's entries against cq_count —
+# the zero-CQ hard stop keys off a verified count, never an asserted one.
+# File layout: ontologies/{name}/work/run-manifest.yaml.
+run_id: "orun-YYYY-MM-DDTHH:MM:SS[.f][Z|±HH:MM]"  # CLOSED grammar, exact string:
+                                  # extended form only (no ISO basic, no `/`
+                                  # or space separators), fraction capped at 9
+                                  # digits so runs/<run_id>.*.yaml always fits
+                                  # a filename — the validator and
+                                  # --print-run-id enforce the SAME grammar
+ontology: {name: ""}              # the {name} every documented path derives from
+engine:                            # the ENGINE that judges this run is inside the
+                                   # lock: the validator recomputes both digests —
+                                   # a manifest that cannot name its engine
+                                   # reconstructs nothing (model WEIGHTS remain a
+                                   # claim; see Known Limits)
+  validator_sha256_12: ""          # sha256[:12] of scripts/validate_artifacts.py
+  contracts_sha256_12: ""          # framed sha256[:12] over the FULL contract closure:
+                                   # _shared/schemas/*.yaml, _shared/*.yaml (rules,
+                                   # authority matrix), _shared/*.md (foundational
+                                   # analysis, backbone, naming), _shared/*.json (the
+                                   # canonical namespace map), and the skill's
+                                   # templates/*.yaml — a semantic edit to ANY of them
+                                   # stales every prior manifest
+# This file is a SINGLETON at work/run-manifest.yaml — the validator rejects
+# manifests at any other path and rejects duplicates.
+repository: {commit: "<sha>", dirty: false, pin_waived: false, waiver_reason: ""}
+                                   # pin_waived must be a BOOLEAN; when true, a
+                                   # substantive waiver_reason (>=20 chars) is
+                                   # required regardless of dirty — and a gate run
+                                   # without --repo under waiver is FLAGGED, never
+                                   # silent. Under --repo the commit is checked
+                                   # against git HEAD and every observation.
+scope_doc: {path: "", sha256_12: ""}
+cq_suite: {path: "", sha256_12: "", cq_count: 0}   # cq_count 0 => HARD STOP (see SKILL.md)
+adapters: [{id: "", version: "", script: "", script_sha256_12: "", golden_fixture: ""}]
+agents:                            # EVERY seat is inside the reproducibility lock;
+                                   # the role→prompt binding is FIXED (validator
+                                   # rejects omitted or swapped prompt paths and
+                                   # recomputes each digest from the shipped bytes)
+  denotation: {model: "", prompt: "prompts/denotation.md", prompt_sha256_12: ""}
+  foundational: {model: "", prompt: "prompts/ufo-analysis.md", prompt_sha256_12: ""}
+  synthesis: {model: "", prompt: "prompts/synthesis.md", prompt_sha256_12: ""}
+  adversary: {model: "", prompt: "prompts/ontoclean-adversary.md", prompt_sha256_12: "", independent_context: true}
+  alternative: {model: "", prompt: "prompts/alternative-model.md", prompt_sha256_12: "", blinded: true}
+first_run: false                   # true ONLY on an ontology's first run — the sole
+                                   # legal reason for an empty prior_index
+prior_index: ""                    # previous run's ARCHIVED index (runs/<run_id>.index.yaml) — REQUIRED
+                                   # key (validator-enforced); unresolved rows must be
+                                   # RE-OPENED (verbatim re-parking is rejected) or
+                                   # retired via carried_from_prior rows in the new index
+prior_index_sha256_12: ""         # 12-hex of the prior index FILE bytes — REQUIRED
+                                   # whenever prior_index is set (validator-verified;
+                                   # an unauthenticated prior is forged authority)
+empty_corpus_reason: ""            # REQUIRED if the adapters emitted zero observations
+unresolved_fraction_waiver: ""     # REQUIRED (with reason) to pass the gate when
+                                   # unresolved > 50% of non-irrelevant dispositions

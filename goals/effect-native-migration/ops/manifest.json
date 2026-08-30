@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "effect-native-migration",
     "title": "Effect-Native Migration",
@@ -82,5 +82,7 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "statusNote": "Historical migration complete: 5 phases, 7 symbol inventories, and 75 package entries are done in ops/progress.json. Packet bookkeeping reconciled on 2026-07-14; initiative status remains externally managed."
+  "statusNote": "Historical migration complete: 5 phases, 7 symbol inventories, and 75 package entries are done in ops/progress.json. Packet bookkeeping reconciled on 2026-07-14; initiative status remains externally managed.",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/effect-native-migration"
 }

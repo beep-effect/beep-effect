@@ -1,6 +1,6 @@
 import { Client as AcpClient, Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
-import { A } from "@beep/utils";
+import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
@@ -85,7 +85,7 @@ const makeHandle = Effect.fn("AcpProtocolTest.makeHandle")(function* (env?: Reco
   const command = ChildProcess.make("bun", ["run", yield* mockPeerPath], {
     cwd: path.join(import.meta.dirname, ".."),
     extendEnv: true,
-    shell: process.platform === "win32",
+    shell: currentHostPlatform === "win32",
     stdin: "pipe",
     stderr: "inherit",
     stdout: "pipe",

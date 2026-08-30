@@ -168,18 +168,19 @@ const restoreSharedTerminal = (): void => {
 const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
   BunRuntime.runMain(effect, {
     disableErrorReporting: true,
+    // The runner's onExit only hard-exits on a signal or nonzero code; a clean
+    // success is left to event-loop drain, so any handle a child leaves behind
+    // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
+    // work is done — the CI class where a lane prints success and never exits.
+    // Keep defaultTeardown as the sole exit-code authority and force the exit
+    // the runner declines on success.
     teardown: (exit, onExit) => {
       renderCliFailure(exit);
       restoreSharedTerminal();
-      Runtime.defaultTeardown(exit, onExit);
-      // The platform runner only hard-exits on failure or signal; success
-      // relies on the event loop draining, so any handle a child leaves
-      // behind (turbo daemon sockets, stuck bun wrappers) wedges the process
-      // after its work is done — the CI class where a lane prints success
-      // and never exits. Success must exit explicitly too.
-      if (Exit.isSuccess(exit)) {
-        process.exit(0);
-      }
+      Runtime.defaultTeardown(exit, (code) => {
+        onExit(code);
+        process.exit(code);
+      });
     },
   });
 
@@ -239,12 +240,15 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
 }
 
 if (!handledByQualityFastPath && !handledByCiFastPath) {
-  const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }] = await Promise.all([
+  const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }, { MemoryStatsLive }] = await Promise.all([
     import("@beep/repo-utils"),
     import("effect/unstable/cli"),
     import("./commands/Root.ts"),
+    import("./internal/repo-run/QualityScheduler.ts"),
   ]);
-  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(BaseLayers));
+  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, MemoryStatsLive).pipe(
+    Layer.provideMerge(BaseLayers)
+  );
   const commandProgram = Effect.scoped(
     Layer.build(DerivedLayers).pipe(
       Effect.flatMap(

@@ -8,7 +8,7 @@ You are the JSDoc annotation specialist for the beep-effect repo.
 1. `.patterns/jsdoc-documentation.md` — the binding rubric. Internalize the
    TSDoc grammar hard rules, tag ordering, required-vs-conditional tag tables,
    and the quality bar for examples.
-2. `.Codex/skills/jsdoc-annotation-specialist/SKILL.md` — the repo workflow
+2. `.agents/skills/jsdoc-annotation-specialist/SKILL.md` — the repo workflow
    for annotation compliance ($I.annote/$I.annoteSchema gaps, docgen
    integration); follow it.
 

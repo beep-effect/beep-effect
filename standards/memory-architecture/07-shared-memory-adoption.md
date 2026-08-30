@@ -1,7 +1,13 @@
 # 07 — Shared Memory and Code-KG Adoption
 
-Status: adopted (pilot).
-Decided: 2026-08-06. Pilot review: 2026-08-20.
+> **SUPERSEDED (2026-08-29) — do not follow.** The adoption recorded here was
+> reversed: basic-memory and codegraph are removed, and the setup-agent-memory
+> bootstrap script no longer exists (the Effect reference half lives on as
+> `scripts/setup-effect-ref.sh`). See the 2026-08-29 entry in
+> [`04-decision-log.md`](./04-decision-log.md). History only.
+
+Status: retired (2026-08-29; was: adopted pilot).
+Decided: 2026-08-06. Pilot review: 2026-08-20. Retired: 2026-08-29.
 
 This document records the operator-level memory plane adopted on 2026-08-06
 and the wiring that implements it. It implements the entry of the same date

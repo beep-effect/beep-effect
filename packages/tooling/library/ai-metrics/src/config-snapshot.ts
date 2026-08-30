@@ -6,26 +6,29 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { isNestedGitRoot } from "./identity-registry.ts";
+import { fileSizeBytes } from "./internal/file-info.ts";
+import { statOption } from "./internal/jsonl-discovery.ts";
 import { ConfigSnapshot } from "./models.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("config-snapshot");
+
 const CONFIG_ROOTS = [".codex", ".claude", ".ai", ".aiassistant"] as const;
-const AGENT_DOC_NAMES = ["AGENTS.md", "CLAUDE.md"] as const;
-const SESSION_SCOPE_PATHS: ReadonlyArray<string> = [
+const AgentDocName = LiteralKit(["AGENTS.md", "CLAUDE.md"]);
+const SessionScopePath = LiteralKit([
   ".claude/settings.json",
   ".claude/settings.local.json",
   ".codex/config.toml",
   "AGENTS.md",
   "CLAUDE.md",
-];
-const EXCLUDED_DIR_NAMES = [
+]);
+const ConfigSnapshotExcludedDirName = LiteralKit([
   ".beep",
   ".cache",
   ".git",
@@ -46,7 +49,7 @@ const EXCLUDED_DIR_NAMES = [
   "statsig",
   "target",
   "todos",
-] as const;
+]);
 const DEFAULT_MAX_DEPTH = 8;
 const DEFAULT_MAX_FILES = 1000;
 const DEFAULT_MAX_FILE_BYTES = 512 * 1024;
@@ -152,9 +155,9 @@ export class AiMetricsConfigSnapshotStageTiming extends S.Class<AiMetricsConfigS
   $I`AiMetricsConfigSnapshotStageTiming`
 )(
   {
-    byteCount: S.Finite,
-    durationMillis: S.Finite,
-    fileCount: S.Finite,
+    byteCount: S.Natural,
+    durationMillis: S.Natural,
+    fileCount: S.Natural,
     stage: AiMetricsConfigSnapshotStage,
   },
   $I.annote("AiMetricsConfigSnapshotStageTiming", {
@@ -285,10 +288,12 @@ export class AiMetricsConfigSnapshotBoundsReport extends S.Class<AiMetricsConfig
       S.withDecodingDefaultKey(Effect.succeed(defaultConfigSnapshotBudget))
     ),
     excludedNestedRootPaths: S.Array(S.String),
-    skippedOversizeFileCount: S.Finite,
-    totalBytes: S.Finite,
+    skippedOversizeFileCount: S.Natural,
+    totalBytes: S.Natural,
     truncated: S.Boolean,
-    truncationReason: S.optionalKey(AiMetricsConfigSnapshotTruncationReason),
+    truncationReason: S.OptionFromOptionalKey(AiMetricsConfigSnapshotTruncationReason).pipe(
+      SchemaUtils.withNoneDefault
+    ),
   },
   $I.annote("AiMetricsConfigSnapshotBoundsReport", {
     description: "Budget, nested-root exclusions, and truncation outcome for one AI metrics config snapshot walk.",
@@ -340,7 +345,7 @@ export class AiMetricsConfigSnapshotInput extends S.Class<AiMetricsConfigSnapsho
       S.withConstructorDefault(Effect.succeed("repo-local-agent-config")),
       S.withDecodingDefaultKey(Effect.succeed("repo-local-agent-config"))
     ),
-    previousSnapshotPath: S.optionalKey(S.String),
+    previousSnapshotPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     repoRoot: S.String,
   },
   $I.annote("AiMetricsConfigSnapshotInput", {
@@ -434,7 +439,7 @@ export class AiMetricsConfigSnapshotFile extends S.Class<AiMetricsConfigSnapshot
       S.withConstructorDefault(Effect.succeed(AiMetricsConfigScope.Enum.baseline)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsConfigScope.Enum.baseline))
     ),
-    sizeBytes: S.Finite,
+    sizeBytes: S.Natural,
   },
   $I.annote("AiMetricsConfigSnapshotFile", {
     description: "Repo-relative agent-facing configuration file and its deterministic content hash.",
@@ -497,15 +502,12 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
     ),
-    bounds: AiMetricsConfigSnapshotBoundsReport.pipe(
-      S.withConstructorDefault(Effect.succeed(emptyConfigSnapshotBoundsReport)),
-      S.withDecodingDefaultKey(Effect.succeed(emptyConfigSnapshotBoundsReport))
-    ),
-    excludedDirectoryNames: S.Array(S.String),
+    bounds: AiMetricsConfigSnapshotBoundsReport.pipe(SchemaUtils.withKeyDefaults(emptyConfigSnapshotBoundsReport)),
+    excludedDirectoryNames: S.Array(ConfigSnapshotExcludedDirName),
     diff: AiMetricsConfigSnapshotDiff.pipe(S.withDecodingDefaultKey(Effect.succeed(emptyConfigSnapshotDiff))),
-    fileCount: S.Finite,
+    fileCount: S.Natural,
     files: S.Array(AiMetricsConfigSnapshotFile),
-    previousSnapshotId: S.optionalKey(S.String),
+    previousSnapshotId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sessionHash: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
@@ -519,7 +521,10 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
   $I.annote("AiMetricsConfigSnapshotResult", {
     description: "Config snapshot manifest used to attribute AI-agent metrics to repo guidance changes.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(AiMetricsConfigSnapshotResult));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AiMetricsConfigSnapshotResult));
+}
 
 /**
  * Typed failure raised while enumerating, reading, or persisting a config snapshot.
@@ -560,9 +565,6 @@ export class AiMetricsConfigSnapshotError extends S.TaggedError<AiMetricsConfigS
   })
 ) {}
 
-const encodeConfigSnapshotJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsConfigSnapshotResult));
-const decodeConfigSnapshotJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsConfigSnapshotResult));
-
 const byRelativePathAscending: Order.Order<AiMetricsConfigSnapshotFile> = Order.mapInput(
   Order.String,
   (file) => file.relativePath
@@ -571,15 +573,9 @@ const byRelativePathAscending: Order.Order<AiMetricsConfigSnapshotFile> = Order.
 const normalizeRepoPath = (pathApi: Path.Path, repoRoot: string, filePath: string): string =>
   pipe(pathApi.relative(repoRoot, filePath), Str.replace(/\\/gu, "/"));
 
-const isExcludedDirectoryName = (name: string): boolean =>
-  A.contains(EXCLUDED_DIR_NAMES as ReadonlyArray<string>, name);
+const isExcludedDirectoryName = S.is(ConfigSnapshotExcludedDirName);
 
-const isAgentDocName = (name: string): boolean => A.contains(AGENT_DOC_NAMES as ReadonlyArray<string>, name);
-
-const statOption = Effect.fn("AiMetrics.configSnapshot.statOption")(function* (pathName: string) {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* fs.stat(pathName).pipe(Effect.option);
-});
+const isAgentDocName = S.is(AgentDocName);
 
 interface ConfigSnapshotEnumeration {
   readonly excludedNestedRootPaths: ReadonlyArray<string>;
@@ -600,7 +596,7 @@ interface ConfigSnapshotRead {
   readonly truncationReason: O.Option<AiMetricsConfigSnapshotTruncationReason>;
 }
 
-const isSessionScopePath = (relativePath: string): boolean => A.contains(SESSION_SCOPE_PATHS, relativePath);
+const isSessionScopePath = S.is(SessionScopePath);
 
 const scopeFor = (relativePath: string): AiMetricsConfigScope =>
   isSessionScopePath(relativePath) ? AiMetricsConfigScope.Enum.session : AiMetricsConfigScope.Enum.baseline;
@@ -652,9 +648,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>)),
       A.sort(Order.String)
     );
-    for (const entry of entries) {
-      yield* walkEntry(currentPath, entry, depth, includeFile);
-    }
+    yield* Effect.forEach(entries, (entry) => walkEntry(currentPath, entry, depth, includeFile), { discard: true });
   });
 
   // Split out of `walk` so the per-entry decision — excluded name, nested repo root, or
@@ -687,9 +681,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   // worse than truncation: both are session-scope paths, so losing them silently changes the
   // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
   yield* walk(repoRoot, 0, isAgentDocName);
-  for (const rootName of CONFIG_ROOTS) {
-    yield* walk(pathApi.join(repoRoot, rootName), 0, () => true);
-  }
+  yield* Effect.forEach(CONFIG_ROOTS, (rootName) => walk(pathApi.join(repoRoot, rootName), 0, () => true), {
+    discard: true,
+  });
 
   return {
     excludedNestedRootPaths: pipe(yield* Ref.get(excludedRef), A.dedupe, A.sort(Order.String)),
@@ -705,48 +699,59 @@ const readSnapshotFiles = Effect.fn("AiMetrics.readConfigSnapshotFiles")(functio
 ): Effect.fn.Return<ConfigSnapshotRead, AiMetricsConfigSnapshotError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
-  let files = A.empty<ConfigSnapshotReadFile>();
-  let skippedOversizeFileCount = 0;
-  let totalBytes = 0;
-  let truncationReason = O.none<AiMetricsConfigSnapshotTruncationReason>();
-
-  for (const filePath of paths) {
-    const info = yield* fs.stat(filePath).pipe(
-      Effect.mapError((cause) =>
-        AiMetricsConfigSnapshotError.make({
-          cause,
-          message: "Failed to stat config snapshot file.",
-        })
-      )
-    );
-    const sizeBytes = globalThis.Number(info.size);
-    if (sizeBytes > budget.maxFileBytes) {
-      skippedOversizeFileCount = skippedOversizeFileCount + 1;
-      continue;
+  const candidates = yield* Effect.forEach(
+    paths,
+    Effect.fnUntraced(function* (filePath) {
+      const info = yield* fs
+        .stat(filePath)
+        .pipe(Effect.mapError((cause) => configSnapshotFailure("Failed to stat config snapshot file.", cause)));
+      return { filePath, sizeBytes: fileSizeBytes(info) };
+    }),
+    { concurrency: 16 }
+  );
+  const selected = A.reduce(
+    candidates,
+    {
+      included: A.empty<{ readonly filePath: string; readonly sizeBytes: number }>(),
+      skippedOversizeFileCount: 0,
+      totalBytes: 0,
+      truncationReason: O.none<AiMetricsConfigSnapshotTruncationReason>(),
+    },
+    (state, candidate) => {
+      if (O.isSome(state.truncationReason)) return state;
+      if (candidate.sizeBytes > budget.maxFileBytes) {
+        return { ...state, skippedOversizeFileCount: state.skippedOversizeFileCount + 1 };
+      }
+      if (state.totalBytes + candidate.sizeBytes > budget.maxTotalBytes) {
+        return {
+          ...state,
+          truncationReason: O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"]),
+        };
+      }
+      return {
+        ...state,
+        included: A.prepend(state.included, candidate),
+        totalBytes: state.totalBytes + candidate.sizeBytes,
+      };
     }
-    if (totalBytes + sizeBytes > budget.maxTotalBytes) {
-      truncationReason = O.orElse(truncationReason, () =>
-        O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"])
-      );
-      break;
-    }
-    const content = yield* fs.readFileString(filePath).pipe(
-      Effect.mapError((cause) =>
-        AiMetricsConfigSnapshotError.make({
-          cause,
-          message: "Failed to read config snapshot file.",
-        })
-      )
-    );
-    totalBytes = totalBytes + sizeBytes;
-    files = A.append(files, {
-      content,
-      relativePath: normalizeRepoPath(pathApi, repoRoot, filePath),
-      sizeBytes,
-    });
-  }
+  );
+  const files = yield* Effect.forEach(
+    A.reverse(selected.included),
+    Effect.fnUntraced(function* ({ filePath, sizeBytes }) {
+      const content = yield* fs
+        .readFileString(filePath)
+        .pipe(Effect.mapError((cause) => configSnapshotFailure("Failed to read config snapshot file.", cause)));
+      return { content, relativePath: normalizeRepoPath(pathApi, repoRoot, filePath), sizeBytes };
+    }),
+    { concurrency: 16 }
+  );
 
-  return { files, skippedOversizeFileCount, totalBytes, truncationReason };
+  return {
+    files,
+    skippedOversizeFileCount: selected.skippedOversizeFileCount,
+    totalBytes: selected.totalBytes,
+    truncationReason: selected.truncationReason,
+  };
 });
 
 const hashSnapshotFiles = Effect.fn("AiMetrics.hashConfigSnapshotFiles")(function* (
@@ -860,45 +865,45 @@ const changedPathsFor = (diff: AiMetricsConfigSnapshotDiff): ReadonlyArray<strin
     A.sort(Order.String)
   );
 
-const readPreviousSnapshot = Effect.fn("AiMetrics.readPreviousConfigSnapshot")(function* (
-  previousSnapshotPath: string | undefined
-) {
-  if (previousSnapshotPath === undefined) {
-    return O.none<AiMetricsConfigSnapshotResult>();
-  }
+const configSnapshotFailure = (message: string, cause: unknown): AiMetricsConfigSnapshotError =>
+  AiMetricsConfigSnapshotError.make({ cause, message });
 
+const readPreviousSnapshotAt = Effect.fn("AiMetrics.readPreviousConfigSnapshotAt")(function* (
+  previousSnapshotPath: string
+) {
   const fs = yield* FileSystem.FileSystem;
-  const exists = yield* fs.exists(previousSnapshotPath).pipe(
-    Effect.mapError((cause) =>
-      AiMetricsConfigSnapshotError.make({
-        cause,
-        message: "Failed to inspect previous AI metrics config snapshot artifact.",
-      })
-    )
-  );
+  const exists = yield* fs
+    .exists(previousSnapshotPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        configSnapshotFailure("Failed to inspect previous AI metrics config snapshot artifact.", cause)
+      )
+    );
   if (!exists) {
     return O.none<AiMetricsConfigSnapshotResult>();
   }
 
-  const content = yield* fs.readFileString(previousSnapshotPath).pipe(
-    Effect.mapError((cause) =>
-      AiMetricsConfigSnapshotError.make({
-        cause,
-        message: "Failed to read previous AI metrics config snapshot artifact.",
-      })
-    )
-  );
+  const content = yield* fs
+    .readFileString(previousSnapshotPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        configSnapshotFailure("Failed to read previous AI metrics config snapshot artifact.", cause)
+      )
+    );
 
-  return yield* decodeConfigSnapshotJson(content).pipe(
+  return yield* AiMetricsConfigSnapshotResult.decodeJsonEffect(content).pipe(
     Effect.map(O.some),
     Effect.mapError((cause) =>
-      AiMetricsConfigSnapshotError.make({
-        cause,
-        message: "Failed to decode previous AI metrics config snapshot artifact.",
-      })
+      configSnapshotFailure("Failed to decode previous AI metrics config snapshot artifact.", cause)
     )
   );
 });
+
+const readPreviousSnapshot = (previousSnapshotPath: O.Option<string>) =>
+  O.match(previousSnapshotPath, {
+    onNone: () => Effect.succeed(O.none<AiMetricsConfigSnapshotResult>()),
+    onSome: readPreviousSnapshotAt,
+  });
 
 /**
  * Build a deterministic, bounded snapshot of repo-owned agent-facing configuration.
@@ -989,24 +994,24 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
       skippedOversizeFileCount: read.skippedOversizeFileCount,
       totalBytes: read.totalBytes,
       truncated: O.isSome(truncationReason),
-      ...(O.isSome(truncationReason) ? { truncationReason: truncationReason.value } : {}),
+      truncationReason,
     });
 
     return AiMetricsConfigSnapshotResult.make({
       baselineHash,
       bounds,
-      excludedDirectoryNames: EXCLUDED_DIR_NAMES,
+      excludedDirectoryNames: ConfigSnapshotExcludedDirName.Options,
       diff,
       fileCount: A.length(files),
       files,
-      ...(O.isSome(previousSnapshotId) ? { previousSnapshotId: previousSnapshotId.value } : {}),
+      previousSnapshotId,
       sessionHash,
       snapshot: ConfigSnapshot.make({
         changedPaths,
         configHash: snapshotHash,
         includedPaths: relativePaths,
         label: input.label,
-        ...(O.isSome(previousSnapshotId) ? { previousSnapshotId: previousSnapshotId.value } : {}),
+        previousSnapshotId,
         snapshotId: `config-${snapshotHash}`,
       }),
       // The `write` stage is deliberately absent: this function writes nothing.
@@ -1128,39 +1133,33 @@ export const writeAiMetricsConfigSnapshotArtifacts = Effect.fn("AiMetrics.writeA
     const latestPath = pathApi.join(outputDir, "latest.json");
     const writerEntropy = yield* Random.nextIntBetween(0, 0xffffffff);
     const latestTmpPath = pathApi.join(outputDir, `latest.json.${writeStartedAt}-${writerEntropy.toString(16)}.tmp`);
-    yield* fs.makeDirectory(outputDir, { recursive: true }).pipe(
-      Effect.mapError((cause) =>
-        AiMetricsConfigSnapshotError.make({
-          cause,
-          message: "Failed to create AI metrics config snapshot artifact directory.",
-        })
-      )
-    );
-    yield* fs.writeFileString(manifestPath, content).pipe(
-      Effect.mapError((cause) =>
-        AiMetricsConfigSnapshotError.make({
-          cause,
-          message: "Failed to write AI metrics config snapshot manifest.",
-        })
-      )
-    );
+    yield* fs
+      .makeDirectory(outputDir, { recursive: true })
+      .pipe(
+        Effect.mapError((cause) =>
+          configSnapshotFailure("Failed to create AI metrics config snapshot artifact directory.", cause)
+        )
+      );
+    yield* fs
+      .writeFileString(manifestPath, content)
+      .pipe(
+        Effect.mapError((cause) => configSnapshotFailure("Failed to write AI metrics config snapshot manifest.", cause))
+      );
     if (commitLatest) {
-      yield* fs.writeFileString(latestTmpPath, content).pipe(
-        Effect.mapError((cause) =>
-          AiMetricsConfigSnapshotError.make({
-            cause,
-            message: "Failed to write AI metrics latest config snapshot temporary pointer.",
-          })
-        )
-      );
-      yield* fs.rename(latestTmpPath, latestPath).pipe(
-        Effect.mapError((cause) =>
-          AiMetricsConfigSnapshotError.make({
-            cause,
-            message: "Failed to promote AI metrics latest config snapshot pointer.",
-          })
-        )
-      );
+      yield* fs
+        .writeFileString(latestTmpPath, content)
+        .pipe(
+          Effect.mapError((cause) =>
+            configSnapshotFailure("Failed to write AI metrics latest config snapshot temporary pointer.", cause)
+          )
+        );
+      yield* fs
+        .rename(latestTmpPath, latestPath)
+        .pipe(
+          Effect.mapError((cause) =>
+            configSnapshotFailure("Failed to promote AI metrics latest config snapshot pointer.", cause)
+          )
+        );
     }
     const writeMillis = yield* elapsedSince(writeStartedAt);
     yield* Effect.annotateCurrentSpan({ "ai_metrics.config_snapshot.write_millis": writeMillis });
@@ -1220,13 +1219,8 @@ export const configSnapshotToJson: (
   result: AiMetricsConfigSnapshotResult
 ) => Effect.Effect<string, AiMetricsConfigSnapshotError> = Effect.fn("AiMetrics.configSnapshotToJson")(
   function* (result) {
-    return yield* encodeConfigSnapshotJson(result).pipe(
-      Effect.mapError((cause) =>
-        AiMetricsConfigSnapshotError.make({
-          cause,
-          message: "Failed to encode AI metrics config snapshot as JSON.",
-        })
-      )
+    return yield* AiMetricsConfigSnapshotResult.encodeJsonEffect(result).pipe(
+      Effect.mapError((cause) => configSnapshotFailure("Failed to encode AI metrics config snapshot as JSON.", cause))
     );
   }
 );

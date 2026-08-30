@@ -7,6 +7,22 @@ until they land here. Deferred questions get an entry too, marked DEFERRED
 with the reason.
 -->
 
+## 2026-08-26 — Amendment J ownership (cross-packet D24)
+
+**Question:** Where does packet-system-redesign Amendment J's next
+`@beep/skill-contract` kernel version get shaped?
+
+**Answer:** Reopen this exploration at `decompose`. Keep the completed
+`skill-contract-kernel` goal closed and leave the packet-convention migration
+independent. This packet decides whether the work becomes a new candidate or an
+explicit amendment to one of its later waves.
+
+**Rationale:** This exploration owns the existing kernel vocabulary and its QA
+judge consumer. Reusing that authority prevents a second certificate vocabulary
+and keeps migration mechanics from defining a cross-cutting evidence contract.
+The verdict/reach/envelope/apply-plan constraints are already fixed by
+packet-system-redesign D22–D24; only candidate decomposition remains open.
+
 ## 2026-08-13 — spine track
 
 **Question:** Which of the five candidate tracks (contract kernel, KG ingestion+eval, fleet

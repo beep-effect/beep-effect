@@ -108,14 +108,14 @@ const toExtractionError = (error: unknown): ExtractionError =>
 
 const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   runId: string,
-  tag: string,
+  _tag: string,
   overallProgress: number,
   extra: Record<string, unknown> = {}
 ) {
   const eventNumber = yield* Random.nextInt;
   const timestamp = DateTime.formatIso(yield* DateTime.now);
   return yield* ProgressEvent.decodeUnknownEffect({
-    _tag: tag,
+    _tag,
     eventId: `evt-${eventNumber}`,
     runId,
     timestamp,
@@ -144,12 +144,19 @@ const toExtractionParams = (
   });
 
 /**
- * Validates and represents make extraction entity handler values at runtime.
+ * Builds the Cluster RPC handlers for extract, cache lookup, cancel, and status.
  *
- * **Example** (Inspect make extraction entity handler)
+ * **Details**
+ *
+ * The returned effect acquires extraction, grounding, and LLM-control services,
+ * then yields idempotent `ExtractFromText`, `GetCachedResult`, `CancelExtraction`,
+ * and `GetExtractionStatus` handlers. {@link ExtractionEntityHandlerLayer} runs
+ * this constructor with `Effect.orDie`.
+ *
+ * **Example** (Construct the handler as a Cluster entity layer)
  *
  * ```ts
- * import { makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
+ * import { ExtractionEntityHandlerLayer, makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
  *
  * console.log(makeExtractionEntityHandler)
  * ```
@@ -491,14 +498,25 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
 });
 
 /**
- * Provides the Effect layer for extraction entity handler layer dependencies.
+ * Registers {@link makeExtractionEntityHandler} as the `KGExtractor` Cluster entity.
  *
- * **Example** (Inspect extraction entity handler layer)
+ * **Details**
+ *
+ * Handler construction is `orDie`'d at layer build time so a missing dependency
+ * fails fast rather than leaving a half-registered entity.
+ *
+ * **Example** (Wire the handler beside sqlite Cluster storage)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { ExtractionEntityHandlerLayer } from "@effect-ontology/Cluster/ExtractionEntityHandler"
+ * import { ClusterSqliteLive } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ExtractionEntityHandlerLayer)
+ * const wired = Layer.provide(
+ *   ExtractionEntityHandlerLayer,
+ *   ClusterSqliteLive({ filename: "output/cluster.db", runnerStorage: "memory" })
+ * )
+ * console.log(wired !== ExtractionEntityHandlerLayer) // true
  * ```
  *
  * @category layers

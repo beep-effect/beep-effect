@@ -37,13 +37,15 @@ type TypeId = typeof TypeId;
  *
  * **Gotchas**
  *
- * Effect's current existential is `VariantSchema.Field<any>` internally. A
- * concrete config is invariant and rejects valid literal variant records, so
- * this mirrors Effect's erased-field boundary rather than widening `@beep/effect-drizzle` data.
+ * Effect's current usable existential is `VariantSchema.Field<any>`. Its
+ * structural `Field.Any` marker omits `schemas` and `pipe`, while a concrete
+ * config is invariant and rejects valid literal variant records. This mirrors
+ * Effect's own erased-field boundary rather than widening `@beep/effect-drizzle` data.
  *
  * @category models
  * @since 0.0.0
  */
+// biome-ignore lint/suspicious/noExplicitAny: Effect uses Field<any> at invariant variant-field existential boundaries.
 export type AnySchema = Top | VariantSchema.Field<any>;
 
 /**

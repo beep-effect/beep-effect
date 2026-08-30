@@ -1,5 +1,6 @@
 /**
- * Utility Module Exports
+ * Idempotency, IRI, RDF, hashing, retrieval, similarity, and SQL helpers
+ * shared across effect-ontology.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -14,5 +15,6 @@ export * from "./Provenance.ts";
 export * from "./Rdf.ts";
 export * from "./Retrieval.ts";
 export * from "./Similarity.ts";
+export * from "./Sql.ts";
 export * from "./String.ts";
 export * from "./Text.ts";

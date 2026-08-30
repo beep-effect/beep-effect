@@ -1,5 +1,8 @@
 # Code Graph: From Visualization to Integration
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Source: https://www.falkordb.com/blog/code-graph/
 
 -

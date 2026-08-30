@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "m365-mcp",
     "title": "M365 MCP Server",

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "official-data-sync-foundation",
     "title": "Official Data Sync Foundation",
@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/official-data-sync-foundation",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 269,
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

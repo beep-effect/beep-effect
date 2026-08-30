@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "beep-ci-operational-ontology",
+    "title": "Beep CI Operational Ontology",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-27",
+    "updated": "2026-08-27"
+  }
+}

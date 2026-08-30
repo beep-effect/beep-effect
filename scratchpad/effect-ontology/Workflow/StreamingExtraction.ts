@@ -159,14 +159,17 @@ const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(functio
 });
 
 /**
- * Validates and represents make extraction workflow values at runtime.
+ * Constructs the 6-phase streaming extraction program (chunk, retrieve, type, scope, relate, merge).
  *
- * **Example** (Inspect make extraction workflow)
+ * **Example** (Construct the 6-phase workflow layer)
  *
  * ```ts
- * import { makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
+ * import { Layer } from "effect"
+ * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
+ * import { ExtractionWorkflowLive, makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
  *
- * console.log(makeExtractionWorkflow)
+ * const layer = Layer.effect(ExtractionWorkflow, makeExtractionWorkflow)
+ * console.log(layer !== ExtractionWorkflowLive) // true
  * ```
  *
  * @category constructors
@@ -799,26 +802,28 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
 });
 
 /**
- * ExtractionWorkflow Service
- *
- * Stream-based extraction workflow for large documents.
- * Implements the 6-phase pipeline: chunking, retrieval, entity extraction,
- * property scoping, relation extraction, and merge.
- *
- * @since 0.0.0
- * @category services
- */
-/**
  * ExtractionWorkflow Implementation Layer
  *
- * **Example** (Inspect extraction workflow live)
+ * **Gotchas**
+ *
+ * `OntologyService.Default` requires StorageService even though it is missing
+ * from that service's declared dependencies. This layer `provideMerge`s
+ * `StorageServiceLive` so construction does not leave a hole.
+ *
+ * **Example** (Provide the live 6-phase workflow)
  *
  * ```ts
- * import { ExtractionWorkflowLive } from "@effect-ontology/Workflow/StreamingExtraction"
+ * import { Layer } from "effect"
+ * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
+ * import { StorageServiceLive } from "@effect-ontology/Service/Storage"
+ * import { ExtractionWorkflowLive, makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
  *
- * console.log(ExtractionWorkflowLive)
+ * const constructed = Layer.effect(ExtractionWorkflow, makeExtractionWorkflow)
+ * console.log(ExtractionWorkflowLive !== constructed) // true
+ * console.log(ExtractionWorkflowLive !== StorageServiceLive) // true
  * ```
  *
+ * @see {@link ExtractionWorkflow} for the service contract defined in Service/ExtractionWorkflow.
  * @category layers
  * @since 0.0.0
  */
@@ -843,12 +848,12 @@ export const ExtractionWorkflowLive = Layer.effect(ExtractionWorkflow, makeExtra
  *
  * Alias for ExtractionWorkflowLive, following the Effect.Service convention.
  *
- * **Example** (Inspect extraction workflow default)
+ * **Example** (Alias the live extraction workflow layer)
  *
  * ```ts
- * import { ExtractionWorkflowDefault } from "@effect-ontology/Workflow/StreamingExtraction"
+ * import { ExtractionWorkflowDefault, ExtractionWorkflowLive } from "@effect-ontology/Workflow/StreamingExtraction"
  *
- * console.log(ExtractionWorkflowDefault)
+ * console.log(ExtractionWorkflowDefault === ExtractionWorkflowLive) // true
  * ```
  *
  * @category layers

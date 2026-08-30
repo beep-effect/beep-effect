@@ -8,7 +8,7 @@
     "next-devtools": {
       "type": "stdio",
       "command": "bunx",
-      "args": ["next-devtools-mcp@latest"]
+      "args": ["next-devtools-mcp@0.4.0"]
     },
     "serena": {
       "type": "stdio",

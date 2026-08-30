@@ -1,0 +1,9 @@
+# CQ-024: Under what resolved cache posture did each WorkUnit execution run (local-only, local-write-remote-read, or caller-controlled)?
+# Expected: non_empty | priority: should_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?exec ?posture WHERE {
+  ?exec rdf:type ciops:WorkUnitExecution ;
+        ciops:hasCachePosture ?posture .
+}

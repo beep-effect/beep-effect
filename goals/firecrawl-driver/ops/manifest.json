@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "firecrawl-driver",
     "title": "Firecrawl Driver",
@@ -9,6 +9,7 @@
     "packetAnchorDocument": "GOAL.md"
   },
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 210,
   "mission": "Implement @beep/firecrawl as a schema-first, Effect-first technical driver around the modern Firecrawl v2 SDK, including watcher streams, fake/live Layers, tests, docs, quality closure, PR babysitting, and Greptile 5/5 readiness.",
   "packetPath": "goals/firecrawl-driver",
   "completionGate": {

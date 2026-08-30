@@ -1,5 +1,8 @@
 # Lane 2: package registration blast-radius census
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Definitive prune list for a future `beep delete-package`. There is no
 `delete-package` command today (repo-wide search of `*.ts` / `*.md` / `*.json`
 returned zero hits).

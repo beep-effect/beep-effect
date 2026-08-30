@@ -5,18 +5,22 @@
  * @since 0.0.0
  */
 
-import { createHash, randomUUID } from "node:crypto";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
+import { Console, Crypto, DateTime, Effect, Encoding, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { commandTextForStep } from "../../../internal/repo-run/index.ts";
+import { concatBytes } from "../../../internal/cli/Bytes.ts";
+import {
+  commandTextForStep,
+  currentEffectiveUserIdOption,
+  isProcessPidAlive,
+  validatePrivateCoordinationDirectory,
+} from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
@@ -33,6 +37,8 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
+const textEncoder = new TextEncoder();
+const fingerprintSeparator = new Uint8Array([0]);
 
 class YeetLaneProofState extends S.Class<YeetLaneProofState>($I`YeetLaneProofState`)(
   {
@@ -276,18 +282,19 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const status = yield* runGitOutput(context.repoRoot, ["status", "--short"]);
   const unstagedDiff = yield* collectGitDiffBytes(context, ["HEAD"], "worktree");
   const stagedDiff = yield* collectGitDiffBytes(context, ["--cached"], "index");
-  return createHash("sha256")
-    .update(status)
-    .update("\0")
-    .update(unstagedDiff)
-    .update("\0")
-    .update(stagedDiff)
-    .digest("hex");
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest(
+      "SHA-256",
+      concatBytes([textEncoder.encode(status), fingerprintSeparator, unstagedDiff, fingerprintSeparator, stagedDiff])
+    )
+    .pipe(YeetCommandError.mapError("Failed to hash Yeet worktree fingerprint."));
+  return Encoding.encodeHex(digest);
 });
 
 /**
@@ -323,68 +330,25 @@ const proofCommandForSteps: (steps: ReadonlyArray<RepoPlanStep>) => string = flo
   A.join(" && ")
 );
 
-const hashText = (text: string): string => createHash("sha256").update(text).digest("hex");
+const hashText = Effect.fn("Yeet.hashText")(function* (
+  value: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", textEncoder.encode(value))
+    .pipe(YeetCommandError.mapError("Failed to hash Yeet proof command."));
+  return Encoding.encodeHex(digest);
+});
 
-const requireSafeProofCoordinator = (satisfied: boolean, message: string) =>
-  satisfied ? Effect.void : YeetCommandError.make({ message });
-
-const currentEffectiveUserId = (): O.Option<number> =>
-  pipe(
-    O.fromUndefinedOr(process.geteuid),
-    O.map((getEffectiveUserId) => getEffectiveUserId())
-  );
-
-const validateProofCoordinatorOwnership = Effect.fn("Yeet.validateProofCoordinatorOwnership")(function* (
-  directory: string,
-  info: FileSystem.File.Info,
-  effectiveUserId: number
-) {
-  const reportedOwner = O.match(info.uid, {
-    onNone: () => "no owner",
-    onSome: (owner) => `uid ${owner}`,
+// The directory invariants live in the shared coordination validator; the
+// label and error constructors keep every refusal message byte-identical.
+const validateProofCoordinatorDirectory = (directory: string, effectiveUserId: O.Option<number>) =>
+  validatePrivateCoordinationDirectory(directory, {
+    label: "Yeet proof lock directory",
+    effectiveUserId,
+    onViolation: (message) => YeetCommandError.make({ message }),
+    onStatError: YeetCommandError.new(`Failed to inspect Yeet proof lock directory ${directory}.`),
   });
-  yield* requireSafeProofCoordinator(
-    O.exists(info.uid, (owner) => owner === effectiveUserId),
-    `Yeet proof lock directory ${directory} reported ${reportedOwner}; expected effective uid ${effectiveUserId}. Refusing to use it.`
-  );
-});
-
-const validateProofCoordinatorMode = Effect.fn("Yeet.validateProofCoordinatorMode")(function* (
-  directory: string,
-  info: FileSystem.File.Info
-) {
-  const mode = info.mode & 0o777;
-  yield* requireSafeProofCoordinator(
-    mode === 0o700,
-    `Yeet proof lock directory ${directory} has mode ${mode.toString(8)}; expected 0700. Refusing to use it.`
-  );
-});
-
-const validateProofCoordinatorDirectory = Effect.fn("Yeet.validateProofCoordinatorDirectory")(function* (
-  directory: string,
-  effectiveUserId: O.Option<number>
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const symbolicLinkTarget = yield* fs.readLink(directory).pipe(Effect.option);
-  const info = yield* fs
-    .stat(directory)
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Yeet proof lock directory ${directory}.`)));
-
-  yield* requireSafeProofCoordinator(
-    O.isNone(symbolicLinkTarget),
-    `Yeet proof lock directory ${directory} is a symbolic link. Refusing to use it.`
-  );
-  yield* requireSafeProofCoordinator(
-    info.type === "Directory",
-    `Yeet proof lock directory ${directory} is not a directory. Refusing to use it.`
-  );
-  yield* validateProofCoordinatorMode(directory, info);
-
-  yield* O.match(effectiveUserId, {
-    onNone: () => Effect.void,
-    onSome: (userId) => validateProofCoordinatorOwnership(directory, info, userId),
-  });
-});
 
 /**
  * Validate a proof coordinator directory through the production filesystem boundary.
@@ -410,7 +374,7 @@ export const validateProofCoordinatorDirectoryForTesting = Effect.fn(
 )(function* (directory: string, effectiveUserIdOverride?: O.Option<number>) {
   yield* validateProofCoordinatorDirectory(
     directory,
-    pipe(O.fromUndefinedOr(effectiveUserIdOverride), O.getOrElse(currentEffectiveUserId))
+    pipe(O.fromUndefinedOr(effectiveUserIdOverride), O.getOrElse(currentEffectiveUserIdOption))
   );
 });
 
@@ -421,20 +385,24 @@ const ensureProofCoordinatorDirectory = Effect.fn("Yeet.ensureProofCoordinatorDi
   yield* fs
     .makeDirectory(directory, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet proof lock directory ${directory}.`)));
-  yield* validateProofCoordinatorDirectory(directory, currentEffectiveUserId());
+  yield* validateProofCoordinatorDirectory(directory, currentEffectiveUserIdOption());
 });
 
-const laneProofStateForStep = (step: RepoPlanStep, diffFingerprint: string, verifiedAt: string): YeetLaneProofState => {
+const laneProofStateForStep = Effect.fn("Yeet.laneProofStateForStep")(function* (
+  step: RepoPlanStep,
+  diffFingerprint: string,
+  verifiedAt: string
+) {
   const commandText = commandTextForStep(step);
   return YeetLaneProofState.make({
-    commandHash: hashText(commandText),
+    commandHash: yield* hashText(commandText),
     commandText,
     diffFingerprint,
     label: step.label,
     stepId: step.id,
     verifiedAt,
   });
-};
+});
 
 /**
  * Proof-lock state schema exposed for lock-disposition tests.
@@ -464,16 +432,6 @@ export const YeetProofLockStateForTesting = YeetProofLockState;
 const decodeProofLockState = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockState));
 const decodeProofLockStateV2 = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockStateV2));
 const decodeProofLockReapClaim = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockReapClaim));
-
-const isPidAlive = (pid: number): Effect.Effect<boolean> =>
-  Effect.sync(() => {
-    try {
-      process.kill(pid, 0);
-      return true;
-    } catch (error) {
-      return P.hasProperty(error, "code") && error.code === "EPERM";
-    }
-  });
 
 const proofLockDisposition = (
   state: O.Option<YeetProofLockState>,
@@ -537,13 +495,29 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
   );
 });
 
-const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
-  `${lockPath}.reap-${hashText(observedText)}.claim`;
+const proofLockReapClaimPath = Effect.fn("Yeet.proofLockReapClaimPath")(function* (
+  lockPath: string,
+  observedText: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  return `${lockPath}.reap-${yield* hashText(observedText)}.claim`;
+});
 
-const proofLockReapClaimTombstonePath = (claimPath: string, observedText: string): string =>
-  `${claimPath}.reap-${hashText(observedText)}.claim`;
+const proofLockReapClaimTombstonePath = Effect.fn("Yeet.proofLockReapClaimTombstonePath")(function* (
+  claimPath: string,
+  observedText: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  return `${claimPath}.reap-${yield* hashText(observedText)}.claim`;
+});
 
-const proofLockReapPath = (lockPath: string): string => `${lockPath}.reap-${process.pid}-${randomUUID()}`;
+const proofLockReapPath = Effect.fn("Yeet.proofLockReapPath")(function* (
+  lockPath: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const uuid = yield* crypto.randomUUIDv4.pipe(
+    YeetCommandError.mapError("Failed to generate Yeet proof-lock reap identifier.")
+  );
+  return `${lockPath}.reap-${process.pid}-${uuid}`;
+});
 
 const legacyProofLockRefusal = (lockPath: string, state: YeetProofLockStateV2): YeetCommandError =>
   YeetCommandError.make({
@@ -571,9 +545,9 @@ const tryRecoverObservedProofLockReapClaim = Effect.fn("Yeet.tryRecoverObservedP
   claimPath: string,
   claimText: string,
   observedClaimText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const tombstonePath = proofLockReapClaimTombstonePath(claimPath, observedClaimText);
+  const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, observedClaimText);
   if (!(yield* tryClaimProofLockExclusive(tombstonePath, claimText))) {
     const tombstoneText = yield* readProofCoordinationFile(
       tombstonePath,
@@ -594,7 +568,7 @@ const tryRecoverObservedProofLockReapClaim = Effect.fn("Yeet.tryRecoverObservedP
         exitCode: 1,
       });
     }
-    if (yield* isPidAlive(tombstoneClaim.value.pid)) {
+    if (yield* isProcessPidAlive(tombstoneClaim.value.pid)) {
       return false;
     }
     return yield* YeetCommandError.make({
@@ -660,7 +634,7 @@ export const tryRecoverObservedProofLockReapClaimForTesting = tryRecoverObserved
 const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(function* (
   claimPath: string,
   claimText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   if (yield* tryClaimProofLockExclusive(claimPath, claimText)) {
     return true;
   }
@@ -684,7 +658,7 @@ const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(
       exitCode: 1,
     });
   }
-  if (yield* isPidAlive(observedClaim.value.pid)) {
+  if (yield* isProcessPidAlive(observedClaim.value.pid)) {
     return false;
   }
   return yield* tryRecoverObservedProofLockReapClaim(claimPath, claimText, observedClaimText.value);
@@ -697,9 +671,9 @@ const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(
 const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(function* (
   lockPath: string,
   observedText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const claimPath = proofLockReapClaimPath(lockPath, observedText);
+  const claimPath = yield* proofLockReapClaimPath(lockPath, observedText);
   const claimText = `${yield* renderJson(
     YeetProofLockReapClaim.make({
       schemaVersion: "yeet-proof-lock-reap-claim/v1",
@@ -719,7 +693,7 @@ const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(func
       return false;
     }
 
-    const reapPath = proofLockReapPath(lockPath);
+    const reapPath = yield* proofLockReapPath(lockPath);
     const renamed = yield* fs.rename(lockPath, reapPath).pipe(
       Effect.as(true),
       Effect.catchTag("PlatformError", (error) =>
@@ -741,7 +715,7 @@ const tryReclaimStaleProofLock = Effect.fn("Yeet.tryReclaimStaleProofLock")(func
   lockPath: string,
   observedText: string,
   replacementText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   if (!(yield* tryMoveObservedProofLock(lockPath, observedText))) {
     return false;
   }
@@ -791,7 +765,7 @@ const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* 
     state,
     O.match({
       onNone: () => Effect.succeed(false),
-      onSome: (owner) => isPidAlive(owner.pid),
+      onSome: (owner) => isProcessPidAlive(owner.pid),
     })
   );
   return { text, state, legacyState, ownerAlive };
@@ -801,7 +775,7 @@ const tryReplaceStaleProofLock = Effect.fn("Yeet.tryReplaceStaleProofLock")(func
   lockPath: string,
   staleText: string,
   lockText: string
-): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   if (yield* tryReclaimStaleProofLock(lockPath, staleText, lockText)) {
     return true;
   }
@@ -827,11 +801,19 @@ const activeProofLockRefusal = (lockPath: string, state: O.Option<YeetProofLockS
   });
 };
 
-const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(function* (
+interface FullProofLockContention {
+  readonly lease: O.Option<YeetProofLockLease>;
+  readonly observed: ObservedProofLockState;
+}
+
+// The single contention ladder shared by the fail-fast and queue-style
+// acquisition paths: refuse legacy, reap a decodable-dead owner, and report
+// the final observation when the lock stays held.
+const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore")(function* (
   lockPath: string,
   lockText: string,
   lease: YeetProofLockLease
-): Effect.fn.Return<YeetProofLockLease, YeetCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   let observed = yield* observeProofLockState(lockPath);
   const disposition = proofLockDisposition(observed.state, observed.ownerAlive, O.isSome(observed.legacyState));
   if (ProofLockDisposition.is["refuse-legacy"](disposition) && O.isSome(observed.legacyState)) {
@@ -843,7 +825,7 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
       `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid} is not running, started ${observed.state.value.startedAt})`
     );
     if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
-      return lease;
+      return { lease: O.some(lease), observed };
     }
     observed = yield* observeProofLockState(lockPath);
   }
@@ -851,7 +833,19 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
   if (O.isSome(observed.legacyState)) {
     return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
   }
-  return yield* activeProofLockRefusal(lockPath, observed.state);
+  return { lease: O.none(), observed };
+});
+
+const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(function* (
+  lockPath: string,
+  lockText: string,
+  lease: YeetProofLockLease
+): Effect.fn.Return<YeetProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  const contention = yield* contendForFullProofLockCore(lockPath, lockText, lease);
+  return yield* O.match(contention.lease, {
+    onNone: () => activeProofLockRefusal(lockPath, contention.observed.state),
+    onSome: Effect.succeed,
+  });
 });
 
 /**
@@ -900,10 +894,39 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
 ): Effect.fn.Return<
   YeetProofLockLease,
   YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const prepared = yield* prepareFullProofLockLease(context, proofSteps);
+  if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
+    return prepared.lease;
+  }
+  return yield* contendForFullProofLock(prepared.lockPath, prepared.lockText, prepared.lease);
+});
+
+interface PreparedFullProofLockLease {
+  readonly lease: YeetProofLockLease;
+  readonly lockPath: string;
+  readonly lockText: string;
+}
+
+const prepareFullProofLockLease = Effect.fn("Yeet.prepareFullProofLockLease")(function* (
+  context: RepoRunContext,
+  proofSteps: ReadonlyArray<RepoPlanStep>
+): Effect.fn.Return<
+  PreparedFullProofLockLease,
+  YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const path = yield* Path.Path;
   const lockPath = yield* proofLockPathForContext(context);
+  return yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
+});
+
+const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt")(function* (
+  lockPath: string,
+  context: RepoRunContext,
+  proofSteps: ReadonlyArray<RepoPlanStep>
+): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
   yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
   const lockState = YeetProofLockState.make({
     schemaVersion: "yeet-proof-lock/v3",
@@ -915,12 +938,120 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
   });
   const lockText = `${yield* renderJson(lockState)}\n`;
-  const lease = YeetProofLockLease.make({ lockPath, lockText });
+  return { lockPath, lockText, lease: YeetProofLockLease.make({ lockPath, lockText }) };
+});
 
-  if (yield* tryClaimProofLockExclusive(lockPath, lockText)) {
-    return lease;
+// Same disposition ladder as contendForFullProofLock, except an actively held
+// lock yields `None` for queue-style callers instead of failing.
+// Legacy and unreadable locks keep failing closed with the v3 messages.
+// Queue-style variant of the ladder: a garbage lock file still fails closed,
+// while a held or vanished lock reports `None` so the contender keeps waiting.
+const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofLock")(function* (
+  lockPath: string,
+  lockText: string,
+  lease: YeetProofLockLease
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  const contention = yield* contendForFullProofLockCore(lockPath, lockText, lease);
+  const unreadable =
+    O.isNone(contention.lease) && O.isNone(contention.observed.state) && Str.isNonEmpty(contention.observed.text);
+  if (unreadable) {
+    return yield* activeProofLockRefusal(lockPath, contention.observed.state);
   }
-  return yield* contendForFullProofLock(lockPath, lockText, lease);
+  return contention.lease;
+});
+
+/**
+ * Attempt one non-blocking acquisition of the full-proof coordinator.
+ *
+ * Succeeds with `None` while a live sibling owns the lock, so queue-style
+ * callers (the machine-wide admission scheduler) can keep waiting with
+ * visible progress instead of failing. Legacy v2 and unreadable lock files
+ * still fail closed exactly like {@link acquireFullProofLock}.
+ *
+ * **Example** (Attempt an acquisition without blocking)
+ *
+ * ```ts
+ * import { acquireFullProofLockOrObserve, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/closeout",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const step = RepoPlanStep.make({
+ *   args: ["run", "check"],
+ *   command: "bun",
+ *   cwd: ".",
+ *   id: "full:check",
+ *   label: "full check",
+ *   mutability: "readonly",
+ *   phase: "full",
+ *   resume: "fingerprint-match",
+ *   scope: "repo"
+ * })
+ *
+ * const attempt = acquireFullProofLockOrObserve(context, [step]).pipe(
+ *   Effect.map((acquisition) => O.isOption(acquisition))
+ * )
+ * console.log(Effect.isEffect(attempt)) // true
+ * ```
+ *
+ * @param context - Repo context whose origin identifies sibling checkouts.
+ * @param proofSteps - Full-proof steps used to record the owner command.
+ * @returns The acquired lease, or `None` while a live sibling owns the lock.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObserve")(function* (
+  context: RepoRunContext,
+  proofSteps: ReadonlyArray<RepoPlanStep>
+): Effect.fn.Return<
+  O.Option<YeetProofLockLease>,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const lockPath = yield* proofLockPathForContext(context);
+  return yield* acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps);
+});
+
+/**
+ * {@link acquireFullProofLockOrObserve} against an already-resolved lock path.
+ *
+ * Queue-style callers resolve the git origin identity once per run and retry
+ * acquisition every scheduler tick without re-spawning git.
+ *
+ * **Example** (Reference the resolved-path acquisition)
+ *
+ * ```ts
+ * import { acquireFullProofLockOrObserveAtPath } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireFullProofLockOrObserveAtPath) // "function"
+ * ```
+ *
+ * @param lockPath - Resolved coordinator lock path for this origin.
+ * @param context - Repo context recorded as the prospective owner.
+ * @param proofSteps - Full-proof steps used to record the owner command.
+ * @returns The acquired lease, or `None` while a live sibling owns the lock.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullProofLockOrObserveAtPath")(function* (
+  lockPath: string,
+  context: RepoRunContext,
+  proofSteps: ReadonlyArray<RepoPlanStep>
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const prepared = yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
+  if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
+    return O.some(prepared.lease);
+  }
+  return yield* contendOrObserveFullProofLock(prepared.lockPath, prepared.lockText, prepared.lease);
 });
 
 /**
@@ -1025,12 +1156,17 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const artifactDir = yield* artifactDirForContext(context);
   const statePath = yield* runStatePathForContext(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const laneProofs = yield* Effect.forEach(
+    proofSteps,
+    (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt),
+    { concurrency: "unbounded" }
+  );
   const state = YeetRunState.make({
     schemaVersion: "yeet-run-state/v1",
     artifactDir,
@@ -1039,7 +1175,7 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
     commitSha: yield* currentCommitSha(context),
     diffFingerprint,
     head: context.head,
-    laneProofs: A.map(proofSteps, (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt)),
+    laneProofs,
     proofCommand: proofCommandForSteps(proofSteps),
     proofTier: tier,
     runId: runIdForContext(context),
@@ -1207,7 +1343,7 @@ export const assertReusableVerifiedState = Effect.fn("Yeet.assertReusableVerifie
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const state = yield* loadVerifiedState(context);
   const expectedCommitSha = yield* currentCommitSha(context);

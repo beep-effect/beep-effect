@@ -19,20 +19,19 @@ import { ErrorMessage } from "../Domain/Error/Base.ts";
 const $I = $ScratchpadId.create("effect-ontology/Runtime/Shutdown");
 
 /**
- * Shutdown configuration
+ * Maximum duration allowed for graceful in-flight request draining.
  *
- *
- * **Example** (Use the ShutdownConfig contract)
+ * **Example** (Construct a 30-second drain config)
  *
  * ```ts
- * import type { ShutdownConfig } from "@effect-ontology/Runtime/Shutdown"
+ * import { Duration } from "effect"
+ * import { ShutdownConfig } from "@effect-ontology/Runtime/Shutdown"
  *
- * const acceptsShutdownConfig = (_value: ShutdownConfig): void => undefined
- *
- * console.log(acceptsShutdownConfig)
+ * const config = ShutdownConfig.make({ drainTimeout: Duration.seconds(30) })
+ * console.log(Duration.toMillis(config.drainTimeout)) // 30000
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ShutdownConfig extends S.Class<ShutdownConfig>($I`ShutdownConfig`)(
@@ -47,12 +46,13 @@ export class ShutdownConfig extends S.Class<ShutdownConfig>($I`ShutdownConfig`)(
 /**
  * Default shutdown configuration
  *
- * **Example** (Inspect default shutdown config)
+ * **Example** (Read the default drain timeout)
  *
  * ```ts
+ * import { Duration } from "effect"
  * import { DEFAULT_SHUTDOWN_CONFIG } from "@effect-ontology/Runtime/Shutdown"
  *
- * console.log(DEFAULT_SHUTDOWN_CONFIG)
+ * console.log(Duration.toMillis(DEFAULT_SHUTDOWN_CONFIG.drainTimeout)) // 30000
  * ```
  *
  * @category constants
@@ -63,12 +63,15 @@ export const DEFAULT_SHUTDOWN_CONFIG = ShutdownConfig.make({});
 /**
  * Error thrown when request is rejected during shutdown
  *
- * **Example** (Inspect shutdown error)
+ * **Example** (Construct a reject-during-shutdown failure)
  *
  * ```ts
  * import { ShutdownError } from "@effect-ontology/Runtime/Shutdown"
  *
- * console.log(ShutdownError)
+ * const error = ShutdownError.make({
+ *   message: "Service is shutting down, not accepting new requests"
+ * })
+ * console.log(error.message)
  * ```
  *
  * @category errors
@@ -87,41 +90,34 @@ export class ShutdownError extends S.TaggedError<ShutdownError>($I`ShutdownError
 ) {}
 
 /**
- * Create a graceful shutdown handler
+ * Tracks in-flight requests and rejects new work after graceful shutdown starts.
  *
- * Tracks in-flight requests and provides drain functionality
- * for clean pod termination.
+ * **Details**
  *
- * @param config - Shutdown configuration
- * @returns Effect providing the shutdown handler
+ * `trackRequest` increments the in-flight counter, runs the request, then
+ * decrements it. After `initiateShutdown`, later `trackRequest` calls fail with
+ * {@link ShutdownError}. `drain` waits until the counter is zero or
+ * {@link DEFAULT_SHUTDOWN_CONFIG} times out.
  *
- * **Example** (Use ShutdownService)
- * ```ts
- * const shutdown = yield* makeGracefulShutdown()
- *
- * // Wrap all requests
- * const result = yield* shutdown.trackRequest(myEffect)
- *
- * // On SIGTERM
- * yield* shutdown.initiateShutdown()
- * yield* shutdown.drain()
- * ```
- *
- * @since 0.0.0
- * @category constructors
- */
-/**
- * Shutdown Service
- *
- * **Example** (Inspect shutdown service)
+ * **Example** (Reject a request after shutdown starts)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ShutdownService } from "@effect-ontology/Runtime/Shutdown"
  *
- * console.log(ShutdownService)
+ * const rejected = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const shutdown = yield* ShutdownService
+ *     yield* shutdown.initiateShutdown
+ *     return yield* shutdown.trackRequest(Effect.succeed("ok")).pipe(
+ *       Effect.catchTag("ShutdownError", (error) => Effect.succeed(error.message))
+ *     )
+ *   }).pipe(Effect.provide(ShutdownService.Default))
+ * )
+ * console.log(rejected)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class ShutdownService extends Context.Service<ShutdownService>()($I`ShutdownService`, {

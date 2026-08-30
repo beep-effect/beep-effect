@@ -1,13 +1,28 @@
 import {
   appendYeetInboxRow,
+  appendYeetInboxRowOnce,
+  describeYeetInboxRow,
   renderYeetInboxRowLine,
   YEET_INBOX_SCHEMA_VERSION,
+  YeetBaseDriftCapsule,
+  YeetBaseDriftRow,
   YeetCheckFailedRow,
   YeetFailureCapsule,
   YeetInboxRowJson,
+  YeetLocalShardFailedRow,
+  YeetLocalShardFailureCapsule,
+  YeetReviewThreadCapsule,
+  YeetReviewThreadRow,
+  YeetSiblingCollisionCapsule,
+  YeetSiblingCollisionRow,
+  yeetBaseDriftRowId,
   yeetInboxAckPath,
+  yeetInboxExpectedRowId,
   yeetInboxPaths,
   yeetInboxRowId,
+  yeetLocalShardFailedRowId,
+  yeetReviewThreadRowId,
+  yeetSiblingCollisionRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -17,6 +32,7 @@ import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as Str from "effect/String";
 
 const AT = "2026-08-17T00:00:00Z";
@@ -34,12 +50,12 @@ const capsule = (overrides: Partial<Parameters<typeof YeetFailureCapsule.make>[0
     ...overrides,
   });
 
-const row = (subject: YeetFailureCapsule): YeetCheckFailedRow =>
+const row = (subject: YeetFailureCapsule, severity: "P0" | "P1" = "P0"): YeetCheckFailedRow =>
   YeetCheckFailedRow.make({
     capsule: subject,
     checkout: "/repo",
     id: yeetInboxRowId(subject),
-    severity: "P0",
+    severity,
     ts: AT,
   });
 
@@ -80,6 +96,74 @@ describe("yeetInboxRowId", () => {
 
     expect(spaced).not.toBe(starred);
   });
+
+  it("identifies and describes every inbox row variant", () => {
+    const siblingCapsule = YeetSiblingCollisionCapsule.make({
+      contendedPaths: ["b.ts", "a.ts"],
+      ownerCheckout: "/fleet/a",
+      siblingCheckout: "/fleet/b",
+    });
+    const reviewCapsule = YeetReviewThreadCapsule.make({
+      headSha: "abc123def456",
+      link: null,
+      prNumber: 751,
+      threadId: "PRRT_abc",
+    });
+    const driftCapsule = YeetBaseDriftCapsule.make({
+      base: "origin/main",
+      headSha: "abc123def456",
+      prNumber: 751,
+    });
+    const localCapsule = YeetLocalShardFailureCapsule.make({
+      command: "bun run check",
+      exitCode: 1,
+      headSha: "abc123def456",
+      shard: "Check",
+    });
+    const rows = [
+      YeetSiblingCollisionRow.make({
+        capsule: siblingCapsule,
+        checkout: "/fleet/a",
+        id: yeetSiblingCollisionRowId(siblingCapsule),
+        severity: "P0",
+        ts: AT,
+      }),
+      YeetReviewThreadRow.make({
+        capsule: reviewCapsule,
+        checkout: "/repo",
+        id: yeetReviewThreadRowId(reviewCapsule),
+        severity: "P1",
+        ts: AT,
+      }),
+      YeetBaseDriftRow.make({
+        capsule: driftCapsule,
+        checkout: "/repo",
+        id: yeetBaseDriftRowId(driftCapsule),
+        severity: "P2",
+        ts: AT,
+      }),
+      YeetLocalShardFailedRow.make({
+        capsule: localCapsule,
+        checkout: "/repo",
+        id: yeetLocalShardFailedRowId(localCapsule),
+        severity: "P0",
+        ts: AT,
+      }),
+    ];
+
+    expect(yeetSiblingCollisionRowId(siblingCapsule)).toBe(
+      yeetSiblingCollisionRowId(
+        YeetSiblingCollisionCapsule.make({ ...siblingCapsule, contendedPaths: ["a.ts", "b.ts"] })
+      )
+    );
+    expect(A.map(rows, yeetInboxExpectedRowId)).toStrictEqual(A.map(rows, (subject) => subject.id));
+    expect(A.map(rows, describeYeetInboxRow)).toStrictEqual([
+      "sibling collision with /fleet/b (2 path(s))",
+      "review thread PRRT_abc (pr #751 @ abc123d)",
+      "base drift from origin/main (pr #751 @ abc123d)",
+      "local shard Check exited 1 @ abc123d",
+    ]);
+  });
 });
 
 describe("yeetInboxPaths", () => {
@@ -88,6 +172,7 @@ describe("yeetInboxPaths", () => {
       const paths = yield* yeetInboxPaths("/repo");
 
       expect(paths.dir).toBe("/repo/.beep/inbox");
+      expect(paths.activePath).toBe("/repo/.beep/inbox/active.ndjson");
       expect(paths.failuresPath).toBe("/repo/.beep/inbox/failures.ndjson");
       expect(paths.acksDir).toBe("/repo/.beep/inbox/acks");
     }).pipe(provideScopedLayer(NodePath.layer))
@@ -139,7 +224,97 @@ describe("appendYeetInboxRow", () => {
         expect(A.length(lines)).toBe(2);
 
         const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
-        expect(A.map(decoded, (entry) => entry.capsule.lane)).toEqual(["Check / Coverage", "Check / Lint"]);
+        expect(
+          A.getSomes(
+            A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
+          )
+        ).toEqual(["Check / Coverage", "Check / Lint"]);
+
+        const activeText = yield* fs.readFileString(paths.activePath);
+        const activeRows = yield* Effect.forEach(A.filter(Str.split(activeText, "\n"), Str.isNonEmpty), (line) =>
+          YeetInboxRowJson.decode(line)
+        );
+        expect(A.map(activeRows, (entry) => entry.id)).toEqual(expect.arrayContaining([first.id, second.id]));
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("appends a row once and reports a duplicate without rewriting it", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const subject = row(capsule());
+        expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(true);
+        expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(false);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("falls back to history when active-index version inspection fails", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(appendYeetInboxRowOnce("/repo", row(capsule())));
+      expect(failure._tag).toBe("YeetCommandError");
+    }).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          NodePath.layer,
+          FileSystem.layerNoop({
+            exists: (path) =>
+              Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "InboxTest",
+                  method: "exists",
+                  pathOrDescriptor: path,
+                })
+              ),
+          })
+        )
+      )
+    )
+  );
+
+  it.live("fails closed and cleans temporary state when the active index is symlinked", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* yeetInboxPaths(root);
+        yield* fs.makeDirectory(paths.dir, { recursive: true });
+        yield* fs.writeFileString(paths.failuresPath, "");
+        yield* fs.symlink(paths.failuresPath, paths.activePath);
+
+        const failure = yield* Effect.flip(appendYeetInboxRow(root, row(capsule())));
+
+        expect(failure.message).toContain("Failed to update the active inbox index");
+        const names = yield* fs.readDirectory(paths.dir);
+        expect(A.some(names, Str.startsWith(".active-row-"))).toBe(false);
+        expect(A.some(names, Str.startsWith(".active-index-"))).toBe(false);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("keeps every unresolved P0 while bounding lower-severity history", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* yeetInboxPaths(root);
+        yield* fs.makeDirectory(paths.dir, { recursive: true });
+        const protectedP0 = row(capsule({ lane: "Check / Protected P0" }));
+        const historical = [
+          protectedP0,
+          ...A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1")),
+        ];
+        const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine);
+        yield* fs.writeFileString(paths.failuresPath, `${A.join(lines, "\n")}\n`);
+        yield* fs.writeFileString(paths.activePath, `${lines.at(-1) ?? ""}\n`);
+
+        const current = row(capsule({ lane: "Check / Current" }));
+        yield* appendYeetInboxRow(root, current);
+
+        const activeText = yield* fs.readFileString(paths.activePath);
+        const activeLines = A.filter(Str.split(activeText, "\n"), Str.isNonEmpty);
+        expect(activeLines).toHaveLength(2_048);
+        expect(A.some(activeLines, Str.includes(current.id))).toBe(true);
+        expect(A.some(activeLines, Str.includes(protectedP0.id))).toBe(true);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -175,7 +350,11 @@ describe("appendYeetInboxRow", () => {
         expect(A.length(lines)).toBe(2);
 
         const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
-        expect(A.map(decoded, (entry) => entry.capsule.lane)).toEqual(["Check / Coverage", "Check / Lint"]);
+        expect(
+          A.getSomes(
+            A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
+          )
+        ).toEqual(["Check / Coverage", "Check / Lint"]);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );

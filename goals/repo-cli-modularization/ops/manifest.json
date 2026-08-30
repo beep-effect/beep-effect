@@ -1,15 +1,15 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "repo-cli-modularization",
     "title": "@beep/repo-cli Modularization",
-    "status": "completed-retained",
+    "status": "paused",
     "created": "2026-07-07",
     "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-modularization",
-  "lifecycle": "completed-retained",
+  "lifecycle": "paused",
   "reflectionRequired": true,
   "mission": "Modularize the ~92k-LOC repo CLI: split the 27 files >=1000 LOC along natural seams into canonical role files, extract a shared internal substrate (subprocess, git, JSON/JSONC, ratchet, gh, schema kits), bring touched command groups to full topology compliance, and raise JSDoc on touched files to the .patterns rubric.",
   "currentSourceOfTruth": "SPEC.md",
@@ -130,5 +130,8 @@
     "statement": "Not achieved until the campaign branch ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --message -> monitor).",
     "grandfathered": false
   },
-  "statusNote": "legacy status: complete"
+  "statusNote": "Implementation waves and final local verification are complete, but delivery PR #339 was closed after overlapping standards work landed in #326. Resume for current-main reconciliation, authoritative proof, and a replacement delivery PR.",
+  "blockedBy": [
+    "No merged or mergeable delivery PR exists for the reconciled campaign work."
+  ]
 }

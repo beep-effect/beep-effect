@@ -32,6 +32,13 @@ import { generateObjectWithRetry } from "./LlmWithRetry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
 const noConfidence: () => O.Option<Confidence> = O.none;
+const isGroundedDecision = (decision: GroundingDecision): boolean => GroundingDecision.guards.Supported(decision);
+const groundingDecisionConfidence = (decision: GroundingDecision): O.Option<Confidence> =>
+  GroundingDecision.match(decision, {
+    NotEvaluated: noConfidence,
+    Supported: ({ confidence }) => O.some(confidence),
+    Rejected: ({ confidence }) => O.some(confidence),
+  });
 
 /**
  * Verification result schema returned by LLM (single relation)
@@ -112,7 +119,6 @@ const BatchEntityVerification = S.Struct({
 /**
  * Input required to verify an entity
  *
- *
  * **Example** (Create an entity verification request)
  *
  * ```ts
@@ -147,7 +153,6 @@ export class EntityVerificationInput extends S.Class<EntityVerificationInput>($I
 
 /**
  * Entity grounding result
- *
  *
  * **Example** (Represent a supported entity)
  *
@@ -209,7 +214,7 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
    * @returns `true` only when the schema-owned decision is `Supported`.
    */
   get grounded(): boolean {
-    return GroundingDecision.guards.Supported(this.decision);
+    return isGroundedDecision(this.decision);
   }
 
   /**
@@ -238,11 +243,7 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
    * @returns The verifier confidence, or `None` when grounding was not evaluated.
    */
   get confidence(): O.Option<Confidence> {
-    return GroundingDecision.match(this.decision, {
-      NotEvaluated: noConfidence,
-      Supported: ({ confidence }) => O.some(confidence),
-      Rejected: ({ confidence }) => O.some(confidence),
-    });
+    return groundingDecisionConfidence(this.decision);
   }
 }
 
@@ -279,7 +280,6 @@ export class RelationEntityContext extends S.Class<RelationEntityContext>($I`Rel
 
 /**
  * Input required to verify a relation triple
- *
  *
  * **Example** (Create a relation verification request)
  *
@@ -339,21 +339,35 @@ const relationObjectPrompt = (
     ],
   });
 
+const relationPromptLabels = ({ object, predicate, relation, subject }: RelationVerificationInput) => ({
+  predicateLabel: O.getOrElse(
+    O.map(predicate, (value) => value.label),
+    () => relation.predicate
+  ),
+  subjectLabel: O.match(subject, {
+    onNone: () => relation.subjectId,
+    onSome: (value) => `${value.mention} (${value.entityId})`,
+  }),
+  object: relationObjectPrompt(relation, object),
+});
+
 /**
  * Build prompt for single relation verification
  *
  * @internal
  */
 const buildGrounderPrompt = ({ context, object, predicate, relation, subject }: RelationVerificationInput): string => {
-  const predicateLabel = O.getOrElse(
-    O.map(predicate, (value) => value.label),
-    () => relation.predicate
-  );
-  const subjectLabel = O.match(subject, {
-    onNone: () => relation.subjectId,
-    onSome: (value) => `${value.mention} (${value.entityId})`,
+  const {
+    object: [objectLabel, objectDetail],
+    predicateLabel,
+    subjectLabel,
+  } = relationPromptLabels({
+    context,
+    object,
+    predicate,
+    relation,
+    subject,
   });
-  const [objectLabel, objectDetail] = relationObjectPrompt(relation, object);
 
   return `You are a verifier that determines whether a triple is grounded in the provided context.
 
@@ -376,16 +390,11 @@ Instructions:
  * @internal
  */
 const formatRelationForBatch = (input: RelationVerificationInput, index: number): string => {
-  const { object, predicate, relation, subject } = input;
-  const predicateLabel = O.getOrElse(
-    O.map(predicate, (value) => value.label),
-    () => relation.predicate
-  );
-  const subjectLabel = O.match(subject, {
-    onNone: () => relation.subjectId,
-    onSome: (value) => `${value.mention} (${value.entityId})`,
-  });
-  const [objectLabel] = relationObjectPrompt(relation, object);
+  const {
+    object: [objectLabel],
+    predicateLabel,
+    subjectLabel,
+  } = relationPromptLabels(input);
 
   return `${index}. <${subjectLabel}, ${predicateLabel}, ${objectLabel}>`;
 };
@@ -482,7 +491,6 @@ Instructions:
 /**
  * Grounder verification result
  *
- *
  * **Example** (Represent an unevaluated relation)
  *
  * ```ts
@@ -540,7 +548,7 @@ export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
    * @returns `true` only when the schema-owned decision is `Supported`.
    */
   get grounded(): boolean {
-    return GroundingDecision.guards.Supported(this.decision);
+    return isGroundedDecision(this.decision);
   }
 
   /**
@@ -568,11 +576,7 @@ export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
    * @returns The verifier confidence, or `None` when grounding was not evaluated.
    */
   get confidence(): O.Option<Confidence> {
-    return GroundingDecision.match(this.decision, {
-      NotEvaluated: noConfidence,
-      Supported: ({ confidence }) => O.some(confidence),
-      Rejected: ({ confidence }) => O.some(confidence),
-    });
+    return groundingDecisionConfidence(this.decision);
   }
 }
 
@@ -723,13 +727,18 @@ const DEFAULT_BATCH_SIZE = 5;
  * Provides relation verification via secondary LLM pass.
  * Supports both single relation and batched verification.
  *
- * **Example** (Inspect the default grounder layer)
+ * **Example** (Compose relation verification)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { Grounder } from "@effect-ontology/Service/Grounder"
  *
- * console.log(Layer.isLayer(Grounder.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const grounder = yield* Grounder
+ *   return grounder
+ * }).pipe(Effect.provide(Grounder.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

@@ -13,16 +13,23 @@ schema-decoded identity, and a test fails when a checked-in file drifts from its
 | `@beep/brand/react` | `BeepMark` and `BeepWordmark` components | React 19 |
 | `@beep/brand/styles/brand.css` | Generated Tailwind v4 `@theme` plus `.dark` scheme | Stylesheet |
 | `@beep/brand/styles/bridge.css` | Opt-in mapping of `@beep/ui` shadcn tokens onto the brand scale | Stylesheet |
-| `@beep/brand/styles/fonts.css` | Self-hosted Inter Variable and JetBrains Mono Variable | Stylesheet |
 | `@beep/brand/assets/*` | `mark.svg`, `favicon.svg`, `wordmark.svg`, `wordmark-light.svg`, and the PNG icon set | Static files |
 
 ## Usage
 
-Stylesheet order matters: fonts first, then `@beep/ui`, then the brand theme, then the
-bridge so its `var()` references resolve.
+Import Fontsource from the application entry point. This lets the bundler resolve and
+fingerprint each font file relative to its package.
+
+```ts
+import "@fontsource-variable/inter"
+import "@fontsource-variable/jetbrains-mono"
+import "./styles/globals.css"
+```
+
+Within the application stylesheet, import `@beep/ui` first, then the brand theme and
+bridge. The bridge comes last so its `var()` references resolve.
 
 ```css
-@import "@beep/brand/styles/fonts.css";
 @import "@beep/ui/styles/globals.css";
 @import "@beep/brand/styles/brand.css";
 @import "@beep/brand/styles/bridge.css";

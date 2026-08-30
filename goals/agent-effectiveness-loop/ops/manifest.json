@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "agent-effectiveness-loop",
     "title": "Agent Effectiveness Loop",
@@ -85,6 +85,9 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "reflectionRequired": false,
-  "statusNote": "legacy status: phase1-complete"
+  "reflectionRequired": true,
+  "statusNote": "legacy status: phase1-complete",
+  "lifecycle": "completed-retained",
+  "mergedPullRequest": 168,
+  "packetPath": "goals/agent-effectiveness-loop"
 }

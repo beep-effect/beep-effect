@@ -10,7 +10,7 @@ exists), scaffolded through
 `packages/drivers/anthropic/src/Anthropic.errors.ts`,
 `packages/drivers/anthropic/src/Anthropic.service.ts`; the Anthropic-specific
 `Anthropic.repair.ts` has no OpenAI counterpart) and composes `@effect/ai-openai`
-4.0.0-rc.111 (already a root dependency) behind typed config and errors:
+4.0.0-rc.112 (already a root dependency) behind typed config and errors:
 
 - `OpenAiLive`: `OpenAiClient.layerConfig({ apiKey })` over `FetchHttpClient`,
   the key read from Effect `Config` as a redacted value.
@@ -100,7 +100,7 @@ Higher sources outrank lower sources when they conflict.
 ### Composition facts (verified in the Effect reference checkout)
 
 Cite `.repos/effect/packages/ai/openai/src` (Effect-TS/effect main at
-`02a5146d69`) when writing or reviewing the service file:
+`dd99ab007e3352761187dae330d52f65feeff7c0`) when writing or reviewing the service file:
 
 - `OpenAiEmbeddingModel.layer({ model, config? })` returns
   `Layer<EmbeddingModel, never, OpenAiClient>` and does **not** provide
@@ -139,7 +139,7 @@ Cite `.repos/effect/packages/ai/openai/src` (Effect-TS/effect main at
 
 - Schema-first: options are `S.Class` schemas with `SchemaUtils.withKeyDefaults`
   for defaults and `PosInt` for dimensions; any literal domain uses
-  `LiteralKit` from `@beep/schema`; identity via the generated `$OpenAiId`
+  `LiteralKit` from `@beep/schema`; identity via the generated `$OpenaiId`
   composer.
 - Effect v4 only; validate every API against the reference checkout before
   writing. Generators use `Effect.fn` / `Effect.fnUntraced`; `HashMap` /
@@ -175,8 +175,8 @@ Cite `.repos/effect/packages/ai/openai/src` (Effect-TS/effect main at
       `LanguageModel.LanguageModel`.
 - [ ] The env-driven Live Layers resolve `AI_OPENAI_MODEL` and
       `AI_OPENAI_EMBEDDING_MODEL` with the pinned defaults as fallback.
-- [ ] Every export carries JSDoc with a titled `**Example**`; `bun run docgen:local`
-      is green.
+- [ ] Every export carries JSDoc with a titled `**Example**`; the required
+      `bun run docgen:local -- --full` new-workspace proof is green.
 - [ ] A changeset naming `@beep/openai` is present.
 - [ ] `bun run beep yeet verify` is green, including the new-package governance
       gates.
@@ -191,7 +191,7 @@ Cite `.repos/effect/packages/ai/openai/src` (Effect-TS/effect main at
 | Whitespace | `git diff --check -- goals/openai-driver` | Passes |
 | Goals index and doctor | `bun run beep goals index --check` and `bun run beep goals doctor` | Passes |
 | Package tests | `bun run --cwd <scaffolded path> test` | Green; Dimensions and LanguageModel tests present |
-| Docgen | `bun run docgen:local` | Green |
+| Docgen | `bun run docgen:local -- --full` | Green; new-workspace global inputs require the full mode |
 | Full proof | `bun run beep yeet verify` | Green |
 | Completion gate | `bun run beep yeet monitor` | `merge-ready: yes` |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at P4 |
@@ -218,7 +218,8 @@ Cite `.repos/effect/packages/ai/openai/src` (Effect-TS/effect main at
 | D3 | Layer factories return Layers that still require `OpenAiClient`; `OpenAiLive` satisfies it, and the env-driven `*Live` convenience Layers bake `OpenAiLive` in (R = never, E = ConfigError, as `AnthropicLanguageModelLive` does). This is what lets tests provide a stubbed `HttpClient` under `OpenAiClient.layer`. | This packet (S3-rev names the surface; the split is the test requirement) |
 | D4 | Dimensions is an explicit `PosInt` option with no env default. | BRIEF rabbit hole 6; shared-schema B4 hazard |
 | D5 | The errors module ships only with a live raiser. The boundary's error vocabulary is `Config.ConfigError` (key resolution) and `AiError.AiError` (provider); if P1 finds no driver-owned failure, document that instead of exporting a vacuous tagged error. | This packet; `Anthropic.errors.ts` exists for `repair.ts` only |
-| D6 | Default model ids are pinned at P0 from the reference `Model` unions and recorded here. | This packet |
+| D6 | Pin `gpt-4o-mini` for language and `text-embedding-3-small` for embeddings. Both are explicit members used by the current upstream model tests. | Effect reference `OpenAiLanguageModel.test.ts` and `OpenAiEmbeddingModel.test.ts` |
+| D7 | Use the root catalog's `@effect/ai-openai` 4.0.0-rc.112 and Effect reference `dd99ab007e`; both preserve the packet's rc.111 composition contract. | P0 current-state verification, 2026-08-27 |
 
 ## Exception Ledger
 

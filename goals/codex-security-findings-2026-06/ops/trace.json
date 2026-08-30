@@ -1,0 +1,37 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 1,
+    "furthestStage": "P1",
+    "issues": [],
+    "packet": "codex-security-findings-2026-06",
+    "resumeStage": "P1",
+    "revision": 1,
+    "root": "goals",
+    "status": "reference",
+    "tip": {
+      "id": "070042f64119b8824460f8719ed7b7401734a8871cd56bf96b0fac7bc4a18f85",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "070042f64119b8824460f8719ed7b7401734a8871cd56bf96b0fac7bc4a18f85",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "ordinal": 1,
+        "stage": "P1",
+        "status": "reference",
+        "type": "packet-created"
+      },
+      "id": "070042f64119b8824460f8719ed7b7401734a8871cd56bf96b0fac7bc4a18f85",
+      "seq": 1
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "jsdoc-worker-eval",
     "title": "JSDoc Worker Eval",
@@ -119,6 +119,8 @@
     "grandfathered": true,
     "grandfatheredNote": "Completion predates the 2026-06-30 PR-mergeable gate (lifecycle reports P0-P6 implemented, evidence-complete); not reopened."
   },
-  "reflectionRequired": false,
-  "statusNote": "legacy status: p0-p6-implemented-runpod-10-packet-evidence-complete"
+  "reflectionRequired": true,
+  "statusNote": "legacy status: p0-p6-implemented-runpod-10-packet-evidence-complete",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/jsdoc-worker-eval"
 }

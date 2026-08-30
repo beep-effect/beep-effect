@@ -11,6 +11,14 @@ full rounds with zero unwaived findings**.
 Started: 2026-07-11. Branch: `feat/professional-desktop-improvements`.
 Plan of record: `~/.claude/plans/i-want-you-to-peaceful-aurora.md`.
 
+## Launch
+
+```text
+/goal follow the instructions in goals/professional-desktop-adversarial-qa/GOAL.md
+```
+
+`GOAL.md` is the compact launcher. This README remains the campaign contract.
+
 ## Locked decisions
 
 | Decision | Value |

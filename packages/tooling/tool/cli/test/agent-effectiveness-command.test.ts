@@ -10,7 +10,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, pipe, Runtime } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, pipe, Result, Runtime } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -23,10 +23,18 @@ const decodeAnnotationCheckReport = S.decodeUnknownEffect(S.fromJsonString(Agent
 const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
 const decodePhoenixSyncResult = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const decodePromptBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
-const encodeDoctorReport = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
-const encodeAnnotationCheckReport = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
-const encodePhoenixSyncResult = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
-const encodePromptBundle = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
+const decodeDoctorReportResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessDoctorReport));
+const decodeAnnotationCheckReportResult = S.decodeUnknownResult(
+  S.fromJsonString(AgentEffectivenessAnnotationCheckReport)
+);
+const decodePhoenixSyncResultResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
+const decodePromptBundleResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessPromptBundle));
+const encodeDoctorReportResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessDoctorReport));
+const encodeAnnotationCheckReportResult = S.encodeUnknownResult(
+  S.fromJsonString(AgentEffectivenessAnnotationCheckReport)
+);
+const encodePhoenixSyncResultResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
+const encodePromptBundleResult = S.encodeUnknownResult(S.fromJsonString(AgentEffectivenessPromptBundle));
 const DoctorReportArbitrary = S.toArbitrary(AgentEffectivenessDoctorReport)(fc);
 const AnnotationCheckReportArbitrary = S.toArbitrary(AgentEffectivenessAnnotationCheckReport)(fc);
 const PhoenixSyncResultArbitrary = S.toArbitrary(AgentEffectivenessPhoenixSyncResult)(fc);
@@ -112,25 +120,29 @@ describe("agent-effectiveness command", () => {
         PhoenixSyncResultArbitrary,
         PromptBundleArbitrary,
         (doctorReport, annotationCheckReport, phoenixSyncResult, promptBundle) => {
-          const encodedDoctorReport = Effect.runSync(encodeDoctorReport(doctorReport));
-          const decodedDoctorReport = Effect.runSync(decodeDoctorReport(encodedDoctorReport));
-          expect(Effect.runSync(encodeDoctorReport(decodedDoctorReport))).toBe(encodedDoctorReport);
+          const encodedDoctorReport = Result.getOrThrow(encodeDoctorReportResult(doctorReport));
+          const decodedDoctorReport = Result.getOrThrow(decodeDoctorReportResult(encodedDoctorReport));
+          expect(Result.getOrThrow(encodeDoctorReportResult(decodedDoctorReport))).toBe(encodedDoctorReport);
 
-          const encodedAnnotationCheckReport = Effect.runSync(encodeAnnotationCheckReport(annotationCheckReport));
-          const decodedAnnotationCheckReport = Effect.runSync(
-            decodeAnnotationCheckReport(encodedAnnotationCheckReport)
+          const encodedAnnotationCheckReport = Result.getOrThrow(
+            encodeAnnotationCheckReportResult(annotationCheckReport)
           );
-          expect(Effect.runSync(encodeAnnotationCheckReport(decodedAnnotationCheckReport))).toBe(
+          const decodedAnnotationCheckReport = Result.getOrThrow(
+            decodeAnnotationCheckReportResult(encodedAnnotationCheckReport)
+          );
+          expect(Result.getOrThrow(encodeAnnotationCheckReportResult(decodedAnnotationCheckReport))).toBe(
             encodedAnnotationCheckReport
           );
 
-          const encodedPhoenixSyncResult = Effect.runSync(encodePhoenixSyncResult(phoenixSyncResult));
-          const decodedPhoenixSyncResult = Effect.runSync(decodePhoenixSyncResult(encodedPhoenixSyncResult));
-          expect(Effect.runSync(encodePhoenixSyncResult(decodedPhoenixSyncResult))).toBe(encodedPhoenixSyncResult);
+          const encodedPhoenixSyncResult = Result.getOrThrow(encodePhoenixSyncResultResult(phoenixSyncResult));
+          const decodedPhoenixSyncResult = Result.getOrThrow(decodePhoenixSyncResultResult(encodedPhoenixSyncResult));
+          expect(Result.getOrThrow(encodePhoenixSyncResultResult(decodedPhoenixSyncResult))).toBe(
+            encodedPhoenixSyncResult
+          );
 
-          const encodedPromptBundle = Effect.runSync(encodePromptBundle(promptBundle));
-          const decodedPromptBundle = Effect.runSync(decodePromptBundle(encodedPromptBundle));
-          expect(Effect.runSync(encodePromptBundle(decodedPromptBundle))).toBe(encodedPromptBundle);
+          const encodedPromptBundle = Result.getOrThrow(encodePromptBundleResult(promptBundle));
+          const decodedPromptBundle = Result.getOrThrow(decodePromptBundleResult(encodedPromptBundle));
+          expect(Result.getOrThrow(encodePromptBundleResult(decodedPromptBundle))).toBe(encodedPromptBundle);
         }
       ),
       fcRuns(25)

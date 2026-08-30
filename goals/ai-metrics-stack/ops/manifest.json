@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "ai-metrics-stack",
     "title": "AI Metrics Stack",
@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/ai-metrics-stack",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 647,
   "reflectionRequired": true,
   "currentSourceOfTruth": "SPEC.md",
   "currentTargetPhase": null,

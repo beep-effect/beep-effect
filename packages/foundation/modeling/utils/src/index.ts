@@ -139,6 +139,21 @@ export * as FileSystem from "./FileSystem.ts";
  */
 export * from "./GlobalValue.ts";
 /**
+ * Host process platform and architecture references.
+ *
+ * **Example** (Read the current platform)
+ *
+ * ```ts
+ * import { currentHostPlatform } from "@beep/utils"
+ *
+ * console.log(typeof currentHostPlatform) // "string"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./HostProcess.ts";
+/**
  * HTML escaping helpers.
  *
  * **Example** (Escape HTML special characters)

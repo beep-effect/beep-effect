@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/harness-hygiene-mechanical",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 408,
   "mission": "Delete the four zero-signal skills, evict volatile state from AGENTS.md's cache prefix, add the three agent-requested laws - mechanical, evidence-cited edits only.",
   "executionCapable": true,
   "reflectionRequired": true,

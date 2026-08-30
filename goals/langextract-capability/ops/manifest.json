@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "langextract-capability",
     "title": "LangExtract Capability",
@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/langextract-capability",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 265,
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",

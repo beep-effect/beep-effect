@@ -68,14 +68,19 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
 import { SchemaUtils } from "@beep/schema";
-import { Clock, DateTime, Effect, flow, Path, pipe } from "effect";
+import * as O from "@beep/utils/Option";
+import { Cause, Clock, DateTime, Effect, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
-import { RepoRunContext, runRepoCommandCapture, safeOriginBranchFromBase } from "../../../internal/repo-run/index.ts";
+import {
+  RepoRunContext,
+  runRepoCommandCapture,
+  runTmpfsReap,
+  safeOriginBranchFromBase,
+} from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
@@ -404,6 +409,14 @@ const endStatePlanStep = (state: SweepGitState): SweepPlanStep =>
     requiresOperator: false,
   });
 
+const tmpfsWorktreesPlanStep = (): SweepPlanStep =>
+  SweepPlanStep.make({
+    id: "tmpfs-worktrees",
+    action: "inspect TMPDIR for idle Git worktrees owned by the current repository",
+    preconditions: [],
+    requiresOperator: false,
+  });
+
 /**
  * Turn observed git state into the plan a sweep would execute.
  *
@@ -486,6 +499,7 @@ export const buildSweepPlan: {
         deleteRemoteBranchPlanStep(state),
         lockfileInstallPlanStep(state),
         endStatePlanStep(state),
+        tmpfsWorktreesPlanStep(),
       ],
     })
 );
@@ -1101,11 +1115,83 @@ const runEndStateStep = (
         )
       );
 
+/**
+ * Reap the current repository's idle tmpfs-resident Git worktrees.
+ *
+ * Lists this checkout's registered worktrees, hands the ones under the
+ * temporary root to the tmpfs janitor's `git-worktree` class, and reports the
+ * outcome in sweep-step shape. The janitor keeps ownership of liveness,
+ * cleanliness, age, and removal semantics.
+ *
+ * **Example** (Build the sweep step effect)
+ *
+ * ```ts
+ * import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runTmpfsWorktreesStep("/tmp/example-repo"))) // true
+ * ```
+ *
+ * @param cwd - Repository whose registered worktrees are inspected.
+ * @param tmpRoot - Optional temporary-root override, primarily for fixtures.
+ * @returns The executed/skipped outcome for the sweep report.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(function* (
+  cwd: string,
+  tmpRoot?: string
+): Effect.fn.Return<
+  SweepStepOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const probe = yield* captureGit(cwd, ["worktree", "list", "--porcelain"]);
+  if (probeUnreliable(probe)) {
+    return SweepStepSkipped.make({
+      reason: `${worktreeProbeCommand} failed or was truncated: ${probeFailureText(probe)}`,
+    });
+  }
+  const worktreePaths = A.map(parseWorktreeList(probe.output), (entry) => entry.path);
+  return yield* runTmpfsReap({
+    apply: true,
+    classes: ["git-worktree"],
+    gitWorktreePaths: worktreePaths,
+    ...O.getSomesStruct({ tmpRoot: O.fromUndefinedOr(tmpRoot) }),
+  }).pipe(
+    Effect.matchCause({
+      onFailure: (cause): SweepStepOutcome =>
+        SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${firstLine(Cause.pretty(cause))}` }),
+      onSuccess: (report): SweepStepOutcome => {
+        if (report.reapedCount > 0) {
+          return SweepStepExecuted.make({
+            detail: O.some(
+              `reaped ${report.reapedCount} idle tmpfs worktree(s), reclaimed ${report.reclaimedBytes} bytes`
+            ),
+          });
+        }
+        if (!A.isReadonlyArrayEmpty(report.warnings)) {
+          return SweepStepSkipped.make({ reason: A.join(report.warnings, "; ") });
+        }
+        return SweepStepSkipped.make({
+          reason: A.isReadonlyArrayEmpty(report.candidates)
+            ? "no current-repo Git worktrees are under TMPDIR"
+            : "no current-repo TMPDIR worktrees passed the conjunctive idleness test",
+        });
+      },
+    })
+  );
+});
+
 const performSweepStep = (
   context: RepoRunContext,
   state: SweepGitState,
   planStep: SweepPlanStep
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<
+  SweepStepOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> =>
   SweepStepId.$match(planStep.id, {
     "fetch-prune": () => runCommandStep("git", ["fetch", "--prune", "origin"], context.repoRoot, planStep.action),
     "ff-main": () =>
@@ -1139,13 +1225,18 @@ const performSweepStep = (
       ),
     "lockfile-install": () => runLockfileInstallStep(state, context.repoRoot, planStep.action),
     "end-state": () => runEndStateStep(state, context.repoRoot, planStep.action),
+    "tmpfs-worktrees": () => runTmpfsWorktreesStep(context.repoRoot),
   });
 
 const runSweepStep = Effect.fn("Yeet.runSweepStep")(function* (
   context: RepoRunContext,
   state: SweepGitState,
   planStep: SweepPlanStep
-): Effect.fn.Return<SweepReportStep, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  SweepReportStep,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const startedAt = yield* Clock.currentTimeMillis;
   const blocked = sweepStepBlockers(planStep);
   const outcome = A.isReadonlyArrayEmpty(blocked)

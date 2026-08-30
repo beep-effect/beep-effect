@@ -58,7 +58,7 @@ const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
  * console.log(conflict.property) // "name"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
@@ -318,14 +318,34 @@ const selectBestTypes = (
  * This is a pure function suitable for `Stream.runFold` reduction.
  * The merge is associative and has an identity element (empty graph).
  *
- * **Example** (Use mergeGraphs)
+ * **Example** (Merge two graphs that share an entity id)
  *
  * ```ts
- * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { IRI } from "@beep/rdf"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { mergeGraphs } from "@effect-ontology/Workflow/Merge"
  *
- * const merged = mergeGraphs(KnowledgeGraph.make({}), KnowledgeGraph.make({}))
- * console.log(merged.entities.length) // 0
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada_lovelace"),
+ *   mention: "Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")],
+ *   attributes: { name: "Ada" }
+ * })
+ * const merged = mergeGraphs(
+ *   KnowledgeGraph.make({ entities: [ada] }),
+ *   KnowledgeGraph.make({
+ *     entities: [
+ *       Entity.make({
+ *         id: EntityId.make("ada_lovelace"),
+ *         mention: "Ada Lovelace",
+ *         types: [IRI.make("https://schema.org/Person")],
+ *         attributes: { name: "Ada Lovelace" }
+ *       })
+ *     ]
+ *   })
+ * )
+ * console.log(merged.entities.length) // 1
  * ```
  *
  * @param a - First graph
@@ -344,14 +364,31 @@ export const mergeGraphs = dual2(mergeGraphData);
  * Returns both the merged graph and a list of conflicts detected during merging.
  * Useful for UI review tools and quality assurance.
  *
- * **Example** (Merge two empty graphs without conflicts)
+ * **Example** (Record a name conflict on a shared entity)
  *
  * ```ts
- * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { IRI } from "@beep/rdf"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { mergeGraphsWithConflicts } from "@effect-ontology/Workflow/Merge"
  *
- * const [, conflicts] = mergeGraphsWithConflicts(KnowledgeGraph.make({}), KnowledgeGraph.make({}))
- * console.log(conflicts.length) // 0
+ * const left = Entity.make({
+ *   id: EntityId.make("ada_lovelace"),
+ *   mention: "Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")],
+ *   attributes: { name: "Ada" }
+ * })
+ * const right = Entity.make({
+ *   id: EntityId.make("ada_lovelace"),
+ *   mention: "Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")],
+ *   attributes: { name: "Augusta" }
+ * })
+ * const [, conflicts] = mergeGraphsWithConflicts(
+ *   KnowledgeGraph.make({ entities: [left] }),
+ *   KnowledgeGraph.make({ entities: [right] })
+ * )
+ * console.log(conflicts[0]?.property) // "name"
  * ```
  *
  * @param a - First graph

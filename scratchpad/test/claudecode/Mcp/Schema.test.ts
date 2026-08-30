@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for the `Mcp.McpServerConfig` discriminated union and the
  * `Mcp.McpJsonFile` + `Mcp.loadJson` pair.
@@ -90,7 +89,7 @@ describe("McpServerConfig — stdio", () => {
       const server = yield* decodeServer({
         type: "stdio",
         command: "node",
-        args: ["./server.js", "--port", "3000"],
+        args: ["./server.ts", "--port", "3000"],
         env: {
           NODE_ENV: "production",
           API_KEY: "secret",
@@ -100,14 +99,14 @@ describe("McpServerConfig — stdio", () => {
       expect(server).toMatchObject({
         type: O.some("stdio"),
         command: "node",
-        args: O.some(["./server.js", "--port", "3000"]),
+        args: O.some(["./server.ts", "--port", "3000"]),
         env: O.some({ NODE_ENV: "production", API_KEY: "secret" }),
         timeout: O.some(600000),
       });
       expect(yield* encodeServer(server)).toEqual({
         type: "stdio",
         command: "node",
-        args: ["./server.js", "--port", "3000"],
+        args: ["./server.ts", "--port", "3000"],
         env: { NODE_ENV: "production", API_KEY: "secret" },
         timeout: 600000,
       });
@@ -584,3 +583,4 @@ describe("Mcp.toClaudeCodeJson", () => {
     })
   );
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

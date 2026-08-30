@@ -37,20 +37,21 @@ const DeadLetterMessage = S.Struct({
 // =============================================================================
 
 /**
- * Published message result
+ * Cloud Pub/Sub acknowledgement identifying the published message and topic.
  *
- *
- * **Example** (Use the PublishResult contract)
+ * **Example** (Record a published message)
  *
  * ```ts
- * import type { PublishResult } from "@effect-ontology/Service/PubSubClient"
+ * import { PublishResult } from "@effect-ontology/Service/PubSubClient"
  *
- * const acceptsPublishResult = (_value: PublishResult): void => undefined
- *
- * console.log(acceptsPublishResult)
+ * const result = PublishResult.make({
+ *   messageId: "msg-1",
+ *   topicName: "ontology-events"
+ * })
+ * console.log(result.messageId) // "msg-1"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class PublishResult extends S.Class<PublishResult>($I`PublishResult`)(
@@ -64,10 +65,15 @@ export class PublishResult extends S.Class<PublishResult>($I`PublishResult`)(
 ) {}
 
 /**
- * Received message from subscription
+ * Received message handle from a subscription.
  *
+ * **Details**
  *
- * @category type-level
+ * This remains a behavioral contract rather than a data schema because `ack`
+ * and `nack` are live effects tied to the underlying Pub/Sub lease. The
+ * serializable message payload is decoded separately at each consumer boundary.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface ReceivedMessage {
@@ -80,39 +86,74 @@ export interface ReceivedMessage {
 }
 
 /**
- * Pub/Sub client configuration
+ * Schema for project, topic, and subscription identifiers consumed by the Pub/Sub client.
  *
+ * **Gotchas**
  *
- * **Example** (Use the PubSubClientConfig contract)
+ * The schema carries the `Schema` suffix because {@link PubSubClientConfig}
+ * is the long-standing environment-backed `Config` value in the value namespace.
+ *
+ * **Example** (Validate Pub/Sub identifiers)
  *
  * ```ts
- * import type { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
+ * import { PubSubClientConfigSchema } from "@effect-ontology/Service/PubSubClient"
+ * import * as S from "effect/Schema"
  *
- * const acceptsPubSubClientConfig = (_value: PubSubClientConfig): void => undefined
- *
- * console.log(acceptsPubSubClientConfig)
+ * const config = S.decodeUnknownSync(PubSubClientConfigSchema)({
+ *   projectId: "effect-ontology",
+ *   eventsTopicId: "ontology-events",
+ *   jobsTopicId: "ontology-jobs",
+ *   jobsSubscriptionId: "ontology-jobs-push",
+ *   dlqTopicId: "ontology-jobs-dlq"
+ * })
+ * console.log(config.projectId) // "effect-ontology"
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PubSubClientConfigSchema = S.Struct({
+  projectId: S.String,
+  eventsTopicId: S.String,
+  jobsTopicId: S.String,
+  jobsSubscriptionId: S.String,
+  dlqTopicId: S.String,
+}).pipe(
+  $I.annoteSchema("PubSubClientConfigSchema", {
+    description: "Validated project, topic, subscription, and dead-letter identifiers for Cloud Pub/Sub.",
+  })
+);
+
+/**
+ * Decoded value produced by {@link PubSubClientConfigSchema}.
+ *
+ * @see {@link PubSubClientConfigSchema} for the runtime configuration schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PubSubClientConfigSchema = typeof PubSubClientConfigSchema.Type;
+
+/**
+ * Runtime Pub/Sub configuration decoded by {@link PubSubClientConfigSchema}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface PubSubClientConfig {
-  readonly projectId: string;
-  readonly eventsTopicId: string;
-  readonly jobsTopicId: string;
-  readonly jobsSubscriptionId: string;
-  readonly dlqTopicId: string;
-}
+export type PubSubClientConfig = PubSubClientConfigSchema;
 
 // =============================================================================
 // Service Interface
 // =============================================================================
 
 /**
- * PubSubClient service interface
+ * Behavioral contract implemented by the Pub/Sub client.
  *
+ * **Details**
  *
- * @category type-level
+ * The methods publish and acknowledge external messages through live effects;
+ * only the configuration payload is schema-backed.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface PubSubClientMethods {
@@ -161,9 +202,15 @@ export interface PubSubClientMethods {
  * **Example** (Inspect pub sub client)
  *
  * ```ts
- * import { PubSubClient } from "@effect-ontology/Service/PubSubClient"
+ * import { Effect } from "effect"
+ * import { PubSubClient, PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClient)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* PubSubClient
+ *   return client
+ * }).pipe(Effect.provide(PubSubClientDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -176,20 +223,33 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
 // =============================================================================
 
 /**
- * PubSub configuration from environment
+ * Environment-backed Pub/Sub project, topic, and subscription identifiers.
  *
- * **Example** (Inspect pub sub client config)
+ * **Details**
+ *
+ * Missing keys fall back to the `effect-ontology` project and the default
+ * ontology event, job, subscription, and dead-letter topic names.
+ *
+ * **Example** (Load default Pub/Sub identifiers)
  *
  * ```ts
+ * import { ConfigProvider, Effect } from "effect"
  * import { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClientConfig)
+ * const config = Effect.runSync(
+ *   Effect.provide(
+ *     PubSubClientConfig,
+ *     ConfigProvider.layer(ConfigProvider.fromUnknown({}))
+ *   )
+ * )
+ * console.log(config.projectId) // "effect-ontology"
+ * console.log(config.eventsTopicId) // "ontology-events"
  * ```
  *
- * @category services
+ * @category configuration
  * @since 0.0.0
  */
-export const PubSubClientConfig = Config.all({
+export const PubSubClientConfig: Config.Config<PubSubClientConfig> = Config.all({
   projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("effect-ontology")),
   eventsTopicId: Config.string("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
   jobsTopicId: Config.string("PUBSUB_JOBS_TOPIC").pipe(Config.withDefault("ontology-jobs")),
@@ -213,9 +273,15 @@ export const PubSubClientConfig = Config.all({
  * **Example** (Inspect pub sub client live)
  *
  * ```ts
- * import { PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
+ * import { Effect } from "effect"
+ * import { PubSubClient, PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClientLive)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* PubSubClient
+ *   return client
+ * }).pipe(Effect.provide(PubSubClientLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -386,9 +452,11 @@ export const PubSubClientLive = Layer.effect(
  * **Example** (Inspect event bus pub sub bridge)
  *
  * ```ts
- * import { EventBusPubSubBridge } from "@effect-ontology/Service/PubSubClient"
+ * import { Layer } from "effect"
+ * import { EventBusPubSubBridge, PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(EventBusPubSubBridge)
+ * const layer = Layer.provide(EventBusPubSubBridge, PubSubClientLive)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -422,9 +490,15 @@ export const EventBusPubSubBridge = Layer.effectDiscard(
  * **Example** (Inspect pub sub client default)
  *
  * ```ts
- * import { PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
+ * import { Effect } from "effect"
+ * import { PubSubClient, PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClientDefault)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* PubSubClient
+ *   return client
+ * }).pipe(Effect.provide(PubSubClientDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

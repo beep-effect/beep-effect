@@ -187,7 +187,7 @@ const repoSafetyPolicyError = (relativePath: AiSyncValidatedConfigPath, message:
     cause: O.fromNullishOr(cause),
   });
 
-const codexSettingSafetyFinding = (
+const explicitSettingSafetyFinding = (
   settingName: string,
   expectedValue: string,
   value: string | undefined
@@ -199,6 +199,9 @@ const codexSettingSafetyFinding = (
         O.as(`${settingName} must be "${expectedValue}"`)
       ),
   });
+
+const codexSettingOmittedFinding = (settingName: string, value: O.Option<string>): O.Option<string> =>
+  O.as(value, `${settingName} must be omitted so sessions inherit the user's ~/.codex/config.toml`);
 
 const validateCodexRepoSafetyPolicy = (content: string) =>
   decodeCodexRepoSafetyPolicy(content).pipe(
@@ -215,8 +218,8 @@ const validateCodexRepoSafetyPolicy = (content: string) =>
         O.as("sandbox_workspace_write.writable_roots must be empty or omitted")
       );
       const findings = A.getSomes([
-        codexSettingSafetyFinding("approval_policy", "on-request", O.getOrUndefined(config.approval_policy)),
-        codexSettingSafetyFinding("sandbox_mode", "workspace-write", O.getOrUndefined(config.sandbox_mode)),
+        codexSettingOmittedFinding("approval_policy", config.approval_policy),
+        codexSettingOmittedFinding("sandbox_mode", config.sandbox_mode),
         networkAccessFinding,
         writableRootsFinding,
       ]);
@@ -249,7 +252,7 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
         deniedPermissions,
         (permission) => !isRequiredClaudeRepoDenyPermission(permission)
       );
-      const defaultModeFinding = codexSettingSafetyFinding(
+      const defaultModeFinding = explicitSettingSafetyFinding(
         "permissions.defaultMode",
         "default",
         settings.permissions.pipe(
@@ -394,9 +397,11 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
  *
  * **Details**
  *
- * Codex must use exactly `on-request` approvals and `workspace-write`
- * sandboxing, disable workspace-write network access, and grant no additional
- * writable roots. Claude must explicitly set `permissions.defaultMode` to
+ * The Codex repo config must omit `approval_policy` and `sandbox_mode`
+ * entirely — permission posture belongs to each user's `~/.codex/config.toml`,
+ * and the repository neither narrows nor widens it. It must also disable
+ * workspace-write network access and grant no additional writable roots.
+ * Claude must explicitly set `permissions.defaultMode` to
  * `default`, and every Bash allow entry must belong to the repository's exact
  * 46-value grant domain. Its deny rules must exactly cover the repository's
  * 19-value destructive-operation domain without out-of-policy additions. Named

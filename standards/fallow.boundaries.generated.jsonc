@@ -528,6 +528,12 @@
         ]
       },
       {
+        "name": "@beep/openai",
+        "patterns": [
+          "packages/drivers/openai/src/**"
+        ]
+      },
+      {
         "name": "@beep/openai-compat",
         "patterns": [
           "packages/drivers/openai-compat/src/**"
@@ -2559,6 +2565,21 @@
         ]
       },
       {
+        "from": "@beep/openai",
+        "allow": [
+          "@beep/identity",
+          "@beep/openai",
+          "@beep/schema",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/openai",
+          "@beep/schema",
+          "@beep/test-utils"
+        ]
+      },
+      {
         "from": "@beep/openai-compat",
         "allow": [
           "@beep/identity",
@@ -2913,6 +2934,7 @@
         "from": "@beep/repo-ai-metrics",
         "allow": [
           "@beep/duckdb",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/phoenix",
@@ -2923,6 +2945,7 @@
         ],
         "allowTypeOnly": [
           "@beep/duckdb",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/phoenix",
@@ -3015,6 +3038,7 @@
         "allow": [
           "@beep/chalk",
           "@beep/identity",
+          "@beep/md",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
@@ -3023,6 +3047,7 @@
         "allowTypeOnly": [
           "@beep/chalk",
           "@beep/identity",
+          "@beep/md",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",

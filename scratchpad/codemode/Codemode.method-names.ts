@@ -4,8 +4,26 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 
+const $I = $ScratchpadId.create("codemode/Codemode.method-names");
+
+/**
+ * Finite Array instance method names the interpreter may dispatch on guest arrays.
+ *
+ * **Example** (Admit map, reject concatX)
+ *
+ * ```ts
+ * import { arrayMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(arrayMethods.is.map("map")) // true
+ * console.log(arrayMethods.is.map("concatX")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const arrayMethods = LiteralKit([
   "map",
   "filter",
@@ -43,14 +61,82 @@ export const arrayMethods = LiteralKit([
   "keys",
   "values",
   "entries",
-]);
+]).pipe(
+  $I.annoteSchema("arrayMethods", {
+    description: "Finite Array.prototype method names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link arrayMethods}.
+ *
+ * @see {@link arrayMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type arrayMethods = typeof arrayMethods.Type;
 
+/**
+ * One Array instance method name admitted by {@link arrayMethods}.
+ *
+ * @see {@link arrayMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArrayMethod = typeof arrayMethods.Type;
 
-export const arrayStatics = LiteralKit(["isArray", "of", "from"]);
+/**
+ * Finite Array constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit isArray)
+ *
+ * ```ts
+ * import { arrayStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(arrayStatics.is.isArray("isArray")) // true
+ * console.log(arrayStatics.is.isArray("fromEntries")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const arrayStatics = LiteralKit(["isArray", "of", "from"]).pipe(
+  $I.annoteSchema("arrayStatics", {
+    description: "Finite Array constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link arrayStatics}.
+ *
+ * @see {@link arrayStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type arrayStatics = typeof arrayStatics.Type;
 
+/**
+ * One Array constructor name admitted by {@link arrayStatics}.
+ *
+ * @see {@link arrayStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArrayStatic = typeof arrayStatics.Type;
 
+/**
+ * Finite Map instance method names the interpreter may dispatch on guest maps.
+ *
+ * **Example** (Admit get)
+ *
+ * ```ts
+ * import { mapMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(mapMethods.is.get("get")) // true
+ * console.log(mapMethods.is.get("groupBy")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const mapMethods = LiteralKit([
   "get",
   "set",
@@ -61,14 +147,82 @@ export const mapMethods = LiteralKit([
   "keys",
   "values",
   "entries",
-]);
+]).pipe(
+  $I.annoteSchema("mapMethods", {
+    description: "Finite Map.prototype method names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link mapMethods}.
+ *
+ * @see {@link mapMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mapMethods = typeof mapMethods.Type;
 
+/**
+ * One Map instance method name admitted by {@link mapMethods}.
+ *
+ * @see {@link mapMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MapMethod = typeof mapMethods.Type;
 
-export const mapStatics = LiteralKit(["groupBy"]);
+/**
+ * Finite Map constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit groupBy)
+ *
+ * ```ts
+ * import { mapStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(mapStatics.is.groupBy("groupBy")) // true
+ * console.log(mapStatics.is.groupBy("from")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const mapStatics = LiteralKit(["groupBy"]).pipe(
+  $I.annoteSchema("mapStatics", {
+    description: "Finite Map constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link mapStatics}.
+ *
+ * @see {@link mapStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mapStatics = typeof mapStatics.Type;
 
+/**
+ * One Map constructor name admitted by {@link mapStatics}.
+ *
+ * @see {@link mapStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MapStatic = typeof mapStatics.Type;
 
+/**
+ * Finite Set instance method names the interpreter may dispatch on guest sets.
+ *
+ * **Example** (Admit has)
+ *
+ * ```ts
+ * import { setMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(setMethods.is.has("has")) // true
+ * console.log(setMethods.is.has("get")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const setMethods = LiteralKit([
   "add",
   "has",
@@ -85,10 +239,44 @@ export const setMethods = LiteralKit([
   "isSubsetOf",
   "isSupersetOf",
   "isDisjointFrom",
-]);
+]).pipe(
+  $I.annoteSchema("setMethods", {
+    description: "Finite Set.prototype method names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link setMethods}.
+ *
+ * @see {@link setMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type setMethods = typeof setMethods.Type;
 
+/**
+ * One Set instance method name admitted by {@link setMethods}.
+ *
+ * @see {@link setMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SetMethod = typeof setMethods.Type;
 
+/**
+ * Finite String instance method names the interpreter may dispatch on guest strings.
+ *
+ * **Example** (Admit includes)
+ *
+ * ```ts
+ * import { stringMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(stringMethods.is.includes("includes")) // true
+ * console.log(stringMethods.is.includes("fromCharCode")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const stringMethods = LiteralKit([
   "toLowerCase",
   "toUpperCase",
@@ -119,14 +307,84 @@ export const stringMethods = LiteralKit([
   "search",
   "localeCompare",
   "normalize",
-]);
+]).pipe(
+  $I.annoteSchema("stringMethods", {
+    description: "Finite String.prototype method names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link stringMethods}.
+ *
+ * @see {@link stringMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type stringMethods = typeof stringMethods.Type;
 
+/**
+ * One String instance method name admitted by {@link stringMethods}.
+ *
+ * @see {@link stringMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StringMethod = typeof stringMethods.Type;
 
-export const stringStatics = LiteralKit(["fromCharCode", "fromCodePoint"]);
+/**
+ * Finite String constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit fromCodePoint)
+ *
+ * ```ts
+ * import { stringStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(stringStatics.is.fromCodePoint("fromCodePoint")) // true
+ * console.log(stringStatics.is.fromCodePoint("charAt")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const stringStatics = LiteralKit(["fromCharCode", "fromCodePoint"]).pipe(
+  $I.annoteSchema("stringStatics", {
+    description: "Finite String constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link stringStatics}.
+ *
+ * @see {@link stringStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type stringStatics = typeof stringStatics.Type;
 
+/**
+ * One String constructor name admitted by {@link stringStatics}.
+ *
+ * @see {@link stringStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StringStatic = typeof stringStatics.Type;
 
+/**
+ * Finite Date setter names that mutate guest Date adapters.
+ *
+ * **Example** (Admit setHours)
+ *
+ * ```ts
+ * import { DateSetterName } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(DateSetterName.is.setHours("setHours")) // true
+ * console.log(DateSetterName.is.setHours("getHours")) // false
+ * ```
+ *
+ * @see {@link DateSetterArity} for maximum optional-argument counts of these setters.
+ * @see {@link dateMethods} for the Date kit that includes these setters.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const DateSetterName = LiteralKit([
   "setTime",
   "setMilliseconds",
@@ -143,11 +401,43 @@ export const DateSetterName = LiteralKit([
   "setUTCFullYear",
   "setHours",
   "setUTCHours",
-]);
+]).annotate(
+  $I.annote("DateSetterName", {
+    description: "Finite Date setter names that mutate guest Date adapters.",
+  })
+);
 
+/**
+ * One Date setter name admitted by {@link DateSetterName}.
+ *
+ * @see {@link DateSetterName} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DateSetterName = typeof DateSetterName.Type;
 
-export const DateSetterArity = Object.freeze({
+/**
+ * Maximum optional-argument counts for JavaScript Date setters.
+ *
+ * **Gotchas**
+ *
+ * Entries are maximum optional-argument counts, not required arities.
+ * `setHours: 4` means hours plus optional minutes, seconds, and milliseconds.
+ *
+ * **Example** (Look up setHours vs setTime)
+ *
+ * ```ts
+ * import { DateSetterArity } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(DateSetterArity.setHours) // 4
+ * console.log(DateSetterArity.setTime) // 1
+ * ```
+ *
+ * @see {@link DateSetterName} for the setter names these counts describe.
+ * @category constants
+ * @since 0.0.0
+ */
+export const DateSetterArity = {
   setTime: 1,
   setMilliseconds: 1,
   setUTCMilliseconds: 1,
@@ -163,8 +453,29 @@ export const DateSetterArity = Object.freeze({
   setUTCFullYear: 3,
   setHours: 4,
   setUTCHours: 4,
-} satisfies Record<DateSetterName, 1 | 2 | 3 | 4>);
+} as const satisfies Record<DateSetterName, 1 | 2 | 3 | 4>;
 
+/**
+ * Finite Date instance method names, including getters and mutating setters.
+ *
+ * **Gotchas**
+ *
+ * Setter names are included via {@link DateSetterName}.Options, so this kit is
+ * not getters-only. Dispatch that mutates time must consult {@link DateSetterArity}.
+ *
+ * **Example** (Admit a getter and a setter)
+ *
+ * ```ts
+ * import { dateMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(dateMethods.is.getTime("getTime")) // true
+ * console.log(dateMethods.is.setHours("setHours")) // true
+ * ```
+ *
+ * @see {@link DateSetterName} for the setter subset spread into this kit.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const dateMethods = LiteralKit([
   "getTime",
   "valueOf",
@@ -191,20 +502,158 @@ export const dateMethods = LiteralKit([
   "getUTCMilliseconds",
   "getTimezoneOffset",
   ...DateSetterName.Options,
-]);
+]).pipe(
+  $I.annoteSchema("dateMethods", {
+    description: "Finite Date.prototype method names, including mutating setters.",
+  })
+);
+/**
+ * Decoded value produced by {@link dateMethods}.
+ *
+ * @see {@link dateMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type dateMethods = typeof dateMethods.Type;
 
+/**
+ * One Date instance method name admitted by {@link dateMethods}.
+ *
+ * @see {@link dateMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DateMethod = typeof dateMethods.Type;
 
-export const dateStatics = LiteralKit(["now", "parse", "UTC"]);
+/**
+ * Finite Date constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit now)
+ *
+ * ```ts
+ * import { dateStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(dateStatics.is.now("now")) // true
+ * console.log(dateStatics.is.now("getTime")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const dateStatics = LiteralKit(["now", "parse", "UTC"]).pipe(
+  $I.annoteSchema("dateStatics", {
+    description: "Finite Date constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link dateStatics}.
+ *
+ * @see {@link dateStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type dateStatics = typeof dateStatics.Type;
 
+/**
+ * One Date constructor name admitted by {@link dateStatics}.
+ *
+ * @see {@link dateStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DateStatic = typeof dateStatics.Type;
 
-export const regexpMethods = LiteralKit(["test", "exec", "toString"]);
+/**
+ * Finite RegExp instance method names the interpreter may dispatch.
+ *
+ * **Example** (Admit test)
+ *
+ * ```ts
+ * import { regexpMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(regexpMethods.is.test("test")) // true
+ * console.log(regexpMethods.is.test("escape")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const regexpMethods = LiteralKit(["test", "exec", "toString"]).pipe(
+  $I.annoteSchema("regexpMethods", {
+    description: "Finite RegExp.prototype method names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link regexpMethods}.
+ *
+ * @see {@link regexpMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type regexpMethods = typeof regexpMethods.Type;
+
+/**
+ * One RegExp instance method name admitted by {@link regexpMethods}.
+ *
+ * @see {@link regexpMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RegExpMethod = typeof regexpMethods.Type;
 
-export const regexpStatics = LiteralKit(["escape"]);
+/**
+ * Finite RegExp constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit escape)
+ *
+ * ```ts
+ * import { regexpStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(regexpStatics.is.escape("escape")) // true
+ * console.log(regexpStatics.is.escape("test")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const regexpStatics = LiteralKit(["escape"]).pipe(
+  $I.annoteSchema("regexpStatics", {
+    description: "Finite RegExp constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link regexpStatics}.
+ *
+ * @see {@link regexpStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type regexpStatics = typeof regexpStatics.Type;
+
+/**
+ * One RegExp constructor name admitted by {@link regexpStatics}.
+ *
+ * @see {@link regexpStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RegExpStatic = typeof regexpStatics.Type;
 
+/**
+ * Finite Object constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit keys)
+ *
+ * ```ts
+ * import { objectStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(objectStatics.is.keys("keys")) // true
+ * console.log(objectStatics.is.keys("assignOwn")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const objectStatics = LiteralKit([
   "keys",
   "values",
@@ -214,20 +663,82 @@ export const objectStatics = LiteralKit([
   "assign",
   "fromEntries",
   "groupBy",
-]);
+]).pipe(
+  $I.annoteSchema("objectStatics", {
+    description: "Finite Object constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link objectStatics}.
+ *
+ * @see {@link objectStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type objectStatics = typeof objectStatics.Type;
 
+/**
+ * One Object constructor name admitted by {@link objectStatics}.
+ *
+ * @see {@link objectStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ObjectStatic = typeof objectStatics.Type;
 
-export const numberMethods = LiteralKit([
-  "toFixed",
-  "toPrecision",
-  "toExponential",
-  "toString",
-  "valueOf",
-]);
+/**
+ * Finite Number instance method names the interpreter may dispatch.
+ *
+ * **Example** (Admit toFixed)
+ *
+ * ```ts
+ * import { numberMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(numberMethods.is.toFixed("toFixed")) // true
+ * console.log(numberMethods.is.toFixed("isInteger")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const numberMethods = LiteralKit(["toFixed", "toPrecision", "toExponential", "toString", "valueOf"]).pipe(
+  $I.annoteSchema("numberMethods", {
+    description: "Finite Number.prototype method names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link numberMethods}.
+ *
+ * @see {@link numberMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type numberMethods = typeof numberMethods.Type;
 
+/**
+ * One Number instance method name admitted by {@link numberMethods}.
+ *
+ * @see {@link numberMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NumberMethod = typeof numberMethods.Type;
 
+/**
+ * Finite Number constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit isInteger)
+ *
+ * ```ts
+ * import { numberStatics } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(numberStatics.is.isInteger("isInteger")) // true
+ * console.log(numberStatics.is.isInteger("toFixed")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const numberStatics = LiteralKit([
   "isInteger",
   "isFinite",
@@ -235,10 +746,44 @@ export const numberStatics = LiteralKit([
   "isSafeInteger",
   "parseInt",
   "parseFloat",
-]);
+]).pipe(
+  $I.annoteSchema("numberStatics", {
+    description: "Finite Number constructor names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link numberStatics}.
+ *
+ * @see {@link numberStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type numberStatics = typeof numberStatics.Type;
 
+/**
+ * One Number constructor name admitted by {@link numberStatics}.
+ *
+ * @see {@link numberStatics} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NumberStatic = typeof numberStatics.Type;
 
+/**
+ * Finite Math function names the interpreter may dispatch.
+ *
+ * **Example** (Admit abs)
+ *
+ * ```ts
+ * import { mathMethods } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(mathMethods.is.abs("abs")) // true
+ * console.log(mathMethods.is.abs("sum")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const mathMethods = LiteralKit([
   "random",
   "max",
@@ -277,28 +822,134 @@ export const mathMethods = LiteralKit([
   "clz32",
   "imul",
   "sumPrecise",
-]);
+]).pipe(
+  $I.annoteSchema("mathMethods", {
+    description: "Finite Math function names the interpreter may dispatch.",
+  })
+);
+/**
+ * Decoded value produced by {@link mathMethods}.
+ *
+ * @see {@link mathMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mathMethods = typeof mathMethods.Type;
 
+/**
+ * One Math function name admitted by {@link mathMethods}.
+ *
+ * @see {@link mathMethods} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MathMethod = typeof mathMethods.Type;
 
-export const ConsoleMethod = LiteralKit([
-  "log",
-  "info",
-  "debug",
-  "warn",
-  "error",
-  "dir",
-  "table",
-]);
+/**
+ * Finite console method names captured into CodeMode logs.
+ *
+ * **Example** (Admit log)
+ *
+ * ```ts
+ * import { ConsoleMethod } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(ConsoleMethod.is.log("log")) // true
+ * console.log(ConsoleMethod.is.log("trace")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConsoleMethod = LiteralKit(["log", "info", "debug", "warn", "error", "dir", "table"]).annotate(
+  $I.annote("ConsoleMethod", {
+    description: "Finite console method names captured into CodeMode logs.",
+  })
+);
 
+/**
+ * One console method name admitted by {@link ConsoleMethod}.
+ *
+ * @see {@link ConsoleMethod} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ConsoleMethod = typeof ConsoleMethod.Type;
 
-export const UrlMethod = LiteralKit(["toString", "toJSON"]);
+/**
+ * Finite URL instance method names the interpreter may dispatch.
+ *
+ * **Example** (Admit toString)
+ *
+ * ```ts
+ * import { UrlMethod } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(UrlMethod.is.toString("toString")) // true
+ * console.log(UrlMethod.is.toString("canParse")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UrlMethod = LiteralKit(["toString", "toJSON"]).annotate(
+  $I.annote("UrlMethod", {
+    description: "Finite URL.prototype method names the interpreter may dispatch.",
+  })
+);
+
+/**
+ * One URL instance method name admitted by {@link UrlMethod}.
+ *
+ * @see {@link UrlMethod} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UrlMethod = typeof UrlMethod.Type;
 
-export const UrlStatic = LiteralKit(["canParse", "parse"]);
+/**
+ * Finite URL constructor names the interpreter may dispatch as statics.
+ *
+ * **Example** (Admit canParse)
+ *
+ * ```ts
+ * import { UrlStatic } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(UrlStatic.is.canParse("canParse")) // true
+ * console.log(UrlStatic.is.canParse("toJSON")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UrlStatic = LiteralKit(["canParse", "parse"]).annotate(
+  $I.annote("UrlStatic", {
+    description: "Finite URL constructor names the interpreter may dispatch.",
+  })
+);
+
+/**
+ * One URL constructor name admitted by {@link UrlStatic}.
+ *
+ * @see {@link UrlStatic} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UrlStatic = typeof UrlStatic.Type;
 
+/**
+ * Finite URLSearchParams instance method names the interpreter may dispatch.
+ *
+ * **Example** (Admit get)
+ *
+ * ```ts
+ * import { UrlSearchParamsMethod } from "../../../codemode/Codemode.method-names.ts"
+ *
+ * console.log(UrlSearchParamsMethod.is.get("get")) // true
+ * console.log(UrlSearchParamsMethod.is.get("canParse")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const UrlSearchParamsMethod = LiteralKit([
   "append",
   "delete",
@@ -312,6 +963,17 @@ export const UrlSearchParamsMethod = LiteralKit([
   "values",
   "entries",
   "toString",
-]);
+]).annotate(
+  $I.annote("UrlSearchParamsMethod", {
+    description: "Finite URLSearchParams.prototype method names the interpreter may dispatch.",
+  })
+);
 
+/**
+ * One URLSearchParams instance method name admitted by {@link UrlSearchParamsMethod}.
+ *
+ * @see {@link UrlSearchParamsMethod} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UrlSearchParamsMethod = typeof UrlSearchParamsMethod.Type;

@@ -2,13 +2,16 @@
 
 ## Status
 
-Stage: `graduate`
-Status: `graduated`
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
+Stage: `decompose`
+Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Spine graduated 2026-08-13 ([`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/),
-merged via PR #694); status flipped 2026-08-24 per the graduation contract — gated MAP.md
-candidates do not hold a packet open. Waves 2–6 are gated re-entry candidates in
-[`MAP.md`](./MAP.md); a fired gate reopens this packet at `decompose`.
+merged via PR #694); status flipped 2026-08-24 per the graduation contract.
+**Reopened at `decompose` 2026-08-26** by packet-system-redesign D22/D24:
+Amendment J belongs to the next `@beep/skill-contract` version and this
+exploration owns its shape pass. The completed kernel goal stays closed.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -23,14 +26,13 @@ evidence layer into beep's epistemic/citation-span/QA stacks.
 
 ## Next Open Question
 
-Execute [`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/) — it has zero
-execution (all phases pending; no `@beep/skill-contract` package exists yet). When a
-later-wave candidate from [`MAP.md`](./MAP.md) is picked up (provisional order:
-kg-ingestion-contracts → ops-evidence-ladder → browser-lease-capabilities →
-memory-routing-manifest → fleet-protocol-contracts), it reopens this packet at `decompose`
-for its own shape pass. Before shaping waves 2/3/4/6, read `MAP.md` §Cross-packet
-coordination (protocol-as-value overlap). All spine shape decisions are locked in
-[`DECISIONS.md`](./DECISIONS.md) (twelve entries).
+Determine Amendment J's exact candidate boundary: a new
+`skill-contract-gate-certificates` goal or an amendment to an existing later
+wave. The fixed shape is a digest-bound in-toto Statement envelope, EARL/ACT's
+five outcomes, explicit complete/incomplete/unknown reach, producer-side
+exclusion of inconclusive checks from aggregate success, and a separate
+apply-by-id plan. The fixed first consumer is one certificate-producing QA
+judge settlement. See `MAP.md` §Amendment J re-entry.
 
 ## Read This First
 
@@ -43,6 +45,11 @@ coordination (protocol-as-value overlap). All spine shape decisions are locked i
 7. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (licenses, dispositions).
 
 ## Trail
+
+- 2026-08-26: reopened at `decompose` by packet-system-redesign D22/D24.
+  Amendment J moved out of packet-core/candidate 6 and into this exploration's
+  existing `@beep/skill-contract` authority. Exact goal/candidate placement is
+  the sole open shaping question; the completed kernel goal is not reopened.
 
 - 2026-08-10: packet opened from the ai-agent-skills mining pass; 7 lane reports + synthesis +
   AI Barrister paper note vendored into `research/mining/`; SOURCES ledger seeded (upstream

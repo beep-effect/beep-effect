@@ -34,7 +34,6 @@ import { RetryPolicy, retryEffect } from "./Retry.ts";
 /**
  * Options for generateObjectWithRetry
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -67,12 +66,23 @@ export interface GenerateObjectWithRetryOptions<
 /**
  * Generate structured object with standardized retry, timeout, and telemetry.
  *
- * **Example** (Inspect generate object with retry)
+ * **Example** (Compose a retried structured generation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { generateObjectWithRetry } from "@effect-ontology/Service/LlmWithRetry"
  *
- * console.log(generateObjectWithRetry)
+ * const Founder = S.Struct({ founder: S.String })
+ * const program = generateObjectWithRetry({
+ *   prompt: "Extract the founder from: Ada founded Acme.",
+ *   schema: Founder,
+ *   objectName: "Founder",
+ *   serviceName: "EntityExtractor",
+ *   model: "claude-haiku-4-5",
+ *   provider: "anthropic",
+ *   retryPolicy: {}
+ * })
+ * console.log(program)
  * ```
  *
  * @category schemas
@@ -109,7 +119,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   // Calculate prompt length for telemetry
   const promptLength = P.isString(prompt) ? prompt.length : prompt.systemMessage.length + prompt.userMessage.length;
 
-  const retryPolicy = yield* S.decodeEffect(RetryPolicy)({ ...retryPolicyInput, serviceName });
+  const retryPolicy = yield* RetryPolicy.decodeEffect({ ...retryPolicyInput, serviceName });
 
   const attemptCount = yield* Ref.make(0);
   const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, Unknown.encodeUnknownEffectFromJsonString);

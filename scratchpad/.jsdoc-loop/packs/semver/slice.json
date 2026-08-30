@@ -1,0 +1,1220 @@
+{
+  "pack": "semver",
+  "modules": [
+    {
+      "file": "semver/Comparator.ts",
+      "pack": "semver",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/Range.ts",
+      "pack": "semver",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/SemVer.ts",
+      "pack": "semver",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionCache.ts",
+      "pack": "semver",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionDiff.ts",
+      "pack": "semver",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/index.ts",
+      "pack": "semver",
+      "exportCount": 5,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": true,
+      "findings": []
+    },
+    {
+      "file": "semver/internal/desugar.ts",
+      "pack": "semver",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "pack": "semver",
+      "exportCount": 7,
+      "owningExportCount": 7,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/normalize.ts",
+      "pack": "semver",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "pack": "semver",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "semver/Comparator.ts",
+      "name": "InvalidComparatorError",
+      "line": 14,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/Comparator.ts",
+      "name": "Comparator",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/Range.ts",
+      "name": "InvalidRangeError",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/Range.ts",
+      "name": "ComparatorSet",
+      "line": 35,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "semver",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/Range.ts",
+      "name": "Range",
+      "line": 60,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/Range.ts",
+      "name": "UnsatisfiableConstraintError",
+      "line": 382,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/SemVer.ts",
+      "name": "InvalidVersionError",
+      "line": 27,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@see",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "undescribed-see",
+          "detail": "Bare @see without purpose phrase: * @see {@link https://semver.org | SemVer 2.0.0 Specification}"
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/SemVer.ts",
+      "name": "SemVer",
+      "line": 85,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@see",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "undescribed-see",
+          "detail": "Bare @see without purpose phrase: * @see {@link https://semver.org | SemVer 2.0.0 Specification}"
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/SemVer.ts",
+      "name": "SemVerBump",
+      "line": 587,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionCache.ts",
+      "name": "EmptyCacheError",
+      "line": 13,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionCache.ts",
+      "name": "VersionNotFoundError",
+      "line": 25,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionCache.ts",
+      "name": "UnsatisfiedRangeError",
+      "line": 41,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionCache.ts",
+      "name": "VersionCacheShape",
+      "line": 65,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionCache.ts",
+      "name": "VersionCache",
+      "line": 143,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/VersionDiff.ts",
+      "name": "VersionDiff",
+      "line": 44,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "semver",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/index.ts",
+      "name": "Comparator, InvalidComparatorError",
+      "line": 32,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "semver",
+      "tags": [
+        "@example",
+        "@effected",
+        "@see",
+        "@link",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-carrier",
+          "detail": "Re-export JSDoc uses a retired @example or @remarks carrier."
+        }
+      ]
+    },
+    {
+      "file": "semver/index.ts",
+      "name": "ComparatorSet, InvalidRangeError, Range, UnsatisfiableConstraintError",
+      "line": 33,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "semver/index.ts",
+      "name": "InvalidVersionError, SemVer, SemVerBump",
+      "line": 39,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "semver/index.ts",
+      "name": "EmptyCacheError, UnsatisfiedRangeError, VersionCache, VersionCacheShape, VersionNotFoundError",
+      "line": 40,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "semver/index.ts",
+      "name": "VersionDiff",
+      "line": 47,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "semver/internal/desugar.ts",
+      "name": "PartialParts",
+      "line": 13,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/desugar.ts",
+      "name": "desugarTilde",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/desugar.ts",
+      "name": "desugarCaret",
+      "line": 57,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/desugar.ts",
+      "name": "desugarXRange",
+      "line": 102,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/desugar.ts",
+      "name": "desugarHyphen",
+      "line": 169,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "ParseResult",
+      "line": 20,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "parseVersion",
+      "line": 240,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "parseRange",
+      "line": 444,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "parseComparator",
+      "line": 539,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "formatVersion",
+      "line": 562,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "formatComparator",
+      "line": 574,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/grammar.ts",
+      "name": "formatRange",
+      "line": 580,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/normalize.ts",
+      "name": "normalizeSets",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "name": "VersionParts",
+      "line": 10,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "name": "ComparatorOperator",
+      "line": 19,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "name": "ComparatorParts",
+      "line": 22,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "name": "comparePrereleaseIdentifier",
+      "line": 32,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "name": "compareParts",
+      "line": 43,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "semver/internal/order.ts",
+      "name": "compareBuild",
+      "line": 70,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "semver",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}

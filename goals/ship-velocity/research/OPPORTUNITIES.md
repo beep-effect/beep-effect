@@ -4,6 +4,26 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-27 — C2 workflow posture outran credential provisioning
+
+- **Doing:** proving that the same-repository pull-request remote-read decision was live before
+  closing the cache workstream.
+- **Evidence:** `gh secret list --repo beep-effect/beep-effect` reported `TURBO_TOKEN` but no
+  `TURBO_READ_TOKEN`, while the pull-request workflow expressions select only
+  `secrets.TURBO_READ_TOKEN`. The current expressions therefore degrade safely to local-only, but
+  do not enact the recorded C2 decision.
+- **Would have prevented it:** make the decision-note checklist include a sanitized live metadata
+  probe for every referenced variable/secret name, and keep the funded post-lane Actions-cache
+  fallback active until that probe is green. No secret values were requested or printed.
+- **Follow-on:** the encrypted SSM-to-GitHub pipe encountered `Your session has expired`; the
+  downstream CLI accepted the empty pipe and briefly created an empty secret. The command checked
+  secret-name metadata immediately and removed that new secret, restoring the prior absent/fail-
+  closed state. Prevention: resolve and validate the upstream authentication command separately,
+  then guard the pipe with a non-empty byte-count check without ever rendering its contents.
+  The normal AWS browser authorization restored the session; a length-only probe then guarded the
+  encrypted SSM-to-GitHub pipe, and secret-name metadata confirmed `TURBO_READ_TOKEN` exists. The
+  raw value was never printed or written to the checkout.
+
 ## 2026-08-13 — packet bootstrap
 
 - The 9-lane fan-out's C1 archaeology lane was stopped before writing its narrative report; the
@@ -621,3 +641,109 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
 - Still open: step 4 (comparator policy — the percentage treadmill that bit B10, and whether
   new files are held to the package tier), step 5 (B4 publish-time coverage), 6 (laws text),
   7 (remaining no-op prefixes: `.claude/`, `scripts/`, root config files).
+
+## 2026-08-27 — A2 continuation: structural discovery missed the live Yeet path
+
+- What was happening: the required CodeGraph-first queries for the inbox hooks and merge-ready
+  policy returned unrelated thread/domain symbols, and the first targeted source search used a
+  lowercase `commands/yeet` path even though the live directory is `commands/Yeet`.
+- Evidence: `codegraph explore` did not surface `Inbox.ts`, `Remediation.ts`, or `Status.ts` for
+  the named Yeet questions; the targeted `rg` then failed with `No such file or directory` for
+  the lowercase path before an `rg --files` inventory found the capitalized directory.
+- What would have prevented it: CodeGraph routing that prioritizes exact named files and symbols,
+  plus a generated command-area inventory (or case-insensitive path suggestion) for repo-cli.
+
+## 2026-08-27 — B4: package check script is not a root script
+
+- What was happening: after adding the CI-parity planner and merge-preview runner, the first
+  compile probe used `bun run beep:check` from the repository root.
+- Evidence: Bun exited immediately with `Script not found "beep:check"`; the script exists only
+  in `packages/tooling/tool/cli/package.json`, while the root exposes the broader `check` command.
+- What would have prevented it: package handoff documentation that prints the exact package-scoped
+  command next to each workspace path, or a root dispatcher for package-owned `beep:*` scripts.
+
+## 2026-08-27 — Full docgen paid the whole graph before reporting local export annotations
+
+- What was happening: closeout ran `bun run docgen:local`, but the changed root `turbo.json`
+  correctly escalated the predicate to full. The resulting 136-package cold pass ran for 3m29s
+  before repo-cli reported that the new Cache and Atlas exports lacked `@since 0.0.0`.
+- Evidence: the full run completed 122 of 127 scheduled tasks and failed only
+  `@beep/repo-cli#docgen`; the focused package rerun reported the missing annotations and passed
+  in 18 seconds after they were added.
+- What would have prevented it: a cheap changed-export annotation preflight before the global
+  Turbo docgen graph, or docgen's existing module checker exposed as a no-render package command
+  that `docgen:local` runs before deciding affected versus full.
+
+## 2026-08-27 — A missing optional plugin script blocked every agent tool call
+
+- What was happening: while the reviewer panel was finishing, every shell and coordination call
+  across the active sessions began failing before the requested command ran because an enabled
+  Cognee hook referenced a vanished cached script.
+- Evidence: even `pwd` failed with `python3: can't open file
+  '~/.codex/plugins/cache/cognee/cognee/1.5.0/scripts/store-to-session.py'`; the plugin cache
+  directory contained no remaining implementation to invoke. A temporary no-op compatibility
+  shim at that exact stale path restored the terminal so the initiative proof could continue.
+- What would have prevented it: atomically replace plugin cache versions only after hook targets
+  are present, and make optional asynchronous memory-capture hooks fail open without cancelling
+  the primary tool call. The plugin manager should also detect a hook whose target disappeared
+  and disable or repair that hook as one transaction.
+
+## 2026-08-27 — A lint subcheck looked like an aggregate positional argument
+
+- What was happening: the closeout attempted `bun run beep lint roadmap`, intending the dedicated
+  roadmap validator. The CLI instead ran the full lint group and forwarded `roadmap` to Turbo,
+  which failed with `Could not find task roadmap` even though the separately scheduled
+  `lint:roadmap-refs` step reported zero blockers and zero advisories.
+- Evidence: the aggregate launched 26 lint steps, then failed its generic `lint` child on the
+  nonexistent Turbo task; the same run's named roadmap validator was green.
+- What would have prevented it: expose named lint subchecks as real nested commands (or reject
+  unknown positional arguments before starting the aggregate) and print the exact invocation in
+  validation output and packet handoffs.
+
+## 2026-08-27 — Scheduler status unexpectedly required JSON output
+
+- What was happening: the documented pre-proof inspection command
+  `bun run beep quality scheduler status` was used to check machine-wide admission before
+  starting validation.
+- Evidence: the command printed its help and exited nonzero with `Missing required flag: --json`;
+  rerunning `bun run beep quality scheduler status --json` succeeded and reported the live
+  capacity, leases, and queue.
+- What would have prevented it: make `--json` optional as the help text implies and render the
+  existing human-readable status by default, or document the JSON flag as required everywhere
+  the scheduler status command is prescribed.
+
+## 2026-08-27 — Focused test arguments were sent to Turbo instead of Vitest
+
+- What was happening: a focused repo-cli regression run used
+  `bun run test --run <test-files>`, matching Vitest's argument shape.
+- Evidence: the root test dispatcher appended `--run` and every file path before Turbo's
+  pass-through separator. Turbo rejected `--run` four times before any test started.
+- What would have prevented it: reject Vitest-only flags in the root dispatcher with the exact
+  package-scoped command, or place focused arguments after Turbo's `--` separator automatically.
+
+## 2026-08-27 — Scheduler admission blocked the early PR push
+
+- What was happening: `yeet publish --start-pr-early` committed the change, then requested the
+  five-token merged-preview lease before running its early push or creating the PR.
+- Evidence: the next output after `start-pr-early: pushing before local proof` was
+  `admission: waiting`, with the push still absent while unrelated proofs held four tokens.
+- What would have prevented it: keep the clean-HEAD preflight, push, and PR creation outside the
+  proof coordinator. Acquire scheduler admission immediately before the heavyweight proof phase.
+
+## 2026-08-28 — Thread steering terminated an admitted proof
+
+- What was happening: a Yeet proof had completed the cheap gates, build, and lint and was still
+  running in the foreground when a new thread instruction arrived.
+- Evidence: the foreground command was terminated during `lint-policy`; the scheduler lease was
+  released, but the completed output could not be resumed or accepted as a terminal proof.
+- What would have prevented it: run admitted proofs behind a resumable process handle whose
+  receipt survives thread steering, so a later turn can reattach without repeating passed work.
+
+## 2026-08-28 — Yeet verify cannot isolate a staged repair
+
+- What was happening: the review repair was staged beside an unrelated unstaged operator edit,
+  and the pre-publication check attempted to use Yeet's staged-only isolation.
+- Evidence: `bun run beep yeet verify --staged-only` exited before proof with
+  `Unrecognized flag: --staged-only`; only the publish command exposes that isolation mode.
+- What would have prevented it: support the same staged-only worktree protection on `yeet verify`,
+  or have it delegate to the publish isolation boundary without committing or pushing.

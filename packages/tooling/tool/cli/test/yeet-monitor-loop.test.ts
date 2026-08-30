@@ -6,9 +6,12 @@ import {
   githubJobShapeEvidence,
 } from "@beep/repo-cli/test/SharedInternals";
 import {
+  applyYeetMonitorJobDecision,
+  collectYeetMonitorFailedJobs,
   detectYeetMonitorFlakeClass,
   emptyYeetMonitorRerunBudget,
   planYeetMonitorReruns,
+  RepoRunContext,
   renderYeetMonitorJobDecision,
   stripYeetMonitorLogDecoration,
   YeetMonitorFailedJob,
@@ -17,10 +20,14 @@ import {
   yeetMonitorRerunKey,
   yeetMonitorTerminalState,
 } from "@beep/repo-cli/test/Yeet";
+import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { HashSet } from "effect";
+import { Effect, HashSet, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 // `gh run view --job <id> --log-failed` emits `<job>\t<step>\t<timestamp> <line>`
 // and sometimes an `##[error]` workflow-command marker. These fixtures keep that
@@ -72,8 +79,12 @@ const ts2306TornReadLog = ghLog("Build", "Run bun run beep ci lane build", [
   "Failed:    @beep/ontology-config#build",
 ]);
 
-const failedJob = (databaseId: number, name: string, flakeClass: O.Option<YeetMonitorFlakeClass>) =>
-  YeetMonitorFailedJob.make({ databaseId, name, flakeClass });
+const failedJob = (
+  databaseId: number,
+  name: string,
+  flakeClass: O.Option<YeetMonitorFlakeClass>,
+  runCompleted = true
+) => YeetMonitorFailedJob.make({ databaseId, name, flakeClass, runCompleted });
 
 // `gh run view --json jobs` reports every step of a job, and a step that never
 // reached a terminal state carries `conclusion: null`. These fixtures keep the
@@ -355,6 +366,271 @@ describe("yeet monitor rerun budget", () => {
     expect(yeetMonitorRerunKey("abc123", "Check")).not.toContain("991");
     expect(yeetMonitorRerunCommand(991)).toBe("gh run rerun --job 991");
   });
+});
+
+describe("awaiting-log classification", () => {
+  it("reports a log-pending red as awaiting-log and spends nothing on it", () => {
+    const pending = YeetMonitorFailedJob.make({ databaseId: 991, logPending: true, name: "Check" });
+    const first = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [pending]);
+
+    expect(first.decisions[0]?.status).toBe("awaiting-log");
+    expect(first.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
+    expect(renderYeetMonitorJobDecision(first.decisions[0]!)).toContain("log not available yet");
+
+    // Once the log materializes and fingerprints, the job still has its full
+    // allowance: awaiting-log asserted nothing and spent nothing.
+    const classified = failedJob(991, "Check", O.some("ci-timeout"));
+    const second = planYeetMonitorReruns(first.budget, "abc123", [classified]);
+    expect(second.decisions[0]?.status).toBe("rerun");
+  });
+
+  it("defers a known flake until its parent run completes without spending the allowance", () => {
+    const activeRunJob = failedJob(991, "Check", O.some("ts2589-no-location"), false);
+    const deferred = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [activeRunJob]);
+
+    expect(deferred.decisions[0]?.status).toBe("awaiting-run");
+    expect(deferred.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
+    expect(renderYeetMonitorJobDecision(deferred.decisions[0]!)).toContain("parent run is still active");
+
+    const completedRunJob = failedJob(991, "Check", O.some("ts2589-no-location"));
+    const completed = planYeetMonitorReruns(deferred.budget, "abc123", [completedRunJob]);
+    expect(completed.decisions[0]?.status).toBe("rerun");
+    expect(HashSet.size(completed.budget)).toBe(1);
+  });
+});
+
+const monitorContext = RepoRunContext.make({
+  base: "origin/main",
+  branch: "feature/monitor",
+  cwd: ".",
+  head: "HEAD",
+  originalArgv: [],
+  packetDir: ".beep/yeet",
+  repoRoot: ".",
+  turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+});
+
+const encoder = new TextEncoder();
+
+const stubHandle = (exitCode: number, output: string) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.make(encoder.encode(output)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    stdout: Stream.make(encoder.encode(output)),
+    unref: Effect.succeed(Effect.void),
+  });
+
+interface MonitorGhScript {
+  readonly jobLog: { readonly exitCode: number; readonly output: string };
+  readonly rerun?: { readonly exitCode: number; readonly output: string };
+  readonly runJobs: string;
+  readonly runList: string;
+}
+
+// Routes the merge loop's gh reads: `run list` for the branch, `run view 7
+// --json jobs` for the one candidate run, `--log-failed` for a red job's log,
+// and `run rerun` for an executed rerun. Anything else — notably a job fetch
+// for a run the selection should have excluded — dies the test.
+const monitorSpawnerLayer = (script: MonitorGhScript) =>
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the merge loop never spawns a piped command");
+      }
+      const line = A.join([command.command, ...command.args], " ");
+      if (Str.includes("run list")(line)) {
+        return Effect.succeed(stubHandle(0, script.runList));
+      }
+      if (Str.includes("--log-failed")(line)) {
+        return Effect.succeed(stubHandle(script.jobLog.exitCode, script.jobLog.output));
+      }
+      if (Str.includes("run rerun")(line)) {
+        const rerun = script.rerun ?? { exitCode: 0, output: "" };
+        return Effect.succeed(stubHandle(rerun.exitCode, rerun.output));
+      }
+      if (Str.includes("run view 7")(line)) {
+        return Effect.succeed(stubHandle(0, script.runJobs));
+      }
+      return Effect.die(`unexpected gh invocation: ${line}`);
+    })
+  );
+
+const runListJson = (
+  runs: ReadonlyArray<{
+    readonly conclusion: string | null;
+    readonly databaseId: number;
+    readonly headSha: string;
+    readonly status: string;
+  }>
+) => JSON.stringify(A.map(runs, (run) => ({ ...run, name: "CI" })));
+
+const runJobsJson = (
+  jobs: ReadonlyArray<{
+    readonly conclusion: string | null;
+    readonly databaseId: number;
+    readonly name: string;
+    readonly status: string;
+  }>
+) =>
+  JSON.stringify({
+    jobs: A.map(jobs, (job) => ({
+      ...job,
+      steps: [
+        { name: "Set up job", conclusion: "success" },
+        { name: "Run lane", conclusion: job.conclusion },
+      ],
+    })),
+  });
+
+// The mid-run selection: an in-progress run's completed red job is collected
+// and classified while its sibling still runs; a green completed run and an
+// old-head run are never even fetched (the spawner dies on `run view 8/9`).
+describe("collectYeetMonitorFailedJobs", () => {
+  const midRunList = runListJson([
+    { conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" },
+    { conclusion: "success", databaseId: 8, headSha: "abc123", status: "completed" },
+    { conclusion: null, databaseId: 9, headSha: "old999", status: "in_progress" },
+  ]);
+  const midRunJobs = runJobsJson([
+    { conclusion: "failure", databaseId: 991, name: "Check", status: "completed" },
+    { conclusion: null, databaseId: 992, name: "Test Unit", status: "in_progress" },
+  ]);
+
+  it.effect("classifies a completed red job inside an in-progress run as log-pending when its log is not up yet", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      expect(A.map(jobs, (job) => [job.name, job.logPending])).toStrictEqual([["Check", true]]);
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      expect(plan.decisions[0]?.status).toBe("awaiting-log");
+    }).pipe(
+      provideScopedLayer(
+        monitorSpawnerLayer({
+          jobLog: { exitCode: 1, output: "job 991 log not found" },
+          runJobs: midRunJobs,
+          runList: midRunList,
+        })
+      )
+    )
+  );
+
+  it.effect("classifies from the log once it materializes, still mid-run", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      expect(A.map(jobs, (job) => [job.name, job.logPending, O.getOrNull(job.flakeClass)])).toStrictEqual([
+        ["Check", false, null],
+      ]);
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      expect(plan.decisions[0]?.status).toBe("needs-code-fix");
+    }).pipe(
+      provideScopedLayer(
+        monitorSpawnerLayer({
+          jobLog: { exitCode: 0, output: genuineTypeErrorLog },
+          runJobs: midRunJobs,
+          runList: midRunList,
+        })
+      )
+    )
+  );
+
+  it.effect("defers a materialized flake until the in-progress parent run completes", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      expect(A.map(jobs, (job) => [job.name, job.runCompleted, O.getOrNull(job.flakeClass)])).toStrictEqual([
+        ["Check", false, "ts2589-no-location"],
+      ]);
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      expect(plan.decisions[0]?.status).toBe("awaiting-run");
+      expect(plan.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
+    }).pipe(
+      provideScopedLayer(
+        monitorSpawnerLayer({
+          jobLog: { exitCode: 0, output: ts2589FlakeLog },
+          runJobs: midRunJobs,
+          runList: midRunList,
+        })
+      )
+    )
+  );
+
+  it.effect("keeps the conservative reading for an unreadable log once the run has concluded", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      expect(A.map(jobs, (job) => [job.name, job.logPending])).toStrictEqual([["Check", false]]);
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      expect(plan.decisions[0]?.status).toBe("needs-code-fix");
+    }).pipe(
+      provideScopedLayer(
+        monitorSpawnerLayer({
+          jobLog: { exitCode: 1, output: "gh: log expired" },
+          runJobs: runJobsJson([{ conclusion: "failure", databaseId: 991, name: "Check", status: "completed" }]),
+          runList: runListJson([{ conclusion: "failure", databaseId: 7, headSha: "abc123", status: "completed" }]),
+        })
+      )
+    )
+  );
+});
+
+describe("applyYeetMonitorJobDecision", () => {
+  const rerunDecision = () => {
+    const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
+      failedJob(991, "Check", O.some("ci-timeout")),
+    ]);
+    return plan.decisions[0]!;
+  };
+  const spawner = (rerunExitCode: number) =>
+    Layer.mergeAll(
+      TestConsole.layer,
+      monitorSpawnerLayer({
+        jobLog: { exitCode: 1, output: "" },
+        rerun: { exitCode: rerunExitCode, output: rerunExitCode === 0 ? "" : "run 7 cannot be rerun" },
+        runJobs: runJobsJson([]),
+        runList: runListJson([]),
+      })
+    );
+
+  it.effect("keeps the allowance spent when GitHub rejects the rerun", () =>
+    Effect.gen(function* () {
+      const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
+
+      expect(result).toBeUndefined();
+      const lines = A.map(yield* TestConsole.logLines, String);
+      expect(A.some(lines, (line) => Str.includes("allowance spent")(line))).toBe(true);
+      expect(A.some(lines, (line) => Str.includes("unbounded retry loop")(line))).toBe(true);
+    }).pipe(provideScopedLayer(spawner(1)))
+  );
+
+  it.effect("completes without a refund when the rerun is accepted", () =>
+    Effect.gen(function* () {
+      const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
+
+      expect(result).toBeUndefined();
+    }).pipe(provideScopedLayer(spawner(0)))
+  );
+
+  it.effect("prints an awaiting-log decision without executing anything", () =>
+    Effect.gen(function* () {
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
+        YeetMonitorFailedJob.make({ databaseId: 991, logPending: true, name: "Check" }),
+      ]);
+      const result = yield* applyYeetMonitorJobDecision(monitorContext, plan.decisions[0]!);
+
+      expect(result).toBeUndefined();
+      const lines = A.map(yield* TestConsole.logLines, String);
+      expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
+    }).pipe(provideScopedLayer(spawner(1)))
+  );
 });
 
 describe("yeet monitor loop control", () => {

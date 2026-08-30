@@ -3,13 +3,13 @@
     "version": "7.10.1",
     "main": "bin/index.js",
     "scripts": {
-        "build": "tsc",
-        "postinstall": "node ./scripts/postinstall.js"
+        "build": "node ./scripts/build.js",
+        "test": "node --test ./test/*.test.js"
     },
     "dependencies": {
         "@pulumi/pulumi": "^3.238.0",
         "@types/node": "^20",
-        "typescript": "^4.7.0"
+        "typescript": "^6.0.3"
     },
     "pulumi": {
         "resource": true,

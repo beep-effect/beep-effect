@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "codex-security-findings-2026-07-08",
     "title": "Codex Security Findings (2026-07-08)",
@@ -10,8 +10,9 @@
   },
   "packetPath": "goals/codex-security-findings-2026-07-08",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 338,
   "executionCapable": true,
-  "reflectionRequired": false,
+  "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
