@@ -11,7 +11,7 @@
 
 import { platform, tmpdir } from "node:os";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, Number as N, pipe } from "effect";
+import { DateTime, Effect, flow, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
@@ -233,14 +233,12 @@ const RUN_SCOPE_DESCRIPTION_PREFIX = "beep-yeet-lease";
 const runScopeDescription = (ticketId: string, ownerRoot: string): string =>
   `${RUN_SCOPE_DESCRIPTION_PREFIX} nonce=${ticketId} root=${ownerRoot}`;
 
-const ownerRootFromDescription = (description: string): O.Option<string> =>
-  pipe(
-    description,
-    Str.match(/^beep-yeet-lease nonce=.* root=(.+)$/u),
-    O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
-    O.map(Str.trim),
-    O.filter(Str.isNonEmpty)
-  );
+const ownerRootFromDescription: (description: string) => O.Option<string> = flow(
+  Str.match(/^beep-yeet-lease nonce=.* root=(.+)$/u),
+  O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
+  O.map(Str.trim),
+  O.filter(Str.isNonEmpty)
+);
 
 /**
  * Read the admission root recorded as the owner of one run scope.
@@ -278,13 +276,11 @@ export const readRunScopeOwnerRoot = Effect.fn("RunScope.readRunScopeOwnerRoot")
   );
 });
 
-const parseTelemetryValue = (value: O.Option<string>): O.Option<number> =>
-  pipe(
-    value,
-    O.map(Str.trim),
-    O.filter((text) => Str.isNonEmpty(text) && text !== "[not set]"),
-    O.flatMap(N.parse)
-  );
+const parseTelemetryValue: (value: O.Option<string>) => O.Option<number> = flow(
+  O.map(Str.trim),
+  O.filter((text) => Str.isNonEmpty(text) && text !== "[not set]"),
+  O.flatMap(N.parse)
+);
 
 const telemetryProperty = (lines: ReadonlyArray<string>, property: string): O.Option<number> =>
   parseTelemetryValue(

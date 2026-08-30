@@ -1,10 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { finding } from "../../findings.mjs";
-import { profileFindingsAsync, profileStep, profileStepAsync } from "../../profile/profiler.mjs";
-import { checkContentHiddenAtRest } from "../../rules/checks.mjs";
-import { captureVisualContrastCandidate } from "../visual/screenshot-contrast.mjs";
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { finding } from '../../findings.mjs';
+import { profileFindingsAsync, profileStep, profileStepAsync } from '../../profile/profiler.mjs';
+import { captureVisualContrastCandidate } from '../visual/screenshot-contrast.mjs';
+import { checkContentHiddenAtRest } from '../../rules/checks.mjs';
 
 // On Windows, puppeteer's bundled Chrome lives in a user-writable cache
 // directory. Its GPU process can be denied (STATUS_ACCESS_DENIED) by security
@@ -21,9 +22,9 @@ import { captureVisualContrastCandidate } from "../visual/screenshot-contrast.mj
 // cause so the real failure is not lost.
 async function launchBrowser(puppeteer, { headless = true, args = [] } = {}) {
   let channelError;
-  if (process.platform === "win32") {
+  if (process.platform === 'win32') {
     try {
-      return await puppeteer.default.launch({ channel: "chrome", headless, args });
+      return await puppeteer.default.launch({ channel: 'chrome', headless, args });
     } catch (err) {
       // System Chrome unavailable or unlaunchable; fall through to the bundled
       // browser, but keep the error in case the fallback fails too.
@@ -48,16 +49,19 @@ async function launchBrowser(puppeteer, { headless = true, args = [] } = {}) {
 async function measureContentHiddenAfterReveal(page) {
   await page.evaluate(async () => {
     const step = Math.max(200, Math.floor(window.innerHeight * 0.7));
-    const max = Math.max(document.documentElement.scrollHeight || 0, document.body?.scrollHeight || 0);
+    const max = Math.max(
+      document.documentElement.scrollHeight || 0,
+      document.body?.scrollHeight || 0,
+    );
     for (let y = 0; y <= max; y += step) {
-      window.scrollTo({ top: y, left: 0, behavior: "instant" });
-      await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 40)));
+      window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+      await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 40)));
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    await new Promise(resolve => setTimeout(resolve, 700));
   });
   return page.evaluate(() => {
-    if (typeof window.impeccableMeasureHiddenText !== "function") return null;
+    if (typeof window.impeccableMeasureHiddenText !== 'function') return null;
     return window.impeccableMeasureHiddenText();
   });
 }
@@ -70,13 +74,13 @@ function serializeDesignSystemForBrowser(designSystem) {
     allowedFonts: Array.from(designSystem.allowedFonts || []),
     hasColors: designSystem.hasColors === true,
     allowedColors: Array.from(designSystem.allowedColorKeys?.values?.() || [])
-      .map((entry) => entry?.color)
-      .filter((color) => color && Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b))
-      .map((color) => ({ r: color.r, g: color.g, b: color.b })),
+      .map(entry => entry?.color)
+      .filter(color => color && Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b))
+      .map(color => ({ r: color.r, g: color.g, b: color.b })),
     hasRadii: designSystem.hasRadii === true,
     allowedRadii: (designSystem.allowedRadii || [])
-      .map((entry) => Number(entry?.px))
-      .filter((px) => Number.isFinite(px)),
+      .map(entry => Number(entry?.px))
+      .filter(px => Number.isFinite(px)),
     hasPillRadius: designSystem.hasPillRadius === true,
   };
 }
@@ -89,85 +93,66 @@ async function runVisualContrastFallback(page, serializedGroups, options, profil
   const scrollOffscreen = options?.visualContrastScrollOffscreen !== false;
   const existingLowContrastSelectors = new Set(
     serializedGroups
-      .filter((group) => group.findings?.some((f) => f.type === "low-contrast"))
-      .map((group) => group.selector)
+      .filter(group => group.findings?.some(f => f.type === 'low-contrast'))
+      .map(group => group.selector)
       .filter(Boolean)
   );
 
   let browserAnalyses = [];
   const findings = [];
   if (options?.visualContrastBrowser !== false) {
-    const browserFindings = await profileFindingsAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "visual-contrast",
-        ruleId: "browser-fallback",
-        target,
-      },
-      async () => {
-        browserAnalyses = await page.evaluate(
-          async ({ maxCandidates, scrollOffscreen }) => {
-            if (typeof window.impeccableAnalyzeVisualContrast !== "function") return [];
-            return window.impeccableAnalyzeVisualContrast({ maxCandidates, scrollOffscreen });
-          },
-          { maxCandidates, scrollOffscreen }
-        );
-        return browserAnalyses
-          .filter((result) => result.finding && !existingLowContrastSelectors.has(result.selector))
-          .map((result) => result.finding);
-      }
-    );
+    const browserFindings = await profileFindingsAsync(profile, {
+      engine: 'browser',
+      phase: 'visual-contrast',
+      ruleId: 'browser-fallback',
+      target,
+    }, async () => {
+      browserAnalyses = await page.evaluate(async ({ maxCandidates, scrollOffscreen }) => {
+        if (typeof window.impeccableAnalyzeVisualContrast !== 'function') return [];
+        return window.impeccableAnalyzeVisualContrast({ maxCandidates, scrollOffscreen });
+      }, { maxCandidates, scrollOffscreen });
+      return browserAnalyses
+        .filter(result => result.finding && !existingLowContrastSelectors.has(result.selector))
+        .map(result => result.finding);
+    });
     findings.push(...browserFindings);
   }
 
   let candidates = browserAnalyses.length > 0 ? browserAnalyses : [];
   if (candidates.length === 0) {
-    candidates = await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "visual-contrast",
-        ruleId: "collect-candidates",
-        target,
-      },
-      () =>
-        page.evaluate(
-          ({ maxCandidates }) => {
-            if (typeof window.impeccableCollectVisualContrastCandidates !== "function") return [];
-            return window.impeccableCollectVisualContrastCandidates({ maxCandidates });
-          },
-          { maxCandidates }
-        )
-    );
+    candidates = await profileStepAsync(profile, {
+      engine: 'browser',
+      phase: 'visual-contrast',
+      ruleId: 'collect-candidates',
+      target,
+    }, () => page.evaluate(({ maxCandidates }) => {
+      if (typeof window.impeccableCollectVisualContrastCandidates !== 'function') return [];
+      return window.impeccableCollectVisualContrastCandidates({ maxCandidates });
+    }, { maxCandidates }));
   }
 
   const viewport = options?.viewport || { width: 1280, height: 800 };
   const browserResolvedSelectors = new Set(
     browserAnalyses
-      .filter((result) => result.status === "fail" || result.status === "pass")
-      .map((result) => result.selector)
+      .filter(result => result.status === 'fail' || result.status === 'pass')
+      .map(result => result.selector)
       .filter(Boolean)
   );
-  const filtered = candidates.filter(
-    (candidate) =>
-      !existingLowContrastSelectors.has(candidate.selector) && !browserResolvedSelectors.has(candidate.selector)
+  const filtered = candidates.filter(candidate =>
+    !existingLowContrastSelectors.has(candidate.selector) &&
+    !browserResolvedSelectors.has(candidate.selector)
   );
   if (options?.visualContrastPixel === false) return findings;
   for (const candidate of filtered) {
-    const result = await profileFindingsAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "visual-contrast",
-        ruleId: "pixel-diff",
-        target,
-      },
-      async () => {
-        const finding = await captureVisualContrastCandidate(page, candidate, viewport);
-        return finding ? [finding] : [];
-      }
-    );
+    const result = await profileFindingsAsync(profile, {
+      engine: 'browser',
+      phase: 'visual-contrast',
+      ruleId: 'pixel-diff',
+      target,
+    }, async () => {
+      const finding = await captureVisualContrastCandidate(page, candidate, viewport);
+      return finding ? [finding] : [];
+    });
     findings.push(...result);
   }
   return findings;
@@ -177,49 +162,102 @@ async function runVisualContrastFallback(page, serializedGroups, options, profil
 // Puppeteer detection (for URLs)
 // ---------------------------------------------------------------------------
 
-async function detectUrl(url, options = {}) {
+function decodeUrlComponent(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function splitScanUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { href: url, credentials: null };
+  }
+  if (!parsed.username && !parsed.password) {
+    return { href: url, credentials: null };
+  }
+  const credentials =
+    parsed.protocol === 'http:' || parsed.protocol === 'https:'
+      ? {
+          username: decodeUrlComponent(parsed.username),
+          password: decodeUrlComponent(parsed.password),
+        }
+      : null;
+  parsed.username = '';
+  parsed.password = '';
+  return { href: parsed.href, credentials };
+}
+
+function basicAuthHeader(credentials) {
+  return `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64')}`;
+}
+
+// page.authenticate is page-wide: a cross-origin redirect that then 401s
+// would receive these credentials. Attach Authorization only to the scan origin.
+async function applyOriginScopedAuth(page, href, credentials) {
+  if (!credentials) return;
+  let origin = '';
+  try {
+    origin = new URL(href).origin;
+  } catch {
+    return;
+  }
+  if (!origin) return;
+  const header = basicAuthHeader(credentials);
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    let headers;
+    try {
+      if (new URL(request.url()).origin === origin) {
+        headers = { ...request.headers(), authorization: header };
+      }
+    } catch {
+      // invalid request URL: continue without auth
+    }
+    void request.continue(headers ? { headers } : undefined).catch(() => {});
+  });
+}
+
+async function detectUrl(rawUrl, options = {}) {
+  const { href: url, credentials } = splitScanUrl(rawUrl);
   const profile = options?.profile;
-  const waitUntil = options?.waitUntil || "networkidle0";
+  const waitUntil = options?.waitUntil || 'networkidle0';
   const settleMs = Number.isFinite(options?.settleMs) ? options.settleMs : 0;
   const viewport = options?.viewport || { width: 1280, height: 800 };
   const externalBrowser = options?.browser || null;
   let puppeteer;
   if (!externalBrowser) {
     try {
-      puppeteer = await profileStepAsync(
-        profile,
-        {
-          engine: "browser",
-          phase: "setup",
-          ruleId: "import-puppeteer",
-          target: url,
-        },
-        () => import("puppeteer")
-      );
+      puppeteer = await profileStepAsync(profile, {
+        engine: 'browser',
+        phase: 'setup',
+        ruleId: 'import-puppeteer',
+        target: url,
+      }, () => import('puppeteer'));
     } catch {
-      throw new Error("puppeteer is required for URL scanning. Install: npm install puppeteer");
+      throw new Error('puppeteer is required for URL scanning. Install: npm install puppeteer');
     }
   }
 
   // Read the browser detection script — reuse it instead of reimplementing
   const browserScriptPath = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
-    "..",
-    "..",
-    "detect-antipatterns-browser.js"
+    '..',
+    '..',
+    'detect-antipatterns-browser.js'
   );
   let browserScript;
   try {
-    browserScript = profileStep(
-      profile,
-      {
-        engine: "browser",
-        phase: "setup",
-        ruleId: "read-browser-script",
-        target: url,
-      },
-      () => fs.readFileSync(browserScriptPath, "utf-8")
-    );
+    browserScript = profileStep(profile, {
+      engine: 'browser',
+      phase: 'setup',
+      ruleId: 'read-browser-script',
+      target: url,
+    }, () => fs.readFileSync(browserScriptPath, 'utf-8'));
   } catch {
     throw new Error(`Browser script not found at ${browserScriptPath}`);
   }
@@ -227,29 +265,19 @@ async function detectUrl(url, options = {}) {
   // CI runners (GitHub Actions Ubuntu) block unprivileged user namespaces, so
   // Chrome can't initialize its sandbox there. Disable the sandbox only when
   // running in CI; local users keep the default hardened launch.
-  const launchArgs = process.env.CI ? ["--no-sandbox", "--disable-setuid-sandbox"] : [];
-  const browser =
-    externalBrowser ||
-    (await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "load",
-        ruleId: "launch-browser",
-        target: url,
-      },
-      () => launchBrowser(puppeteer, { headless: options?.headless ?? true, args: launchArgs })
-    ));
-  const page = await profileStepAsync(
-    profile,
-    {
-      engine: "browser",
-      phase: "load",
-      ruleId: "new-page",
-      target: url,
-    },
-    () => browser.newPage()
-  );
+  const launchArgs = process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [];
+  const browser = externalBrowser || await profileStepAsync(profile, {
+    engine: 'browser',
+    phase: 'load',
+    ruleId: 'launch-browser',
+    target: url,
+  }, () => launchBrowser(puppeteer, { headless: options?.headless ?? true, args: launchArgs }));
+  const page = await profileStepAsync(profile, {
+    engine: 'browser',
+    phase: 'load',
+    ruleId: 'new-page',
+    target: url,
+  }, () => browser.newPage());
 
   // Uncaught exceptions and parse errors surface as pageerror events. The
   // listener must attach before goto: a syntax error fires during the
@@ -257,154 +285,110 @@ async function detectUrl(url, options = {}) {
   // broken loop can otherwise throw hundreds of identical errors.
   const pageErrors = [];
   if (options?.scriptErrors !== false) {
-    page.on("pageerror", (err) => {
-      const message = String(err?.message || err)
-        .split("\n")[0]
-        .trim()
-        .slice(0, 160);
+    page.on('pageerror', (err) => {
+      const message = String(err?.message || err).split('\n')[0].trim().slice(0, 160);
       if (message && !pageErrors.includes(message)) pageErrors.push(message);
     });
   }
 
   let results = [];
   try {
-    await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "load",
-        ruleId: "set-viewport",
-        target: url,
-      },
-      () => page.setViewport(viewport)
-    );
-    await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "load",
-        ruleId: `goto:${waitUntil}`,
-        target: url,
-      },
-      () => page.goto(url, { waitUntil, timeout: 30000 })
-    );
+    await profileStepAsync(profile, {
+      engine: 'browser',
+      phase: 'load',
+      ruleId: 'set-viewport',
+      target: url,
+    }, () => page.setViewport(viewport));
+    await applyOriginScopedAuth(page, url, credentials);
+    await profileStepAsync(profile, {
+      engine: 'browser',
+      phase: 'load',
+      ruleId: `goto:${waitUntil}`,
+      target: url,
+    }, () => page.goto(url, { waitUntil, timeout: 30000 }));
     if (settleMs > 0) {
-      await profileStepAsync(
-        profile,
-        {
-          engine: "browser",
-          phase: "load",
-          ruleId: "settle",
-          target: url,
-        },
-        () => new Promise((resolve) => setTimeout(resolve, settleMs))
-      );
+      await profileStepAsync(profile, {
+        engine: 'browser',
+        phase: 'load',
+        ruleId: 'settle',
+        target: url,
+      }, () => new Promise(resolve => setTimeout(resolve, settleMs)));
     }
 
     // Inject the browser detection script and collect results
     const browserDesignSystem = serializeDesignSystemForBrowser(options?.designSystem);
-    await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "scan",
-        ruleId: "configure-pure-detect",
-        target: url,
-      },
-      () =>
-        page.evaluate((designSystem) => {
-          window.__IMPECCABLE_CONFIG__ = {
-            ...(window.__IMPECCABLE_CONFIG__ || {}),
-            autoScan: false,
-            ...(designSystem ? { designSystem } : {}),
-          };
-        }, browserDesignSystem)
-    );
-    await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "scan",
-        ruleId: "inject-browser-script",
-        target: url,
-      },
-      () => page.evaluate(browserScript)
-    );
+    await profileStepAsync(profile, {
+      engine: 'browser',
+      phase: 'scan',
+      ruleId: 'configure-pure-detect',
+      target: url,
+    }, () => page.evaluate((designSystem) => {
+      window.__IMPECCABLE_CONFIG__ = {
+        ...(window.__IMPECCABLE_CONFIG__ || {}),
+        autoScan: false,
+        ...(designSystem ? { designSystem } : {}),
+      };
+    }, browserDesignSystem));
+    await profileStepAsync(profile, {
+      engine: 'browser',
+      phase: 'scan',
+      ruleId: 'inject-browser-script',
+      target: url,
+    }, () => page.evaluate(browserScript));
     let serializedGroups = [];
-    results = await profileFindingsAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "scan",
-        ruleId: "browser-scan",
-        target: url,
-      },
-      async () => {
-        serializedGroups = await page.evaluate(() => {
-          if (!window.impeccableDetect) return [];
-          return window.impeccableDetect({ decorate: false, serialize: true });
-        });
-        return serializedGroups.flatMap(({ findings }) =>
-          findings.map((f) => ({
-            id: f.type,
-            snippet: f.detail,
-            ignoreValue: f.ignoreValue || "",
-            severity: f.severity || "",
-          }))
-        );
-      }
-    );
+    results = await profileFindingsAsync(profile, {
+      engine: 'browser',
+      phase: 'scan',
+      ruleId: 'browser-scan',
+      target: url,
+    }, async () => {
+      serializedGroups = await page.evaluate(() => {
+        if (!window.impeccableDetect) return [];
+        return window.impeccableDetect({ decorate: false, serialize: true });
+      });
+      return serializedGroups.flatMap(({ findings }) =>
+        findings.map(f => ({ id: f.type, snippet: f.detail, ignoreValue: f.ignoreValue || '', severity: f.severity || '' }))
+      );
+    });
     // Content invisible at rest: reveal sweep, then re-measure. Runs after
     // the main scan (which must see the true at-rest state) and before the
     // visual contrast fallback (the sweep restores scroll to the top).
     if (options?.contentHidden !== false) {
-      const hiddenFindings = await profileFindingsAsync(
-        profile,
-        {
-          engine: "browser",
-          phase: "scan",
-          ruleId: "content-hidden-at-rest",
-          target: url,
-        },
-        async () => {
-          const measured = await measureContentHiddenAfterReveal(page);
-          return measured ? checkContentHiddenAtRest(measured) : [];
-        }
-      );
+      const hiddenFindings = await profileFindingsAsync(profile, {
+        engine: 'browser',
+        phase: 'scan',
+        ruleId: 'content-hidden-at-rest',
+        target: url,
+      }, async () => {
+        const measured = await measureContentHiddenAfterReveal(page);
+        return measured ? checkContentHiddenAtRest(measured) : [];
+      });
       results.push(...hiddenFindings);
     }
 
     for (const message of pageErrors.slice(0, 3)) {
-      results.push({ id: "script-error", snippet: message });
+      results.push({ id: 'script-error', snippet: message });
     }
 
     const visualFindings = await runVisualContrastFallback(page, serializedGroups, options, profile, url);
     results.push(...visualFindings);
   } finally {
-    await profileStepAsync(
-      profile,
-      {
-        engine: "browser",
-        phase: "load",
-        ruleId: "close-page",
-        target: url,
-      },
-      () => page.close().catch(() => {})
-    );
+    await profileStepAsync(profile, {
+      engine: 'browser',
+      phase: 'load',
+      ruleId: 'close-page',
+      target: url,
+    }, () => page.close().catch(() => {}));
     if (!externalBrowser) {
-      await profileStepAsync(
-        profile,
-        {
-          engine: "browser",
-          phase: "load",
-          ruleId: "close-browser",
-          target: url,
-        },
-        () => browser.close()
-      );
+      await profileStepAsync(profile, {
+        engine: 'browser',
+        phase: 'load',
+        ruleId: 'close-browser',
+        target: url,
+      }, () => browser.close());
     }
   }
-  return results.map((f) => {
+  return results.map(f => {
     const item = finding(f.id, url, f.snippet);
     if (f.ignoreValue) item.ignoreValue = f.ignoreValue;
     // Per-finding severity promotion (e.g. hero-region pulsing dot)
@@ -417,20 +401,18 @@ async function detectUrl(url, options = {}) {
 async function createBrowserDetector(options = {}) {
   let puppeteer;
   try {
-    puppeteer = await import("puppeteer");
+    puppeteer = await import('puppeteer');
   } catch {
-    throw new Error("puppeteer is required for URL scanning. Install: npm install puppeteer");
+    throw new Error('puppeteer is required for URL scanning. Install: npm install puppeteer');
   }
-  const launchArgs = options.launchArgs || (process.env.CI ? ["--no-sandbox", "--disable-setuid-sandbox"] : []);
-  const browser =
-    options.browser ||
-    (await launchBrowser(puppeteer, {
-      headless: options.headless ?? true,
-      args: launchArgs,
-    }));
+  const launchArgs = options.launchArgs || (process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : []);
+  const browser = options.browser || await launchBrowser(puppeteer, {
+    headless: options.headless ?? true,
+    args: launchArgs,
+  });
   const ownsBrowser = !options.browser;
   const defaults = {
-    waitUntil: options.waitUntil || "load",
+    waitUntil: options.waitUntil || 'load',
     settleMs: Number.isFinite(options.settleMs) ? options.settleMs : 100,
     viewport: options.viewport || { width: 1280, height: 800 },
   };
@@ -449,4 +431,4 @@ async function createBrowserDetector(options = {}) {
   };
 }
 
-export { createBrowserDetector, detectUrl, launchBrowser, runVisualContrastFallback };
+export { runVisualContrastFallback, detectUrl, createBrowserDetector, launchBrowser, splitScanUrl };

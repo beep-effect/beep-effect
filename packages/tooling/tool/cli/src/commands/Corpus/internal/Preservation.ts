@@ -7,10 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { DateTime, Effect, Encoding, FileSystem, Layer, MutableHashMap, MutableRef, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printLines } from "../../../internal/cli/Printer.ts";
@@ -195,7 +195,7 @@ const hashStream = Effect.fn("Preservation.hashStream")(function* (
   let bytes = 0;
   const stream = fs.stream(filePath, {
     chunkSize: hashChunkBytes,
-    ...(length === undefined ? {} : { bytesToRead: length }),
+    ...O.getSomesStruct({ bytesToRead: O.fromUndefinedOr(length) }),
   });
   yield* Stream.runForEach(stream, (chunk) =>
     Effect.sync(() => {
@@ -686,11 +686,11 @@ export const ArchiveWriterLive: Layer.Layer<ArchiveWriter, never, FileSystem.Fil
 const expectedDigest = (row: PreservationManifestRow): O.Option<Sha256Hex> =>
   PreservationAttemptOutcome.match(row.outcome, {
     "already-complete": (outcome) => O.some(outcome.sha256),
-    "changed-during-copy": () => O.none<Sha256Hex>(),
+    "changed-during-copy": O.none<Sha256Hex>,
     copied: (outcome) => O.some(outcome.sha256),
     "resume-completed": (outcome) => O.some(outcome.sha256),
-    "resume-discarded": () => O.none<Sha256Hex>(),
-    unreadable: () => O.none<Sha256Hex>(),
+    "resume-discarded": O.none<Sha256Hex>,
+    unreadable: O.none<Sha256Hex>,
   });
 
 const missingVerificationRow = (row: PreservationManifestRow, verifiedAt: string): PreservationVerificationRow =>
