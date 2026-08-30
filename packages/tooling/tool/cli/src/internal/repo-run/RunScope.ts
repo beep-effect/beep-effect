@@ -13,10 +13,11 @@ import { platform, tmpdir } from "node:os";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, flow, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
-import { RunScopeRecord, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
+import { RunScopeRecord, RunScopeStopOutcome, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const SYSTEMD_DESTINATION = "org.freedesktop.systemd1";
@@ -170,9 +171,10 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
  * console.log(typeof enterRunScope) // "function"
  * ```
  *
- * The unit description records the admission root that owns the scope, so a
- * reaper running against an isolated test root never mistakes its scope for a
- * leak. Production sessions all use the invariant canonical root.
+ * The unit description records diagnostic provenance for the admission root.
+ * Destructive reaping does not infer authority from loaded units or this
+ * description: a verified dead lease with a nonce matching the unit name, and
+ * no live lease representing that unit, is the sole stop authority.
  *
  * @param ticketId - Admission ticket nonce used to generate a safe unit name.
  * @param ownerRoot - Admission root directory whose lease owns the scope.
@@ -246,7 +248,8 @@ const ownerRootFromDescription: (description: string) => O.Option<string> = flow
  * Scopes started by {@link enterRunScope} carry
  * `Description=beep-yeet-lease nonce=<nonce> root=<admission root>`. Scopes
  * without that description, command failures, and spawn failures all read as
- * an unknown owner, which the reaper leaves alone.
+ * an unknown owner. This is a diagnostic reader; the reaper uses verified
+ * dead-lease evidence rather than owner-description census data.
  *
  * **Example** (Reference the owner reader)
  *
@@ -326,8 +329,8 @@ export const readRunScopeTelemetry = Effect.fn("RunScope.readRunScopeTelemetry")
 /**
  * Stop a recorded run scope while applying dead-lease reaping.
  *
- * This helper is reserved for the scheduler reaper. Stop and spawn failures
- * are ignored so stale lease cleanup can continue.
+ * This helper is reserved for the scheduler reaper. It reports failures so
+ * the owning dead lease can remain available as retry authority.
  *
  * **Example** (Reference the dead-lease stop helper)
  *
@@ -338,57 +341,31 @@ export const readRunScopeTelemetry = Effect.fn("RunScope.readRunScopeTelemetry")
  * ```
  *
  * @param unitName - Scope recorded by a dead admission lease.
+ * @returns A bounded outcome distinguishing a successful stop, an already-collected scope, spawn failure, and non-zero exit.
  * @internal
  * @category admission
  * @since 0.0.0
  */
 export const stopRunScopeForReap = Effect.fn("RunScope.stopRunScopeForReap")(function* (
   unitName: string
-): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
-  yield* runScopeCommand("systemctl", ["--user", "stop", unitName]);
-});
-
-/**
- * List the run-scope units currently loaded by the systemd user manager.
- *
- * The reaper compares this census against live leases so scopes kept alive by
- * detached descendants are stopped once no lease owns them, after confirming
- * with {@link readRunScopeOwnerRoot} that the scope belongs to the reaper's own
- * admission root. Spawn and command failures become an empty census.
- *
- * **Example** (Reference the scope census)
- *
- * ```ts
- * import { listRunScopeUnits } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(typeof listRunScopeUnits) // "function"
- * ```
- *
- * @returns Loaded `agent-run-*.scope` unit names.
- * @category admission
- * @since 0.0.0
- */
-export const listRunScopeUnits = Effect.fn("RunScope.listRunScopeUnits")(function* (): Effect.fn.Return<
-  ReadonlyArray<string>,
-  never,
-  ChildProcessSpawner.ChildProcessSpawner
-> {
-  const listed = yield* runScopeCommand("systemctl", [
-    "--user",
-    "list-units",
-    "--plain",
-    "--no-legend",
-    "agent-run-*.scope",
-  ]);
-  if (O.isNone(listed) || listed.value.exitCode !== 0) {
-    return [];
-  }
-  return pipe(
-    Str.split(listed.value.output, "\n"),
-    A.map(Str.trim),
-    A.filter(Str.isNonEmpty),
-    A.map((line) => A.headNonEmpty(Str.split(line, /\s+/u)))
-  );
+): Effect.fn.Return<RunScopeStopOutcome, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const stopped = yield* runScopeCommand("systemctl", ["--user", "stop", unitName]);
+  return yield* O.match(stopped, {
+    onNone: () => Effect.succeed(RunScopeStopOutcome.Enum["spawn-failed"]),
+    onSome: (capture) =>
+      Eq.equals(capture.exitCode, 0)
+        ? Effect.succeed(RunScopeStopOutcome.Enum.stopped)
+        : runScopeCommand("systemctl", ["--user", "show", unitName, "--property=LoadState", "--value"]).pipe(
+            Effect.map((loadState) =>
+              O.exists(
+                loadState,
+                (probe) => Eq.equals(probe.exitCode, 0) && Str.Equivalence(Str.trim(probe.output), "not-found")
+              )
+                ? RunScopeStopOutcome.Enum.absent
+                : RunScopeStopOutcome.Enum["exit-failed"]
+            )
+          ),
+  });
 });
 
 /**

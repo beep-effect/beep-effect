@@ -45,6 +45,7 @@ describe("Yeet PR lease watcher", () => {
           expect(script).toContain('BEEP_YEET_PUSH_REFSPEC="HEAD:refs/heads/${head_branch}"');
           expect(script).toContain('mv -f "$original_lease" "$lease"');
           expect(script).toContain('parse_timestamp_epoch "$refreshed_at"');
+          expect(script).toContain("take_over_checkout() (");
         })
       )
     ));

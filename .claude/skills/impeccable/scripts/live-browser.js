@@ -9,9 +9,8 @@
  * configure (pick action + go), generating (progressive dots), and cycling
  * (prev/next + accept/discard). Feels like Spotlight, not a modal.
  */
-(function () {
-  'use strict';
-  if (typeof window === 'undefined') return;
+(() => {
+  if (typeof window === "undefined") return;
 
   // Guard against double-init. Bun's HTML loader may process the <script> tag
   // and create a bundled copy alongside the external load, or HMR may re-execute.
@@ -37,52 +36,52 @@
   // not a washed theme-adjusted one. These mirror the kit's picker
   // colors in site/styles/kinpaku-kit.css; keep them in sync by hand.
   const C = {
-    brand:     'oklch(84% 0.19 80.46)',         // kinpaku gold
-    brandHov:  'oklch(86% 0.07 84)',            // kinpaku-pale (hover lift)
-    brandSoft: 'oklch(84% 0.19 80.46 / 0.18)',  // kinpaku-dim
-    ink:       'oklch(4% 0.004 95)',            // lacquer-deep
-    ash:       'oklch(55% 0.018 82)',           // warm muted text
-    paper:     'oklch(98% 0.005 95 / 0.92)',    // light overlay on user pages
-    paperSolid:'oklch(98% 0.005 95)',
-    mist:      'oklch(90% 0.008 82 / 0.6)',     // light hairline
-    white:     'oklch(99% 0 0)',
+    brand: "oklch(84% 0.19 80.46)", // kinpaku gold
+    brandHov: "oklch(86% 0.07 84)", // kinpaku-pale (hover lift)
+    brandSoft: "oklch(84% 0.19 80.46 / 0.18)", // kinpaku-dim
+    ink: "oklch(4% 0.004 95)", // lacquer-deep
+    ash: "oklch(55% 0.018 82)", // warm muted text
+    paper: "oklch(98% 0.005 95 / 0.92)", // light overlay on user pages
+    paperSolid: "oklch(98% 0.005 95)",
+    mist: "oklch(90% 0.008 82 / 0.6)", // light hairline
+    white: "oklch(99% 0 0)",
   };
   // Picker bar chrome - mirrors .live-demo-gbar / .live-demo-ctx in kinpaku-kit.css.
   // Quiet neutral elevation: no gold halo ring (gold is reserved for the brand
   // mark and the active control, not the container outline).
-  const PICKER_SHADOW =
-    '0 16px 36px -12px oklch(0% 0 0 / 0.6)';
-  const FONT = 'system-ui, -apple-system, sans-serif';
-  const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+  const PICKER_SHADOW = "0 16px 36px -12px oklch(0% 0 0 / 0.6)";
+  const FONT = "system-ui, -apple-system, sans-serif";
+  const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
   // z-index: detect overlays use 99999, so our UI must be above them
   const Z = { highlight: 100001, bar: 100005, picker: 100007, toast: 100010 };
-  const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'; // ease-out-quint
-  const PREFIX = 'impeccable-live';
-  const IMPECCABLE_COMMAND = (window.__IMPECCABLE_COMMAND_PREFIX__ || '/') + 'impeccable';
-  const PICK_CURSOR_STYLE_ID = PREFIX + '-pick-cursor-style';
+  const EASE = "cubic-bezier(0.22, 1, 0.36, 1)"; // ease-out-quint
+  const PREFIX = "impeccable-live";
+  const IMPECCABLE_COMMAND = (window.__IMPECCABLE_COMMAND_PREFIX__ || "/") + "impeccable";
+  const PICK_CURSOR_STYLE_ID = PREFIX + "-pick-cursor-style";
   const MANUAL_APPLY_STATE_TTL_MS = 15 * 60 * 1000;
   const sessionState = window.__IMPECCABLE_LIVE_SESSION__?.createLiveBrowserSessionState({
     prefix: PREFIX,
     storage: localStorage,
-    idFactory: () => crypto.randomUUID().replace(/-/g, '').slice(0, 8),
+    idFactory: () => crypto.randomUUID().replace(/-/g, "").slice(0, 8),
   });
   if (!sessionState) {
-    console.error('[impeccable] live-browser-session.js was not loaded. Live mode cannot start safely.');
+    console.error("[impeccable] live-browser-session.js was not loaded. Live mode cannot start safely.");
     window.__IMPECCABLE_LIVE_INIT__ = false;
     return;
   }
   const HIGHLIGHT_TRANSITION =
-    'top 140ms ' + EASE +
-    ', left 140ms ' + EASE +
-    ', width 140ms ' + EASE +
-    ', height 140ms ' + EASE +
-    ', opacity 150ms ease';
-  const TOOLTIP_TRANSITION =
-    'top 140ms ' + EASE + ', left 140ms ' + EASE + ', opacity 150ms ease';
+    "top 140ms " +
+    EASE +
+    ", left 140ms " +
+    EASE +
+    ", width 140ms " +
+    EASE +
+    ", height 140ms " +
+    EASE +
+    ", opacity 150ms ease";
+  const TOOLTIP_TRANSITION = "top 140ms " + EASE + ", left 140ms " + EASE + ", opacity 150ms ease";
 
-  const SKIP_TAGS = new Set([
-    'html', 'head', 'body', 'script', 'style', 'link', 'meta', 'noscript', 'br', 'wbr',
-  ]);
+  const SKIP_TAGS = new Set(["html", "head", "body", "script", "style", "link", "meta", "noscript", "br", "wbr"]);
 
   // Command vocabulary (values + labels + icons) comes from the canonical source,
   // skill/scripts/live/vocabulary.mjs, which live-server.mjs serializes into
@@ -107,7 +106,7 @@
   // Add a surface in ui-surfaces.mjs, not here.
   const LIVE_CHROME_MOUNT_CONTRACT = Array.isArray(window.__IMPECCABLE_LIVE_MOUNT_CONTRACT__)
     ? window.__IMPECCABLE_LIVE_MOUNT_CONTRACT__
-    : ['root', 'transport', 'state', 'actions'];
+    : ["root", "transport", "state", "actions"];
   const LIVE_UI_SURFACES = Array.isArray(window.__IMPECCABLE_LIVE_UI_SURFACES__)
     ? window.__IMPECCABLE_LIVE_UI_SURFACES__
     : [];
@@ -117,7 +116,7 @@
   // State
   //
 
-  let state = 'IDLE';
+  let state = "IDLE";
   let hoveredElement = null;
   let selectedElement = null;
   let currentSessionId = null;
@@ -159,7 +158,7 @@
     if (nextRank === undefined || currentRank === undefined) return true;
     return nextRank >= currentRank;
   }
-  let parameterGenerationState = 'idle';
+  let parameterGenerationState = "idle";
   let parameterReadyAnnouncedSession = null;
   let svelteComponentSession = null;
   let svelteRuntimePromise = null;
@@ -192,7 +191,7 @@
   let variantSelectionPromise = null;
   let recoveringEmptyCycling = false;
   let hasProjectContext = false;
-  let selectedAction = 'impeccable';
+  let selectedAction = "impeccable";
   let selectedCount = 3;
   const browserOwner = sessionState.owner;
   let checkpointTimer = null;
@@ -205,18 +204,24 @@
   let scrollLockAnchorTop = null;
   let scrollLockRaf = null;
   let scrollLockAbort = null;
-  const SCROLL_ANCHOR_LOCK_ID = 'impeccable-scroll-anchor-lock';
-  const VARIANT_STATE_STYLE_ID = 'impeccable-variant-state';
-  const DISCARD_STATE_STYLE_ID = 'impeccable-discard-state';
+  const SCROLL_ANCHOR_LOCK_ID = "impeccable-scroll-anchor-lock";
+  const VARIANT_STATE_STYLE_ID = "impeccable-variant-state";
+  const DISCARD_STATE_STYLE_ID = "impeccable-discard-state";
 
   // Dedicated key for scroll position - SEPARATE from LS_KEY so that
   // saveSession's state updates don't clobber a carefully-captured scrollY.
   // (Previously: saveSession wrote scrollY alongside state, so every call
   // during resume overwrote the pre-reload value with whatever the browser
   // had landed on, typically 0.)
-  function writeScrollY(y) { sessionState.writeScrollY(y); }
-  function readScrollY() { return sessionState.readScrollY(); }
-  function clearScrollY() { sessionState.clearScrollY(); }
+  function writeScrollY(y) {
+    sessionState.writeScrollY(y);
+  }
+  function readScrollY() {
+    return sessionState.readScrollY();
+  }
+  function clearScrollY() {
+    sessionState.clearScrollY();
+  }
 
   // Pre-empt the browser: apply manual scroll restoration and jump to the
   // saved scrollY at script-parse time. Retries on fonts.ready and load
@@ -224,7 +229,7 @@
   // which is often hundreds of pixels short of the final value until
   // async-loaded fonts swap in and reflow.
   try {
-    history.scrollRestoration = 'manual';
+    history.scrollRestoration = "manual";
     const savedY = readScrollY();
     if (savedY != null) {
       const apply = () => {
@@ -234,7 +239,7 @@
       };
       apply();
       if (document.fonts?.ready) document.fonts.ready.then(apply).catch(() => {});
-      window.addEventListener('load', apply, { once: true });
+      window.addEventListener("load", apply, { once: true });
     }
   } catch {}
 
@@ -260,7 +265,7 @@
     document,
   });
   if (!domHelpers) {
-    console.error('[impeccable] live-browser-dom.js was not loaded. Live mode cannot start safely.');
+    console.error("[impeccable] live-browser-dom.js was not loaded. Live mode cannot start safely.");
     window.__IMPECCABLE_LIVE_INIT__ = false;
     return;
   }
@@ -282,7 +287,7 @@
 
   window.__IMPECCABLE_LIVE_CHROME_CORE__ = {
     version: 1,
-    adapter: window.__IMPECCABLE_LIVE_ADAPTER__ || 'dom',
+    adapter: window.__IMPECCABLE_LIVE_ADAPTER__ || "dom",
     mountContract: LIVE_CHROME_MOUNT_CONTRACT,
     surfaces: LIVE_UI_SURFACES,
     componentIds: LIVE_UI_COMPONENT_IDS,
@@ -307,11 +312,13 @@
       mountedSvelteVariant: svelteComponentSession?.mountedVariant || 0,
       pickActive,
       pendingApplyInFlight,
-      hoveredElement: hoveredElement ? {
-        tag: hoveredElement.tagName,
-        classes: hoveredElement.className,
-        pickable: pickable(hoveredElement),
-      } : null,
+      hoveredElement: hoveredElement
+        ? {
+            tag: hoveredElement.tagName,
+            classes: hoveredElement.className,
+            pickable: pickable(hoveredElement),
+          }
+        : null,
       pendingSvelteComponentRetry: !!pendingSvelteComponentRetryObserver,
       recoveryWaitingForAnchor,
       evtSourceReadyState: evtSource ? evtSource.readyState : null,
@@ -323,27 +330,41 @@
   //
 
   function initHighlight() {
-    highlightEl = document.createElement('div');
-    highlightEl.id = PREFIX + '-highlight';
+    highlightEl = document.createElement("div");
+    highlightEl.id = PREFIX + "-highlight";
     Object.assign(highlightEl.style, {
-      position: 'fixed', top: '0', left: '0', width: '0', height: '0',
-      border: '2px solid ' + C.brand, borderRadius: '3px',
-      pointerEvents: 'none', zIndex: Z.highlight, boxSizing: 'border-box',
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "0",
+      height: "0",
+      border: "2px solid " + C.brand,
+      borderRadius: "3px",
+      pointerEvents: "none",
+      zIndex: Z.highlight,
+      boxSizing: "border-box",
       transition: HIGHLIGHT_TRANSITION,
-      display: 'none', opacity: '0',
+      display: "none",
+      opacity: "0",
     });
     uiAppend(highlightEl);
 
-    tooltipEl = document.createElement('div');
-    tooltipEl.id = PREFIX + '-tooltip';
+    tooltipEl = document.createElement("div");
+    tooltipEl.id = PREFIX + "-tooltip";
     Object.assign(tooltipEl.style, {
-      position: 'fixed',
-      background: C.ink, color: C.white,
-      fontFamily: MONO, fontSize: '10px', fontWeight: '500',
-      padding: '2px 6px', borderRadius: '3px',
-      zIndex: Z.highlight + 1, pointerEvents: 'none',
-      whiteSpace: 'nowrap', display: 'none',
-      letterSpacing: '0.02em',
+      position: "fixed",
+      background: C.ink,
+      color: C.white,
+      fontFamily: MONO,
+      fontSize: "10px",
+      fontWeight: "500",
+      padding: "2px 6px",
+      borderRadius: "3px",
+      zIndex: Z.highlight + 1,
+      pointerEvents: "none",
+      whiteSpace: "nowrap",
+      display: "none",
+      letterSpacing: "0.02em",
       transition: TOOLTIP_TRANSITION,
     });
     uiAppend(tooltipEl);
@@ -351,33 +372,35 @@
 
   function shouldShowHighlightTagTooltip() {
     // Configure/edit carry the tag in the bar selection pill, so keep only the outline.
-    return state !== 'CONFIGURING' && state !== 'EDITING';
+    return state !== "CONFIGURING" && state !== "EDITING";
   }
 
   function hideHighlightTagTooltip() {
     if (!tooltipEl) return;
-    tooltipEl.style.opacity = '0';
-    tooltipEl.style.display = 'none';
+    tooltipEl.style.opacity = "0";
+    tooltipEl.style.display = "none";
   }
 
   function showHighlight(el) {
     if (!el || !highlightEl) return;
-    if (el.hasAttribute?.('data-impeccable-insert-placeholder')) return;
+    if (el.hasAttribute?.("data-impeccable-insert-placeholder")) return;
     const r = el.getBoundingClientRect();
-    const top = (r.top - 2) + 'px', left = (r.left - 2) + 'px';
-    const width = (r.width + 4) + 'px', height = (r.height + 4) + 'px';
+    const top = r.top - 2 + "px",
+      left = r.left - 2 + "px";
+    const width = r.width + 4 + "px",
+      height = r.height + 4 + "px";
     const showTagTooltip = shouldShowHighlightTagTooltip();
 
-    const hiWasHidden = highlightEl.style.display === 'none' || highlightEl.style.opacity === '0';
+    const hiWasHidden = highlightEl.style.display === "none" || highlightEl.style.opacity === "0";
     if (hiWasHidden) {
       // Snap to first target without animating from (0,0), then fade in.
-      highlightEl.style.transition = 'none';
-      Object.assign(highlightEl.style, { top, left, width, height, display: 'block' });
+      highlightEl.style.transition = "none";
+      Object.assign(highlightEl.style, { top, left, width, height, display: "block" });
       void highlightEl.offsetWidth;
       highlightEl.style.transition = HIGHLIGHT_TRANSITION;
-      highlightEl.style.opacity = '1';
+      highlightEl.style.opacity = "1";
     } else {
-      Object.assign(highlightEl.style, { top, left, width, height, display: 'block', opacity: '1' });
+      Object.assign(highlightEl.style, { top, left, width, height, display: "block", opacity: "1" });
     }
 
     if (!showTagTooltip) {
@@ -386,23 +409,29 @@
     }
 
     const tipTop = r.top - 20;
-    const tipY = (tipTop < 4 ? r.bottom + 4 : tipTop) + 'px';
-    const tipX = Math.max(4, r.left) + 'px';
+    const tipY = (tipTop < 4 ? r.bottom + 4 : tipTop) + "px";
+    const tipX = Math.max(4, r.left) + "px";
     tooltipEl.textContent = desc(el);
     if (hiWasHidden) {
-      tooltipEl.style.transition = 'none';
-      Object.assign(tooltipEl.style, { top: tipY, left: tipX, display: 'block' });
+      tooltipEl.style.transition = "none";
+      Object.assign(tooltipEl.style, { top: tipY, left: tipX, display: "block" });
       void tooltipEl.offsetWidth;
       tooltipEl.style.transition = TOOLTIP_TRANSITION;
-      tooltipEl.style.opacity = '1';
+      tooltipEl.style.opacity = "1";
     } else {
-      Object.assign(tooltipEl.style, { top: tipY, left: tipX, display: 'block', opacity: '1' });
+      Object.assign(tooltipEl.style, { top: tipY, left: tipX, display: "block", opacity: "1" });
     }
   }
 
   function hideHighlight() {
-    if (highlightEl) { highlightEl.style.opacity = '0'; highlightEl.style.display = 'none'; }
-    if (tooltipEl) { tooltipEl.style.opacity = '0'; tooltipEl.style.display = 'none'; }
+    if (highlightEl) {
+      highlightEl.style.opacity = "0";
+      highlightEl.style.display = "none";
+    }
+    if (tooltipEl) {
+      tooltipEl.style.opacity = "0";
+      tooltipEl.style.display = "none";
+    }
   }
 
   //
@@ -415,83 +444,104 @@
   // correlate directly with the captured PNG.
   //
 
-  const DRAG_THRESHOLD = 5;       // px - below this, treat pointerup as a click
-  const PIN_DBL_CLICK_MS = 300;   // two clicks on the same pin within this delete it
+  const DRAG_THRESHOLD = 5; // px - below this, treat pointerup as a click
+  const PIN_DBL_CLICK_MS = 300; // two clicks on the same pin within this delete it
   let annotOverlayEl = null;
   let annotSvgEl = null;
   let annotPinsEl = null;
   let annotClearChipEl = null;
-  let annotState = { comments: [], strokes: [] };
+  const annotState = { comments: [], strokes: [] };
   let annotActive = false;
   // `annotPointer` is either:
   //   { kind: 'new',   x0, y0, moved, strokeEl, strokePoints }   creating a stroke/pin
   //   { kind: 'pin',   idx, startPointer, startPin, moved }     dragging an existing pin
   let annotPointer = null;
-  let annotEditing = null;        // { idx, input, wrapEl }
+  let annotEditing = null; // { idx, input, wrapEl }
   let annotLastPinClick = { idx: -1, time: 0 }; // for click-click-to-delete
   let placeholderResizeLayerEl = null;
   let placeholderResizeDrag = null;
 
   function initAnnotOverlay() {
-    annotOverlayEl = document.createElement('div');
-    annotOverlayEl.id = PREFIX + '-annot';
+    annotOverlayEl = document.createElement("div");
+    annotOverlayEl.id = PREFIX + "-annot";
     Object.assign(annotOverlayEl.style, {
-      position: 'fixed', top: '0', left: '0', width: '0', height: '0',
-      pointerEvents: 'auto', zIndex: Z.highlight + 2,
-      display: 'none', overflow: 'visible',
-      cursor: 'crosshair', touchAction: 'none',
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "0",
+      height: "0",
+      pointerEvents: "auto",
+      zIndex: Z.highlight + 2,
+      display: "none",
+      overflow: "visible",
+      cursor: "crosshair",
+      touchAction: "none",
     });
 
-    annotSvgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    annotSvgEl.id = PREFIX + '-annot-svg';
+    annotSvgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    annotSvgEl.id = PREFIX + "-annot-svg";
     Object.assign(annotSvgEl.style, {
-      position: 'absolute', top: '0', left: '0',
-      width: '100%', height: '100%',
+      position: "absolute",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
       // The SVG itself doesn't absorb clicks; individual hit-paths opt-in via
       // pointer-events=stroke so gaps still fall through to the overlay.
-      pointerEvents: 'none', overflow: 'visible',
+      pointerEvents: "none",
+      overflow: "visible",
     });
     annotOverlayEl.appendChild(annotSvgEl);
 
-    annotPinsEl = document.createElement('div');
-    annotPinsEl.id = PREFIX + '-annot-pins';
+    annotPinsEl = document.createElement("div");
+    annotPinsEl.id = PREFIX + "-annot-pins";
     Object.assign(annotPinsEl.style, {
-      position: 'absolute', inset: '0',
-      pointerEvents: 'none',
+      position: "absolute",
+      inset: "0",
+      pointerEvents: "none",
     });
     annotOverlayEl.appendChild(annotPinsEl);
 
-    annotClearChipEl = document.createElement('div');
-    annotClearChipEl.id = PREFIX + '-annot-clear';
-    annotClearChipEl.dataset.annotClear = 'true';
-    annotClearChipEl.textContent = 'Clear';
+    annotClearChipEl = document.createElement("div");
+    annotClearChipEl.id = PREFIX + "-annot-clear";
+    annotClearChipEl.dataset.annotClear = "true";
+    annotClearChipEl.textContent = "Clear";
     Object.assign(annotClearChipEl.style, {
-      position: 'absolute', top: '8px', right: '8px',
-      background: C.ink, color: C.white,
-      fontFamily: FONT, fontSize: '10px', fontWeight: '500',
-      letterSpacing: '0.08em', textTransform: 'uppercase',
-      padding: '5px 12px', borderRadius: '999px',
-      cursor: 'pointer', pointerEvents: 'auto',
-      display: 'none', userSelect: 'none',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+      position: "absolute",
+      top: "8px",
+      right: "8px",
+      background: C.ink,
+      color: C.white,
+      fontFamily: FONT,
+      fontSize: "10px",
+      fontWeight: "500",
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      padding: "5px 12px",
+      borderRadius: "999px",
+      cursor: "pointer",
+      pointerEvents: "auto",
+      display: "none",
+      userSelect: "none",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
     });
     annotOverlayEl.appendChild(annotClearChipEl);
 
-    placeholderResizeLayerEl = document.createElement('div');
-    placeholderResizeLayerEl.id = PREFIX + '-placeholder-resize';
+    placeholderResizeLayerEl = document.createElement("div");
+    placeholderResizeLayerEl.id = PREFIX + "-placeholder-resize";
     Object.assign(placeholderResizeLayerEl.style, {
-      position: 'absolute',
-      inset: '0',
-      pointerEvents: 'none',
-      display: 'none',
-      zIndex: '2',
+      position: "absolute",
+      inset: "0",
+      pointerEvents: "none",
+      display: "none",
+      zIndex: "2",
     });
     annotOverlayEl.appendChild(placeholderResizeLayerEl);
 
-    annotOverlayEl.addEventListener('pointerdown', onAnnotDown);
-    annotOverlayEl.addEventListener('pointermove', onAnnotMove);
-    annotOverlayEl.addEventListener('pointerup', onAnnotUp);
-    annotOverlayEl.addEventListener('pointercancel', onAnnotUp);
+    annotOverlayEl.addEventListener("pointerdown", onAnnotDown);
+    annotOverlayEl.addEventListener("pointermove", onAnnotMove);
+    annotOverlayEl.addEventListener("pointerup", onAnnotUp);
+    annotOverlayEl.addEventListener("pointercancel", onAnnotUp);
     uiAppend(annotOverlayEl);
     // Modal-host friendliness: pointer-events is already 'auto' on this
     // overlay; we only need to silence the host's outside-interaction
@@ -503,21 +553,21 @@
   function updateClearChip() {
     if (!annotClearChipEl) return;
     const hasAny = annotState.comments.length > 0 || annotState.strokes.length > 0;
-    annotClearChipEl.style.display = hasAny ? 'block' : 'none';
+    annotClearChipEl.style.display = hasAny ? "block" : "none";
   }
 
   function showAnnotOverlay(el) {
     if (!annotOverlayEl || !el) return;
     annotActive = true;
     positionAnnotOverlay(el);
-    annotOverlayEl.style.display = 'block';
+    annotOverlayEl.style.display = "block";
     syncPlaceholderResizeHandles();
   }
 
   function hideAnnotOverlay() {
     annotActive = false;
     placeholderResizeDrag = null;
-    if (annotOverlayEl) annotOverlayEl.style.display = 'none';
+    if (annotOverlayEl) annotOverlayEl.style.display = "none";
     syncPlaceholderResizeHandles();
     // Drop any in-progress edit without touching annotState - clearAnnotations
     // (if the caller is exiting configure mode) handles state reset.
@@ -528,10 +578,12 @@
     if (!annotOverlayEl || !el) return;
     const r = el.getBoundingClientRect();
     Object.assign(annotOverlayEl.style, {
-      top: r.top + 'px', left: r.left + 'px',
-      width: r.width + 'px', height: r.height + 'px',
+      top: r.top + "px",
+      left: r.left + "px",
+      width: r.width + "px",
+      height: r.height + "px",
     });
-    annotSvgEl.setAttribute('viewBox', '0 0 ' + r.width + ' ' + r.height);
+    annotSvgEl.setAttribute("viewBox", "0 0 " + r.width + " " + r.height);
     syncPlaceholderResizeHandles();
   }
 
@@ -539,7 +591,7 @@
     annotState.comments = [];
     annotState.strokes = [];
     if (annotSvgEl) while (annotSvgEl.firstChild) annotSvgEl.removeChild(annotSvgEl.firstChild);
-    if (annotPinsEl) annotPinsEl.innerHTML = '';
+    if (annotPinsEl) annotPinsEl.innerHTML = "";
     annotPointer = null;
     annotEditing = null;
     annotLastPinClick = { idx: -1, time: 0 };
@@ -552,25 +604,25 @@
     while (annotSvgEl.firstChild) annotSvgEl.removeChild(annotSvgEl.firstChild);
     annotState.strokes.forEach((s, idx) => {
       const d = pointsToPath(s.points);
-      const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      hit.setAttribute('d', d);
-      hit.setAttribute('stroke', 'transparent');
-      hit.setAttribute('stroke-width', '16');
-      hit.setAttribute('stroke-linecap', 'round');
-      hit.setAttribute('stroke-linejoin', 'round');
-      hit.setAttribute('fill', 'none');
-      hit.setAttribute('pointer-events', 'stroke');
-      hit.style.cursor = 'pointer';
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hit.setAttribute("d", d);
+      hit.setAttribute("stroke", "transparent");
+      hit.setAttribute("stroke-width", "16");
+      hit.setAttribute("stroke-linecap", "round");
+      hit.setAttribute("stroke-linejoin", "round");
+      hit.setAttribute("fill", "none");
+      hit.setAttribute("pointer-events", "stroke");
+      hit.style.cursor = "pointer";
       hit.dataset.annotStroke = String(idx);
       annotSvgEl.appendChild(hit);
-      const visible = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      visible.setAttribute('d', d);
-      visible.setAttribute('stroke', C.brand);
-      visible.setAttribute('stroke-width', '3');
-      visible.setAttribute('stroke-linecap', 'round');
-      visible.setAttribute('stroke-linejoin', 'round');
-      visible.setAttribute('fill', 'none');
-      visible.setAttribute('pointer-events', 'none');
+      const visible = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      visible.setAttribute("d", d);
+      visible.setAttribute("stroke", C.brand);
+      visible.setAttribute("stroke-width", "3");
+      visible.setAttribute("stroke-linecap", "round");
+      visible.setAttribute("stroke-linejoin", "round");
+      visible.setAttribute("fill", "none");
+      visible.setAttribute("pointer-events", "none");
       annotSvgEl.appendChild(visible);
     });
     updateClearChip();
@@ -585,38 +637,40 @@
     if (!annotActive) return;
 
     // 0) Insert placeholder edge resize - wins over draw / pins.
-    const resizeEdge = e.target.closest?.('[data-impeccable-placeholder-resize]')?.dataset.impeccablePlaceholderResize;
-    if (resizeEdge && configureKind === 'insert' && placeholderElement) {
+    const resizeEdge = e.target.closest?.("[data-impeccable-placeholder-resize]")?.dataset.impeccablePlaceholderResize;
+    if (resizeEdge && configureKind === "insert" && placeholderElement) {
       startPlaceholderEdgeResize(resizeEdge, e);
       return;
     }
 
     // 1) Clear chip → wipe all annotations
-    if (e.target.closest?.('[data-annot-clear]')) {
+    if (e.target.closest?.("[data-annot-clear]")) {
       if (annotEditing) annotEditing = null;
       clearAnnotations();
       renderAllPins();
       redrawStrokes();
-      e.stopPropagation(); e.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
       return;
     }
 
     // 2) Stroke hit path → delete that stroke
-    const strokeHit = e.target.closest?.('[data-annot-stroke]');
+    const strokeHit = e.target.closest?.("[data-annot-stroke]");
     if (strokeHit) {
-      const idx = parseInt(strokeHit.dataset.annotStroke, 10);
+      const idx = Number.parseInt(strokeHit.dataset.annotStroke, 10);
       if (Number.isInteger(idx)) {
         annotState.strokes.splice(idx, 1);
         redrawStrokes();
       }
-      e.stopPropagation(); e.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
       return;
     }
 
     // 3) Pin → drag, edit, or delete-on-double-click
-    const pinWrap = e.target.closest?.('[data-annot-pin]');
+    const pinWrap = e.target.closest?.("[data-annot-pin]");
     if (pinWrap) {
-      const idx = parseInt(pinWrap.dataset.annotPin, 10);
+      const idx = Number.parseInt(pinWrap.dataset.annotPin, 10);
       if (!Number.isInteger(idx)) return;
       // Double-click (two pointerdowns on the same pin within window) → delete.
       const now = Date.now();
@@ -625,7 +679,8 @@
         annotState.comments.splice(idx, 1);
         annotLastPinClick = { idx: -1, time: 0 };
         renderAllPins();
-        e.stopPropagation(); e.preventDefault();
+        e.stopPropagation();
+        e.preventDefault();
         return;
       }
       annotLastPinClick = { idx, time: now };
@@ -637,26 +692,34 @@
       const p = localCoords(e);
       const pin = annotState.comments[idx];
       annotPointer = {
-        kind: 'pin', idx,
+        kind: "pin",
+        idx,
         startPointer: p,
         startPin: { x: pin.x, y: pin.y },
         moved: false,
       };
-      try { annotOverlayEl.setPointerCapture(e.pointerId); } catch {}
-      e.stopPropagation(); e.preventDefault();
+      try {
+        annotOverlayEl.setPointerCapture(e.pointerId);
+      } catch {}
+      e.stopPropagation();
+      e.preventDefault();
       return;
     }
 
     // 4) Empty area → commit any open edit, then start new annotation
     if (annotEditing) {
       finalizeEditingPin();
-      e.stopPropagation(); e.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
       return;
     }
     const p = localCoords(e);
-    annotPointer = { kind: 'new', x0: p.x, y0: p.y, moved: false, strokeEl: null, strokePoints: null };
-    try { annotOverlayEl.setPointerCapture(e.pointerId); } catch {}
-    e.stopPropagation(); e.preventDefault();
+    annotPointer = { kind: "new", x0: p.x, y0: p.y, moved: false, strokeEl: null, strokePoints: null };
+    try {
+      annotOverlayEl.setPointerCapture(e.pointerId);
+    } catch {}
+    e.stopPropagation();
+    e.preventDefault();
   }
 
   function onAnnotMove(e) {
@@ -669,7 +732,7 @@
         d.edge,
         e.clientX - d.startX,
         e.clientY - d.startY,
-        d.parentWidth,
+        d.parentWidth
       );
       applyPlaceholderDimensions(next);
       e.stopPropagation();
@@ -679,7 +742,7 @@
     if (!annotPointer) return;
     const p = localCoords(e);
 
-    if (annotPointer.kind === 'pin') {
+    if (annotPointer.kind === "pin") {
       const dx = p.x - annotPointer.startPointer.x;
       const dy = p.y - annotPointer.startPointer.y;
       if (!annotPointer.moved) {
@@ -687,7 +750,10 @@
         annotPointer.moved = true;
       }
       const pin = annotState.comments[annotPointer.idx];
-      if (!pin) { annotPointer = null; return; }
+      if (!pin) {
+        annotPointer = null;
+        return;
+      }
       pin.x = annotPointer.startPin.x + dx;
       pin.y = annotPointer.startPin.y + dy;
       renderAllPins();
@@ -696,48 +762,53 @@
     }
 
     // kind === 'new'
-    const dx = p.x - annotPointer.x0, dy = p.y - annotPointer.y0;
+    const dx = p.x - annotPointer.x0,
+      dy = p.y - annotPointer.y0;
     if (!annotPointer.moved) {
       if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       annotPointer.moved = true;
-      const strokeEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      strokeEl.setAttribute('stroke', C.brand);
-      strokeEl.setAttribute('stroke-width', '3');
-      strokeEl.setAttribute('stroke-linecap', 'round');
-      strokeEl.setAttribute('stroke-linejoin', 'round');
-      strokeEl.setAttribute('fill', 'none');
-      strokeEl.setAttribute('pointer-events', 'none');
+      const strokeEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      strokeEl.setAttribute("stroke", C.brand);
+      strokeEl.setAttribute("stroke-width", "3");
+      strokeEl.setAttribute("stroke-linecap", "round");
+      strokeEl.setAttribute("stroke-linejoin", "round");
+      strokeEl.setAttribute("fill", "none");
+      strokeEl.setAttribute("pointer-events", "none");
       annotSvgEl.appendChild(strokeEl);
       annotPointer.strokeEl = strokeEl;
       annotPointer.strokePoints = [[annotPointer.x0, annotPointer.y0]];
     }
     annotPointer.strokePoints.push([p.x, p.y]);
-    annotPointer.strokeEl.setAttribute('d', pointsToPath(annotPointer.strokePoints));
+    annotPointer.strokeEl.setAttribute("d", pointsToPath(annotPointer.strokePoints));
     e.stopPropagation();
   }
 
   function pointsToPath(points) {
-    if (!points || points.length === 0) return '';
-    let d = 'M' + points[0][0].toFixed(1) + ' ' + points[0][1].toFixed(1);
+    if (!points || points.length === 0) return "";
+    let d = "M" + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
     for (let i = 1; i < points.length; i++) {
-      d += ' L' + points[i][0].toFixed(1) + ' ' + points[i][1].toFixed(1);
+      d += " L" + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
     }
     return d;
   }
 
   function onAnnotUp(e) {
     if (placeholderResizeDrag) {
-      try { annotOverlayEl.releasePointerCapture(e.pointerId); } catch {}
+      try {
+        annotOverlayEl.releasePointerCapture(e.pointerId);
+      } catch {}
       placeholderResizeDrag = null;
       e.stopPropagation();
       return;
     }
     if (!annotActive || !annotPointer) return;
 
-    if (annotPointer.kind === 'pin') {
+    if (annotPointer.kind === "pin") {
       const wasDrag = annotPointer.moved;
       const idx = annotPointer.idx;
-      try { annotOverlayEl.releasePointerCapture(e.pointerId); } catch {}
+      try {
+        annotOverlayEl.releasePointerCapture(e.pointerId);
+      } catch {}
       annotPointer = null;
       if (wasDrag) {
         // A drag is an intentional reposition; a follow-up click shouldn't be
@@ -758,18 +829,20 @@
       redrawStrokes();
     } else {
       const idx = annotState.comments.length;
-      annotState.comments.push({ x: annotPointer.x0, y: annotPointer.y0, text: '' });
+      annotState.comments.push({ x: annotPointer.x0, y: annotPointer.y0, text: "" });
       renderAllPins();
       beginEditPin(idx);
     }
-    try { annotOverlayEl.releasePointerCapture(e.pointerId); } catch {}
+    try {
+      annotOverlayEl.releasePointerCapture(e.pointerId);
+    } catch {}
     annotPointer = null;
-    if (configureKind === 'insert') syncInsertCreateButton();
+    if (configureKind === "insert") syncInsertCreateButton();
     e.stopPropagation();
   }
 
   function renderAllPins() {
-    annotPinsEl.innerHTML = '';
+    annotPinsEl.innerHTML = "";
     annotState.comments.forEach((c, idx) => {
       annotPinsEl.appendChild(buildPinElement(c, idx));
     });
@@ -778,35 +851,47 @@
 
   function buildPinElement(comment, idx) {
     const interactive = idx >= 0;
-    const wrap = document.createElement('div');
+    const wrap = document.createElement("div");
     if (interactive) wrap.dataset.annotPin = String(idx);
     Object.assign(wrap.style, {
-      position: 'absolute',
-      left: (comment.x - 7) + 'px', top: (comment.y - 7) + 'px',
-      pointerEvents: interactive ? 'auto' : 'none',
-      display: 'flex', alignItems: 'flex-start', gap: '6px',
-      cursor: interactive ? 'grab' : 'default',
-      touchAction: 'none',
+      position: "absolute",
+      left: comment.x - 7 + "px",
+      top: comment.y - 7 + "px",
+      pointerEvents: interactive ? "auto" : "none",
+      display: "flex",
+      alignItems: "flex-start",
+      gap: "6px",
+      cursor: interactive ? "grab" : "default",
+      touchAction: "none",
     });
-    const dot = document.createElement('div');
+    const dot = document.createElement("div");
     Object.assign(dot.style, {
-      width: '14px', height: '14px', borderRadius: '50%',
-      background: C.brand, border: '2px solid ' + C.white,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-      flexShrink: '0',
+      width: "14px",
+      height: "14px",
+      borderRadius: "50%",
+      background: C.brand,
+      border: "2px solid " + C.white,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+      flexShrink: "0",
     });
     wrap.appendChild(dot);
 
     if (comment.text) {
-      const bubble = document.createElement('div');
+      const bubble = document.createElement("div");
       bubble.textContent = comment.text;
       Object.assign(bubble.style, {
-        background: C.ink, color: C.white,
-        fontFamily: FONT, fontSize: '12px', lineHeight: '1.4',
-        padding: '4px 8px', borderRadius: '3px',
-        marginTop: '-2px', maxWidth: '220px',
-        pointerEvents: 'none', whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
+        background: C.ink,
+        color: C.white,
+        fontFamily: FONT,
+        fontSize: "12px",
+        lineHeight: "1.4",
+        padding: "4px 8px",
+        borderRadius: "3px",
+        marginTop: "-2px",
+        maxWidth: "220px",
+        pointerEvents: "none",
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
       });
       wrap.appendChild(bubble);
     }
@@ -817,41 +902,49 @@
     const wrapEl = annotPinsEl.querySelector('[data-annot-pin="' + idx + '"]');
     if (!wrapEl) return;
     // Strip any existing bubble (but keep the dot)
-    wrapEl.querySelectorAll('div:not(:first-child)').forEach(n => n.remove());
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Note…';
+    wrapEl.querySelectorAll("div:not(:first-child)").forEach((n) => n.remove());
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Note…";
     Object.assign(input.style, {
-      background: C.ink, color: C.white,
-      fontFamily: FONT, fontSize: '12px', lineHeight: '1.4',
-      padding: '4px 8px', borderRadius: '3px',
-      border: '1px solid ' + C.brand,
-      outline: 'none', marginTop: '-2px',
-      width: '220px', pointerEvents: 'auto',
+      background: C.ink,
+      color: C.white,
+      fontFamily: FONT,
+      fontSize: "12px",
+      lineHeight: "1.4",
+      padding: "4px 8px",
+      borderRadius: "3px",
+      border: "1px solid " + C.brand,
+      outline: "none",
+      marginTop: "-2px",
+      width: "220px",
+      pointerEvents: "auto",
     });
-    const originalText = annotState.comments[idx].text || '';
+    const originalText = annotState.comments[idx].text || "";
     input.value = originalText;
     wrapEl.appendChild(input);
     annotEditing = { idx, input, wrapEl, originalText };
-    input.addEventListener('keydown', onAnnotInputKey, true);
-    input.addEventListener('blur', () => {
+    input.addEventListener("keydown", onAnnotInputKey, true);
+    input.addEventListener("blur", () => {
       // Fires on both focus-loss and programmatic blur; commit unless we
       // already handled it.
       if (annotEditing && annotEditing.input === input) finalizeEditingPin();
     });
     // Stop clicks/pointerdowns inside the input from bubbling to the overlay
-    ['pointerdown', 'click'].forEach(ev => {
-      input.addEventListener(ev, e => e.stopPropagation());
+    ["pointerdown", "click"].forEach((ev) => {
+      input.addEventListener(ev, (e) => e.stopPropagation());
     });
     setTimeout(() => input.focus(), 0);
   }
 
   function onAnnotInputKey(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault(); e.stopPropagation();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
       finalizeEditingPin();
-    } else if (e.key === 'Escape') {
-      e.preventDefault(); e.stopPropagation();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
       cancelEditingPin();
     } else {
       // Keep arrows / backspace from hitting global handlers
@@ -891,27 +984,35 @@
     const comments = snapshot ? snapshot.comments : annotState.comments;
     const strokes = snapshot ? snapshot.strokes : annotState.strokes;
     if (comments.length === 0 && strokes.length === 0) return null;
-    const wrap = document.createElement('div');
+    const wrap = document.createElement("div");
     Object.assign(wrap.style, {
-      position: 'absolute', top: '0', left: '0',
-      width: rect.width + 'px', height: rect.height + 'px',
-      pointerEvents: 'none', overflow: 'visible',
+      position: "absolute",
+      top: "0",
+      left: "0",
+      width: rect.width + "px",
+      height: rect.height + "px",
+      pointerEvents: "none",
+      overflow: "visible",
     });
     if (strokes.length > 0) {
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 " + rect.width + " " + rect.height);
       Object.assign(svg.style, {
-        position: 'absolute', top: '0', left: '0',
-        width: '100%', height: '100%', overflow: 'visible',
+        position: "absolute",
+        top: "0",
+        left: "0",
+        width: "100%",
+        height: "100%",
+        overflow: "visible",
       });
       for (const s of strokes) {
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('stroke', C.brand);
-        path.setAttribute('stroke-width', '3');
-        path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('stroke-linejoin', 'round');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('d', pointsToPath(s.points));
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("stroke", C.brand);
+        path.setAttribute("stroke-width", "3");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("fill", "none");
+        path.setAttribute("d", pointsToPath(s.points));
         svg.appendChild(path);
       }
       wrap.appendChild(svg);
@@ -930,31 +1031,36 @@
   function stripManualEditRuntimeState(root) {
     if (!root || root.nodeType !== 1) return;
     unwrapMixedContentTextNodes(root);
-    const nodes = [root, ...root.querySelectorAll('[data-impeccable-editable], [data-impeccable-original-text], [data-impeccable-text-wrap]')];
+    const nodes = [
+      root,
+      ...root.querySelectorAll(
+        "[data-impeccable-editable], [data-impeccable-original-text], [data-impeccable-text-wrap]"
+      ),
+    ];
     for (const node of nodes) {
-      const runtimeEditable = node.hasAttribute('data-impeccable-editable')
-        || node.hasAttribute('data-impeccable-original-text');
-      node.removeAttribute('data-impeccable-editable');
-      node.removeAttribute('data-impeccable-original-text');
-      node.removeAttribute('data-impeccable-text-wrap');
+      const runtimeEditable =
+        node.hasAttribute("data-impeccable-editable") || node.hasAttribute("data-impeccable-original-text");
+      node.removeAttribute("data-impeccable-editable");
+      node.removeAttribute("data-impeccable-original-text");
+      node.removeAttribute("data-impeccable-text-wrap");
       if (runtimeEditable) {
-        node.removeAttribute('contenteditable');
+        node.removeAttribute("contenteditable");
         if (node.style) {
-          node.style.userSelect = '';
-          node.style.cursor = '';
-          node.style.outline = '';
-          node.style.webkitUserModify = '';
-          if (!node.getAttribute('style')?.trim()) node.removeAttribute('style');
+          node.style.userSelect = "";
+          node.style.cursor = "";
+          node.style.outline = "";
+          node.style.webkitUserModify = "";
+          if (!node.getAttribute("style")?.trim()) node.removeAttribute("style");
         }
       }
     }
   }
 
   function sanitizedContextOuterHTML(el, maxLength) {
-    if (!el || !el.cloneNode) return '';
+    if (!el || !el.cloneNode) return "";
     const clone = el.cloneNode(true);
     stripManualEditRuntimeState(clone);
-    return clone.outerHTML ? clone.outerHTML.slice(0, maxLength) : '';
+    return clone.outerHTML ? clone.outerHTML.slice(0, maxLength) : "";
   }
 
   function extractContext(el) {
@@ -964,37 +1070,48 @@
     for (const sheet of document.styleSheets) {
       try {
         for (const rule of sheet.cssRules) {
-          if (rule.style) for (let i = 0; i < rule.style.length; i++) {
-            const p = rule.style[i];
-            if (p.startsWith('--') && !props[p]) {
-              const v = cs.getPropertyValue(p).trim();
-              if (v) props[p] = v;
+          if (rule.style)
+            for (let i = 0; i < rule.style.length; i++) {
+              const p = rule.style[i];
+              if (p.startsWith("--") && !props[p]) {
+                const v = cs.getPropertyValue(p).trim();
+                if (v) props[p] = v;
+              }
             }
-          }
         }
-      } catch { /* cross-origin */ }
+      } catch {
+        /* cross-origin */
+      }
     }
     return {
-      tagName: el.tagName.toLowerCase(), id: el.id || null,
+      tagName: el.tagName.toLowerCase(),
+      id: el.id || null,
       classes: [...el.classList],
-      textContent: (el.textContent || '').slice(0, 500),
+      textContent: (el.textContent || "").slice(0, 500),
       outerHTML: sanitizedContextOuterHTML(el, 10000),
       computedStyles: {
-        'font-family': cs.fontFamily, 'font-size': cs.fontSize,
-        'font-weight': cs.fontWeight, 'line-height': cs.lineHeight,
-        'color': cs.color, 'background': cs.background,
-        'background-color': cs.backgroundColor,
-        'padding': cs.padding, 'margin': cs.margin,
-        'display': cs.display, 'position': cs.position,
-        'gap': cs.gap, 'border-radius': cs.borderRadius,
-        'box-shadow': cs.boxShadow,
+        "font-family": cs.fontFamily,
+        "font-size": cs.fontSize,
+        "font-weight": cs.fontWeight,
+        "line-height": cs.lineHeight,
+        color: cs.color,
+        background: cs.background,
+        "background-color": cs.backgroundColor,
+        padding: cs.padding,
+        margin: cs.margin,
+        display: cs.display,
+        position: cs.position,
+        gap: cs.gap,
+        "border-radius": cs.borderRadius,
+        "box-shadow": cs.boxShadow,
       },
       cssCustomProperties: props,
       parentContext: el.parentElement
-        ? '<' + el.parentElement.tagName.toLowerCase()
-          + (el.parentElement.id ? ' id="' + el.parentElement.id + '"' : '')
-          + (el.parentElement.className ? ' class="' + el.parentElement.className + '"' : '')
-          + '>'
+        ? "<" +
+          el.parentElement.tagName.toLowerCase() +
+          (el.parentElement.id ? ' id="' + el.parentElement.id + '"' : "") +
+          (el.parentElement.className ? ' class="' + el.parentElement.className + '"' : "") +
+          ">"
         : null,
       boundingRect: { width: Math.round(r.width), height: Math.round(r.height) },
     };
@@ -1004,8 +1121,7 @@
 
   function contextElementForManualEdit(selectedEl, rows, ops) {
     if (!selectedEl) return selectedEl;
-    const leafOnly =
-      rows && rows.length === 1 && rows[0] && rows[0].el === selectedEl;
+    const leafOnly = rows && rows.length === 1 && rows[0] && rows[0].el === selectedEl;
     if (!leafOnly) return selectedEl;
 
     const editedTexts = new Set();
@@ -1063,7 +1179,9 @@
   }
 
   function normalizeManualContextText(value) {
-    return String(value || '').replace(/\s+/g, ' ').trim();
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   //
@@ -1079,27 +1197,32 @@
   // the Tune popover opens below the bar, a downward shadow lands on the
   // dark popover and reads as a bright ghost line. We swap to UP-only while
   // tune is open below so the popover's top edge is clean.
-  const BAR_SHADOW_DEFAULT = '0 4px 20px oklch(0% 0 0 / 0.08), 0 1px 3px oklch(0% 0 0 / 0.06)';
-  const BAR_SHADOW_UP = '0 -4px 20px oklch(0% 0 0 / 0.08), 0 -1px 3px oklch(0% 0 0 / 0.06)';
+  const BAR_SHADOW_DEFAULT = "0 4px 20px oklch(0% 0 0 / 0.08), 0 1px 3px oklch(0% 0 0 / 0.06)";
+  const BAR_SHADOW_UP = "0 -4px 20px oklch(0% 0 0 / 0.08), 0 -1px 3px oklch(0% 0 0 / 0.06)";
   const BAR_SHADOW_DOWN = BAR_SHADOW_DEFAULT;
 
   function initBar() {
     BP = barPaletteForTheme(detectPageTheme());
-    barEl = document.createElement('div');
-    barEl.id = PREFIX + '-bar';
+    barEl = document.createElement("div");
+    barEl.id = PREFIX + "-bar";
     Object.assign(barEl.style, {
-      position: 'fixed', zIndex: Z.bar,
-      display: 'none', opacity: '0',
-      transform: 'translateY(6px)',
-      transition: 'opacity 0.25s ' + EASE + ', transform 0.3s ' + EASE,
+      position: "fixed",
+      zIndex: Z.bar,
+      display: "none",
+      opacity: "0",
+      transform: "translateY(6px)",
+      transition: "opacity 0.25s " + EASE + ", transform 0.3s " + EASE,
       background: BP.surface,
-      border: '1px solid ' + BP.border,
-      borderRadius: '8px',
+      border: "1px solid " + BP.border,
+      borderRadius: "8px",
       boxShadow: BP.shadow,
-      transition: 'box-shadow 0.2s ease, opacity 0.25s ' + EASE + ', transform 0.3s ' + EASE,
-      fontFamily: FONT, fontSize: '13px', color: BP.text,
-      padding: '5px',
-      maxWidth: '560px', minWidth: '340px',
+      transition: "box-shadow 0.2s ease, opacity 0.25s " + EASE + ", transform 0.3s " + EASE,
+      fontFamily: FONT,
+      fontSize: "13px",
+      color: BP.text,
+      padding: "5px",
+      maxWidth: "560px",
+      minWidth: "340px",
     });
     uiAppend(barEl);
     defangOutsideHandlers(barEl);
@@ -1117,12 +1240,13 @@
     // stacking a duplicate toast in the same slot.
     if (recoveryWaitingForAnchor) {
       const barRect = globalBarEl?.getBoundingClientRect();
-      const reserve = barRect && barRect.height > 0
-        ? Math.max(GLOBAL_BAR_RESERVE, window.innerHeight - barRect.top + 12)
-        : GLOBAL_BAR_RESERVE;
+      const reserve =
+        barRect && barRect.height > 0
+          ? Math.max(GLOBAL_BAR_RESERVE, window.innerHeight - barRect.top + 12)
+          : GLOBAL_BAR_RESERVE;
       const top = window.innerHeight - barH - reserve;
       const left = Math.max(GAP, (window.innerWidth - barW) / 2);
-      Object.assign(barEl.style, { top: top + 'px', left: left + 'px' });
+      Object.assign(barEl.style, { top: top + "px", left: left + "px" });
       return;
     }
 
@@ -1147,30 +1271,30 @@
     let left = r.left + (r.width - barW) / 2;
     if (left < GAP) left = GAP;
     if (left + barW > window.innerWidth - GAP) left = window.innerWidth - barW - GAP;
-    Object.assign(barEl.style, { top: top + 'px', left: left + 'px' });
+    Object.assign(barEl.style, { top: top + "px", left: left + "px" });
   }
 
   function showBar(mode) {
     barHideSeq += 1;
-    if (mode === 'cycling' && !ensureCyclingRenderable('show-bar')) return;
-    barEl.innerHTML = '';
-    if (mode === 'configure') {
-      barEl.appendChild(configureKind === 'insert' ? buildInsertConfigureRow() : buildConfigureRow());
-      if (configureKind === 'insert') syncInsertCreateButton();
+    if (mode === "cycling" && !ensureCyclingRenderable("show-bar")) return;
+    barEl.innerHTML = "";
+    if (mode === "configure") {
+      barEl.appendChild(configureKind === "insert" ? buildInsertConfigureRow() : buildConfigureRow());
+      if (configureKind === "insert") syncInsertCreateButton();
       applyConfigureBarChrome();
     } else {
       restorePickerBarChrome();
-      if (mode === 'generating') {
+      if (mode === "generating") {
         if (recoveryWaitingForAnchor) dismissToast();
         barEl.appendChild(buildGeneratingRow());
-      } else if (mode === 'cycling') barEl.appendChild(buildCyclingRow());
+      } else if (mode === "cycling") barEl.appendChild(buildCyclingRow());
     }
-    barEl.style.display = 'block';
+    barEl.style.display = "block";
     positionBar();
     requestAnimationFrame(() => {
-      barEl.style.opacity = '1';
-      barEl.style.transform = 'translateY(0)';
-      syncPageChatFocus('show-bar');
+      barEl.style.opacity = "1";
+      barEl.style.transform = "translateY(0)";
+      syncPageChatFocus("show-bar");
     });
   }
 
@@ -1178,89 +1302,90 @@
     if (!barEl) return;
     const hideSeq = ++barHideSeq;
     stopVoice({ suppressSubmit: true });
-    if (configureKind === 'insert') clearInsertPicking();
-    barEl.style.opacity = '0';
-    barEl.style.transform = instant ? 'translateY(0)' : 'translateY(6px)';
-    if (instant) barEl.style.display = 'none';
-    else setTimeout(() => { if (barEl && hideSeq === barHideSeq) barEl.style.display = 'none'; }, 250);
+    if (configureKind === "insert") clearInsertPicking();
+    barEl.style.opacity = "0";
+    barEl.style.transform = instant ? "translateY(0)" : "translateY(6px)";
+    if (instant) barEl.style.display = "none";
+    else
+      setTimeout(() => {
+        if (barEl && hideSeq === barHideSeq) barEl.style.display = "none";
+      }, 250);
     hideActionPicker();
     closeTunePopover();
     hideConfigureBarTooltip();
-    if (state === 'EDITING') restoreInlineEditDrafts();
+    if (state === "EDITING") restoreInlineEditDrafts();
     disableInlineEdit();
   }
 
   function updateBarContent(mode) {
-    if (!barEl || barEl.style.display === 'none') return;
-    if (mode === 'cycling' && !ensureCyclingRenderable('update-bar')) return;
-    barEl.innerHTML = '';
-    if (mode === 'configure') {
-      barEl.appendChild(configureKind === 'insert' ? buildInsertConfigureRow() : buildConfigureRow());
-      if (configureKind === 'insert') syncInsertCreateButton();
+    if (!barEl || barEl.style.display === "none") return;
+    if (mode === "cycling" && !ensureCyclingRenderable("update-bar")) return;
+    barEl.innerHTML = "";
+    if (mode === "configure") {
+      barEl.appendChild(configureKind === "insert" ? buildInsertConfigureRow() : buildConfigureRow());
+      if (configureKind === "insert") syncInsertCreateButton();
       applyConfigureBarChrome();
     } else {
       restorePickerBarChrome();
-      if (mode === 'generating') barEl.appendChild(buildGeneratingRow());
-      else if (mode === 'cycling') barEl.appendChild(buildCyclingRow());
-      else if (mode === 'saving') barEl.appendChild(buildSavingRow());
-      else if (mode === 'confirmed') {
+      if (mode === "generating") barEl.appendChild(buildGeneratingRow());
+      else if (mode === "cycling") barEl.appendChild(buildCyclingRow());
+      else if (mode === "saving") barEl.appendChild(buildSavingRow());
+      else if (mode === "confirmed") {
         barEl.appendChild(buildConfirmedRow());
-        barEl.style.background = 'oklch(95% 0.05 145)';
-        barEl.style.border = '1px solid oklch(75% 0.12 145 / 0.4)';
+        barEl.style.background = "oklch(95% 0.05 145)";
+        barEl.style.border = "1px solid oklch(75% 0.12 145 / 0.4)";
       }
     }
-    syncPageChatFocus('update-bar-content');
+    syncPageChatFocus("update-bar-content");
   }
 
   // Configure row: the floating bar surface IS the input; modifier pills sit left of the field.
 
-  const CONFIGURE_BAR_H = '36px';
+  const CONFIGURE_BAR_H = "36px";
   // Compact selection pill + 7px inset balances vertical centering in the 36px bar.
-  const CONFIGURE_BAR_INSET = '7px';
-  const CONFIGURE_PILL_RADIUS = '7px';
-  const CONFIGURE_SELECTION_PILL_BORDER = '1px solid oklch(70% 0.12 188)';
-  const CONFIGURE_SELECTION_PILL_PAD = '1px 4px';
-  const CONFIGURE_ROW_FONT_SIZE = '12px';
-  const CONFIGURE_ROW_TRACK_H = '18px';
-  const CONFIGURE_PILL_PAD_Y = '3px';
-  const CONFIGURE_BAR_SURFACE = 'oklch(15% 0.008 95)';
-  const CONFIGURE_PILL_TEXT = 'oklch(94% 0.02 82)';
+  const CONFIGURE_BAR_INSET = "7px";
+  const CONFIGURE_PILL_RADIUS = "7px";
+  const CONFIGURE_SELECTION_PILL_BORDER = "1px solid oklch(70% 0.12 188)";
+  const CONFIGURE_SELECTION_PILL_PAD = "1px 4px";
+  const CONFIGURE_ROW_FONT_SIZE = "12px";
+  const CONFIGURE_ROW_TRACK_H = "18px";
+  const CONFIGURE_PILL_PAD_Y = "3px";
+  const CONFIGURE_BAR_SURFACE = "oklch(15% 0.008 95)";
+  const CONFIGURE_PILL_TEXT = "oklch(94% 0.02 82)";
   const ICON_CONFIGURE_SUBMIT =
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
   function applyConfigureBarChrome() {
     if (!barEl) return;
-    barEl.dataset.configureSurface = 'true';
-    barEl.style.padding = '0';
+    barEl.dataset.configureSurface = "true";
+    barEl.style.padding = "0";
     barEl.style.background = CONFIGURE_BAR_SURFACE;
-    barEl.style.overflow = 'hidden';
+    barEl.style.overflow = "hidden";
     syncConfigureInputChrome();
   }
 
   function restorePickerBarChrome() {
     if (!barEl) return;
-    barEl.dataset.configureSurface = 'false';
-    barEl.removeAttribute('data-input-focused');
-    barEl.removeAttribute('data-voice-listening');
-    barEl.style.padding = '5px';
+    barEl.dataset.configureSurface = "false";
+    barEl.removeAttribute("data-input-focused");
+    barEl.removeAttribute("data-voice-listening");
+    barEl.style.padding = "5px";
     barEl.style.background = BP.surface;
-    barEl.style.overflow = '';
-    barEl.style.border = '1px solid ' + BP.border;
+    barEl.style.overflow = "";
+    barEl.style.border = "1px solid " + BP.border;
     barEl.style.borderColor = BP.border;
     barEl.style.boxShadow = BP.shadow;
   }
 
   function syncConfigureInputChrome() {
-    const input = uiGetById(PREFIX + '-input') || uiGetById(PREFIX + '-insert-input');
-    const surface = barEl?.dataset.configureSurface === 'true' ? barEl : null;
+    const input = uiGetById(PREFIX + "-input") || uiGetById(PREFIX + "-insert-input");
+    const surface = barEl?.dataset.configureSurface === "true" ? barEl : null;
     if (!surface || !input) return;
     const focused = activeElementDeep() === input;
-    const listening = voiceListening && voiceCtx?.mode === 'configure';
-    surface.dataset.inputFocused = focused ? 'true' : 'false';
-    surface.dataset.voiceListening = listening ? 'true' : 'false';
-    surface.style.borderColor = listening
-      ? BP.patinaSoft
-      : (focused ? BP.accentSoft : BP.border);
+    const listening = voiceListening && voiceCtx?.mode === "configure";
+    surface.dataset.inputFocused = focused ? "true" : "false";
+    surface.dataset.voiceListening = listening ? "true" : "false";
+    surface.style.borderColor = listening ? BP.patinaSoft : focused ? BP.accentSoft : BP.border;
     surface.style.boxShadow = BP.shadow;
   }
 
@@ -1272,7 +1397,7 @@
     return {
       fontFamily: FONT,
       fontSize: CONFIGURE_ROW_FONT_SIZE,
-      fontWeight: '500',
+      fontWeight: "500",
       lineHeight: CONFIGURE_ROW_TRACK_H,
       ...extra,
     };
@@ -1280,14 +1405,18 @@
 
   function configureInputFieldStyle(extra = {}) {
     return {
-      flex: '1', minWidth: '0', width: '100%',
-      padding: '0', margin: '0',
-      border: 'none', background: 'transparent',
-      boxSizing: 'border-box',
+      flex: "1",
+      minWidth: "0",
+      width: "100%",
+      padding: "0",
+      margin: "0",
+      border: "none",
+      background: "transparent",
+      boxSizing: "border-box",
       height: CONFIGURE_ROW_TRACK_H,
       color: CONFIGURE_PILL_TEXT,
       caretColor: CONFIGURE_PILL_TEXT,
-      outline: 'none',
+      outline: "none",
       ...configureRowTextMetrics(),
       ...extra,
     };
@@ -1295,28 +1424,38 @@
 
   function configureInputShellStyle() {
     return {
-      display: 'flex', alignItems: 'center', gap: '6px',
-      flex: '1', minWidth: '0', height: '100%',
-      padding: '0 6px 0 ' + CONFIGURE_BAR_INSET,
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      flex: "1",
+      minWidth: "0",
+      height: "100%",
+      padding: "0 6px 0 " + CONFIGURE_BAR_INSET,
     };
   }
 
   function configureSelectionPillStyle(extra = {}) {
     const P = configureBarPalette();
     return {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      gap: '2px', height: 'auto', flexShrink: '0',
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "2px",
+      height: "auto",
+      flexShrink: "0",
       padding: CONFIGURE_SELECTION_PILL_PAD,
-      boxSizing: 'border-box',
+      boxSizing: "border-box",
       border: CONFIGURE_SELECTION_PILL_BORDER,
       borderRadius: CONFIGURE_PILL_RADIUS,
-      background: 'transparent',
+      background: "transparent",
       color: P.patina,
-      cursor: 'pointer',
-      transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
-      whiteSpace: 'nowrap',
+      cursor: "pointer",
+      transition: "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+      whiteSpace: "nowrap",
       ...configureRowTextMetrics({
-        fontFamily: MONO, fontWeight: '600', letterSpacing: '-0.01em',
+        fontFamily: MONO,
+        fontWeight: "600",
+        letterSpacing: "-0.01em",
       }),
       ...extra,
     };
@@ -1325,16 +1464,22 @@
   function configureModifierPillStyle(extra = {}) {
     const P = configureBarPalette();
     return {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      gap: '2px', height: 'auto', minHeight: CONFIGURE_ROW_TRACK_H,
-      padding: CONFIGURE_PILL_PAD_Y + ' 8px', flexShrink: '0',
-      boxSizing: 'border-box',
-      border: '1px solid transparent',
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "2px",
+      height: "auto",
+      minHeight: CONFIGURE_ROW_TRACK_H,
+      padding: CONFIGURE_PILL_PAD_Y + " 8px",
+      flexShrink: "0",
+      boxSizing: "border-box",
+      border: "1px solid transparent",
       borderRadius: CONFIGURE_PILL_RADIUS,
-      background: 'transparent',
-      color: P.textDim, cursor: 'pointer',
-      transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
-      whiteSpace: 'nowrap',
+      background: "transparent",
+      color: P.textDim,
+      cursor: "pointer",
+      transition: "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+      whiteSpace: "nowrap",
       ...configureRowTextMetrics(),
       ...extra,
     };
@@ -1343,44 +1488,51 @@
   function configureInlineControlStyle(extra = {}) {
     const P = configureBarPalette();
     return {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      gap: '2px', height: CONFIGURE_ROW_TRACK_H, flexShrink: '0',
-      padding: '0', margin: '0',
-      boxSizing: 'border-box',
-      border: 'none', borderRadius: '0',
-      background: 'transparent',
-      color: P.textDim, cursor: 'pointer',
-      transition: 'color 0.12s ease, background 0.12s ease',
-      whiteSpace: 'nowrap',
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "2px",
+      height: CONFIGURE_ROW_TRACK_H,
+      flexShrink: "0",
+      padding: "0",
+      margin: "0",
+      boxSizing: "border-box",
+      border: "none",
+      borderRadius: "0",
+      background: "transparent",
+      color: P.textDim,
+      cursor: "pointer",
+      transition: "color 0.12s ease, background 0.12s ease",
+      whiteSpace: "nowrap",
       ...configureRowTextMetrics(),
       ...extra,
     };
   }
 
   function bindConfigureInlineControlHover(btn, controlsLocked) {
-    btn.addEventListener('mouseenter', () => {
+    btn.addEventListener("mouseenter", () => {
       if (controlsLocked) return;
       const P = configureBarPalette();
       btn.style.color = P.text;
     });
-    btn.addEventListener('mouseleave', () => {
+    btn.addEventListener("mouseleave", () => {
       if (controlsLocked) return;
       btn.style.color = configureBarPalette().textDim;
     });
   }
 
   function bindConfigureModifierPillHover(btn, controlsLocked) {
-    btn.addEventListener('mouseenter', () => {
+    btn.addEventListener("mouseenter", () => {
       if (controlsLocked) return;
       const P = configureBarPalette();
       btn.style.color = P.text;
       btn.style.background = P.toggleActive;
     });
-    btn.addEventListener('mouseleave', () => {
+    btn.addEventListener("mouseleave", () => {
       if (controlsLocked) return;
       const P = configureBarPalette();
       btn.style.color = P.textDim;
-      btn.style.background = 'transparent';
+      btn.style.background = "transparent";
     });
   }
 
@@ -1389,27 +1541,27 @@
   function ensureConfigureBarTooltip() {
     if (configureBarTooltipEl) return configureBarTooltipEl;
     const P = configureBarPalette();
-    configureBarTooltipEl = el('div', {
-      position: 'fixed',
-      display: 'none',
+    configureBarTooltipEl = el("div", {
+      position: "fixed",
+      display: "none",
       zIndex: String(Z.bar + 7),
-      pointerEvents: 'none',
-      maxWidth: 'min(360px, calc(100vw - 16px))',
-      padding: '6px 9px',
-      borderRadius: '7px',
+      pointerEvents: "none",
+      maxWidth: "min(360px, calc(100vw - 16px))",
+      padding: "6px 9px",
+      borderRadius: "7px",
       background: P.chatSurface,
-      border: '1px solid ' + P.hairline,
+      border: "1px solid " + P.hairline,
       boxShadow: P.shadow,
       color: P.text,
       fontFamily: FONT,
-      fontSize: '11px',
-      fontWeight: '500',
-      lineHeight: '1.35',
-      letterSpacing: '0.01em',
-      whiteSpace: 'normal',
-      wordBreak: 'break-word',
+      fontSize: "11px",
+      fontWeight: "500",
+      lineHeight: "1.35",
+      letterSpacing: "0.01em",
+      whiteSpace: "normal",
+      wordBreak: "break-word",
     });
-    configureBarTooltipEl.id = PREFIX + '-configure-bar-tooltip';
+    configureBarTooltipEl.id = PREFIX + "-configure-bar-tooltip";
     uiAppend(configureBarTooltipEl);
     return configureBarTooltipEl;
   }
@@ -1418,106 +1570,108 @@
     if (!anchor || !message) return;
     const tip = ensureConfigureBarTooltip();
     tip.textContent = message;
-    tip.style.transition = 'none';
-    tip.style.display = 'block';
-    tip.style.opacity = '1';
+    tip.style.transition = "none";
+    tip.style.display = "block";
+    tip.style.opacity = "1";
     const r = anchor.getBoundingClientRect();
     const tipW = tip.offsetWidth;
     const tipH = tip.offsetHeight;
     const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
     const top = Math.max(8, r.top - tipH - 8);
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
   }
 
   function hideConfigureBarTooltip() {
     if (!configureBarTooltipEl) return;
-    configureBarTooltipEl.style.display = 'none';
-    configureBarTooltipEl.style.opacity = '0';
+    configureBarTooltipEl.style.display = "none";
+    configureBarTooltipEl.style.opacity = "0";
   }
 
   function selectionTagLabel(el) {
-    if (!el) return '';
-    if (el.hasAttribute?.('data-impeccable-insert-placeholder')) return 'slot';
+    if (!el) return "";
+    if (el.hasAttribute?.("data-impeccable-insert-placeholder")) return "slot";
     return el.tagName.toLowerCase();
   }
 
   function elementPath(el, maxDepth = 8) {
-    if (!el) return '';
+    if (!el) return "";
     const parts = [];
     let node = el;
     while (node && node.nodeType === 1 && node !== document.body) {
       let part = node.tagName.toLowerCase();
-      if (node.id) part += '#' + node.id;
-      else if (node.classList?.length) part += '.' + [...node.classList].slice(0, 2).join('.');
+      if (node.id) part += "#" + node.id;
+      else if (node.classList?.length) part += "." + [...node.classList].slice(0, 2).join(".");
       parts.unshift(part);
       node = node.parentElement;
       if (parts.length >= maxDepth) break;
     }
-    return parts.join(' \u203a ');
+    return parts.join(" \u203a ");
   }
 
   function variantCountTooltipText(count) {
     const n = Number(count) || selectedCount;
-    const word = n === 1 ? 'variant' : 'variants';
-    return 'Click to change \u00b7 ' + n + ' ' + word;
+    const word = n === 1 ? "variant" : "variants";
+    return "Click to change \u00b7 " + n + " " + word;
   }
 
   function removeConfigureSelection() {
     hideConfigureBarTooltip();
-    if (configureKind === 'insert') {
+    if (configureKind === "insert") {
       cancelInsertConfigure();
       return;
     }
     selectedElement = null;
-    exitConfigureToPicking('selection-pill-remove', { clearHover: true });
+    exitConfigureToPicking("selection-pill-remove", { clearHover: true });
   }
 
   function buildSelectionPill({ el: targetEl, controlsLocked }) {
     const tag = selectionTagLabel(targetEl);
     const path = elementPath(targetEl);
     const P = configureBarPalette();
-    const pill = el('button', configureSelectionPillStyle({ minWidth: '32px' }));
-    pill.id = PREFIX + '-selection-pill';
-    pill.type = 'button';
-    pill.setAttribute('aria-label', 'Selected element: ' + tag);
+    const pill = el("button", configureSelectionPillStyle({ minWidth: "32px" }));
+    pill.id = PREFIX + "-selection-pill";
+    pill.type = "button";
+    pill.setAttribute("aria-label", "Selected element: " + tag);
     pill.disabled = controlsLocked;
-    pill.style.cursor = controlsLocked ? 'not-allowed' : 'pointer';
-    pill.style.opacity = controlsLocked ? '0.58' : '1';
-    pill.style.flexShrink = '0';
+    pill.style.cursor = controlsLocked ? "not-allowed" : "pointer";
+    pill.style.opacity = controlsLocked ? "0.58" : "1";
+    pill.style.flexShrink = "0";
 
-    const faceStack = el('span', {
-      display: 'grid', placeItems: 'center',
-      width: '100%', minWidth: '1.25em',
+    const faceStack = el("span", {
+      display: "grid",
+      placeItems: "center",
+      width: "100%",
+      minWidth: "1.25em",
       lineHeight: CONFIGURE_ROW_TRACK_H,
     });
-    const tagFace = el('span', {
-      gridArea: '1 / 1',
-      transition: 'opacity 0.12s ease',
+    const tagFace = el("span", {
+      gridArea: "1 / 1",
+      transition: "opacity 0.12s ease",
       color: P.patina,
     });
-    const clearFace = el('span', {
-      gridArea: '1 / 1',
-      opacity: '0',
-      transition: 'opacity 0.12s ease',
-      color: 'oklch(58% 0.15 35)',
+    const clearFace = el("span", {
+      gridArea: "1 / 1",
+      opacity: "0",
+      transition: "opacity 0.12s ease",
+      color: "oklch(58% 0.15 35)",
     });
     tagFace.textContent = tag;
-    clearFace.textContent = '\u00D7';
+    clearFace.textContent = "\u00D7";
     faceStack.appendChild(tagFace);
     faceStack.appendChild(clearFace);
     pill.appendChild(faceStack);
 
     const setArmed = (armed) => {
-      tagFace.style.opacity = armed ? '0' : '1';
-      clearFace.style.opacity = armed ? '1' : '0';
-      pill.style.background = armed ? P.toggleActive : 'transparent';
+      tagFace.style.opacity = armed ? "0" : "1";
+      clearFace.style.opacity = armed ? "1" : "0";
+      pill.style.background = armed ? P.toggleActive : "transparent";
       pill.style.border = CONFIGURE_SELECTION_PILL_BORDER;
-      pill.setAttribute('aria-label', armed ? 'Clear selection' : 'Selected element: ' + tag);
+      pill.setAttribute("aria-label", armed ? "Clear selection" : "Selected element: " + tag);
     };
     const arm = () => {
       if (controlsLocked) {
-        showConfigureBarTooltip(pill, 'Apply is still running');
+        showConfigureBarTooltip(pill, "Apply is still running");
         return;
       }
       setArmed(true);
@@ -1527,48 +1681,53 @@
       hideConfigureBarTooltip();
       setArmed(false);
     };
-    pill.addEventListener('mouseenter', arm);
-    pill.addEventListener('mouseleave', disarm);
-    pill.addEventListener('focus', arm);
-    pill.addEventListener('blur', disarm);
-    pill.addEventListener('click', (e) => {
+    pill.addEventListener("mouseenter", arm);
+    pill.addEventListener("mouseleave", disarm);
+    pill.addEventListener("focus", arm);
+    pill.addEventListener("blur", disarm);
+    pill.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (controlsLocked) { showManualApplyBusyToast(); return; }
+      if (controlsLocked) {
+        showManualApplyBusyToast();
+        return;
+      }
       removeConfigureSelection();
     });
     return pill;
   }
 
   function bindConfigureCountPillTooltip(count, controlsLocked) {
-    count.removeAttribute('title');
-    count.addEventListener('mouseenter', () => {
+    count.removeAttribute("title");
+    count.addEventListener("mouseenter", () => {
       if (controlsLocked) {
-        showConfigureBarTooltip(count, 'Apply is still running');
+        showConfigureBarTooltip(count, "Apply is still running");
         return;
       }
       showConfigureBarTooltip(count, variantCountTooltipText(selectedCount));
     });
-    count.addEventListener('mouseleave', hideConfigureBarTooltip);
+    count.addEventListener("mouseleave", hideConfigureBarTooltip);
   }
 
   function buildConfigureActionControl({ controlsLocked, onClick }) {
-    const control = el('button', configureInlineControlStyle());
-    const label = document.createElement('span');
+    const control = el("button", configureInlineControlStyle());
+    const label = document.createElement("span");
     label.textContent = actionLabel();
-    const caret = el('span', {
-      fontSize: '10px', lineHeight: '1',
-      marginLeft: '2px', pointerEvents: 'none',
-      color: 'inherit',
+    const caret = el("span", {
+      fontSize: "10px",
+      lineHeight: "1",
+      marginLeft: "2px",
+      pointerEvents: "none",
+      color: "inherit",
     });
-    caret.textContent = '\u25BE';
-    caret.setAttribute('aria-hidden', 'true');
+    caret.textContent = "\u25BE";
+    caret.setAttribute("aria-hidden", "true");
     control.appendChild(label);
     control.appendChild(caret);
     control.disabled = controlsLocked;
-    control.style.cursor = controlsLocked ? 'not-allowed' : 'pointer';
-    control.style.opacity = controlsLocked ? '0.58' : '1';
+    control.style.cursor = controlsLocked ? "not-allowed" : "pointer";
+    control.style.opacity = controlsLocked ? "0.58" : "1";
     bindConfigureInlineControlHover(control, controlsLocked);
-    control.addEventListener('click', onClick);
+    control.addEventListener("click", onClick);
     return control;
   }
 
@@ -1582,109 +1741,140 @@
   }
 
   function buildConfigureCountControl({ controlsLocked, onClick }) {
-    const count = el('button', configureInlineControlStyle({
-      fontFamily: MONO, fontWeight: '600', letterSpacing: '0',
-    }));
-    count.textContent = '\u00D7' + selectedCount;
+    const count = el(
+      "button",
+      configureInlineControlStyle({
+        fontFamily: MONO,
+        fontWeight: "600",
+        letterSpacing: "0",
+      })
+    );
+    count.textContent = "\u00D7" + selectedCount;
     count.disabled = controlsLocked;
-    count.style.cursor = controlsLocked ? 'not-allowed' : 'pointer';
-    count.style.opacity = controlsLocked ? '0.58' : '1';
+    count.style.cursor = controlsLocked ? "not-allowed" : "pointer";
+    count.style.opacity = controlsLocked ? "0.58" : "1";
     bindConfigureInlineControlHover(count, controlsLocked);
     bindConfigureCountPillTooltip(count, controlsLocked);
-    count.addEventListener('click', onClick);
+    count.addEventListener("click", onClick);
     return count;
   }
 
   function buildConfigureVoiceButton({ id, controlsLocked, onClick }) {
-    const voiceBtn = el('button', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      boxSizing: 'border-box',
-      width: CONFIGURE_BAR_H, height: '100%', flexShrink: '0',
-      padding: '0', margin: '0',
-      border: 'none', borderRight: '1px solid ' + BP.hairline,
-      borderRadius: '0', background: 'transparent',
-      color: BP.textDim, cursor: 'pointer',
-      transition: 'color 0.12s ease, background 0.12s ease',
+    const voiceBtn = el("button", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      boxSizing: "border-box",
+      width: CONFIGURE_BAR_H,
+      height: "100%",
+      flexShrink: "0",
+      padding: "0",
+      margin: "0",
+      border: "none",
+      borderRight: "1px solid " + BP.hairline,
+      borderRadius: "0",
+      background: "transparent",
+      color: BP.textDim,
+      cursor: "pointer",
+      transition: "color 0.12s ease, background 0.12s ease",
     });
     voiceBtn.id = id;
-    voiceBtn.type = 'button';
-    voiceBtn.setAttribute('aria-label', 'Voice input');
+    voiceBtn.type = "button";
+    voiceBtn.setAttribute("aria-label", "Voice input");
     voiceBtn.innerHTML = ICON_PAGE_VOICE;
     voiceBtn.disabled = controlsLocked;
-    voiceBtn.style.cursor = controlsLocked ? 'not-allowed' : 'pointer';
-    voiceBtn.style.opacity = controlsLocked ? '0.58' : '1';
-    voiceBtn.addEventListener('mousedown', (e) => e.stopPropagation());
-    voiceBtn.addEventListener('click', onClick);
+    voiceBtn.style.cursor = controlsLocked ? "not-allowed" : "pointer";
+    voiceBtn.style.opacity = controlsLocked ? "0.58" : "1";
+    voiceBtn.addEventListener("mousedown", (e) => e.stopPropagation());
+    voiceBtn.addEventListener("click", onClick);
     return voiceBtn;
   }
 
   function buildConfigureTrailingCluster(controls, voiceBtn, submitBtn) {
-    const cluster = el('div', {
-      display: 'inline-flex', alignItems: 'stretch', flexShrink: '0',
-      height: '100%', borderLeft: '1px solid ' + BP.hairline,
+    const cluster = el("div", {
+      display: "inline-flex",
+      alignItems: "stretch",
+      flexShrink: "0",
+      height: "100%",
+      borderLeft: "1px solid " + BP.hairline,
     });
     if (controls.length) {
-      const controlsWrap = el('div', {
-        display: 'inline-flex', alignItems: 'center', gap: '8px',
-        padding: '0 10px', flexShrink: '0', height: '100%',
+      const controlsWrap = el("div", {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "0 10px",
+        flexShrink: "0",
+        height: "100%",
       });
       controls.forEach((control) => controlsWrap.appendChild(control));
       cluster.appendChild(controlsWrap);
     }
-    voiceBtn.style.borderLeft = '1px solid ' + BP.hairline;
+    voiceBtn.style.borderLeft = "1px solid " + BP.hairline;
     cluster.appendChild(voiceBtn);
     cluster.appendChild(submitBtn);
     return cluster;
   }
 
   function buildConfigureSubmitButton({ controlsLocked, onClick, ariaLabel }) {
-    const btn = el('button', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      boxSizing: 'border-box', width: CONFIGURE_BAR_H, height: CONFIGURE_BAR_H,
-      padding: '0', flexShrink: '0',
-      border: 'none', borderLeft: '1px solid ' + BP.hairline,
-      borderRadius: '0',
-      background: BP.accent, color: C.ink,
-      cursor: controlsLocked ? 'not-allowed' : 'pointer',
-      transition: 'filter 0.12s ease, transform 0.1s ease',
+    const btn = el("button", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      boxSizing: "border-box",
+      width: CONFIGURE_BAR_H,
+      height: CONFIGURE_BAR_H,
+      padding: "0",
+      flexShrink: "0",
+      border: "none",
+      borderLeft: "1px solid " + BP.hairline,
+      borderRadius: "0",
+      background: BP.accent,
+      color: C.ink,
+      cursor: controlsLocked ? "not-allowed" : "pointer",
+      transition: "filter 0.12s ease, transform 0.1s ease",
     });
-    btn.type = 'button';
-    btn.setAttribute('aria-label', ariaLabel);
+    btn.type = "button";
+    btn.setAttribute("aria-label", ariaLabel);
     btn.innerHTML = ICON_CONFIGURE_SUBMIT;
     btn.disabled = controlsLocked;
-    btn.style.opacity = controlsLocked ? '0.58' : '1';
-    if (controlsLocked) btn.title = 'Apply is still running';
-    btn.addEventListener('mouseenter', () => { if (!controlsLocked) btn.style.filter = 'brightness(1.1)'; });
-    btn.addEventListener('mouseleave', () => btn.style.filter = 'none');
-    btn.addEventListener('mousedown', () => { if (!controlsLocked) btn.style.transform = 'scale(0.97)'; });
-    btn.addEventListener('mouseup', () => btn.style.transform = 'scale(1)');
-    btn.addEventListener('click', onClick);
+    btn.style.opacity = controlsLocked ? "0.58" : "1";
+    if (controlsLocked) btn.title = "Apply is still running";
+    btn.addEventListener("mouseenter", () => {
+      if (!controlsLocked) btn.style.filter = "brightness(1.1)";
+    });
+    btn.addEventListener("mouseleave", () => (btn.style.filter = "none"));
+    btn.addEventListener("mousedown", () => {
+      if (!controlsLocked) btn.style.transform = "scale(0.97)";
+    });
+    btn.addEventListener("mouseup", () => (btn.style.transform = "scale(1)"));
+    btn.addEventListener("click", onClick);
     return btn;
   }
 
   // Insert mode helpers (mirrors skill/scripts/live/insert-ui.mjs)
 
   function detectInsertAxisFromStyle(style) {
-    const display = style?.display || 'block';
-    if (display.includes('flex')) {
-      const dir = style.flexDirection || 'row';
-      return dir.startsWith('row') ? 'row' : 'column';
+    const display = style?.display || "block";
+    if (display.includes("flex")) {
+      const dir = style.flexDirection || "row";
+      return dir.startsWith("row") ? "row" : "column";
     }
-    if (display === 'grid' || display === 'inline-grid') {
-      const flow = style.gridAutoFlow || 'row';
-      if (flow.includes('column')) return 'column';
-      const cols = (style.gridTemplateColumns || '').trim();
-      if (cols && cols !== 'none') {
+    if (display === "grid" || display === "inline-grid") {
+      const flow = style.gridAutoFlow || "row";
+      if (flow.includes("column")) return "column";
+      const cols = (style.gridTemplateColumns || "").trim();
+      if (cols && cols !== "none") {
         const colCount = cols.split(/\s+/).filter(Boolean).length;
-        if (colCount > 1) return 'row';
+        if (colCount > 1) return "row";
       }
-      return 'row';
+      return "row";
     }
-    return 'column';
+    return "column";
   }
 
   function detectInsertAxis(parent) {
-    if (!parent || parent.nodeType !== 1) return 'column';
+    if (!parent || parent.nodeType !== 1) return "column";
     const st = getComputedStyle(parent);
     return detectInsertAxisFromStyle({
       display: st.display,
@@ -1696,20 +1886,18 @@
 
   function layoutFlowChildren(parent) {
     if (!parent) return [];
-    return [...parent.children]
-      .filter(pickable)
-      .map((el) => ({ el, rect: el.getBoundingClientRect() }));
+    return [...parent.children].filter(pickable).map((el) => ({ el, rect: el.getBoundingClientRect() }));
   }
 
   function computeInsertPosition(clientX, clientY, rect, axis) {
-    axis = axis || 'column';
-    if (!rect) return 'after';
-    if (axis === 'row') {
-      if (!Number.isFinite(rect.width) || rect.width <= 0) return 'after';
-      return clientX < rect.left + rect.width / 2 ? 'before' : 'after';
+    axis = axis || "column";
+    if (!rect) return "after";
+    if (axis === "row") {
+      if (!Number.isFinite(rect.width) || rect.width <= 0) return "after";
+      return clientX < rect.left + rect.width / 2 ? "before" : "after";
     }
-    if (!Number.isFinite(rect.height) || rect.height <= 0) return 'after';
-    return clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+    if (!Number.isFinite(rect.height) || rect.height <= 0) return "after";
+    return clientY < rect.top + rect.height / 2 ? "before" : "after";
   }
 
   function groupSiblingRows(siblings, rowThreshold) {
@@ -1761,9 +1949,9 @@
         if (!inX || !inY) continue;
         return {
           anchor: b.el,
-          position: 'before',
-          axis: 'row',
-          line: { axis: 'row', left: (aRight + bLeft) / 2, top, width: 0, height: span },
+          position: "before",
+          axis: "row",
+          line: { axis: "row", left: (aRight + bLeft) / 2, top, width: 0, height: span },
         };
       }
     }
@@ -1785,22 +1973,22 @@
       if (!inY || !inX) continue;
       return {
         anchor: b.el,
-        position: 'before',
-        axis: 'column',
-        line: { axis: 'column', top: (gapTop + gapBottom) / 2, left: overlapLeft, width: overlap, height: 0 },
+        position: "before",
+        axis: "column",
+        line: { axis: "column", top: (gapTop + gapBottom) / 2, left: overlapLeft, width: overlap, height: 0 },
       };
     }
     return null;
   }
 
   function insertLineCoords(rect, position, axis) {
-    axis = axis || 'column';
-    if (axis === 'row') {
-      const x = position === 'before' ? rect.left - 2 : rect.right + 2;
-      return { axis: 'row', top: rect.top, left: x, width: 0, height: rect.height };
+    axis = axis || "column";
+    if (axis === "row") {
+      const x = position === "before" ? rect.left - 2 : rect.right + 2;
+      return { axis: "row", top: rect.top, left: x, width: 0, height: rect.height };
     }
-    const y = position === 'before' ? rect.top - 2 : rect.bottom + 2;
-    return { axis: 'column', top: y, left: rect.left, width: rect.width, height: 0 };
+    const y = position === "before" ? rect.top - 2 : rect.bottom + 2;
+    return { axis: "column", top: y, left: rect.left, width: rect.width, height: 0 };
   }
 
   function resolveInsertHover({ clientX, clientY, target, rect, axis, siblings }) {
@@ -1812,46 +2000,44 @@
   }
 
   function cursorForInsertAxis(axis) {
-    return axis === 'row' ? 'ew-resize' : 'ns-resize';
+    return axis === "row" ? "ew-resize" : "ns-resize";
   }
 
   function placeholderSizing({ axis, parentDisplay, parentWidth, anchorFlex }) {
-    const display = parentDisplay || 'block';
+    const display = parentDisplay || "block";
     const w = Number.isFinite(parentWidth) ? parentWidth : 0;
-    if (axis === 'row') {
-      if (display.includes('flex')) {
-        const flex = anchorFlex && anchorFlex !== 'none' && anchorFlex !== '0 1 auto'
-          ? anchorFlex
-          : '1 1 0';
-        return { kind: 'flex', flex, minWidth: 0 };
+    if (axis === "row") {
+      if (display.includes("flex")) {
+        const flex = anchorFlex && anchorFlex !== "none" && anchorFlex !== "0 1 auto" ? anchorFlex : "1 1 0";
+        return { kind: "flex", flex, minWidth: 0 };
       }
-      if (display === 'grid' || display === 'inline-grid') return { kind: 'auto' };
+      if (display === "grid" || display === "inline-grid") return { kind: "auto" };
     }
-    if (w >= PLACEHOLDER_MIN_WIDTH) return { kind: 'percent' };
+    if (w >= PLACEHOLDER_MIN_WIDTH) return { kind: "percent" };
     return {
-      kind: 'explicit',
+      kind: "explicit",
       width: Math.max(PLACEHOLDER_MIN_WIDTH, w || PLACEHOLDER_MIN_WIDTH),
     };
   }
 
   function placeholderWidthIsImplicit(kind) {
-    return kind === 'flex' || kind === 'percent' || kind === 'auto';
+    return kind === "flex" || kind === "percent" || kind === "auto";
   }
 
   function applyPlaceholderSizingStyles(placeholder, sizing) {
     placeholder.dataset.impeccablePlaceholderWidth = sizing.kind;
-    placeholder.style.flex = '';
-    placeholder.style.minWidth = '';
-    placeholder.style.maxWidth = '';
-    placeholder.style.width = '';
-    if (sizing.kind === 'flex') {
+    placeholder.style.flex = "";
+    placeholder.style.minWidth = "";
+    placeholder.style.maxWidth = "";
+    placeholder.style.width = "";
+    if (sizing.kind === "flex") {
       placeholder.style.flex = sizing.flex;
-      placeholder.style.minWidth = sizing.minWidth + 'px';
-    } else if (sizing.kind === 'percent') {
-      placeholder.style.width = '100%';
-      placeholder.style.maxWidth = '100%';
-    } else if (sizing.kind === 'explicit') {
-      placeholder.style.width = sizing.width + 'px';
+      placeholder.style.minWidth = sizing.minWidth + "px";
+    } else if (sizing.kind === "percent") {
+      placeholder.style.width = "100%";
+      placeholder.style.maxWidth = "100%";
+    } else if (sizing.kind === "explicit") {
+      placeholder.style.width = sizing.width + "px";
     }
   }
 
@@ -1860,25 +2046,23 @@
     const kind = placeholder.dataset.impeccablePlaceholderWidth;
     if (!placeholderWidthIsImplicit(kind)) return;
     const w = Math.max(PLACEHOLDER_MIN_WIDTH, Math.round(placeholder.offsetWidth));
-    placeholder.style.flex = '';
-    placeholder.style.minWidth = '';
-    placeholder.style.maxWidth = '';
-    placeholder.style.width = w + 'px';
-    placeholder.dataset.impeccablePlaceholderWidth = 'explicit';
+    placeholder.style.flex = "";
+    placeholder.style.minWidth = "";
+    placeholder.style.maxWidth = "";
+    placeholder.style.width = w + "px";
+    placeholder.dataset.impeccablePlaceholderWidth = "explicit";
   }
 
   function canCreateInsert({ prompt, comments, strokes }) {
-    const hasPrompt = typeof prompt === 'string' && prompt.trim().length > 0;
+    const hasPrompt = typeof prompt === "string" && prompt.trim().length > 0;
     const hasComments = Array.isArray(comments) && comments.length > 0;
-    const hasStrokes = Array.isArray(strokes) && strokes.some(
-      (s) => Array.isArray(s?.points) && s.points.length >= 2,
-    );
+    const hasStrokes = Array.isArray(strokes) && strokes.some((s) => Array.isArray(s?.points) && s.points.length >= 2);
     return hasPrompt || hasComments || hasStrokes;
   }
 
   function insertCreateDisabledReason({ prompt, comments, strokes }) {
     if (canCreateInsert({ prompt, comments, strokes })) return null;
-    return 'Add a prompt or annotate the placeholder to create';
+    return "Add a prompt or annotate the placeholder to create";
   }
 
   function clampPlaceholderSize(width, height, parentWidth) {
@@ -1890,9 +2074,9 @@
   }
 
   function cursorForPlaceholderEdge(edge) {
-    if (edge === 'n' || edge === 's') return 'ns-resize';
-    if (edge === 'e' || edge === 'w') return 'ew-resize';
-    return 'default';
+    if (edge === "n" || edge === "s") return "ns-resize";
+    if (edge === "e" || edge === "w") return "ew-resize";
+    return "default";
   }
 
   function resizePlaceholderFromEdge(start, edge, dx, dy, parentWidth) {
@@ -1902,18 +2086,18 @@
       marginLeft: start.marginLeft ?? 0,
       marginTop: start.marginTop ?? 0,
     };
-    if (edge === 'e') base.width = start.width + dx;
-    else if (edge === 'w') {
+    if (edge === "e") base.width = start.width + dx;
+    else if (edge === "w") {
       base.width = start.width - dx;
       base.marginLeft = start.marginLeft + dx;
-    } else if (edge === 's') base.height = start.height + dy;
-    else if (edge === 'n') {
+    } else if (edge === "s") base.height = start.height + dy;
+    else if (edge === "n") {
       base.height = start.height - dy;
       base.marginTop = start.marginTop + dy;
     }
     const clamped = clampPlaceholderSize(base.width, base.height, parentWidth);
-    if (edge === 'w') base.marginLeft = start.marginLeft + start.width - clamped.width;
-    else if (edge === 'n') base.marginTop = start.marginTop + start.height - clamped.height;
+    if (edge === "w") base.marginLeft = start.marginLeft + start.width - clamped.width;
+    else if (edge === "n") base.marginTop = start.marginTop + start.height - clamped.height;
     return {
       width: clamped.width,
       height: clamped.height,
@@ -1924,16 +2108,16 @@
 
   function ensureInsertLine() {
     if (insertLineEl) return insertLineEl;
-    insertLineEl = document.createElement('div');
-    insertLineEl.id = PREFIX + '-insert-line';
+    insertLineEl = document.createElement("div");
+    insertLineEl.id = PREFIX + "-insert-line";
     Object.assign(insertLineEl.style, {
-      position: 'fixed',
+      position: "fixed",
       zIndex: String(Z.highlight),
-      height: '0',
-      borderTop: '2px dotted ' + C.brand,
-      pointerEvents: 'none',
-      display: 'none',
-      opacity: '0.9',
+      height: "0",
+      borderTop: "2px dotted " + C.brand,
+      pointerEvents: "none",
+      display: "none",
+      opacity: "0.9",
     });
     uiAppend(insertLineEl);
     defangOutsideHandlers(insertLineEl);
@@ -1944,35 +2128,35 @@
     if (!resolved?.anchor || !resolved.line) return;
     const line = ensureInsertLine();
     const coords = resolved.line;
-    if (coords.axis === 'row') {
+    if (coords.axis === "row") {
       Object.assign(line.style, {
-        display: 'block',
-        top: coords.top + 'px',
-        left: coords.left + 'px',
-        width: '0',
-        height: coords.height + 'px',
-        borderTop: 'none',
-        borderLeft: '2px dotted ' + C.brand,
+        display: "block",
+        top: coords.top + "px",
+        left: coords.left + "px",
+        width: "0",
+        height: coords.height + "px",
+        borderTop: "none",
+        borderLeft: "2px dotted " + C.brand,
       });
     } else {
       Object.assign(line.style, {
-        display: 'block',
-        top: coords.top + 'px',
-        left: coords.left + 'px',
-        width: coords.width + 'px',
-        height: '0',
-        borderLeft: 'none',
-        borderTop: '2px dotted ' + C.brand,
+        display: "block",
+        top: coords.top + "px",
+        left: coords.left + "px",
+        width: coords.width + "px",
+        height: "0",
+        borderLeft: "none",
+        borderTop: "2px dotted " + C.brand,
       });
     }
     insertHoverAnchor = resolved.anchor;
     insertHoverPosition = resolved.position;
-    insertHoverAxis = resolved.axis || 'column';
+    insertHoverAxis = resolved.axis || "column";
   }
 
   function hideInsertLine() {
     if (!insertLineEl) return;
-    insertLineEl.style.display = 'none';
+    insertLineEl.style.display = "none";
     insertHoverAnchor = null;
     insertHoverPosition = null;
     insertHoverAxis = null;
@@ -1993,29 +2177,35 @@
   function setPageInteractionCursor(cursor) {
     let style = document.getElementById(PICK_CURSOR_STYLE_ID);
     if (!cursor) {
-      if (style) style.textContent = '';
+      if (style) style.textContent = "";
       return;
     }
     if (!style) {
-      style = document.createElement('style');
+      style = document.createElement("style");
       style.id = PICK_CURSOR_STYLE_ID;
       // Styles the host page, not the chrome - inside the adapter's shadow UI
       // root (uiAppendStyle's target) these selectors would match nothing.
       (document.head || document.documentElement).appendChild(style);
     }
     style.textContent =
-      '* { cursor: ' + cursor + ' !important; }\n'
-      + '[id^="' + PREFIX + '"],\n'
-      + '[id^="' + PREFIX + '"] * { cursor: revert !important; }';
+      "* { cursor: " +
+      cursor +
+      " !important; }\n" +
+      '[id^="' +
+      PREFIX +
+      '"],\n' +
+      '[id^="' +
+      PREFIX +
+      '"] * { cursor: revert !important; }';
   }
 
   /** Page-level cursor while pick or insert mode is targeting page elements. */
   function syncPageInteractionCursor() {
-    let cursor = '';
-    if (state === 'PICKING' && pickActive && !insertActive) {
-      cursor = 'crosshair';
-    } else if (state === 'PICKING' && insertActive && insertHoverAnchor) {
-      cursor = cursorForInsertAxis(insertHoverAxis || 'column');
+    let cursor = "";
+    if (state === "PICKING" && pickActive && !insertActive) {
+      cursor = "crosshair";
+    } else if (state === "PICKING" && insertActive && insertHoverAnchor) {
+      cursor = cursorForInsertAxis(insertHoverAxis || "column");
     }
     setPageInteractionCursor(cursor);
   }
@@ -2036,19 +2226,21 @@
 
   /** Element used to position the floating bar / shader during a session. */
   function resolveBarAnchor() {
-    if (svelteComponentSession?.sessionId === currentSessionId && (state === 'GENERATING' || state === 'CYCLING')) {
+    if (svelteComponentSession?.sessionId === currentSessionId && (state === "GENERATING" || state === "CYCLING")) {
       const anchor = resolveSvelteComponentAnchor();
       if (anchor) return anchor;
     }
-    if (currentSessionId && (state === 'GENERATING' || state === 'CYCLING')) {
+    if (currentSessionId && (state === "GENERATING" || state === "CYCLING")) {
       const wrapper = document.querySelector('[data-impeccable-variants="' + currentSessionId + '"]');
       if (wrapper) {
-        const variantCount = wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])').length;
+        const variantCount = wrapper.querySelectorAll(
+          '[data-impeccable-variant]:not([data-impeccable-variant="original"])'
+        ).length;
         if (variantCount > 0 && visibleVariant > 0) {
           const visEl = pickVariantContent(wrapper, visibleVariant);
           if (visEl) return visEl;
         }
-        if (state === 'GENERATING') {
+        if (state === "GENERATING") {
           const ph = ensureInsertPlaceholder();
           if (ph) return ph;
           if (insertAnchorElement && document.body.contains(insertAnchorElement)) return insertAnchorElement;
@@ -2076,20 +2268,20 @@
     insertAnchorPosition = null;
     insertAnchorLayoutAxis = null;
     insertPlaceholderSnapshot = null;
-    if (configureKind === 'insert') configureKind = 'replace';
+    if (configureKind === "insert") configureKind = "replace";
   }
 
   function buildInsertPlaceholderSnapshotFromDom(anchor, placeholder) {
     return {
       width: Math.round(placeholder.offsetWidth || 0),
       height: Math.round(placeholder.offsetHeight || PLACEHOLDER_DEFAULT_HEIGHT),
-      marginLeft: parseFloat(placeholder.style.marginLeft) || 0,
-      marginTop: parseFloat(placeholder.style.marginTop) || 0,
-      position: insertAnchorPosition || 'before',
-      layoutAxis: insertAnchorLayoutAxis || 'column',
-      anchorTag: anchor.tagName || 'DIV',
-      anchorClasses: anchor.className || '',
-      anchorText: (anchor.textContent || '').trim().slice(0, 120),
+      marginLeft: Number.parseFloat(placeholder.style.marginLeft) || 0,
+      marginTop: Number.parseFloat(placeholder.style.marginTop) || 0,
+      position: insertAnchorPosition || "before",
+      layoutAxis: insertAnchorLayoutAxis || "column",
+      anchorTag: anchor.tagName || "DIV",
+      anchorClasses: anchor.className || "",
+      anchorText: (anchor.textContent || "").trim().slice(0, 120),
     };
   }
 
@@ -2097,30 +2289,32 @@
     if (insertAnchorElement && document.body.contains(insertAnchorElement)) return insertAnchorElement;
     const snap = insertPlaceholderSnapshot;
     if (!snap) return null;
-    const tag = (snap.anchorTag || 'div').toLowerCase();
-    const cls = (snap.anchorClasses || '').split(/\s+/).filter(Boolean)[0];
-    const needle = snap.anchorText || '';
-    const sel = cls ? tag + '.' + cls : tag;
+    const tag = (snap.anchorTag || "div").toLowerCase();
+    const cls = (snap.anchorClasses || "").split(/\s+/).filter(Boolean)[0];
+    const needle = snap.anchorText || "";
+    const sel = cls ? tag + "." + cls : tag;
     const candidates = document.querySelectorAll(sel);
     for (const candidate of candidates) {
       if (own(candidate)) continue;
-      if (needle && !(candidate.textContent || '').includes(needle.slice(0, 40))) continue;
+      if (needle && !(candidate.textContent || "").includes(needle.slice(0, 40))) continue;
       return candidate;
     }
     return null;
   }
 
   function isInsertGeneratingSession() {
-    if (state !== 'GENERATING' || !currentSessionId) return false;
+    if (state !== "GENERATING" || !currentSessionId) return false;
     const wrapper = document.querySelector('[data-impeccable-variants="' + currentSessionId + '"]');
-    return !!wrapper && wrapper.dataset.impeccableMode === 'insert';
+    return !!wrapper && wrapper.dataset.impeccableMode === "insert";
   }
 
   /** Recreate the dotted placeholder if Astro/Vite HMR removed it mid-generation. */
   function ensureInsertPlaceholder() {
     if (!isInsertGeneratingSession()) return placeholderElement;
     const wrapper = document.querySelector('[data-impeccable-variants="' + currentSessionId + '"]');
-    const variantCount = wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])').length;
+    const variantCount = wrapper.querySelectorAll(
+      '[data-impeccable-variant]:not([data-impeccable-variant="original"])'
+    ).length;
     if (variantCount > 0) return placeholderElement;
     if (placeholderElement && document.body.contains(placeholderElement)) return placeholderElement;
 
@@ -2128,7 +2322,7 @@
     if (!anchor) return null;
 
     insertAnchorElement = anchor;
-    const position = insertPlaceholderSnapshot?.position || insertAnchorPosition || 'before';
+    const position = insertPlaceholderSnapshot?.position || insertAnchorPosition || "before";
     const axis = insertPlaceholderSnapshot?.layoutAxis || insertAnchorLayoutAxis;
     const ph = createInsertPlaceholder(anchor, position, axis);
     if (!ph) return null;
@@ -2149,55 +2343,55 @@
     const ph = placeholderElement;
     if (!ph) return;
     materializePlaceholderWidth(ph);
-    ph.style.width = width + 'px';
-    ph.style.height = height + 'px';
-    ph.style.marginLeft = marginLeft ? marginLeft + 'px' : '';
-    ph.style.marginTop = marginTop ? marginTop + 'px' : '';
+    ph.style.width = width + "px";
+    ph.style.height = height + "px";
+    ph.style.marginLeft = marginLeft ? marginLeft + "px" : "";
+    ph.style.marginTop = marginTop ? marginTop + "px" : "";
     positionAnnotOverlay(ph);
     positionBar();
   }
 
   function showOrUpdateCyclingBar() {
-    if (barEl && barEl.style.display !== 'none') updateBarContent('cycling');
-    else showBar('cycling');
+    if (barEl && barEl.style.display !== "none") updateBarContent("cycling");
+    else showBar("cycling");
   }
 
   function buildPlaceholderResizeHandles() {
     if (!placeholderResizeLayerEl) return;
-    placeholderResizeLayerEl.innerHTML = '';
+    placeholderResizeLayerEl.innerHTML = "";
     const hit = 10;
     const half = hit / 2;
     const specs = [
-      { edge: 'n', top: -half, left: 0, right: 0, height: hit },
-      { edge: 's', bottom: -half, left: 0, right: 0, height: hit },
-      { edge: 'e', top: 0, bottom: 0, right: -half, width: hit },
-      { edge: 'w', top: 0, bottom: 0, left: -half, width: hit },
+      { edge: "n", top: -half, left: 0, right: 0, height: hit },
+      { edge: "s", bottom: -half, left: 0, right: 0, height: hit },
+      { edge: "e", top: 0, bottom: 0, right: -half, width: hit },
+      { edge: "w", top: 0, bottom: 0, left: -half, width: hit },
     ];
     for (const spec of specs) {
-      const handle = el('div', {
-        position: 'absolute',
-        pointerEvents: 'auto',
+      const handle = el("div", {
+        position: "absolute",
+        pointerEvents: "auto",
         cursor: cursorForPlaceholderEdge(spec.edge),
       });
-      if (spec.top != null) handle.style.top = spec.top + 'px';
-      if (spec.bottom != null) handle.style.bottom = spec.bottom + 'px';
-      if (spec.left != null) handle.style.left = spec.left + 'px';
-      if (spec.right != null) handle.style.right = spec.right + 'px';
-      if (spec.width != null) handle.style.width = spec.width + 'px';
-      if (spec.height != null) handle.style.height = spec.height + 'px';
+      if (spec.top != null) handle.style.top = spec.top + "px";
+      if (spec.bottom != null) handle.style.bottom = spec.bottom + "px";
+      if (spec.left != null) handle.style.left = spec.left + "px";
+      if (spec.right != null) handle.style.right = spec.right + "px";
+      if (spec.width != null) handle.style.width = spec.width + "px";
+      if (spec.height != null) handle.style.height = spec.height + "px";
       handle.dataset.impeccablePlaceholderResize = spec.edge;
-      handle.setAttribute('aria-label', 'Resize placeholder');
-      handle.title = 'Drag to resize';
+      handle.setAttribute("aria-label", "Resize placeholder");
+      handle.title = "Drag to resize";
       placeholderResizeLayerEl.appendChild(handle);
     }
   }
 
   function syncPlaceholderResizeHandles() {
     if (!placeholderResizeLayerEl) return;
-    const show = configureKind === 'insert' && annotActive && !!placeholderElement && state === 'CONFIGURING';
-    placeholderResizeLayerEl.style.display = show ? 'block' : 'none';
+    const show = configureKind === "insert" && annotActive && !!placeholderElement && state === "CONFIGURING";
+    placeholderResizeLayerEl.style.display = show ? "block" : "none";
     if (!show) {
-      placeholderResizeLayerEl.innerHTML = '';
+      placeholderResizeLayerEl.innerHTML = "";
       return;
     }
     if (!placeholderResizeLayerEl.childElementCount) buildPlaceholderResizeHandles();
@@ -2205,7 +2399,7 @@
 
   function startPlaceholderEdgeResize(edge, e) {
     const ph = placeholderElement;
-    if (!ph || configureKind !== 'insert') return;
+    if (!ph || configureKind !== "insert") return;
     materializePlaceholderWidth(ph);
     placeholderResizeDrag = {
       edge,
@@ -2214,13 +2408,15 @@
       start: {
         width: ph.offsetWidth,
         height: ph.offsetHeight,
-        marginLeft: parseFloat(ph.style.marginLeft) || 0,
-        marginTop: parseFloat(ph.style.marginTop) || 0,
+        marginLeft: Number.parseFloat(ph.style.marginLeft) || 0,
+        marginTop: Number.parseFloat(ph.style.marginTop) || 0,
       },
       parentWidth: ph.parentNode?.getBoundingClientRect().width || PLACEHOLDER_MIN_WIDTH,
       pointerId: e.pointerId,
     };
-    try { annotOverlayEl.setPointerCapture(e.pointerId); } catch {}
+    try {
+      annotOverlayEl.setPointerCapture(e.pointerId);
+    } catch {}
     e.stopPropagation();
     e.preventDefault();
   }
@@ -2238,24 +2434,24 @@
       parentWidth: parent.getBoundingClientRect().width,
       anchorFlex: ast.flex,
     });
-    const placeholder = document.createElement('div');
-    placeholder.id = PREFIX + '-insert-placeholder';
-    placeholder.setAttribute('data-impeccable-insert-placeholder', 'true');
-    placeholder.setAttribute('aria-hidden', 'true');
+    const placeholder = document.createElement("div");
+    placeholder.id = PREFIX + "-insert-placeholder";
+    placeholder.setAttribute("data-impeccable-insert-placeholder", "true");
+    placeholder.setAttribute("aria-hidden", "true");
     Object.assign(placeholder.style, {
-      boxSizing: 'border-box',
-      height: PLACEHOLDER_DEFAULT_HEIGHT + 'px',
-      minHeight: PLACEHOLDER_MIN_HEIGHT + 'px',
-      border: '2px dotted ' + BP.accent,
-      borderRadius: '0',
-      background: 'transparent',
-      opacity: '1',
-      position: 'relative',
-      marginLeft: '',
-      marginTop: '',
+      boxSizing: "border-box",
+      height: PLACEHOLDER_DEFAULT_HEIGHT + "px",
+      minHeight: PLACEHOLDER_MIN_HEIGHT + "px",
+      border: "2px dotted " + BP.accent,
+      borderRadius: "0",
+      background: "transparent",
+      opacity: "1",
+      position: "relative",
+      marginLeft: "",
+      marginTop: "",
     });
     applyPlaceholderSizingStyles(placeholder, sizing);
-    if (position === 'before') parent.insertBefore(placeholder, anchor);
+    if (position === "before") parent.insertBefore(placeholder, anchor);
     else parent.insertBefore(placeholder, anchor.nextSibling);
     placeholderElement = placeholder;
     insertAnchorElement = anchor;
@@ -2270,32 +2466,32 @@
   }
 
   function isInsertCreateEnabled(btn) {
-    btn = btn || uiGetById(PREFIX + '-insert-create');
-    return !!btn && btn.getAttribute('aria-disabled') !== 'true';
+    btn = btn || uiGetById(PREFIX + "-insert-create");
+    return !!btn && btn.getAttribute("aria-disabled") !== "true";
   }
 
   let insertCreateTooltipEl = null;
 
   function ensureInsertCreateTooltip() {
     if (insertCreateTooltipEl) return insertCreateTooltipEl;
-    insertCreateTooltipEl = el('div', {
-      position: 'fixed',
-      display: 'none',
+    insertCreateTooltipEl = el("div", {
+      position: "fixed",
+      display: "none",
       zIndex: String(Z.bar + 7),
-      pointerEvents: 'none',
-      maxWidth: '240px',
-      padding: '6px 9px',
-      borderRadius: '7px',
+      pointerEvents: "none",
+      maxWidth: "240px",
+      padding: "6px 9px",
+      borderRadius: "7px",
       background: BP.chatSurface,
-      border: '1px solid ' + BP.hairline,
+      border: "1px solid " + BP.hairline,
       boxShadow: BP.shadow,
       color: BP.text,
       fontFamily: FONT,
-      fontSize: '11px',
-      fontWeight: '500',
-      lineHeight: '1.35',
+      fontSize: "11px",
+      fontWeight: "500",
+      lineHeight: "1.35",
     });
-    insertCreateTooltipEl.id = PREFIX + '-insert-create-tooltip';
+    insertCreateTooltipEl.id = PREFIX + "-insert-create-tooltip";
     uiAppend(insertCreateTooltipEl);
     return insertCreateTooltipEl;
   }
@@ -2304,95 +2500,131 @@
     if (!anchor || !message) return;
     const tip = ensureInsertCreateTooltip();
     tip.textContent = message;
-    tip.style.display = 'block';
+    tip.style.display = "block";
     const r = anchor.getBoundingClientRect();
     const tipW = tip.offsetWidth;
     const tipH = tip.offsetHeight;
     const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
     const top = Math.max(8, r.top - tipH - 8);
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
   }
 
   function hideInsertCreateTooltip() {
     if (!insertCreateTooltipEl) return;
-    insertCreateTooltipEl.style.display = 'none';
+    insertCreateTooltipEl.style.display = "none";
   }
 
   function insertCreateGateState(input) {
     return {
-      prompt: input?.value ?? '',
+      prompt: input?.value ?? "",
       comments: annotState.comments,
       strokes: annotState.strokes,
     };
   }
 
   function syncInsertCreateButton(btn, input) {
-    btn = btn || uiGetById(PREFIX + '-insert-create');
-    input = input || uiGetById(PREFIX + '-insert-input');
+    btn = btn || uiGetById(PREFIX + "-insert-create");
+    input = input || uiGetById(PREFIX + "-insert-input");
     if (!btn || !input) return;
     const gate = insertCreateGateState(input);
     const ok = canCreateInsert(gate);
-    const reason = ok ? 'Create variants' : insertCreateDisabledReason(gate);
-    btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
-    btn.setAttribute('aria-label', reason);
+    const reason = ok ? "Create variants" : insertCreateDisabledReason(gate);
+    btn.setAttribute("aria-disabled", ok ? "false" : "true");
+    btn.setAttribute("aria-label", reason);
     if (ok) {
       hideInsertCreateTooltip();
       btn.style.background = BP.accent;
       btn.style.color = C.ink;
-      btn.style.border = 'none';
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
+      btn.style.border = "none";
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
     } else {
-      btn.style.background = 'transparent';
+      btn.style.background = "transparent";
       btn.style.color = BP.textDim;
-      btn.style.border = '1px solid ' + BP.hairline;
-      btn.style.opacity = '0.72';
-      btn.style.cursor = 'not-allowed';
+      btn.style.border = "1px solid " + BP.hairline;
+      btn.style.opacity = "0.72";
+      btn.style.cursor = "not-allowed";
     }
   }
 
   /** Stylesheet shared by the replace and insert configure rows. */
   function ensureConfigureInputStyle() {
-    if (uiGetById(PREFIX + '-configure-input-style')) return;
-    const s = document.createElement('style');
-    s.id = PREFIX + '-configure-input-style';
+    if (uiGetById(PREFIX + "-configure-input-style")) return;
+    const s = document.createElement("style");
+    s.id = PREFIX + "-configure-input-style";
     s.textContent =
-      '@keyframes impeccable-configure-voice-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }' +
-      '#' + PREFIX + '-input, #' + PREFIX + '-insert-input { box-sizing: border-box; height: ' + CONFIGURE_ROW_TRACK_H + '; line-height: ' + CONFIGURE_ROW_TRACK_H + '; padding: 0; margin: 0; caret-color: ' + CONFIGURE_PILL_TEXT + '; }' +
-      '#' + PREFIX + '-input::placeholder, #' + PREFIX + '-insert-input::placeholder { color: ' + BP.textDim + '; opacity: 1; }' +
-      '#' + PREFIX + '-configure-voice[data-listening="true"] svg, #' + PREFIX + '-insert-voice[data-listening="true"] svg { animation: impeccable-configure-voice-pulse 1.1s ease-in-out infinite; }' +
-      '@media (prefers-reduced-motion: reduce) { #' + PREFIX + '-configure-voice[data-listening="true"] svg, #' + PREFIX + '-insert-voice[data-listening="true"] svg { animation: none; opacity: 1; } }' +
-      '#' + PREFIX + '-configure-voice:hover, #' + PREFIX + '-insert-voice:hover { background: oklch(27% 0 0); color: ' + BP.accent + '; }';
+      "@keyframes impeccable-configure-voice-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }" +
+      "#" +
+      PREFIX +
+      "-input, #" +
+      PREFIX +
+      "-insert-input { box-sizing: border-box; height: " +
+      CONFIGURE_ROW_TRACK_H +
+      "; line-height: " +
+      CONFIGURE_ROW_TRACK_H +
+      "; padding: 0; margin: 0; caret-color: " +
+      CONFIGURE_PILL_TEXT +
+      "; }" +
+      "#" +
+      PREFIX +
+      "-input::placeholder, #" +
+      PREFIX +
+      "-insert-input::placeholder { color: " +
+      BP.textDim +
+      "; opacity: 1; }" +
+      "#" +
+      PREFIX +
+      '-configure-voice[data-listening="true"] svg, #' +
+      PREFIX +
+      '-insert-voice[data-listening="true"] svg { animation: impeccable-configure-voice-pulse 1.1s ease-in-out infinite; }' +
+      "@media (prefers-reduced-motion: reduce) { #" +
+      PREFIX +
+      '-configure-voice[data-listening="true"] svg, #' +
+      PREFIX +
+      '-insert-voice[data-listening="true"] svg { animation: none; opacity: 1; } }' +
+      "#" +
+      PREFIX +
+      "-configure-voice:hover, #" +
+      PREFIX +
+      "-insert-voice:hover { background: oklch(27% 0 0); color: " +
+      BP.accent +
+      "; }";
     uiAppendStyle(s);
   }
 
   function buildConfigureRow() {
     const controlsLocked = pendingApplyInFlight === true;
-    const row = el('div', {
-      display: 'flex', alignItems: 'stretch', width: '100%', height: CONFIGURE_BAR_H,
+    const row = el("div", {
+      display: "flex",
+      alignItems: "stretch",
+      width: "100%",
+      height: CONFIGURE_BAR_H,
     });
 
-    const inputShell = el('div', configureInputShellStyle());
+    const inputShell = el("div", configureInputShellStyle());
 
-    const input = document.createElement('input');
-    input.id = PREFIX + '-input';
-    input.type = 'text';
-    input.placeholder = '';
-    input.setAttribute('aria-label', 'Describe the change');
+    const input = document.createElement("input");
+    input.id = PREFIX + "-input";
+    input.type = "text";
+    input.placeholder = "";
+    input.setAttribute("aria-label", "Describe the change");
     Object.assign(input.style, configureInputFieldStyle());
     input.disabled = controlsLocked;
     if (controlsLocked) {
-      input.placeholder = 'apply is running...';
-      input.style.cursor = 'not-allowed';
-      input.style.opacity = '0.58';
+      input.placeholder = "apply is running...";
+      input.style.cursor = "not-allowed";
+      input.style.opacity = "0.58";
     }
 
     const action = buildConfigureActionControl({
       controlsLocked,
       onClick: (e) => {
         e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
+        if (controlsLocked) {
+          showManualApplyBusyToast();
+          return;
+        }
         toggleActionPicker();
       },
     });
@@ -2401,9 +2633,12 @@
       controlsLocked,
       onClick: (e) => {
         e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
-        count.textContent = '\u00D7' + cycleSelectedCount();
-        if (count.matches(':hover')) {
+        if (controlsLocked) {
+          showManualApplyBusyToast();
+          return;
+        }
+        count.textContent = "\u00D7" + cycleSelectedCount();
+        if (count.matches(":hover")) {
           showConfigureBarTooltip(count, variantCountTooltipText(selectedCount));
         }
       },
@@ -2414,35 +2649,46 @@
 
     ensureConfigureInputStyle();
 
-    input.addEventListener('focus', () => syncConfigureInputChrome());
-    input.addEventListener('blur', () => syncConfigureInputChrome());
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.stopPropagation(); e.preventDefault(); handleGo(); return; }
-      if (e.key === 'Escape') {
+    input.addEventListener("focus", () => syncConfigureInputChrome());
+    input.addEventListener("blur", () => syncConfigureInputChrome());
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.stopPropagation();
+        e.preventDefault();
+        handleGo();
+        return;
+      }
+      if (e.key === "Escape") {
         e.stopPropagation();
         e.preventDefault();
         input.blur();
-        exitConfigureToPicking('configure-input-escape');
+        exitConfigureToPicking("configure-input-escape");
         return;
       }
-      if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !input.value) return;
+      if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !input.value) return;
       e.stopPropagation();
     });
 
     const voiceBtn = buildConfigureVoiceButton({
-      id: PREFIX + '-configure-voice',
+      id: PREFIX + "-configure-voice",
       controlsLocked,
       onClick: (e) => {
         e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
+        if (controlsLocked) {
+          showManualApplyBusyToast();
+          return;
+        }
         toggleConfigureVoice();
       },
     });
 
     const go = buildConfigureSubmitButton({
       controlsLocked,
-      ariaLabel: 'Generate variants',
-      onClick: (e) => { e.stopPropagation(); handleGo(); },
+      ariaLabel: "Generate variants",
+      onClick: (e) => {
+        e.stopPropagation();
+        handleGo();
+      },
     });
 
     row.appendChild(inputShell);
@@ -2456,35 +2702,41 @@
 
   function buildInsertConfigureRow() {
     const controlsLocked = pendingApplyInFlight === true;
-    const row = el('div', {
-      display: 'flex', alignItems: 'stretch', width: '100%', height: CONFIGURE_BAR_H,
+    const row = el("div", {
+      display: "flex",
+      alignItems: "stretch",
+      width: "100%",
+      height: CONFIGURE_BAR_H,
     });
-    row.addEventListener('pointerdown', (e) => e.stopPropagation());
-    row.addEventListener('mousedown', (e) => e.stopPropagation());
-    row.addEventListener('click', (e) => e.stopPropagation());
+    row.addEventListener("pointerdown", (e) => e.stopPropagation());
+    row.addEventListener("mousedown", (e) => e.stopPropagation());
+    row.addEventListener("click", (e) => e.stopPropagation());
 
-    const inputShell = el('div', configureInputShellStyle());
+    const inputShell = el("div", configureInputShellStyle());
 
-    const input = document.createElement('input');
-    input.id = PREFIX + '-insert-input';
-    input.type = 'text';
-    input.placeholder = '';
-    input.setAttribute('aria-label', 'Describe the new element');
+    const input = document.createElement("input");
+    input.id = PREFIX + "-insert-input";
+    input.type = "text";
+    input.placeholder = "";
+    input.setAttribute("aria-label", "Describe the new element");
     Object.assign(input.style, configureInputFieldStyle());
     input.disabled = controlsLocked;
     if (controlsLocked) {
-      input.placeholder = 'apply is running...';
-      input.style.cursor = 'not-allowed';
-      input.style.opacity = '0.58';
+      input.placeholder = "apply is running...";
+      input.style.cursor = "not-allowed";
+      input.style.opacity = "0.58";
     }
 
     const count = buildConfigureCountControl({
       controlsLocked,
       onClick: (e) => {
         e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
-        count.textContent = '\u00D7' + cycleSelectedCount();
-        if (count.matches(':hover')) {
+        if (controlsLocked) {
+          showManualApplyBusyToast();
+          return;
+        }
+        count.textContent = "\u00D7" + cycleSelectedCount();
+        if (count.matches(":hover")) {
           showConfigureBarTooltip(count, variantCountTooltipText(selectedCount));
         }
       },
@@ -2495,52 +2747,64 @@
 
     ensureConfigureInputStyle();
 
-    input.addEventListener('input', () => syncInsertCreateButton());
-    input.addEventListener('pointerdown', (e) => e.stopPropagation());
-    input.addEventListener('mousedown', (e) => e.stopPropagation());
-    input.addEventListener('click', (e) => {
+    input.addEventListener("input", () => syncInsertCreateButton());
+    input.addEventListener("pointerdown", (e) => e.stopPropagation());
+    input.addEventListener("mousedown", (e) => e.stopPropagation());
+    input.addEventListener("click", (e) => {
       e.stopPropagation();
-      try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+      try {
+        input.focus({ preventScroll: true });
+      } catch {
+        input.focus();
+      }
     });
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.stopPropagation(); e.preventDefault();
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.stopPropagation();
+        e.preventDefault();
         if (isInsertCreateEnabled()) handleInsertCreate();
         return;
       }
-      if (e.key === 'Escape') {
-        e.stopPropagation(); e.preventDefault();
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        e.preventDefault();
         cancelInsertConfigure();
         return;
       }
       e.stopPropagation();
     });
-    input.addEventListener('focus', () => syncConfigureInputChrome());
-    input.addEventListener('blur', () => syncConfigureInputChrome());
+    input.addEventListener("focus", () => syncConfigureInputChrome());
+    input.addEventListener("blur", () => syncConfigureInputChrome());
 
     const voiceBtn = buildConfigureVoiceButton({
-      id: PREFIX + '-insert-voice',
+      id: PREFIX + "-insert-voice",
       controlsLocked,
       onClick: (e) => {
         e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
+        if (controlsLocked) {
+          showManualApplyBusyToast();
+          return;
+        }
         toggleConfigureVoice();
       },
     });
 
     const create = buildConfigureSubmitButton({
       controlsLocked,
-      ariaLabel: 'Create variants',
+      ariaLabel: "Create variants",
       onClick: (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
+        if (controlsLocked) {
+          showManualApplyBusyToast();
+          return;
+        }
         if (!isInsertCreateEnabled(create)) return;
         handleInsertCreate();
       },
     });
-    create.id = PREFIX + '-insert-create';
-    create.addEventListener('mouseenter', () => {
+    create.id = PREFIX + "-insert-create";
+    create.addEventListener("mouseenter", () => {
       if (controlsLocked) return;
       if (isInsertCreateEnabled(create)) {
         hideInsertCreateTooltip();
@@ -2548,7 +2812,7 @@
       }
       showInsertCreateTooltip(create, insertCreateDisabledReason(insertCreateGateState(input)));
     });
-    create.addEventListener('mouseleave', hideInsertCreateTooltip);
+    create.addEventListener("mouseleave", hideInsertCreateTooltip);
     row.appendChild(inputShell);
     row.appendChild(buildConfigureTrailingCluster([count], voiceBtn, create));
     syncInsertCreateButton(create, input);
@@ -2560,29 +2824,36 @@
   // Generating row
 
   function buildGeneratingRow() {
-    const row = el('div', {
-      display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '2px 4px',
+    const row = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "2px 4px",
     });
 
     // Action label
-    const label = el('span', {
-      fontWeight: '600', fontSize: '12px', color: BP.text,
-      flexShrink: '0', whiteSpace: 'nowrap',
+    const label = el("span", {
+      fontWeight: "600",
+      fontSize: "12px",
+      color: BP.text,
+      flexShrink: "0",
+      whiteSpace: "nowrap",
     });
-    label.textContent = configureKind === 'insert' ? 'Insert' : actionLabel();
+    label.textContent = configureKind === "insert" ? "Insert" : actionLabel();
     row.appendChild(label);
 
     // Dots
     row.appendChild(buildDots(false));
 
     // Status
-    const status = el('span', {
-      fontSize: '11px', color: BP.textDim, whiteSpace: 'nowrap',
-      marginLeft: 'auto',
+    const status = el("span", {
+      fontSize: "11px",
+      color: BP.textDim,
+      whiteSpace: "nowrap",
+      marginLeft: "auto",
     });
     status.textContent = recoveryWaitingForAnchor
-      ? 'Variants ready. Reveal the selected element to resume.'
+      ? "Variants ready. Reveal the selected element to resume."
       : generationStatusText();
     row.appendChild(status);
 
@@ -2590,19 +2861,20 @@
   }
 
   function generationStatusText() {
-    if (arrivedVariants >= expectedVariants && expectedVariants > 0) return 'Done';
-    if (generationPhase === 'picked_up') return 'Agent picked up the request...';
-    if (generationPhase === 'scaffolding') return 'Finding the source...';
-    if (generationPhase === 'source_ready') return 'Source ready. Generating...';
-    if (generationPhase === 'scaffold_fallback') return 'Agent is locating the source...';
-    if (generationPhase === 'first_reviewable') return 'First variant is ready. Exploring more...';
-    if (generationPhase === 'second_reviewable') return 'Checking the remaining variants...';
-    return 'Generating ' + expectedVariants + ' variants...';
+    if (arrivedVariants >= expectedVariants && expectedVariants > 0) return "Done";
+    if (generationPhase === "picked_up") return "Agent picked up the request...";
+    if (generationPhase === "scaffolding") return "Finding the source...";
+    if (generationPhase === "source_ready") return "Source ready. Generating...";
+    if (generationPhase === "scaffold_fallback") return "Agent is locating the source...";
+    if (generationPhase === "first_reviewable") return "First variant is ready. Exploring more...";
+    if (generationPhase === "second_reviewable") return "Checking the remaining variants...";
+    return "Generating " + expectedVariants + " variants...";
   }
 
   // Cycling row
 
-  const TUNE_ICON_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0"><line x1="4" y1="8" x2="20" y2="8"/><circle cx="14" cy="8" r="2.4" fill="currentColor" stroke="none"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="10" cy="16" r="2.4" fill="currentColor" stroke="none"/></svg>';
+  const TUNE_ICON_SVG =
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0"><line x1="4" y1="8" x2="20" y2="8"/><circle cx="14" cy="8" r="2.4" fill="currentColor" stroke="none"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="10" cy="16" r="2.4" fill="currentColor" stroke="none"/></svg>';
 
   /**
    * Which variant the user is actually looking at. For component previews the
@@ -2625,154 +2897,209 @@
    */
   function cyclingCounterText() {
     const total = arrivedVariants > 0 ? arrivedVariants : expectedVariants;
-    return cyclingShownVariant() + '/' + total;
+    return cyclingShownVariant() + "/" + total;
   }
 
   function buildCyclingRow() {
-    if (!ensureCyclingRenderable('build-cycling-row')) {
-      return el('div', { display: 'none' });
+    if (!ensureCyclingRenderable("build-cycling-row")) {
+      return el("div", { display: "none" });
     }
-    const row = el('div', {
-      display: 'flex', alignItems: 'center', gap: '6px',
-      padding: '1px 2px',
+    const row = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      padding: "1px 2px",
     });
 
     // Prev
-    const prev = navBtn('\u2190');
-    prev.id = PREFIX + '-variant-prev';
-    prev.addEventListener('click', (e) => { e.stopPropagation(); cycleVariant(-1); });
-    if (cyclingShownVariant() <= 1) prev.style.opacity = '0.3';
+    const prev = navBtn("\u2190");
+    prev.id = PREFIX + "-variant-prev";
+    prev.addEventListener("click", (e) => {
+      e.stopPropagation();
+      cycleVariant(-1);
+    });
+    if (cyclingShownVariant() <= 1) prev.style.opacity = "0.3";
     row.appendChild(prev);
 
     // Dots (clickable)
     row.appendChild(buildDots(true));
 
     // Counter
-    const counter = el('span', {
-      fontFamily: MONO, fontSize: '11px', fontWeight: '500',
-      color: BP.textDim, minWidth: '24px', textAlign: 'center',
+    const counter = el("span", {
+      fontFamily: MONO,
+      fontSize: "11px",
+      fontWeight: "500",
+      color: BP.textDim,
+      minWidth: "24px",
+      textAlign: "center",
     });
-    counter.id = PREFIX + '-variant-counter';
+    counter.id = PREFIX + "-variant-counter";
     counter.textContent = cyclingCounterText();
     row.appendChild(counter);
 
     // Next
-    const next = navBtn('\u2192');
-    next.id = PREFIX + '-variant-next';
-    next.addEventListener('click', (e) => { e.stopPropagation(); cycleVariant(1); });
-    if (cyclingShownVariant() >= arrivedVariants) next.style.opacity = '0.3';
+    const next = navBtn("\u2192");
+    next.id = PREFIX + "-variant-next";
+    next.addEventListener("click", (e) => {
+      e.stopPropagation();
+      cycleVariant(1);
+    });
+    if (cyclingShownVariant() >= arrivedVariants) next.style.opacity = "0.3";
     row.appendChild(next);
 
     // Tune chip stays visible while the deferred parameter phase is running,
     // then becomes interactive as soon as this variant exposes controls.
     const visParams = parseVariantParams(getVisibleVariantEl());
     const hasParams = visParams.length > 0;
-    const paramsPending = !hasParams && (parameterGenerationState === 'pending' || parameterGenerationState === 'loading');
+    const paramsPending =
+      !hasParams && (parameterGenerationState === "pending" || parameterGenerationState === "loading");
     if (hasParams || paramsPending) {
-      const tune = el('button', {
-        display: 'inline-flex', alignItems: 'center', gap: '6px',
-        padding: '4px 10px', borderRadius: '5px',
-        border: '1px solid transparent',
-        background: tuneOpen ? BP.accentSoft : 'transparent',
+      const tune = el("button", {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "4px 10px",
+        borderRadius: "5px",
+        border: "1px solid transparent",
+        background: tuneOpen ? BP.accentSoft : "transparent",
         color: tuneOpen ? BP.accent : BP.text,
-        fontFamily: FONT, fontSize: '11px', fontWeight: '500',
-        cursor: paramsPending ? 'wait' : 'pointer',
-        transition: 'color 0.12s ease, background 0.12s ease',
-        whiteSpace: 'nowrap',
+        fontFamily: FONT,
+        fontSize: "11px",
+        fontWeight: "500",
+        cursor: paramsPending ? "wait" : "pointer",
+        transition: "color 0.12s ease, background 0.12s ease",
+        whiteSpace: "nowrap",
       });
       if (paramsPending) {
-        const spinner = el('span', {
-          width: '11px', height: '11px', borderRadius: '50%',
-          border: '1.5px solid ' + BP.hairline,
+        const spinner = el("span", {
+          width: "11px",
+          height: "11px",
+          borderRadius: "50%",
+          border: "1.5px solid " + BP.hairline,
           borderTopColor: BP.accent,
-          animation: 'impeccable-spin 0.6s linear infinite',
-          boxSizing: 'border-box', flexShrink: '0',
+          animation: "impeccable-spin 0.6s linear infinite",
+          boxSizing: "border-box",
+          flexShrink: "0",
         });
-        spinner.setAttribute('aria-hidden', 'true');
+        spinner.setAttribute("aria-hidden", "true");
         tune.appendChild(spinner);
       } else {
         tune.innerHTML = TUNE_ICON_SVG;
       }
-      const tuneLabel = document.createElement('span');
-      tuneLabel.textContent = 'Tune';
+      const tuneLabel = document.createElement("span");
+      tuneLabel.textContent = "Tune";
       tune.appendChild(tuneLabel);
       if (hasParams) {
-        const tuneBadge = document.createElement('span');
+        const tuneBadge = document.createElement("span");
         Object.assign(tuneBadge.style, {
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          minWidth: '16px', height: '16px', padding: '0 4px',
-          borderRadius: '999px',
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: "16px",
+          height: "16px",
+          padding: "0 4px",
+          borderRadius: "999px",
           background: tuneOpen ? C.brand : BP.hairline,
-          color: tuneOpen ? C.ink : 'inherit',
-          fontFamily: MONO, fontSize: '9.5px', fontWeight: '600',
-          lineHeight: '1',
-          boxSizing: 'border-box',
+          color: tuneOpen ? C.ink : "inherit",
+          fontFamily: MONO,
+          fontSize: "9.5px",
+          fontWeight: "600",
+          lineHeight: "1",
+          boxSizing: "border-box",
         });
         tuneBadge.textContent = String(visParams.length);
         tune.appendChild(tuneBadge);
-        tune.title = 'Tune this variant (' + visParams.length + ' knob' + (visParams.length === 1 ? '' : 's') + ')';
-        tune.addEventListener('mouseenter', () => {
+        tune.title = "Tune this variant (" + visParams.length + " knob" + (visParams.length === 1 ? "" : "s") + ")";
+        tune.addEventListener("mouseenter", () => {
           if (!tuneOpen) tune.style.background = BP.accentSoft;
         });
-        tune.addEventListener('mouseleave', () => {
-          if (!tuneOpen) tune.style.background = 'transparent';
+        tune.addEventListener("mouseleave", () => {
+          if (!tuneOpen) tune.style.background = "transparent";
         });
-        tune.addEventListener('click', (e) => { e.stopPropagation(); toggleTunePopover(); });
+        tune.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleTunePopover();
+        });
       } else {
         tune.disabled = true;
-        tune.setAttribute('aria-label', 'Tune controls are still being prepared');
-        tune.title = 'Tune controls are still being prepared';
-        tune.style.opacity = '0.72';
+        tune.setAttribute("aria-label", "Tune controls are still being prepared");
+        tune.title = "Tune controls are still being prepared";
+        tune.style.opacity = "0.72";
       }
-      tune.dataset.iceqTune = '1';
+      tune.dataset.iceqTune = "1";
       row.appendChild(tune);
     }
 
     // Spacer
-    row.appendChild(el('div', { flex: '1' }));
+    row.appendChild(el("div", { flex: "1" }));
 
     if (arrivedVariants < expectedVariants) {
       const remaining = expectedVariants - arrivedVariants;
-      const progress = el('span', {
-        fontSize: '11px', color: BP.textDim, whiteSpace: 'nowrap',
+      const progress = el("span", {
+        fontSize: "11px",
+        color: BP.textDim,
+        whiteSpace: "nowrap",
       });
-      progress.textContent = remaining + ' more arriving...';
+      progress.textContent = remaining + " more arriving...";
       row.appendChild(progress);
     }
 
     // Accept - primary action, kinpaku gold + lacquer-deep (matches demo .live-demo-ctx-accept)
-    const accept = el('button', {
-      padding: '5px 14px', borderRadius: '5px',
-      border: 'none', background: C.brand, color: C.ink,
-      fontFamily: FONT, fontSize: '11px', fontWeight: '600',
-      cursor: 'pointer', transition: 'filter 0.12s ease, transform 0.1s ease',
-      whiteSpace: 'nowrap',
+    const accept = el("button", {
+      padding: "5px 14px",
+      borderRadius: "5px",
+      border: "none",
+      background: C.brand,
+      color: C.ink,
+      fontFamily: FONT,
+      fontSize: "11px",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "filter 0.12s ease, transform 0.1s ease",
+      whiteSpace: "nowrap",
     });
-    accept.textContent = '\u2713 Accept';
-    accept.addEventListener('mouseenter', () => accept.style.filter = 'brightness(1.08)');
-    accept.addEventListener('mouseleave', () => accept.style.filter = 'none');
-    accept.addEventListener('mousedown', () => accept.style.transform = 'scale(0.97)');
-    accept.addEventListener('mouseup', () => accept.style.transform = 'scale(1)');
-    accept.addEventListener('click', (e) => { e.stopPropagation(); handleAccept(); });
+    accept.textContent = "\u2713 Accept";
+    accept.addEventListener("mouseenter", () => (accept.style.filter = "brightness(1.08)"));
+    accept.addEventListener("mouseleave", () => (accept.style.filter = "none"));
+    accept.addEventListener("mousedown", () => (accept.style.transform = "scale(0.97)"));
+    accept.addEventListener("mouseup", () => (accept.style.transform = "scale(1)"));
+    accept.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleAccept();
+    });
     if (arrivedVariants === 0) {
-      accept.style.opacity = '0.3';
-      accept.style.pointerEvents = 'none';
-      accept.title = 'Accept becomes available when the first variant arrives';
+      accept.style.opacity = "0.3";
+      accept.style.pointerEvents = "none";
+      accept.title = "Accept becomes available when the first variant arrives";
     }
     row.appendChild(accept);
 
     // Discard
-    const discard = el('button', {
-      padding: '4px 6px', borderRadius: '5px',
-      border: '1px solid ' + BP.hairline, background: 'transparent',
-      fontFamily: FONT, fontSize: '11px', color: BP.textDim,
-      cursor: 'pointer', transition: 'color 0.12s ease, border-color 0.12s ease',
+    const discard = el("button", {
+      padding: "4px 6px",
+      borderRadius: "5px",
+      border: "1px solid " + BP.hairline,
+      background: "transparent",
+      fontFamily: FONT,
+      fontSize: "11px",
+      color: BP.textDim,
+      cursor: "pointer",
+      transition: "color 0.12s ease, border-color 0.12s ease",
     });
-    discard.textContent = '\u2715';
-    discard.title = 'Discard all variants';
-    discard.addEventListener('mouseenter', () => { discard.style.color = BP.text; discard.style.borderColor = BP.text; });
-    discard.addEventListener('mouseleave', () => { discard.style.color = BP.textDim; discard.style.borderColor = BP.hairline; });
-    discard.addEventListener('click', (e) => { e.stopPropagation(); handleDiscard(); });
+    discard.textContent = "\u2715";
+    discard.title = "Discard all variants";
+    discard.addEventListener("mouseenter", () => {
+      discard.style.color = BP.text;
+      discard.style.borderColor = BP.text;
+    });
+    discard.addEventListener("mouseleave", () => {
+      discard.style.color = BP.textDim;
+      discard.style.borderColor = BP.hairline;
+    });
+    discard.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleDiscard();
+    });
     row.appendChild(discard);
 
     return row;
@@ -2783,22 +3110,28 @@
   // Saving row (waiting for agent to process accept/discard)
 
   function buildSavingRow() {
-    const row = el('div', {
-      display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '2px 8px',
+    const row = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "2px 8px",
     });
-    const spinner = el('div', {
-      width: '14px', height: '14px', borderRadius: '50%',
-      border: '2px solid ' + BP.hairline,
+    const spinner = el("div", {
+      width: "14px",
+      height: "14px",
+      borderRadius: "50%",
+      border: "2px solid " + BP.hairline,
       borderTopColor: BP.accent,
-      animation: 'impeccable-spin 0.6s linear infinite',
-      flexShrink: '0',
+      animation: "impeccable-spin 0.6s linear infinite",
+      flexShrink: "0",
     });
     row.appendChild(spinner);
-    const label = el('span', {
-      fontSize: '12px', color: BP.textDim, fontWeight: '500',
+    const label = el("span", {
+      fontSize: "12px",
+      color: BP.textDim,
+      fontWeight: "500",
     });
-    label.textContent = 'Applying variant...';
+    label.textContent = "Applying variant...";
     row.appendChild(label);
 
     ensureSpinKeyframes();
@@ -2808,20 +3141,26 @@
   // Confirmed row (green success, auto-dismisses)
 
   function buildConfirmedRow() {
-    const row = el('div', {
-      display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '2px 8px',
+    const row = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "2px 8px",
     });
-    const check = el('span', {
-      fontSize: '15px', lineHeight: '1', flexShrink: '0',
-      color: 'oklch(45% 0.18 145)',
+    const check = el("span", {
+      fontSize: "15px",
+      lineHeight: "1",
+      flexShrink: "0",
+      color: "oklch(45% 0.18 145)",
     });
-    check.textContent = '\u2713';
+    check.textContent = "\u2713";
     row.appendChild(check);
-    const label = el('span', {
-      fontSize: '12px', color: 'oklch(49% 0.08 188)', fontWeight: '600',
+    const label = el("span", {
+      fontSize: "12px",
+      color: "oklch(49% 0.08 188)",
+      fontWeight: "600",
     });
-    label.textContent = 'Variant applied';
+    label.textContent = "Variant applied";
     row.appendChild(label);
     return row;
   }
@@ -2829,8 +3168,10 @@
   // Shared UI builders
 
   function buildDots(clickable) {
-    const container = el('div', {
-      display: 'flex', alignItems: 'center', gap: '4px',
+    const container = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
     });
     for (let i = 1; i <= expectedVariants; i++) {
       const arrived = i <= arrivedVariants;
@@ -2840,27 +3181,25 @@
       // dots - the previous "accent ring + ash fill" combo read as noisy
       // kinpaku chips, especially when all variants had arrived and every
       // dot wore an accent ring.
-      const dotBg = active ? C.brand
-        : arrived ? BP.textDim
-        : 'transparent';
-      const dotBorder = arrived ? 'none' : '1.5px solid ' + BP.hairline;
-      const dot = el('div', {
-        width: active ? '8px' : '6px',
-        height: active ? '8px' : '6px',
-        borderRadius: '50%',
+      const dotBg = active ? C.brand : arrived ? BP.textDim : "transparent";
+      const dotBorder = arrived ? "none" : "1.5px solid " + BP.hairline;
+      const dot = el("div", {
+        width: active ? "8px" : "6px",
+        height: active ? "8px" : "6px",
+        borderRadius: "50%",
         background: dotBg,
         border: dotBorder,
-        boxSizing: 'border-box',
-        transition: 'all 0.2s ' + EASE,
-        cursor: (clickable && arrived) ? 'pointer' : 'default',
-        transform: arrived ? 'scale(1)' : 'scale(0.85)',
-        opacity: arrived ? (active ? '1' : '0.6') : '0.4',
+        boxSizing: "border-box",
+        transition: "all 0.2s " + EASE,
+        cursor: clickable && arrived ? "pointer" : "default",
+        transform: arrived ? "scale(1)" : "scale(0.85)",
+        opacity: arrived ? (active ? "1" : "0.6") : "0.4",
       });
       if (clickable && arrived) {
         const idx = i;
-        dot.addEventListener('click', (e) => {
+        dot.addEventListener("click", (e) => {
           e.stopPropagation();
-          selectVariant(idx, 'variant_changed');
+          selectVariant(idx, "variant_changed");
         });
       }
       container.appendChild(dot);
@@ -2869,28 +3208,41 @@
   }
 
   function navBtn(text) {
-    const b = el('button', {
-      width: '26px', height: '26px', borderRadius: '5px',
-      border: '1px solid ' + BP.hairline, background: 'transparent',
-      color: BP.text, fontFamily: FONT, fontSize: '13px',
-      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      transition: 'border-color 0.12s ease, background 0.12s ease',
-      padding: '0', lineHeight: '1',
+    const b = el("button", {
+      width: "26px",
+      height: "26px",
+      borderRadius: "5px",
+      border: "1px solid " + BP.hairline,
+      background: "transparent",
+      color: BP.text,
+      fontFamily: FONT,
+      fontSize: "13px",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "border-color 0.12s ease, background 0.12s ease",
+      padding: "0",
+      lineHeight: "1",
     });
     b.textContent = text;
-    b.addEventListener('mouseenter', () => { b.style.borderColor = BP.text; });
-    b.addEventListener('mouseleave', () => { b.style.borderColor = BP.hairline; });
+    b.addEventListener("mouseenter", () => {
+      b.style.borderColor = BP.text;
+    });
+    b.addEventListener("mouseleave", () => {
+      b.style.borderColor = BP.hairline;
+    });
     return b;
   }
 
   function actionLabel() {
-    const a = ACTIONS.find(a => a.value === selectedAction);
-    return a ? a.label : 'Freeform';
+    const a = ACTIONS.find((a) => a.value === selectedAction);
+    return a ? a.label : "Freeform";
   }
 
   function el(tag, styles) {
     const e = document.createElement(tag);
-    if (String(tag).toLowerCase() === 'button') e.type = 'button';
+    if (String(tag).toLowerCase() === "button") e.type = "button";
     if (styles) Object.assign(e.style, styles);
     return e;
   }
@@ -2901,64 +3253,77 @@
 
   function initActionPicker() {
     const P = barPaletteForTheme(detectPageTheme());
-    pickerEl = document.createElement('div');
-    pickerEl.id = PREFIX + '-picker';
+    pickerEl = document.createElement("div");
+    pickerEl.id = PREFIX + "-picker";
     Object.assign(pickerEl.style, {
-      position: 'fixed', zIndex: Z.picker,
-      display: 'none', opacity: '0',
-      transform: 'scale(0.96) translateY(4px)',
-      transformOrigin: 'bottom right',
-      transition: 'opacity 0.18s ' + EASE + ', transform 0.2s ' + EASE,
+      position: "fixed",
+      zIndex: Z.picker,
+      display: "none",
+      opacity: "0",
+      transform: "scale(0.96) translateY(4px)",
+      transformOrigin: "bottom right",
+      transition: "opacity 0.18s " + EASE + ", transform 0.2s " + EASE,
       background: P.surface,
-      border: '1px solid ' + P.border,
-      borderRadius: '8px',
+      border: "1px solid " + P.border,
+      borderRadius: "8px",
       boxShadow: P.shadow,
-      padding: '6px',
+      padding: "6px",
       fontFamily: FONT,
     });
 
     // Build the chip grid
-    const grid = el('div', {
-      display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px',
+    const grid = el("div", {
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gap: "3px",
     });
 
-    ACTIONS.forEach(action => {
-      const chip = el('button', {
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: '4px',
-        padding: '8px 6px', borderRadius: '6px',
-        border: 'none',
-        background: action.value === selectedAction ? P.accentSoft : 'transparent',
+    ACTIONS.forEach((action) => {
+      const chip = el("button", {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "4px",
+        padding: "8px 6px",
+        borderRadius: "6px",
+        border: "none",
+        background: action.value === selectedAction ? P.accentSoft : "transparent",
         color: action.value === selectedAction ? P.accent : P.text,
-        fontFamily: FONT, fontSize: '11px', fontWeight: '500',
-        cursor: 'pointer',
-        transition: 'background 0.1s ease, color 0.1s ease',
-        textAlign: 'center', whiteSpace: 'nowrap',
+        fontFamily: FONT,
+        fontSize: "11px",
+        fontWeight: "500",
+        cursor: "pointer",
+        transition: "background 0.1s ease, color 0.1s ease",
+        textAlign: "center",
+        whiteSpace: "nowrap",
       });
-      const iconWrap = el('span', {
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '20px', opacity: '0.9',
+      const iconWrap = el("span", {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "20px",
+        opacity: "0.9",
       });
-      iconWrap.innerHTML = ICONS[action.value] || '';
-      const labelEl = el('span', { lineHeight: '1' });
+      iconWrap.innerHTML = ICONS[action.value] || "";
+      const labelEl = el("span", { lineHeight: "1" });
       labelEl.textContent = action.label;
       chip.appendChild(iconWrap);
       chip.appendChild(labelEl);
       chip.dataset.action = action.value;
-      chip.addEventListener('mouseenter', () => {
+      chip.addEventListener("mouseenter", () => {
         if (action.value !== selectedAction) chip.style.background = P.accentSoft;
       });
-      chip.addEventListener('mouseleave', () => {
-        chip.style.background = action.value === selectedAction ? P.accentSoft : 'transparent';
+      chip.addEventListener("mouseleave", () => {
+        chip.style.background = action.value === selectedAction ? P.accentSoft : "transparent";
       });
-      chip.addEventListener('click', (e) => {
+      chip.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const prompt = uiGetById(PREFIX + '-input')?.value || '';
+        const prompt = uiGetById(PREFIX + "-input")?.value || "";
         selectedAction = action.value;
         hideActionPicker();
-        updateBarContent('configure');
-        const input = uiGetById(PREFIX + '-input');
+        updateBarContent("configure");
+        const input = uiGetById(PREFIX + "-input");
         if (input && prompt) input.value = prompt;
       });
       grid.appendChild(chip);
@@ -2974,13 +3339,19 @@
   }
 
   function toggleActionPicker() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
-    if (pickerEl.style.display !== 'none') { hideActionPicker(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
+    if (pickerEl.style.display !== "none") {
+      hideActionPicker();
+      return;
+    }
     // Rebuild chips to reflect current selection
     const P = pickerEl.__iceq_palette || barPaletteForTheme(detectPageTheme());
-    pickerEl.querySelectorAll('button').forEach(chip => {
+    pickerEl.querySelectorAll("button").forEach((chip) => {
       const isActive = chip.dataset.action === selectedAction;
-      chip.style.background = isActive ? P.accentSoft : 'transparent';
+      chip.style.background = isActive ? P.accentSoft : "transparent";
       chip.style.color = isActive ? P.accent : P.text;
     });
     // Position above the bar, right-aligned to the configure bar edge.
@@ -2988,25 +3359,27 @@
     const pickerH = 170; // approximate; grows with icon + label rows
     let top = barRect.top - pickerH - 6;
     if (top < 8) top = barRect.bottom + 6;
-    pickerEl.style.display = 'block';
+    pickerEl.style.display = "block";
     const pickerW = pickerEl.offsetWidth;
     let left = barRect.right - pickerW;
     left = Math.max(8, Math.min(left, window.innerWidth - pickerW - 8));
     Object.assign(pickerEl.style, {
-      top: top + 'px',
-      left: left + 'px',
+      top: top + "px",
+      left: left + "px",
     });
     requestAnimationFrame(() => {
-      pickerEl.style.opacity = '1';
-      pickerEl.style.transform = 'scale(1) translateY(0)';
+      pickerEl.style.opacity = "1";
+      pickerEl.style.transform = "scale(1) translateY(0)";
     });
   }
 
   function hideActionPicker() {
     if (!pickerEl) return;
-    pickerEl.style.opacity = '0';
-    pickerEl.style.transform = 'scale(0.96) translateY(4px)';
-    setTimeout(() => { if (pickerEl) pickerEl.style.display = 'none'; }, 180);
+    pickerEl.style.opacity = "0";
+    pickerEl.style.transform = "scale(0.96) translateY(4px)";
+    setTimeout(() => {
+      if (pickerEl) pickerEl.style.display = "none";
+    }, 180);
   }
 
   function ensureCyclingRenderable(reason) {
@@ -3022,8 +3395,8 @@
     if (recoveringEmptyCycling) return;
     recoveringEmptyCycling = true;
     try {
-      console.warn('[impeccable] Refusing to render empty variant cycling state:', reason);
-      const message = 'No variants were mounted. Please try again.';
+      console.warn("[impeccable] Refusing to render empty variant cycling state:", reason);
+      const message = "No variants were mounted. Please try again.";
       if (svelteComponentSession?.sessionId === currentSessionId) {
         resetSvelteComponentSession(currentSessionId, message);
         return;
@@ -3056,11 +3429,11 @@
   // can bake them into the source-file write.
   //
 
-  let paramsPanelEl = null;     // outer wrapper (overflow:hidden, clips the slide)
-  let paramsPanelInner = null;  // translating content (carries bg, padding, knobs)
-  let paramsPanelBody = null;   // grid holding the knob cells
+  let paramsPanelEl = null; // outer wrapper (overflow:hidden, clips the slide)
+  let paramsPanelInner = null; // translating content (carries bg, padding, knobs)
+  let paramsPanelBody = null; // grid holding the knob cells
   let paramsCurrentValues = {}; // {paramId: value} - mirror of the visible variant's live values
-  let tuneOpen = false;         // whether the Tune popover is open right now
+  let tuneOpen = false; // whether the Tune popover is open right now
 
   // Theme-aware Tune popover. Appears as a drawer that slides out from the
   // contextual bar's bar-facing edge (below if the bar sits below the
@@ -3078,34 +3451,37 @@
     // display toggle, no opacity toggle, no transform trickery. The mask
     // hides everything initially; as it grows, content is revealed from
     // the bar edge outward.
-    paramsPanelEl = document.createElement('div');
-    paramsPanelEl.id = PREFIX + '-params-panel';
+    paramsPanelEl = document.createElement("div");
+    paramsPanelEl.id = PREFIX + "-params-panel";
     Object.assign(paramsPanelEl.style, {
-      position: 'fixed', zIndex: String(Z.bar - 1),
+      position: "fixed",
+      zIndex: String(Z.bar - 1),
       background: P.surfaceDeep,
       color: P.text,
       fontFamily: FONT,
-      padding: '14px 18px',
-      boxSizing: 'border-box',
-      borderRadius: '0 0 10px 10px',
-      pointerEvents: 'none',
+      padding: "14px 18px",
+      boxSizing: "border-box",
+      borderRadius: "0 0 10px 10px",
+      pointerEvents: "none",
 
       // clip-path is the same conceptual reveal as mask but with rock-solid
       // transition support across engines. Closed state clips from the far
       // edge; open = inset(0) shows everything.
-      clipPath: 'inset(0 0 100% 0)',
-      transition: 'clip-path 0.44s ' + EASE,
+      clipPath: "inset(0 0 100% 0)",
+      transition: "clip-path 0.44s " + EASE,
 
       // Park off-screen until positionParamsPanel places it. These are NOT
       // in the transition list, so they snap instantly - no fly-in from the
       // top-left when first shown.
-      top: '-9999px', left: '-9999px', width: '0',
+      top: "-9999px",
+      left: "-9999px",
+      width: "0",
     });
 
-    paramsPanelBody = el('div', {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-      gap: '12px 16px',
+    paramsPanelBody = el("div", {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+      gap: "12px 16px",
     });
 
     paramsPanelEl.appendChild(paramsPanelBody);
@@ -3117,7 +3493,6 @@
     paramsPanelInner = paramsPanelEl; // compatibility alias for the rest of the code
   }
 
-
   function getMountedSvelteComponentAnchor(session = svelteComponentSession) {
     const el = session?.mountTargetEl?.firstElementChild || null;
     if (!el || !document.body.contains(el)) return null;
@@ -3125,17 +3500,13 @@
   }
 
   function resolveSvelteComponentAnchor(session = svelteComponentSession) {
-    return getMountedSvelteComponentAnchor(session)
-      || session?.swapAnchor
-      || null;
+    return getMountedSvelteComponentAnchor(session) || session?.swapAnchor || null;
   }
 
   function getVisibleVariantEl() {
     if (!currentSessionId) return null;
     if (svelteComponentSession?.sessionId === currentSessionId) {
-      return resolveSvelteComponentAnchor()
-        || svelteComponentSession.wrapperEl
-        || null;
+      return resolveSvelteComponentAnchor() || svelteComponentSession.wrapperEl || null;
     }
     const wrapper = document.querySelector('[data-impeccable-variants="' + currentSessionId + '"]');
     if (!wrapper) return null;
@@ -3153,25 +3524,25 @@
       return Array.isArray(params) ? params : [];
     }
     if (!variantEl) return [];
-    const raw = variantEl.getAttribute('data-impeccable-params');
+    const raw = variantEl.getAttribute("data-impeccable-params");
     if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch (err) {
-      console.warn('[impeccable] Invalid data-impeccable-params JSON:', err.message);
+      console.warn("[impeccable] Invalid data-impeccable-params JSON:", err.message);
       return [];
     }
   }
 
   function applyParamValue(variantEl, param, value) {
     if (!variantEl) return;
-    const attr = 'data-p-' + param.id;
-    if (param.kind === 'toggle') {
+    const attr = "data-p-" + param.id;
+    if (param.kind === "toggle") {
       const on = !!value;
-      if (on) variantEl.setAttribute(attr, 'on');
+      if (on) variantEl.setAttribute(attr, "on");
       else variantEl.removeAttribute(attr);
-    } else if (param.kind === 'steps') {
+    } else if (param.kind === "steps") {
       variantEl.setAttribute(attr, String(value));
     }
     // Svelte component variants are client-mounted into
@@ -3180,8 +3551,8 @@
     // so there is no React hydration to mismatch. Drive range/toggle --p-* inline
     // on the mounted element so scoped preview CSS resolves them.
     if (svelteComponentSession?.sessionId === currentSessionId) {
-      if (param.kind === 'range') variantEl.style.setProperty('--p-' + param.id, String(value));
-      else if (param.kind === 'toggle') variantEl.style.setProperty('--p-' + param.id, value ? '1' : '0');
+      if (param.kind === "range") variantEl.style.setProperty("--p-" + param.id, String(value));
+      else if (param.kind === "toggle") variantEl.style.setProperty("--p-" + param.id, value ? "1" : "0");
       return;
     }
     // range/toggle --p-* custom properties are driven through the injected
@@ -3198,120 +3569,140 @@
   }
 
   function formatRangeValue(input) {
-    const max = parseFloat(input.max), min = parseFloat(input.min);
-    const v = parseFloat(input.value);
+    const max = Number.parseFloat(input.max),
+      min = Number.parseFloat(input.min);
+    const v = Number.parseFloat(input.value);
     if (!isFinite(v)) return input.value;
-    return (max - min) <= 2 ? v.toFixed(2) : String(Math.round(v));
+    return max - min <= 2 ? v.toFixed(2) : String(Math.round(v));
   }
 
   function buildParamsPanel(variantEl, params) {
     const P = paramsPanelPalette || barPaletteForTheme(detectPageTheme());
-    paramsPanelBody.innerHTML = '';
+    paramsPanelBody.innerHTML = "";
     for (const p of params) {
-      const row = el('div', { display: 'flex', flexDirection: 'column', gap: '6px' });
-      const labelRow = el('div', {
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: 'baseline', gap: '8px',
+      const row = el("div", { display: "flex", flexDirection: "column", gap: "6px" });
+      const labelRow = el("div", {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        gap: "8px",
       });
-      const lbl = el('span', {
-        fontSize: '10.5px', fontWeight: '600', color: P.text,
-        letterSpacing: '0.03em',
+      const lbl = el("span", {
+        fontSize: "10.5px",
+        fontWeight: "600",
+        color: P.text,
+        letterSpacing: "0.03em",
       });
       lbl.textContent = p.label || p.id;
       labelRow.appendChild(lbl);
-      const readout = el('span', {
-        fontSize: '10.5px', color: P.textDim,
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+      const readout = el("span", {
+        fontSize: "10.5px",
+        color: P.textDim,
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
       });
       labelRow.appendChild(readout);
       row.appendChild(labelRow);
 
-      if (p.kind === 'range') {
-        const input = document.createElement('input');
-        input.type = 'range';
+      if (p.kind === "range") {
+        const input = document.createElement("input");
+        input.type = "range";
         input.min = String(p.min != null ? p.min : 0);
         input.max = String(p.max != null ? p.max : 1);
         input.step = String(p.step != null ? p.step : 0.05);
         input.value = String(p.default);
         Object.assign(input.style, {
-          width: '100%', accentColor: C.brand, cursor: 'pointer',
+          width: "100%",
+          accentColor: C.brand,
+          cursor: "pointer",
         });
         readout.textContent = formatRangeValue(input);
-        input.addEventListener('input', (e) => {
+        input.addEventListener("input", (e) => {
           e.stopPropagation();
-          const v = parseFloat(input.value);
+          const v = Number.parseFloat(input.value);
           paramsCurrentValues[p.id] = v;
           readout.textContent = formatRangeValue(input);
           applyParamValue(variantEl, p, v);
-          queueCheckpoint('param_changed');
+          queueCheckpoint("param_changed");
         });
         row.appendChild(input);
-      } else if (p.kind === 'toggle') {
+      } else if (p.kind === "toggle") {
         const initial = !!p.default;
-        readout.textContent = initial ? 'On' : 'Off';
-        const track = el('button', {
-          position: 'relative', width: '36px', height: '20px',
-          borderRadius: '10px', border: 'none', padding: '0',
-          cursor: 'pointer',
+        readout.textContent = initial ? "On" : "Off";
+        const track = el("button", {
+          position: "relative",
+          width: "36px",
+          height: "20px",
+          borderRadius: "10px",
+          border: "none",
+          padding: "0",
+          cursor: "pointer",
           background: initial ? C.brand : P.hairline,
-          transition: 'background 0.15s ease',
-          alignSelf: 'flex-start',
+          transition: "background 0.15s ease",
+          alignSelf: "flex-start",
         });
-        const knob = el('span', {
-          position: 'absolute', top: '2px',
-          left: initial ? '18px' : '2px',
-          width: '16px', height: '16px', borderRadius: '50%',
+        const knob = el("span", {
+          position: "absolute",
+          top: "2px",
+          left: initial ? "18px" : "2px",
+          width: "16px",
+          height: "16px",
+          borderRadius: "50%",
           background: C.ink,
-          transition: 'left 0.18s ' + EASE,
-          boxShadow: '0 1px 2px oklch(0% 0 0 / 0.2)',
+          transition: "left 0.18s " + EASE,
+          boxShadow: "0 1px 2px oklch(0% 0 0 / 0.2)",
         });
         track.appendChild(knob);
-        track.addEventListener('click', (e) => {
+        track.addEventListener("click", (e) => {
           e.stopPropagation();
           const next = !paramsCurrentValues[p.id];
           paramsCurrentValues[p.id] = next;
           track.style.background = next ? C.brand : P.hairline;
-          knob.style.left = next ? '18px' : '2px';
-          readout.textContent = next ? 'On' : 'Off';
+          knob.style.left = next ? "18px" : "2px";
+          readout.textContent = next ? "On" : "Off";
           applyParamValue(variantEl, p, next);
-          queueCheckpoint('param_changed');
+          queueCheckpoint("param_changed");
         });
         row.appendChild(track);
-      } else if (p.kind === 'steps') {
-        const opts = (p.options || []).map(o =>
-          typeof o === 'string' ? { value: o, label: o } : o
-        );
-        const activeOpt = opts.find(o => o.value === p.default) || opts[0];
+      } else if (p.kind === "steps") {
+        const opts = (p.options || []).map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+        const activeOpt = opts.find((o) => o.value === p.default) || opts[0];
         readout.textContent = activeOpt ? activeOpt.label : String(p.default);
-        const segRow = el('div', {
-          display: 'grid',
-          gridTemplateColumns: 'repeat(' + opts.length + ', 1fr)',
-          gap: '1px', padding: '2px',
-          background: P.hairline, borderRadius: '5px',
+        const segRow = el("div", {
+          display: "grid",
+          gridTemplateColumns: "repeat(" + opts.length + ", 1fr)",
+          gap: "1px",
+          padding: "2px",
+          background: P.hairline,
+          borderRadius: "5px",
         });
         const segBtns = [];
-        opts.forEach(o => {
+        opts.forEach((o) => {
           const active = o.value === p.default;
-          const b = el('button', {
-            padding: '5px 4px', border: 'none', borderRadius: '3px',
-            background: active ? C.brand : 'transparent',
+          const b = el("button", {
+            padding: "5px 4px",
+            border: "none",
+            borderRadius: "3px",
+            background: active ? C.brand : "transparent",
             color: active ? C.ink : P.text,
-            fontFamily: FONT, fontSize: '10.5px', fontWeight: '500',
-            cursor: 'pointer', whiteSpace: 'nowrap',
-            transition: 'background 0.1s ease, color 0.1s ease',
+            fontFamily: FONT,
+            fontSize: "10.5px",
+            fontWeight: "500",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            transition: "background 0.1s ease, color 0.1s ease",
           });
           b.textContent = o.label;
-          b.addEventListener('click', (e) => {
+          b.addEventListener("click", (e) => {
             e.stopPropagation();
             paramsCurrentValues[p.id] = o.value;
             readout.textContent = o.label;
             segBtns.forEach(({ btn, val }) => {
               const on = val === o.value;
-              btn.style.background = on ? C.brand : 'transparent';
+              btn.style.background = on ? C.brand : "transparent";
               btn.style.color = on ? C.ink : P.text;
             });
             applyParamValue(variantEl, p, o.value);
-            queueCheckpoint('param_changed');
+            queueCheckpoint("param_changed");
           });
           segRow.appendChild(b);
           segBtns.push({ btn: b, val: o.value });
@@ -3325,8 +3716,8 @@
 
   //
   // Inline text editing - makes pure-text descendants of the picked element
-  // directly contenteditable. Save stages copy edits in the live buffer; the
-  // Apply copy edits dock later asks the AI to apply the staged batch.
+  // directly contenteditable. Save stages copy edits in the live buffer; a
+  // trusted operator later authorizes the AI to apply the staged batch.
   //
 
   let inlineEditRows = [];
@@ -3348,7 +3739,7 @@
       if (!el || el.nodeType !== 1) return;
       const tag = el.tagName.toLowerCase();
       if (MIXED_WRAP_SKIP[tag]) return;
-      if (el.hasAttribute && el.hasAttribute('contenteditable')) return;
+      if (el.hasAttribute && el.hasAttribute("contenteditable")) return;
       if (el !== rootEl && isOwn(el)) return;
 
       const children = Array.from(el.childNodes);
@@ -3367,7 +3758,7 @@
         rows.push({
           el,
           ref: documentRefForElement(el) || el.tagName.toLowerCase(),
-          text: textNodes.map((node) => node.nodeValue).join(''),
+          text: textNodes.map((node) => node.nodeValue).join(""),
           textNodes,
         });
       }
@@ -3385,15 +3776,15 @@
     if (!rootEl || rootEl.nodeType !== 1) return;
     const tag = rootEl.tagName.toLowerCase();
     if (MIXED_WRAP_SKIP[tag]) return;
-    if (rootEl.hasAttribute('contenteditable')) return;
+    if (rootEl.hasAttribute("contenteditable")) return;
     const children = Array.from(rootEl.childNodes);
-    const hasText = children.some((n) => n.nodeType === 3 && /\S/.test(n.nodeValue || ''));
+    const hasText = children.some((n) => n.nodeType === 3 && /\S/.test(n.nodeValue || ""));
     const hasElement = children.some((n) => n.nodeType === 1);
     if (hasText && hasElement) {
       for (const node of children) {
-        if (node.nodeType === 3 && /\S/.test(node.nodeValue || '')) {
-          const wrap = document.createElement('span');
-          wrap.dataset.impeccableTextWrap = 'true';
+        if (node.nodeType === 3 && /\S/.test(node.nodeValue || "")) {
+          const wrap = document.createElement("span");
+          wrap.dataset.impeccableTextWrap = "true";
           wrap.textContent = node.nodeValue;
           rootEl.insertBefore(wrap, node);
           rootEl.removeChild(node);
@@ -3429,27 +3820,27 @@
     for (const row of rows) {
       row.inlineWhiteSpace = row.el.style.whiteSpace;
       row.el.style.whiteSpace = getComputedStyle(row.el).whiteSpace;
-      row.el.setAttribute('contenteditable', 'true');
-      row.el.dataset.impeccableEditable = 'true';
+      row.el.setAttribute("contenteditable", "true");
+      row.el.dataset.impeccableEditable = "true";
       row.el.dataset.impeccableOriginalText = row.text;
-      row.el.style.userSelect = 'text';
-      row.el.style.cursor = 'text';
-      row.el.style.outline = 'none';
-      row.el.addEventListener('input', onInlineInput);
+      row.el.style.userSelect = "text";
+      row.el.style.cursor = "text";
+      row.el.style.outline = "none";
+      row.el.addEventListener("input", onInlineInput);
     }
   }
 
   function disableInlineEdit(opts = {}) {
     for (const row of inlineEditRows) {
       if (activeElementDeep() === row.el) row.el.blur();
-      row.el.removeAttribute('contenteditable');
+      row.el.removeAttribute("contenteditable");
       delete row.el.dataset.impeccableEditable;
       delete row.el.dataset.impeccableOriginalText;
-      row.el.style.whiteSpace = row.inlineWhiteSpace || '';
-      row.el.style.userSelect = '';
-      row.el.style.cursor = '';
-      row.el.style.outline = '';
-      row.el.removeEventListener('input', onInlineInput);
+      row.el.style.whiteSpace = row.inlineWhiteSpace || "";
+      row.el.style.userSelect = "";
+      row.el.style.cursor = "";
+      row.el.style.outline = "";
+      row.el.removeEventListener("input", onInlineInput);
     }
     inlineEditRows = [];
     inlineEditDrafts = new Map();
@@ -3475,7 +3866,7 @@
       if (MIXED_WRAP_SKIP[tag]) return false;
       if (node !== el && own(node)) return false;
       for (const child of node.childNodes) {
-        if (child.nodeType === 3 && /\S/.test(child.nodeValue || '')) return true;
+        if (child.nodeType === 3 && /\S/.test(child.nodeValue || "")) return true;
       }
       for (const child of node.children) {
         if (check(child)) return true;
@@ -3486,18 +3877,21 @@
   }
 
   function enterEditingMode() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
-    setLiveState('EDITING');
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
+    setLiveState("EDITING");
     hideBar();
     hideAnnotOverlay();
-    renderEditBadge('editing');
+    renderEditBadge("editing");
     enableInlineEdit(selectedElement);
     // Focus first editable element and position cursor at end
     if (inlineEditRows.length > 0) {
       const firstEditable = inlineEditRows[0] && inlineEditRows[0].el;
       setTimeout(() => {
         const el = firstEditable;
-        if (!el || !el.isConnected || state !== 'EDITING') return;
+        if (!el || !el.isConnected || state !== "EDITING") return;
         el.focus();
         const range = document.createRange();
         const sel = window.getSelection();
@@ -3520,10 +3914,10 @@
   function cancelEditing() {
     restoreInlineEditDrafts();
     disableInlineEdit();
-    setLiveState('CONFIGURING');
-    showBar('configure');
+    setLiveState("CONFIGURING");
+    showBar("configure");
     showAnnotOverlay(selectedElement);
-    renderEditBadge('idle');
+    renderEditBadge("idle");
   }
 
   function cancelEditingToPicking() {
@@ -3533,11 +3927,11 @@
     stopScrollTracking();
     hideAnnotOverlay();
     clearAnnotations();
-    renderEditBadge('hidden');
-    setLiveState('PICKING');
+    renderEditBadge("hidden");
+    setLiveState("PICKING");
     hoveredElement = null;
     hideHighlight();
-    syncPageChatFocus('editing-outside-click');
+    syncPageChatFocus("editing-outside-click");
   }
 
   function teardownConfigureChrome() {
@@ -3548,12 +3942,12 @@
     stopScrollTracking();
     hideAnnotOverlay();
     clearAnnotations();
-    renderEditBadge('hidden');
+    renderEditBadge("hidden");
   }
 
   function exitConfigureToPicking(reason, opts = {}) {
     teardownConfigureChrome();
-    setLiveState('PICKING');
+    setLiveState("PICKING");
     if (opts.clearHover) {
       hoveredElement = null;
       hideHighlight();
@@ -3592,13 +3986,13 @@
 
   function sourceHintForElement(el) {
     if (!el || !el.getAttribute) return null;
-    const file = el.getAttribute('data-astro-source-file');
-    const loc = el.getAttribute('data-astro-source-loc');
+    const file = el.getAttribute("data-astro-source-file");
+    const loc = el.getAttribute("data-astro-source-loc");
     if (file || loc) {
       const parsed = parseSourceLoc(loc);
       return {
-        file: file || '',
-        loc: loc || '',
+        file: file || "",
+        loc: loc || "",
         line: parsed.line,
         column: parsed.column,
       };
@@ -3607,7 +4001,7 @@
   }
 
   function parseSourceLoc(loc) {
-    const match = String(loc || '').match(/^(\d+)(?::(\d+))?/);
+    const match = String(loc || "").match(/^(\d+)(?::(\d+))?/);
     return {
       line: match ? Number(match[1]) : null,
       column: match && match[2] ? Number(match[2]) : null,
@@ -3620,39 +4014,39 @@
     let cur = el;
     while (cur && cur.nodeType === 1) {
       const tag = cur.tagName.toLowerCase();
-      if (tag === 'html') break;
-      if (tag === 'body') {
-        parts.unshift('body');
+      if (tag === "html") break;
+      if (tag === "body") {
+        parts.unshift("body");
         break;
       }
       parts.unshift(documentRefSegment(cur));
       cur = cur.parentElement;
     }
-    return parts.join('>') || null;
+    return parts.join(">") || null;
   }
 
   function documentRefSegment(el) {
     const tag = el.tagName.toLowerCase();
-    return tag + documentRefIdSuffix(el) + documentRefClassSuffix(el) + ':nth-of-type(' + indexAmongSameTag(el) + ')';
+    return tag + documentRefIdSuffix(el) + documentRefClassSuffix(el) + ":nth-of-type(" + indexAmongSameTag(el) + ")";
   }
 
   function documentRefIdSuffix(el) {
-    return el.id ? '#' + normalizeDocumentRefToken(el.id) : '';
+    return el.id ? "#" + normalizeDocumentRefToken(el.id) : "";
   }
 
   function documentRefClassSuffix(el) {
-    if (!el.classList || el.classList.length === 0) return '';
+    if (!el.classList || el.classList.length === 0) return "";
     const classes = [];
     for (const cls of el.classList) {
-      if (!cls || cls.indexOf('impeccable-') === 0) continue;
+      if (!cls || cls.indexOf("impeccable-") === 0) continue;
       classes.push(normalizeDocumentRefToken(cls));
       if (classes.length === 2) break;
     }
-    return classes.length ? '.' + classes.join('.') : '';
+    return classes.length ? "." + classes.join(".") : "";
   }
 
   function normalizeDocumentRefToken(value) {
-    return String(value || '').replace(/[>\s]+/g, '_');
+    return String(value || "").replace(/[>\s]+/g, "_");
   }
 
   function indexAmongSameTag(el) {
@@ -3675,10 +4069,10 @@
       ref: documentRefForElement(el),
       tagName: el.tagName ? el.tagName.toLowerCase() : null,
       id: el.id || null,
-      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf('impeccable-') !== 0) : [],
+      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf("impeccable-") !== 0) : [],
       originalText,
       newText,
-      textContent: (el.textContent || '').slice(0, 500),
+      textContent: (el.textContent || "").slice(0, 500),
       outerHTML: sanitizedContextOuterHTML(el, 3000) || null,
     };
   }
@@ -3695,7 +4089,7 @@
       out.push({
         ref: documentRefForElement(row.el),
         tag: row.el?.tagName ? row.el.tagName.toLowerCase() : null,
-        classes: row.el?.classList ? [...row.el.classList].filter((cls) => cls.indexOf('impeccable-') !== 0) : [],
+        classes: row.el?.classList ? [...row.el.classList].filter((cls) => cls.indexOf("impeccable-") !== 0) : [],
         text,
       });
       if (out.length >= 12) break;
@@ -3709,33 +4103,41 @@
       ref: documentRefForElement(el),
       tagName: el.tagName ? el.tagName.toLowerCase() : null,
       id: el.id || null,
-      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf('impeccable-') !== 0) : [],
-      textContent: (el.textContent || '').slice(0, 1000),
+      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf("impeccable-") !== 0) : [],
+      textContent: (el.textContent || "").slice(0, 1000),
       outerHTML: sanitizedContextOuterHTML(el, 10000) || null,
     };
   }
 
   function forbiddenManualTextChars(text) {
     const out = [];
-    for (const ch of ['<', '{', '}', '`']) {
-      if (String(text || '').includes(ch)) out.push(ch);
+    for (const ch of ["<", "{", "}", "`"]) {
+      if (String(text || "").includes(ch)) out.push(ch);
     }
     return out;
   }
 
   async function applyEditing() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     const ops = [];
     for (const row of inlineEditRows) {
       const newText = inlineEditDrafts.get(row.el);
       if (newText !== undefined && newText !== row.text) {
-        if (String(newText || '').trim() === '') {
-          showToast('Save rejected: copy edits cannot be empty.', 5500);
+        if (String(newText || "").trim() === "") {
+          showToast("Save rejected: copy edits cannot be empty.", 5500);
           return;
         }
         const forbidden = forbiddenManualTextChars(newText);
         if (forbidden.length > 0) {
-          showToast('Save rejected: newText cannot contain ' + forbidden.join(' ') + ' (plain text only; ask the AI to insert markup)', 5500);
+          showToast(
+            "Save rejected: newText cannot contain " +
+              forbidden.join(" ") +
+              " (plain text only; ask the AI to insert markup)",
+            5500
+          );
           return;
         }
         const locator = buildLocatorForLeaf(row.el, selectedElement);
@@ -3756,7 +4158,10 @@
         ops.push(op);
       }
     }
-    if (ops.length === 0) { cancelEditing(); return; }
+    if (ops.length === 0) {
+      cancelEditing();
+      return;
+    }
     const contextElement = contextElementForManualEdit(selectedElement, inlineEditRows, ops);
     const contextRef = documentRefForElement(contextElement);
     if (contextRef) for (const op of ops) op.contextRef = contextRef;
@@ -3766,9 +4171,9 @@
       // Token in the query string as well as the body: the URL token is what
       // authorizes the CORS preflight when the page runs on a non-loopback
       // dev host (ddev, Valet), since the preflight carries no request body.
-      const res = await fetch('http://localhost:' + PORT + '/manual-edit-stash?token=' + encodeURIComponent(TOKEN), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://localhost:" + PORT + "/manual-edit-stash?token=" + encodeURIComponent(TOKEN), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token: TOKEN,
           id: id8(),
@@ -3779,23 +4184,23 @@
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || ('HTTP ' + res.status));
+        throw new Error(errBody.error || "HTTP " + res.status);
       }
       const stashResult = await res.json();
       updatePendingCounter(stashResult.pendingCount || 0);
       maybeShowFirstSaveToast();
       disableInlineEdit();
-      setLiveState('CONFIGURING');
-      showBar('configure');
+      setLiveState("CONFIGURING");
+      showBar("configure");
       showAnnotOverlay(selectedElement);
-      renderEditBadge('idle');
+      renderEditBadge("idle");
     } catch (err) {
-      console.error('[impeccable] manual edit stash failed:', err);
-      const detail = String(err?.message || '');
-      if (detail.includes('newText cannot contain') || detail.includes('newText cannot be empty')) {
-        showToast('Save rejected: ' + detail.replace(/^manual_edits:\s*/, ''), 5500);
+      console.error("[impeccable] manual edit stash failed:", err);
+      const detail = String(err?.message || "");
+      if (detail.includes("newText cannot contain") || detail.includes("newText cannot be empty")) {
+        showToast("Save rejected: " + detail.replace(/^manual_edits:\s*/, ""), 5500);
       } else {
-        showToast('Save failed - retry or cancel', 4000);
+        showToast("Save failed - retry or cancel", 4000);
       }
     }
   }
@@ -3810,56 +4215,74 @@
     const width = globalBarEl.offsetWidth;
     const height = globalBarEl.offsetHeight;
     if (!width || !height) return;
-    pendingDockEl.style.left = Math.round((window.innerWidth / 2) - (width / 2) - 18) + 'px';
-    pendingDockEl.style.top = 'auto';
-    pendingDockEl.style.bottom = Math.round(14 + (height / 2)) + 'px';
+    pendingDockEl.style.left = Math.round(window.innerWidth / 2 - width / 2 - 18) + "px";
+    pendingDockEl.style.top = "auto";
+    pendingDockEl.style.bottom = Math.round(14 + height / 2) + "px";
   }
 
   function playPendingIntroAnimation() {
-    if (!pendingPillEl || !pendingPillEl.animate || (matchMedia?.('(prefers-reduced-motion: reduce)').matches)) return;
+    if (!pendingPillEl || !pendingPillEl.animate || matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     if (pendingIntroAnimation) pendingIntroAnimation.cancel();
-    pendingIntroAnimation = pendingPillEl.animate([
-      {
-        opacity: 0,
-        transform: 'scale(0.82)',
-        filter: 'brightness(1.2)',
-        boxShadow: '0 0 0 0 oklch(84% 0.19 80.46 / 0.45), 0 8px 24px oklch(0% 0 0 / 0.16)',
+    pendingIntroAnimation = pendingPillEl.animate(
+      [
+        {
+          opacity: 0,
+          transform: "scale(0.82)",
+          filter: "brightness(1.2)",
+          boxShadow: "0 0 0 0 oklch(84% 0.19 80.46 / 0.45), 0 8px 24px oklch(0% 0 0 / 0.16)",
+        },
+        {
+          opacity: 1,
+          transform: "scale(1.08)",
+          filter: "brightness(1.15)",
+          boxShadow: "0 0 0 12px oklch(84% 0.19 80.46 / 0), 0 12px 34px oklch(0% 0 0 / 0.22)",
+          offset: 0.55,
+        },
+        {
+          opacity: 1,
+          transform: "scale(1)",
+          filter: "none",
+          boxShadow: "0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)",
+        },
+      ],
+      { duration: 620, easing: EASE }
+    );
+    pendingIntroAnimation.addEventListener(
+      "finish",
+      () => {
+        pendingIntroAnimation = null;
       },
-      {
-        opacity: 1,
-        transform: 'scale(1.08)',
-        filter: 'brightness(1.15)',
-        boxShadow: '0 0 0 12px oklch(84% 0.19 80.46 / 0), 0 12px 34px oklch(0% 0 0 / 0.22)',
-        offset: 0.55,
-      },
-      {
-        opacity: 1,
-        transform: 'scale(1)',
-        filter: 'none',
-        boxShadow: '0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)',
-      },
-    ], { duration: 620, easing: EASE });
-    pendingIntroAnimation.addEventListener('finish', () => { pendingIntroAnimation = null; }, { once: true });
+      { once: true }
+    );
   }
 
   function ensureSpinKeyframes() {
-    if (uiGetById(PREFIX + '-keyframes')) return;
-    const style = document.createElement('style');
-    style.id = PREFIX + '-keyframes';
-    style.textContent = '@keyframes impeccable-spin { to { transform: rotate(360deg); } }';
+    if (uiGetById(PREFIX + "-keyframes")) return;
+    const style = document.createElement("style");
+    style.id = PREFIX + "-keyframes";
+    style.textContent = "@keyframes impeccable-spin { to { transform: rotate(360deg); } }";
     uiAppendStyle(style);
   }
 
   function pendingApplyLabel(count) {
-    return count === 1 ? 'Apply copy edit' : 'Apply copy edits';
+    return count === 1 ? "Copy edit staged" : "Copy edits staged";
+  }
+
+  function showTrustedManualApplyInstructions(action = "apply") {
+    console.info(
+      "[impeccable] " +
+        action +
+        " requires authorization outside the inspected page. Return to the trusted live-server terminal."
+    );
+    showToast("Return to the trusted terminal to authorize " + action, 5200);
   }
 
   function showManualApplyBusyToast() {
-    showToast('Apply is still running. Wait for it to finish.', 2800);
+    showToast("Apply is still running. Wait for it to finish.", 2800);
   }
 
   function manualApplyStateKey() {
-    return PREFIX + ':manual-apply:' + PORT + ':' + TOKEN + ':' + location.pathname;
+    return PREFIX + ":manual-apply:" + PORT + ":" + TOKEN + ":" + location.pathname;
   }
 
   function readStoredManualApplyState() {
@@ -3867,7 +4290,11 @@
       const raw = sessionStorage.getItem(manualApplyStateKey());
       if (!raw) return null;
       const storedState = JSON.parse(raw);
-      if (!storedState || storedState.pageUrl !== location.pathname || Date.now() > Number(storedState.expiresAt || 0)) {
+      if (
+        !storedState ||
+        storedState.pageUrl !== location.pathname ||
+        Date.now() > Number(storedState.expiresAt || 0)
+      ) {
         sessionStorage.removeItem(manualApplyStateKey());
         return null;
       }
@@ -3879,12 +4306,15 @@
 
   function writeManualApplyState(applyState) {
     try {
-      sessionStorage.setItem(manualApplyStateKey(), JSON.stringify({
-        ...applyState,
-        pageUrl: location.pathname,
-        updatedAt: Date.now(),
-        expiresAt: Date.now() + MANUAL_APPLY_STATE_TTL_MS,
-      }));
+      sessionStorage.setItem(
+        manualApplyStateKey(),
+        JSON.stringify({
+          ...applyState,
+          pageUrl: location.pathname,
+          updatedAt: Date.now(),
+          expiresAt: Date.now() + MANUAL_APPLY_STATE_TTL_MS,
+        })
+      );
     } catch {
       // Best-effort only. The in-memory flag still covers non-reload flows.
     }
@@ -3900,7 +4330,7 @@
       totalOps: totalOps || currentCount,
       completedOps: Number(existing.completedOps) || 0,
       remainingCount: Number.isFinite(Number(existing.remainingCount)) ? Number(existing.remainingCount) : currentCount,
-      phase: existing.phase || 'applying',
+      phase: existing.phase || "applying",
       startedAt: Number(existing.startedAt) || Date.now(),
       ...(patch || {}),
     });
@@ -3920,19 +4350,19 @@
 
   function manualApplyLoadingText(fallbackCount) {
     const stored = readStoredManualApplyState();
-    if (stored?.phase === 'repair-decision') return 'Apply needs attention';
-    if (stored?.phase === 'repairing') {
+    if (stored?.phase === "repair-decision") return "Apply needs attention";
+    if (stored?.phase === "repairing") {
       const attempt = Number(stored.repairAttempt) || 1;
       const max = Number(stored.repairMaxAttempts) || 3;
-      return 'Fixing apply issue, attempt ' + attempt + '/' + max;
+      return "Fixing apply issue, attempt " + attempt + "/" + max;
     }
-    if (stored?.phase === 'verifying') return 'Verifying copy edits';
+    if (stored?.phase === "verifying") return "Verifying copy edits";
     const remaining = Number.isFinite(Number(stored?.remainingCount))
       ? Number(stored.remainingCount)
       : Number(fallbackCount) || 0;
     return remaining > 0
-      ? 'Applying ' + remaining + ' copy edit' + (remaining === 1 ? '' : 's')
-      : 'Verifying copy edits';
+      ? "Applying " + remaining + " copy edit" + (remaining === 1 ? "" : "s")
+      : "Verifying copy edits";
   }
 
   function resetManualApplyProgress(count) {
@@ -3943,7 +4373,7 @@
       totalOps: total,
       completedOps: 0,
       remainingCount: total,
-      phase: 'applying',
+      phase: "applying",
       startedAt: Date.now(),
     });
   }
@@ -3951,20 +4381,26 @@
   function updateManualApplyProgressFromChunk(chunk) {
     if (!chunk || !pendingApplyInFlight) return;
     const stored = readStoredManualApplyState() || {};
-    const totalOps = Number(chunk.totalOpCount) || Number(stored.totalOps) || Number(stored.count) || parseInt(pendingPillEl?.dataset.count || '0', 10) || 0;
+    const totalOps =
+      Number(chunk.totalOpCount) ||
+      Number(stored.totalOps) ||
+      Number(stored.count) ||
+      Number.parseInt(pendingPillEl?.dataset.count || "0", 10) ||
+      0;
     const completedOps = Math.min(totalOps, (Number(stored.completedOps) || 0) + (Number(chunk.opCount) || 0));
     const remainingCount = Math.max(0, totalOps - completedOps);
     storeManualApplyState(Number(stored.count) || totalOps, {
       totalOps,
       completedOps,
       remainingCount,
-      phase: remainingCount > 0 ? 'applying' : 'verifying',
+      phase: remainingCount > 0 ? "applying" : "verifying",
     });
     setPendingApplyLoading(true, remainingCount);
   }
 
   function updateManualApplyRepairState(repair, phase) {
-    const count = parseInt(pendingPillEl?.dataset.count || '0', 10) || Number(readStoredManualApplyState()?.count) || 0;
+    const count =
+      Number.parseInt(pendingPillEl?.dataset.count || "0", 10) || Number(readStoredManualApplyState()?.count) || 0;
     if (count <= 0) return;
     storeManualApplyState(count, {
       phase,
@@ -3979,16 +4415,16 @@
       hideActionPicker();
       closeTunePopover();
     }
-    if (barEl && barEl.style.display !== 'none' && state === 'CONFIGURING') {
-      const input = uiGetById(PREFIX + '-input');
-      const prompt = input ? input.value : '';
-      updateBarContent('configure');
-      const nextInput = uiGetById(PREFIX + '-input');
+    if (barEl && barEl.style.display !== "none" && state === "CONFIGURING") {
+      const input = uiGetById(PREFIX + "-input");
+      const prompt = input ? input.value : "";
+      updateBarContent("configure");
+      const nextInput = uiGetById(PREFIX + "-input");
       if (nextInput) nextInput.value = prompt;
     }
-    if (editBadgeEl && editBadgeEl.style.display !== 'none') {
-      if (pendingApplyInFlight) renderEditBadge('idle-disabled');
-      else if (state === 'CONFIGURING' && selectedElement && hasTextRows(selectedElement)) renderEditBadge('idle');
+    if (editBadgeEl && editBadgeEl.style.display !== "none") {
+      if (pendingApplyInFlight) renderEditBadge("idle-disabled");
+      else if (state === "CONFIGURING" && selectedElement && hasTextRows(selectedElement)) renderEditBadge("idle");
     }
     updateGlobalBarState();
   }
@@ -3996,58 +4432,61 @@
   function hidePendingApplyDock() {
     pendingApplyInFlight = false;
     clearStoredManualApplyState();
-    if (pendingIntroAnimation) { pendingIntroAnimation.cancel(); pendingIntroAnimation = null; }
-    if (pendingDockEl) pendingDockEl.style.display = 'none';
-    if (pendingPillEl) {
-      pendingPillEl.dataset.count = '0';
-      pendingPillEl.style.display = 'none';
-      pendingPillEl.disabled = false;
-      pendingPillEl.setAttribute('aria-busy', 'false');
-      pendingPillEl.setAttribute('aria-label', 'Apply copy edits to source');
-      pendingPillEl.style.cursor = 'pointer';
-      pendingPillEl.style.filter = 'none';
-      pendingPillEl.style.transform = 'scale(1)';
+    if (pendingIntroAnimation) {
+      pendingIntroAnimation.cancel();
+      pendingIntroAnimation = null;
     }
-    if (pendingPillSpinnerEl) pendingPillSpinnerEl.style.display = 'none';
+    if (pendingDockEl) pendingDockEl.style.display = "none";
+    if (pendingPillEl) {
+      pendingPillEl.dataset.count = "0";
+      pendingPillEl.style.display = "none";
+      pendingPillEl.disabled = false;
+      pendingPillEl.setAttribute("aria-busy", "false");
+      pendingPillEl.setAttribute("aria-label", "Copy edits staged; apply from the trusted operator CLI");
+      pendingPillEl.style.cursor = "pointer";
+      pendingPillEl.style.filter = "none";
+      pendingPillEl.style.transform = "scale(1)";
+    }
+    if (pendingPillSpinnerEl) pendingPillSpinnerEl.style.display = "none";
     if (pendingPillLabelEl) pendingPillLabelEl.textContent = pendingApplyLabel(0);
     if (pendingPillCountEl) {
-      pendingPillCountEl.textContent = '0';
-      pendingPillCountEl.style.display = 'inline-flex';
+      pendingPillCountEl.textContent = "0";
+      pendingPillCountEl.style.display = "inline-flex";
     }
     if (pendingTrashBtn) {
-      pendingTrashBtn.style.display = 'none';
+      pendingTrashBtn.style.display = "none";
       pendingTrashBtn.disabled = false;
-      pendingTrashBtn.style.cursor = 'pointer';
-      pendingTrashBtn.style.opacity = '1';
+      pendingTrashBtn.style.cursor = "pointer";
+      pendingTrashBtn.style.opacity = "1";
     }
-    if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = 'none';
-    if (pendingRollbackBtn) pendingRollbackBtn.style.display = 'none';
+    if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = "none";
+    if (pendingRollbackBtn) pendingRollbackBtn.style.display = "none";
     refreshLiveControlsForManualApply();
   }
 
   function setPendingApplyLoading(loading, count) {
     if (!pendingPillEl || !pendingPillLabelEl || !pendingPillCountEl || !pendingTrashBtn) return;
     pendingApplyInFlight = loading === true;
-    const currentCount = count || parseInt(pendingPillEl.dataset.count || '0', 10) || 0;
+    const currentCount = count || Number.parseInt(pendingPillEl.dataset.count || "0", 10) || 0;
     if (pendingApplyInFlight) storeManualApplyState(currentCount);
     else clearStoredManualApplyState();
-    if (pendingPillSpinnerEl) pendingPillSpinnerEl.style.display = pendingApplyInFlight ? 'inline-block' : 'none';
+    if (pendingPillSpinnerEl) pendingPillSpinnerEl.style.display = pendingApplyInFlight ? "inline-block" : "none";
     pendingPillLabelEl.textContent = pendingApplyInFlight
       ? manualApplyLoadingText(currentCount)
       : pendingApplyLabel(currentCount);
-    pendingPillCountEl.style.display = pendingApplyInFlight ? 'none' : 'inline-flex';
+    pendingPillCountEl.style.display = pendingApplyInFlight ? "none" : "inline-flex";
     pendingPillEl.disabled = pendingApplyInFlight;
-    pendingPillEl.setAttribute('aria-busy', pendingApplyInFlight ? 'true' : 'false');
-    pendingPillEl.style.cursor = pendingApplyInFlight ? 'wait' : 'pointer';
-    pendingPillEl.style.filter = pendingApplyInFlight ? 'brightness(0.98)' : 'none';
-    pendingPillEl.style.transform = 'scale(1)';
+    pendingPillEl.setAttribute("aria-busy", pendingApplyInFlight ? "true" : "false");
+    pendingPillEl.style.cursor = pendingApplyInFlight ? "wait" : "pointer";
+    pendingPillEl.style.filter = pendingApplyInFlight ? "brightness(0.98)" : "none";
+    pendingPillEl.style.transform = "scale(1)";
     pendingTrashBtn.disabled = pendingApplyInFlight;
-    pendingTrashBtn.style.cursor = pendingApplyInFlight ? 'not-allowed' : 'pointer';
-    pendingTrashBtn.style.opacity = pendingApplyInFlight ? '0.58' : '1';
+    pendingTrashBtn.style.cursor = pendingApplyInFlight ? "not-allowed" : "pointer";
+    pendingTrashBtn.style.opacity = pendingApplyInFlight ? "0.58" : "1";
     if (pendingApplyInFlight) {
-      if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = 'none';
-      if (pendingRollbackBtn) pendingRollbackBtn.style.display = 'none';
-      pendingTrashBtn.style.display = 'inline-flex';
+      if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = "none";
+      if (pendingRollbackBtn) pendingRollbackBtn.style.display = "none";
+      pendingTrashBtn.style.display = "inline-flex";
     }
     schedulePendingDockPosition();
     refreshLiveControlsForManualApply();
@@ -4055,19 +4494,26 @@
 
   function updatePendingCounter(currentPageCount) {
     if (!pendingDockEl || !pendingPillEl || !pendingPillLabelEl || !pendingPillCountEl || !pendingTrashBtn) return;
-    const previousCount = parseInt(pendingPillEl.dataset.count || '0', 10);
+    const previousCount = Number.parseInt(pendingPillEl.dataset.count || "0", 10);
     if (!currentPageCount || currentPageCount <= 0) {
       hidePendingApplyDock();
       return;
     }
     pendingPillLabelEl.textContent = pendingApplyLabel(currentPageCount);
     pendingPillCountEl.textContent = String(currentPageCount);
-    pendingPillEl.setAttribute('aria-label', 'Apply ' + currentPageCount + ' copy edit' + (currentPageCount === 1 ? '' : 's') + ' to source');
-    pendingPillEl.style.display = 'inline-flex';
-    pendingTrashBtn.style.display = 'inline-flex';
-    pendingDockEl.style.display = 'inline-flex';
+    pendingPillEl.setAttribute(
+      "aria-label",
+      currentPageCount +
+        " copy edit" +
+        (currentPageCount === 1 ? "" : "s") +
+        " staged; apply from the trusted operator CLI"
+    );
+    pendingPillEl.style.display = "inline-flex";
+    pendingTrashBtn.style.display = "inline-flex";
+    pendingDockEl.style.display = "inline-flex";
     pendingPillEl.dataset.count = String(currentPageCount);
-    if (pendingApplyInFlight || shouldResumeManualApplyLoading(currentPageCount)) setPendingApplyLoading(true, currentPageCount);
+    if (pendingApplyInFlight || shouldResumeManualApplyLoading(currentPageCount))
+      setPendingApplyLoading(true, currentPageCount);
     schedulePendingDockPosition();
     if (previousCount <= 0) playPendingIntroAnimation();
   }
@@ -4075,160 +4521,79 @@
   function maybeShowFirstSaveToast() {
     if (!firstSaveOfSession) return;
     firstSaveOfSession = false;
-    showToast('Saved. Click "Apply copy edits" to write changes.', 4500);
+    showToast("Saved. Use the trusted operator CLI to write staged changes.", 4500);
   }
 
   async function fetchPendingCount() {
     try {
       const res = await fetch(
-        'http://localhost:' + PORT + '/manual-edit-stash?token=' + encodeURIComponent(TOKEN) + '&pageUrl=' + encodeURIComponent(location.pathname),
+        "http://localhost:" +
+          PORT +
+          "/manual-edit-stash?token=" +
+          encodeURIComponent(TOKEN) +
+          "&pageUrl=" +
+          encodeURIComponent(location.pathname)
       );
       if (!res.ok) return;
       const data = await res.json();
       updatePendingCounter(data.count || 0);
     } catch (err) {
-      console.warn('[impeccable] failed to fetch pending count:', err);
+      console.warn("[impeccable] failed to fetch pending count:", err);
     }
   }
 
   async function onPendingPillClick() {
-    const count = parseInt(pendingPillEl?.dataset.count || '0', 10);
+    const count = Number.parseInt(pendingPillEl?.dataset.count || "0", 10);
     if (count <= 0 || pendingApplyInFlight) return;
-    const ok = confirm('Apply ' + count + ' copy edit' + (count === 1 ? '' : 's') + ' to source?');
-    if (!ok) return;
-    let waitForSseCompletion = false;
-    resetManualApplyProgress(count);
-    setPendingApplyLoading(true, count);
-    try {
-      const res = await fetch(
-        'http://localhost:' + PORT + '/manual-edit-commit?token=' + encodeURIComponent(TOKEN) + '&pageUrl=' + encodeURIComponent(location.pathname) + '&async=1',
-        { method: 'POST', keepalive: true },
-      );
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || ('HTTP ' + res.status));
-      }
-      const result = await res.json();
-      if (res.status === 202 || result.status === 'started') {
-        waitForSseCompletion = true;
-        return;
-      }
-      const remaining = remainingManualEditCount(result);
-      updatePendingCounter(remaining);
-      if (result.failed && result.failed.length > 0) {
-        console.warn('[impeccable] some copy edits failed:', result.failed);
-        showToast('Applied ' + (result.applied?.length || 0) + ', ' + result.failed.length + ' failed - see console', 5000);
-      } else {
-        const n = Array.isArray(result.applied) ? result.applied.length : (result.cleared || 0);
-        if (n > 0) {
-          showToast('Applied ' + n + ' edit' + (n === 1 ? '' : 's'), 2500);
-        } else {
-          console.warn('[impeccable] apply returned no verified edits:', result);
-          showToast('No edits applied - see console', 4000);
-        }
-      }
-    } catch (err) {
-      console.error('[impeccable] commit failed:', err);
-      showToast('Apply failed - see console', 4000);
-    } finally {
-      if (waitForSseCompletion) return;
-      const remainingCount = parseInt(pendingPillEl?.dataset.count || '0', 10) || 0;
-      if (remainingCount > 0) setPendingApplyLoading(false);
-      else hidePendingApplyDock();
-    }
+    showTrustedManualApplyInstructions("apply");
   }
 
   async function onPendingTrashClick() {
-    const count = parseInt(pendingPillEl?.dataset.count || '0', 10);
+    const count = Number.parseInt(pendingPillEl?.dataset.count || "0", 10);
     if (count <= 0 || pendingApplyInFlight) return;
-    const ok = confirm('Discard ' + count + ' copy edit' + (count === 1 ? '' : 's') + ' on this page?');
+    const ok = confirm("Discard " + count + " copy edit" + (count === 1 ? "" : "s") + " on this page?");
     if (!ok) return;
-    try {
-      const res = await fetch(
-        'http://localhost:' + PORT + '/manual-edit-discard?token=' + encodeURIComponent(TOKEN) + '&pageUrl=' + encodeURIComponent(location.pathname),
-        { method: 'POST' },
-      );
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const result = await res.json().catch(() => ({}));
-      const restoreFailures = restoreDiscardedManualEdits(result.entries || []);
-      updatePendingCounter(0);
-      if (restoreFailures > 0) {
-        showToast('Discarded ' + count + ' copy edit' + (count === 1 ? '' : 's') + ' - refresh to reset ' + restoreFailures, 4000);
-      } else {
-        showToast('Discarded ' + count + ' copy edit' + (count === 1 ? '' : 's'), 2500);
-      }
-    } catch (err) {
-      console.error('[impeccable] discard failed:', err);
-      showToast('Discard failed - see console', 4000);
-    }
+    showTrustedManualApplyInstructions("discard");
   }
 
   function showManualApplyDecision(msg) {
-    const count = parseInt(pendingPillEl?.dataset.count || '0', 10) || numberOrNull(msg?.remainingCount) || 0;
+    const count = Number.parseInt(pendingPillEl?.dataset.count || "0", 10) || numberOrNull(msg?.remainingCount) || 0;
     pendingApplyInFlight = false;
     storeManualApplyState(count, {
-      phase: 'repair-decision',
+      phase: "repair-decision",
       repairAttempt: numberOrNull(msg?.repair?.attempts) || numberOrNull(msg?.repair?.attempt) || 3,
       repairMaxAttempts: numberOrNull(msg?.repair?.maxAttempts) || 3,
     });
-    if (pendingPillSpinnerEl) pendingPillSpinnerEl.style.display = 'none';
-    if (pendingPillLabelEl) pendingPillLabelEl.textContent = 'Apply needs attention';
-    if (pendingPillCountEl) pendingPillCountEl.style.display = 'none';
+    if (pendingPillSpinnerEl) pendingPillSpinnerEl.style.display = "none";
+    if (pendingPillLabelEl) pendingPillLabelEl.textContent = "Apply needs attention";
+    if (pendingPillCountEl) pendingPillCountEl.style.display = "none";
     if (pendingPillEl) {
       pendingPillEl.disabled = true;
-      pendingPillEl.setAttribute('aria-busy', 'false');
-      pendingPillEl.style.cursor = 'default';
-      pendingPillEl.style.display = 'inline-flex';
+      pendingPillEl.setAttribute("aria-busy", "false");
+      pendingPillEl.style.cursor = "default";
+      pendingPillEl.style.display = "inline-flex";
     }
-    if (pendingTrashBtn) pendingTrashBtn.style.display = 'none';
-    if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = 'inline-flex';
-    if (pendingRollbackBtn) pendingRollbackBtn.style.display = 'inline-flex';
-    if (pendingDockEl) pendingDockEl.style.display = 'inline-flex';
+    if (pendingTrashBtn) pendingTrashBtn.style.display = "none";
+    if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = "inline-flex";
+    if (pendingRollbackBtn) pendingRollbackBtn.style.display = "inline-flex";
+    if (pendingDockEl) pendingDockEl.style.display = "inline-flex";
     schedulePendingDockPosition();
     refreshLiveControlsForManualApply();
   }
 
   async function onPendingKeepFixingClick() {
-    const count = parseInt(pendingPillEl?.dataset.count || '0', 10) || numberOrNull(readStoredManualApplyState()?.count) || 0;
+    const count =
+      Number.parseInt(pendingPillEl?.dataset.count || "0", 10) ||
+      numberOrNull(readStoredManualApplyState()?.count) ||
+      0;
     if (count <= 0) return;
-    updateManualApplyRepairState({ attempt: 1, maxAttempts: 3 }, 'repairing');
-    try {
-      const res = await fetch(
-        'http://localhost:' + PORT + '/manual-edit-commit?token=' + encodeURIComponent(TOKEN) + '&pageUrl=' + encodeURIComponent(location.pathname) + '&async=1&repair=1',
-        { method: 'POST', keepalive: true },
-      );
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = 'none';
-      if (pendingRollbackBtn) pendingRollbackBtn.style.display = 'none';
-      if (pendingTrashBtn) pendingTrashBtn.style.display = 'inline-flex';
-    } catch (err) {
-      console.error('[impeccable] repair retry failed:', err);
-      showToast('Repair retry failed - see console', 4000);
-      showManualApplyDecision({ remainingCount: count, repair: readStoredManualApplyState() });
-    }
+    showTrustedManualApplyInstructions("repair");
   }
 
   async function onPendingRollbackClick() {
-    const ok = confirm('Rollback source files to before this Apply and keep the edits staged?');
+    const ok = confirm("Rollback source files to before this Apply and keep the edits staged?");
     if (!ok) return;
-    try {
-      const res = await fetch(
-        'http://localhost:' + PORT + '/manual-edit-repair-decision?token=' + encodeURIComponent(TOKEN) + '&pageUrl=' + encodeURIComponent(location.pathname),
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: TOKEN, pageUrl: location.pathname, action: 'rollback' }),
-        },
-      );
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const result = await res.json().catch(() => ({}));
-      clearStoredManualApplyState();
-      updatePendingCounter(numberOrNull(result.remainingCount) || 0);
-      showToast('Rolled back source; copy edits are still staged.', 3500);
-    } catch (err) {
-      console.error('[impeccable] manual Apply rollback failed:', err);
-      showToast('Rollback failed - see console', 4000);
-    }
+    showTrustedManualApplyInstructions("rollback");
   }
 
   function manualEditEventForCurrentPage(msg) {
@@ -4253,45 +4618,45 @@
   function handleManualEditActivity(msg) {
     if (!manualEditEventForCurrentPage(msg)) return;
 
-    if (msg.type === 'manual_edit_stashed') {
+    if (msg.type === "manual_edit_stashed") {
       const pendingCount = numberOrNull(msg.pendingCount);
       if (pendingCount !== null) updatePendingCounter(pendingCount);
       return;
     }
 
-    if (msg.type === 'manual_edit_commit_started') {
+    if (msg.type === "manual_edit_commit_started") {
       const pendingCount = numberOrNull(msg.pendingCount);
       if (pendingCount !== null && pendingCount > 0) updatePendingCounter(pendingCount);
       if (!msg.repairOnly && pendingCount !== null && pendingCount > 0) resetManualApplyProgress(pendingCount);
-      if (msg.repairOnly) updateManualApplyRepairState({ attempt: 1, maxAttempts: 3 }, 'repairing');
+      if (msg.repairOnly) updateManualApplyRepairState({ attempt: 1, maxAttempts: 3 }, "repairing");
       setPendingApplyLoading(true, pendingCount || undefined);
       return;
     }
 
-    if (msg.type === 'manual_edit_apply_reply_received') {
+    if (msg.type === "manual_edit_apply_reply_received") {
       if (msg.chunk) updateManualApplyProgressFromChunk(msg.chunk);
-      if (msg.repair) updateManualApplyRepairState(msg.repair, 'repairing');
+      if (msg.repair) updateManualApplyRepairState(msg.repair, "repairing");
       return;
     }
 
-    if (msg.type === 'manual_edit_apply_dispatched' && msg.repair) {
-      updateManualApplyRepairState(msg.repair, 'repairing');
+    if (msg.type === "manual_edit_apply_dispatched" && msg.repair) {
+      updateManualApplyRepairState(msg.repair, "repairing");
       return;
     }
 
-    if (msg.type === 'manual_edit_repair_needs_decision') {
+    if (msg.type === "manual_edit_repair_needs_decision") {
       showManualApplyDecision(msg);
       return;
     }
 
-    if (msg.type === 'manual_edit_repair_rollback_done') {
+    if (msg.type === "manual_edit_repair_rollback_done") {
       clearStoredManualApplyState();
       fetchPendingCount();
       return;
     }
 
-    if (msg.type === 'manual_edit_commit_done') {
-      if (msg.reason === 'manual_edit_repair_needs_decision' || msg.needsManualDecision === true) {
+    if (msg.type === "manual_edit_commit_done") {
+      if (msg.reason === "manual_edit_repair_needs_decision" || msg.needsManualDecision === true) {
         showManualApplyDecision(msg);
         return;
       }
@@ -4307,224 +4672,128 @@
         const failedCount = numberOrNull(msg.failedCount) || 0;
         const appliedCount = numberOrNull(msg.appliedCount) || numberOrNull(msg.cleared) || 0;
         if (failedCount > 0) {
-          showToast('Applied ' + appliedCount + ', ' + failedCount + ' failed - see console', 5000);
+          showToast("Applied " + appliedCount + ", " + failedCount + " failed - see console", 5000);
         } else if (appliedCount > 0) {
-          showToast('Applied ' + appliedCount + ' edit' + (appliedCount === 1 ? '' : 's'), 2500);
+          showToast("Applied " + appliedCount + " edit" + (appliedCount === 1 ? "" : "s"), 2500);
         }
       }
       return;
     }
 
-    if (msg.type === 'manual_edit_commit_failed') {
+    if (msg.type === "manual_edit_commit_failed") {
       setPendingApplyLoading(false);
       fetchPendingCount();
       return;
     }
 
-    if (msg.type === 'manual_edit_discarded') {
-      fetchPendingCount();
+    if (msg.type === "manual_edit_discarded") {
+      // Source and staging are already authoritative. Reload so browser-local
+      // text mutations cannot masquerade as committed source after discard.
+      location.reload();
+      return;
     }
-  }
-
-  function restoreDiscardedManualEdits(entries) {
-    let failures = 0;
-    for (const entry of entries || []) {
-      for (const op of entry.ops || []) {
-        if (restoreMixedTextNodeManualEdit(op)) continue;
-        const el = findManualEditRestoreElement(op);
-        if (!el || typeof op.originalText !== 'string' || !canRestoreManualEditElement(el, op)) {
-          failures += 1;
-          continue;
-        }
-        el.textContent = op.originalText;
-      }
-    }
-    if (failures > 0) {
-      console.warn('[impeccable] skipped unsafe copy edit DOM restore for', failures, 'edit(s). Refresh to reset the page DOM.');
-    }
-    return failures;
-  }
-
-  function canRestoreManualEditElement(el, op) {
-    if (!el || typeof op?.originalText !== 'string') return false;
-    if (el.children && el.children.length > 0) return false;
-    return normalizeManualContextText(el.textContent) === normalizeManualContextText(op.newText);
   }
 
   function mixedTextWrapRestoreHint(el) {
-    if (!el || !el.dataset || el.dataset.impeccableTextWrap !== 'true' || !el.parentElement) return null;
+    if (!el || !el.dataset || el.dataset.impeccableTextWrap !== "true" || !el.parentElement) return null;
     const siblings = directMixedTextRestoreNodes(el.parentElement);
     const textIndex = siblings.indexOf(el);
     return {
-      kind: 'mixedTextNode',
+      kind: "mixedTextNode",
       parentRef: documentRefForElement(el.parentElement),
       textIndex,
     };
   }
 
-  function restoreMixedTextNodeManualEdit(op) {
-    const restore = op?.restore;
-    if (!restore || restore.kind !== 'mixedTextNode' || typeof op?.originalText !== 'string') return false;
-    const parent = queryManualEditRef(restore.parentRef);
-    if (!parent) return false;
-    const textNodes = directMixedTextRestoreNodes(parent).filter((node) => node.nodeType === 3);
-    const newText = normalizeManualContextText(op.newText);
-    const byIndex = textNodes[Number(restore.textIndex)];
-    if (byIndex && normalizeManualContextText(byIndex.nodeValue) === newText) {
-      byIndex.nodeValue = op.originalText;
-      return true;
-    }
-    const matches = textNodes.filter((node) => normalizeManualContextText(node.nodeValue) === newText);
-    if (matches.length !== 1) return false;
-    matches[0].nodeValue = op.originalText;
-    return true;
-  }
-
   function directMixedTextRestoreNodes(parent) {
     return Array.from(parent?.childNodes || []).filter((node) => {
-      if (node.nodeType === 3) return /\S/.test(node.nodeValue || '');
-      return node.nodeType === 1
-        && node.dataset
-        && node.dataset.impeccableTextWrap === 'true'
-        && /\S/.test(node.textContent || '');
+      if (node.nodeType === 3) return /\S/.test(node.nodeValue || "");
+      return (
+        node.nodeType === 1 &&
+        node.dataset &&
+        node.dataset.impeccableTextWrap === "true" &&
+        /\S/.test(node.textContent || "")
+      );
     });
   }
 
-  function findManualEditRestoreElement(op) {
-    for (const ref of [op?.ref, op?.leaf?.ref]) {
-      const byRef = queryManualEditRef(ref);
-      if (byRef) return byRef;
-    }
-    const tag = op?.tag || op?.leaf?.tagName || '*';
-    const classes = Array.isArray(op?.classes) ? op.classes : (Array.isArray(op?.leaf?.classes) ? op.leaf.classes : []);
-    const selector = (tag === '*' ? '' : tag) + classes.map((cls) => '.' + cssIdent(cls)).join('') || '*';
-    let matches = [];
-    try {
-      matches = Array.from(document.querySelectorAll(selector));
-    } catch {
-      matches = [];
-    }
-    const newText = normalizeManualContextText(op?.newText);
-    const filtered = matches.filter((el) => normalizeManualContextText(el.textContent) === newText);
-    return filtered.length === 1 ? filtered[0] : null;
-  }
-
-  function queryManualEditRef(ref) {
-    if (!ref || typeof ref !== 'string') return null;
-    const parts = ref.split('>').map((part) => part.trim()).filter(Boolean);
-    let current = null;
-    for (let index = 0; index < parts.length; index += 1) {
-      const segment = parseManualEditRefSegment(parts[index]);
-      if (!segment) return null;
-      if (index === 0 && segment.tag === 'body') {
-        current = document.body;
-        if (!elementMatchesManualRefSegment(current, segment)) return null;
-        continue;
-      }
-      const scope = current || document.body;
-      const children = Array.from(scope.children || []);
-      current = children.find((child) => elementMatchesManualRefSegment(child, segment)) || null;
-      if (!current) return null;
-    }
-    return current;
-  }
-
-  function parseManualEditRefSegment(segment) {
-    const nthMatch = String(segment || '').match(/:nth-of-type\((\d+)\)$/);
-    const nth = nthMatch ? Number(nthMatch[1]) : null;
-    const base = nthMatch ? segment.slice(0, nthMatch.index) : segment;
-    const tagMatch = base.match(/^[^#.:\s]+/);
-    const tag = tagMatch ? tagMatch[0].toLowerCase() : null;
-    if (!tag) return null;
-    const idMatch = base.match(/#([^#.]+)/);
-    const classes = base
-      .slice(tag.length)
-      .replace(/#[^#.]+/, '')
-      .split('.')
-      .filter(Boolean);
-    return { tag, id: idMatch ? idMatch[1] : null, classes, nth };
-  }
-
-  function elementMatchesManualRefSegment(el, segment) {
-    if (!el || !segment) return false;
-    if (el.tagName.toLowerCase() !== segment.tag) return false;
-    if (segment.id && el.id !== segment.id) return false;
-    for (const cls of segment.classes) {
-      if (!el.classList || !el.classList.contains(cls)) return false;
-    }
-    if (segment.nth && indexAmongSameTag(el) !== segment.nth) return false;
-    return true;
-  }
-
   function cssIdent(value) {
-    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(String(value));
-    return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+    if (window.CSS && typeof window.CSS.escape === "function") return window.CSS.escape(String(value));
+    return String(value).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
   }
 
   //
   // Edit content badge - floating button at element top-right to enter EDITING mode
   //
 
-  const EDIT_COPY_LABEL = 'Edit copy';
+  const EDIT_COPY_LABEL = "Edit copy";
   const EDIT_COPY_ICON =
     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>' +
-    '</svg>';
+    "</svg>";
 
   function usesShadowChromeRoot() {
     const root = liveUiRoot();
-    return root && root !== document.body && root.host && root.host.id === PREFIX + '-root';
+    return root && root !== document.body && root.host && root.host.id === PREFIX + "-root";
   }
 
   function setImportantStyle(el, name, value) {
-    el.style.setProperty(name, value, 'important');
+    el.style.setProperty(name, value, "important");
   }
 
   function initEditBadgeHitProxies() {
     if (!usesShadowChromeRoot() || editBadgeProxyRoot) return;
-    editBadgeProxyRoot = document.createElement('div');
-    editBadgeProxyRoot.id = PREFIX + '-edit-badge-hit-proxies';
-    editBadgeProxyRoot.setAttribute('aria-hidden', 'true');
+    editBadgeProxyRoot = document.createElement("div");
+    editBadgeProxyRoot.id = PREFIX + "-edit-badge-hit-proxies";
+    editBadgeProxyRoot.setAttribute("aria-hidden", "true");
     const styles = {
-      all: 'initial',
-      position: 'fixed',
-      inset: '0',
-      width: '100vw',
-      height: '100vh',
+      all: "initial",
+      position: "fixed",
+      inset: "0",
+      width: "100vw",
+      height: "100vh",
       zIndex: String(Z.toast + 1),
-      pointerEvents: 'none',
-      background: 'transparent',
-      overflow: 'visible',
+      pointerEvents: "none",
+      background: "transparent",
+      overflow: "visible",
     };
     for (const [name, value] of Object.entries(styles)) {
-      setImportantStyle(editBadgeProxyRoot, name.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase()), value);
+      setImportantStyle(
+        editBadgeProxyRoot,
+        name.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase()),
+        value
+      );
     }
     document.body.appendChild(editBadgeProxyRoot);
   }
 
   function styleEditBadgeProxy(proxy, target) {
     const rect = target.getBoundingClientRect();
-    const cursor = getComputedStyle(target).cursor || 'pointer';
+    const cursor = getComputedStyle(target).cursor || "pointer";
     const styles = {
-      all: 'initial',
-      position: 'fixed',
-      left: rect.left + 'px',
-      top: rect.top + 'px',
-      width: rect.width + 'px',
-      height: rect.height + 'px',
-      margin: '0',
-      padding: '0',
-      border: '0',
-      borderRadius: '0',
-      background: 'transparent',
-      color: 'transparent',
-      opacity: '0.001',
-      pointerEvents: 'auto',
+      all: "initial",
+      position: "fixed",
+      left: rect.left + "px",
+      top: rect.top + "px",
+      width: rect.width + "px",
+      height: rect.height + "px",
+      margin: "0",
+      padding: "0",
+      border: "0",
+      borderRadius: "0",
+      background: "transparent",
+      color: "transparent",
+      opacity: "0.001",
+      pointerEvents: "auto",
       cursor,
       zIndex: String(Z.toast + 2),
     };
     for (const [name, value] of Object.entries(styles)) {
-      setImportantStyle(proxy, name.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase()), value);
+      setImportantStyle(
+        proxy,
+        name.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase()),
+        value
+      );
     }
   }
 
@@ -4532,7 +4801,7 @@
     let event;
     try {
       event = new MouseEvent(type, {
-        bubbles: type !== 'mouseenter' && type !== 'mouseleave',
+        bubbles: type !== "mouseenter" && type !== "mouseleave",
         cancelable: true,
         composed: true,
         clientX: source.clientX,
@@ -4555,26 +4824,26 @@
       event.preventDefault();
       event.stopPropagation();
     };
-    proxy.addEventListener('mouseenter', (event) => {
+    proxy.addEventListener("mouseenter", (event) => {
       stop(event);
-      proxyMouseEvent('mouseenter', event, target);
-      proxyMouseEvent('mouseover', event, target);
+      proxyMouseEvent("mouseenter", event, target);
+      proxyMouseEvent("mouseover", event, target);
     });
-    proxy.addEventListener('mouseleave', (event) => {
+    proxy.addEventListener("mouseleave", (event) => {
       stop(event);
-      proxyMouseEvent('mouseleave', event, target);
-      proxyMouseEvent('mouseout', event, target);
+      proxyMouseEvent("mouseleave", event, target);
+      proxyMouseEvent("mouseout", event, target);
     });
-    proxy.addEventListener('mousedown', (event) => {
+    proxy.addEventListener("mousedown", (event) => {
       stop(event);
       target.focus?.({ preventScroll: true });
-      proxyMouseEvent('mousedown', event, target);
+      proxyMouseEvent("mousedown", event, target);
     });
-    proxy.addEventListener('mouseup', (event) => {
+    proxy.addEventListener("mouseup", (event) => {
       stop(event);
-      proxyMouseEvent('mouseup', event, target);
+      proxyMouseEvent("mouseup", event, target);
     });
-    proxy.addEventListener('click', (event) => {
+    proxy.addEventListener("click", (event) => {
       stop(event);
       target.click();
       syncEditBadgeHitProxies();
@@ -4582,13 +4851,13 @@
   }
 
   function editBadgeProxyTargets() {
-    if (!usesShadowChromeRoot() || !editBadgeEl || editBadgeEl.style.display === 'none') return [];
-    return [...editBadgeEl.querySelectorAll('button')].filter((target) => {
+    if (!usesShadowChromeRoot() || !editBadgeEl || editBadgeEl.style.display === "none") return [];
+    return [...editBadgeEl.querySelectorAll("button")].filter((target) => {
       if (target.disabled) return false;
       const rect = target.getBoundingClientRect();
       if (rect.width < 1 || rect.height < 1) return false;
       const style = getComputedStyle(target);
-      return style.display !== 'none' && style.visibility !== 'hidden';
+      return style.display !== "none" && style.visibility !== "hidden";
     });
   }
 
@@ -4612,41 +4881,47 @@
     for (const target of targets) {
       let proxy = editBadgeProxyByTarget.get(target);
       if (!proxy) {
-        proxy = document.createElement('button');
-        proxy.type = 'button';
+        proxy = document.createElement("button");
+        proxy.type = "button";
         proxy.tabIndex = -1;
-        proxy.dataset.impeccableEditBadgeProxy = 'true';
-        proxy.setAttribute('aria-hidden', 'true');
+        proxy.dataset.impeccableEditBadgeProxy = "true";
+        proxy.setAttribute("aria-hidden", "true");
         bindEditBadgeProxy(proxy, target);
         editBadgeProxyRoot.appendChild(proxy);
         editBadgeProxyByTarget.set(target, proxy);
       }
-      proxy.title = target.title || target.getAttribute('aria-label') || target.textContent || EDIT_COPY_LABEL;
+      proxy.title = target.title || target.getAttribute("aria-label") || target.textContent || EDIT_COPY_LABEL;
       styleEditBadgeProxy(proxy, target);
     }
   }
 
   function initEditBadge() {
-    editBadgeEl = document.createElement('div');
-    editBadgeEl.id = PREFIX + '-edit-badge';
+    editBadgeEl = document.createElement("div");
+    editBadgeEl.id = PREFIX + "-edit-badge";
     Object.assign(editBadgeEl.style, {
-      position: 'fixed',
+      position: "fixed",
       zIndex: String(Z.highlight + 1),
-      cursor: 'default',
-      display: 'none',
-      userSelect: 'none',
+      cursor: "default",
+      display: "none",
+      userSelect: "none",
     });
     uiAppend(editBadgeEl);
     initEditBadgeHitProxies();
 
     // Remove focus rings on edit badge buttons + contenteditable elements
-    if (!uiGetById(PREFIX + '-edit-badge-focus-style')) {
-      const s = document.createElement('style');
-      s.id = PREFIX + '-edit-badge-focus-style';
+    if (!uiGetById(PREFIX + "-edit-badge-focus-style")) {
+      const s = document.createElement("style");
+      s.id = PREFIX + "-edit-badge-focus-style";
       s.textContent =
-        '#' + PREFIX + '-edit-badge button { outline: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }' +
-        '#' + PREFIX + '-edit-badge button:focus { outline: none !important; }' +
-        '#' + PREFIX + '-edit-badge button:focus-visible { outline: none !important; }' +
+        "#" +
+        PREFIX +
+        "-edit-badge button { outline: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }" +
+        "#" +
+        PREFIX +
+        "-edit-badge button:focus { outline: none !important; }" +
+        "#" +
+        PREFIX +
+        "-edit-badge button:focus-visible { outline: none !important; }" +
         '[data-impeccable-editable="true"] { outline: none !important; box-shadow: none !important; }' +
         '[data-impeccable-editable="true"]:focus { outline: none !important; box-shadow: none !important; }' +
         '[data-impeccable-editable="true"]:focus-visible { outline: none !important; box-shadow: none !important; }';
@@ -4655,7 +4930,7 @@
   }
 
   function positionEditBadge() {
-    if (!selectedElement || !editBadgeEl || editBadgeEl.style.display === 'none') {
+    if (!selectedElement || !editBadgeEl || editBadgeEl.style.display === "none") {
       syncEditBadgeHitProxies();
       return;
     }
@@ -4663,21 +4938,21 @@
     const bw = editBadgeEl.offsetWidth;
     // Match showHighlight's 2px outset so the badge right edge lines up with the outline.
     const outlineRight = r.right + 2;
-    editBadgeEl.style.top = Math.max(4, r.top - 28) + 'px';
-    editBadgeEl.style.left = Math.min(window.innerWidth - bw - 4, outlineRight - bw) + 'px';
+    editBadgeEl.style.top = Math.max(4, r.top - 28) + "px";
+    editBadgeEl.style.left = Math.min(window.innerWidth - bw - 4, outlineRight - bw) + "px";
     syncEditBadgeHitProxies();
   }
 
   function renderEditBadge(mode) {
-    if (mode === 'hidden' || !editBadgeEl) {
+    if (mode === "hidden" || !editBadgeEl) {
       hideConfigureBarTooltip();
-      if (editBadgeEl) editBadgeEl.style.display = 'none';
+      if (editBadgeEl) editBadgeEl.style.display = "none";
       syncEditBadgeHitProxies();
       return;
     }
-    editBadgeEl.style.display = 'flex';
-    editBadgeEl.style.alignItems = 'center';
-    editBadgeEl.style.cursor = 'default';
+    editBadgeEl.style.display = "flex";
+    editBadgeEl.style.alignItems = "center";
+    editBadgeEl.style.cursor = "default";
     const P = BP || barPaletteForTheme(detectPageTheme());
     const ACCENT = P.accent;
     const PRIMARY_TEXT = C.ink;
@@ -4686,73 +4961,74 @@
     const HAIRLINE = P.hairline;
     const calloutStyle = (color, borderColor) => ({
       fontFamily: FONT,
-      fontSize: '10px',
-      fontWeight: '600',
-      lineHeight: '16px',
-      letterSpacing: '0.06em',
+      fontSize: "10px",
+      fontWeight: "600",
+      lineHeight: "16px",
+      letterSpacing: "0.06em",
       color: color,
       background: SURFACE,
-      padding: '2px 8px',
-      border: '1px solid ' + (borderColor || color),
-      borderRadius: '6px',
-      boxSizing: 'border-box',
-      minHeight: '22px',
-      margin: '0',
-      appearance: 'none',
-      whiteSpace: 'nowrap',
-      boxShadow: '0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.08)',
-      cursor: 'pointer',
-      transition: 'background 0.18s ease, color 0.18s ease, border-color 0.18s ease, filter 0.18s ease',
+      padding: "2px 8px",
+      border: "1px solid " + (borderColor || color),
+      borderRadius: "6px",
+      boxSizing: "border-box",
+      minHeight: "22px",
+      margin: "0",
+      appearance: "none",
+      whiteSpace: "nowrap",
+      boxShadow: "0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.08)",
+      cursor: "pointer",
+      transition: "background 0.18s ease, color 0.18s ease, border-color 0.18s ease, filter 0.18s ease",
     });
-    if (mode === 'idle' || mode === 'idle-disabled') {
-      const disabled = mode === 'idle-disabled';
-      editBadgeEl.innerHTML = '';
-      const btn = document.createElement('button');
-      btn.type = 'button';
+    if (mode === "idle" || mode === "idle-disabled") {
+      const disabled = mode === "idle-disabled";
+      editBadgeEl.innerHTML = "";
+      const btn = document.createElement("button");
+      btn.type = "button";
       btn.innerHTML = EDIT_COPY_ICON;
-      btn.setAttribute('aria-label', EDIT_COPY_LABEL);
-      Object.assign(btn.style, calloutStyle(
-        disabled ? MUTED : PRIMARY_TEXT,
-        disabled ? HAIRLINE : ACCENT,
-      ));
+      btn.setAttribute("aria-label", EDIT_COPY_LABEL);
+      Object.assign(btn.style, calloutStyle(disabled ? MUTED : PRIMARY_TEXT, disabled ? HAIRLINE : ACCENT));
       Object.assign(btn.style, {
-        padding: '4px',
-        minWidth: '22px',
-        width: '22px',
-        height: '22px',
-        minHeight: '22px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        lineHeight: '0',
-        letterSpacing: '0',
+        padding: "4px",
+        minWidth: "22px",
+        width: "22px",
+        height: "22px",
+        minHeight: "22px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: "0",
+        letterSpacing: "0",
         background: disabled ? SURFACE : ACCENT,
       });
       if (disabled) {
-        btn.style.cursor = 'not-allowed';
-        btn.style.opacity = '0.55';
+        btn.style.cursor = "not-allowed";
+        btn.style.opacity = "0.55";
         btn.disabled = true;
-        const disabledTip = EDIT_COPY_LABEL + ' is disabled while the current copy edit is applying';
-        btn.addEventListener('mouseenter', () => showConfigureBarTooltip(btn, disabledTip));
-        btn.addEventListener('mouseleave', hideConfigureBarTooltip);
+        const disabledTip = EDIT_COPY_LABEL + " is disabled while the current copy edit is applying";
+        btn.addEventListener("mouseenter", () => showConfigureBarTooltip(btn, disabledTip));
+        btn.addEventListener("mouseleave", hideConfigureBarTooltip);
       } else {
-        btn.addEventListener('mouseenter', () => showConfigureBarTooltip(btn, EDIT_COPY_LABEL));
-        btn.addEventListener('mouseleave', hideConfigureBarTooltip);
+        btn.addEventListener("mouseenter", () => showConfigureBarTooltip(btn, EDIT_COPY_LABEL));
+        btn.addEventListener("mouseleave", hideConfigureBarTooltip);
         btn.onclick = enterEditingMode;
       }
       editBadgeEl.appendChild(btn);
     } else {
       // 'editing' - show Cancel + Save separated
-      editBadgeEl.innerHTML = '';
-      editBadgeEl.style.gap = '8px';
-      const cancel = document.createElement('button');
-      cancel.textContent = 'Cancel';
+      editBadgeEl.innerHTML = "";
+      editBadgeEl.style.gap = "8px";
+      const cancel = document.createElement("button");
+      cancel.textContent = "Cancel";
       Object.assign(cancel.style, calloutStyle(MUTED, HAIRLINE));
-      cancel.addEventListener('mouseenter', () => { cancel.style.color = P.text; });
-      cancel.addEventListener('mouseleave', () => { cancel.style.color = P.textDim; });
+      cancel.addEventListener("mouseenter", () => {
+        cancel.style.color = P.text;
+      });
+      cancel.addEventListener("mouseleave", () => {
+        cancel.style.color = P.textDim;
+      });
       cancel.onclick = cancelEditing;
-      const save = document.createElement('button');
-      save.textContent = 'Save';
+      const save = document.createElement("button");
+      save.textContent = "Save";
       Object.assign(save.style, calloutStyle(PRIMARY_TEXT, ACCENT));
       save.style.background = ACCENT;
       save.onclick = applyEditing;
@@ -4765,10 +5041,10 @@
   // bar landed below the element, popover slides DOWN from the bar's bottom.
   // If the bar landed above, popover slides UP from the bar's top.
   function popoverDirection() {
-    if (!barEl || !selectedElement) return 'below';
+    if (!barEl || !selectedElement) return "below";
     const br = barEl.getBoundingClientRect();
     const er = selectedElement.getBoundingClientRect();
-    return br.top >= er.bottom - 4 ? 'below' : 'above';
+    return br.top >= er.bottom - 4 ? "below" : "above";
   }
 
   // The popover overlaps the bar by OVERLAP px on the bar-facing side. With
@@ -4781,12 +5057,12 @@
   // (bottom) edge so the reveal grows downward from the bar; for 'above'
   // clip from the top edge so the reveal grows upward from the bar.
   function closedClipPath(direction) {
-    return direction === 'below' ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)';
+    return direction === "below" ? "inset(0 0 100% 0)" : "inset(100% 0 0 0)";
   }
 
   function setClipPath(value, withTransition) {
     const saved = paramsPanelEl.style.transition;
-    if (!withTransition) paramsPanelEl.style.transition = 'none';
+    if (!withTransition) paramsPanelEl.style.transition = "none";
     paramsPanelEl.style.clipPath = value;
     if (!withTransition) {
       void paramsPanelEl.offsetHeight;
@@ -4795,26 +5071,26 @@
   }
 
   function positionParamsPanel() {
-    if (!paramsPanelEl || !barEl || barEl.style.display === 'none') return;
+    if (!paramsPanelEl || !barEl || barEl.style.display === "none") return;
     const br = barEl.getBoundingClientRect();
     const direction = popoverDirection();
     const prevDirection = paramsPanelEl.dataset.tuneDirection;
 
     // top/left/width are NOT in the transition list, so they snap instantly.
-    paramsPanelEl.style.left = br.left + 'px';
-    paramsPanelEl.style.width = br.width + 'px';
+    paramsPanelEl.style.left = br.left + "px";
+    paramsPanelEl.style.width = br.width + "px";
 
-    if (direction === 'below') {
-      paramsPanelEl.style.top = (br.bottom - TUNE_OVERLAP) + 'px';
-      paramsPanelEl.style.borderRadius = '0 0 10px 10px';
-      paramsPanelEl.style.paddingTop = (14 + TUNE_OVERLAP) + 'px';
-      paramsPanelEl.style.paddingBottom = '14px';
+    if (direction === "below") {
+      paramsPanelEl.style.top = br.bottom - TUNE_OVERLAP + "px";
+      paramsPanelEl.style.borderRadius = "0 0 10px 10px";
+      paramsPanelEl.style.paddingTop = 14 + TUNE_OVERLAP + "px";
+      paramsPanelEl.style.paddingBottom = "14px";
     } else {
       const ih = paramsPanelEl.offsetHeight || 80;
-      paramsPanelEl.style.top = (br.top - ih + TUNE_OVERLAP) + 'px';
-      paramsPanelEl.style.borderRadius = '10px 10px 0 0';
-      paramsPanelEl.style.paddingTop = '14px';
-      paramsPanelEl.style.paddingBottom = (14 + TUNE_OVERLAP) + 'px';
+      paramsPanelEl.style.top = br.top - ih + TUNE_OVERLAP + "px";
+      paramsPanelEl.style.borderRadius = "10px 10px 0 0";
+      paramsPanelEl.style.paddingTop = "14px";
+      paramsPanelEl.style.paddingBottom = 14 + TUNE_OVERLAP + "px";
     }
     paramsPanelEl.dataset.tuneDirection = direction;
 
@@ -4829,17 +5105,17 @@
   function showParamsPanel() {
     if (!paramsPanelEl) return;
     positionParamsPanel();
-    paramsPanelEl.style.pointerEvents = 'auto';
+    paramsPanelEl.style.pointerEvents = "auto";
     // rAF so the positioning paint commits before the transition fires.
     requestAnimationFrame(() => {
-      setClipPath('inset(0 0 0 0)', true);
+      setClipPath("inset(0 0 0 0)", true);
     });
   }
 
   function hideParamsPanel() {
     if (!paramsPanelEl) return;
-    paramsPanelEl.style.pointerEvents = 'none';
-    const direction = paramsPanelEl.dataset.tuneDirection || 'below';
+    paramsPanelEl.style.pointerEvents = "none";
+    const direction = paramsPanelEl.dataset.tuneDirection || "below";
     setClipPath(closedClipPath(direction), true);
   }
 
@@ -4847,7 +5123,7 @@
   // its defaults to the variant wrapper (so scoped CSS responds even before
   // the user opens the popover). Visibility is governed by tuneOpen.
   function refreshParamsPanel() {
-    if (state !== 'CYCLING') {
+    if (state !== "CYCLING") {
       paramsCurrentValues = {};
       tuneOpen = false;
       hideParamsPanel();
@@ -4867,8 +5143,7 @@
     if (tuneOpen) {
       // If already visible (variant cycled while open), refresh in place
       // instead of re-running the clip-path animation.
-      const alreadyVisible = paramsPanelEl.style.display === 'block'
-        && paramsPanelEl.style.opacity === '1';
+      const alreadyVisible = paramsPanelEl.style.display === "block" && paramsPanelEl.style.opacity === "1";
       if (alreadyVisible) positionParamsPanel();
       else showParamsPanel();
     } else {
@@ -4878,24 +5153,28 @@
 
   function mountedParameterCount() {
     if (svelteComponentSession?.sessionId === currentSessionId) {
-      return Object.values(svelteComponentSession.paramsByVariant || {})
-        .reduce((total, params) => total + (Array.isArray(params) ? params.length : 0), 0);
+      return Object.values(svelteComponentSession.paramsByVariant || {}).reduce(
+        (total, params) => total + (Array.isArray(params) ? params.length : 0),
+        0
+      );
     }
     const wrapper = document.querySelector('[data-impeccable-variants="' + currentSessionId + '"]');
     if (!wrapper) return 0;
-    return [...wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])')]
-      .reduce((total, variant) => total + parseVariantParams(variant).length, 0);
+    return [...wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])')].reduce(
+      (total, variant) => total + parseVariantParams(variant).length,
+      0
+    );
   }
 
   function completeParameterPublication() {
     if (!currentSessionId) return;
     const ready = mountedParameterCount() > 0;
-    parameterGenerationState = ready ? 'ready' : 'none';
+    parameterGenerationState = ready ? "ready" : "none";
     if (ready && parameterReadyAnnouncedSession !== currentSessionId) {
       parameterReadyAnnouncedSession = currentSessionId;
-      showToast('Tune controls are ready.', 3000);
+      showToast("Tune controls are ready.", 3000);
     }
-    if (state === 'CYCLING') {
+    if (state === "CYCLING") {
       refreshParamsPanel();
       showOrUpdateCyclingBar();
     }
@@ -4904,19 +5183,25 @@
 
   function completeParameterGenerationIfReady() {
     if (expectedVariants <= 0 || arrivedVariants < expectedVariants) return;
-    if (parameterGenerationState === 'pending' || parameterGenerationState === 'loading') {
+    if (parameterGenerationState === "pending" || parameterGenerationState === "loading") {
       completeParameterPublication();
     }
   }
 
   function toggleTunePopover() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
-    if (tuneOpen) { closeTunePopover(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
+    if (tuneOpen) {
+      closeTunePopover();
+      return;
+    }
     openTunePopover();
   }
 
   function openTunePopover() {
-    if (state !== 'CYCLING') return;
+    if (state !== "CYCLING") return;
     const variantEl = getVisibleVariantEl();
     const params = parseVariantParams(variantEl);
     if (!variantEl || params.length === 0) return;
@@ -4928,8 +5213,8 @@
     // Kill the bar's shadow on the popover-facing side so the dark popover
     // doesn't pick up a bright glow line.
     if (barEl) {
-      const direction = paramsPanelEl?.dataset.tuneDirection || 'below';
-      barEl.style.boxShadow = direction === 'below' ? BAR_SHADOW_UP : BAR_SHADOW_DOWN;
+      const direction = paramsPanelEl?.dataset.tuneDirection || "below";
+      barEl.style.boxShadow = direction === "below" ? BAR_SHADOW_UP : BAR_SHADOW_DOWN;
     }
     // Re-render the bar so the Tune chip picks up the active styling.
     showOrUpdateCyclingBar();
@@ -4939,7 +5224,7 @@
     tuneOpen = false;
     hideParamsPanel();
     if (barEl) barEl.style.boxShadow = BAR_SHADOW_DEFAULT;
-    if (barEl && barEl.style.display !== 'none' && state === 'CYCLING') {
+    if (barEl && barEl.style.display !== "none" && state === "CYCLING") {
       showOrUpdateCyclingBar();
     }
   }
@@ -4950,12 +5235,12 @@
 
   function isVariantShown(el) {
     if (!el) return false;
-    return getComputedStyle(el).display !== 'none';
+    return getComputedStyle(el).display !== "none";
   }
 
   function scheduleCyclingBarSync(sessionId, variantNum) {
     requestAnimationFrame(() => {
-      if (state !== 'CYCLING') return;
+      if (state !== "CYCLING") return;
       if (currentSessionId !== sessionId) return;
       if (visibleVariant !== variantNum) return;
       showOrUpdateCyclingBar();
@@ -4966,13 +5251,13 @@
 
   function syncCyclingControls() {
     const shown = cyclingShownVariant();
-    const counter = uiGetById(PREFIX + '-variant-counter');
+    const counter = uiGetById(PREFIX + "-variant-counter");
     if (counter) counter.textContent = cyclingCounterText();
-    const prev = uiGetById(PREFIX + '-variant-prev');
-    const next = uiGetById(PREFIX + '-variant-next');
-    if (prev) prev.style.opacity = shown <= 1 ? '0.3' : '1';
-    if (next) next.style.opacity = shown >= arrivedVariants ? '0.3' : '1';
-    if (currentSessionId && state === 'CYCLING') saveSession();
+    const prev = uiGetById(PREFIX + "-variant-prev");
+    const next = uiGetById(PREFIX + "-variant-next");
+    if (prev) prev.style.opacity = shown <= 1 ? "0.3" : "1";
+    if (next) next.style.opacity = shown >= arrivedVariants ? "0.3" : "1";
+    if (currentSessionId && state === "CYCLING") saveSession();
   }
 
   async function showVariantInDOM(sessionId, num) {
@@ -4996,47 +5281,45 @@
   }
 
   function isSvelteComponentManifestPath(filePath) {
-    return String(filePath || '').endsWith('manifest.json');
+    return String(filePath || "").endsWith("manifest.json");
   }
 
   function isFrameworkComponentPreviewMode(mode) {
-    return mode === 'svelte-component';
+    return mode === "svelte-component";
   }
 
   function parseOriginalMarkupElement(originalMarkup) {
     const parser = new DOMParser();
-    const doc = parser.parseFromString('<div id="impeccable-anchor">' + originalMarkup + '</div>', 'text/html');
-    return doc.getElementById('impeccable-anchor')?.firstElementChild || null;
+    const doc = parser.parseFromString('<div id="impeccable-anchor">' + originalMarkup + "</div>", "text/html");
+    return doc.getElementById("impeccable-anchor")?.firstElementChild || null;
   }
 
   function normalizeElementClassName(el) {
-    if (!el) return '';
-    const raw = el.getAttribute?.('class');
-    if (typeof raw === 'string') return raw.trim();
+    if (!el) return "";
+    const raw = el.getAttribute?.("class");
+    if (typeof raw === "string") return raw.trim();
     if (el.className != null) {
       const cls = el.className;
-      if (typeof cls === 'string') return cls.trim();
-      if (typeof cls.baseVal === 'string') return cls.baseVal.trim();
+      if (typeof cls === "string") return cls.trim();
+      if (typeof cls.baseVal === "string") return cls.baseVal.trim();
     }
-    return '';
+    return "";
   }
 
   function buildPickedAnchorSnapshot(el) {
     if (!el || el.nodeType !== 1) return null;
     return {
       tag: el.tagName,
-      id: el.id || '',
+      id: el.id || "",
       classes: [...el.classList],
-      text: (el.textContent || '').trim().slice(0, 120),
+      text: (el.textContent || "").trim().slice(0, 120),
     };
   }
 
   function isUsableInjectionAnchor(el) {
-    return !!el
-      && el.parentElement
-      && document.body.contains(el)
-      && !own(el)
-      && !el.closest?.('[data-impeccable-variants]');
+    return (
+      !!el && el.parentElement && document.body.contains(el) && !own(el) && !el.closest?.("[data-impeccable-variants]")
+    );
   }
 
   function elementMatchesOriginalMarkup(liveEl, origContent) {
@@ -5047,35 +5330,38 @@
     if (origContent.id) return liveEl.id === origContent.id;
     if (liveEl.tagName !== origContent.tagName) return false;
 
-    const origClasses = normalizeElementClassName(origContent).split(/\s+/).filter(Boolean)
+    const origClasses = normalizeElementClassName(origContent)
+      .split(/\s+/)
+      .filter(Boolean)
       .filter((name) => /^[A-Za-z_-][\w-]*$/.test(name));
     if (origClasses.length > 0 && !origClasses.every((name) => liveEl.classList.contains(name))) return false;
 
-    const origText = (origContent.textContent || '').trim();
+    const origText = (origContent.textContent || "").trim();
     if (origClasses.length === 0 && origText.length >= 4) {
-      const liveText = (liveEl.textContent || '').trim();
+      const liveText = (liveEl.textContent || "").trim();
       const needle = origText.slice(0, Math.min(40, origText.length));
-      if (!liveText.includes(needle) && !(liveText.length >= 4 && origText.includes(liveText.slice(0, 40)))) return false;
+      if (!liveText.includes(needle) && !(liveText.length >= 4 && origText.includes(liveText.slice(0, 40))))
+        return false;
     }
     return true;
   }
 
   function findLiveElementFromAnchorSnapshot(snapshot) {
     if (!snapshot) return null;
-    const tag = String(snapshot.tag || '').toLowerCase();
+    const tag = String(snapshot.tag || "").toLowerCase();
     if (!tag) return null;
     if (snapshot.id) {
       const byId = document.getElementById(snapshot.id);
       if (isUsableInjectionAnchor(byId)) return byId;
     }
     const classes = (snapshot.classes || []).filter((name) => /^[A-Za-z_-][\w-]*$/.test(name));
-    const needle = (snapshot.text || '').trim();
+    const needle = (snapshot.text || "").trim();
     const candidates = [...document.getElementsByTagName(tag)];
     for (const c of candidates) {
       if (!isUsableInjectionAnchor(c)) continue;
       if (classes.length > 0 && !classes.every((name) => c.classList.contains(name))) continue;
       if (!snapshot.id && classes.length === 0 && needle.length >= 4) {
-        const text = (c.textContent || '').trim();
+        const text = (c.textContent || "").trim();
         if (!text.includes(needle.slice(0, 40)) && !(text.length >= 4 && needle.includes(text.slice(0, 40)))) continue;
       }
       return c;
@@ -5106,16 +5392,19 @@
       }
     }
 
-    const origText = (origContent.textContent || '').trim();
+    const origText = (origContent.textContent || "").trim();
     if (origText.length >= 4) {
       const needle = origText.slice(0, 40);
       let best = null;
-      let bestLen = Infinity;
+      let bestLen = Number.POSITIVE_INFINITY;
       for (const c of candidates) {
         if (!isUsableInjectionAnchor(c)) continue;
-        const text = (c.textContent || '').trim();
+        const text = (c.textContent || "").trim();
         if (!text.includes(needle) && !(text.length >= 4 && origText.includes(text.slice(0, 40)))) continue;
-        if (text.length < bestLen) { best = c; bestLen = text.length; }
+        if (text.length < bestLen) {
+          best = c;
+          bestLen = text.length;
+        }
       }
       if (best) return best;
     }
@@ -5148,7 +5437,7 @@
   }
 
   function isSvelteInsertManifest(manifest) {
-    return manifest?.previewMode === 'svelte-component' && manifest?.mode === 'insert';
+    return manifest?.previewMode === "svelte-component" && manifest?.mode === "insert";
   }
 
   function findLiveElementForSvelteManifest(manifest) {
@@ -5156,7 +5445,7 @@
       const anchor = findInsertAnchorInDom();
       if (anchor?.parentElement) return anchor;
     }
-    return resolveLiveInjectionAnchor(manifest?.originalMarkup || manifest?.anchorMarkup || '');
+    return resolveLiveInjectionAnchor(manifest?.originalMarkup || manifest?.anchorMarkup || "");
   }
 
   function waitForVariantAnchorAndRetry({ filePath, sessionId, srcWrapper, checkpointReason }) {
@@ -5186,8 +5475,8 @@
   function enterRecoveryWaitingForAnchor({ filePath, sessionId, srcWrapper, checkpointReason, trackScroll }) {
     recoveryWaitingForAnchor = true;
     selectedElement = document.body;
-    setLiveState('GENERATING');
-    showBar('generating');
+    setLiveState("GENERATING");
+    showBar("generating");
     if (trackScroll !== false) startScrollTracking();
     saveSession();
     if (srcWrapper && filePath && sessionId) {
@@ -5205,28 +5494,34 @@
   let detectedDevBase = null;
   function detectDevServerBase() {
     if (detectedDevBase !== null) return detectedDevBase;
-    detectedDevBase = '/';
+    detectedDevBase = "/";
     const scripts = document.querySelectorAll('script[type="module"][src]');
     for (const script of scripts) {
-      const src = script.getAttribute('src') || '';
-      const idx = src.indexOf('/@vite/client');
-      if (idx > 0) { detectedDevBase = src.slice(0, idx) + '/'; break; }
-      if (idx === 0) { detectedDevBase = '/'; break; }
+      const src = script.getAttribute("src") || "";
+      const idx = src.indexOf("/@vite/client");
+      if (idx > 0) {
+        detectedDevBase = src.slice(0, idx) + "/";
+        break;
+      }
+      if (idx === 0) {
+        detectedDevBase = "/";
+        break;
+      }
     }
     return detectedDevBase;
   }
 
   function componentModuleCandidates(manifest, modulePath, absPath) {
     const base = detectDevServerBase();
-    const rel = String(modulePath || '').replace(/^\/+/, '');
+    const rel = String(modulePath || "").replace(/^\/+/, "");
     const candidates = [new URL(base + rel, location.origin).href];
-    if (base !== '/') candidates.push(new URL('/' + rel, location.origin).href);
+    if (base !== "/") candidates.push(new URL("/" + rel, location.origin).href);
     if (absPath) {
-      const fsRel = '@fs/' + String(absPath).replace(/^\/+/, '');
+      const fsRel = "@fs/" + String(absPath).replace(/^\/+/, "");
       candidates.push(new URL(base + fsRel, location.origin).href);
       // Vite versions differ on whether @fs is served under base or at the
       // server root; with a non-root base, try both.
-      if (base !== '/') candidates.push(new URL('/' + fsRel, location.origin).href);
+      if (base !== "/") candidates.push(new URL("/" + fsRel, location.origin).href);
     }
     return candidates;
   }
@@ -5235,14 +5530,14 @@
     let lastErr = null;
     for (const candidate of candidates) {
       try {
-        const url = bust ? candidate + (candidate.includes('?') ? '&' : '?') + 't=' + Date.now() : candidate;
+        const url = bust ? candidate + (candidate.includes("?") ? "&" : "?") + "t=" + Date.now() : candidate;
         const mod = await import(/* @vite-ignore */ url);
         return { mod, url: candidate };
       } catch (err) {
         lastErr = err;
       }
     }
-    throw Object.assign(lastErr || new Error('no module candidates'), {
+    throw Object.assign(lastErr || new Error("no module candidates"), {
       impeccableTriedUrls: candidates,
     });
   }
@@ -5261,7 +5556,7 @@
   }
 
   function loadSvelteRuntime(runtimeModule, manifest) {
-    const modulePath = runtimeModule || '/src/lib/impeccable/__runtime.js';
+    const modulePath = runtimeModule || "/src/lib/impeccable/__runtime.js";
     if (!svelteRuntimePromise) {
       const candidates = componentModuleCandidates(manifest, modulePath, manifest?.runtimeModuleAbs);
       svelteRuntimePromise = importFirstReachable(candidates, false).then((r) => r.mod);
@@ -5274,15 +5569,15 @@
   // attribute with JSON braces can't survive the Svelte compiler. Returns a map of
   // { "1": [...params], "2": [...] }; an empty object when the agent declared none.
   async function loadSvelteComponentParams(manifest) {
-    const dir = String(manifest?.revisionDir || manifest?.componentDir || '').replace(/^\/+/, '');
+    const dir = String(manifest?.revisionDir || manifest?.componentDir || "").replace(/^\/+/, "");
     if (!dir) return {};
-    const paramsPath = dir + '/params.json';
-    const url = 'http://localhost:' + PORT + '/source?token=' + TOKEN + '&path=' + encodeURIComponent(paramsPath);
+    const paramsPath = dir + "/params.json";
+    const url = "http://localhost:" + PORT + "/source?token=" + TOKEN + "&path=" + encodeURIComponent(paramsPath);
     try {
       const res = await fetch(url);
       if (!res.ok) return {};
       const parsed = JSON.parse(await res.text());
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
       const out = {};
       for (const [key, value] of Object.entries(parsed)) {
         if (Array.isArray(value)) out[String(key)] = value;
@@ -5292,8 +5587,6 @@
       return {};
     }
   }
-
-
 
   // NOTE: the compiled component imported from the dev server already carries
   // its own scoped styles (vite-plugin-svelte injects them on module
@@ -5308,17 +5601,16 @@
     if (session) session.styleEl = null;
   }
 
-
   function scopeCssBlock(css, prefix) {
-    let out = '';
+    let out = "";
     let i = 0;
     while (i < css.length) {
-      const open = css.indexOf('{', i);
+      const open = css.indexOf("{", i);
       if (open === -1) {
         out += css.slice(i);
         break;
       }
-      const semi = css.indexOf(';', i);
+      const semi = css.indexOf(";", i);
       if (semi !== -1 && semi < open) {
         out += css.slice(i, semi + 1);
         i = semi + 1;
@@ -5332,11 +5624,11 @@
       }
       const body = css.slice(open + 1, close);
       if (shouldScopeNestedCssAtRule(prelude)) {
-        out += prelude + ' {\n' + scopeCssBlock(body, prefix) + '\n}';
-      } else if (prelude.startsWith('@')) {
-        out += prelude + ' {' + body + '}';
+        out += prelude + " {\n" + scopeCssBlock(body, prefix) + "\n}";
+      } else if (prelude.startsWith("@")) {
+        out += prelude + " {" + body + "}";
       } else {
-        out += prefixCssSelectors(prelude, prefix) + ' {' + body + '}';
+        out += prefixCssSelectors(prelude, prefix) + " {" + body + "}";
       }
       i = close + 1;
     }
@@ -5344,24 +5636,24 @@
   }
 
   function shouldScopeNestedCssAtRule(prelude) {
-    return /^@(media|supports|container|layer)\b/i.test(prelude || '');
+    return /^@(media|supports|container|layer)\b/i.test(prelude || "");
   }
 
   function findMatchingCssBrace(css, openIndex) {
     let depth = 0;
-    let quote = '';
+    let quote = "";
     for (let i = openIndex; i < css.length; i++) {
       const ch = css[i];
       const prev = css[i - 1];
       if (quote) {
-        if (ch === quote && prev !== '\\') quote = '';
+        if (ch === quote && prev !== "\\") quote = "";
         continue;
       }
       if (ch === '"' || ch === "'") {
         quote = ch;
-      } else if (ch === '{') {
+      } else if (ch === "{") {
         depth++;
-      } else if (ch === '}') {
+      } else if (ch === "}") {
         depth--;
         if (depth === 0) return i;
       }
@@ -5373,34 +5665,34 @@
     return splitCssSelectorList(prelude)
       .map((selector) => {
         const s = unwrapSvelteGlobalSelector(selector.trim());
-        if (!s) return '';
+        if (!s) return "";
         if (s.startsWith(prefix.trim())) return s;
-        if (s.startsWith(':host')) return s.replace(/^:host\b/, prefix.trim());
+        if (s.startsWith(":host")) return s.replace(/^:host\b/, prefix.trim());
         return prefix + s;
       })
       .filter(Boolean)
-      .join(', ');
+      .join(", ");
   }
 
   function splitCssSelectorList(selectorList) {
     const selectors = [];
     let start = 0;
     let depth = 0;
-    let quote = '';
+    let quote = "";
     for (let i = 0; i < selectorList.length; i++) {
       const ch = selectorList[i];
       const prev = selectorList[i - 1];
       if (quote) {
-        if (ch === quote && prev !== '\\') quote = '';
+        if (ch === quote && prev !== "\\") quote = "";
         continue;
       }
       if (ch === '"' || ch === "'") {
         quote = ch;
-      } else if (ch === '(' || ch === '[') {
+      } else if (ch === "(" || ch === "[") {
         depth++;
-      } else if ((ch === ')' || ch === ']') && depth > 0) {
+      } else if ((ch === ")" || ch === "]") && depth > 0) {
         depth--;
-      } else if (ch === ',' && depth === 0) {
+      } else if (ch === "," && depth === 0) {
         selectors.push(selectorList.slice(start, i));
         start = i + 1;
       }
@@ -5410,7 +5702,7 @@
   }
 
   function unwrapSvelteGlobalSelector(selector) {
-    return selector.replace(/:global\(([^()]*)\)/g, '$1');
+    return selector.replace(/:global\(([^()]*)\)/g, "$1");
   }
 
   function buildSveltePropValuesFromLiveElement(liveEl, manifest) {
@@ -5420,12 +5712,12 @@
     if (Number(manifest.contractVersion) === 2) {
       return buildSveltePropValuesV2(liveEl, manifest);
     }
-    const sourceOriginal = parseOriginalMarkupElement(manifest.originalMarkup || '');
+    const sourceOriginal = parseOriginalMarkupElement(manifest.originalMarkup || "");
     if (!sourceOriginal) return values;
     const map = buildSvelteExpressionTextMap(sourceOriginal, liveEl);
     for (const entry of contract) {
-      const token = entry.previewToken || ('{' + entry.expr + '}');
-      values[entry.prop] = map.get(token) || '';
+      const token = entry.previewToken || "{" + entry.expr + "}";
+      values[entry.prop] = map.get(token) || "";
     }
     return values;
   }
@@ -5443,45 +5735,63 @@
     const itemElsByProp = new Map();
 
     for (const entry of contract) {
-      if (entry.kind === 'collection' && entry.item && entry.item.rootTag) {
-        const selector = entry.item.rootTag + (entry.item.rootClasses || []).map((c) => '.' + cssEscapeIdent(c)).join('');
+      if (entry.kind === "collection" && entry.item && entry.item.rootTag) {
+        const selector =
+          entry.item.rootTag + (entry.item.rootClasses || []).map((c) => "." + cssEscapeIdent(c)).join("");
         let matches = [];
-        try { matches = Array.from(liveEl.querySelectorAll(selector)); } catch { matches = []; }
+        try {
+          matches = Array.from(liveEl.querySelectorAll(selector));
+        } catch {
+          matches = [];
+        }
         itemElsByProp.set(entry.prop, matches);
         const statics = new Set((entry.item.staticTexts || []).map((t) => String(t).trim()));
         const slots = entry.item.textSlots || [];
         values[entry.prop] = matches.map((itemEl, index) => {
           const texts = collectVisibleTexts(itemEl).filter((t) => !statics.has(t));
           const item = {};
-          slots.forEach((slot, i) => { item[slot.key] = texts[i] != null ? texts[i] : ''; });
+          slots.forEach((slot, i) => {
+            item[slot.key] = texts[i] != null ? texts[i] : "";
+          });
           // Attribute-bound values (href={link.href}) hydrate from the
           // rendered attribute on the live item element or a descendant.
           for (const slot of entry.item.attrSlots || []) {
             if (item[slot.key] != null || !slot.tag) continue;
-            const sel = slot.tag + (slot.classes || []).map((c) => '.' + cssEscapeIdent(c)).join('');
+            const sel = slot.tag + (slot.classes || []).map((c) => "." + cssEscapeIdent(c)).join("");
             let el = null;
-            try { el = itemEl.matches(sel) ? itemEl : itemEl.querySelector(sel); } catch { el = null; }
+            try {
+              el = itemEl.matches(sel) ? itemEl : itemEl.querySelector(sel);
+            } catch {
+              el = null;
+            }
             const value = el ? el.getAttribute(slot.attr) : null;
             if (value != null) item[slot.key] = value;
           }
           // Keyed each: the key field is never rendered, so hydrate it with a
           // unique per-index value or Svelte throws each_key_duplicate.
           if (entry.item.keyField && item[entry.item.keyField] == null) {
-            item[entry.item.keyField] = 'impeccable-live-' + index;
+            item[entry.item.keyField] = "impeccable-live-" + index;
           }
           return item;
         });
-      } else if (entry.kind === 'condition') {
+      } else if (entry.kind === "condition") {
         if (entry.probe && entry.probe.tag) {
-          const selector = entry.probe.tag + (entry.probe.classes || []).map((c) => '.' + cssEscapeIdent(c)).join('');
-          try { values[entry.prop] = !!liveEl.querySelector(selector); } catch { /* keep default */ }
+          const selector = entry.probe.tag + (entry.probe.classes || []).map((c) => "." + cssEscapeIdent(c)).join("");
+          try {
+            values[entry.prop] = !!liveEl.querySelector(selector);
+          } catch {
+            /* keep default */
+          }
         } else if (entry.probe && entry.probe.className) {
           // class:name directive: the live DOM answers directly, either on
           // the picked element itself or on a descendant carrying the class.
           try {
-            values[entry.prop] = liveEl.classList.contains(entry.probe.className)
-              || !!liveEl.querySelector('.' + cssEscapeIdent(entry.probe.className));
-          } catch { /* keep default */ }
+            values[entry.prop] =
+              liveEl.classList.contains(entry.probe.className) ||
+              !!liveEl.querySelector("." + cssEscapeIdent(entry.probe.className));
+          } catch {
+            /* keep default */
+          }
         }
       }
     }
@@ -5489,9 +5799,9 @@
     // Text props outside control flow: strip block regions from the source
     // markup, exclude live text nodes inside any hydrated item element, then
     // run the existing zip.
-    const textEntries = contract.filter((e) => e.kind === 'text' || e.kind === 'raw');
+    const textEntries = contract.filter((e) => e.kind === "text" || e.kind === "raw");
     if (textEntries.length > 0) {
-      const strippedMarkup = stripSvelteBlockRegions(manifest.originalMarkup || '');
+      const strippedMarkup = stripSvelteBlockRegions(manifest.originalMarkup || "");
       const sourceOriginal = parseOriginalMarkupElement(strippedMarkup);
       if (sourceOriginal) {
         const excluded = [];
@@ -5499,8 +5809,8 @@
         const filteredLive = cloneWithoutElements(liveEl, excluded);
         const map = buildSvelteExpressionTextMap(sourceOriginal, filteredLive);
         for (const entry of textEntries) {
-          const token = '{' + entry.expr + '}';
-          if (map.has(token)) values[entry.prop] = map.get(token) || '';
+          const token = "{" + entry.expr + "}";
+          if (map.has(token)) values[entry.prop] = map.get(token) || "";
         }
       }
     }
@@ -5508,7 +5818,11 @@
   }
 
   function cssEscapeIdent(value) {
-    try { return CSS.escape(value); } catch { return String(value).replace(/[^a-zA-Z0-9_-]/g, ''); }
+    try {
+      return CSS.escape(value);
+    } catch {
+      return String(value).replace(/[^a-zA-Z0-9_-]/g, "");
+    }
   }
 
   function collectVisibleTexts(rootEl) {
@@ -5516,7 +5830,7 @@
     const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT);
     let node;
     while ((node = walker.nextNode())) {
-      const trimmed = String(node.textContent || '').trim();
+      const trimmed = String(node.textContent || "").trim();
       if (trimmed) texts.push(trimmed);
     }
     return texts;
@@ -5528,11 +5842,11 @@
   // would otherwise consume live text slots in the zip and shift every
   // following expression.
   function stripSvelteBlockRegions(markup) {
-    let out = String(markup || '');
+    let out = String(markup || "");
     out = stripSvelteKeyDelimiters(out);
-    for (const kind of ['each', 'if']) {
-      const open = '{#' + kind;
-      const close = '{/' + kind + '}';
+    for (const kind of ["each", "if"]) {
+      const open = "{#" + kind;
+      const close = "{/" + kind + "}";
       for (;;) {
         const start = out.indexOf(open);
         if (start === -1) break;
@@ -5540,11 +5854,18 @@
         let i = start;
         let end = -1;
         while (i < out.length) {
-          if (out.startsWith(open, i)) { depth++; i += open.length; continue; }
+          if (out.startsWith(open, i)) {
+            depth++;
+            i += open.length;
+            continue;
+          }
           if (out.startsWith(close, i)) {
             depth--;
             i += close.length;
-            if (depth === 0) { end = i; break; }
+            if (depth === 0) {
+              end = i;
+              break;
+            }
             continue;
           }
           i++;
@@ -5557,9 +5878,9 @@
   }
 
   function stripSvelteKeyDelimiters(markup) {
-    let out = String(markup || '');
+    let out = String(markup || "");
     for (;;) {
-      const start = out.indexOf('{#key');
+      const start = out.indexOf("{#key");
       if (start === -1) break;
       // The opening tag runs to its matching close brace (expressions inside
       // may nest braces).
@@ -5567,17 +5888,20 @@
       let i = start;
       let openEnd = -1;
       while (i < out.length) {
-        if (out[i] === '{') depth++;
-        else if (out[i] === '}') {
+        if (out[i] === "{") depth++;
+        else if (out[i] === "}") {
           depth--;
-          if (depth === 0) { openEnd = i + 1; break; }
+          if (depth === 0) {
+            openEnd = i + 1;
+            break;
+          }
         }
         i++;
       }
       if (openEnd === -1) break;
       out = out.slice(0, start) + out.slice(openEnd);
     }
-    return out.split('{/key}').join('');
+    return out.split("{/key}").join("");
   }
 
   function cloneWithoutElements(rootEl, excludedEls) {
@@ -5585,14 +5909,26 @@
     const excludedSet = new Set(excludedEls);
     // Mark originals, clone, then strip marked clones: identity does not
     // survive cloneNode, attributes do.
-    const MARK = 'data-impeccable-hydration-excluded';
-    for (const el of excludedSet) { try { el.setAttribute(MARK, '1'); } catch { /* detached */ } }
+    const MARK = "data-impeccable-hydration-excluded";
+    for (const el of excludedSet) {
+      try {
+        el.setAttribute(MARK, "1");
+      } catch {
+        /* detached */
+      }
+    }
     let clone;
     try {
       clone = rootEl.cloneNode(true);
-      clone.querySelectorAll('[' + MARK + ']').forEach((el) => el.remove());
+      clone.querySelectorAll("[" + MARK + "]").forEach((el) => el.remove());
     } finally {
-      for (const el of excludedSet) { try { el.removeAttribute(MARK); } catch { /* detached */ } }
+      for (const el of excludedSet) {
+        try {
+          el.removeAttribute(MARK);
+        } catch {
+          /* detached */
+        }
+      }
     }
     return clone || rootEl;
   }
@@ -5602,18 +5938,15 @@
     const { manifest, mountTargetEl, sessionId } = svelteComponentSession;
     // Resolved before the first await so the failure report can name the module
     // the browser could not reach, whichever step threw.
-    const extension = manifest.componentExtension || 'svelte';
+    const extension = manifest.componentExtension || "svelte";
     // Prefer the server-stamped revision dir: its path changes on every
     // publish, which is what defeats stale transform caches for files the
     // dev server does not watch.
-    const dirRel = manifest.revisionDir || manifest.componentDir || '';
+    const dirRel = manifest.revisionDir || manifest.componentDir || "";
     const dirAbs = manifest.revisionDirAbs || manifest.componentDirAbs || null;
-    const moduleBase = manifest.componentModuleBase
-      || ('/' + String(dirRel).replace(/^\/+/, ''));
-    const modulePath = String(moduleBase).replace(/\/+$/, '') + '/v' + variantNum + '.' + extension;
-    const moduleAbs = dirAbs
-      ? String(dirAbs).replace(/\/+$/, '') + '/v' + variantNum + '.' + extension
-      : null;
+    const moduleBase = manifest.componentModuleBase || "/" + String(dirRel).replace(/^\/+/, "");
+    const modulePath = String(moduleBase).replace(/\/+$/, "") + "/v" + variantNum + "." + extension;
+    const moduleAbs = dirAbs ? String(dirAbs).replace(/\/+$/, "") + "/v" + variantNum + "." + extension : null;
     const candidates = componentModuleCandidates(manifest, modulePath, moduleAbs);
     let moduleUrl = candidates[0];
     try {
@@ -5636,11 +5969,11 @@
       svelteComponentSession.mountedVariant = variantNum;
       svelteComponentSession.runtime = runtime;
       removeSvelteComponentVariantStyle(svelteComponentSession);
-      if (state === 'CYCLING') syncCyclingControls();
+      if (state === "CYCLING") syncCyclingControls();
       const nextAnchor = getMountedSvelteComponentAnchor(svelteComponentSession);
       if (nextAnchor) {
         if (!isSvelteInsertManifest(manifest)) {
-          applyOriginalAttrsToSvelteAnchor(nextAnchor, manifest.originalMarkup || '');
+          applyOriginalAttrsToSvelteAnchor(nextAnchor, manifest.originalMarkup || "");
         }
         svelteComponentSession.swapAnchor = null;
         selectedElement = nextAnchor;
@@ -5650,7 +5983,7 @@
           const settledAnchor = getMountedSvelteComponentAnchor(svelteComponentSession);
           if (!settledAnchor) return;
           if (!isSvelteInsertManifest(manifest)) {
-            applyOriginalAttrsToSvelteAnchor(settledAnchor, manifest.originalMarkup || '');
+            applyOriginalAttrsToSvelteAnchor(settledAnchor, manifest.originalMarkup || "");
           }
           svelteComponentSession.swapAnchor = null;
           selectedElement = settledAnchor;
@@ -5667,7 +6000,7 @@
       if (svelteComponentSession?.sessionId === sessionId) {
         svelteComponentSession.swapAnchor = null;
       }
-      console.error('[impeccable] Failed to mount component variant ' + variantNum + ' for ' + sessionId + ':', err);
+      console.error("[impeccable] Failed to mount component variant " + variantNum + " for " + sessionId + ":", err);
       reportVariantMountFailed(sessionId, variantNum, moduleUrl, err);
       // Every mount failure gets the card, so the variant-switch path (which
       // used to revert with no feedback whatsoever) says what broke too.
@@ -5686,12 +6019,16 @@
     try {
       const probe = await probePreviewTree(manifest);
       if (probe.ok === false) {
-        return 'The preview tree is not reachable from the dev server (probe failed on '
-          + (probe.tried || []).join(', ')
-          + '). The resolved app root and the dev server root likely disagree; restart live from the app the dev server serves.';
+        return (
+          "The preview tree is not reachable from the dev server (probe failed on " +
+          (probe.tried || []).join(", ") +
+          "). The resolved app root and the dev server root likely disagree; restart live from the app the dev server serves."
+        );
       }
-    } catch { /* probe is best-effort */ }
-    return 'The compiled component could not be imported or mounted. ' + (err?.message || 'Unknown error');
+    } catch {
+      /* probe is best-effort */
+    }
+    return "The compiled component could not be imported or mounted. " + (err?.message || "Unknown error");
   }
 
   function teardownSvelteComponentSession(restoreOriginal) {
@@ -5699,7 +6036,11 @@
     const { wrapperEl, detachedOriginal, runtime, mountedInstance } = svelteComponentSession;
     removeSvelteComponentVariantStyle(svelteComponentSession);
     if (mountedInstance && runtime?.unmount) {
-      try { runtime.unmount(mountedInstance); } catch { /* non-fatal */ }
+      try {
+        runtime.unmount(mountedInstance);
+      } catch {
+        /* non-fatal */
+      }
     }
     if (restoreOriginal && detachedOriginal && wrapperEl?.parentElement) {
       wrapperEl.parentElement.replaceChild(detachedOriginal, wrapperEl);
@@ -5715,7 +6056,7 @@
     const original = parseOriginalMarkupElement(originalMarkup);
     if (!original || original.tagName !== el.tagName) return;
     for (const attr of original.attributes) {
-      if (attr.name === 'class') {
+      if (attr.name === "class") {
         for (const className of attr.value.split(/\s+/).filter(Boolean)) {
           el.classList.add(className);
         }
@@ -5732,10 +6073,14 @@
     if (!anchor || !wrapperEl?.parentElement) return false;
     const committed = anchor.cloneNode(true);
     if (!isSvelteInsertManifest(manifest)) {
-      applyOriginalAttrsToSvelteAnchor(committed, manifest.originalMarkup || '');
+      applyOriginalAttrsToSvelteAnchor(committed, manifest.originalMarkup || "");
     }
     if (mountedInstance && runtime?.unmount) {
-      try { runtime.unmount(mountedInstance); } catch { /* non-fatal */ }
+      try {
+        runtime.unmount(mountedInstance);
+      } catch {
+        /* non-fatal */
+      }
     }
     removeSvelteComponentVariantStyle(svelteComponentSession);
     wrapperEl.parentElement.replaceChild(committed, wrapperEl);
@@ -5750,7 +6095,7 @@
     // republish that is STILL broken at the same URL reports again instead of
     // being swallowed while the agent believes the repair landed.
     lastReportedMountFailure = null;
-    const url = 'http://localhost:' + PORT + '/source?token=' + TOKEN + '&path=' + encodeURIComponent(manifestPath);
+    const url = "http://localhost:" + PORT + "/source?token=" + TOKEN + "&path=" + encodeURIComponent(manifestPath);
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(String(res.status));
@@ -5759,12 +6104,19 @@
         // A manifest at the expected path belonging to a different session is
         // an agent-side publish error. Left as a bare return it stranded the
         // bar in GENERATING with no explanation and no event.
-        const mismatch = 'Manifest at ' + manifestPath + ' belongs to session ' + (manifest.id || 'unknown') + ', not ' + sessionId + '.';
+        const mismatch =
+          "Manifest at " +
+          manifestPath +
+          " belongs to session " +
+          (manifest.id || "unknown") +
+          ", not " +
+          sessionId +
+          ".";
         reportVariantMountFailed(sessionId, visibleVariant || 1, manifestPath, mismatch);
         showMountErrorCard(sessionId, {
           variant: visibleVariant || 0,
           url: manifestPath,
-          message: 'The variant manifest is for a different session. Ask the agent to republish.',
+          message: "The variant manifest is for a different session. Ask the agent to republish.",
           previewFile: manifestPath,
         });
         return;
@@ -5774,7 +6126,7 @@
       const availableVariants = Number(manifest.arrivedVariants) || Number(manifest.count) || 1;
       const componentPreviewMode = isFrameworkComponentPreviewMode(manifest.previewMode)
         ? manifest.previewMode
-        : 'svelte-component';
+        : "svelte-component";
       currentSessionId = sessionId;
       expectedVariants = Number(manifest.count) || expectedVariants || 1;
       rememberSessionFileMeta({
@@ -5782,7 +6134,7 @@
         previewFile: manifestPath,
         previewMode: componentPreviewMode,
       });
-      if (state !== 'CYCLING') setLiveState('GENERATING');
+      if (state !== "CYCLING") setLiveState("GENERATING");
 
       const existingWrapper = document.querySelector('[data-impeccable-variants="' + sessionId + '"]');
       if (existingWrapper && svelteComponentSession?.sessionId === sessionId) {
@@ -5800,7 +6152,7 @@
           saveSession();
           return;
         }
-        setLiveState('CYCLING');
+        setLiveState("CYCLING");
         showOrUpdateCyclingBar();
         saveSession();
         completeParameterGenerationIfReady();
@@ -5809,35 +6161,38 @@
 
       const liveEl = findLiveElementForSvelteManifest(manifest);
       if (!liveEl?.parentElement) {
-        console.warn('[impeccable] Could not find original element in live DOM.');
+        console.warn("[impeccable] Could not find original element in live DOM.");
         arrivedVariants = availableVariants;
         expectedVariants = Number(manifest.count) || expectedVariants || arrivedVariants;
         const saved = loadSession();
         const savedVisibleVariant = saved && saved.id === sessionId ? saved.visible : 0;
-        visibleVariant = visibleVariant > 0 && visibleVariant <= arrivedVariants
-          ? visibleVariant
-          : (savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants ? savedVisibleVariant : 1);
-        enterRecoveryWaitingForAnchor({ checkpointReason: 'component_preview_anchor_missing', trackScroll: true });
+        visibleVariant =
+          visibleVariant > 0 && visibleVariant <= arrivedVariants
+            ? visibleVariant
+            : savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants
+              ? savedVisibleVariant
+              : 1;
+        enterRecoveryWaitingForAnchor({ checkpointReason: "component_preview_anchor_missing", trackScroll: true });
         waitForSvelteComponentTargetAndRetry({ manifestPath, sessionId, manifest });
         return;
       }
 
-      const wrapper = document.createElement('div');
+      const wrapper = document.createElement("div");
       wrapper.dataset.impeccableVariants = sessionId;
       wrapper.dataset.impeccableVariantCount = String(manifest.count || expectedVariants || 1);
       wrapper.dataset.impeccablePreview = componentPreviewMode;
-      wrapper.style.display = 'contents';
+      wrapper.style.display = "contents";
 
-      const mountTarget = document.createElement('div');
+      const mountTarget = document.createElement("div");
       mountTarget.dataset.impeccableComponentMount = sessionId;
-      mountTarget.style.display = 'contents';
+      mountTarget.style.display = "contents";
       wrapper.appendChild(mountTarget);
 
       const insertMode = isSvelteInsertManifest(manifest);
       const detachedOriginal = insertMode ? null : liveEl;
       if (insertMode) {
         removeInsertPlaceholderDom();
-        if (manifest.position === 'before') liveEl.parentElement.insertBefore(wrapper, liveEl);
+        if (manifest.position === "before") liveEl.parentElement.insertBefore(wrapper, liveEl);
         else liveEl.parentElement.insertBefore(wrapper, liveEl.nextSibling);
       } else {
         liveEl.parentElement.replaceChild(wrapper, liveEl);
@@ -5867,9 +6222,12 @@
       expectedVariants = Number(manifest.count) || expectedVariants || arrivedVariants;
       const saved = loadSession();
       const savedVisibleVariant = saved && saved.id === sessionId ? saved.visible : 0;
-      visibleVariant = previousVisibleVariant > 0 && previousVisibleVariant <= arrivedVariants
-        ? previousVisibleVariant
-        : (savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants ? savedVisibleVariant : 1);
+      visibleVariant =
+        previousVisibleVariant > 0 && previousVisibleVariant <= arrivedVariants
+          ? previousVisibleVariant
+          : savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants
+            ? savedVisibleVariant
+            : 1;
 
       const mounted = await mountSvelteComponentVariant(visibleVariant);
       if (!mounted) {
@@ -5883,7 +6241,7 @@
       }
 
       selectedElement = mountTarget.firstElementChild || mountTarget;
-      setLiveState('CYCLING');
+      setLiveState("CYCLING");
       recoveryWaitingForAnchor = false;
       hideShaderOverlay();
       showOrUpdateCyclingBar();
@@ -5892,16 +6250,16 @@
       positionBar();
       saveSession();
       completeParameterGenerationIfReady();
-      console.log('[impeccable] Mounted ' + arrivedVariants + ' ' + manifest.framework + ' component variants.');
+      console.log("[impeccable] Mounted " + arrivedVariants + " " + manifest.framework + " component variants.");
     } catch (err) {
-      console.error('[impeccable] Failed to mount component-preview variants:', err);
+      console.error("[impeccable] Failed to mount component-preview variants:", err);
       // Report the manifest PATH, never the fetch URL: that URL carries the
       // live helper token and this string is journaled.
       reportVariantMountFailed(sessionId, visibleVariant || 1, manifestPath, err);
       abortSvelteComponentInjection(sessionId, {
         variant: visibleVariant || 0,
         url: manifestPath,
-        message: 'Could not read the variant manifest. ' + (err?.message || 'Unknown error'),
+        message: "Could not read the variant manifest. " + (err?.message || "Unknown error"),
         previewFile: manifestPath,
       });
     }
@@ -5941,7 +6299,7 @@
     const variant = Math.floor(Number(variantNum) || 0);
     if (!sessionId || variant < 1) return;
     sendEvent({
-      type: 'variant_mounted',
+      type: "variant_mounted",
       id: sessionId,
       variant,
       url: moduleUrl ? String(moduleUrl).slice(0, MOUNT_URL_MAX) : undefined,
@@ -5952,24 +6310,24 @@
     if (!sessionId) return;
     const parsed = Math.floor(Number(variantNum) || 0);
     const variant = parsed >= 1 ? parsed : 1;
-    const url = String(moduleUrl || 'unknown').slice(0, MOUNT_URL_MAX);
-    const message = String(error?.message || error || 'Unknown mount error').slice(0, MOUNT_ERROR_MAX);
+    const url = String(moduleUrl || "unknown").slice(0, MOUNT_URL_MAX);
+    const message = String(error?.message || error || "Unknown mount error").slice(0, MOUNT_ERROR_MAX);
     // Progressive delivery and the Retry button both re-enter the same failure.
     // Report each distinct one once so the agent's poll queue and the journal
     // stay readable; a genuinely new failure (different variant, URL, or
     // message) still gets through.
-    const key = sessionId + '|' + variant + '|' + url + '|' + message;
+    const key = sessionId + "|" + variant + "|" + url + "|" + message;
     if (lastReportedMountFailure === key) return;
     lastReportedMountFailure = key;
-    sendEvent({ type: 'variant_mount_failed', id: sessionId, variant, url, error: message });
+    sendEvent({ type: "variant_mount_failed", id: sessionId, variant, url, error: message });
   }
 
   function truncateMiddle(value, max) {
-    const text = String(value || '');
+    const text = String(value || "");
     if (text.length <= max) return text;
     const head = Math.ceil((max - 1) / 2);
     const tail = max - 1 - head;
-    return text.slice(0, head) + '…' + text.slice(text.length - tail);
+    return text.slice(0, head) + "…" + text.slice(text.length - tail);
   }
 
   /**
@@ -5982,8 +6340,8 @@
     mountErrorState = {
       sessionId: sessionId || currentSessionId || null,
       variant: Math.floor(Number(details?.variant) || 0),
-      url: details?.url ? String(details.url) : '',
-      message: details?.message || 'A variant failed to load.',
+      url: details?.url ? String(details.url) : "",
+      message: details?.message || "A variant failed to load.",
       previewFile: details?.previewFile || currentPreviewFile || null,
     };
     renderMountErrorCard();
@@ -5999,46 +6357,60 @@
 
   function mountErrorCardBottomOffset() {
     const barRect = globalBarEl?.getBoundingClientRect();
-    return barRect && barRect.height > 0
-      ? Math.max(16, window.innerHeight - barRect.top + 12)
-      : 16;
+    return barRect && barRect.height > 0 ? Math.max(16, window.innerHeight - barRect.top + 12) : 16;
   }
 
   function renderMountErrorCard() {
     if (!mountErrorState) return;
     if (mountErrorEl) mountErrorEl.remove();
     const P = BP || barPaletteForTheme(detectPageTheme());
-    const card = el('div', {
-      position: 'fixed', bottom: mountErrorCardBottomOffset() + 'px', left: '50%',
-      transform: 'translateX(-50%)',
-      display: 'flex', flexDirection: 'column', gap: '6px',
-      background: P.surface, color: P.text,
-      border: '1px solid oklch(65% 0.18 30 / 0.55)',
-      borderRadius: '8px', padding: '10px 12px',
-      fontFamily: FONT, fontSize: '12px',
-      boxShadow: P.shadow, zIndex: Z.toast,
-      maxWidth: 'min(520px, calc(100vw - 32px))',
-      pointerEvents: 'auto', textAlign: 'left',
+    const card = el("div", {
+      position: "fixed",
+      bottom: mountErrorCardBottomOffset() + "px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+      background: P.surface,
+      color: P.text,
+      border: "1px solid oklch(65% 0.18 30 / 0.55)",
+      borderRadius: "8px",
+      padding: "10px 12px",
+      fontFamily: FONT,
+      fontSize: "12px",
+      boxShadow: P.shadow,
+      zIndex: Z.toast,
+      maxWidth: "min(520px, calc(100vw - 32px))",
+      pointerEvents: "auto",
+      textAlign: "left",
     });
-    card.id = PREFIX + '-mount-error';
+    card.id = PREFIX + "-mount-error";
 
-    const head = el('div', { display: 'flex', alignItems: 'center', gap: '8px' });
-    const glyph = el('span', { fontSize: '13px', lineHeight: '1', color: 'oklch(62% 0.19 30)', flexShrink: '0' });
-    glyph.textContent = '⚠';
+    const head = el("div", { display: "flex", alignItems: "center", gap: "8px" });
+    const glyph = el("span", { fontSize: "13px", lineHeight: "1", color: "oklch(62% 0.19 30)", flexShrink: "0" });
+    glyph.textContent = "⚠";
     head.appendChild(glyph);
-    const title = el('span', { fontWeight: '600', flex: '1' });
-    title.textContent = mountErrorState.variant > 0
-      ? 'Variant ' + mountErrorState.variant + ' failed to load'
-      : 'Variants failed to load';
+    const title = el("span", { fontWeight: "600", flex: "1" });
+    title.textContent =
+      mountErrorState.variant > 0
+        ? "Variant " + mountErrorState.variant + " failed to load"
+        : "Variants failed to load";
     head.appendChild(title);
-    const dismiss = el('button', {
-      border: 'none', background: 'transparent', color: P.textDim,
-      cursor: 'pointer', fontFamily: FONT, fontSize: '14px', lineHeight: '1',
-      padding: '0 2px', flexShrink: '0',
+    const dismiss = el("button", {
+      border: "none",
+      background: "transparent",
+      color: P.textDim,
+      cursor: "pointer",
+      fontFamily: FONT,
+      fontSize: "14px",
+      lineHeight: "1",
+      padding: "0 2px",
+      flexShrink: "0",
     });
-    dismiss.textContent = '×';
-    dismiss.setAttribute('aria-label', 'Dismiss');
-    dismiss.addEventListener('click', (e) => {
+    dismiss.textContent = "×";
+    dismiss.setAttribute("aria-label", "Dismiss");
+    dismiss.addEventListener("click", (e) => {
       e.stopPropagation();
       clearMountErrorCard();
       // The card was the only recovery affordance while the bar is hidden;
@@ -6046,34 +6418,46 @@
       // reactivates the global mark and the picker. The saved session and
       // server truth survive, so a later republish (SSE `done`) still
       // resurrects the comparison through the normal handlers.
-      if (state === 'GENERATING') setLiveState('PICKING');
+      if (state === "GENERATING") setLiveState("PICKING");
     });
     head.appendChild(dismiss);
     card.appendChild(head);
 
-    const body = el('div', { color: P.textDim, lineHeight: '1.4' });
+    const body = el("div", { color: P.textDim, lineHeight: "1.4" });
     body.textContent = mountErrorState.message;
     card.appendChild(body);
 
     if (mountErrorState.url) {
-      const urlLine = el('div', {
-        fontFamily: MONO, fontSize: '11px', color: P.textDim,
-        wordBreak: 'break-all', opacity: '0.85',
+      const urlLine = el("div", {
+        fontFamily: MONO,
+        fontSize: "11px",
+        color: P.textDim,
+        wordBreak: "break-all",
+        opacity: "0.85",
       });
       urlLine.textContent = truncateMiddle(mountErrorState.url, 72);
       urlLine.title = mountErrorState.url;
       card.appendChild(urlLine);
     }
 
-    const actions = el('div', { display: 'flex', gap: '8px', marginTop: '2px' });
-    const retry = el('button', {
-      border: '1px solid ' + P.hairline, background: 'transparent',
-      color: P.text, fontFamily: FONT, fontSize: '12px', fontWeight: '500',
-      borderRadius: '5px', padding: '4px 10px', cursor: 'pointer',
+    const actions = el("div", { display: "flex", gap: "8px", marginTop: "2px" });
+    const retry = el("button", {
+      border: "1px solid " + P.hairline,
+      background: "transparent",
+      color: P.text,
+      fontFamily: FONT,
+      fontSize: "12px",
+      fontWeight: "500",
+      borderRadius: "5px",
+      padding: "4px 10px",
+      cursor: "pointer",
     });
-    retry.textContent = 'Retry';
-    retry.dataset.impeccableMountRetry = 'true';
-    retry.addEventListener('click', (e) => { e.stopPropagation(); retryMountErrorCard(); });
+    retry.textContent = "Retry";
+    retry.dataset.impeccableMountRetry = "true";
+    retry.addEventListener("click", (e) => {
+      e.stopPropagation();
+      retryMountErrorCard();
+    });
     actions.appendChild(retry);
     card.appendChild(actions);
 
@@ -6089,13 +6473,13 @@
     const manifestPath = info.previewFile || currentPreviewFile;
     clearMountErrorCard();
     if (!sessionId || !manifestPath) {
-      showToast('No variant manifest to retry. Ask the agent to republish.', 5000);
+      showToast("No variant manifest to retry. Ask the agent to republish.", 5000);
       return;
     }
     // A retry must be able to report the same failure again, otherwise a second
     // attempt against an unchanged broken module would look silent.
     lastReportedMountFailure = null;
-    if (state !== 'CYCLING') setLiveState('GENERATING');
+    if (state !== "CYCLING") setLiveState("GENERATING");
     injectSvelteComponentsFromManifest(manifestPath, sessionId);
   }
 
@@ -6113,16 +6497,25 @@
         if (orphan) orphan.remove();
       }
     } catch (err) {
-      console.warn('[impeccable] Svelte component abort cleanup failed:', err);
+      console.warn("[impeccable] Svelte component abort cleanup failed:", err);
     }
     hideShaderOverlay();
-    if (pendingSvelteComponentRetryObserver) { pendingSvelteComponentRetryObserver.disconnect(); pendingSvelteComponentRetryObserver = null; }
-    if (pendingVariantAnchorRetryObserver) { pendingVariantAnchorRetryObserver.disconnect(); pendingVariantAnchorRetryObserver = null; }
+    if (pendingSvelteComponentRetryObserver) {
+      pendingSvelteComponentRetryObserver.disconnect();
+      pendingSvelteComponentRetryObserver = null;
+    }
+    if (pendingVariantAnchorRetryObserver) {
+      pendingVariantAnchorRetryObserver.disconnect();
+      pendingVariantAnchorRetryObserver = null;
+    }
     // The generate submit armed a scroll lock and a variant observer; a page
     // the user cannot scroll, watched by a stale observer, is exactly the
     // wrong place to show a card asking them to act.
     stopScrollLock();
-    if (variantObserver) { variantObserver.disconnect(); variantObserver = null; }
+    if (variantObserver) {
+      variantObserver.disconnect();
+      variantObserver = null;
+    }
     removeVariantStateStylesheet();
     hideBar(true);
     // currentSessionId, the saved session, and the file metadata all survive on
@@ -6131,7 +6524,9 @@
     saveSession();
     if (details) showMountErrorCard(sessionId, details);
     else if (!mountErrorState) {
-      showMountErrorCard(sessionId, { message: 'Variants could not be mounted. Retry, or ask the agent to republish.' });
+      showMountErrorCard(sessionId, {
+        message: "Variants could not be mounted. Retry, or ask the agent to republish.",
+      });
     }
   }
 
@@ -6147,12 +6542,21 @@
         if (orphan) orphan.remove();
       }
     } catch (err) {
-      console.warn('[impeccable] Svelte component reset cleanup failed:', err);
+      console.warn("[impeccable] Svelte component reset cleanup failed:", err);
     }
     hideShaderOverlay();
-    if (variantObserver) { variantObserver.disconnect(); variantObserver = null; }
-    if (pendingSvelteComponentRetryObserver) { pendingSvelteComponentRetryObserver.disconnect(); pendingSvelteComponentRetryObserver = null; }
-    if (pendingVariantAnchorRetryObserver) { pendingVariantAnchorRetryObserver.disconnect(); pendingVariantAnchorRetryObserver = null; }
+    if (variantObserver) {
+      variantObserver.disconnect();
+      variantObserver = null;
+    }
+    if (pendingSvelteComponentRetryObserver) {
+      pendingSvelteComponentRetryObserver.disconnect();
+      pendingSvelteComponentRetryObserver = null;
+    }
+    if (pendingVariantAnchorRetryObserver) {
+      pendingVariantAnchorRetryObserver.disconnect();
+      pendingVariantAnchorRetryObserver = null;
+    }
     stopScrollLock();
     removeVariantStateStylesheet();
     clearMountErrorCard();
@@ -6160,13 +6564,13 @@
     clearHandled();
     resetSessionFileMeta();
     currentSessionId = null;
-    parameterGenerationState = 'idle';
+    parameterGenerationState = "idle";
     parameterReadyAnnouncedSession = null;
     expectedVariants = 0;
     arrivedVariants = 0;
     visibleVariant = 0;
     selectedElement = null;
-    setLiveState('PICKING');
+    setLiveState("PICKING");
     hideBar();
     if (message) showToast(message, 5000);
   }
@@ -6186,11 +6590,14 @@
   function discardOrphanedSession(reason) {
     const sessionId = currentSessionId;
     if (!sessionId) return;
-    console.warn('[impeccable] Discarding orphaned session ' + sessionId + ': ' + reason);
-    sendEvent({ type: 'discard', id: sessionId, orphaned: true }).catch(() => {});
+    console.warn("[impeccable] Discarding orphaned session " + sessionId + ": " + reason);
+    sendEvent({ type: "discard", id: sessionId, orphaned: true }).catch(() => {});
     markSessionHandled();
     cleanup({ instantChrome: true });
-    showToast('The previous live session no longer matches the source file, so it was discarded. Pick an element to start fresh.', 6000);
+    showToast(
+      "The previous live session no longer matches the source file, so it was discarded. Pick an element to start fresh.",
+      6000
+    );
   }
 
   /**
@@ -6210,25 +6617,29 @@
       return;
     }
     rememberSessionFileMeta({ file: filePath });
-    const url = 'http://localhost:' + PORT + '/source?token=' + TOKEN + '&path=' + encodeURIComponent(filePath);
+    const url = "http://localhost:" + PORT + "/source?token=" + TOKEN + "&path=" + encodeURIComponent(filePath);
     fetch(url)
-      .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(html => {
+      .then((r) => {
+        if (!r.ok) throw new Error(r.status);
+        return r.text();
+      })
+      .then((html) => {
         const parser = new DOMParser();
         let srcWrapper = null;
 
         // Full-file parse works for HTML/JSX; Astro/Vue sources need marker extraction.
-        const startMark = '<!-- impeccable-variants-start ' + sessionId + ' -->';
-        const endMark = '<!-- impeccable-variants-end ' + sessionId + ' -->';
+        const startMark = "<!-- impeccable-variants-start " + sessionId + " -->";
+        const endMark = "<!-- impeccable-variants-end " + sessionId + " -->";
         const startIdx = html.indexOf(startMark);
         const endIdx = html.indexOf(endMark);
-        const block = startIdx !== -1 && endIdx !== -1 && endIdx > startIdx
-          ? html.slice(startIdx + startMark.length, endIdx).trim()
-          : html;
-        const doc = parser.parseFromString(normalizeSourceFallbackBlock(block, filePath), 'text/html');
+        const block =
+          startIdx !== -1 && endIdx !== -1 && endIdx > startIdx
+            ? html.slice(startIdx + startMark.length, endIdx).trim()
+            : html;
+        const doc = parser.parseFromString(normalizeSourceFallbackBlock(block, filePath), "text/html");
         srcWrapper = doc.querySelector('[data-impeccable-variants="' + sessionId + '"]');
         if (!srcWrapper) {
-          console.warn('[impeccable] Variant wrapper not found in source file.');
+          console.warn("[impeccable] Variant wrapper not found in source file.");
           // A resumed cycling session whose wrapper is gone from source is an
           // ORPHAN: the file was edited or regenerated out from under it, so
           // no reload, HMR push, or server restart can ever complete it, and
@@ -6241,11 +6652,11 @@
             if (attempt < COMPLETED_SOURCE_FALLBACK_RETRIES) {
               setTimeout(() => {
                 if (sessionId !== currentSessionId) return;
-                if (state !== 'GENERATING' && state !== 'CYCLING') return;
+                if (state !== "GENERATING" && state !== "CYCLING") return;
                 injectVariantsFromSource(filePath, sessionId, { ...opts, _orphanAttempt: attempt + 1 });
               }, COMPLETED_SOURCE_FALLBACK_RETRY_MS);
             } else {
-              discardOrphanedSession('variant wrapper missing from source');
+              discardOrphanedSession("variant wrapper missing from source");
             }
           }
           return;
@@ -6264,12 +6675,12 @@
 
           const liveEl = resolveLiveInjectionAnchor(origContent.outerHTML);
           if (!liveEl) {
-            console.warn('[impeccable] Could not find original element in live DOM.');
+            console.warn("[impeccable] Could not find original element in live DOM.");
             enterRecoveryWaitingForAnchor({
               filePath,
               sessionId,
               srcWrapper,
-              checkpointReason: 'variant_anchor_missing',
+              checkpointReason: "variant_anchor_missing",
               trackScroll: false,
             });
             return;
@@ -6285,18 +6696,20 @@
 
         // Update state: count variants, preserving the user's current variant
         // when a late HMR/source reinjection lands after they have cycled.
-        const variants = wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])');
+        const variants = wrapper.querySelectorAll(
+          '[data-impeccable-variant]:not([data-impeccable-variant="original"])'
+        );
         arrivedVariants = variants.length;
-        expectedVariants = parseInt(wrapper.dataset.impeccableVariantCount || arrivedVariants);
+        expectedVariants = Number.parseInt(wrapper.dataset.impeccableVariantCount || arrivedVariants);
         if (arrivedVariants <= 0) {
-          if (state === 'GENERATING') {
+          if (state === "GENERATING") {
             // Mid-generation the source legitimately holds a scaffold wrapper
             // with no variants yet (the server-side preflight wraps before the
             // agent writes). Tearing the session down here would destroy an
             // in-flight generation; stay in GENERATING — the variant observer
             // is armed and the server re-delivers a missed `done`.
             if (!opts.generationCompleted) {
-              console.log('[impeccable] Source has scaffold but no variants yet; still generating.');
+              console.log("[impeccable] Source has scaffold but no variants yet; still generating.");
               return;
             }
             // Generation finished, yet the read shows only the scaffold: the
@@ -6305,30 +6718,38 @@
             // here would strand the tab in GENERATING forever.
             const attempt = opts.attempt || 0;
             if (attempt < COMPLETED_SOURCE_FALLBACK_RETRIES) {
-              console.log('[impeccable] Generation is done but source shows no variants yet; retrying read ('
-                + (attempt + 1) + '/' + COMPLETED_SOURCE_FALLBACK_RETRIES + ').');
+              console.log(
+                "[impeccable] Generation is done but source shows no variants yet; retrying read (" +
+                  (attempt + 1) +
+                  "/" +
+                  COMPLETED_SOURCE_FALLBACK_RETRIES +
+                  ")."
+              );
               setTimeout(() => {
-                if (state !== 'GENERATING' || currentSessionId !== sessionId) return;
+                if (state !== "GENERATING" || currentSessionId !== sessionId) return;
                 if (arrivedVariants > 0) return;
                 injectVariantsFromSource(filePath, sessionId, { ...opts, attempt: attempt + 1 });
               }, COMPLETED_SOURCE_FALLBACK_RETRY_MS);
               return;
             }
           }
-          recoverEmptyCycling('source-fallback-empty');
+          recoverEmptyCycling("source-fallback-empty");
           return;
         }
         const saved = loadSession();
         const savedVisibleVariant = saved && saved.id === sessionId ? saved.visible : 0;
-        visibleVariant = previousVisibleVariant > 0 && previousVisibleVariant <= arrivedVariants
-          ? previousVisibleVariant
-          : (savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants ? savedVisibleVariant : 1);
+        visibleVariant =
+          previousVisibleVariant > 0 && previousVisibleVariant <= arrivedVariants
+            ? previousVisibleVariant
+            : savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants
+              ? savedVisibleVariant
+              : 1;
         showVariantInDOM(sessionId, visibleVariant);
 
         // Update selectedElement to the visible variant's content
         selectedElement = pickVariantContent(wrapper, visibleVariant) || wrapper.parentElement;
 
-        setLiveState('CYCLING');
+        setLiveState("CYCLING");
         recoveryWaitingForAnchor = false;
         hideShaderOverlay();
         showOrUpdateCyclingBar();
@@ -6337,29 +6758,32 @@
         positionBar();
         saveSession();
         completeParameterGenerationIfReady();
-        console.log('[impeccable] Injected ' + arrivedVariants + ' variants from source file.');
+        console.log("[impeccable] Injected " + arrivedVariants + " variants from source file.");
       })
-      .catch(err => {
-        console.error('[impeccable] Failed to fetch source:', err);
-        showToast('Could not load variants. Try refreshing the page.', 5000);
+      .catch((err) => {
+        console.error("[impeccable] Failed to fetch source:", err);
+        showToast("Could not load variants. Try refreshing the page.", 5000);
       });
   }
 
   function normalizeSourceFallbackBlock(block, filePath) {
-    if (!/\.[cm]?[jt]sx$/i.test(String(filePath || ''))) return block;
+    if (!/\.[cm]?[jt]sx$/i.test(String(filePath || ""))) return block;
     return String(block)
       .replace(
         /<style\b([^>]*)>\s*\{\s*`([\s\S]*?)`\s*\}\s*<\/style>/g,
-        (_match, attrs, css) => '<style' + attrs + '>' + css + '</style>',
+        (_match, attrs, css) => "<style" + attrs + ">" + css + "</style>"
       )
       .replace(/\bclassName\s*=\s*\{\s*`([^`]*?)`\s*\}/g, (_match, value) => {
-        const literalClasses = value.replace(/\$\{[^}]*\}/g, ' ').replace(/\s+/g, ' ').trim();
-        return literalClasses ? 'class="' + escapeHtml(literalClasses) + '"' : '';
+        const literalClasses = value
+          .replace(/\$\{[^}]*\}/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        return literalClasses ? 'class="' + escapeHtml(literalClasses) + '"' : "";
       })
-      .replace(/\bclassName\s*=/g, 'class=')
+      .replace(/\bclassName\s*=/g, "class=")
       .replace(/\sstyle=\{\{([\s\S]*?)\}\}/g, (_match, body) => {
         const css = jsxStyleObjectToCss(body);
-        return css ? ' style="' + escapeHtml(css) + '"' : '';
+        return css ? ' style="' + escapeHtml(css) + '"' : "";
       });
   }
 
@@ -6367,39 +6791,40 @@
     const declarations = [];
     const re = /(["'][^"']+["']|[A-Za-z_$][\w$-]*)\s*:\s*(?:"([^"]*)"|'([^']*)'|(-?\d+(?:\.\d+)?))/g;
     let match;
-    while ((match = re.exec(String(body || '')))) {
+    while ((match = re.exec(String(body || "")))) {
       const prop = jsxStylePropToCss(match[1]);
-      const value = match[2] ?? match[3] ?? match[4] ?? '';
-      if (!prop || value === '') continue;
-      declarations.push(prop + ': ' + value);
+      const value = match[2] ?? match[3] ?? match[4] ?? "";
+      if (!prop || value === "") continue;
+      declarations.push(prop + ": " + value);
     }
-    return declarations.join('; ');
+    return declarations.join("; ");
   }
 
   function jsxStylePropToCss(prop) {
-    let out = String(prop || '').trim().replace(/^["']|["']$/g, '');
-    if (!out) return '';
-    if (out.startsWith('--')) return out;
-    return out.replace(/[A-Z]/g, (ch) => '-' + ch.toLowerCase()).replace(/^-ms-/, '-ms-');
+    const out = String(prop || "")
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    if (!out) return "";
+    if (out.startsWith("--")) return out;
+    return out.replace(/[A-Z]/g, (ch) => "-" + ch.toLowerCase()).replace(/^-ms-/, "-ms-");
   }
 
   function buildSvelteExpressionTextMap(sourceOriginal, liveOriginal) {
     const map = new Map();
     if (!sourceOriginal || !liveOriginal) return map;
 
-    const sourceNodes = collectTextNodes(sourceOriginal)
-      .filter((node) => /\{[^{}]+\}/.test(node.nodeValue || ''));
+    const sourceNodes = collectTextNodes(sourceOriginal).filter((node) => /\{[^{}]+\}/.test(node.nodeValue || ""));
     const liveTexts = collectTextNodes(liveOriginal)
-      .map((node) => normalizePreviewText(node.nodeValue || ''))
+      .map((node) => normalizePreviewText(node.nodeValue || ""))
       .filter(Boolean);
     let liveIndex = 0;
 
     for (const sourceNode of sourceNodes) {
-      const sourceText = sourceNode.nodeValue || '';
+      const sourceText = sourceNode.nodeValue || "";
       const tokens = sourceText.match(/\{[^{}]+\}/g) || [];
       if (tokens.length === 0) continue;
 
-      const liveText = liveTexts[liveIndex++] || '';
+      const liveText = liveTexts[liveIndex++] || "";
       if (!liveText) continue;
 
       if (tokens.length === 1) {
@@ -6415,9 +6840,9 @@
         continue;
       }
 
-      if (normalizePreviewText(sourceText) === tokens.join(' ')) {
+      if (normalizePreviewText(sourceText) === tokens.join(" ")) {
         for (const token of tokens) {
-          const tokenLiveText = liveTexts[liveIndex - 1] || '';
+          const tokenLiveText = liveTexts[liveIndex - 1] || "";
           if (tokenLiveText) map.set(token, tokenLiveText);
         }
       }
@@ -6427,16 +6852,16 @@
   }
 
   function expressionTextMatcher(sourceText, tokens) {
-    let pattern = '^';
+    let pattern = "^";
     let cursor = 0;
     for (const token of tokens) {
       const index = sourceText.indexOf(token, cursor);
       if (index === -1) continue;
-      pattern += escapeRegExp(sourceText.slice(cursor, index)).replace(/\s+/g, '\\s*');
-      pattern += '(.*?)';
+      pattern += escapeRegExp(sourceText.slice(cursor, index)).replace(/\s+/g, "\\s*");
+      pattern += "(.*?)";
       cursor = index + token.length;
     }
-    pattern += escapeRegExp(sourceText.slice(cursor)).replace(/\s+/g, '\\s*') + '$';
+    pattern += escapeRegExp(sourceText.slice(cursor)).replace(/\s+/g, "\\s*") + "$";
     return new RegExp(pattern);
   }
 
@@ -6453,15 +6878,20 @@
   }
 
   function normalizePreviewText(value) {
-    return String(value || '').replace(/\s+/g, ' ').trim();
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function escapeRegExp(value) {
-    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   async function selectVariant(next, checkpointReason) {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     if (variantSelectionInFlight) return;
     if (next < 1 || next > arrivedVariants) return;
     if (next === visibleVariant) return;
@@ -6496,7 +6926,7 @@
   }
 
   function cycleVariant(dir) {
-    selectVariant(visibleVariant + dir, 'variant_changed');
+    selectVariant(visibleVariant + dir, "variant_changed");
   }
 
   function updateSelectedElement() {
@@ -6521,7 +6951,7 @@
     const variants = wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])');
     for (const variant of variants) {
       if (!isVariantShown(variant)) continue;
-      const idx = parseInt(variant.dataset.impeccableVariant || '0', 10);
+      const idx = Number.parseInt(variant.dataset.impeccableVariant || "0", 10);
       if (idx > 0) return idx;
     }
     return 0;
@@ -6537,7 +6967,7 @@
     if (!wrapper) return null;
     const variantDiv = wrapper.querySelector('[data-impeccable-variant="' + index + '"]');
     if (!variantDiv) return null;
-    const NON_VISUAL = new Set(['STYLE', 'SCRIPT', 'LINK', 'META', 'TEMPLATE']);
+    const NON_VISUAL = new Set(["STYLE", "SCRIPT", "LINK", "META", "TEMPLATE"]);
     const visual = [];
     for (const child of variantDiv.children) {
       if (!NON_VISUAL.has(child.tagName)) visual.push(child);
@@ -6555,18 +6985,16 @@
   // and pick-cursor (#286) fixes address. A stylesheet rule has the same
   // computed effect without mutating any hydrated element's attributes.
   // (steps params keep driving `data-p-*` attributes, matching scoped CSS.)
-  const VARIANT_HIDE_DECL = 'display: none !important;';
-  const VARIANT_SHOW_DECL = 'display: block !important;';
+  const VARIANT_HIDE_DECL = "display: none !important;";
+  const VARIANT_SHOW_DECL = "display: block !important;";
 
   // Build a direct-child variant selector for a session. With `num`, targets a
   // single variant (`… > [data-impeccable-variant="N"]`); without it, targets
   // every variant via the bare `[data-impeccable-variant]` attribute.
   function variantStateSelector(sessionId, num) {
     const wrapper = '[data-impeccable-variants="' + sessionId + '"]';
-    const variant = num == null
-      ? '[data-impeccable-variant]'
-      : '[data-impeccable-variant="' + num + '"]';
-    return wrapper + ' > ' + variant;
+    const variant = num == null ? "[data-impeccable-variant]" : '[data-impeccable-variant="' + num + '"]';
+    return wrapper + " > " + variant;
   }
 
   // Serialize the visible variant's knob values into `--p-<id>` custom-property
@@ -6575,11 +7003,11 @@
   function variantParamDecls(values) {
     return Object.entries(values || {})
       .map(([id, val]) => {
-        if (typeof val === 'number') return ' --p-' + id + ': ' + val + ';';
-        if (typeof val === 'boolean') return ' --p-' + id + ': ' + (val ? '1' : '0') + ';';
-        return '';
+        if (typeof val === "number") return " --p-" + id + ": " + val + ";";
+        if (typeof val === "boolean") return " --p-" + id + ": " + (val ? "1" : "0") + ";";
+        return "";
       })
-      .join('');
+      .join("");
   }
 
   function updateVariantStateStylesheet(sessionId, num) {
@@ -6587,21 +7015,21 @@
 
     let styleEl = document.getElementById(VARIANT_STATE_STYLE_ID);
     if (!styleEl) {
-      styleEl = document.createElement('style');
+      styleEl = document.createElement("style");
       styleEl.id = VARIANT_STATE_STYLE_ID;
       (document.head || document.documentElement).appendChild(styleEl);
     }
 
     // Hide every variant except the visible one (incl. the SSR'd "original").
-    const hideOthers = variantStateSelector(sessionId)
-      + ':not([data-impeccable-variant="' + num + '"]) { ' + VARIANT_HIDE_DECL + ' }';
+    const hideOthers =
+      variantStateSelector(sessionId) + ':not([data-impeccable-variant="' + num + '"]) { ' + VARIANT_HIDE_DECL + " }";
 
     // Force-show the visible variant (beats the source inline display:none on
     // v2/v3) and apply its knob values as custom properties.
-    const showVisible = variantStateSelector(sessionId, num)
-      + ' { ' + VARIANT_SHOW_DECL + variantParamDecls(paramsCurrentValues) + ' }';
+    const showVisible =
+      variantStateSelector(sessionId, num) + " { " + VARIANT_SHOW_DECL + variantParamDecls(paramsCurrentValues) + " }";
 
-    styleEl.textContent = hideOthers + '\n' + showVisible + '\n';
+    styleEl.textContent = hideOthers + "\n" + showVisible + "\n";
   }
 
   function removeVariantStateStylesheet() {
@@ -6612,13 +7040,16 @@
     if (!sessionId) return;
     let styleEl = document.getElementById(DISCARD_STATE_STYLE_ID);
     if (!styleEl) {
-      styleEl = document.createElement('style');
+      styleEl = document.createElement("style");
       styleEl.id = DISCARD_STATE_STYLE_ID;
       (document.head || document.documentElement).appendChild(styleEl);
     }
     const wrapper = '[data-impeccable-variants="' + sessionId + '"]';
-    styleEl.textContent = wrapper + ' > [data-impeccable-variant]:not([data-impeccable-variant="original"]) { display:none !important; }\n'
-      + wrapper + ' > [data-impeccable-variant="original"] { display:block !important; }';
+    styleEl.textContent =
+      wrapper +
+      ' > [data-impeccable-variant]:not([data-impeccable-variant="original"]) { display:none !important; }\n' +
+      wrapper +
+      ' > [data-impeccable-variant="original"] { display:block !important; }';
   }
 
   function resolveScrollLockAnchorTop() {
@@ -6632,14 +7063,16 @@
   // session's wrapper (HMR patches, variant inserts, cycle swaps).
   function startScrollLock(sessionId, initialTargetY, initialAnchorTop) {
     stopScrollLock();
-    scrollLockTargetY = typeof initialTargetY === 'number' && isFinite(initialTargetY)
-      ? initialTargetY
-      : window.scrollY;
-    scrollLockAnchorTop = typeof initialAnchorTop === 'number' && isFinite(initialAnchorTop)
-      ? initialAnchorTop
-      : resolveScrollLockAnchorTop();
+    scrollLockTargetY =
+      typeof initialTargetY === "number" && isFinite(initialTargetY) ? initialTargetY : window.scrollY;
+    scrollLockAnchorTop =
+      typeof initialAnchorTop === "number" && isFinite(initialAnchorTop)
+        ? initialAnchorTop
+        : resolveScrollLockAnchorTop();
 
-    try { history.scrollRestoration = 'manual'; } catch {}
+    try {
+      history.scrollRestoration = "manual";
+    } catch {}
 
     // Suppress the browser's scroll-anchoring on the scroll root so it can't
     // fight our manual scroll correction. Apply this as a stylesheet rule, not
@@ -6652,9 +7085,9 @@
     // key) is unaffected.
     let anchorLockStyle = document.getElementById(SCROLL_ANCHOR_LOCK_ID);
     if (!anchorLockStyle) {
-      anchorLockStyle = document.createElement('style');
+      anchorLockStyle = document.createElement("style");
       anchorLockStyle.id = SCROLL_ANCHOR_LOCK_ID;
-      anchorLockStyle.textContent = 'html,body{overflow-anchor:none !important;}';
+      anchorLockStyle.textContent = "html,body{overflow-anchor:none !important;}";
       (document.head || document.documentElement).appendChild(anchorLockStyle);
     }
 
@@ -6662,11 +7095,11 @@
       scrollLockRaf = null;
       if (scrollLockTargetY == null) return;
       const anchor = resolveBarAnchor();
-      if (anchor?.isConnected && typeof scrollLockAnchorTop === 'number' && isFinite(scrollLockAnchorTop)) {
+      if (anchor?.isConnected && typeof scrollLockAnchorTop === "number" && isFinite(scrollLockAnchorTop)) {
         const anchorTop = anchor.getBoundingClientRect().top;
         const anchorDelta = anchorTop - scrollLockAnchorTop;
         if (Math.abs(anchorDelta) >= 0.5) {
-          window.scrollTo({ top: window.scrollY + anchorDelta, left: window.scrollX, behavior: 'instant' });
+          window.scrollTo({ top: window.scrollY + anchorDelta, left: window.scrollX, behavior: "instant" });
           scrollLockTargetY = window.scrollY;
           writeScrollY(scrollLockTargetY);
           return;
@@ -6677,7 +7110,7 @@
       if (Math.abs(delta) < 0.5) {
         return;
       }
-      window.scrollTo({ top: scrollLockTargetY, left: window.scrollX, behavior: 'instant' });
+      window.scrollTo({ top: scrollLockTargetY, left: window.scrollX, behavior: "instant" });
     };
     const schedule = (why) => {
       if (scrollLockRaf != null) return;
@@ -6687,12 +7120,16 @@
     scrollLockObserver = new MutationObserver((mutations) => {
       for (const m of mutations) {
         if (m.target?.closest?.('[data-impeccable-variants="' + sessionId + '"]')) {
-          schedule('mutation-in-wrapper');
+          schedule("mutation-in-wrapper");
           return;
         }
         for (const n of m.addedNodes) {
-          if (n.nodeType === 1 && (n.matches?.('[data-impeccable-variants="' + sessionId + '"]') || n.querySelector?.('[data-impeccable-variants="' + sessionId + '"]'))) {
-            schedule('wrapper-added');
+          if (
+            n.nodeType === 1 &&
+            (n.matches?.('[data-impeccable-variants="' + sessionId + '"]') ||
+              n.querySelector?.('[data-impeccable-variants="' + sessionId + '"]'))
+          ) {
+            schedule("wrapper-added");
             return;
           }
         }
@@ -6701,9 +7138,13 @@
     scrollLockObserver.observe(document.body, { childList: true, subtree: true });
 
     scrollLockAbort = new AbortController();
-    scrollLockAbort.signal.addEventListener('abort', () => {
-      document.getElementById(SCROLL_ANCHOR_LOCK_ID)?.remove();
-    }, { once: true });
+    scrollLockAbort.signal.addEventListener(
+      "abort",
+      () => {
+        document.getElementById(SCROLL_ANCHOR_LOCK_ID)?.remove();
+      },
+      { once: true }
+    );
     const sig = { signal: scrollLockAbort.signal };
     // Track whether the most recent scroll came from a user gesture. We
     // gate user-scroll re-anchoring on this flag so programmatic smooth
@@ -6713,7 +7154,10 @@
     const USER_GESTURE_WINDOW_MS = 250;
 
     const reanchor = (why) => {
-      if (scrollLockRaf != null) { cancelAnimationFrame(scrollLockRaf); scrollLockRaf = null; }
+      if (scrollLockRaf != null) {
+        cancelAnimationFrame(scrollLockRaf);
+        scrollLockRaf = null;
+      }
       const prevTarget = scrollLockTargetY;
       scrollLockTargetY = window.scrollY;
       scrollLockAnchorTop = resolveScrollLockAnchorTop();
@@ -6723,36 +7167,54 @@
       userGestureAt = performance.now();
       reanchor(why);
     };
-    window.addEventListener('wheel', () => markGesture('wheel'), { passive: true, ...sig });
-    window.addEventListener('touchstart', () => markGesture('touchstart'), { passive: true, ...sig });
-    window.addEventListener('touchmove', () => markGesture('touchmove'), { passive: true, ...sig });
-    window.addEventListener('keydown', (e) => {
-      if (['PageDown', 'PageUp', ' ', 'End', 'Home', 'ArrowDown', 'ArrowUp'].includes(e.key)) markGesture('key:' + e.key);
-    }, sig);
+    window.addEventListener("wheel", () => markGesture("wheel"), { passive: true, ...sig });
+    window.addEventListener("touchstart", () => markGesture("touchstart"), { passive: true, ...sig });
+    window.addEventListener("touchmove", () => markGesture("touchmove"), { passive: true, ...sig });
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (["PageDown", "PageUp", " ", "End", "Home", "ArrowDown", "ArrowUp"].includes(e.key))
+          markGesture("key:" + e.key);
+      },
+      sig
+    );
 
     // Correct on EVERY scroll event: whether it's the browser's
     // post-reload animated restore or some other script calling
     // scrollIntoView, we want to snap back immediately. Only skip if a
     // user gesture fired in the last 250ms.
-    window.addEventListener('scroll', () => {
-      const now = window.scrollY;
-      if (scrollLockTargetY == null) return;
-      if (performance.now() - userGestureAt < USER_GESTURE_WINDOW_MS) return;
-      if (Math.abs(now - scrollLockTargetY) < 0.5) return;
-      window.scrollTo({ top: scrollLockTargetY, left: window.scrollX, behavior: 'instant' });
-    }, { passive: true, ...sig });
+    window.addEventListener(
+      "scroll",
+      () => {
+        const now = window.scrollY;
+        if (scrollLockTargetY == null) return;
+        if (performance.now() - userGestureAt < USER_GESTURE_WINDOW_MS) return;
+        if (Math.abs(now - scrollLockTargetY) < 0.5) return;
+        window.scrollTo({ top: scrollLockTargetY, left: window.scrollX, behavior: "instant" });
+      },
+      { passive: true, ...sig }
+    );
 
     // Apply target synchronously, not via rAF - racing the browser's
     // restore or a smooth-scroll animation means we want to win now.
     if (Math.abs(window.scrollY - scrollLockTargetY) > 0.5) {
-      window.scrollTo({ top: scrollLockTargetY, left: window.scrollX, behavior: 'instant' });
+      window.scrollTo({ top: scrollLockTargetY, left: window.scrollX, behavior: "instant" });
     }
   }
 
   function stopScrollLock() {
-    if (scrollLockObserver) { scrollLockObserver.disconnect(); scrollLockObserver = null; }
-    if (scrollLockRaf != null) { cancelAnimationFrame(scrollLockRaf); scrollLockRaf = null; }
-    if (scrollLockAbort) { scrollLockAbort.abort(); scrollLockAbort = null; }
+    if (scrollLockObserver) {
+      scrollLockObserver.disconnect();
+      scrollLockObserver = null;
+    }
+    if (scrollLockRaf != null) {
+      cancelAnimationFrame(scrollLockRaf);
+      scrollLockRaf = null;
+    }
+    if (scrollLockAbort) {
+      scrollLockAbort.abort();
+      scrollLockAbort = null;
+    }
     scrollLockTargetY = null;
     scrollLockAnchorTop = null;
     // NOTE: do NOT clear the persistent scroll key here. startScrollLock
@@ -6774,19 +7236,24 @@
       // or mutations inside the variant wrapper. Ignore our own bar/UI changes.
       let dominated = false;
       for (const m of mutations) {
-        if (m.target.closest?.('[data-impeccable-variants]')) { dominated = true; break; }
+        if (m.target.closest?.("[data-impeccable-variants]")) {
+          dominated = true;
+          break;
+        }
         for (const n of m.addedNodes) {
           if (n.nodeType !== 1) continue;
           // Direct hit: the added node itself is the wrapper or a variant.
           if (n.dataset?.impeccableVariants || n.dataset?.impeccableVariant) {
-            dominated = true; break;
+            dominated = true;
+            break;
           }
           // Subtree hit: framework HMR (notably SvelteKit) sometimes replaces
           // a whole subtree where the wrapper is a descendant of the added
           // node. Without this check, the observer ignores those mutations
           // and the session stays in GENERATING forever.
-          if (n.querySelector?.('[data-impeccable-variants],[data-impeccable-variant]')) {
-            dominated = true; break;
+          if (n.querySelector?.("[data-impeccable-variants],[data-impeccable-variant]")) {
+            dominated = true;
+            break;
           }
         }
         if (dominated) break;
@@ -6803,7 +7270,7 @@
       // Without this, the shader / highlight / bar track a zero-rect phantom
       // and the overlay appears frozen.
       if (selectedElement && !document.body.contains(selectedElement)) {
-        const isInsert = wrapper.dataset.impeccableMode === 'insert';
+        const isInsert = wrapper.dataset.impeccableMode === "insert";
         if (isInsert) {
           const visEl = count > 0 ? pickVariantContent(wrapper, visibleVariant || 1) : null;
           if (visEl) {
@@ -6817,7 +7284,7 @@
             }
           }
         } else {
-          selectedElement = pickVariantContent(wrapper, 'original') || wrapper;
+          selectedElement = pickVariantContent(wrapper, "original") || wrapper;
         }
       } else if (isInsertGeneratingSession() && count === 0) {
         ensureInsertPlaceholder();
@@ -6828,7 +7295,7 @@
 
       updating = true;
       arrivedVariants = count;
-      generationPhase = arrivedVariants >= expectedVariants ? 'variants_ready' : 'variants_progress';
+      generationPhase = arrivedVariants >= expectedVariants ? "variants_ready" : "variants_progress";
       if (visibleVariant === 0 && arrivedVariants > 0) {
         const saved = loadSession();
         const savedVisibleVariant = saved && saved.id === sessionId ? saved.visible : 0;
@@ -6841,29 +7308,27 @@
         if (visEl) selectedElement = visEl;
       }
 
-      const expected = parseInt(wrapper.dataset.impeccableVariantCount || '0');
+      const expected = Number.parseInt(wrapper.dataset.impeccableVariantCount || "0");
       if (expected > 0) expectedVariants = expected;
       completeParameterGenerationIfReady();
 
       if (arrivedVariants > 0) {
-        setLiveState('CYCLING');
+        setLiveState("CYCLING");
         recoveryWaitingForAnchor = false;
         hideShaderOverlay();
-        if (wrapper.dataset.impeccableMode === 'insert') finalizeInsertSession();
+        if (wrapper.dataset.impeccableMode === "insert") finalizeInsertSession();
         updateSelectedElement();
         showOrUpdateCyclingBar();
         disableInlineEdit();
         if (arrivedVariants >= expectedVariants && expectedVariants > 0) refreshParamsPanel();
         else hideParamsPanel();
         positionBar();
-      } else if (state === 'GENERATING') {
-        updateBarContent('generating');
+      } else if (state === "GENERATING") {
+        updateBarContent("generating");
       }
       saveSession();
       sendCheckpoint(
-        arrivedVariants >= expectedVariants && expectedVariants > 0
-          ? 'variants_ready'
-          : 'variants_progress',
+        arrivedVariants >= expectedVariants && expectedVariants > 0 ? "variants_ready" : "variants_progress"
       );
       updating = false;
     });
@@ -6878,19 +7343,19 @@
 
   function startScrollTracking() {
     function tick() {
-      if (state === 'CONFIGURING' || state === 'GENERATING' || state === 'CYCLING') {
+      if (state === "CONFIGURING" || state === "GENERATING" || state === "CYCLING") {
         if (isInsertGeneratingSession()) ensureInsertPlaceholder();
         positionBar();
-        if (state === 'CONFIGURING') positionEditBadge();
+        if (state === "CONFIGURING") positionEditBadge();
         const hiTarget = resolveBarAnchor();
-        if (hiTarget && !hiTarget.hasAttribute?.('data-impeccable-insert-placeholder')) {
+        if (hiTarget && !hiTarget.hasAttribute?.("data-impeccable-insert-placeholder")) {
           showHighlight(hiTarget);
         } else {
           hideHighlight();
         }
         if (tuneOpen) positionParamsPanel();
       }
-      if (state === 'EDITING') {
+      if (state === "EDITING") {
         positionEditBadge();
         showHighlight(selectedElement);
       }
@@ -6907,7 +7372,10 @@
   }
 
   function stopScrollTracking() {
-    if (scrollRaf) { cancelAnimationFrame(scrollRaf); scrollRaf = null; }
+    if (scrollRaf) {
+      cancelAnimationFrame(scrollRaf);
+      scrollRaf = null;
+    }
   }
 
   //
@@ -6917,10 +7385,10 @@
 
   let evtSource = null;
   let sseRetries = 0;
-  const SSE_MAX_RETRIES = 20;  // generous: heartbeats keep the connection alive, so retries mean real trouble
+  const SSE_MAX_RETRIES = 20; // generous: heartbeats keep the connection alive, so retries mean real trouble
 
   function connectSSE() {
-    evtSource = new EventSource('http://localhost:' + PORT + '/events?token=' + TOKEN);
+    evtSource = new EventSource("http://localhost:" + PORT + "/events?token=" + TOKEN);
 
     evtSource.onopen = () => {
       sseRetries = 0; // reset on successful (re)connect
@@ -6928,38 +7396,47 @@
 
     evtSource.onmessage = (e) => {
       sseRetries = 0; // reset on any successful message
-      let msg; try { msg = JSON.parse(e.data); } catch { return; }
+      let msg;
+      try {
+        msg = JSON.parse(e.data);
+      } catch {
+        return;
+      }
       switch (msg.type) {
-        case 'connected':
+        case "connected":
           hasProjectContext = !!msg.hasProjectContext;
-          if (!hasProjectContext) showToast(`No PRODUCT.md found. Variants will be brand-agnostic. Run ${IMPECCABLE_COMMAND} init to generate one.`, 7000);
-          console.log('[impeccable] Live mode connected.');
+          if (!hasProjectContext)
+            showToast(
+              `No PRODUCT.md found. Variants will be brand-agnostic. Run ${IMPECCABLE_COMMAND} init to generate one.`,
+              7000
+            );
+          console.log("[impeccable] Live mode connected.");
           syncAgentPollingUi(!!msg.agentPolling);
           startAgentStatusPoll();
-          restoreFromActiveSessions(msg.activeSessions, 'sse_connected');
+          restoreFromActiveSessions(msg.activeSessions, "sse_connected");
           recoverMissedGenerationCompletion(msg.activeSessions);
-          if (state === 'IDLE' && (pickActive || insertActive)) setLiveState('PICKING');
+          if (state === "IDLE" && (pickActive || insertActive)) setLiveState("PICKING");
           syncPageInteractionCursor();
-          syncPageChatFocus('sse-connected');
+          syncPageChatFocus("sse-connected");
           break;
-        case 'agent_polling':
+        case "agent_polling":
           syncAgentPollingUi(!!msg.connected);
           break;
-        case 'agent_phase':
-          if (msg.id === currentSessionId && (state === 'GENERATING' || state === 'CYCLING')) {
+        case "agent_phase":
+          if (msg.id === currentSessionId && (state === "GENERATING" || state === "CYCLING")) {
             // Advance the visible phase monotonically. A behind/resumed
             // checkpoint may carry an earlier phase for internal bookkeeping,
             // but the bar must not move backward.
             if (shouldAdvancePhase(generationPhase, msg.phase)) generationPhase = msg.phase;
             // The deferred parameter pass reports through `variant_progress`
             // with publicationKind 'params', not through agent_phase.
-            updateBarContent(state === 'CYCLING' ? 'cycling' : 'generating');
+            updateBarContent(state === "CYCLING" ? "cycling" : "generating");
             saveSession();
           }
           break;
-        case 'variant_progress':
+        case "variant_progress":
           if (msg.id === currentSessionId) {
-            if (msg.publicationKind === 'params') parameterGenerationState = 'loading';
+            if (msg.publicationKind === "params") parameterGenerationState = "loading";
             rememberSessionFileMeta(msg);
             if (isFrameworkComponentPreviewMode(msg.previewMode) && msg.previewFile) {
               // Component-preview (Svelte/Vue) progressive delivery: the browser
@@ -6977,31 +7454,35 @@
             // MutationObserver as HMR lands each variant.
           }
           break;
-        case 'steer_done':
+        case "steer_done":
           maybeCompleteSteer(msg);
           break;
-        case 'manual_edit_stashed':
-        case 'manual_edit_discarded':
-        case 'manual_edit_commit_started':
-        case 'manual_edit_apply_reply_received':
-        case 'manual_edit_apply_dispatched':
-        case 'manual_edit_repair_needs_decision':
-        case 'manual_edit_repair_rollback_done':
-        case 'manual_edit_commit_done':
-        case 'manual_edit_commit_failed':
+        case "manual_edit_stashed":
+        case "manual_edit_discarded":
+        case "manual_edit_commit_started":
+        case "manual_edit_apply_reply_received":
+        case "manual_edit_apply_dispatched":
+        case "manual_edit_repair_needs_decision":
+        case "manual_edit_repair_rollback_done":
+        case "manual_edit_commit_done":
+        case "manual_edit_commit_failed":
           handleManualEditActivity(msg);
           break;
-        case 'done':
+        case "done":
           if (maybeCompleteSteer(msg)) break;
           rememberSessionFileMeta(msg);
-          if (msg.id === currentSessionId && isFrameworkComponentPreviewMode(currentPreviewMode) && currentPreviewFile) {
+          if (
+            msg.id === currentSessionId &&
+            isFrameworkComponentPreviewMode(currentPreviewMode) &&
+            currentPreviewFile
+          ) {
             injectSvelteComponentsFromManifest(currentPreviewFile, msg.id);
             break;
           }
           // Variants already arrived via HMR → normal transition.
           if (arrivedVariants >= expectedVariants && expectedVariants > 0) {
-            if (state === 'GENERATING') {
-              setLiveState('CYCLING');
+            if (state === "GENERATING") {
+              setLiveState("CYCLING");
               showOrUpdateCyclingBar();
               disableInlineEdit();
               refreshParamsPanel();
@@ -7009,10 +7490,10 @@
             break;
           }
           // Source fallback when HMR did not land variants in this tab.
-          if (msg.file && msg.id && state === 'GENERATING' && msg.id === currentSessionId) {
+          if (msg.file && msg.id && state === "GENERATING" && msg.id === currentSessionId) {
             setTimeout(() => {
               if (arrivedVariants >= expectedVariants && expectedVariants > 0) return;
-              if (state !== 'GENERATING' || msg.id !== currentSessionId) return;
+              if (state !== "GENERATING" || msg.id !== currentSessionId) return;
               injectVariantsFromSource(msg.file, msg.id, { generationCompleted: true });
             }, 750);
             break;
@@ -7026,20 +7507,20 @@
           // which reset framework state and left the session stuck.
           setTimeout(() => {
             if (arrivedVariants >= expectedVariants && expectedVariants > 0) return;
-            if (state !== 'GENERATING') return;
+            if (state !== "GENERATING") return;
             showToast(
               "Variants ready. If the picked element isn't visible, retrace the path that revealed it - they'll appear automatically.",
-              15000,
+              15000
             );
           }, 2000);
           break;
-        case 'complete':
-        case 'accept':
+        case "complete":
+        case "accept":
           // The real accept result arrived: the awaited failure window closed.
           if (awaitingAcceptResult?.id && msg.id === awaitingAcceptResult.id) awaitingAcceptResult = null;
           if (maybeCompleteAcceptedSession(msg)) break;
           break;
-        case 'agent_done':
+        case "agent_done":
           // The deterministic accept has already committed the reviewed DOM
           // and fenced generation. Carbonize may continue in the background;
           // it must not hold the foreground picker hostage.
@@ -7048,22 +7529,23 @@
           // for the same session id can still arrive after Accept and must
           // not close the awaited failure window early (the SSE broadcast
           // carries no sourceEventType to tell the two apart).
-          if (msg.data?.carbonize === true && awaitingAcceptResult?.id && msg.id === awaitingAcceptResult.id) awaitingAcceptResult = null;
+          if (msg.data?.carbonize === true && awaitingAcceptResult?.id && msg.id === awaitingAcceptResult.id)
+            awaitingAcceptResult = null;
           if (msg.data?.carbonize === true && maybeCompleteAcceptedSession(msg)) break;
           break;
-        case 'discarded':
+        case "discarded":
           if (msg.id && msg.id === currentSessionId) {
             markSessionHandled();
             cleanup();
           }
           break;
-        case 'error':
+        case "error":
           if (pendingAcceptedSession?.id && msg.id === pendingAcceptedSession.id) {
             pendingAcceptedSession = null;
             awaitingAcceptResult = null;
-            setLiveState('CYCLING');
-            updateBarContent('cycling');
-            showToast('Could not complete accept cleanup. Try Accept again.', 5000);
+            setLiveState("CYCLING");
+            updateBarContent("cycling");
+            showToast("Could not complete accept cleanup. Try Accept again.", 5000);
             break;
           }
           // The optimistic teardown already released the session, so the
@@ -7072,18 +7554,25 @@
           // no hint their variant was never written (issue #384).
           if (awaitingAcceptResult?.id && msg.id === awaitingAcceptResult.id) {
             awaitingAcceptResult = null;
-            console.error('[impeccable] Accept failed after teardown:', msg.message);
+            console.error("[impeccable] Accept failed after teardown:", msg.message);
             // Hedged on purpose: a carbonize-phase failure raises this same
             // error after the source WAS promoted, so "was not saved" would
             // overclaim. Normalize the server message's terminal punctuation
             // so the two sentences don't run together.
-            const acceptFailDetail = String(msg.message || 'unknown error').trim().replace(/[.!?]?$/, '.');
-            showToast('Accept failed: ' + acceptFailDetail + ' The variant may not have been saved. If the change is missing, pick the element and generate again.', 8000);
+            const acceptFailDetail = String(msg.message || "unknown error")
+              .trim()
+              .replace(/[.!?]?$/, ".");
+            showToast(
+              "Accept failed: " +
+                acceptFailDetail +
+                " The variant may not have been saved. If the change is missing, pick the element and generate again.",
+              8000
+            );
             break;
           }
           if (maybeCompleteSteer(msg)) break;
-          console.error('[impeccable] Error:', msg.message);
-          showToast('Error: ' + msg.message, 5000);
+          console.error("[impeccable] Error:", msg.message);
+          showToast("Error: " + msg.message, 5000);
           // An agent error reply is terminal for the session it names: tear
           // it down exactly like 'discarded' (cleanup includes clearSession),
           // or the durable localStorage checkpoint survives and every reload
@@ -7098,8 +7587,8 @@
           // (the error raced a reload) must not resurrect either.
           if (msg.id && loadSession()?.id === msg.id) clearSession();
           hideBar();
-          renderEditBadge('hidden');
-          setLiveState('PICKING');
+          renderEditBadge("hidden");
+          setLiveState("PICKING");
           break;
       }
     };
@@ -7107,11 +7596,11 @@
     evtSource.onerror = () => {
       sseRetries++;
       if (sseRetries <= SSE_MAX_RETRIES) {
-        console.log('[impeccable] SSE connection lost. Retry ' + sseRetries + '/' + SSE_MAX_RETRIES + '...');
+        console.log("[impeccable] SSE connection lost. Retry " + sseRetries + "/" + SSE_MAX_RETRIES + "...");
         return; // EventSource auto-reconnects
       }
       // Server is gone. Clean up gracefully.
-      console.log('[impeccable] Live server unreachable. Cleaning up UI.');
+      console.log("[impeccable] Live server unreachable. Cleaning up UI.");
       evtSource.close();
       evtSource = null;
       handleServerLost();
@@ -7120,23 +7609,29 @@
 
   /** Server died or became unreachable. Reset UI to a clean state. */
   function handleServerLost() {
-    const recoveryState = currentSessionId ? state : 'IDLE';
-    if (state === 'GENERATING' || state === 'CYCLING' || state === 'SAVING') {
-      showToast('Live server connection lost. Your session is saved; reopen this page or restart live-poll.mjs to continue.', 6000);
+    const recoveryState = currentSessionId ? state : "IDLE";
+    if (state === "GENERATING" || state === "CYCLING" || state === "SAVING") {
+      showToast(
+        "Live server connection lost. Your session is saved; reopen this page or restart live-poll.mjs to continue.",
+        6000
+      );
     }
     hideBar();
     hideHighlight();
     hideShaderOverlay();
     hideAnnotOverlay();
     stopScrollTracking();
-    if (variantObserver) { variantObserver.disconnect(); variantObserver = null; }
+    if (variantObserver) {
+      variantObserver.disconnect();
+      variantObserver = null;
+    }
     stopScrollLock();
     // Preserve local session state on server loss. The durable journal is the
     // source of truth, but localStorage plus the variant wrapper lets the UI
     // resume after a helper restart or page reload instead of treating a
     // transient disconnect as an explicit discard.
     selectedElement = null;
-    selectedAction = 'impeccable';
+    selectedAction = "impeccable";
     setLiveState(recoveryState);
     if (currentSessionId) saveSession();
   }
@@ -7152,38 +7647,43 @@
     msg.token = TOKEN;
     function handleFailure(err) {
       if (opts && opts.throwOnError) {
-        console.error('[impeccable] Failed to send event:', err);
+        console.error("[impeccable] Failed to send event:", err);
         throw err;
       }
-      console.debug('[impeccable] Dropped optional live event:', err);
+      console.debug("[impeccable] Dropped optional live event:", err);
       return null;
     }
     // Token in the query string as well as the body: the URL token is what
     // authorizes the CORS preflight when the page runs on a non-loopback
     // dev host (ddev, Valet), since the preflight carries no request body.
-    const doSend = () => fetch('http://localhost:' + PORT + '/events?token=' + encodeURIComponent(TOKEN), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(msg),
-    }).then(async res => {
-      if (res.ok) return res;
-      const body = await res.json().catch(() => ({}));
-      // The server refused to journal progress for a session it has never
-      // seen: this browser is carrying state from another project or a
-      // wiped store (two apps sharing a localhost port). Continuing to
-      // report it would freeze the picker behind a session that can never
-      // complete, so drop the local state and hand the surface back.
-      if (body.error === 'unknown_session' && msg.type === 'checkpoint'
-          && msg.id && msg.id === currentSessionId) {
-        abandonForeignSession(msg.id);
-        return null;
-      }
-      return handleFailure(new Error(body.error || ('HTTP ' + res.status + ' ' + res.statusText)));
-    }).catch(handleFailure);
+    const doSend = () =>
+      fetch("http://localhost:" + PORT + "/events?token=" + encodeURIComponent(TOKEN), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(msg),
+      })
+        .then(async (res) => {
+          if (res.ok) return res;
+          const body = await res.json().catch(() => ({}));
+          // The server refused to journal progress for a session it has never
+          // seen: this browser is carrying state from another project or a
+          // wiped store (two apps sharing a localhost port). Continuing to
+          // report it would freeze the picker behind a session that can never
+          // complete, so drop the local state and hand the surface back.
+          if (body.error === "unknown_session" && msg.type === "checkpoint" && msg.id && msg.id === currentSessionId) {
+            abandonForeignSession(msg.id);
+            return null;
+          }
+          return handleFailure(new Error(body.error || "HTTP " + res.status + " " + res.statusText));
+        })
+        .catch(handleFailure);
 
-    if (msg.type === 'generate' || msg.type === 'steer') {
+    if (msg.type === "generate" || msg.type === "steer") {
       const creation = doSend();
-      sessionCreationGate = creation.then(() => {}, () => {});
+      sessionCreationGate = creation.then(
+        () => {},
+        () => {}
+      );
       return creation;
     }
     return sessionCreationGate.then(doSend);
@@ -7193,20 +7693,25 @@
   function abandonForeignSession(sessionId) {
     if (abandonedForeignSessionId === sessionId || sessionId !== currentSessionId) return;
     abandonedForeignSessionId = sessionId;
-    console.warn('[impeccable] The live server has no record of session ' + sessionId + '; clearing stale local state.');
+    console.warn(
+      "[impeccable] The live server has no record of session " + sessionId + "; clearing stale local state."
+    );
     markSessionHandled();
     cleanup({ instantChrome: true });
-    showToast('A saved live session belonged to a different project, so it was cleared. Pick an element to start fresh.', 6000);
+    showToast(
+      "A saved live session belonged to a different project, so it was cleared. Pick an element to start fresh.",
+      6000
+    );
   }
 
   function checkpointPayload(reason) {
     return {
-      type: 'checkpoint',
+      type: "checkpoint",
       id: currentSessionId,
       revision: sessionState.nextCheckpointRevision(),
-      revisionDomain: 'browser',
+      revisionDomain: "browser",
       owner: browserOwner,
-      phase: String(state || '').toLowerCase(),
+      phase: String(state || "").toLowerCase(),
       reason,
       pageUrl: location.pathname,
       expectedVariants,
@@ -7227,12 +7732,12 @@
   function sendSteerCheckpoint(id, reason, extra) {
     if (!id) return Promise.resolve(null);
     return sendEvent({
-      type: 'checkpoint',
+      type: "checkpoint",
       id,
       revision: sessionState.nextCheckpointRevision(),
-      revisionDomain: 'browser',
+      revisionDomain: "browser",
       owner: browserOwner,
-      phase: 'steer',
+      phase: "steer",
       reason,
       pageUrl: location.pathname,
       ...(extra || {}),
@@ -7254,7 +7759,7 @@
 
   function handleMouseMove(e) {
     if (pendingApplyInFlight) return;
-    if (state === 'PICKING' && insertActive) {
+    if (state === "PICKING" && insertActive) {
       const target = document.elementFromPoint(e.clientX, e.clientY);
       if (!target || own(target) || !pickable(target)) {
         hideInsertLine();
@@ -7273,16 +7778,16 @@
         siblings,
       });
       if (
-        resolved.anchor !== insertHoverAnchor
-        || resolved.position !== insertHoverPosition
-        || resolved.axis !== insertHoverAxis
+        resolved.anchor !== insertHoverAnchor ||
+        resolved.position !== insertHoverPosition ||
+        resolved.axis !== insertHoverAxis
       ) {
         showInsertLine(resolved);
       }
       syncPageInteractionCursor();
       return;
     }
-    if (state !== 'PICKING' || !pickActive) return;
+    if (state !== "PICKING" || !pickActive) return;
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (!target || !pickable(target) || target === hoveredElement) return;
     hoveredElement = target;
@@ -7291,7 +7796,7 @@
 
   function handleClick(e) {
     if (pendingApplyInFlight && !pendingDockEl?.contains(e.target)) {
-      if (pickerEl?.style.display !== 'none') hideActionPicker();
+      if (pickerEl?.style.display !== "none") hideActionPicker();
       if (own(e.target)) {
         e.preventDefault();
         e.stopPropagation();
@@ -7300,7 +7805,7 @@
       return;
     }
     // Close action picker on any outside click
-    if (pickerEl?.style.display !== 'none' && !own(e.target)) {
+    if (pickerEl?.style.display !== "none" && !own(e.target)) {
       hideActionPicker();
     }
     // Close Tune popover on outside click (anything outside panel + bar)
@@ -7308,42 +7813,38 @@
       closeTunePopover();
     }
     // In EDITING: click outside exits the text edit flow without rebuilding configure UI first.
-    if (state === 'EDITING' && !own(e.target) && selectedElement && !selectedElement.contains(e.target)) {
+    if (state === "EDITING" && !own(e.target) && selectedElement && !selectedElement.contains(e.target)) {
       cancelEditingToPicking();
       return;
     }
     // In CONFIGURING: click outside the bar and selected element returns to PICKING.
-    if (
-      state === 'CONFIGURING' && !own(e.target) && selectedElement
-      && !selectedElement.contains(e.target)
-    ) {
-      if (configureKind === 'insert') { cancelInsertConfigure(); return; }
-      exitConfigureToPicking('configure-outside-click', { clearHover: true });
+    if (state === "CONFIGURING" && !own(e.target) && selectedElement && !selectedElement.contains(e.target)) {
+      if (configureKind === "insert") {
+        cancelInsertConfigure();
+        return;
+      }
+      exitConfigureToPicking("configure-outside-click", { clearHover: true });
       return;
     }
-    if (state === 'PICKING' && insertActive) {
+    if (state === "PICKING" && insertActive) {
       if (own(e.target)) return;
       if (!insertHoverAnchor || !insertHoverPosition) return;
       e.preventDefault();
       e.stopPropagation();
-      const placeholder = createInsertPlaceholder(
-        insertHoverAnchor,
-        insertHoverPosition,
-        insertHoverAxis,
-      );
+      const placeholder = createInsertPlaceholder(insertHoverAnchor, insertHoverPosition, insertHoverAxis);
       if (!placeholder) return;
       hideInsertLine();
-      configureKind = 'insert';
+      configureKind = "insert";
       selectedElement = placeholder;
-      setLiveState('CONFIGURING');
+      setLiveState("CONFIGURING");
       hideHighlight();
       clearAnnotations();
       showAnnotOverlay(placeholder);
-      showBar('configure');
+      showBar("configure");
       startScrollTracking();
       return;
     }
-    if (state !== 'PICKING' || !pickActive) return;
+    if (state !== "PICKING" || !pickActive) return;
     if (own(e.target)) return;
     if (pagePickSkipClick || pageHasHostTextSelection()) {
       pagePickSkipClick = false;
@@ -7353,12 +7854,12 @@
     e.preventDefault();
     e.stopPropagation();
     selectedElement = hoveredElement;
-    setLiveState('CONFIGURING');
+    setLiveState("CONFIGURING");
     showHighlight(selectedElement);
     clearAnnotations();
     showAnnotOverlay(selectedElement);
-    showBar('configure');
-    renderEditBadge(hasTextRows(selectedElement) ? 'idle' : 'hidden');
+    showBar("configure");
+    renderEditBadge(hasTextRows(selectedElement) ? "idle" : "hidden");
     startScrollTracking();
     maybePrefetchPage();
     maybeWarnConditionalAncestor(selectedElement);
@@ -7381,25 +7882,33 @@
     let depth = 0;
     while (node && depth < 12) {
       // 1. Active dialog / modal
-      if (node.getAttribute && node.getAttribute('role') === 'dialog'
-          && node.getAttribute('aria-modal') === 'true') {
-        showToast('Heads up: this element lives inside a dialog. If state resets during generation, you may need to re-open it.', 6000);
+      if (node.getAttribute && node.getAttribute("role") === "dialog" && node.getAttribute("aria-modal") === "true") {
+        showToast(
+          "Heads up: this element lives inside a dialog. If state resets during generation, you may need to re-open it.",
+          6000
+        );
         return;
       }
       // 2. Common Radix / shadcn / headless-ui open-state attribute
-      if (node.dataset && node.dataset.state === 'open') {
-        showToast('Heads up: this element lives inside an open panel. If state resets during generation, you may need to re-open it.', 6000);
+      if (node.dataset && node.dataset.state === "open") {
+        showToast(
+          "Heads up: this element lives inside an open panel. If state resets during generation, you may need to re-open it.",
+          6000
+        );
         return;
       }
       // 3. Tab panel - only meaningful when the page also shows ANOTHER
       // tab as selected. A single tabpanel with no tablist is just a static
       // section in disguise and isn't conditional.
-      if (node.getAttribute && node.getAttribute('role') === 'tabpanel') {
+      if (node.getAttribute && node.getAttribute("role") === "tabpanel") {
         const list = document.querySelector('[role="tablist"]');
         if (list) {
           const tabs = list.querySelectorAll('[role="tab"]');
           if (tabs.length > 1) {
-            showToast('Heads up: this element lives in a tab panel. If state resets during generation, switch back to this tab.', 6000);
+            showToast(
+              "Heads up: this element lives in a tab panel. If state resets during generation, switch back to this tab.",
+              6000
+            );
             return;
           }
         }
@@ -7408,7 +7917,10 @@
       if (node.id) {
         const trigger = document.querySelector(`[aria-controls="${CSS.escape(node.id)}"][aria-expanded="true"]`);
         if (trigger) {
-          showToast('Heads up: this element lives inside an expandable section. If state resets during generation, re-expand it.', 6000);
+          showToast(
+            "Heads up: this element lives inside an expandable section. If state resets during generation, re-expand it.",
+            6000
+          );
           return;
         }
       }
@@ -7435,16 +7947,16 @@
     const path = location.pathname;
     if (prefetchedPaths.has(path)) return;
     prefetchedPaths.add(path);
-    sendEvent({ type: 'prefetch', pageUrl: path });
+    sendEvent({ type: "prefetch", pageUrl: path });
   }
 
   function shouldPassthroughElementNav(deepActive, e) {
     if (!deepActive || !own(deepActive)) return false;
-    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return false;
-    if (!/^(INPUT|TEXTAREA)$/.test(deepActive.tagName || '')) return false;
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return false;
+    if (!/^(INPUT|TEXTAREA)$/.test(deepActive.tagName || "")) return false;
     if (deepActive.value) return false;
-    if (deepActive.id === PREFIX + '-input' && state === 'CONFIGURING') return true;
-    if (deepActive.id === PREFIX + '-page-chat-input' && state === 'PICKING') return true;
+    if (deepActive.id === PREFIX + "-input" && state === "CONFIGURING") return true;
+    if (deepActive.id === PREFIX + "-page-chat-input" && state === "PICKING") return true;
     return false;
   }
 
@@ -7453,10 +7965,10 @@
     if (annotEditing && annotEditing.input && e.target === annotEditing.input) return;
     const deepActive = activeElementDeep();
     if (
-      deepActive
-      && own(deepActive)
-      && /^(INPUT|TEXTAREA|SELECT)$/.test(deepActive.tagName || '')
-      && !shouldPassthroughElementNav(deepActive, e)
+      deepActive &&
+      own(deepActive) &&
+      /^(INPUT|TEXTAREA|SELECT)$/.test(deepActive.tagName || "") &&
+      !shouldPassthroughElementNav(deepActive, e)
     ) {
       return;
     }
@@ -7467,7 +7979,7 @@
     // all keys except Escape. Escape cancels the current edit (restores
     // original text) and blurs without saving, staying in CONFIGURING.
     if (e.target.isContentEditable && isInlineEditActive(e.target)) {
-      if (e.key !== 'Escape') return;
+      if (e.key !== "Escape") return;
       e.preventDefault();
       e.stopPropagation();
       const original = e.target.dataset.impeccableOriginalText;
@@ -7480,98 +7992,126 @@
       return;
     }
     if (pendingApplyInFlight) {
-      const liveNavKey = e.key === 'Enter'
-        || e.key === 'ArrowUp'
-        || e.key === 'ArrowDown'
-        || e.key === 'ArrowLeft'
-        || e.key === 'ArrowRight';
-      if (liveNavKey && (state === 'PICKING' || state === 'CONFIGURING' || state === 'CYCLING')) {
+      const liveNavKey =
+        e.key === "Enter" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight";
+      if (liveNavKey && (state === "PICKING" || state === "CONFIGURING" || state === "CYCLING")) {
         e.preventDefault();
         e.stopPropagation();
-        if (e.key === 'Enter') showManualApplyBusyToast();
+        if (e.key === "Enter") showManualApplyBusyToast();
       }
       return;
     }
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       e.preventDefault();
-      if (pickerEl?.style.display !== 'none') { hideActionPicker(); return; }
-      if (state === 'EDITING') { cancelEditing(); return; }
-      if (state === 'CONFIGURING') {
-        if (configureKind === 'insert') { cancelInsertConfigure(); return; }
-        exitConfigureToPicking('escape-from-configure');
+      if (pickerEl?.style.display !== "none") {
+        hideActionPicker();
         return;
       }
-      if (state === 'CYCLING') { handleDiscard(); return; }
-      if (state === 'SAVING' || state === 'CONFIRMED') return; // don't interrupt
-      if (state === 'PICKING') {
+      if (state === "EDITING") {
+        cancelEditing();
+        return;
+      }
+      if (state === "CONFIGURING") {
+        if (configureKind === "insert") {
+          cancelInsertConfigure();
+          return;
+        }
+        exitConfigureToPicking("escape-from-configure");
+        return;
+      }
+      if (state === "CYCLING") {
+        handleDiscard();
+        return;
+      }
+      if (state === "SAVING" || state === "CONFIRMED") return; // don't interrupt
+      if (state === "PICKING") {
         if (insertActive) toggleInsert();
         else if (pickActive) togglePick();
-        else { hideHighlight(); setLiveState('IDLE'); }
+        else {
+          hideHighlight();
+          setLiveState("IDLE");
+        }
         return;
       }
     }
 
     // Arrow/Enter nav works in PICKING (hover) and CONFIGURING (selected, input empty)
-    var navEl = (state === 'PICKING') ? hoveredElement : (state === 'CONFIGURING') ? selectedElement : null;
-    if (navEl && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || (e.key === 'Enter' && state === 'PICKING'))) {
+    var navEl = state === "PICKING" ? hoveredElement : state === "CONFIGURING" ? selectedElement : null;
+    if (navEl && (e.key === "ArrowUp" || e.key === "ArrowDown" || (e.key === "Enter" && state === "PICKING"))) {
       let next = null;
-      if (e.key === 'ArrowDown' && !e.shiftKey) {
+      if (e.key === "ArrowDown" && !e.shiftKey) {
         next = navEl.nextElementSibling;
         while (next && !pickable(next)) next = next.nextElementSibling;
-      } else if (e.key === 'ArrowUp' && !e.shiftKey) {
+      } else if (e.key === "ArrowUp" && !e.shiftKey) {
         next = navEl.previousElementSibling;
         while (next && !pickable(next)) next = next.previousElementSibling;
-      } else if (e.key === 'ArrowUp' && e.shiftKey) {
+      } else if (e.key === "ArrowUp" && e.shiftKey) {
         next = navEl.parentElement;
         if (next && !pickable(next)) next = null;
-      } else if (e.key === 'ArrowDown' && e.shiftKey) {
+      } else if (e.key === "ArrowDown" && e.shiftKey) {
         next = navEl.firstElementChild;
         while (next && !pickable(next)) next = next.nextElementSibling;
-      } else if (e.key === 'Enter') {
+      } else if (e.key === "Enter") {
         e.preventDefault();
         selectedElement = hoveredElement;
-        setLiveState('CONFIGURING');
+        setLiveState("CONFIGURING");
         showHighlight(selectedElement);
         clearAnnotations();
         showAnnotOverlay(selectedElement);
-        showBar('configure');
-        renderEditBadge(hasTextRows(selectedElement) ? 'idle' : 'hidden');
+        showBar("configure");
+        renderEditBadge(hasTextRows(selectedElement) ? "idle" : "hidden");
         startScrollTracking();
         return;
       }
       if (next) {
         e.preventDefault();
-        if (state === 'PICKING') {
+        if (state === "PICKING") {
           hoveredElement = next;
         } else {
           // CONFIGURING: re-select the new element
           selectedElement = next;
           clearAnnotations();
           showAnnotOverlay(next);
-          showBar('configure');
+          showBar("configure");
           disableInlineEdit();
-          renderEditBadge(hasTextRows(selectedElement) ? 'idle' : 'hidden');
+          renderEditBadge(hasTextRows(selectedElement) ? "idle" : "hidden");
           startScrollTracking();
         }
         showHighlight(next);
-        next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        next.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
       return;
     }
 
-    if (state === 'CYCLING') {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); cycleVariant(-1); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); cycleVariant(1); }
-      if (e.key === 'Enter') { e.preventDefault(); handleAccept(); }
+    if (state === "CYCLING") {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        cycleVariant(-1);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        cycleVariant(1);
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAccept();
+      }
     }
   }
 
   function handleGo() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
-    if (!selectedElement || state !== 'CONFIGURING') return;
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
+    if (!selectedElement || state !== "CONFIGURING") return;
     stopVoice({ suppressSubmit: true });
-    const input = uiGetById(PREFIX + '-input');
-    const prompt = input ? input.value.trim() : '';
+    const input = uiGetById(PREFIX + "-input");
+    const prompt = input ? input.value.trim() : "";
 
     // Commit any pending pin edit BEFORE we snapshot annotations.
     if (annotEditing) finalizeEditingPin();
@@ -7591,8 +8131,8 @@
     expectedVariants = selectedCount;
     arrivedVariants = 0;
     visibleVariant = 0;
-    generationPhase = 'queued';
-    parameterGenerationState = 'pending';
+    generationPhase = "queued";
+    parameterGenerationState = "pending";
     parameterReadyAnnouncedSession = null;
     resetSessionFileMeta();
 
@@ -7605,11 +8145,12 @@
     const captureRect = elForCapture.getBoundingClientRect();
     pickedAnchorViewportTop = captureRect.top;
     const snapshot = {
-      comments: annotState.comments.map(c => ({ x: c.x, y: c.y, text: c.text })),
-      strokes: annotState.strokes.map(s => ({ points: s.points.map(p => [p[0], p[1]]) })),
+      comments: annotState.comments.map((c) => ({ x: c.x, y: c.y, text: c.text })),
+      strokes: annotState.strokes.map((s) => ({ points: s.points.map((p) => [p[0], p[1]]) })),
     };
     const basePayload = {
-      type: 'generate', id: currentSessionId,
+      type: "generate",
+      id: currentSessionId,
       action: selectedAction,
       freeformPrompt: prompt || undefined,
       count: selectedCount,
@@ -7623,15 +8164,15 @@
     hideAnnotOverlay();
     clearAnnotations();
 
-    setLiveState('GENERATING');
+    setLiveState("GENERATING");
     // Disable the Edit badge: starting a manual text edit mid-generation would
     // conflict with the variant wrap that's about to land in the same DOM
     // region. Only swap if the badge was visible - picked elements with no
     // text rows have it hidden already.
-    if (editBadgeEl && editBadgeEl.style.display !== 'none') renderEditBadge('idle-disabled');
-    showBar('generating');
+    if (editBadgeEl && editBadgeEl.style.display !== "none") renderEditBadge("idle-disabled");
+    showBar("generating");
     saveSession();
-    sendCheckpoint('generate_started');
+    sendCheckpoint("generate_started");
     writeScrollY(window.scrollY);
     if (variantObserver) variantObserver.disconnect();
     variantObserver = startVariantObserver(currentSessionId);
@@ -7646,21 +8187,21 @@
     hideAnnotOverlay();
     clearAnnotations();
     clearInsertPicking();
-    configureKind = 'replace';
+    configureKind = "replace";
     selectedElement = null;
-    setLiveState(insertActive ? 'PICKING' : 'IDLE');
+    setLiveState(insertActive ? "PICKING" : "IDLE");
     hideHighlight();
-    syncPageChatFocus('insert-configure-cancel');
+    syncPageChatFocus("insert-configure-cancel");
   }
 
   function handleInsertCreate() {
-    if (!placeholderElement || !insertAnchorElement || state !== 'CONFIGURING' || configureKind !== 'insert') return;
-    const input = uiGetById(PREFIX + '-insert-input');
-    const prompt = input ? input.value.trim() : '';
+    if (!placeholderElement || !insertAnchorElement || state !== "CONFIGURING" || configureKind !== "insert") return;
+    const input = uiGetById(PREFIX + "-insert-input");
+    const prompt = input ? input.value.trim() : "";
     if (annotEditing) finalizeEditingPin();
     const snapshot = {
-      comments: annotState.comments.map(c => ({ x: c.x, y: c.y, text: c.text })),
-      strokes: annotState.strokes.map(s => ({ points: s.points.map(p => [p[0], p[1]]) })),
+      comments: annotState.comments.map((c) => ({ x: c.x, y: c.y, text: c.text })),
+      strokes: annotState.strokes.map((s) => ({ points: s.points.map((p) => [p[0], p[1]]) })),
     };
     if (!canCreateInsert({ prompt, comments: snapshot.comments, strokes: snapshot.strokes })) return;
 
@@ -7677,8 +8218,8 @@
     expectedVariants = selectedCount;
     arrivedVariants = 0;
     visibleVariant = 0;
-    generationPhase = 'queued';
-    parameterGenerationState = 'pending';
+    generationPhase = "queued";
+    parameterGenerationState = "pending";
     parameterReadyAnnouncedSession = null;
     resetSessionFileMeta();
     selectedElement = placeholderElement;
@@ -7688,8 +8229,8 @@
     const captureRect = elForCapture.getBoundingClientRect();
     pickedAnchorViewportTop = captureRect.top;
     const basePayload = {
-      type: 'generate',
-      mode: 'insert',
+      type: "generate",
+      mode: "insert",
       id: currentSessionId,
       count: selectedCount,
       pageUrl: location.pathname,
@@ -7709,11 +8250,11 @@
     hideAnnotOverlay();
     clearAnnotations();
 
-    setLiveState('GENERATING');
-    showBar('generating');
+    setLiveState("GENERATING");
+    showBar("generating");
     startScrollTracking();
     saveSession();
-    sendCheckpoint('generate_started');
+    sendCheckpoint("generate_started");
     writeScrollY(window.scrollY);
     if (variantObserver) variantObserver.disconnect();
     variantObserver = startVariantObserver(currentSessionId);
@@ -7730,10 +8271,13 @@
     if (window.modernScreenshot) return Promise.resolve(window.modernScreenshot);
     if (msLoadPromise) return msLoadPromise;
     msLoadPromise = new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'http://localhost:' + PORT + '/modern-screenshot.js';
+      const s = document.createElement("script");
+      s.src = "http://localhost:" + PORT + "/modern-screenshot.js";
       s.onload = () => resolve(window.modernScreenshot);
-      s.onerror = () => { msLoadPromise = null; reject(new Error('modern-screenshot failed to load')); };
+      s.onerror = () => {
+        msLoadPromise = null;
+        reject(new Error("modern-screenshot failed to load"));
+      };
       uiAppendStyle(s);
     });
     return msLoadPromise;
@@ -7750,11 +8294,15 @@
   // to modern-screenshot as font.cssText.
   const FONT_EXT_RE = /\.(woff2?|ttf|otf|eot)(\?.*)?$/i;
   const FONT_MIME = {
-    woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf', otf: 'font/otf', eot: 'application/vnd.ms-fontobject',
+    woff2: "font/woff2",
+    woff: "font/woff",
+    ttf: "font/ttf",
+    otf: "font/otf",
+    eot: "application/vnd.ms-fontobject",
   };
   function bufferToBase64(buf) {
     const bytes = new Uint8Array(buf);
-    let binary = '';
+    let binary = "";
     const CHUNK = 0x8000;
     for (let i = 0; i < bytes.length; i += CHUNK) {
       binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
@@ -7769,19 +8317,23 @@
       if (FONT_EXT_RE.test(m[2])) urls.add(m[2]);
     }
     const map = new Map();
-    await Promise.all([...urls].map(async (url) => {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const buf = await res.arrayBuffer();
-        const ext = url.toLowerCase().match(FONT_EXT_RE)?.[1] || 'woff2';
-        const mime = FONT_MIME[ext] || 'application/octet-stream';
-        map.set(url, 'data:' + mime + ';base64,' + bufferToBase64(buf));
-      } catch { /* skip; fall through to URL */ }
-    }));
+    await Promise.all(
+      [...urls].map(async (url) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const buf = await res.arrayBuffer();
+          const ext = url.toLowerCase().match(FONT_EXT_RE)?.[1] || "woff2";
+          const mime = FONT_MIME[ext] || "application/octet-stream";
+          map.set(url, "data:" + mime + ";base64," + bufferToBase64(buf));
+        } catch {
+          /* skip; fall through to URL */
+        }
+      })
+    );
     return cssText.replace(urlRe, (orig, q, url) => {
       const data = map.get(url);
-      return data ? 'url(' + q + data + q + ')' : orig;
+      return data ? "url(" + q + data + q + ")" : orig;
     });
   }
   async function collectFontCssText() {
@@ -7791,7 +8343,7 @@
       try {
         const rules = sheet.cssRules;
         for (const rule of rules) {
-          if (rule.constructor.name === 'CSSFontFaceRule' || rule.cssText?.startsWith('@font-face')) {
+          if (rule.constructor.name === "CSSFontFaceRule" || rule.cssText?.startsWith("@font-face")) {
             chunks.push(rule.cssText);
           }
         }
@@ -7803,22 +8355,24 @@
           const text = await res.text();
           let m2;
           while ((m2 = fontFaceRe.exec(text))) chunks.push(m2[0]);
-        } catch { /* ignore; capture is best-effort */ }
+        } catch {
+          /* ignore; capture is best-effort */
+        }
       }
     }
-    if (chunks.length === 0) return '';
-    return inlineFontUrls(chunks.join('\n'));
+    if (chunks.length === 0) return "";
+    return inlineFontUrls(chunks.join("\n"));
   }
 
   // True if `s` is a computed color string that renders as nothing
   // (explicit `transparent`, or `rgba(...)` with alpha 0).
   function isTransparentColor(s) {
     if (!s) return true;
-    if (s === 'transparent') return true;
+    if (s === "transparent") return true;
     const m = /rgba?\(([^)]+)\)/.exec(s);
     if (!m) return false;
-    const parts = m[1].split(',').map((p) => p.trim());
-    if (parts.length === 4) return parseFloat(parts[3]) === 0;
+    const parts = m[1].split(",").map((p) => p.trim());
+    if (parts.length === 4) return Number.parseFloat(parts[3]) === 0;
     return false;
   }
 
@@ -7831,7 +8385,7 @@
   function resolveCanvasBackground(el) {
     const own = getComputedStyle(el);
     if (!isTransparentColor(own.backgroundColor)) return null;
-    if (own.backgroundImage && own.backgroundImage !== 'none') return null;
+    if (own.backgroundImage && own.backgroundImage !== "none") return null;
     let node = el.parentElement;
     while (node) {
       const cs = getComputedStyle(node);
@@ -7846,7 +8400,7 @@
     // transparent-black - modern-screenshot then renders the capture on a
     // black canvas and the shader overlay flashes solid black during load.
     // The browser canvas defaults to white, so we do too.
-    return '#ffffff';
+    return "#ffffff";
   }
 
   function captureChromeNodes() {
@@ -7855,20 +8409,20 @@
       if (!node || node === document.body || nodes.includes(node)) return;
       nodes.push(node);
     };
-    add(document.getElementById(PREFIX + '-root'));
+    add(document.getElementById(PREFIX + "-root"));
     [
-      PREFIX + '-highlight',
-      PREFIX + '-tooltip',
-      PREFIX + '-bar',
-      PREFIX + '-picker',
-      PREFIX + '-params-panel',
-      PREFIX + '-insert-line',
-      PREFIX + '-insert-placeholder',
-      PREFIX + '-insert-create-tooltip',
-      PREFIX + '-annot',
-      PREFIX + '-design-host',
-      PREFIX + '-toast',
-      PREFIX + '-shader',
+      PREFIX + "-highlight",
+      PREFIX + "-tooltip",
+      PREFIX + "-bar",
+      PREFIX + "-picker",
+      PREFIX + "-params-panel",
+      PREFIX + "-insert-line",
+      PREFIX + "-insert-placeholder",
+      PREFIX + "-insert-create-tooltip",
+      PREFIX + "-annot",
+      PREFIX + "-design-host",
+      PREFIX + "-toast",
+      PREFIX + "-shader",
     ].forEach((id) => add(uiGetById(id)));
     return nodes;
   }
@@ -7877,17 +8431,17 @@
     const saved = captureChromeNodes().map((node) => ({
       node,
       visibility: node.style.visibility,
-      priority: node.style.getPropertyPriority('visibility'),
+      priority: node.style.getPropertyPriority("visibility"),
     }));
     for (const { node } of saved) {
-      node.style.setProperty('visibility', 'hidden', 'important');
+      node.style.setProperty("visibility", "hidden", "important");
     }
     await new Promise((resolve) => requestAnimationFrame(resolve));
     try {
       return await fn();
     } finally {
       for (const { node, visibility, priority } of saved) {
-        node.style.setProperty('visibility', visibility, priority);
+        node.style.setProperty("visibility", visibility, priority);
       }
     }
   }
@@ -7895,18 +8449,20 @@
   function shouldUseAncestorCropShaderProxy(el) {
     // TODO: Enable this proxy for React/Vue/etc. adapters once their live
     // preview mounts are covered by the same shader regression checks.
-    const adapter = String(window.__IMPECCABLE_LIVE_ADAPTER__ || '').toLowerCase();
-    if (adapter === 'svelte' || adapter === 'sveltekit') return true;
+    const adapter = String(window.__IMPECCABLE_LIVE_ADAPTER__ || "").toLowerCase();
+    if (adapter === "svelte" || adapter === "sveltekit") return true;
     if (isFrameworkComponentPreviewMode(currentPreviewMode) || svelteComponentSession) return true;
-    const wrapper = el?.closest?.('[data-impeccable-variants]');
+    const wrapper = el?.closest?.("[data-impeccable-variants]");
     return isFrameworkComponentPreviewMode(wrapper?.dataset?.impeccablePreview);
   }
 
   function paintsShaderProxySurface(node) {
     const s = getComputedStyle(node);
-    return !isTransparentColor(s.backgroundColor)
-      || (s.backgroundImage && s.backgroundImage !== 'none')
-      || paintsBackdrop(node);
+    return (
+      !isTransparentColor(s.backgroundColor) ||
+      (s.backgroundImage && s.backgroundImage !== "none") ||
+      paintsBackdrop(node)
+    );
   }
 
   function findShaderProxyCaptureRoot(el) {
@@ -7916,7 +8472,8 @@
     while (node && node !== doc.documentElement) {
       const nr = node.getBoundingClientRect();
       const containsElement =
-        nr.width > 0 && nr.height > 0 &&
+        nr.width > 0 &&
+        nr.height > 0 &&
         nr.left <= er.left + 0.5 &&
         nr.top <= er.top + 0.5 &&
         nr.right >= er.right - 0.5 &&
@@ -7935,7 +8492,7 @@
   async function captureElementFromRenderedAncestor(ms, el, opts) {
     const doc = el.ownerDocument || document;
     const captureRoot = findShaderProxyCaptureRoot(el);
-    if (!captureRoot) throw new Error('No painted ancestor for Svelte shader proxy');
+    if (!captureRoot) throw new Error("No painted ancestor for Svelte shader proxy");
     const rootCanvas = await ms.domToCanvas(captureRoot, opts);
     const S = opts.scale;
     const er = el.getBoundingClientRect();
@@ -7944,28 +8501,30 @@
     const sy = (er.top - rr.top) * S;
     const sw = er.width * S;
     const sh = er.height * S;
-    if (sw <= 0 || sh <= 0) throw new Error('Selected element has no visible capture rect');
-    const crop = doc.createElement('canvas');
+    if (sw <= 0 || sh <= 0) throw new Error("Selected element has no visible capture rect");
+    const crop = doc.createElement("canvas");
     crop.width = Math.max(1, Math.round(sw));
     crop.height = Math.max(1, Math.round(sh));
-    const cctx = crop.getContext('2d', { willReadFrequently: true });
+    const cctx = crop.getContext("2d", { willReadFrequently: true });
     cctx.drawImage(rootCanvas, sx, sy, sw, sh, 0, 0, crop.width, crop.height);
     const paper = dominantRgb01(cctx, crop.width, crop.height) || averageRgb01(cctx, crop.width, crop.height);
-    const blob = await new Promise((res) => crop.toBlob(res, 'image/png'));
-    if (!blob) throw new Error('Ancestor crop failed to produce a PNG blob');
+    const blob = await new Promise((res) => crop.toBlob(res, "image/png"));
+    if (!blob) throw new Error("Ancestor crop failed to produce a PNG blob");
     return { blob, paper };
   }
 
   async function captureElementToBlob(el, snapshot, rect) {
-    try { if (document.fonts?.ready) await document.fonts.ready; } catch {}
+    try {
+      if (document.fonts?.ready) await document.fonts.ready;
+    } catch {}
     const hasAnnotations = snapshot && (snapshot.comments.length > 0 || snapshot.strokes.length > 0);
     let annotNode = null;
     let savedPosition = null;
     if (hasAnnotations) {
       const pos = getComputedStyle(el).position;
-      if (pos === 'static') {
+      if (pos === "static") {
         savedPosition = el.style.position;
-        el.style.position = 'relative';
+        el.style.position = "relative";
       }
       annotNode = buildAnnotationsForCapture(rect, snapshot);
       el.appendChild(annotNode);
@@ -7981,13 +8540,13 @@
         try {
           return await hideCaptureChromeForShaderProxy(() => captureElementFromRenderedAncestor(ms, el, opts));
         } catch (err) {
-          console.warn('[impeccable] Svelte ancestor crop capture failed, falling back to element capture:', err);
+          console.warn("[impeccable] Svelte ancestor crop capture failed, falling back to element capture:", err);
         }
       }
       const bg = resolveCanvasBackground(el);
       // Fast path: the element paints its own background, or an opaque ancestor
       // color was found. modern-screenshot bakes that color; paper matches it.
-      if (bg !== '#ffffff') {
+      if (bg !== "#ffffff") {
         const blob = await ms.domToBlob(el, { ...opts, ...(bg ? { backgroundColor: bg } : {}) });
         return { blob, paper: bg ? cssColorToRgb01(bg) : resolvePaperRgb(el) };
       }
@@ -7999,26 +8558,29 @@
       // when nothing is actually painted behind the element.
       const backdrop = findBackdropAncestor(el);
       if (!backdrop) {
-        const blob = await ms.domToBlob(el, { ...opts, backgroundColor: '#ffffff' });
+        const blob = await ms.domToBlob(el, { ...opts, backgroundColor: "#ffffff" });
         return { blob, paper: SHADER_PAPER_FALLBACK };
       }
       const ancestorCanvas = await ms.domToCanvas(backdrop, opts);
       const S = opts.scale;
       const er = el.getBoundingClientRect();
       const ar = backdrop.getBoundingClientRect();
-      const sx = (er.left - ar.left) * S, sy = (er.top - ar.top) * S;
-      const sw = er.width * S, sh = er.height * S;
-      const crop = document.createElement('canvas');
+      const sx = (er.left - ar.left) * S,
+        sy = (er.top - ar.top) * S;
+      const sw = er.width * S,
+        sh = er.height * S;
+      const crop = document.createElement("canvas");
       crop.width = Math.max(1, Math.round(sw));
       crop.height = Math.max(1, Math.round(sh));
-      const cctx = crop.getContext('2d', { willReadFrequently: true });
+      const cctx = crop.getContext("2d", { willReadFrequently: true });
       cctx.drawImage(ancestorCanvas, sx, sy, sw, sh, 0, 0, crop.width, crop.height);
       // Ground = backdrop sampled around the element, falling back to the crop
       // mean only if the surround is fully transparent.
-      const actx = ancestorCanvas.getContext('2d', { willReadFrequently: true });
-      const paper = sampleSurroundingRgb(actx, sx, sy, sw, sh, ancestorCanvas.width, ancestorCanvas.height)
-        || averageRgb01(cctx, crop.width, crop.height);
-      const blob = await new Promise((res) => crop.toBlob(res, 'image/png'));
+      const actx = ancestorCanvas.getContext("2d", { willReadFrequently: true });
+      const paper =
+        sampleSurroundingRgb(actx, sx, sy, sw, sh, ancestorCanvas.width, ancestorCanvas.height) ||
+        averageRgb01(cctx, crop.width, crop.height);
+      const blob = await new Promise((res) => crop.toBlob(res, "image/png"));
       return { blob, paper };
     } finally {
       if (annotNode) annotNode.remove();
@@ -8044,11 +8606,11 @@
     try {
       ({ blob, paper } = await captureElementToBlob(el, snapshot, rect));
     } catch (err) {
-      console.warn('[impeccable] capture failed, proceeding without screenshot:', err);
+      console.warn("[impeccable] capture failed, proceeding without screenshot:", err);
     }
     // Light up the shader overlay the moment capture is ready - no reason to
     // wait for the upload to complete before the user sees something alive.
-    if (blob && state === 'GENERATING') {
+    if (blob && state === "GENERATING") {
       showShaderOverlay(el, blob, rect, paper);
     }
     // Only upload + forward the screenshot when annotations (comments/strokes)
@@ -8058,18 +8620,22 @@
     if (blob && hasAnnotations) {
       try {
         const uploadRes = await fetch(
-          'http://localhost:' + PORT + '/annotation?token=' + encodeURIComponent(TOKEN) +
-          '&eventId=' + encodeURIComponent(basePayload.id),
-          { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: blob },
+          "http://localhost:" +
+            PORT +
+            "/annotation?token=" +
+            encodeURIComponent(TOKEN) +
+            "&eventId=" +
+            encodeURIComponent(basePayload.id),
+          { method: "POST", headers: { "Content-Type": "image/png" }, body: blob }
         );
         if (uploadRes.ok) {
           const { path: p } = await uploadRes.json();
           screenshotPath = p;
         } else {
-          console.warn('[impeccable] annotation upload failed:', uploadRes.status);
+          console.warn("[impeccable] annotation upload failed:", uploadRes.status);
         }
       } catch (err) {
-        console.warn('[impeccable] annotation upload failed:', err);
+        console.warn("[impeccable] annotation upload failed:", err);
       }
     }
     // Annotated requests must wait for capture + upload because the screenshot
@@ -8177,13 +8743,13 @@ void main() {
   let colorParseCtx = null;
   function cssColorToRgb01(str) {
     if (!colorParseCtx) {
-      colorParseCtx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+      colorParseCtx = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
     }
     // Clear first: the ctx is cached across calls, so a semi-transparent color
     // would otherwise blend (source-over) with the previous call's leftover
     // pixel, making the result depend on call history.
     colorParseCtx.clearRect(0, 0, 1, 1);
-    colorParseCtx.fillStyle = '#000'; // invalid input leaves this default
+    colorParseCtx.fillStyle = "#000"; // invalid input leaves this default
     colorParseCtx.fillStyle = str;
     colorParseCtx.fillRect(0, 0, 1, 1);
     const d = colorParseCtx.getImageData(0, 0, 1, 1).data;
@@ -8208,13 +8774,13 @@ void main() {
   // (genuinely transparent → white is correct).
   function paintsBackdrop(node) {
     const s = getComputedStyle(node);
-    if (s.backgroundImage && s.backgroundImage !== 'none') return true;
+    if (s.backgroundImage && s.backgroundImage !== "none") return true;
     const nr = node.getBoundingClientRect();
     for (const child of node.children) {
       const ccs = getComputedStyle(child);
-      if (ccs.position !== 'absolute' && ccs.position !== 'fixed') continue;
-      const paints = !isTransparentColor(ccs.backgroundColor)
-        || (ccs.backgroundImage && ccs.backgroundImage !== 'none');
+      if (ccs.position !== "absolute" && ccs.position !== "fixed") continue;
+      const paints =
+        !isTransparentColor(ccs.backgroundColor) || (ccs.backgroundImage && ccs.backgroundImage !== "none");
       if (!paints) continue;
       const cr = child.getBoundingClientRect();
       if (cr.width >= nr.width * 0.9 && cr.height >= nr.height * 0.9) return true;
@@ -8234,9 +8800,17 @@ void main() {
   // backdrop was captured from an ancestor rather than read from a CSS color.
   function averageRgb01(ctx, w, h) {
     const data = ctx.getImageData(0, 0, w, h).data;
-    let r = 0, g = 0, b = 0, n = 0;
+    let r = 0,
+      g = 0,
+      b = 0,
+      n = 0;
     // Stride a few pixels for speed; exact average is unnecessary for a ground.
-    for (let i = 0; i < data.length; i += 16) { r += data[i]; g += data[i + 1]; b += data[i + 2]; n++; }
+    for (let i = 0; i < data.length; i += 16) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      n++;
+    }
     return n ? [r / n / 255, g / n / 255, b / n / 255] : SHADER_PAPER_FALLBACK;
   }
 
@@ -8250,7 +8824,7 @@ void main() {
     for (let p = 0; p < w * h; p += stride) {
       const i = p * 4;
       if (data[i + 3] < 16) continue;
-      const key = (data[i] >> 4) + ',' + (data[i + 1] >> 4) + ',' + (data[i + 2] >> 4);
+      const key = (data[i] >> 4) + "," + (data[i + 1] >> 4) + "," + (data[i + 2] >> 4);
       const bucket = buckets.get(key) || { count: 0, r: 0, g: 0, b: 0 };
       bucket.count += 1;
       bucket.r += data[i];
@@ -8274,15 +8848,25 @@ void main() {
     const fx = [0.2, 0.5, 0.8].map((f) => sx + sw * f);
     const fy = [0.2, 0.5, 0.8].map((f) => sy + sh * f);
     const pts = [];
-    for (const x of fx) { pts.push([x, sy - pad], [x, sy + sh + pad]); }
-    for (const y of fy) { pts.push([sx - pad, y], [sx + sw + pad, y]); }
-    let r = 0, g = 0, b = 0, n = 0;
+    for (const x of fx) {
+      pts.push([x, sy - pad], [x, sy + sh + pad]);
+    }
+    for (const y of fy) {
+      pts.push([sx - pad, y], [sx + sw + pad, y]);
+    }
+    let r = 0,
+      g = 0,
+      b = 0,
+      n = 0;
     for (const [px, py] of pts) {
       const cx = Math.max(0, Math.min(W - 1, Math.round(px)));
       const cy = Math.max(0, Math.min(H - 1, Math.round(py)));
       const d = ctx.getImageData(cx, cy, 1, 1).data;
       if (d[3] === 0) continue; // outside the ancestor's paint
-      r += d[0]; g += d[1]; b += d[2]; n++;
+      r += d[0];
+      g += d[1];
+      b += d[2];
+      n++;
     }
     return n ? [r / n / 255, g / n / 255, b / n / 255] : null;
   }
@@ -8294,7 +8878,7 @@ void main() {
     if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
       const info = gl.getShaderInfoLog(sh);
       gl.deleteShader(sh);
-      throw new Error('shader compile failed: ' + info);
+      throw new Error("shader compile failed: " + info);
     }
     return sh;
   }
@@ -8305,8 +8889,10 @@ void main() {
     if (!anchor) return;
     const r = anchor.getBoundingClientRect();
     Object.assign(shaderState.canvas.style, {
-      top: r.top + 'px', left: r.left + 'px',
-      width: r.width + 'px', height: r.height + 'px',
+      top: r.top + "px",
+      left: r.left + "px",
+      width: r.width + "px",
+      height: r.height + "px",
     });
   }
 
@@ -8315,26 +8901,28 @@ void main() {
     if (shaderState.rafId) cancelAnimationFrame(shaderState.rafId);
     if (shaderState.canvas) shaderState.canvas.remove();
     if (shaderState.objectUrl) URL.revokeObjectURL(shaderState.objectUrl);
-    const lose = shaderState.gl?.getExtension?.('WEBGL_lose_context');
-    try { lose?.loseContext(); } catch {}
+    const lose = shaderState.gl?.getExtension?.("WEBGL_lose_context");
+    try {
+      lose?.loseContext();
+    } catch {}
     shaderState = null;
   }
 
   function showShaderBitmapFallback(canvas, blob) {
     canvas.remove();
     const objectUrl = URL.createObjectURL(blob);
-    const fallback = document.createElement('div');
-    fallback.id = PREFIX + '-shader';
+    const fallback = document.createElement("div");
+    fallback.id = PREFIX + "-shader";
     // Copy positioning via cssText. Object.assign across CSSStyleDeclaration
     // throws in modern Chromium because the source's indexed properties
     // (style[0], [1], ...) are read-only and the engine forbids writing
     // them on the destination.
     fallback.style.cssText = canvas.style.cssText;
     fallback.style.backgroundImage = 'url("' + objectUrl + '")';
-    fallback.style.backgroundSize = '100% 100%';
-    fallback.style.backgroundRepeat = 'no-repeat';
-    fallback.style.outline = '2px dashed ' + C.brand;
-    fallback.style.outlineOffset = '-2px';
+    fallback.style.backgroundSize = "100% 100%";
+    fallback.style.backgroundRepeat = "no-repeat";
+    fallback.style.outline = "2px dashed " + C.brand;
+    fallback.style.outlineOffset = "-2px";
     uiAppend(fallback);
     shaderState = { canvas: fallback, gl: null, program: null, texture: null, rafId: 0, startTime: 0, objectUrl };
   }
@@ -8342,25 +8930,28 @@ void main() {
   async function showShaderOverlay(el, blob, rect, paper) {
     hideShaderOverlay();
     if (!blob || !el) return;
-    const canvas = document.createElement('canvas');
-    canvas.id = PREFIX + '-shader';
+    const canvas = document.createElement("canvas");
+    canvas.id = PREFIX + "-shader";
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const radius = getComputedStyle(el).borderRadius;
     canvas.width = Math.max(1, Math.floor(rect.width * dpr));
     canvas.height = Math.max(1, Math.floor(rect.height * dpr));
     Object.assign(canvas.style, {
-      position: 'fixed',
-      top: rect.top + 'px', left: rect.left + 'px',
-      width: rect.width + 'px', height: rect.height + 'px',
+      position: "fixed",
+      top: rect.top + "px",
+      left: rect.left + "px",
+      width: rect.width + "px",
+      height: rect.height + "px",
       borderRadius: radius,
-      overflow: 'hidden',
-      pointerEvents: 'none',
+      overflow: "hidden",
+      pointerEvents: "none",
       zIndex: Z.bar - 1,
     });
     uiAppend(canvas);
 
-    const gl = canvas.getContext('webgl', { premultipliedAlpha: false, preserveDrawingBuffer: false })
-            || canvas.getContext('experimental-webgl');
+    const gl =
+      canvas.getContext("webgl", { premultipliedAlpha: false, preserveDrawingBuffer: false }) ||
+      canvas.getContext("experimental-webgl");
     if (!gl) {
       // WebGL unavailable: use the captured bitmap as a background overlay so
       // the user still sees something meaningful during generation.
@@ -8377,27 +8968,24 @@ void main() {
       gl.attachShader(program, fs);
       gl.linkProgram(program);
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        throw new Error('program link failed: ' + gl.getProgramInfoLog(program));
+        throw new Error("program link failed: " + gl.getProgramInfoLog(program));
       }
       // Full-screen quad
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        -1, -1, 0, 1,
-         1, -1, 1, 1,
-        -1,  1, 0, 0,
-        -1,  1, 0, 0,
-         1, -1, 1, 1,
-         1,  1, 1, 0,
-      ]), gl.STATIC_DRAW);
-      const posLoc = gl.getAttribLocation(program, 'a_position');
-      const uvLoc = gl.getAttribLocation(program, 'a_uv');
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 0, 1, 1, -1, 1, 1, -1, 1, 0, 0, -1, 1, 0, 0, 1, -1, 1, 1, 1, 1, 1, 0]),
+        gl.STATIC_DRAW
+      );
+      const posLoc = gl.getAttribLocation(program, "a_position");
+      const uvLoc = gl.getAttribLocation(program, "a_uv");
       gl.enableVertexAttribArray(posLoc);
       gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 16, 0);
       gl.enableVertexAttribArray(uvLoc);
       gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, false, 16, 8);
     } catch (err) {
-      console.warn('[impeccable] shader setup failed:', err);
+      console.warn("[impeccable] shader setup failed:", err);
       canvas.remove();
       return;
     }
@@ -8407,9 +8995,11 @@ void main() {
     try {
       bitmap = await createImageBitmap(blob);
     } catch (err) {
-      console.warn('[impeccable] shader bitmap decode failed:', err);
-      const lose = gl.getExtension?.('WEBGL_lose_context');
-      try { lose?.loseContext(); } catch {}
+      console.warn("[impeccable] shader bitmap decode failed:", err);
+      const lose = gl.getExtension?.("WEBGL_lose_context");
+      try {
+        lose?.loseContext();
+      } catch {}
       showShaderBitmapFallback(canvas, blob);
       return;
     }
@@ -8423,13 +9013,13 @@ void main() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
     if (bitmap.close) bitmap.close();
 
-    const uTime = gl.getUniformLocation(program, 'u_time');
-    const uRes = gl.getUniformLocation(program, 'u_resolution');
-    const uAccent = gl.getUniformLocation(program, 'u_accent');
-    const uPaper = gl.getUniformLocation(program, 'u_paper');
-    const uTex = gl.getUniformLocation(program, 'u_texture');
+    const uTime = gl.getUniformLocation(program, "u_time");
+    const uRes = gl.getUniformLocation(program, "u_resolution");
+    const uAccent = gl.getUniformLocation(program, "u_accent");
+    const uPaper = gl.getUniformLocation(program, "u_paper");
+    const uTex = gl.getUniformLocation(program, "u_texture");
     const paperRgb = paper || resolvePaperRgb(el);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     shaderState = { canvas, gl, program, texture, rafId: 0, startTime: performance.now(), reduced };
     function frame() {
@@ -8452,15 +9042,22 @@ void main() {
   }
 
   async function handleAccept() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
-    if (pendingAcceptedSession || state === 'SAVING') return;
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
+    if (pendingAcceptedSession || state === "SAVING") return;
     if (variantSelectionPromise) {
-      try { await variantSelectionPromise; } catch { /* failed selection falls back below */ }
+      try {
+        await variantSelectionPromise;
+      } catch {
+        /* failed selection falls back below */
+      }
     }
     const domVisibleVariant = readVisibleVariantFromDOM(currentSessionId);
     if (domVisibleVariant > 0) visibleVariant = domVisibleVariant;
     const acceptPayload = {
-      type: 'accept',
+      type: "accept",
       id: currentSessionId,
       variantId: String(visibleVariant),
       pageUrl: location.pathname,
@@ -8479,12 +9076,13 @@ void main() {
     // HMR hasn't cleaned up by then (keeps static-server flows working).
     const acceptedSessionId = currentSessionId;
     const acceptedVariant = visibleVariant;
-    const acceptedIsSvelteComponent = svelteComponentSession?.sessionId === acceptedSessionId
-      || isFrameworkComponentPreviewMode(acceptWrapper?.dataset?.impeccablePreview);
+    const acceptedIsSvelteComponent =
+      svelteComponentSession?.sessionId === acceptedSessionId ||
+      isFrameworkComponentPreviewMode(acceptWrapper?.dataset?.impeccablePreview);
     const acceptedSnapshot = snapshotAcceptedVariantDom(acceptedSessionId, acceptedVariant);
 
-    setLiveState('SAVING');
-    updateBarContent('saving');
+    setLiveState("SAVING");
+    updateBarContent("saving");
     pendingAcceptedSession = {
       id: acceptedSessionId,
       variant: String(acceptedVariant),
@@ -8502,16 +9100,16 @@ void main() {
         // generation epoch is fenced. Source promotion/carbonize can finish in
         // the background; the foreground picker is free immediately.
         markSessionHandled();
-        setLiveState('CONFIRMED');
+        setLiveState("CONFIRMED");
         document.documentElement.dataset.impeccableAcceptToPickingMs = String(Date.now() - acceptPayload.clientSentAt);
         awaitingAcceptResult = { id: acceptedSessionId };
         scheduleAcceptCleanup(pending);
       })
       .catch(() => {
         if (pendingAcceptedSession?.id === acceptedSessionId) pendingAcceptedSession = null;
-        setLiveState('CYCLING');
+        setLiveState("CYCLING");
         showOrUpdateCyclingBar();
-        showToast('Could not confirm accept with the live server. Session kept for recovery; try Accept again.', 5000);
+        showToast("Could not confirm accept with the live server. Session kept for recovery; try Accept again.", 5000);
       });
   }
 
@@ -8528,14 +9126,14 @@ void main() {
     if (pending.isSvelteComponent) {
       commitAcceptedSvelteComponentToDom(pending.id);
     }
-    setLiveState('CONFIRMED');
-    updateBarContent('confirmed');
+    setLiveState("CONFIRMED");
+    updateBarContent("confirmed");
     scheduleAcceptCleanup(pending);
     return true;
   }
 
   function scheduleAcceptCleanup(accepted) {
-    queueMicrotask(function() {
+    queueMicrotask(() => {
       if (pendingAcceptedSession?.id !== accepted?.id) return;
       // Svelte previews live in an adapter-owned mount rather than in source
       // wrapper markup. Promote the mounted variant before releasing the
@@ -8551,7 +9149,7 @@ void main() {
     // races. Static servers still need a fallback, but it must not keep Live
     // in SAVING or block the user's next pick.
     if (!accepted?.isSvelteComponent) {
-      setTimeout(function() {
+      setTimeout(() => {
         if (!acceptedDomAlreadyClean(accepted)) ensureAcceptedDomClean(accepted);
       }, 1200);
     }
@@ -8562,7 +9160,7 @@ void main() {
     const accepted = wrapper?.querySelector?.('[data-impeccable-variant="' + variantId + '"]');
     const root = accepted?.firstElementChild || null;
     return {
-      acceptedHtml: accepted ? accepted.innerHTML : '',
+      acceptedHtml: accepted ? accepted.innerHTML : "",
       acceptedSelector: selectorForAcceptedRoot(root),
       parentElement: wrapper?.parentElement || null,
       parentSelector: selectorForAcceptedRoot(wrapper?.parentElement || null),
@@ -8571,18 +9169,22 @@ void main() {
   }
 
   function selectorForAcceptedRoot(root) {
-    if (!root || !root.tagName) return '';
+    if (!root || !root.tagName) return "";
     const tag = root.tagName.toLowerCase();
     const classes = [...(root.classList || [])].filter(Boolean);
     if (classes.length === 0) return tag;
-    return tag + classes.map((cls) => '.' + cssIdent(cls)).join('');
+    return tag + classes.map((cls) => "." + cssIdent(cls)).join("");
   }
 
   function acceptedDomAlreadyClean(pending) {
     if (!pending?.acceptedSelector) return false;
     const matches = [...document.querySelectorAll(pending.acceptedSelector)];
-    return matches.length > 0
-      && matches.every((el) => !el.closest('[data-impeccable-variants],[data-impeccable-variant],[data-impeccable-carbonize]'));
+    return (
+      matches.length > 0 &&
+      matches.every(
+        (el) => !el.closest("[data-impeccable-variants],[data-impeccable-variant],[data-impeccable-carbonize]")
+      )
+    );
   }
 
   function ensureAcceptedDomClean(pending) {
@@ -8613,10 +9215,12 @@ void main() {
 
   function findAcceptedRuntimeWrappers(sessionId) {
     if (!sessionId) return [];
-    return [...new Set([
-      ...document.querySelectorAll('[data-impeccable-variants="' + sessionId + '"]'),
-      ...document.querySelectorAll('[data-impeccable-carbonize="' + sessionId + '"]'),
-    ])];
+    return [
+      ...new Set([
+        ...document.querySelectorAll('[data-impeccable-variants="' + sessionId + '"]'),
+        ...document.querySelectorAll('[data-impeccable-carbonize="' + sessionId + '"]'),
+      ]),
+    ];
   }
 
   function restoreAcceptedDomFromSnapshot(pending) {
@@ -8627,16 +9231,17 @@ void main() {
     }
     const parent = pending.parentElement?.isConnected
       ? pending.parentElement
-      : (pending.parentSelector ? document.querySelector(pending.parentSelector) : null);
+      : pending.parentSelector
+        ? document.querySelector(pending.parentSelector)
+        : null;
     if (!parent) {
       reloadAfterMissingAcceptedDom(pending);
       return;
     }
-    const template = document.createElement('template');
+    const template = document.createElement("template");
     template.innerHTML = pending.acceptedHtml;
-    const anchor = pending.nextSibling?.isConnected && pending.nextSibling.parentElement === parent
-      ? pending.nextSibling
-      : null;
+    const anchor =
+      pending.nextSibling?.isConnected && pending.nextSibling.parentElement === parent ? pending.nextSibling : null;
     parent.insertBefore(template.content, anchor);
     if (!acceptedDomAlreadyClean(pending)) reloadAfterMissingAcceptedDom(pending);
   }
@@ -8651,7 +9256,10 @@ void main() {
     hideBar();
     hideHighlight();
     stopScrollTracking();
-    if (variantObserver) { variantObserver.disconnect(); variantObserver = null; }
+    if (variantObserver) {
+      variantObserver.disconnect();
+      variantObserver = null;
+    }
     stopScrollLock();
     removeVariantStateStylesheet();
     clearScrollY();
@@ -8661,12 +9269,12 @@ void main() {
     hoveredElement = null;
     pagePickSkipClick = false;
     currentSessionId = null;
-    parameterGenerationState = 'idle';
+    parameterGenerationState = "idle";
     parameterReadyAnnouncedSession = null;
-    selectedAction = 'impeccable';
+    selectedAction = "impeccable";
     pendingAcceptedSession = null;
-    renderEditBadge('hidden');
-    setLiveState('PICKING');
+    renderEditBadge("hidden");
+    setLiveState("PICKING");
   }
 
   function commitAcceptedVariantToDom(sessionId, variantId) {
@@ -8677,29 +9285,32 @@ void main() {
     const parent = wrapper.parentElement;
     if (!parent) return false;
 
-    const style = wrapper.querySelector('style[data-impeccable-css]');
+    const style = wrapper.querySelector("style[data-impeccable-css]");
     if (style && !document.querySelector('style[data-impeccable-accepted-css="' + sessionId + '"]')) {
       const promotedStyle = style.cloneNode(true);
-      promotedStyle.setAttribute('data-impeccable-accepted-css', sessionId);
+      promotedStyle.setAttribute("data-impeccable-accepted-css", sessionId);
       parent.insertBefore(promotedStyle, wrapper);
     }
 
     const committed = accepted.cloneNode(true);
-    committed.removeAttribute('hidden');
-    committed.style.display = 'contents';
+    committed.removeAttribute("hidden");
+    committed.style.display = "contents";
     parent.replaceChild(committed, wrapper);
     return true;
   }
 
   function handleDiscard() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     if (!currentSessionId) return;
-    sendEvent({ type: 'discard', id: currentSessionId }, { throwOnError: true })
+    sendEvent({ type: "discard", id: currentSessionId }, { throwOnError: true })
       .then(() => {
         markSessionHandled();
         cleanup({ restoreOriginal: true, instantChrome: true });
       })
-      .catch(() => showToast('Could not confirm discard with the live server. Session kept for recovery.', 5000));
+      .catch(() => showToast("Could not confirm discard with the live server. Session kept for recovery.", 5000));
   }
 
   //
@@ -8708,9 +9319,9 @@ void main() {
   // Survives page reloads, browser close/reopen, HMR, and accidental refreshes.
 
   function normalizeSessionPath(value) {
-    if (typeof value !== 'string') return null;
+    if (typeof value !== "string") return null;
     const trimmed = value.trim();
-    return trimmed ? trimmed.replace(/\\/g, '/') : null;
+    return trimmed ? trimmed.replace(/\\/g, "/") : null;
   }
 
   function resetSessionFileMeta() {
@@ -8726,10 +9337,11 @@ void main() {
     const file = normalizeSessionPath(meta.file);
     const sourceFile = normalizeSessionPath(meta.sourceFile);
     const previewFile = normalizeSessionPath(meta.previewFile);
-    const previewMode = meta.previewMode || (isSvelteComponentManifestPath(previewFile || file) ? 'svelte-component' : null);
+    const previewMode =
+      meta.previewMode || (isSvelteComponentManifestPath(previewFile || file) ? "svelte-component" : null);
 
     if (isFrameworkComponentPreviewMode(previewMode) || isSvelteComponentManifestPath(file)) {
-      currentPreviewMode = isFrameworkComponentPreviewMode(previewMode) ? previewMode : 'svelte-component';
+      currentPreviewMode = isFrameworkComponentPreviewMode(previewMode) ? previewMode : "svelte-component";
       currentPreviewFile = previewFile || (isSvelteComponentManifestPath(file) ? file : currentPreviewFile);
       currentSourceFile = sourceFile || currentSourceFile;
       return;
@@ -8749,7 +9361,7 @@ void main() {
     if (saved.action) selectedAction = saved.action;
     if (saved.count) selectedCount = saved.count;
     if (saved.previewMode) currentPreviewMode = saved.previewMode;
-    if (saved.paramValues && typeof saved.paramValues === 'object') {
+    if (saved.paramValues && typeof saved.paramValues === "object") {
       paramsCurrentValues = { ...saved.paramValues };
     }
     if (saved.parameterState) parameterGenerationState = saved.parameterState;
@@ -8757,7 +9369,7 @@ void main() {
   }
 
   function normalizePagePath(value) {
-    if (!value || typeof value !== 'string') return null;
+    if (!value || typeof value !== "string") return null;
     try {
       return new URL(value, location.origin).pathname;
     } catch {
@@ -8771,16 +9383,19 @@ void main() {
   }
 
   function isTerminalSessionSummary(session) {
-    return /^(completed|discarded|discard_requested|accept_requested)$/.test(String(session?.phase || ''));
+    return /^(completed|discarded|discard_requested|accept_requested)$/.test(String(session?.phase || ""));
   }
 
   function findActiveSessionSummary(saved, activeSessions) {
     if (!saved?.id || !Array.isArray(activeSessions)) return null;
-    return activeSessions.find((session) =>
-      session?.id === saved.id
-      && pageMatchesCurrent(session.pageUrl || saved.pageUrl)
-      && !isTerminalSessionSummary(session)
-    ) || null;
+    return (
+      activeSessions.find(
+        (session) =>
+          session?.id === saved.id &&
+          pageMatchesCurrent(session.pageUrl || saved.pageUrl) &&
+          !isTerminalSessionSummary(session)
+      ) || null
+    );
   }
 
   function clampVariantIndex(value, count) {
@@ -8803,22 +9418,23 @@ void main() {
   // agent-side work: a reload mid-carbonize must not resurrect the bar over a
   // page whose comparison is already decided (a slow-CI reload hit exactly
   // that window and left the bar stranded after accept).
-  const ADOPTABLE_SESSION_PHASES = new Set([
-    'generate_requested', 'variants_ready', 'generating', 'cycling',
-  ]);
+  const ADOPTABLE_SESSION_PHASES = new Set(["generate_requested", "variants_ready", "generating", "cycling"]);
 
   function findAdoptableServerSession(activeSessions) {
     if (!Array.isArray(activeSessions)) return null;
-    return activeSessions.find((session) => (
-      session?.id
-      && !isTerminalSessionSummary(session)
-      && !isSessionHandled(session.id)
-      && session.pageUrl
-      && pageMatchesCurrent(session.pageUrl)
-      && (session.previewFile || session.sourceFile)
-      && Number(session.expectedVariants) > 0
-      && ADOPTABLE_SESSION_PHASES.has(String(session.phase || ''))
-    )) || null;
+    return (
+      activeSessions.find(
+        (session) =>
+          session?.id &&
+          !isTerminalSessionSummary(session) &&
+          !isSessionHandled(session.id) &&
+          session.pageUrl &&
+          pageMatchesCurrent(session.pageUrl) &&
+          (session.previewFile || session.sourceFile) &&
+          Number(session.expectedVariants) > 0 &&
+          ADOPTABLE_SESSION_PHASES.has(String(session.phase || ""))
+      ) || null
+    );
   }
 
   // Shape a server summary like a saved local session so one restore path
@@ -8827,7 +9443,7 @@ void main() {
   function serverSessionAsSavedShape(session) {
     return {
       id: session.id,
-      state: 'GENERATING',
+      state: "GENERATING",
       expected: Number(session.expectedVariants) || 0,
       arrived: Number(session.arrivedVariants) || 0,
       visible: Number(session.visibleVariant) || 0,
@@ -8835,7 +9451,7 @@ void main() {
       previewFile: session.previewFile || undefined,
       previewMode: session.previewMode || undefined,
       pageUrl: session.pageUrl || undefined,
-      paramValues: session.paramValues && typeof session.paramValues === 'object' ? session.paramValues : {},
+      paramValues: session.paramValues && typeof session.paramValues === "object" ? session.paramValues : {},
     };
   }
 
@@ -8846,10 +9462,10 @@ void main() {
     // server session as the only record of work in progress; adopt it instead
     // of stranding a session the server still considers live.
     const adopted = cached?.id ? null : findAdoptableServerSession(activeSessions);
-    const saved = cached?.id ? cached : (adopted ? serverSessionAsSavedShape(adopted) : null);
+    const saved = cached?.id ? cached : adopted ? serverSessionAsSavedShape(adopted) : null;
     if (!saved?.id || isSessionHandled(saved.id)) return false;
-    const savedState = String(saved.state || '').toUpperCase();
-    if (savedState !== 'GENERATING' && savedState !== 'CYCLING') return false;
+    const savedState = String(saved.state || "").toUpperCase();
+    if (savedState !== "GENERATING" && savedState !== "CYCLING") return false;
 
     const serverSession = findActiveSessionSummary(saved, activeSessions);
     if (Array.isArray(activeSessions) && activeSessions.length > 0 && !serverSession) {
@@ -8862,26 +9478,29 @@ void main() {
 
     expectedVariants = Number(saved.expected || serverSession?.expectedVariants || selectedCount || 0);
     arrivedVariants = Number(saved.arrived || serverSession?.arrivedVariants || 0);
-    if (arrivedVariants <= 0 && currentPreviewFile) arrivedVariants = Number(serverSession?.expectedVariants || saved.expected || selectedCount || 0);
-    if (expectedVariants <= 0) expectedVariants = Number(serverSession?.expectedVariants || arrivedVariants || selectedCount || 0);
-    visibleVariant = clampVariantIndex(saved.visible, arrivedVariants || expectedVariants)
-      || clampVariantIndex(serverSession?.visibleVariant, arrivedVariants || expectedVariants)
-      || (arrivedVariants > 0 ? 1 : 0);
+    if (arrivedVariants <= 0 && currentPreviewFile)
+      arrivedVariants = Number(serverSession?.expectedVariants || saved.expected || selectedCount || 0);
+    if (expectedVariants <= 0)
+      expectedVariants = Number(serverSession?.expectedVariants || arrivedVariants || selectedCount || 0);
+    visibleVariant =
+      clampVariantIndex(saved.visible, arrivedVariants || expectedVariants) ||
+      clampVariantIndex(serverSession?.visibleVariant, arrivedVariants || expectedVariants) ||
+      (arrivedVariants > 0 ? 1 : 0);
 
     const restoredAnchor = findLiveElementFromAnchorSnapshot(pickedAnchorSnapshot);
     selectedElement = restoredAnchor || document.body;
-    setLiveState('GENERATING');
+    setLiveState("GENERATING");
     recoveryWaitingForAnchor = !restoredAnchor;
-    showBar('generating');
+    showBar("generating");
     startScrollTracking();
     if (variantObserver) variantObserver.disconnect();
     variantObserver = startVariantObserver(currentSessionId);
     saveSession();
-    queueCheckpoint(reason || 'browser_restore_without_wrapper');
+    queueCheckpoint(reason || "browser_restore_without_wrapper");
 
     const restoreFile = isFrameworkComponentPreviewMode(currentPreviewMode)
       ? currentPreviewFile
-      : (currentSourceFile || currentPreviewFile);
+      : currentSourceFile || currentPreviewFile;
     if (restoreFile) {
       // A restored CYCLING session promises variants already written into
       // source; if they are not there (after retries), the session is an
@@ -8889,7 +9508,7 @@ void main() {
       // GENERATING restores make no such promise: deferred-wrapper flows
       // legitimately have no wrapper in source until the agent's write lands.
       injectVariantsFromSource(restoreFile, currentSessionId, {
-        orphanDiscard: savedState === 'CYCLING' && !isFrameworkComponentPreviewMode(currentPreviewMode),
+        orphanDiscard: savedState === "CYCLING" && !isFrameworkComponentPreviewMode(currentPreviewMode),
       });
       return true;
     }
@@ -8898,10 +9517,10 @@ void main() {
   }
 
   function restoreFromActiveSessions(activeSessions, reason) {
-    const wrapper = document.querySelector('[data-impeccable-variants]');
+    const wrapper = document.querySelector("[data-impeccable-variants]");
     if (wrapper && !isFrameworkComponentPreviewMode(wrapper.dataset.impeccablePreview)) return false;
     if (svelteComponentSession?.sessionId === currentSessionId) return false;
-    return restoreSessionWithoutWrapper(reason || 'sse_connected', activeSessions);
+    return restoreSessionWithoutWrapper(reason || "sse_connected", activeSessions);
   }
 
   // Self-heal on SSE (re)connect. The preflight scaffold write triggers a
@@ -8914,7 +9533,7 @@ void main() {
   // variants from source when behind. Mirrors the `done` handler's source
   // fallback, including its give-HMR-the-first-chance settle delay.
   function recoverMissedGenerationCompletion(activeSessions) {
-    if (!currentSessionId || state !== 'GENERATING') return;
+    if (!currentSessionId || state !== "GENERATING") return;
     if (!Array.isArray(activeSessions)) return;
     const summary = activeSessions.find((session) => session?.id === currentSessionId);
     if (!summary?.generationCompletedAt || summary.generationCanceled) return;
@@ -8924,11 +9543,11 @@ void main() {
     const sessionId = currentSessionId;
     const file = isFrameworkComponentPreviewMode(currentPreviewMode)
       ? currentPreviewFile
-      : (summary.sourceFile || summary.previewFile || currentSourceFile || currentPreviewFile);
+      : summary.sourceFile || summary.previewFile || currentSourceFile || currentPreviewFile;
     if (!file) return;
-    console.log('[impeccable] Reconnected after generation completed; recovering variants from source.');
+    console.log("[impeccable] Reconnected after generation completed; recovering variants from source.");
     setTimeout(() => {
-      if (sessionId !== currentSessionId || state !== 'GENERATING') return;
+      if (sessionId !== currentSessionId || state !== "GENERATING") return;
       if (arrivedVariants > 0 && arrivedVariants >= expectedVariants) return;
       injectVariantsFromSource(file, sessionId, { generationCompleted: true });
     }, 750);
@@ -8968,7 +9587,7 @@ void main() {
     // is that project's leftover, never a session this server can complete;
     // resuming it freezes the picker behind an unfinishable banner.
     if (saved?.appRoot && APP_ROOT && saved.appRoot !== APP_ROOT) {
-      console.warn('[impeccable] Ignoring saved live session from another project (' + saved.appRoot + ').');
+      console.warn("[impeccable] Ignoring saved live session from another project (" + saved.appRoot + ").");
       sessionState.clearSession();
       return null;
     }
@@ -9013,9 +9632,9 @@ void main() {
       const wrapper = document.querySelector('[data-impeccable-variants="' + cleanupSessionId + '"]');
       if (wrapper) {
         if (restoreOriginal) showOriginalDuringDiscard(cleanupSessionId);
-        else wrapper.style.display = 'none';
+        else wrapper.style.display = "none";
       }
-      setTimeout(function() {
+      setTimeout(() => {
         document.getElementById(DISCARD_STATE_STYLE_ID)?.remove();
         if (!cleanupSessionId) return;
         const lateWrapper = document.querySelector('[data-impeccable-variants="' + cleanupSessionId + '"]');
@@ -9034,8 +9653,14 @@ void main() {
     hideBar(instantChrome);
     hideHighlight();
     stopScrollTracking();
-    if (variantObserver) { variantObserver.disconnect(); variantObserver = null; }
-    if (pendingVariantAnchorRetryObserver) { pendingVariantAnchorRetryObserver.disconnect(); pendingVariantAnchorRetryObserver = null; }
+    if (variantObserver) {
+      variantObserver.disconnect();
+      variantObserver = null;
+    }
+    if (pendingVariantAnchorRetryObserver) {
+      pendingVariantAnchorRetryObserver.disconnect();
+      pendingVariantAnchorRetryObserver = null;
+    }
     stopScrollLock();
     removeVariantStateStylesheet();
     clearScrollY();
@@ -9046,11 +9671,11 @@ void main() {
     hoveredElement = null;
     pagePickSkipClick = false;
     currentSessionId = null;
-    parameterGenerationState = 'idle';
+    parameterGenerationState = "idle";
     parameterReadyAnnouncedSession = null;
-    selectedAction = 'impeccable';
-    renderEditBadge('hidden');
-    setLiveState('PICKING');
+    selectedAction = "impeccable";
+    renderEditBadge("hidden");
+    setLiveState("PICKING");
   }
 
   //
@@ -9070,32 +9695,38 @@ void main() {
     // with hover-expanded labels - and fall back to a sensible default
     // when the bar isn't mounted yet.
     const barRect = globalBarEl?.getBoundingClientRect();
-    const barTopFromBottom = barRect && barRect.height > 0
-      ? Math.max(16, window.innerHeight - barRect.top + 12)
-      : 16;
-    const currentToast = el('div', {
-      position: 'fixed', bottom: barTopFromBottom + 'px', left: '50%',
-      transform: 'translateX(-50%) translateY(8px)',
-      background: C.ink, color: C.white,
-      fontFamily: FONT, fontSize: '12px',
-      padding: '8px 16px', borderRadius: '8px',
-      zIndex: Z.toast, opacity: '0',
-      transition: 'opacity 0.25s ' + EASE + ', transform 0.25s ' + EASE,
-      pointerEvents: 'none', maxWidth: '420px', textAlign: 'center',
+    const barTopFromBottom = barRect && barRect.height > 0 ? Math.max(16, window.innerHeight - barRect.top + 12) : 16;
+    const currentToast = el("div", {
+      position: "fixed",
+      bottom: barTopFromBottom + "px",
+      left: "50%",
+      transform: "translateX(-50%) translateY(8px)",
+      background: C.ink,
+      color: C.white,
+      fontFamily: FONT,
+      fontSize: "12px",
+      padding: "8px 16px",
+      borderRadius: "8px",
+      zIndex: Z.toast,
+      opacity: "0",
+      transition: "opacity 0.25s " + EASE + ", transform 0.25s " + EASE,
+      pointerEvents: "none",
+      maxWidth: "420px",
+      textAlign: "center",
     });
     toastEl = currentToast;
-    currentToast.id = PREFIX + '-toast';
+    currentToast.id = PREFIX + "-toast";
     currentToast.textContent = message;
     uiAppend(currentToast);
     requestAnimationFrame(() => {
       if (toastEl !== currentToast) return;
-      currentToast.style.opacity = '1';
-      currentToast.style.transform = 'translateX(-50%) translateY(0)';
+      currentToast.style.opacity = "1";
+      currentToast.style.transform = "translateX(-50%) translateY(0)";
     });
     setTimeout(() => {
       if (toastEl !== currentToast) return;
-      currentToast.style.opacity = '0';
-      currentToast.style.transform = 'translateX(-50%) translateY(8px)';
+      currentToast.style.opacity = "0";
+      currentToast.style.transform = "translateX(-50%) translateY(8px)";
       setTimeout(() => {
         if (toastEl !== currentToast) return;
         currentToast.remove();
@@ -9112,9 +9743,9 @@ void main() {
   // If a [data-impeccable-variants] wrapper exists in the DOM, the agent wrote
   // variants before HMR fired. Pick up where we left off.
   function resumeSession() {
-    const wrapper = document.querySelector('[data-impeccable-variants]');
+    const wrapper = document.querySelector("[data-impeccable-variants]");
     if (!wrapper) {
-      if (restoreSessionWithoutWrapper('browser_resumed_without_wrapper')) return true;
+      if (restoreSessionWithoutWrapper("browser_resumed_without_wrapper")) return true;
       clearSession();
       clearHandled();
       return false;
@@ -9131,10 +9762,12 @@ void main() {
     // would strand the bar in CYCLING at 0/0. If there's no live in-memory mount
     // for this wrapper, it's an orphan (reload / failed mount): drop it and let
     // the live-server's SSE re-inject the manifest if the session is still live.
-    if (isFrameworkComponentPreviewMode(wrapper.dataset.impeccablePreview)
-        && svelteComponentSession?.sessionId !== sessionId) {
+    if (
+      isFrameworkComponentPreviewMode(wrapper.dataset.impeccablePreview) &&
+      svelteComponentSession?.sessionId !== sessionId
+    ) {
       wrapper.remove();
-      if (restoreSessionWithoutWrapper('browser_resumed_svelte_orphan_wrapper')) return true;
+      if (restoreSessionWithoutWrapper("browser_resumed_svelte_orphan_wrapper")) return true;
       clearSession();
       clearHandled();
       return false;
@@ -9145,31 +9778,34 @@ void main() {
         return true;
       }
       currentSessionId = sessionId;
-      expectedVariants = Number(wrapper.dataset.impeccableVariantCount)
-        || Number(svelteComponentSession.manifest?.count)
-        || expectedVariants
-        || 1;
+      expectedVariants =
+        Number(wrapper.dataset.impeccableVariantCount) ||
+        Number(svelteComponentSession.manifest?.count) ||
+        expectedVariants ||
+        1;
       arrivedVariants = expectedVariants;
       const saved = loadSession();
       applySavedSessionMeta(saved);
       const savedVisibleVariant = saved && saved.id === sessionId ? saved.visible : 0;
-      visibleVariant = svelteComponentSession.mountedVariant > 0 && svelteComponentSession.mountedVariant <= arrivedVariants
-        ? svelteComponentSession.mountedVariant
-        : (savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants ? savedVisibleVariant : 1);
-      selectedElement = resolveSvelteComponentAnchor()
-        || wrapper.parentElement;
-      setLiveState('CYCLING');
+      visibleVariant =
+        svelteComponentSession.mountedVariant > 0 && svelteComponentSession.mountedVariant <= arrivedVariants
+          ? svelteComponentSession.mountedVariant
+          : savedVisibleVariant > 0 && savedVisibleVariant <= arrivedVariants
+            ? savedVisibleVariant
+            : 1;
+      selectedElement = resolveSvelteComponentAnchor() || wrapper.parentElement;
+      setLiveState("CYCLING");
       hideShaderOverlay();
-      showBar('cycling');
+      showBar("cycling");
       startScrollTracking();
       refreshParamsPanel();
       saveSession();
-      queueCheckpoint('browser_resumed_svelte_component');
+      queueCheckpoint("browser_resumed_svelte_component");
       return true;
     }
 
     currentSessionId = sessionId;
-    expectedVariants = parseInt(wrapper.dataset.impeccableVariantCount || '0');
+    expectedVariants = Number.parseInt(wrapper.dataset.impeccableVariantCount || "0");
     const variants = wrapper.querySelectorAll('[data-impeccable-variant]:not([data-impeccable-variant="original"])');
     arrivedVariants = variants.length;
 
@@ -9177,7 +9813,8 @@ void main() {
     const saved = loadSession();
     if (saved && saved.id === sessionId) {
       applySavedSessionMeta(saved);
-      visibleVariant = (saved.visible > 0 && saved.visible <= arrivedVariants) ? saved.visible : (arrivedVariants > 0 ? 1 : 0);
+      visibleVariant =
+        saved.visible > 0 && saved.visible <= arrivedVariants ? saved.visible : arrivedVariants > 0 ? 1 : 0;
       if (saved.action) selectedAction = saved.action;
       if (saved.count) selectedCount = saved.count;
     } else {
@@ -9188,14 +9825,14 @@ void main() {
       insertPlaceholderSnapshot = saved.insertPlaceholder;
     }
 
-    const resumedState = arrivedVariants > 0 ? 'CYCLING' : 'GENERATING';
+    const resumedState = arrivedVariants > 0 ? "CYCLING" : "GENERATING";
 
     // Find the visible variant's content element for highlight positioning.
-    const isInsert = wrapper.dataset.impeccableMode === 'insert';
+    const isInsert = wrapper.dataset.impeccableMode === "insert";
     const visEl = visibleVariant > 0 ? pickVariantContent(wrapper, visibleVariant) : null;
-    const origEl = pickVariantContent(wrapper, 'original');
+    const origEl = pickVariantContent(wrapper, "original");
     setLiveState(resumedState);
-    if (isInsert && resumedState === 'GENERATING' && arrivedVariants === 0) {
+    if (isInsert && resumedState === "GENERATING" && arrivedVariants === 0) {
       selectedElement = ensureInsertPlaceholder() || findInsertAnchorInDom() || wrapper;
     } else {
       selectedElement = visEl || origEl || (isInsert ? findInsertAnchorInDom() : null) || wrapper.parentElement;
@@ -9204,18 +9841,18 @@ void main() {
     // Set display state BEFORE starting observer (avoid triggering it)
     if (visibleVariant > 0) showVariantInDOM(currentSessionId, visibleVariant);
 
-    showBar(state === 'CYCLING' ? 'cycling' : 'generating');
+    showBar(state === "CYCLING" ? "cycling" : "generating");
     startScrollTracking();
     // Build the params panel for the restored visible variant. Previously
     // this was missed on page-reload resume: showVariantInDOM above fires
     // refreshParamsPanel, but state was still IDLE at that moment so it
     // hid. Now that state is CYCLING, re-fire.
-    if (state === 'CYCLING') refreshParamsPanel();
+    if (state === "CYCLING") refreshParamsPanel();
     saveSession();
     if (arrivedVariants > 0 && arrivedVariants < expectedVariants) {
-      sendCheckpoint('variants_progress');
+      sendCheckpoint("variants_progress");
     } else {
-      queueCheckpoint('browser_resumed');
+      queueCheckpoint("browser_resumed");
     }
 
     // Start observing for more variants AFTER initial setup
@@ -9229,21 +9866,19 @@ void main() {
     // If we reloaded mid-generation (Bun's HTML HMR destroys the shader
     // canvas), re-capture the original's content and restart the shader so
     // the wait doesn't go dead.
-    if (state === 'GENERATING') {
-      const shaderTarget = isInsert
-        ? (ensureInsertPlaceholder() || findInsertAnchorInDom())
-        : origEl;
+    if (state === "GENERATING") {
+      const shaderTarget = isInsert ? ensureInsertPlaceholder() || findInsertAnchorInDom() : origEl;
       if (shaderTarget) {
         (async () => {
           try {
             const rect = shaderTarget.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) return;
             const { blob, paper } = await captureElementToBlob(shaderTarget, null, rect);
-            if (blob && state === 'GENERATING') {
+            if (blob && state === "GENERATING") {
               showShaderOverlay(shaderTarget, blob, rect, paper);
             }
           } catch (err) {
-            console.warn('[impeccable] shader resume failed:', err);
+            console.warn("[impeccable] shader resume failed:", err);
           }
         })();
       }
@@ -9271,9 +9906,9 @@ void main() {
   let detectScanSeq = 0;
   let activeDetectScanId = null;
   let pendingDetectScanId = null;
-  const DETECT_EMPTY_MESSAGE = 'No detector issues found.';
-  const PICK_PREFS_KEY = 'impeccable-live-pick';
-  const INTERACTION_PREFS_KEY = 'impeccable-live-interaction';
+  const DETECT_EMPTY_MESSAGE = "No detector issues found.";
+  const PICK_PREFS_KEY = "impeccable-live-pick";
+  const INTERACTION_PREFS_KEY = "impeccable-live-interaction";
   const PLACEHOLDER_DEFAULT_HEIGHT = 80;
   const PLACEHOLDER_MIN_HEIGHT = 48;
   const PLACEHOLDER_MIN_WIDTH = 120;
@@ -9293,14 +9928,18 @@ void main() {
         const prefs = JSON.parse(legacy);
         return { pickActive: !!prefs.pickActive, insertActive: false };
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return { pickActive: false, insertActive: false };
   }
 
   function saveInteractionPrefs() {
     try {
       localStorage.setItem(INTERACTION_PREFS_KEY, JSON.stringify({ pickActive, insertActive }));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   function loadPickPref() {
@@ -9313,7 +9952,7 @@ void main() {
 
   let pickActive = loadInteractionPrefs().pickActive;
   let insertActive = loadInteractionPrefs().insertActive;
-  let configureKind = 'replace';
+  let configureKind = "replace";
   let insertLineEl = null;
   let insertHoverAnchor = null;
   let insertHoverPosition = null;
@@ -9348,35 +9987,35 @@ void main() {
   let pageChatExpanded = false;
   let steerLocked = false;
   let steerRequestId = null;
-  let steerPendingMessage = '';
+  let steerPendingMessage = "";
   let steerInputWasFocused = false;
   let pageChatDotsEl = null;
   let steerAwaitTimer = null;
   let voiceRecognition = null;
   let voiceListening = false;
   let voiceSuppressSubmit = false;
-  let voiceInterimBase = '';
+  let voiceInterimBase = "";
   /** @type {{ mode: 'steer'|'configure', input: HTMLInputElement, submit: () => void, beforeStart?: () => void } | null} */
   let voiceCtx = null;
-  const PAGE_CHAT_COLLAPSED_W = '104px';
-  const PAGE_CHAT_QUEUED_W = '212px';
-  const PAGE_CHAT_PLACEHOLDER_COLLAPSED = 'Steer…';
-  const PAGE_CHAT_PLACEHOLDER_EXPANDED = 'Steer the page…';
+  const PAGE_CHAT_COLLAPSED_W = "104px";
+  const PAGE_CHAT_QUEUED_W = "212px";
+  const PAGE_CHAT_PLACEHOLDER_COLLAPSED = "Steer…";
+  const PAGE_CHAT_PLACEHOLDER_EXPANDED = "Steer the page…";
   const STEER_AWAIT_TIMEOUT_MS = 120000;
   const AGENT_STATUS_POLL_MS = 5000;
-  const AGENT_DISCONNECTED_MARK = 'oklch(62% 0 0 / 0.78)';
-  const AGENT_DISCONNECTED_TIP = 'Agent disconnected - run live-poll.mjs to connect';
+  const AGENT_DISCONNECTED_MARK = "oklch(62% 0 0 / 0.78)";
+  const AGENT_DISCONNECTED_TIP = "Agent disconnected - run live-poll.mjs to connect";
   // The indicator tracks whether a poll is parked, which is what decides if
   // steering can reach the agent right now. That goes quiet two ways, and they
   // need different copy: nobody is polling at all, or the agent took the work
   // and is busy with it. Under one-shot foreground polling the second case is
   // every normal generation, and telling the user to start a poll loop then is
   // wrong advice about a healthy session.
-  const AGENT_BUSY_TIP = 'Agent is working - steering resumes when it finishes';
+  const AGENT_BUSY_TIP = "Agent is working - steering resumes when it finishes";
   // Same distinction, said where the steer request is waiting. A submitted
   // steer that lands while a generate holds the poll lease is not stuck, it is
   // second in line, and the pulsing dots alone read as "nothing is happening".
-  const STEER_QUEUED_HINT = 'Queued behind current generation';
+  const STEER_QUEUED_HINT = "Queued behind current generation";
   const GLOBAL_BAR_SECTION_GAP = 8;
   const GLOBAL_BAR_INNER_GAP = 2;
   const GLOBAL_BAR_INNER_PAD_LEFT = 2;
@@ -9394,8 +10033,8 @@ void main() {
       // Dev override: set localStorage 'impeccable-dev-theme' to 'light' or
       // 'dark' to preview the opposite palette without actually changing the
       // page bg. Used for screenshots and theme QA.
-      const override = localStorage.getItem('impeccable-dev-theme');
-      if (override === 'light' || override === 'dark') return override;
+      const override = localStorage.getItem("impeccable-dev-theme");
+      if (override === "light" || override === "dark") return override;
 
       // Walk body → html, taking the first opaque background. The browser's
       // default body / html background is `rgba(0, 0, 0, 0)`, which a naive
@@ -9407,7 +10046,7 @@ void main() {
         const bg = getComputedStyle(el).backgroundColor;
         const m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/);
         if (!m) return null;
-        const alpha = m[4] == null ? 1 : parseFloat(m[4]);
+        const alpha = m[4] == null ? 1 : Number.parseFloat(m[4]);
         if (alpha < 0.5) return null; // transparent / nearly transparent → skip
         return [+m[1], +m[2], +m[3]];
       }
@@ -9418,13 +10057,15 @@ void main() {
       // via `color-scheme: dark` on <html>, and `prefers-color-scheme` lets
       // us catch that case.
       if (!rgb) {
-        return matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        return matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
       const [r, g, b] = rgb;
       // Perceptual luminance (Rec. 709)
       const L = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-      return L > 0.55 ? 'light' : 'dark';
-    } catch { return 'light'; }
+      return L > 0.55 ? "light" : "dark";
+    } catch {
+      return "light";
+    }
   }
 
   function barPaletteForTheme(_theme) {
@@ -9435,24 +10076,24 @@ void main() {
       surfaceDeep: C.ink,
       // Quiet neutral hairline (was the loud kinpaku gold border). Gold lives on
       // the brand mark and the active control instead.
-      border: 'oklch(92% 0 0 / 0.13)',
+      border: "oklch(92% 0 0 / 0.13)",
       // Crisp graphite pill behind the active toggle (was a murky kinpaku-dim
       // wash); the gold text/icon carries the "selected" signal.
-      toggleActive: 'oklch(27% 0 0)',
+      toggleActive: "oklch(27% 0 0)",
       // Neutral hairline for internal control borders / dividers (was a warm
       // gold rule that read as muddy champagne edges on the pill / input / count).
-      hairline: 'oklch(92% 0 0 / 0.12)',
-      text: 'oklch(91% 0 0)',
-      textDim: 'oklch(72% 0 0)',
+      hairline: "oklch(92% 0 0 / 0.12)",
+      text: "oklch(91% 0 0)",
+      textDim: "oklch(72% 0 0)",
       accent: C.brand,
       accentSoft: C.brandSoft,
-      exitHover: 'oklch(58% 0.15 35 / 0.18)',
+      exitHover: "oklch(58% 0.15 35 / 0.18)",
       shadow: PICKER_SHADOW,
-      chatSurface: 'oklch(22% 0.012 82)',
+      chatSurface: "oklch(22% 0.012 82)",
       // Verdigris patina - secondary state (see site/styles/kinpaku-tokens.css)
-      patina: 'oklch(70% 0.12 188)',
-      patinaPale: 'oklch(82% 0.07 188)',
-      patinaSoft: 'oklch(70% 0.12 188 / 0.28)',
+      patina: "oklch(70% 0.12 188)",
+      patinaPale: "oklch(82% 0.07 188)",
+      patinaSoft: "oklch(70% 0.12 188 / 0.28)",
     };
   }
 
@@ -9462,22 +10103,22 @@ void main() {
 
   function globalBarModeToggles() {
     return [
-      uiGetById(PREFIX + '-pick-toggle'),
-      uiGetById(PREFIX + '-insert-toggle'),
-      uiGetById(PREFIX + '-detect-toggle'),
-      uiGetById(PREFIX + '-design-toggle'),
+      uiGetById(PREFIX + "-pick-toggle"),
+      uiGetById(PREFIX + "-insert-toggle"),
+      uiGetById(PREFIX + "-detect-toggle"),
+      uiGetById(PREFIX + "-design-toggle"),
     ].filter(Boolean);
   }
 
   function applyGlobalBarLabelState(expandInactive, forceCollapse = false) {
     globalBarModeToggles().forEach((toggle) => {
       if (forceCollapse) toggle._collapseLabel?.(true);
-      else if (expandInactive || toggle.dataset.active === 'true') toggle._expandLabel?.();
+      else if (expandInactive || toggle.dataset.active === "true") toggle._expandLabel?.();
       else toggle._collapseLabel?.();
     });
   }
 
-  function syncGlobalBarExpandedLabels(expanded = globalBarEl?.matches(':hover')) {
+  function syncGlobalBarExpandedLabels(expanded = globalBarEl?.matches(":hover")) {
     const expandInactive = !!(expanded && !pageChatExpanded);
     applyGlobalBarLabelState(expandInactive, pageChatExpanded);
 
@@ -9487,18 +10128,18 @@ void main() {
   }
 
   function pageChatCollapsedWidthPx() {
-    const parsed = parseFloat(PAGE_CHAT_COLLAPSED_W);
+    const parsed = Number.parseFloat(PAGE_CHAT_COLLAPSED_W);
     return Number.isFinite(parsed) ? parsed : 104;
   }
 
   function pageChatExpandedWidth() {
-    if (!pageChatEl || !globalBarEl) return PAGE_CHAT_EXPANDED_MAX_W + 'px';
+    if (!pageChatEl || !globalBarEl) return PAGE_CHAT_EXPANDED_MAX_W + "px";
     const currentChatWidth = pageChatEl.getBoundingClientRect().width || pageChatCollapsedWidthPx();
     const barWidth = Math.max(globalBarEl.getBoundingClientRect().width || 0, globalBarEl.scrollWidth || 0);
     const nonChatWidth = Math.max(0, barWidth - currentChatWidth);
     const available = window.innerWidth - 16 - nonChatWidth;
     const next = Math.max(pageChatCollapsedWidthPx(), Math.min(PAGE_CHAT_EXPANDED_MAX_W, available));
-    return Math.round(next) + 'px';
+    return Math.round(next) + "px";
   }
 
   function syncPageChatExpandedWidth() {
@@ -9511,20 +10152,16 @@ void main() {
     const P = pageChatPalette();
     const inputFocused = pageChatInput && activeElementDeep() === pageChatInput;
     pageChatEl.style.background = P.chatSurface;
-    pageChatEl.style.borderColor = 'transparent';
+    pageChatEl.style.borderColor = "transparent";
     if (pageChatHint) pageChatHint.style.color = steerLocked ? P.patinaPale : P.textDim;
     const chatIcon = pageChatEl?.firstElementChild;
     if (chatIcon) {
-      chatIcon.style.color = steerLocked
-        ? P.patinaPale
-        : (inputFocused || pageChatExpanded ? P.text : P.textDim);
+      chatIcon.style.color = steerLocked ? P.patinaPale : inputFocused || pageChatExpanded ? P.text : P.textDim;
     }
     if (pageChatInput) pageChatInput.style.color = P.text;
     if (pageChatVoiceBtn) {
-      const listening = pageChatVoiceBtn.dataset.listening === 'true';
-      pageChatVoiceBtn.style.color = listening || pageChatVoiceBtn.dataset.active === 'true'
-        ? P.accent
-        : P.textDim;
+      const listening = pageChatVoiceBtn.dataset.listening === "true";
+      pageChatVoiceBtn.style.color = listening || pageChatVoiceBtn.dataset.active === "true" ? P.accent : P.textDim;
     }
   }
 
@@ -9550,14 +10187,14 @@ void main() {
     const hasText = !!pageChatInput?.value.trim();
     const focused = pageChatInput && activeElementDeep() === pageChatInput;
     const visible = !steerLocked && (pageChatExpanded || hasText || focused);
-    pageChatSendBtn.style.display = visible ? 'inline-flex' : 'none';
+    pageChatSendBtn.style.display = visible ? "inline-flex" : "none";
     pageChatSendBtn.disabled = !visible || !hasText;
     pageChatSendBtn.style.background = P.accent;
     pageChatSendBtn.style.color = C.ink;
-    pageChatSendBtn.style.borderLeft = '1px solid ' + P.hairline;
-    pageChatSendBtn.style.opacity = pageChatSendBtn.disabled ? '0.42' : '1';
-    pageChatSendBtn.style.cursor = pageChatSendBtn.disabled ? 'not-allowed' : 'pointer';
-    pageChatSendBtn.title = pageChatSendBtn.disabled ? 'Type what to change first' : 'Send (Enter)';
+    pageChatSendBtn.style.borderLeft = "1px solid " + P.hairline;
+    pageChatSendBtn.style.opacity = pageChatSendBtn.disabled ? "0.42" : "1";
+    pageChatSendBtn.style.cursor = pageChatSendBtn.disabled ? "not-allowed" : "pointer";
+    pageChatSendBtn.title = pageChatSendBtn.disabled ? "Type what to change first" : "Send (Enter)";
   }
 
   /**
@@ -9572,16 +10209,24 @@ void main() {
 
   function buildSteerQueueHint() {
     const P = pageChatPalette();
-    const hint = el('span', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end',
-      flex: '1', minWidth: '0', marginLeft: 'auto',
-      padding: '0 10px 0 6px',
-      fontFamily: FONT, fontSize: '10.5px', fontWeight: '500',
+    const hint = el("span", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      flex: "1",
+      minWidth: "0",
+      marginLeft: "auto",
+      padding: "0 10px 0 6px",
+      fontFamily: FONT,
+      fontSize: "10.5px",
+      fontWeight: "500",
       color: P.patinaPale,
-      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-      pointerEvents: 'none',
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      pointerEvents: "none",
     });
-    hint.id = PREFIX + '-page-chat-queue';
+    hint.id = PREFIX + "-page-chat-queue";
     return hint;
   }
 
@@ -9594,9 +10239,9 @@ void main() {
         pageChatEl.appendChild(pageChatQueueHintEl);
       }
       pageChatQueueHintEl.textContent = STEER_QUEUED_HINT;
-      if (pageChatDotsEl) pageChatDotsEl.style.display = 'none';
+      if (pageChatDotsEl) pageChatDotsEl.style.display = "none";
       pageChatEl.style.width = PAGE_CHAT_QUEUED_W;
-      pageChatEl.setAttribute('aria-label', STEER_QUEUED_HINT);
+      pageChatEl.setAttribute("aria-label", STEER_QUEUED_HINT);
       return;
     }
     if (pageChatQueueHintEl?.parentNode) {
@@ -9604,21 +10249,19 @@ void main() {
       pageChatQueueHintEl = null;
       if (steerLocked) {
         pageChatEl.style.width = pageChatExpanded ? pageChatExpandedWidth() : PAGE_CHAT_COLLAPSED_W;
-        pageChatEl.setAttribute('aria-label', 'Processing steer request');
+        pageChatEl.setAttribute("aria-label", "Processing steer request");
       }
     }
-    if (pageChatDotsEl) pageChatDotsEl.style.display = '';
+    if (pageChatDotsEl) pageChatDotsEl.style.display = "";
   }
 
   function shouldFocusSteerChat() {
-    return state !== 'CONFIGURING'
-      && state !== 'EDITING'
-      && !steerLocked;
+    return state !== "CONFIGURING" && state !== "EDITING" && !steerLocked;
   }
 
   function isPageEditableElement(el) {
     if (!el || own(el)) return false;
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName || '')) return true;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName || "")) return true;
     return !!el.isContentEditable;
   }
 
@@ -9634,7 +10277,7 @@ void main() {
   function pageHasHostTextSelection() {
     const sel = window.getSelection?.();
     if (!sel || sel.isCollapsed) return false;
-    if (!(sel.toString() || '').trim()) return false;
+    if (!(sel.toString() || "").trim()) return false;
     const node = sel.anchorNode;
     const el = node?.nodeType === 1 ? node : node?.parentElement;
     if (el && own(el)) return false;
@@ -9642,10 +10285,12 @@ void main() {
   }
 
   function shouldSteerAutoFocus() {
-    return shouldFocusSteerChat()
-      && !steerFocusSuspended
-      && !isPageEditableActive()
-      && performance.now() >= steerFocusPauseUntil;
+    return (
+      shouldFocusSteerChat() &&
+      !steerFocusSuspended &&
+      !isPageEditableActive() &&
+      performance.now() >= steerFocusPauseUntil
+    );
   }
 
   function clearSteerFocusRecoverTimer() {
@@ -9659,7 +10304,7 @@ void main() {
     clearSteerFocusRecoverTimer();
     const attempt = () => {
       steerFocusRecoverTimer = null;
-      if (state === 'CONFIGURING' || steerLocked || voiceListening) return;
+      if (state === "CONFIGURING" || steerLocked || voiceListening) return;
       if (pageChatEl?.contains(activeElementDeep())) return;
       if (pageHasHostTextSelection()) {
         steerFocusRecoverTimer = setTimeout(attempt, 120);
@@ -9690,53 +10335,69 @@ void main() {
     if (window.__IMPECCABLE_STEER_FOCUS_GUARD__) return;
     window.__IMPECCABLE_STEER_FOCUS_GUARD__ = true;
 
-    document.addEventListener('mousedown', (e) => {
-      notePagePointerDown(e);
-    }, true);
+    document.addEventListener(
+      "mousedown",
+      (e) => {
+        notePagePointerDown(e);
+      },
+      true
+    );
 
-    document.addEventListener('mousemove', (e) => {
-      if (!pagePointerGesture || pagePointerGesture.dragged) return;
-      const dx = e.clientX - pagePointerGesture.x;
-      const dy = e.clientY - pagePointerGesture.y;
-      if (Math.hypot(dx, dy) > 4) pagePointerGesture.dragged = true;
-    }, true);
+    document.addEventListener(
+      "mousemove",
+      (e) => {
+        if (!pagePointerGesture || pagePointerGesture.dragged) return;
+        const dx = e.clientX - pagePointerGesture.x;
+        const dy = e.clientY - pagePointerGesture.y;
+        if (Math.hypot(dx, dy) > 4) pagePointerGesture.dragged = true;
+      },
+      true
+    );
 
-    document.addEventListener('mouseup', () => {
-      if (!shouldFocusSteerChat()) return;
-      pagePickSkipClick = !!(pagePointerGesture?.dragged || pageHasHostTextSelection());
-      if (pageHasHostTextSelection()) {
-        steerFocusSuspended = true;
-      } else {
-        steerFocusSuspended = false;
-        scheduleSteerFocusRecover('page-mouseup-recover');
-      }
-      pagePointerGesture = null;
-    }, true);
+    document.addEventListener(
+      "mouseup",
+      () => {
+        if (!shouldFocusSteerChat()) return;
+        pagePickSkipClick = !!(pagePointerGesture?.dragged || pageHasHostTextSelection());
+        if (pageHasHostTextSelection()) {
+          steerFocusSuspended = true;
+        } else {
+          steerFocusSuspended = false;
+          scheduleSteerFocusRecover("page-mouseup-recover");
+        }
+        pagePointerGesture = null;
+      },
+      true
+    );
 
-    document.addEventListener('selectionchange', () => {
+    document.addEventListener("selectionchange", () => {
       if (!shouldFocusSteerChat()) return;
       const wasSuspended = steerFocusSuspended;
       steerFocusSuspended = pageHasHostTextSelection();
       if (wasSuspended && !steerFocusSuspended) {
-        scheduleSteerFocusRecover('selection-cleared');
+        scheduleSteerFocusRecover("selection-cleared");
       }
     });
   }
 
   function steerFocusTargetLabel(el) {
-    if (!el || el === document.body) return 'body';
-    if (el === document.documentElement) return 'html';
-    if (el.id) return el.tagName.toLowerCase() + '#' + el.id;
+    if (!el || el === document.body) return "body";
+    if (el === document.documentElement) return "html";
+    if (el.id) return el.tagName.toLowerCase() + "#" + el.id;
     return el.tagName?.toLowerCase() || String(el);
   }
 
   function steerFocusDebugEnabled() {
-    try { return localStorage.getItem('impeccable-steer-debug') === '1'; } catch { return false; }
+    try {
+      return localStorage.getItem("impeccable-steer-debug") === "1";
+    } catch {
+      return false;
+    }
   }
 
   function steerFocusLog(reason, extra) {
     if (!steerFocusDebugEnabled()) return;
-    console.log('[impeccable.steer]', reason, {
+    console.log("[impeccable.steer]", reason, {
       state,
       pickActive,
       pageChatReady: !!pageChatInput,
@@ -9751,24 +10412,28 @@ void main() {
     if (!steerFocusDebugEnabled()) return;
     if (window.__IMPECCABLE_STEER_FOCUS_DEBUG__) return;
     window.__IMPECCABLE_STEER_FOCUS_DEBUG__ = true;
-    document.addEventListener('focusin', (e) => {
-      if (!pageChatInput) return;
-      steerFocusLog('focusin', { target: steerFocusTargetLabel(e.target) });
-    }, true);
+    document.addEventListener(
+      "focusin",
+      (e) => {
+        if (!pageChatInput) return;
+        steerFocusLog("focusin", { target: steerFocusTargetLabel(e.target) });
+      },
+      true
+    );
   }
 
   function focusConfigureInput(reason) {
-    steerFocusLog('focusConfigureInput', { reason });
-    const inputId = configureKind === 'insert' ? PREFIX + '-insert-input' : PREFIX + '-input';
+    steerFocusLog("focusConfigureInput", { reason });
+    const inputId = configureKind === "insert" ? PREFIX + "-insert-input" : PREFIX + "-input";
     const input = uiGetById(inputId);
     if (!input) {
-      steerFocusLog('focusConfigureInput missing', { reason });
+      steerFocusLog("focusConfigureInput missing", { reason });
       return;
     }
     setTimeout(() => {
       const before = activeElementDeep();
       input.focus();
-      steerFocusLog('focusConfigureInput result', {
+      steerFocusLog("focusConfigureInput result", {
         reason,
         before: steerFocusTargetLabel(before),
         after: steerFocusTargetLabel(activeElementDeep()),
@@ -9782,15 +10447,15 @@ void main() {
     syncPageChatSendButton();
     const focused = activeElementDeep() === pageChatInput;
     const typingReady = focused && !steerLocked;
-    pageChatEl.dataset.inputFocused = focused ? 'true' : 'false';
-    pageChatEl.style.boxShadow = 'none';
+    pageChatEl.dataset.inputFocused = focused ? "true" : "false";
+    pageChatEl.style.boxShadow = "none";
 
     if (pageChatExpanded) {
       pageChatInput.placeholder = PAGE_CHAT_PLACEHOLDER_EXPANDED;
-      pageChatInput.style.width = '';
-      pageChatInput.style.padding = '0 6px';
-      pageChatInput.style.opacity = steerLocked ? '0.72' : '1';
-      pageChatInput.style.pointerEvents = steerLocked ? 'none' : 'auto';
+      pageChatInput.style.width = "";
+      pageChatInput.style.padding = "0 6px";
+      pageChatInput.style.opacity = steerLocked ? "0.72" : "1";
+      pageChatInput.style.pointerEvents = steerLocked ? "none" : "auto";
       return;
     }
 
@@ -9799,32 +10464,32 @@ void main() {
       // truncated patina "Steer" label with an invisible focused field.
       pageChatInput.placeholder = PAGE_CHAT_PLACEHOLDER_COLLAPSED;
       if (pageChatHint) {
-        pageChatHint.style.display = 'none';
-        pageChatHint.style.opacity = '0';
+        pageChatHint.style.display = "none";
+        pageChatHint.style.opacity = "0";
       }
-      pageChatInput.style.width = '';
-      pageChatInput.style.padding = '0 4px';
-      pageChatInput.style.opacity = '1';
-      pageChatInput.style.pointerEvents = 'auto';
+      pageChatInput.style.width = "";
+      pageChatInput.style.padding = "0 4px";
+      pageChatInput.style.opacity = "1";
+      pageChatInput.style.pointerEvents = "auto";
       return;
     }
 
     pageChatInput.placeholder = PAGE_CHAT_PLACEHOLDER_COLLAPSED;
     if (pageChatHint) {
-      pageChatHint.style.display = '';
-      pageChatHint.style.opacity = '1';
-      pageChatHint.style.visibility = '';
+      pageChatHint.style.display = "";
+      pageChatHint.style.opacity = "1";
+      pageChatHint.style.visibility = "";
     }
-    pageChatInput.style.width = '0';
-    pageChatInput.style.padding = '0';
-    pageChatInput.style.opacity = '0';
-    pageChatInput.style.pointerEvents = 'none';
+    pageChatInput.style.width = "0";
+    pageChatInput.style.padding = "0";
+    pageChatInput.style.opacity = "0";
+    pageChatInput.style.pointerEvents = "none";
   }
 
   function focusSteerChat(reason) {
-    steerFocusLog('focusSteerChat called', { reason });
+    steerFocusLog("focusSteerChat called", { reason });
     if (!pageChatInput || !shouldSteerAutoFocus()) {
-      steerFocusLog('focusSteerChat skipped', {
+      steerFocusLog("focusSteerChat skipped", {
         reason,
         hasInput: !!pageChatInput,
         shouldSteer: shouldFocusSteerChat(),
@@ -9833,13 +10498,21 @@ void main() {
       return;
     }
     syncPageChatVisual();
-    pageChatInput.style.pointerEvents = 'auto';
+    pageChatInput.style.pointerEvents = "auto";
     const before = activeElementDeep();
-    try { window.focus(); } catch { /* embed may block */ }
-    try { pageChatInput.focus({ preventScroll: true }); } catch { pageChatInput.focus(); }
+    try {
+      window.focus();
+    } catch {
+      /* embed may block */
+    }
+    try {
+      pageChatInput.focus({ preventScroll: true });
+    } catch {
+      pageChatInput.focus();
+    }
     syncPageChatFocusRing();
     syncPageChatChrome();
-    steerFocusLog('focusSteerChat result', {
+    steerFocusLog("focusSteerChat result", {
       reason,
       before: steerFocusTargetLabel(before),
       after: steerFocusTargetLabel(activeElementDeep()),
@@ -9848,28 +10521,37 @@ void main() {
   }
 
   function syncPageChatFocus(reason) {
-    steerFocusLog('syncPageChatFocus', { reason });
-    if (state === 'CONFIGURING') focusConfigureInput(reason);
+    steerFocusLog("syncPageChatFocus", { reason });
+    if (state === "CONFIGURING") focusConfigureInput(reason);
     else if (shouldSteerAutoFocus()) focusSteerChat(reason);
   }
 
   function buildSteerProcessingDots() {
     const P = pageChatPalette();
-    const wrap = el('span', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end',
-      gap: '5px', flex: '0 0 auto', minWidth: '0', marginLeft: 'auto',
-      padding: '0 12px 0 8px',
-      pointerEvents: 'none',
+    const wrap = el("span", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: "5px",
+      flex: "0 0 auto",
+      minWidth: "0",
+      marginLeft: "auto",
+      padding: "0 12px 0 8px",
+      pointerEvents: "none",
     });
-    wrap.setAttribute('aria-hidden', 'true');
+    wrap.setAttribute("aria-hidden", "true");
     for (let i = 0; i < 3; i++) {
-      wrap.appendChild(el('span', {
-        display: 'inline-block',
-        width: '4px', height: '4px', borderRadius: '50%',
-        background: P.patinaPale,
-        boxShadow: '0 0 6px ' + P.patinaSoft,
-        animation: 'impeccable-steer-dot 1.05s ease-in-out ' + (i * 0.14) + 's infinite',
-      }));
+      wrap.appendChild(
+        el("span", {
+          display: "inline-block",
+          width: "4px",
+          height: "4px",
+          borderRadius: "50%",
+          background: P.patinaPale,
+          boxShadow: "0 0 6px " + P.patinaSoft,
+          animation: "impeccable-steer-dot 1.05s ease-in-out " + i * 0.14 + "s infinite",
+        })
+      );
     }
     return wrap;
   }
@@ -9882,19 +10564,19 @@ void main() {
   function preparePageChatInputForTyping() {
     if (!pageChatEl || !pageChatInput) return false;
     pageChatExpanded = true;
-    pageChatEl.dataset.expanded = 'true';
+    pageChatEl.dataset.expanded = "true";
     syncGlobalBarExpandedLabels(false);
     pageChatEl.style.width = pageChatExpandedWidth();
-    pageChatEl.style.cursor = steerLocked ? 'default' : 'text';
+    pageChatEl.style.cursor = steerLocked ? "default" : "text";
     pageChatInput.placeholder = PAGE_CHAT_PLACEHOLDER_EXPANDED;
     if (pageChatHint) {
-      pageChatHint.style.display = 'none';
-      pageChatHint.style.opacity = '0';
+      pageChatHint.style.display = "none";
+      pageChatHint.style.opacity = "0";
     }
-    pageChatInput.style.width = '';
-    pageChatInput.style.padding = '0 6px';
-    pageChatInput.style.opacity = steerLocked ? '0.72' : '1';
-    pageChatInput.style.pointerEvents = steerLocked ? 'none' : 'auto';
+    pageChatInput.style.width = "";
+    pageChatInput.style.padding = "0 6px";
+    pageChatInput.style.opacity = steerLocked ? "0.72" : "1";
+    pageChatInput.style.pointerEvents = steerLocked ? "none" : "auto";
     return true;
   }
 
@@ -9906,7 +10588,7 @@ void main() {
       preparePageChatInputForTyping();
       syncPageChatChrome();
     }
-    if (focus) return focusPageChatInput('arm-page-chat');
+    if (focus) return focusPageChatInput("arm-page-chat");
     syncPageChatFocusRing();
     syncPageChatChrome();
     return true;
@@ -9914,7 +10596,11 @@ void main() {
 
   function focusPageChatInput(reason) {
     if (!preparePageChatInputForTyping() || steerLocked) return false;
-    try { pageChatInput.focus({ preventScroll: true }); } catch { pageChatInput.focus(); }
+    try {
+      pageChatInput.focus({ preventScroll: true });
+    } catch {
+      pageChatInput.focus();
+    }
     const focused = activeElementDeep() === pageChatInput;
     if (focused) steerInputWasFocused = true;
     syncPageChatFocusRing();
@@ -9945,35 +10631,41 @@ void main() {
    * a poll loop that was never the problem.
    */
   function steerTimeoutMessage() {
-    const head = 'Steer timed out after 2 minutes. ';
+    const head = "Steer timed out after 2 minutes. ";
     if (steerQueuedBehindGeneration()) {
-      return head + 'The agent is still busy with the current generation - your message was not lost, but it never got picked up. Send it again once the variants land.';
+      return (
+        head +
+        "The agent is still busy with the current generation - your message was not lost, but it never got picked up. Send it again once the variants land."
+      );
     }
     if (!agentPollingConnected) {
-      return head + 'No agent is polling right now. Run live-poll.mjs, then send it again.';
+      return head + "No agent is polling right now. Run live-poll.mjs, then send it again.";
     }
-    return head + 'The agent picked it up but never replied with steer_done. Check the agent session for a stalled or failed steer.';
+    return (
+      head +
+      "The agent picked it up but never replied with steer_done. Check the agent session for a stalled or failed steer."
+    );
   }
 
   function lockSteerChat() {
     if (!pageChatEl || !pageChatInput) return;
     stopVoice({ suppressSubmit: true });
     steerLocked = true;
-    pageChatEl.dataset.processing = 'true';
+    pageChatEl.dataset.processing = "true";
     pageChatInput.disabled = true;
     preparePageChatInputForTyping();
     if (pageChatVoiceBtn) {
       pageChatVoiceBtn.disabled = true;
-      pageChatVoiceBtn.style.display = 'none';
+      pageChatVoiceBtn.style.display = "none";
     }
-    pageChatEl.style.cursor = 'default';
-    pageChatInput.style.pointerEvents = 'none';
+    pageChatEl.style.cursor = "default";
+    pageChatInput.style.pointerEvents = "none";
     if (pageChatHint) {
-      pageChatHint.style.display = 'none';
-      pageChatHint.style.visibility = 'hidden';
+      pageChatHint.style.display = "none";
+      pageChatHint.style.visibility = "hidden";
     }
-    pageChatEl.setAttribute('aria-busy', 'true');
-    pageChatEl.setAttribute('aria-label', 'Processing steer request');
+    pageChatEl.setAttribute("aria-busy", "true");
+    pageChatEl.setAttribute("aria-label", "Processing steer request");
     if (!pageChatDotsEl) {
       pageChatDotsEl = buildSteerProcessingDots();
       pageChatEl.appendChild(pageChatDotsEl);
@@ -9985,36 +10677,36 @@ void main() {
 
   function unlockSteerChat(opts) {
     clearSteerAwaitTimer();
-    const restoreMessage = typeof opts?.restoreMessage === 'string' ? opts.restoreMessage : '';
+    const restoreMessage = typeof opts?.restoreMessage === "string" ? opts.restoreMessage : "";
     const keepExpanded = Boolean(opts?.error && restoreMessage);
     steerLocked = false;
     const completedId = steerRequestId;
     steerRequestId = null;
     if (!pageChatEl) return;
-    pageChatEl.dataset.processing = 'false';
-    pageChatEl.removeAttribute('aria-busy');
-    pageChatEl.setAttribute('aria-label', 'Steer the page');
+    pageChatEl.dataset.processing = "false";
+    pageChatEl.removeAttribute("aria-busy");
+    pageChatEl.setAttribute("aria-label", "Steer the page");
     pageChatExpanded = keepExpanded;
-    pageChatEl.dataset.expanded = keepExpanded ? 'true' : 'false';
+    pageChatEl.dataset.expanded = keepExpanded ? "true" : "false";
     pageChatEl.style.width = keepExpanded ? pageChatExpandedWidth() : PAGE_CHAT_COLLAPSED_W;
-    pageChatEl.style.cursor = 'pointer';
+    pageChatEl.style.cursor = "pointer";
     if (pageChatInput) {
       pageChatInput.disabled = false;
-      pageChatInput.value = keepExpanded ? restoreMessage : '';
-      pageChatInput.style.width = keepExpanded ? '' : '0';
-      pageChatInput.style.padding = keepExpanded ? '0 6px' : '0';
-      pageChatInput.style.opacity = keepExpanded ? '1' : '0';
-      pageChatInput.style.pointerEvents = 'auto';
+      pageChatInput.value = keepExpanded ? restoreMessage : "";
+      pageChatInput.style.width = keepExpanded ? "" : "0";
+      pageChatInput.style.padding = keepExpanded ? "0 6px" : "0";
+      pageChatInput.style.opacity = keepExpanded ? "1" : "0";
+      pageChatInput.style.pointerEvents = "auto";
     }
     if (pageChatVoiceBtn) {
       pageChatVoiceBtn.disabled = false;
-      pageChatVoiceBtn.style.display = '';
+      pageChatVoiceBtn.style.display = "";
     }
     if (pageChatHint) {
-      pageChatHint.textContent = 'Steer';
-      pageChatHint.style.display = keepExpanded ? 'none' : '';
-      pageChatHint.style.visibility = keepExpanded ? 'hidden' : '';
-      pageChatHint.style.opacity = keepExpanded ? '0' : '1';
+      pageChatHint.textContent = "Steer";
+      pageChatHint.style.display = keepExpanded ? "none" : "";
+      pageChatHint.style.visibility = keepExpanded ? "hidden" : "";
+      pageChatHint.style.opacity = keepExpanded ? "0" : "1";
     }
     if (pageChatDotsEl?.parentNode) {
       pageChatDotsEl.remove();
@@ -10024,20 +10716,20 @@ void main() {
       pageChatQueueHintEl.remove();
       pageChatQueueHintEl = null;
     }
-    steerPendingMessage = keepExpanded ? restoreMessage : '';
+    steerPendingMessage = keepExpanded ? restoreMessage : "";
     steerInputWasFocused = false;
     syncPageChatChrome();
     syncPageChatFocusRing();
     if (opts?.error) showToast(String(opts.error), 5000);
     else if (opts?.message) showToast(String(opts.message), 4000);
     if (completedId) {
-      sendSteerCheckpoint(completedId, opts?.error ? 'steer_error' : 'steer_done', {
-        message: opts?.message || opts?.error || '',
-        file: opts?.file || '',
+      sendSteerCheckpoint(completedId, opts?.error ? "steer_error" : "steer_done", {
+        message: opts?.message || opts?.error || "",
+        file: opts?.file || "",
       });
     }
-    if (keepExpanded) focusPageChatInput('steer-error-restore');
-    else syncPageChatFocus('steer-unlock');
+    if (keepExpanded) focusPageChatInput("steer-error-restore");
+    else syncPageChatFocus("steer-unlock");
   }
 
   function steerSpeechRecognitionCtor() {
@@ -10045,60 +10737,62 @@ void main() {
   }
 
   function isEmbeddedPreviewBrowser() {
-    const ua = navigator.userAgent || '';
+    const ua = navigator.userAgent || "";
     if (/Electron/i.test(ua)) return true;
     if (/Cursor/i.test(ua)) return true;
     try {
       return !!(window.cursor || window.__CURSOR__ || window.__GLASS_BROWSER__);
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 
   function steerVoiceUnavailableMessage() {
-    return 'Voice input works in Chrome or Safari. Cursor\'s preview browser cannot reach speech services.';
+    return "Voice input works in Chrome or Safari. Cursor's preview browser cannot reach speech services.";
   }
 
   function steerVoiceErrorMessage(code) {
     switch (code) {
-      case 'not-allowed':
-        return 'Microphone access blocked';
-      case 'audio-capture':
-        return 'No microphone found';
-      case 'network':
+      case "not-allowed":
+        return "Microphone access blocked";
+      case "audio-capture":
+        return "No microphone found";
+      case "network":
         return isEmbeddedPreviewBrowser()
           ? steerVoiceUnavailableMessage()
-          : 'Voice input needs a network connection (browser speech uses a cloud service)';
-      case 'service-not-allowed':
-        return 'Voice input is not available in this browser tab';
-      case 'language-not-supported':
-        return 'Speech language not supported';
-      case 'no-speech':
-      case 'aborted':
+          : "Voice input needs a network connection (browser speech uses a cloud service)";
+      case "service-not-allowed":
+        return "Voice input is not available in this browser tab";
+      case "language-not-supported":
+        return "Speech language not supported";
+      case "no-speech":
+      case "aborted":
         return null;
       default:
-        return 'Voice input failed (' + code + ')';
+        return "Voice input failed (" + code + ")";
     }
   }
 
   function syncVoiceUi(listening) {
     voiceListening = !!listening;
-    if (voiceCtx?.mode === 'steer') {
+    if (voiceCtx?.mode === "steer") {
       if (pageChatVoiceBtn) {
-        pageChatVoiceBtn.dataset.active = listening ? 'true' : 'false';
-        pageChatVoiceBtn.dataset.listening = listening ? 'true' : 'false';
-        pageChatVoiceBtn.setAttribute('aria-label', listening ? 'Stop voice input' : 'Voice input');
-        pageChatVoiceBtn.setAttribute('aria-pressed', listening ? 'true' : 'false');
+        pageChatVoiceBtn.dataset.active = listening ? "true" : "false";
+        pageChatVoiceBtn.dataset.listening = listening ? "true" : "false";
+        pageChatVoiceBtn.setAttribute("aria-label", listening ? "Stop voice input" : "Voice input");
+        pageChatVoiceBtn.setAttribute("aria-pressed", listening ? "true" : "false");
       }
-      if (pageChatEl) pageChatEl.dataset.voiceListening = listening ? 'true' : 'false';
+      if (pageChatEl) pageChatEl.dataset.voiceListening = listening ? "true" : "false";
       syncPageChatChrome();
-    } else if (voiceCtx?.mode === 'configure') {
+    } else if (voiceCtx?.mode === "configure") {
       // The bar shows either the replace row's voice button or the insert
       // row's - both run voice through the 'configure' mode.
-      const voiceBtn = uiGetById(PREFIX + '-configure-voice') || uiGetById(PREFIX + '-insert-voice');
+      const voiceBtn = uiGetById(PREFIX + "-configure-voice") || uiGetById(PREFIX + "-insert-voice");
       if (voiceBtn) {
-        voiceBtn.dataset.active = listening ? 'true' : 'false';
-        voiceBtn.dataset.listening = listening ? 'true' : 'false';
-        voiceBtn.setAttribute('aria-label', listening ? 'Stop voice input' : 'Voice input');
-        voiceBtn.setAttribute('aria-pressed', listening ? 'true' : 'false');
+        voiceBtn.dataset.active = listening ? "true" : "false";
+        voiceBtn.dataset.listening = listening ? "true" : "false";
+        voiceBtn.setAttribute("aria-label", listening ? "Stop voice input" : "Voice input");
+        voiceBtn.setAttribute("aria-pressed", listening ? "true" : "false");
       }
       syncConfigureInputChrome();
     }
@@ -10116,7 +10810,9 @@ void main() {
     try {
       if (opts && opts.abort) rec.abort();
       else rec.stop();
-    } catch { /* already ended */ }
+    } catch {
+      /* already ended */
+    }
   }
 
   function stopVoice(opts) {
@@ -10134,23 +10830,23 @@ void main() {
     voiceSuppressSubmit = false;
     voiceCtx = null;
     const input = ctx?.input;
-    const text = input?.value.trim() || '';
+    const text = input?.value.trim() || "";
     if (suppress || !text || !ctx) return;
-    if (ctx.mode === 'steer' && !steerLocked) ctx.submit();
-    else if (ctx.mode === 'configure' && state === 'CONFIGURING') ctx.submit();
+    if (ctx.mode === "steer" && !steerLocked) ctx.submit();
+    else if (ctx.mode === "configure" && state === "CONFIGURING") ctx.submit();
   }
 
   function startVoice(ctx) {
     if (!ctx?.input || voiceListening) return;
-    if (ctx.mode === 'steer' && (steerLocked || state === 'CONFIGURING')) return;
-    if (ctx.mode === 'configure' && state !== 'CONFIGURING') return;
+    if (ctx.mode === "steer" && (steerLocked || state === "CONFIGURING")) return;
+    if (ctx.mode === "configure" && state !== "CONFIGURING") return;
     const Ctor = steerSpeechRecognitionCtor();
     if (!Ctor) {
-      showToast('Voice input needs Speech Recognition (Chrome, Safari, or Edge)', 4500);
+      showToast("Voice input needs Speech Recognition (Chrome, Safari, or Edge)", 4500);
       return;
     }
     if (!window.isSecureContext) {
-      showToast('Voice input needs HTTPS or localhost', 4500);
+      showToast("Voice input needs HTTPS or localhost", 4500);
       return;
     }
     if (isEmbeddedPreviewBrowser()) {
@@ -10163,14 +10859,12 @@ void main() {
     voiceCtx = ctx;
     if (ctx.beforeStart) ctx.beforeStart();
 
-    voiceInterimBase = ctx.input.value.trim()
-      ? ctx.input.value.trim() + ' '
-      : '';
+    voiceInterimBase = ctx.input.value.trim() ? ctx.input.value.trim() + " " : "";
 
     const rec = new Ctor();
     rec.continuous = false;
     rec.interimResults = true;
-    rec.lang = document.documentElement.lang || navigator.language || 'en-US';
+    rec.lang = document.documentElement.lang || navigator.language || "en-US";
     rec.maxAlternatives = 1;
 
     rec.onstart = () => {
@@ -10179,18 +10873,18 @@ void main() {
 
     rec.onresult = (event) => {
       if (!voiceCtx?.input) return;
-      let transcript = '';
+      let transcript = "";
       for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0]?.transcript || '';
+        transcript += event.results[i][0]?.transcript || "";
       }
       voiceCtx.input.value = (voiceInterimBase + transcript).trim();
-      if (voiceCtx.mode === 'steer') syncPageChatVisual();
+      if (voiceCtx.mode === "steer") syncPageChatVisual();
       else syncConfigureInputChrome();
     };
 
     rec.onerror = (event) => {
-      const code = event.error || 'unknown';
-      console.warn('[impeccable.voice] recognition error:', code);
+      const code = event.error || "unknown";
+      console.warn("[impeccable.voice] recognition error:", code);
       const message = steerVoiceErrorMessage(code);
       stopVoice({ suppressSubmit: true, message: message || undefined });
     };
@@ -10204,19 +10898,19 @@ void main() {
     try {
       rec.start();
     } catch (err) {
-      console.warn('[impeccable.voice] start failed:', err);
+      console.warn("[impeccable.voice] start failed:", err);
       stopVoice({
         suppressSubmit: true,
-        message: err?.message?.includes('already started')
-          ? 'Voice input already running'
-          : 'Could not start voice input',
+        message: err?.message?.includes("already started")
+          ? "Voice input already running"
+          : "Could not start voice input",
       });
     }
   }
 
   function steerVoiceContext() {
     return {
-      mode: 'steer',
+      mode: "steer",
       input: pageChatInput,
       beforeStart: () => {
         if (!pageChatExpanded) expandPageChat({ focus: false });
@@ -10226,19 +10920,19 @@ void main() {
   }
 
   function configureVoiceContext() {
-    const input = uiGetById(
-      configureKind === 'insert' ? PREFIX + '-insert-input' : PREFIX + '-input',
-    );
+    const input = uiGetById(configureKind === "insert" ? PREFIX + "-insert-input" : PREFIX + "-input");
     return {
-      mode: 'configure',
+      mode: "configure",
       input,
-      beforeStart: () => { input?.focus(); },
-      submit: configureKind === 'insert' ? handleInsertCreate : handleGo,
+      beforeStart: () => {
+        input?.focus();
+      },
+      submit: configureKind === "insert" ? handleInsertCreate : handleGo,
     };
   }
 
   function toggleSteerVoice() {
-    if (voiceListening && voiceCtx?.mode === 'steer') {
+    if (voiceListening && voiceCtx?.mode === "steer") {
       voiceSuppressSubmit = true;
       stopVoice({ suppressSubmit: true, abort: true });
       return;
@@ -10247,7 +10941,7 @@ void main() {
   }
 
   function toggleConfigureVoice() {
-    if (voiceListening && voiceCtx?.mode === 'configure') {
+    if (voiceListening && voiceCtx?.mode === "configure") {
       voiceSuppressSubmit = true;
       stopVoice({ suppressSubmit: true, abort: true });
       return;
@@ -10268,33 +10962,33 @@ void main() {
     // is what creates the session journal server-side, and a checkpoint for
     // a not-yet-created session is rejected as unknown_session.
     sendEvent({
-      type: 'steer',
+      type: "steer",
       id,
       message: text,
       pageUrl: location.href,
     }).then((res) => {
       if (!res) {
-        unlockSteerChat({ error: 'Could not reach live server', restoreMessage: text });
+        unlockSteerChat({ error: "Could not reach live server", restoreMessage: text });
         return;
       }
-      if (steerInputWasFocused) sendSteerCheckpoint(id, 'steer_input_focused', { focused: true });
-      sendSteerCheckpoint(id, 'steer_submitted', { message: text, pageUrl: location.href });
+      if (steerInputWasFocused) sendSteerCheckpoint(id, "steer_input_focused", { focused: true });
+      sendSteerCheckpoint(id, "steer_submitted", { message: text, pageUrl: location.href });
     });
   }
 
   function maybeCompleteSteer(msg) {
     if (!steerRequestId || msg.id !== steerRequestId) return false;
-    if (msg.type === 'steer_done') {
+    if (msg.type === "steer_done") {
       unlockSteerChat({ message: msg.message, file: msg.file });
       if (msg.file && /\.svelte(?:$|\?)/.test(String(msg.file))) {
         setTimeout(() => {
-          if (!steerLocked) showToast('Steer applied. Reload if the page has not refreshed yet.', 5000);
+          if (!steerLocked) showToast("Steer applied. Reload if the page has not refreshed yet.", 5000);
         }, 4500);
       }
       return true;
     }
-    if (msg.type === 'error') {
-      unlockSteerChat({ error: msg.message || 'Steer failed', restoreMessage: steerPendingMessage });
+    if (msg.type === "error") {
+      unlockSteerChat({ error: msg.message || "Steer failed", restoreMessage: steerPendingMessage });
       return true;
     }
     return false;
@@ -10306,7 +11000,7 @@ void main() {
     preparePageChatInputForTyping();
     syncPageChatChrome();
     syncPageChatFocusRing();
-    if (focus) focusPageChatInput('expand-page-chat');
+    if (focus) focusPageChatInput("expand-page-chat");
   }
 
   function collapsePageChat(opts) {
@@ -10314,110 +11008,145 @@ void main() {
     if (voiceListening) return;
     if (!pageChatEl || !pageChatInput) return;
     pageChatExpanded = false;
-    pageChatEl.dataset.expanded = 'false';
+    pageChatEl.dataset.expanded = "false";
     pageChatEl.style.width = PAGE_CHAT_COLLAPSED_W;
-    pageChatEl.style.cursor = 'pointer';
-    syncGlobalBarExpandedLabels(globalBarEl?.matches(':hover'));
+    pageChatEl.style.cursor = "pointer";
+    syncGlobalBarExpandedLabels(globalBarEl?.matches(":hover"));
     if (blur) {
       pageChatInput.blur();
-      pageChatInput.style.pointerEvents = 'none';
+      pageChatInput.style.pointerEvents = "none";
     } else {
-      pageChatInput.style.pointerEvents = 'auto';
+      pageChatInput.style.pointerEvents = "auto";
     }
     if (pageChatHint && activeElementDeep() !== pageChatInput) {
-      pageChatHint.style.display = '';
-      pageChatHint.style.opacity = '1';
+      pageChatHint.style.display = "";
+      pageChatHint.style.opacity = "1";
     }
-    if (pageChatVoiceBtn) pageChatVoiceBtn.dataset.active = 'false';
+    if (pageChatVoiceBtn) pageChatVoiceBtn.dataset.active = "false";
     syncPageChatChrome();
     syncPageChatFocusRing();
   }
 
   function initPageChat(parent, P) {
-    pageChatEl = el('div', {
-      display: 'inline-flex', alignItems: 'center',
-      height: '28px', margin: '0 4px 0 ' + (GLOBAL_BAR_SECTION_GAP - GLOBAL_BAR_INNER_GAP) + 'px',
-      borderRadius: '7px',
+    pageChatEl = el("div", {
+      display: "inline-flex",
+      alignItems: "center",
+      height: "28px",
+      margin: "0 4px 0 " + (GLOBAL_BAR_SECTION_GAP - GLOBAL_BAR_INNER_GAP) + "px",
+      borderRadius: "7px",
       background: P.chatSurface,
-      border: '1px solid transparent',
-      overflow: 'hidden',
-      cursor: 'pointer',
-      flexShrink: '0',
+      border: "1px solid transparent",
+      overflow: "hidden",
+      cursor: "pointer",
+      flexShrink: "0",
       width: PAGE_CHAT_COLLAPSED_W,
-      transition: 'border-color 0.15s ease',
+      transition: "border-color 0.15s ease",
     });
-    pageChatEl.id = PREFIX + '-page-chat';
-    pageChatEl.dataset.expanded = 'false';
-    pageChatEl.title = 'Steer the page';
+    pageChatEl.id = PREFIX + "-page-chat";
+    pageChatEl.dataset.expanded = "false";
+    pageChatEl.title = "Steer the page";
 
-    const chatIcon = el('span', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      width: '28px', height: '28px', flexShrink: '0',
-      color: P.textDim, pointerEvents: 'none',
+    const chatIcon = el("span", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "28px",
+      height: "28px",
+      flexShrink: "0",
+      color: P.textDim,
+      pointerEvents: "none",
     });
     chatIcon.innerHTML = ICON_PAGE_CHAT;
 
-    pageChatHint = el('span', {
-      fontSize: '11.5px', fontWeight: '500',
+    pageChatHint = el("span", {
+      fontSize: "11.5px",
+      fontWeight: "500",
       color: P.textDim,
-      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-      flex: '1', minWidth: '0',
-      pointerEvents: 'none',
-      transition: 'opacity 0.15s ease',
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      flex: "1",
+      minWidth: "0",
+      pointerEvents: "none",
+      transition: "opacity 0.15s ease",
     });
-    pageChatHint.textContent = 'Steer';
+    pageChatHint.textContent = "Steer";
 
-    pageChatInput = document.createElement('input');
-    pageChatInput.id = PREFIX + '-page-chat-input';
-    pageChatInput.type = 'text';
+    pageChatInput = document.createElement("input");
+    pageChatInput.id = PREFIX + "-page-chat-input";
+    pageChatInput.type = "text";
     pageChatInput.placeholder = PAGE_CHAT_PLACEHOLDER_COLLAPSED;
-    pageChatInput.setAttribute('aria-label', 'Steer the page');
+    pageChatInput.setAttribute("aria-label", "Steer the page");
     Object.assign(pageChatInput.style, {
-      flex: '1', minWidth: '0', width: '0',
-      padding: '0', border: 'none', background: 'transparent',
-      fontFamily: FONT, fontSize: '11.5px', color: P.text,
-      outline: 'none', opacity: '0', pointerEvents: 'none',
+      flex: "1",
+      minWidth: "0",
+      width: "0",
+      padding: "0",
+      border: "none",
+      background: "transparent",
+      fontFamily: FONT,
+      fontSize: "11.5px",
+      color: P.text,
+      outline: "none",
+      opacity: "0",
+      pointerEvents: "none",
       caretColor: P.accent,
-      transition: 'opacity 0.15s ease',
+      transition: "opacity 0.15s ease",
     });
 
-    pageChatVoiceBtn = el('button', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      padding: '0', boxSizing: 'border-box',
-      width: '28px', height: '28px', flexShrink: '0',
-      border: 'none', background: 'transparent',
-      color: P.textDim, cursor: 'pointer',
-      transition: 'color 0.12s ease, background 0.12s ease',
+    pageChatVoiceBtn = el("button", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0",
+      boxSizing: "border-box",
+      width: "28px",
+      height: "28px",
+      flexShrink: "0",
+      border: "none",
+      background: "transparent",
+      color: P.textDim,
+      cursor: "pointer",
+      transition: "color 0.12s ease, background 0.12s ease",
     });
-    pageChatVoiceBtn.id = PREFIX + '-page-chat-voice';
-    pageChatVoiceBtn.type = 'button';
-    pageChatVoiceBtn.setAttribute('aria-label', 'Voice input');
+    pageChatVoiceBtn.id = PREFIX + "-page-chat-voice";
+    pageChatVoiceBtn.type = "button";
+    pageChatVoiceBtn.setAttribute("aria-label", "Voice input");
     pageChatVoiceBtn.innerHTML = ICON_PAGE_VOICE;
 
     // Visible Send, same affordance the element-level Go bar gets from
     // buildConfigureSubmitButton. Enter still submits; the button exists so a
     // typed steer does not look like a dead-end text field.
-    pageChatSendBtn = el('button', {
-      display: 'none', alignItems: 'center', justifyContent: 'center',
-      padding: '0', boxSizing: 'border-box',
-      width: '28px', height: '28px', flexShrink: '0',
-      border: 'none', borderLeft: '1px solid ' + P.hairline,
-      borderRadius: '0',
-      background: P.accent, color: C.ink,
-      cursor: 'pointer',
-      transition: 'filter 0.12s ease, opacity 0.12s ease',
+    pageChatSendBtn = el("button", {
+      display: "none",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0",
+      boxSizing: "border-box",
+      width: "28px",
+      height: "28px",
+      flexShrink: "0",
+      border: "none",
+      borderLeft: "1px solid " + P.hairline,
+      borderRadius: "0",
+      background: P.accent,
+      color: C.ink,
+      cursor: "pointer",
+      transition: "filter 0.12s ease, opacity 0.12s ease",
     });
-    pageChatSendBtn.id = PREFIX + '-page-chat-send';
-    pageChatSendBtn.type = 'button';
-    pageChatSendBtn.setAttribute('aria-label', 'Send steer message');
+    pageChatSendBtn.id = PREFIX + "-page-chat-send";
+    pageChatSendBtn.type = "button";
+    pageChatSendBtn.setAttribute("aria-label", "Send steer message");
     pageChatSendBtn.innerHTML = ICON_CONFIGURE_SUBMIT;
-    pageChatSendBtn.addEventListener('pointerdown', keepSteerPointerInside);
-    pageChatSendBtn.addEventListener('mousedown', keepSteerPointerInside);
-    pageChatSendBtn.addEventListener('mouseenter', () => {
-      if (!pageChatSendBtn.disabled) pageChatSendBtn.style.filter = 'brightness(1.1)';
+    pageChatSendBtn.addEventListener("pointerdown", keepSteerPointerInside);
+    pageChatSendBtn.addEventListener("mousedown", keepSteerPointerInside);
+    pageChatSendBtn.addEventListener("mouseenter", () => {
+      if (!pageChatSendBtn.disabled) pageChatSendBtn.style.filter = "brightness(1.1)";
     });
-    pageChatSendBtn.addEventListener('mouseleave', () => { pageChatSendBtn.style.filter = 'none'; });
-    pageChatSendBtn.addEventListener('click', (e) => {
+    pageChatSendBtn.addEventListener("mouseleave", () => {
+      pageChatSendBtn.style.filter = "none";
+    });
+    pageChatSendBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       keepSteerPointerInside(e);
       if (steerLocked || pageChatSendBtn.disabled) return;
@@ -10430,95 +11159,117 @@ void main() {
     pageChatEl.appendChild(pageChatVoiceBtn);
     pageChatEl.appendChild(pageChatSendBtn);
 
-    if (!uiGetById(PREFIX + '-page-chat-style')) {
-      const s = document.createElement('style');
-      s.id = PREFIX + '-page-chat-style';
+    if (!uiGetById(PREFIX + "-page-chat-style")) {
+      const s = document.createElement("style");
+      s.id = PREFIX + "-page-chat-style";
       s.textContent =
-        '@keyframes impeccable-steer-dot { 0%, 70%, 100% { opacity: 0.28; transform: scale(0.82); } 35% { opacity: 1; transform: scale(1); } }' +
-        '@keyframes impeccable-steer-processing { 0%, 100% { border-color: oklch(70% 0.12 188 / 0.28); box-shadow: 0 0 0 0 oklch(70% 0.12 188 / 0); } 50% { border-color: oklch(82% 0.07 188 / 0.55); box-shadow: 0 0 14px oklch(70% 0.12 188 / 0.18); } }' +
-        '@keyframes impeccable-voice-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }' +
-        '#' + PREFIX + '-page-chat[data-processing="true"] { animation: impeccable-steer-processing 1.6s ease-in-out infinite; }' +
-        '@media (prefers-reduced-motion: reduce) { #' + PREFIX + '-page-chat[data-processing="true"] { animation: none; border-color: oklch(70% 0.12 188 / 0.45); } #' + PREFIX + '-page-chat[data-processing="true"] [aria-hidden="true"] span { animation: none; opacity: 0.85; } }' +
-        '#' + PREFIX + '-page-chat[data-voice-listening="true"] { border-color: oklch(70% 0.12 188 / 0.45); }' +
-        '#' + PREFIX + '-page-chat-voice[data-listening="true"] svg { animation: impeccable-voice-pulse 1.1s ease-in-out infinite; }' +
-        '@media (prefers-reduced-motion: reduce) { #' + PREFIX + '-page-chat-voice[data-listening="true"] svg { animation: none; opacity: 1; } }' +
-        '#' + PREFIX + '-page-chat-input::placeholder { color: oklch(72% 0 0); opacity: 1; }' +
-        '#' + PREFIX + '-page-chat-input { caret-color: oklch(84% 0.19 80.46); }' +
-        '#' + PREFIX + '-page-chat[data-input-focused="true"]:not([data-expanded="true"]) #' + PREFIX + '-page-chat-input::placeholder { color: oklch(72% 0 0); }' +
-        '#' + PREFIX + '-page-chat-voice:hover { background: oklch(78% 0.12 82 / 0.12); }';
+        "@keyframes impeccable-steer-dot { 0%, 70%, 100% { opacity: 0.28; transform: scale(0.82); } 35% { opacity: 1; transform: scale(1); } }" +
+        "@keyframes impeccable-steer-processing { 0%, 100% { border-color: oklch(70% 0.12 188 / 0.28); box-shadow: 0 0 0 0 oklch(70% 0.12 188 / 0); } 50% { border-color: oklch(82% 0.07 188 / 0.55); box-shadow: 0 0 14px oklch(70% 0.12 188 / 0.18); } }" +
+        "@keyframes impeccable-voice-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }" +
+        "#" +
+        PREFIX +
+        '-page-chat[data-processing="true"] { animation: impeccable-steer-processing 1.6s ease-in-out infinite; }' +
+        "@media (prefers-reduced-motion: reduce) { #" +
+        PREFIX +
+        '-page-chat[data-processing="true"] { animation: none; border-color: oklch(70% 0.12 188 / 0.45); } #' +
+        PREFIX +
+        '-page-chat[data-processing="true"] [aria-hidden="true"] span { animation: none; opacity: 0.85; } }' +
+        "#" +
+        PREFIX +
+        '-page-chat[data-voice-listening="true"] { border-color: oklch(70% 0.12 188 / 0.45); }' +
+        "#" +
+        PREFIX +
+        '-page-chat-voice[data-listening="true"] svg { animation: impeccable-voice-pulse 1.1s ease-in-out infinite; }' +
+        "@media (prefers-reduced-motion: reduce) { #" +
+        PREFIX +
+        '-page-chat-voice[data-listening="true"] svg { animation: none; opacity: 1; } }' +
+        "#" +
+        PREFIX +
+        "-page-chat-input::placeholder { color: oklch(72% 0 0); opacity: 1; }" +
+        "#" +
+        PREFIX +
+        "-page-chat-input { caret-color: oklch(84% 0.19 80.46); }" +
+        "#" +
+        PREFIX +
+        '-page-chat[data-input-focused="true"]:not([data-expanded="true"]) #' +
+        PREFIX +
+        "-page-chat-input::placeholder { color: oklch(72% 0 0); }" +
+        "#" +
+        PREFIX +
+        "-page-chat-voice:hover { background: oklch(78% 0.12 82 / 0.12); }";
       uiAppendStyle(s);
     }
 
-    pageChatEl.addEventListener('pointerdown', (e) => {
+    pageChatEl.addEventListener("pointerdown", (e) => {
       keepSteerPointerInside(e);
       if (steerLocked || pageChatVoiceBtn.contains(e.target) || pageChatSendBtn.contains(e.target)) return;
       armPageChatForTyping({ expand: true, focus: false });
     });
-    pageChatEl.addEventListener('mousedown', keepSteerPointerInside);
-    pageChatEl.addEventListener('click', (e) => {
+    pageChatEl.addEventListener("mousedown", keepSteerPointerInside);
+    pageChatEl.addEventListener("click", (e) => {
       keepSteerPointerInside(e);
       if (steerLocked) return;
       if (pageChatVoiceBtn.contains(e.target) || pageChatSendBtn.contains(e.target)) return;
       armPageChatForTyping({ expand: true, focus: true });
     });
 
-    pageChatVoiceBtn.addEventListener('pointerdown', keepSteerPointerInside);
-    pageChatVoiceBtn.addEventListener('mousedown', keepSteerPointerInside);
-    pageChatVoiceBtn.addEventListener('click', (e) => {
+    pageChatVoiceBtn.addEventListener("pointerdown", keepSteerPointerInside);
+    pageChatVoiceBtn.addEventListener("mousedown", keepSteerPointerInside);
+    pageChatVoiceBtn.addEventListener("click", (e) => {
       keepSteerPointerInside(e);
       if (steerLocked) return;
       toggleSteerVoice();
     });
 
-    pageChatInput.addEventListener('pointerdown', keepSteerPointerInside);
-    pageChatInput.addEventListener('mousedown', keepSteerPointerInside);
-    pageChatInput.addEventListener('click', (e) => {
+    pageChatInput.addEventListener("pointerdown", keepSteerPointerInside);
+    pageChatInput.addEventListener("mousedown", keepSteerPointerInside);
+    pageChatInput.addEventListener("click", (e) => {
       keepSteerPointerInside(e);
-      if (!steerLocked) focusPageChatInput('page-chat-input-click');
+      if (!steerLocked) focusPageChatInput("page-chat-input-click");
     });
 
-    pageChatInput.addEventListener('input', () => {
+    pageChatInput.addEventListener("input", () => {
       syncPageChatVisual();
       syncPageChatSendButton();
     });
 
-    pageChatInput.addEventListener('focus', () => {
+    pageChatInput.addEventListener("focus", () => {
       steerInputWasFocused = true;
       syncPageChatFocusRing();
       syncPageChatChrome();
     });
 
-    pageChatInput.addEventListener('blur', () => {
+    pageChatInput.addEventListener("blur", () => {
       syncPageChatFocusRing();
       setTimeout(() => {
-        if (state === 'CONFIGURING' || steerLocked || voiceListening) return;
+        if (state === "CONFIGURING" || steerLocked || voiceListening) return;
         if (pageChatEl?.contains(activeElementDeep())) return;
         if (!pageChatInput.value.trim()) collapsePageChat();
-        scheduleSteerFocusRecover('steer-blur-recover');
+        scheduleSteerFocusRecover("steer-blur-recover");
       }, 120);
     });
 
-    pageChatInput.addEventListener('keydown', (e) => {
-      if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !pageChatInput.value) return;
+    pageChatInput.addEventListener("keydown", (e) => {
+      if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !pageChatInput.value) return;
       e.stopPropagation();
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         if (pageChatInput.value) {
-          pageChatInput.value = '';
+          pageChatInput.value = "";
           syncPageChatVisual();
         } else {
           collapsePageChat();
         }
         return;
       }
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
         submitSteerMessage();
       }
     });
 
     parent.appendChild(pageChatEl);
-    steerFocusLog('page-chat-mounted', {});
+    steerFocusLog("page-chat-mounted", {});
   }
 
   // Impeccable mark - same paths as site/components/Header.astro + favicon.svg.
@@ -10534,7 +11285,7 @@ void main() {
    * In these states a quiet poll indicator means "busy", not "absent".
    */
   function agentHasWorkInFlight() {
-    return state === 'GENERATING' || state === 'SAVING';
+    return state === "GENERATING" || state === "SAVING";
   }
 
   /**
@@ -10554,48 +11305,51 @@ void main() {
     if (!globalBarBrandEl) return;
     const P = barPaletteForTheme(globalBarEl?.dataset.theme || detectPageTheme());
     agentStatusMessage = agentStatusText();
-    globalBarBrandEl.dataset.agentConnected = connected ? 'true' : 'false';
+    globalBarBrandEl.dataset.agentConnected = connected ? "true" : "false";
     // The tooltip is mouse-only, so carry the same distinction in the label or
     // screen-reader users are left with the vaguer of the two readings.
-    globalBarBrandEl.setAttribute('aria-label', agentStatusMessage
-      ? 'Impeccable live mode - ' + (agentHasWorkInFlight() ? 'agent is working' : 'agent not polling')
-      : 'Impeccable live mode');
-    globalBarBrandEl.removeAttribute('title');
-    globalBarBrandEl.style.cursor = agentStatusMessage ? 'help' : 'default';
-    const mark = globalBarBrandEl.querySelector('[data-brand-mark]');
+    globalBarBrandEl.setAttribute(
+      "aria-label",
+      agentStatusMessage
+        ? "Impeccable live mode - " + (agentHasWorkInFlight() ? "agent is working" : "agent not polling")
+        : "Impeccable live mode"
+    );
+    globalBarBrandEl.removeAttribute("title");
+    globalBarBrandEl.style.cursor = agentStatusMessage ? "help" : "default";
+    const mark = globalBarBrandEl.querySelector("[data-brand-mark]");
     if (mark) {
       mark.innerHTML = brandMarkSvg(connected ? P.accent : AGENT_DISCONNECTED_MARK, 18);
-      mark.style.opacity = '1';
+      mark.style.opacity = "1";
     }
-    const dot = globalBarBrandEl.querySelector('[data-agent-dot]');
-    if (dot) dot.style.display = agentStatusMessage ? 'block' : 'none';
+    const dot = globalBarBrandEl.querySelector("[data-agent-dot]");
+    if (dot) dot.style.display = agentStatusMessage ? "block" : "none";
     if (!agentStatusMessage) hideAgentPollTooltip();
   }
 
   function ensureAgentPollTooltip() {
     if (agentPollTooltipEl) return agentPollTooltipEl;
     const P = barPaletteForTheme(globalBarEl?.dataset.theme || detectPageTheme());
-    agentPollTooltipEl = el('div', {
-      position: 'fixed',
-      display: 'none',
-      opacity: '0',
+    agentPollTooltipEl = el("div", {
+      position: "fixed",
+      display: "none",
+      opacity: "0",
       zIndex: String(Z.bar + 6),
-      pointerEvents: 'none',
-      maxWidth: '220px',
-      padding: '6px 9px',
-      borderRadius: '7px',
+      pointerEvents: "none",
+      maxWidth: "220px",
+      padding: "6px 9px",
+      borderRadius: "7px",
       background: P.chatSurface,
-      border: '1px solid ' + P.hairline,
+      border: "1px solid " + P.hairline,
       boxShadow: P.shadow,
       color: P.text,
       fontFamily: FONT,
-      fontSize: '11px',
-      fontWeight: '500',
-      lineHeight: '1.35',
-      letterSpacing: '0.01em',
-      whiteSpace: 'normal',
+      fontSize: "11px",
+      fontWeight: "500",
+      lineHeight: "1.35",
+      letterSpacing: "0.01em",
+      whiteSpace: "normal",
     });
-    agentPollTooltipEl.id = PREFIX + '-agent-poll-tooltip';
+    agentPollTooltipEl.id = PREFIX + "-agent-poll-tooltip";
     agentPollTooltipEl.textContent = agentStatusText() || AGENT_DISCONNECTED_TIP;
     uiAppend(agentPollTooltipEl);
     return agentPollTooltipEl;
@@ -10607,22 +11361,22 @@ void main() {
     // Re-derive rather than reuse the cached copy: the live state may have moved
     // since the last status poll set it.
     tip.textContent = agentStatusText() || AGENT_DISCONNECTED_TIP;
-    tip.style.transition = 'none';
-    tip.style.display = 'block';
-    tip.style.opacity = '1';
+    tip.style.transition = "none";
+    tip.style.display = "block";
+    tip.style.opacity = "1";
     const r = anchor.getBoundingClientRect();
     const tipW = tip.offsetWidth;
     const tipH = tip.offsetHeight;
     const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
     const top = Math.max(8, r.top - tipH - 8);
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
   }
 
   function hideAgentPollTooltip() {
     if (!agentPollTooltipEl) return;
-    agentPollTooltipEl.style.display = 'none';
-    agentPollTooltipEl.style.opacity = '0';
+    agentPollTooltipEl.style.display = "none";
+    agentPollTooltipEl.style.opacity = "0";
   }
 
   function stopAgentStatusPoll() {
@@ -10633,14 +11387,16 @@ void main() {
   }
 
   function fetchAgentPollingStatus() {
-    fetch('http://localhost:' + PORT + '/status?token=' + TOKEN, { cache: 'no-store' })
+    fetch("http://localhost:" + PORT + "/status?token=" + TOKEN, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data && typeof data.agentPolling === 'boolean') {
+        if (data && typeof data.agentPolling === "boolean") {
           syncAgentPollingUi(data.agentPolling);
         }
       })
-      .catch(() => { /* server loss handled elsewhere */ });
+      .catch(() => {
+        /* server loss handled elsewhere */
+      });
   }
 
   function startAgentStatusPoll() {
@@ -10656,127 +11412,176 @@ void main() {
     // Custom focus-visible for bar buttons. Browser default is a heavy
     // blue ring that looks jarring on the dark capsule. Replace with a
     // soft accent-tinted inner ring that respects the bar's palette.
-    if (!uiGetById(PREFIX + '-bar-focus-style')) {
-      const s = document.createElement('style');
-      s.id = PREFIX + '-bar-focus-style';
+    if (!uiGetById(PREFIX + "-bar-focus-style")) {
+      const s = document.createElement("style");
+      s.id = PREFIX + "-bar-focus-style";
       s.textContent =
-        '#' + PREFIX + '-global-bar button:focus { outline: none; }' +
-        '#' + PREFIX + '-global-bar button:focus-visible {' +
-        '  outline: none;' +
-        '  box-shadow: 0 0 0 2px ' + P.accentSoft + ', 0 0 0 3px ' + P.accent + ';' +
-        '}' +
-        '@keyframes impeccable-agent-dot { 0%, 100% { opacity: 0.45; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } }' +
-        '#' + PREFIX + '-global-bar-brand[data-agent-connected="false"] [data-agent-dot] { animation: impeccable-agent-dot 1.4s ease-in-out infinite; }' +
-        '@media (prefers-reduced-motion: reduce) { #' + PREFIX + '-global-bar-brand[data-agent-connected="false"] [data-agent-dot] { animation: none; opacity: 0.9; } }';
+        "#" +
+        PREFIX +
+        "-global-bar button:focus { outline: none; }" +
+        "#" +
+        PREFIX +
+        "-global-bar button:focus-visible {" +
+        "  outline: none;" +
+        "  box-shadow: 0 0 0 2px " +
+        P.accentSoft +
+        ", 0 0 0 3px " +
+        P.accent +
+        ";" +
+        "}" +
+        "@keyframes impeccable-agent-dot { 0%, 100% { opacity: 0.45; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } }" +
+        "#" +
+        PREFIX +
+        '-global-bar-brand[data-agent-connected="false"] [data-agent-dot] { animation: impeccable-agent-dot 1.4s ease-in-out infinite; }' +
+        "@media (prefers-reduced-motion: reduce) { #" +
+        PREFIX +
+        '-global-bar-brand[data-agent-connected="false"] [data-agent-dot] { animation: none; opacity: 0.9; } }';
       uiAppendStyle(s);
     }
 
-    globalBarEl = el('div', {
-      position: 'fixed', bottom: '14px', left: '50%',
-      transform: 'translateX(-50%) translateY(20px)',
+    globalBarEl = el("div", {
+      position: "fixed",
+      bottom: "14px",
+      left: "50%",
+      transform: "translateX(-50%) translateY(20px)",
       zIndex: Z.bar + 5,
-      display: 'flex', alignItems: 'stretch',
-      gap: '0',
-      width: 'max-content',
+      display: "flex",
+      alignItems: "stretch",
+      gap: "0",
+      width: "max-content",
       background: P.surface,
-      border: '1px solid ' + P.border,
-      borderRadius: '8px',
+      border: "1px solid " + P.border,
+      borderRadius: "8px",
       boxShadow: P.shadow,
-      fontFamily: FONT, fontSize: '12px', lineHeight: '1',
-      opacity: '0',
-      overflow: 'hidden',          // clip the full-bleed brand mark to the bar radius
-      maxWidth: 'calc(100vw - 16px)',
-      boxSizing: 'border-box',
-      transition: 'opacity 0.3s ' + EASE + ', transform 0.3s ' + EASE,
+      fontFamily: FONT,
+      fontSize: "12px",
+      lineHeight: "1",
+      opacity: "0",
+      overflow: "hidden", // clip the full-bleed brand mark to the bar radius
+      maxWidth: "calc(100vw - 16px)",
+      boxSizing: "border-box",
+      transition: "opacity 0.3s " + EASE + ", transform 0.3s " + EASE,
     });
-    globalBarEl.id = PREFIX + '-global-bar';
+    globalBarEl.id = PREFIX + "-global-bar";
     globalBarEl.dataset.theme = theme;
 
     // Brand mark - kinpaku Impeccable icon (site header / favicon paths).
-    const brand = el('span', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      alignSelf: 'stretch', position: 'relative',
-      padding: '0 ' + (GLOBAL_BAR_SECTION_GAP - GLOBAL_BAR_INNER_PAD_LEFT) + 'px 0 14px',
-      background: 'transparent',
+    const brand = el("span", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      alignSelf: "stretch",
+      position: "relative",
+      padding: "0 " + (GLOBAL_BAR_SECTION_GAP - GLOBAL_BAR_INNER_PAD_LEFT) + "px 0 14px",
+      background: "transparent",
       color: P.accent,
-      flexShrink: '0',
+      flexShrink: "0",
     });
-    brand.id = PREFIX + '-global-bar-brand';
-    brand.dataset.agentConnected = 'false';
-    brand.setAttribute('role', 'img');
-    brand.setAttribute('aria-label', 'Impeccable live mode - agent not polling');
+    brand.id = PREFIX + "-global-bar-brand";
+    brand.dataset.agentConnected = "false";
+    brand.setAttribute("role", "img");
+    brand.setAttribute("aria-label", "Impeccable live mode - agent not polling");
 
-    const brandMark = el('span', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      position: 'relative',
+    const brandMark = el("span", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
     });
-    brandMark.dataset.brandMark = 'true';
+    brandMark.dataset.brandMark = "true";
     brandMark.innerHTML = brandMarkSvg(P.accent, 18);
 
-    const agentDot = el('span', {
-      position: 'absolute', right: '-1px', bottom: '7px',
-      width: '6px', height: '6px', borderRadius: '50%',
-      background: 'oklch(77% 0.13 82)',
-      boxShadow: '0 0 0 2px ' + P.surface,
-      display: 'none', pointerEvents: 'none',
+    const agentDot = el("span", {
+      position: "absolute",
+      right: "-1px",
+      bottom: "7px",
+      width: "6px",
+      height: "6px",
+      borderRadius: "50%",
+      background: "oklch(77% 0.13 82)",
+      boxShadow: "0 0 0 2px " + P.surface,
+      display: "none",
+      pointerEvents: "none",
     });
-    agentDot.dataset.agentDot = 'true';
-    agentDot.setAttribute('aria-hidden', 'true');
+    agentDot.dataset.agentDot = "true";
+    agentDot.setAttribute("aria-hidden", "true");
 
     brandMark.appendChild(agentDot);
     brand.appendChild(brandMark);
-    brand.addEventListener('mouseenter', () => showAgentPollTooltip(brand));
-    brand.addEventListener('mouseleave', hideAgentPollTooltip);
+    brand.addEventListener("mouseenter", () => showAgentPollTooltip(brand));
+    brand.addEventListener("mouseleave", hideAgentPollTooltip);
     globalBarBrandEl = brand;
     globalBarEl.appendChild(brand);
     syncAgentPollingUi(false);
 
     // Inner wrapper: holds the toggles with normal bar padding.
-    const inner = el('div', {
-      display: 'flex', alignItems: 'center',
-      padding: '4px 5px 4px ' + GLOBAL_BAR_INNER_PAD_LEFT + 'px', gap: GLOBAL_BAR_INNER_GAP + 'px',
-      flex: '0 0 auto',
+    const inner = el("div", {
+      display: "flex",
+      alignItems: "center",
+      padding: "4px 5px 4px " + GLOBAL_BAR_INNER_PAD_LEFT + "px",
+      gap: GLOBAL_BAR_INNER_GAP + "px",
+      flex: "0 0 auto",
     });
-    inner.id = PREFIX + '-global-bar-inner';
+    inner.id = PREFIX + "-global-bar-inner";
     globalBarEl.appendChild(inner);
 
     // Button factory: icon-only at rest, label slides in on hover/active.
     function makeIconBtn({ id, svg, label, ariaLabel, labelFont, onClick }) {
-      const b = el('button', {
-        position: 'relative',
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        boxSizing: 'border-box',
-        flex: '0 0 auto',
-        minWidth: '30px',
-        padding: '6px 8px', borderRadius: '7px',
-        border: 'none', background: 'transparent',
-        color: P.textDim, fontFamily: FONT, fontSize: '11.5px', fontWeight: '500',
-        cursor: 'pointer',
-        transition: 'background 0.15s ease, color 0.15s ease',
-        whiteSpace: 'nowrap', overflow: 'hidden',
+      const b = el("button", {
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        flex: "0 0 auto",
+        minWidth: "30px",
+        padding: "6px 8px",
+        borderRadius: "7px",
+        border: "none",
+        background: "transparent",
+        color: P.textDim,
+        fontFamily: FONT,
+        fontSize: "11.5px",
+        fontWeight: "500",
+        cursor: "pointer",
+        transition: "background 0.15s ease, color 0.15s ease",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
       });
       b.id = id;
-      b.title = ariaLabel || label || '';
-      b.setAttribute('aria-label', ariaLabel || label || '');
-      b.innerHTML = svg + (label
-        ? `<span class="icon-btn-label" style="display:inline-block;max-width:0;opacity:0;margin-left:0;overflow:hidden;font-family:${labelFont || FONT};transform:translateX(-4px);transition:opacity 0.2s ease, transform 0.25s ${EASE};">${label}</span>`
-        : '');
-      const labelEl = b.querySelector('.icon-btn-label');
+      b.title = ariaLabel || label || "";
+      b.setAttribute("aria-label", ariaLabel || label || "");
+      b.innerHTML =
+        svg +
+        (label
+          ? `<span class="icon-btn-label" style="display:inline-block;max-width:0;opacity:0;margin-left:0;overflow:hidden;font-family:${labelFont || FONT};transform:translateX(-4px);transition:opacity 0.2s ease, transform 0.25s ${EASE};">${label}</span>`
+          : "");
+      const labelEl = b.querySelector(".icon-btn-label");
       const expand = () => {
         if (!labelEl) return;
-        labelEl.style.maxWidth = '120px'; labelEl.style.opacity = '1'; labelEl.style.marginLeft = '6px'; labelEl.style.transform = 'translateX(0)';
+        labelEl.style.maxWidth = "120px";
+        labelEl.style.opacity = "1";
+        labelEl.style.marginLeft = "6px";
+        labelEl.style.transform = "translateX(0)";
       };
       const collapse = (force = false) => {
-        if (!labelEl || (!force && b.dataset.active === 'true')) return;
-        labelEl.style.maxWidth = '0'; labelEl.style.opacity = '0'; labelEl.style.marginLeft = '0'; labelEl.style.transform = 'translateX(-4px)';
+        if (!labelEl || (!force && b.dataset.active === "true")) return;
+        labelEl.style.maxWidth = "0";
+        labelEl.style.opacity = "0";
+        labelEl.style.marginLeft = "0";
+        labelEl.style.transform = "translateX(-4px)";
       };
       // Per-button hover only changes color (no layout). The label expand/
       // collapse is driven by the bar-level mouseenter/mouseleave so moving
       // the mouse between adjacent buttons doesn't trigger per-button width
       // thrashing - the whole bar grows once and shrinks once.
-      b.addEventListener('mouseenter', () => { if (b.dataset.active !== 'true') b.style.color = P.text; });
-      b.addEventListener('mouseleave', () => { if (b.dataset.active !== 'true') b.style.color = P.textDim; });
-      b.addEventListener('click', onClick);
+      b.addEventListener("mouseenter", () => {
+        if (b.dataset.active !== "true") b.style.color = P.text;
+      });
+      b.addEventListener("mouseleave", () => {
+        if (b.dataset.active !== "true") b.style.color = P.textDim;
+      });
+      b.addEventListener("click", onClick);
       b._expandLabel = expand;
       b._collapseLabel = collapse;
       return b;
@@ -10784,52 +11589,58 @@ void main() {
 
     // Pick toggle - restored from localStorage; both pick and insert may be off.
     const pickBtn = makeIconBtn({
-      id: PREFIX + '-pick-toggle',
+      id: PREFIX + "-pick-toggle",
       svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>',
-      label: 'Pick',
-      ariaLabel: 'Pick element',
+      label: "Pick",
+      ariaLabel: "Pick element",
       onClick: () => togglePick(),
     });
     inner.appendChild(pickBtn);
 
     const insertBtn = makeIconBtn({
-      id: PREFIX + '-insert-toggle',
+      id: PREFIX + "-insert-toggle",
       svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
-      label: 'Insert',
-      ariaLabel: 'Insert new element',
+      label: "Insert",
+      ariaLabel: "Insert new element",
       onClick: () => toggleInsert(),
     });
     inner.appendChild(insertBtn);
 
     // Detect toggle
     const detectBtn = makeIconBtn({
-      id: PREFIX + '-detect-toggle',
+      id: PREFIX + "-detect-toggle",
       svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-      label: 'Detect',
-      ariaLabel: 'Detect anti-patterns',
+      label: "Detect",
+      ariaLabel: "Detect anti-patterns",
       onClick: () => toggleDetect(),
     });
-    const detectBadge = el('span', {
-      fontSize: '10px', fontWeight: '600',
-      padding: '0px 5px', borderRadius: '7px', lineHeight: '16px',
-      background: P.accent, color: C.ink,
-      display: 'none', fontFamily: MONO, marginLeft: '4px',
+    const detectBadge = el("span", {
+      fontSize: "10px",
+      fontWeight: "600",
+      padding: "0px 5px",
+      borderRadius: "7px",
+      lineHeight: "16px",
+      background: P.accent,
+      color: C.ink,
+      display: "none",
+      fontFamily: MONO,
+      marginLeft: "4px",
     });
-    detectBadge.id = PREFIX + '-detect-badge';
+    detectBadge.id = PREFIX + "-detect-badge";
     detectBtn.appendChild(detectBadge);
     inner.appendChild(detectBtn);
 
     // DESIGN.md panel toggle - quartet of color squares as the mark.
     const designBtn = makeIconBtn({
-      id: PREFIX + '-design-toggle',
+      id: PREFIX + "-design-toggle",
       svg: `<span style="display:inline-grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;width:14px;height:14px;border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px oklch(92% 0 0 / 0.13);flex-shrink:0">
         <span style="background:oklch(84% 0.19 80.46)"></span>
         <span style="background:oklch(70% 0.12 188)"></span>
         <span style="background:oklch(91% 0 0)"></span>
         <span style="background:oklch(34% 0 0)"></span>
       </span>`,
-      label: 'DESIGN.md',
-      ariaLabel: 'Toggle DESIGN.md panel',
+      label: "DESIGN.md",
+      ariaLabel: "Toggle DESIGN.md panel",
       labelFont: MONO,
       onClick: () => toggleDesignPanel(),
     });
@@ -10839,174 +11650,182 @@ void main() {
 
     // Pending manual edits live outside the bar so applying staged copy edits
     // reads as a distinct next step instead of another chrome toggle.
-    pendingDockEl = el('div', {
-      position: 'fixed',
-      left: '0',
-      bottom: '0',
-      transform: 'translate(-100%, 50%)',
+    pendingDockEl = el("div", {
+      position: "fixed",
+      left: "0",
+      bottom: "0",
+      transform: "translate(-100%, 50%)",
       zIndex: String(Z.bar + 6),
-      display: 'none',
-      alignItems: 'center',
-      gap: '6px',
+      display: "none",
+      alignItems: "center",
+      gap: "6px",
       fontFamily: FONT,
-      pointerEvents: 'auto',
+      pointerEvents: "auto",
     });
-    pendingDockEl.id = PREFIX + '-pending-dock';
+    pendingDockEl.id = PREFIX + "-pending-dock";
 
-    pendingPillEl = el('button', {
-      display: 'none',
-      alignItems: 'center',
-      gap: '8px',
+    pendingPillEl = el("button", {
+      display: "none",
+      alignItems: "center",
+      gap: "8px",
       fontFamily: FONT,
-      fontSize: '12px',
-      fontWeight: '600',
-      letterSpacing: '0',
+      fontSize: "12px",
+      fontWeight: "600",
+      letterSpacing: "0",
       color: C.ink,
       background: P.accent,
-      padding: '7px 12px 7px 14px',
-      border: 'none',
-      borderRadius: '999px',
-      whiteSpace: 'nowrap',
-      cursor: 'pointer',
-      boxShadow: '0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)',
-      transition: 'filter 0.12s ease, transform 0.1s ease, box-shadow 0.18s ease',
+      padding: "7px 12px 7px 14px",
+      border: "none",
+      borderRadius: "999px",
+      whiteSpace: "nowrap",
+      cursor: "pointer",
+      boxShadow: "0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)",
+      transition: "filter 0.12s ease, transform 0.1s ease, box-shadow 0.18s ease",
     });
-    pendingPillEl.title = 'Apply copy edits to source';
-    pendingPillSpinnerEl = el('span', {
-      display: 'none',
-      width: '12px',
-      height: '12px',
-      borderRadius: '50%',
-      border: '2px solid currentColor',
-      borderTopColor: 'transparent',
+    pendingPillEl.title = "Copy edits staged; apply from the trusted operator CLI";
+    pendingPillSpinnerEl = el("span", {
+      display: "none",
+      width: "12px",
+      height: "12px",
+      borderRadius: "50%",
+      border: "2px solid currentColor",
+      borderTopColor: "transparent",
       color: C.ink,
-      opacity: '0.9',
-      animation: 'impeccable-spin 0.6s linear infinite',
-      flex: '0 0 auto',
-      boxSizing: 'border-box',
+      opacity: "0.9",
+      animation: "impeccable-spin 0.6s linear infinite",
+      flex: "0 0 auto",
+      boxSizing: "border-box",
     });
-    pendingPillLabelEl = el('span', { lineHeight: '1', whiteSpace: 'nowrap' });
-    pendingPillLabelEl.textContent = 'Apply copy edits';
-    pendingPillCountEl = el('span', {
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: '17px',
-      height: '17px',
-      padding: '0 5px',
-      borderRadius: '999px',
-      background: 'oklch(4% 0.004 95 / 0.18)',
+    pendingPillLabelEl = el("span", { lineHeight: "1", whiteSpace: "nowrap" });
+    pendingPillLabelEl.textContent = "Copy edits staged";
+    pendingPillCountEl = el("span", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: "17px",
+      height: "17px",
+      padding: "0 5px",
+      borderRadius: "999px",
+      background: "oklch(4% 0.004 95 / 0.18)",
       color: C.ink,
       fontFamily: MONO,
-      fontSize: '10px',
-      fontWeight: '700',
-      lineHeight: '1',
+      fontSize: "10px",
+      fontWeight: "700",
+      lineHeight: "1",
     });
     ensureSpinKeyframes();
     pendingPillEl.appendChild(pendingPillSpinnerEl);
     pendingPillEl.appendChild(pendingPillLabelEl);
     pendingPillEl.appendChild(pendingPillCountEl);
-    pendingPillEl.addEventListener('mouseenter', () => {
+    pendingPillEl.addEventListener("mouseenter", () => {
       if (pendingApplyInFlight) return;
-      pendingPillEl.style.filter = 'brightness(1.1)';
-      pendingPillEl.style.boxShadow = '0 7px 22px oklch(0% 0 0 / 0.18), 0 2px 5px oklch(0% 0 0 / 0.12)';
+      pendingPillEl.style.filter = "brightness(1.1)";
+      pendingPillEl.style.boxShadow = "0 7px 22px oklch(0% 0 0 / 0.18), 0 2px 5px oklch(0% 0 0 / 0.12)";
     });
-    pendingPillEl.addEventListener('mouseleave', () => {
+    pendingPillEl.addEventListener("mouseleave", () => {
       if (pendingApplyInFlight) return;
-      pendingPillEl.style.filter = 'none';
-      pendingPillEl.style.transform = 'scale(1)';
-      pendingPillEl.style.boxShadow = '0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)';
+      pendingPillEl.style.filter = "none";
+      pendingPillEl.style.transform = "scale(1)";
+      pendingPillEl.style.boxShadow = "0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)";
     });
-    pendingPillEl.addEventListener('mousedown', () => { if (!pendingApplyInFlight) pendingPillEl.style.transform = 'scale(0.97)'; });
-    pendingPillEl.addEventListener('mouseup', () => { pendingPillEl.style.transform = 'scale(1)'; });
-    pendingPillEl.addEventListener('click', onPendingPillClick);
+    pendingPillEl.addEventListener("mousedown", () => {
+      if (!pendingApplyInFlight) pendingPillEl.style.transform = "scale(0.97)";
+    });
+    pendingPillEl.addEventListener("mouseup", () => {
+      pendingPillEl.style.transform = "scale(1)";
+    });
+    pendingPillEl.addEventListener("click", onPendingPillClick);
 
-    pendingTrashBtn = el('button', {
-      position: 'relative',
-      display: 'none',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '0', boxSizing: 'border-box',
-      width: '30px', height: '30px', borderRadius: '999px',
-      border: '1px solid ' + P.hairline,
+    pendingTrashBtn = el("button", {
+      position: "relative",
+      display: "none",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0",
+      boxSizing: "border-box",
+      width: "30px",
+      height: "30px",
+      borderRadius: "999px",
+      border: "1px solid " + P.hairline,
       background: P.chatSurface,
       color: P.textDim,
-      overflow: 'visible',
-      boxShadow: '0 4px 16px oklch(0% 0 0 / 0.12), 0 1px 3px oklch(0% 0 0 / 0.08)',
-      cursor: 'pointer',
-      transition: 'color 0.12s ease, background 0.12s ease, box-shadow 0.18s ease',
+      overflow: "visible",
+      boxShadow: "0 4px 16px oklch(0% 0 0 / 0.12), 0 1px 3px oklch(0% 0 0 / 0.08)",
+      cursor: "pointer",
+      transition: "color 0.12s ease, background 0.12s ease, box-shadow 0.18s ease",
     });
-    pendingTrashBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M3 4h8"/><path d="M5 4V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/><path d="M4 4l.5 7a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1L10 4"/></svg>';
-    const pendingTrashTooltipEl = el('span', {
-      position: 'absolute',
-      bottom: 'calc(100% + 8px)',
-      left: '50%',
-      transform: 'translateX(-50%) translateY(4px)',
-      opacity: '0',
-      pointerEvents: 'none',
-      padding: '8px 16px',
-      borderRadius: '8px',
+    pendingTrashBtn.innerHTML =
+      '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M3 4h8"/><path d="M5 4V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/><path d="M4 4l.5 7a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1L10 4"/></svg>';
+    const pendingTrashTooltipEl = el("span", {
+      position: "absolute",
+      bottom: "calc(100% + 8px)",
+      left: "50%",
+      transform: "translateX(-50%) translateY(4px)",
+      opacity: "0",
+      pointerEvents: "none",
+      padding: "8px 16px",
+      borderRadius: "8px",
       background: C.ink,
       color: C.white,
       fontFamily: FONT,
-      fontSize: '12px',
-      fontWeight: '400',
-      lineHeight: '1',
-      whiteSpace: 'nowrap',
-      textAlign: 'center',
-      transition: 'opacity 0.16s ease, transform 0.18s ' + EASE,
+      fontSize: "12px",
+      fontWeight: "400",
+      lineHeight: "1",
+      whiteSpace: "nowrap",
+      textAlign: "center",
+      transition: "opacity 0.16s ease, transform 0.18s " + EASE,
     });
-    pendingTrashTooltipEl.textContent = 'Discard copy edits';
-    pendingTrashTooltipEl.setAttribute('role', 'tooltip');
+    pendingTrashTooltipEl.textContent = "Discard copy edits";
+    pendingTrashTooltipEl.setAttribute("role", "tooltip");
     pendingTrashBtn.appendChild(pendingTrashTooltipEl);
-    pendingTrashBtn.setAttribute('aria-label', 'Discard copy edits on this page');
+    pendingTrashBtn.setAttribute("aria-label", "Discard copy edits on this page");
     const showTrashTooltip = () => {
       pendingTrashBtn.style.color = P.accent;
-      pendingTrashBtn.style.boxShadow = '0 7px 22px oklch(0% 0 0 / 0.16), 0 2px 5px oklch(0% 0 0 / 0.1)';
-      pendingTrashTooltipEl.style.opacity = '1';
-      pendingTrashTooltipEl.style.transform = 'translateX(-50%) translateY(0)';
+      pendingTrashBtn.style.boxShadow = "0 7px 22px oklch(0% 0 0 / 0.16), 0 2px 5px oklch(0% 0 0 / 0.1)";
+      pendingTrashTooltipEl.style.opacity = "1";
+      pendingTrashTooltipEl.style.transform = "translateX(-50%) translateY(0)";
     };
     const hideTrashTooltip = () => {
       pendingTrashBtn.style.color = P.textDim;
       pendingTrashBtn.style.background = P.chatSurface;
-      pendingTrashBtn.style.boxShadow = '0 4px 16px oklch(0% 0 0 / 0.12), 0 1px 3px oklch(0% 0 0 / 0.08)';
-      pendingTrashTooltipEl.style.opacity = '0';
-      pendingTrashTooltipEl.style.transform = 'translateX(-50%) translateY(4px)';
+      pendingTrashBtn.style.boxShadow = "0 4px 16px oklch(0% 0 0 / 0.12), 0 1px 3px oklch(0% 0 0 / 0.08)";
+      pendingTrashTooltipEl.style.opacity = "0";
+      pendingTrashTooltipEl.style.transform = "translateX(-50%) translateY(4px)";
     };
-    pendingTrashBtn.addEventListener('mouseenter', showTrashTooltip);
-    pendingTrashBtn.addEventListener('mouseleave', hideTrashTooltip);
-    pendingTrashBtn.addEventListener('focus', showTrashTooltip);
-    pendingTrashBtn.addEventListener('blur', hideTrashTooltip);
-    pendingTrashBtn.addEventListener('click', onPendingTrashClick);
+    pendingTrashBtn.addEventListener("mouseenter", showTrashTooltip);
+    pendingTrashBtn.addEventListener("mouseleave", hideTrashTooltip);
+    pendingTrashBtn.addEventListener("focus", showTrashTooltip);
+    pendingTrashBtn.addEventListener("blur", hideTrashTooltip);
+    pendingTrashBtn.addEventListener("click", onPendingTrashClick);
 
     const makePendingDecisionBtn = (label, accent) => {
-      const btn = el('button', {
-        display: 'none',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '30px',
-        padding: '0 12px',
-        borderRadius: '999px',
-        border: '1px solid ' + (accent ? P.accent : P.hairline),
+      const btn = el("button", {
+        display: "none",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "30px",
+        padding: "0 12px",
+        borderRadius: "999px",
+        border: "1px solid " + (accent ? P.accent : P.hairline),
         background: accent ? P.accent : P.chatSurface,
         color: accent ? C.ink : P.textDim,
         fontFamily: FONT,
-        fontSize: '12px',
-        fontWeight: '600',
-        letterSpacing: '0',
-        cursor: 'pointer',
-        whiteSpace: 'nowrap',
-        boxShadow: '0 4px 16px oklch(0% 0 0 / 0.12), 0 1px 3px oklch(0% 0 0 / 0.08)',
+        fontSize: "12px",
+        fontWeight: "600",
+        letterSpacing: "0",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        boxShadow: "0 4px 16px oklch(0% 0 0 / 0.12), 0 1px 3px oklch(0% 0 0 / 0.08)",
       });
       btn.textContent = label;
       return btn;
     };
-    pendingKeepFixingBtn = makePendingDecisionBtn('Keep fixing', true);
-    pendingKeepFixingBtn.setAttribute('aria-label', 'Ask the agent to keep fixing Apply errors');
-    pendingKeepFixingBtn.addEventListener('click', onPendingKeepFixingClick);
-    pendingRollbackBtn = makePendingDecisionBtn('Rollback', false);
-    pendingRollbackBtn.setAttribute('aria-label', 'Rollback source and keep copy edits staged');
-    pendingRollbackBtn.addEventListener('click', onPendingRollbackClick);
+    pendingKeepFixingBtn = makePendingDecisionBtn("Repair from CLI", true);
+    pendingKeepFixingBtn.setAttribute("aria-label", "Return to the trusted terminal to authorize repair");
+    pendingKeepFixingBtn.addEventListener("click", onPendingKeepFixingClick);
+    pendingRollbackBtn = makePendingDecisionBtn("Rollback", false);
+    pendingRollbackBtn.setAttribute("aria-label", "Rollback source and keep copy edits staged");
+    pendingRollbackBtn.addEventListener("click", onPendingRollbackClick);
 
     pendingDockEl.appendChild(pendingPillEl);
     pendingDockEl.appendChild(pendingTrashBtn);
@@ -11014,11 +11833,12 @@ void main() {
     pendingDockEl.appendChild(pendingRollbackBtn);
 
     // Thin divider before the exit button
-    const divider = el('span', {
-      width: '1px', height: '18px',
+    const divider = el("span", {
+      width: "1px",
+      height: "18px",
       background: P.hairline,
-      margin: '0 4px 0 2px',
-      flexShrink: '0',
+      margin: "0 4px 0 2px",
+      flexShrink: "0",
     });
     inner.appendChild(divider);
 
@@ -11031,39 +11851,67 @@ void main() {
     // of the visible bar - the X stays invisible even though the styles in
     // DevTools look fine. Every other chrome button sets padding inline;
     // this one needed it too.
-    const exitBtn = el('button', {
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      padding: '0', boxSizing: 'border-box',
-      width: '24px', height: '24px', borderRadius: '6px',
-      flexShrink: '0',
-      border: 'none', background: 'transparent',
-      color: P.textDim, fontFamily: FONT, fontSize: '0', lineHeight: '0',
-      cursor: 'pointer', transition: 'color 0.12s ease, background 0.12s ease',
+    const exitBtn = el("button", {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0",
+      boxSizing: "border-box",
+      width: "24px",
+      height: "24px",
+      borderRadius: "6px",
+      flexShrink: "0",
+      border: "none",
+      background: "transparent",
+      color: P.textDim,
+      fontFamily: FONT,
+      fontSize: "0",
+      lineHeight: "0",
+      cursor: "pointer",
+      transition: "color 0.12s ease, background 0.12s ease",
     });
-    exitBtn.id = PREFIX + '-exit';
-    exitBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>';
-    exitBtn.title = 'Exit live mode';
-    exitBtn.addEventListener('mouseenter', () => { exitBtn.style.color = 'oklch(58% 0.15 35)'; exitBtn.style.background = P.exitHover; });
-    exitBtn.addEventListener('mouseleave', () => { exitBtn.style.color = P.textDim; exitBtn.style.background = 'transparent'; });
-    exitBtn.addEventListener('click', () => { sendEvent({ type: 'exit' }); teardown(); });
+    exitBtn.id = PREFIX + "-exit";
+    exitBtn.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>';
+    exitBtn.title = "Exit live mode";
+    exitBtn.addEventListener("mouseenter", () => {
+      exitBtn.style.color = "oklch(58% 0.15 35)";
+      exitBtn.style.background = P.exitHover;
+    });
+    exitBtn.addEventListener("mouseleave", () => {
+      exitBtn.style.color = P.textDim;
+      exitBtn.style.background = "transparent";
+    });
+    exitBtn.addEventListener("click", () => {
+      sendEvent({ type: "exit" });
+      teardown();
+    });
     inner.appendChild(exitBtn);
 
     // Bar-level hover: expand mode labels unless Steer is using the space.
     // Buttons with dataset.active="true" ignore collapse (their label stays).
-    globalBarEl.addEventListener('mouseenter', () => {
+    globalBarEl.addEventListener("mouseenter", () => {
       syncGlobalBarExpandedLabels(true);
       syncPageChatExpandedWidth();
       schedulePendingDockPosition();
       setTimeout(schedulePendingDockPosition, 260);
     });
-    globalBarEl.addEventListener('mouseleave', () => {
+    globalBarEl.addEventListener("mouseleave", () => {
       syncGlobalBarExpandedLabels(false);
       schedulePendingDockPosition();
       setTimeout(schedulePendingDockPosition, 260);
     });
-    globalBarEl.addEventListener('pointerdown', () => {
-      try { window.focus(); } catch { /* in-app preview may block */ }
-    }, true);
+    globalBarEl.addEventListener(
+      "pointerdown",
+      () => {
+        try {
+          window.focus();
+        } catch {
+          /* in-app preview may block */
+        }
+      },
+      true
+    );
 
     uiAppend(pendingDockEl);
     uiAppend(globalBarEl);
@@ -11074,35 +11922,35 @@ void main() {
       pendingDockResizeObserver = new ResizeObserver(schedulePendingDockPosition);
       pendingDockResizeObserver.observe(globalBarEl);
     }
-    window.addEventListener('resize', positionPendingDock);
-    window.addEventListener('resize', syncPageChatExpandedWidth);
+    window.addEventListener("resize", positionPendingDock);
+    window.addEventListener("resize", syncPageChatExpandedWidth);
 
     requestAnimationFrame(() => {
-      globalBarEl.style.opacity = '1';
-      globalBarEl.style.transform = 'translateX(-50%) translateY(0)';
-      syncPageChatFocus('global-bar-visible');
+      globalBarEl.style.opacity = "1";
+      globalBarEl.style.transform = "translateX(-50%) translateY(0)";
+      syncPageChatFocus("global-bar-visible");
     });
 
     // Listen for detection results AND ready signal
-    window.addEventListener('message', onDetectMessage);
+    window.addEventListener("message", onDetectMessage);
     updateGlobalBarState();
   }
 
   function updateGlobalBarState() {
-    const detectToggle = uiGetById(PREFIX + '-detect-toggle');
-    const detectBadge = uiGetById(PREFIX + '-detect-badge');
-    const pickToggle = uiGetById(PREFIX + '-pick-toggle');
-    const insertToggle = uiGetById(PREFIX + '-insert-toggle');
-    const designToggle = uiGetById(PREFIX + '-design-toggle');
-    const theme = globalBarEl?.dataset.theme || 'light';
+    const detectToggle = uiGetById(PREFIX + "-detect-toggle");
+    const detectBadge = uiGetById(PREFIX + "-detect-badge");
+    const pickToggle = uiGetById(PREFIX + "-pick-toggle");
+    const insertToggle = uiGetById(PREFIX + "-insert-toggle");
+    const designToggle = uiGetById(PREFIX + "-design-toggle");
+    const theme = globalBarEl?.dataset.theme || "light";
     const P = barPaletteForTheme(theme);
 
     // Sync one toggle's active state, colors, and slide-label visibility.
     function sync(btn, active) {
       if (!btn) return;
-      btn.style.background = active ? P.toggleActive : 'transparent';
+      btn.style.background = active ? P.toggleActive : "transparent";
       btn.style.color = active ? P.accent : P.textDim;
-      btn.dataset.active = active ? 'true' : 'false';
+      btn.dataset.active = active ? "true" : "false";
       if (active && btn._expandLabel) btn._expandLabel();
       else if (!active && btn._collapseLabel) btn._collapseLabel();
     }
@@ -11115,23 +11963,23 @@ void main() {
     [pickToggle, insertToggle, detectToggle, designToggle].forEach((btn) => {
       if (!btn) return;
       btn.disabled = controlsLocked;
-      btn.style.cursor = controlsLocked ? 'not-allowed' : 'pointer';
-      btn.style.opacity = controlsLocked ? '0.55' : '1';
+      btn.style.cursor = controlsLocked ? "not-allowed" : "pointer";
+      btn.style.opacity = controlsLocked ? "0.55" : "1";
     });
 
     // If the bar is currently under the cursor, keep all labels expanded -
     // otherwise clicking a toggle that deactivates (e.g. closing DESIGN.md)
     // would collapse its label while the user's mouse is still on the bar.
-    syncGlobalBarExpandedLabels(globalBarEl && globalBarEl.matches(':hover'));
+    syncGlobalBarExpandedLabels(globalBarEl && globalBarEl.matches(":hover"));
 
     if (detectBadge) {
-      detectBadge.style.display = (detectActive && detectCount > 0) ? 'inline' : 'none';
+      detectBadge.style.display = detectActive && detectCount > 0 ? "inline" : "none";
       detectBadge.textContent = detectCount;
     }
 
     // When pick/insert is active, make detect overlays click-through
-    document.querySelectorAll('.impeccable-overlay').forEach(o => {
-      o.style.pointerEvents = (pickActive || insertActive) ? 'none' : '';
+    document.querySelectorAll(".impeccable-overlay").forEach((o) => {
+      o.style.pointerEvents = pickActive || insertActive ? "none" : "";
     });
     syncPageInteractionCursor();
   }
@@ -11143,15 +11991,21 @@ void main() {
     const scanId = String(++detectScanSeq);
     activeDetectScanId = scanId;
     pendingDetectScanId = scanId;
-    window.postMessage({
-      source: 'impeccable-command',
-      action: 'scan',
-      config: { scanId },
-    }, '*');
+    window.postMessage(
+      {
+        source: "impeccable-command",
+        action: "scan",
+        config: { scanId },
+      },
+      "*"
+    );
   }
 
   function toggleDetect() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     detectActive = !detectActive;
     updateGlobalBarState();
 
@@ -11165,7 +12019,7 @@ void main() {
         detectPendingScan = true;
       }
     } else {
-      window.postMessage({ source: 'impeccable-command', action: 'remove' }, '*');
+      window.postMessage({ source: "impeccable-command", action: "remove" }, "*");
       activeDetectScanId = null;
       pendingDetectScanId = null;
       detectCount = 0;
@@ -11174,7 +12028,10 @@ void main() {
   }
 
   function togglePick() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     pickActive = !pickActive;
     if (pickActive) {
       insertActive = false;
@@ -11184,7 +12041,7 @@ void main() {
     updateGlobalBarState();
 
     if (!pickActive) {
-      if (configureKind === 'insert' && state === 'CONFIGURING') {
+      if (configureKind === "insert" && state === "CONFIGURING") {
         cancelInsertConfigure();
         return;
       }
@@ -11193,16 +12050,19 @@ void main() {
       hideActionPicker();
       selectedElement = null;
       hoveredElement = null;
-      configureKind = 'replace';
-      if (state === 'PICKING' || state === 'CONFIGURING') setLiveState('IDLE');
+      configureKind = "replace";
+      if (state === "PICKING" || state === "CONFIGURING") setLiveState("IDLE");
     } else {
-      if (state === 'IDLE') setLiveState('PICKING');
+      if (state === "IDLE") setLiveState("PICKING");
     }
-    syncPageChatFocus('toggle-pick');
+    syncPageChatFocus("toggle-pick");
   }
 
   function toggleInsert() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     insertActive = !insertActive;
     if (insertActive) {
       pickActive = false;
@@ -11210,31 +12070,31 @@ void main() {
       hideBar();
       hideActionPicker();
       selectedElement = null;
-      configureKind = 'replace';
-      if (state === 'CONFIGURING') cancelInsertConfigure();
-      else if (state === 'IDLE' || state === 'PICKING') setLiveState('PICKING');
+      configureKind = "replace";
+      if (state === "CONFIGURING") cancelInsertConfigure();
+      else if (state === "IDLE" || state === "PICKING") setLiveState("PICKING");
     } else {
       clearInsertPicking();
-      if (state === 'PICKING' && !pickActive) setLiveState('IDLE');
+      if (state === "PICKING" && !pickActive) setLiveState("IDLE");
     }
     saveInteractionPrefs();
     updateGlobalBarState();
-    syncPageChatFocus('toggle-insert');
+    syncPageChatFocus("toggle-insert");
   }
 
   function loadDetectScript() {
     if (detectScriptLoaded) return;
     detectScriptLoaded = true;
-    const s = document.createElement('script');
-    s.src = 'http://localhost:' + PORT + '/detect.js';
-    s.dataset.impeccableExtension = 'true';
+    const s = document.createElement("script");
+    s.src = "http://localhost:" + PORT + "/detect.js";
+    s.dataset.impeccableExtension = "true";
     document.head.appendChild(s);
   }
 
   function onDetectMessage(e) {
-    if (!e.data || typeof e.data.source !== 'string') return;
+    if (!e.data || typeof e.data.source !== "string") return;
     // Detection script is loaded and ready
-    if (e.data.source === 'impeccable-ready') {
+    if (e.data.source === "impeccable-ready") {
       detectReady = true;
       if (detectPendingScan && detectActive) {
         detectPendingScan = false;
@@ -11242,7 +12102,7 @@ void main() {
       }
     }
     // Scan results arrived
-    if (e.data.source === 'impeccable-results') {
+    if (e.data.source === "impeccable-results") {
       if (!detectActive) return;
       if (activeDetectScanId && e.data.scanId !== activeDetectScanId) return;
       detectCount = e.data.count || 0;
@@ -11270,9 +12130,15 @@ void main() {
     pagePickSkipClick = false;
     cleanup();
     hideBar();
-    if (pendingDockResizeObserver) { pendingDockResizeObserver.disconnect(); pendingDockResizeObserver = null; }
-    window.removeEventListener('resize', positionPendingDock);
-    if (pendingIntroAnimation) { pendingIntroAnimation.cancel(); pendingIntroAnimation = null; }
+    if (pendingDockResizeObserver) {
+      pendingDockResizeObserver.disconnect();
+      pendingDockResizeObserver = null;
+    }
+    window.removeEventListener("resize", positionPendingDock);
+    if (pendingIntroAnimation) {
+      pendingIntroAnimation.cancel();
+      pendingIntroAnimation = null;
+    }
     if (pendingDockEl) {
       pendingDockEl.remove();
       pendingDockEl = null;
@@ -11286,7 +12152,7 @@ void main() {
       pendingApplyInFlight = false;
     }
     if (globalBarEl) {
-      globalBarEl.style.transition = 'none';
+      globalBarEl.style.transition = "none";
       globalBarEl.remove();
       globalBarEl = null;
     }
@@ -11295,51 +12161,84 @@ void main() {
     pageChatHint = null;
     pageChatVoiceBtn = null;
     pageChatExpanded = false;
-    if (insertCreateTooltipEl) { insertCreateTooltipEl.remove(); insertCreateTooltipEl = null; }
-    if (configureBarTooltipEl) { configureBarTooltipEl.remove(); configureBarTooltipEl = null; }
-    if (highlightEl) { highlightEl.remove(); highlightEl = null; }
-    if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
-    if (barEl) { barEl.remove(); barEl = null; }
-    if (pickerEl) { pickerEl.remove(); pickerEl = null; }
-    if (paramsPanelEl) { paramsPanelEl.remove(); paramsPanelEl = null; paramsPanelInner = null; paramsPanelBody = null; }
-    if (editBadgeProxyRoot) { editBadgeProxyRoot.remove(); editBadgeProxyRoot = null; editBadgeProxyByTarget = new Map(); }
-    if (evtSource) { evtSource.close(); evtSource = null; }
-    document.removeEventListener('mousemove', handleMouseMove, true);
-    document.removeEventListener('click', handleClick, true);
-    document.removeEventListener('keydown', handleKeyDown, true);
-    window.removeEventListener('message', onDetectMessage);
+    if (insertCreateTooltipEl) {
+      insertCreateTooltipEl.remove();
+      insertCreateTooltipEl = null;
+    }
+    if (configureBarTooltipEl) {
+      configureBarTooltipEl.remove();
+      configureBarTooltipEl = null;
+    }
+    if (highlightEl) {
+      highlightEl.remove();
+      highlightEl = null;
+    }
+    if (tooltipEl) {
+      tooltipEl.remove();
+      tooltipEl = null;
+    }
+    if (barEl) {
+      barEl.remove();
+      barEl = null;
+    }
+    if (pickerEl) {
+      pickerEl.remove();
+      pickerEl = null;
+    }
+    if (paramsPanelEl) {
+      paramsPanelEl.remove();
+      paramsPanelEl = null;
+      paramsPanelInner = null;
+      paramsPanelBody = null;
+    }
+    if (editBadgeProxyRoot) {
+      editBadgeProxyRoot.remove();
+      editBadgeProxyRoot = null;
+      editBadgeProxyByTarget = new Map();
+    }
+    if (evtSource) {
+      evtSource.close();
+      evtSource = null;
+    }
+    document.removeEventListener("mousemove", handleMouseMove, true);
+    document.removeEventListener("click", handleClick, true);
+    document.removeEventListener("keydown", handleKeyDown, true);
+    window.removeEventListener("message", onDetectMessage);
     // Remove detection overlays
-    window.postMessage({ source: 'impeccable-command', action: 'remove' }, '*');
-    setLiveState('IDLE');
+    window.postMessage({ source: "impeccable-command", action: "remove" }, "*");
+    setLiveState("IDLE");
     document.getElementById(PICK_CURSOR_STYLE_ID)?.remove();
     removeVariantStateStylesheet();
     window.__IMPECCABLE_LIVE_INIT__ = false;
-    console.log('[impeccable] Live mode exited.');
+    console.log("[impeccable] Live mode exited.");
   }
 
   //
   // Design System Panel - visualizes the project's .impeccable/design.json sidecar
   //
 
-  const DESIGN_PREFS_KEY = 'impeccable-live-design-panel';
+  const DESIGN_PREFS_KEY = "impeccable-live-design-panel";
   const DESIGN_PANEL_WIDTH = 440;
 
   let designHost = null;
   let designShadow = null;
-  let designState = {
+  const designState = {
     open: false,
-    tab: 'visual',          // 'visual' | 'raw'
-    parsed: null,           // parseDesignMd output (frontmatter + body sections)
-    sidecar: null,          // .impeccable/design.json v2 payload (extensions + components + narrative)
+    tab: "visual", // 'visual' | 'raw'
+    parsed: null, // parseDesignMd output (frontmatter + body sections)
+    sidecar: null, // .impeccable/design.json v2 payload (extensions + components + narrative)
     hasMd: false,
     hasSidecar: false,
-    present: null,          // true/false once fetch resolves
-    raw: null,              // raw DESIGN.md for the raw tab
+    present: null, // true/false once fetch resolves
+    raw: null, // raw DESIGN.md for the raw tab
     mdNewerThanJson: false, // stale-hint flag
     loading: false,
     error: null,
-    collapsed: {            // narrative-section accordion state
-      rules: true, dosdonts: true, overview: true,
+    collapsed: {
+      // narrative-section accordion state
+      rules: true,
+      dosdonts: true,
+      overview: true,
     },
   };
 
@@ -11350,41 +12249,51 @@ void main() {
       const raw = localStorage.getItem(DESIGN_PREFS_KEY);
       if (!raw) return;
       const prefs = JSON.parse(raw);
-      if (prefs.tab === 'visual' || prefs.tab === 'raw') designState.tab = prefs.tab;
-      if (prefs.collapsed && typeof prefs.collapsed === 'object') {
+      if (prefs.tab === "visual" || prefs.tab === "raw") designState.tab = prefs.tab;
+      if (prefs.collapsed && typeof prefs.collapsed === "object") {
         Object.assign(designState.collapsed, prefs.collapsed);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   function saveDesignPrefs() {
     try {
-      localStorage.setItem(DESIGN_PREFS_KEY, JSON.stringify({
-        tab: designState.tab,
-        collapsed: designState.collapsed,
-      }));
-    } catch { /* ignore */ }
+      localStorage.setItem(
+        DESIGN_PREFS_KEY,
+        JSON.stringify({
+          tab: designState.tab,
+          collapsed: designState.collapsed,
+        })
+      );
+    } catch {
+      /* ignore */
+    }
   }
 
   function initDesignPanel() {
-    designHost = document.createElement('div');
-    designHost.id = PREFIX + '-design-host';
+    designHost = document.createElement("div");
+    designHost.id = PREFIX + "-design-host";
     Object.assign(designHost.style, {
-      position: 'fixed', top: '0', left: '0',
-      width: '0', height: '0',
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "0",
+      height: "0",
       zIndex: String(Z.bar + 10),
-      pointerEvents: 'none',
+      pointerEvents: "none",
     });
-    designShadow = designHost.attachShadow({ mode: 'open' });
+    designShadow = designHost.attachShadow({ mode: "open" });
 
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     // Theme-match the bar: dark chrome on light pages, light chrome on dark pages.
     const theme = detectPageTheme();
     style.textContent = designPanelCss(barPaletteForTheme(theme));
     designShadow.appendChild(style);
 
-    const root = document.createElement('div');
-    root.className = 'root';
+    const root = document.createElement("div");
+    root.className = "root";
     designShadow.appendChild(root);
 
     uiAppend(designHost);
@@ -11404,16 +12313,16 @@ void main() {
   // Neutral panel palette - deliberately NOT Impeccable-branded. The panel is
   // a viewer of the project's design system, not an Impeccable surface.
   const DP = {
-    canvas:   'oklch(94% 0 0)',            // panel background
-    tile:     'oklch(98.5% 0 0)',          // card-on-canvas
-    tileAlt:  'oklch(96% 0 0)',            // subtler tile for inner surfaces
-    ink:      'oklch(15% 0 0)',
-    ink2:     'oklch(35% 0 0)',
-    meta:     'oklch(55% 0 0)',
-    hairline: 'oklch(88% 0 0)',
-    hairlineSoft: 'oklch(92% 0 0)',
-    amber:    'oklch(77% 0.13 82)',         // stale-hint accent
-    amberBg:  'oklch(89% 0.055 84)',
+    canvas: "oklch(94% 0 0)", // panel background
+    tile: "oklch(98.5% 0 0)", // card-on-canvas
+    tileAlt: "oklch(96% 0 0)", // subtler tile for inner surfaces
+    ink: "oklch(15% 0 0)",
+    ink2: "oklch(35% 0 0)",
+    meta: "oklch(55% 0 0)",
+    hairline: "oklch(88% 0 0)",
+    hairlineSoft: "oklch(92% 0 0)",
+    amber: "oklch(77% 0.13 82)", // stale-hint accent
+    amberBg: "oklch(89% 0.055 84)",
   };
 
   function designPanelCss(BP) {
@@ -11692,18 +12601,18 @@ void main() {
   }
 
   function renderDesignChrome() {
-    const root = designShadow.querySelector('.root');
-    root.innerHTML = '';
+    const root = designShadow.querySelector(".root");
+    root.innerHTML = "";
 
     // (Panel toggle lives in the global bar - no floating FAB.)
     // Panel
-    const panel = document.createElement('aside');
-    panel.className = 'panel';
-    panel.setAttribute('data-open', designState.open ? 'true' : 'false');
+    const panel = document.createElement("aside");
+    panel.className = "panel";
+    panel.setAttribute("data-open", designState.open ? "true" : "false");
     panel.appendChild(buildDesignHeader());
-    const body = document.createElement('div');
-    body.className = 'panel-body';
-    body.id = 'panel-body';
+    const body = document.createElement("div");
+    body.className = "panel-body";
+    body.id = "panel-body";
     panel.appendChild(body);
     root.appendChild(panel);
 
@@ -11711,27 +12620,30 @@ void main() {
   }
 
   function buildDesignHeader() {
-    const header = document.createElement('div');
-    header.className = 'panel-header';
+    const header = document.createElement("div");
+    header.className = "panel-header";
 
-    const title = document.createElement('div');
-    title.className = 'panel-title';
-    title.textContent = 'DESIGN.md';
+    const title = document.createElement("div");
+    title.className = "panel-title";
+    title.textContent = "DESIGN.md";
     header.appendChild(title);
 
-    const tabs = document.createElement('div');
-    tabs.className = 'tabs';
-    for (const t of [['visual', 'Visual'], ['raw', 'Raw']]) {
-      const btn = document.createElement('button');
-      btn.className = 'tab';
+    const tabs = document.createElement("div");
+    tabs.className = "tabs";
+    for (const t of [
+      ["visual", "Visual"],
+      ["raw", "Raw"],
+    ]) {
+      const btn = document.createElement("button");
+      btn.className = "tab";
       btn.textContent = t[1];
-      btn.setAttribute('data-active', designState.tab === t[0] ? 'true' : 'false');
-      btn.addEventListener('click', () => {
+      btn.setAttribute("data-active", designState.tab === t[0] ? "true" : "false");
+      btn.addEventListener("click", () => {
         if (designState.tab === t[0]) return;
         designState.tab = t[0];
         saveDesignPrefs();
         renderDesignChrome();
-        if (t[0] === 'raw' && designState.raw === null && !designState.loading) {
+        if (t[0] === "raw" && designState.raw === null && !designState.loading) {
           fetchDesignSystem(); // raw is part of the same fetch pair
         }
       });
@@ -11739,18 +12651,21 @@ void main() {
     }
     header.appendChild(tabs);
 
-    const close = document.createElement('button');
-    close.className = 'panel-close';
-    close.innerHTML = '&#x2715;';
-    close.setAttribute('aria-label', 'Close panel');
-    close.addEventListener('click', toggleDesignPanel);
+    const close = document.createElement("button");
+    close.className = "panel-close";
+    close.innerHTML = "&#x2715;";
+    close.setAttribute("aria-label", "Close panel");
+    close.addEventListener("click", toggleDesignPanel);
     header.appendChild(close);
 
     return header;
   }
 
   function toggleDesignPanel() {
-    if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
+    if (pendingApplyInFlight) {
+      showManualApplyBusyToast();
+      return;
+    }
     designState.open = !designState.open;
     renderDesignChrome();
     updateGlobalBarState();
@@ -11765,8 +12680,8 @@ void main() {
     renderDesignBody();
     try {
       const [jsonRes, rawRes] = await Promise.all([
-        fetch(`http://localhost:${PORT}/design-system.json?token=${TOKEN}`, { cache: 'no-store' }),
-        fetch(`http://localhost:${PORT}/design-system/raw?token=${TOKEN}`, { cache: 'no-store' }),
+        fetch(`http://localhost:${PORT}/design-system.json?token=${TOKEN}`, { cache: "no-store" }),
+        fetch(`http://localhost:${PORT}/design-system/raw?token=${TOKEN}`, { cache: "no-store" }),
       ]);
       const jsonData = await jsonRes.json();
       designState.present = jsonData.present === true;
@@ -11778,7 +12693,7 @@ void main() {
       designState.raw = designState.present && rawRes.ok ? await rawRes.text() : null;
       designState.error = jsonData.parseError || jsonData.sidecarError || null;
     } catch (err) {
-      designState.error = err?.message || 'Failed to load design system.';
+      designState.error = err?.message || "Failed to load design system.";
     } finally {
       designState.loading = false;
       renderDesignChrome(); // refresh title from data
@@ -11786,28 +12701,28 @@ void main() {
   }
 
   function renderDesignBody() {
-    const body = designShadow.querySelector('#panel-body');
+    const body = designShadow.querySelector("#panel-body");
     if (!body) return;
-    body.innerHTML = '';
+    body.innerHTML = "";
 
     if (designState.loading) {
-      body.appendChild(msgDiv('loading', 'Loading design system…'));
+      body.appendChild(msgDiv("loading", "Loading design system…"));
       return;
     }
     if (designState.error) {
-      body.appendChild(msgDiv('error', designState.error));
+      body.appendChild(msgDiv("error", designState.error));
       return;
     }
     if (designState.present === false) {
-      const empty = document.createElement('div');
-      empty.className = 'empty';
+      const empty = document.createElement("div");
+      empty.className = "empty";
       empty.innerHTML = `<strong>No DESIGN.md yet</strong>Create one by running <code>${IMPECCABLE_COMMAND} document</code> in your terminal, then re-open this panel.`;
       body.appendChild(empty);
       return;
     }
 
-    if (designState.tab === 'raw') {
-      renderRawTab(body, designState.raw || '');
+    if (designState.tab === "raw") {
+      renderRawTab(body, designState.raw || "");
       return;
     }
 
@@ -11820,15 +12735,15 @@ void main() {
   }
 
   function msgDiv(cls, text) {
-    const d = document.createElement('div');
+    const d = document.createElement("div");
     d.className = cls;
     d.textContent = text;
     return d;
   }
 
   function renderStaleHint() {
-    const box = document.createElement('div');
-    box.className = 'stale';
+    const box = document.createElement("div");
+    box.className = "stale";
     box.innerHTML = `
       <span class="stale-dot"></span>
       <span class="stale-text"><strong>DESIGN.md is newer than .impeccable/design.json.</strong> Run <code>${IMPECCABLE_COMMAND} document</code> to refresh the sidecar.</span>
@@ -11837,8 +12752,8 @@ void main() {
   }
 
   function renderParsedMdCta() {
-    const box = document.createElement('div');
-    box.className = 'parsed-md-cta';
+    const box = document.createElement("div");
+    box.className = "parsed-md-cta";
     box.innerHTML = `<strong>Basic view</strong>This panel reads the tokens in your <code>DESIGN.md</code> frontmatter. Running <code>${IMPECCABLE_COMMAND} document</code> also generates a <code>.impeccable/design.json</code> sidecar with your project's actual component snippets (button, input, nav) and tonal ramps, rendered live below the tokens.`;
     return box;
   }
@@ -11854,12 +12769,16 @@ void main() {
    */
   function designEmptyMessage() {
     if (designState.hasMd && !designState.hasSidecar) {
-      return 'DESIGN.md found, no structured tokens to display. Run ' + IMPECCABLE_COMMAND + ' document to generate the .impeccable/design.json sidecar.';
+      return (
+        "DESIGN.md found, no structured tokens to display. Run " +
+        IMPECCABLE_COMMAND +
+        " document to generate the .impeccable/design.json sidecar."
+      );
     }
     if (designState.hasMd) {
-      return 'DESIGN.md and its sidecar were found, but neither carries colors, type, radii, or components to display.';
+      return "DESIGN.md and its sidecar were found, but neither carries colors, type, radii, or components to display.";
     }
-    return 'No design system data available.';
+    return "No design system data available.";
   }
 
   function renderDesignVisual(body, parsed, sidecar) {
@@ -11889,13 +12808,13 @@ void main() {
     // synthesize from prose sections.
     const narrative = sidecar?.narrative || synthesizeNarrative(parsed);
     if (narrative.rules?.length) body.appendChild(renderRulesCollapsible(narrative.rules));
-    if ((narrative.dos?.length || narrative.donts?.length)) body.appendChild(renderDosDontsCollapsible(narrative));
+    if (narrative.dos?.length || narrative.donts?.length) body.appendChild(renderDosDontsCollapsible(narrative));
     if (narrative.overview || narrative.northStar || narrative.keyCharacteristics?.length) {
       body.appendChild(renderOverviewCollapsible(narrative));
     }
 
     if (body.childElementCount === beforeCount) {
-      body.appendChild(msgDiv('empty', designEmptyMessage()));
+      body.appendChild(msgDiv("empty", designEmptyMessage()));
     }
   }
 
@@ -11932,9 +12851,9 @@ void main() {
         weight: spec?.fontWeight ?? 400,
         // fontStyle isn't in Stitch's frontmatter schema; the sidecar carries
         // it when a role is rendered in italic (e.g. display italic).
-        style: m.style || 'normal',
-        sampleSize: spec?.fontSize || '1rem',
-        lineHeight: spec?.lineHeight != null ? String(spec.lineHeight) : '',
+        style: m.style || "normal",
+        sampleSize: spec?.fontSize || "1rem",
+        lineHeight: spec?.lineHeight != null ? String(spec.lineHeight) : "",
         letterSpacing: spec?.letterSpacing,
         purpose: m.purpose,
       };
@@ -11947,13 +12866,15 @@ void main() {
   }
 
   function splitFontFamily(stack) {
-    if (!stack || typeof stack !== 'string') return { family: '', fallback: '' };
-    const parts = stack.split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, ''));
-    return { family: parts[0] || '', fallback: parts.slice(1).join(', ') };
+    if (!stack || typeof stack !== "string") return { family: "", fallback: "" };
+    const parts = stack.split(",").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
+    return { family: parts[0] || "", fallback: parts.slice(1).join(", ") };
   }
 
   function humanizeKey(k) {
-    return String(k || '').replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return String(k || "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
   function findProseDescription(proseColors, key, displayName) {
@@ -11961,7 +12882,7 @@ void main() {
     const needles = [key, displayName].filter(Boolean).map((s) => s.toLowerCase());
     for (const g of proseColors.groups) {
       for (const c of g.colors || []) {
-        const hay = String(c.name || '').toLowerCase();
+        const hay = String(c.name || "").toLowerCase();
         if (hay && needles.some((n) => hay.includes(n) || n.includes(hay))) {
           return c.description || null;
         }
@@ -11975,14 +12896,14 @@ void main() {
     const md = parsed;
     return {
       northStar: md.overview?.creativeNorthStar,
-      overview: (md.overview?.philosophy || []).join(' '),
+      overview: (md.overview?.philosophy || []).join(" "),
       keyCharacteristics: md.overview?.keyCharacteristics || [],
       rules: [
-        ...(md.colors?.rules || []).map((r) => ({ ...r, section: 'colors' })),
-        ...(md.typography?.rules || []).map((r) => ({ ...r, section: 'typography' })),
-        ...(md.layout?.rules || []).map((r) => ({ ...r, section: 'layout' })),
-        ...(md.elevation?.rules || []).map((r) => ({ ...r, section: 'elevation' })),
-        ...(md.shapes?.rules || []).map((r) => ({ ...r, section: 'shapes' })),
+        ...(md.colors?.rules || []).map((r) => ({ ...r, section: "colors" })),
+        ...(md.typography?.rules || []).map((r) => ({ ...r, section: "typography" })),
+        ...(md.layout?.rules || []).map((r) => ({ ...r, section: "layout" })),
+        ...(md.elevation?.rules || []).map((r) => ({ ...r, section: "elevation" })),
+        ...(md.shapes?.rules || []).map((r) => ({ ...r, section: "shapes" })),
       ],
       dos: md.dosDonts?.dos || [],
       donts: md.dosDonts?.donts || [],
@@ -11991,32 +12912,32 @@ void main() {
 
   function renderColorTiles(body, colors) {
     for (const c of colors) {
-      const tile = document.createElement('div');
-      tile.className = 'tile c-tile';
-      tile.title = 'Click to copy';
-      tile.addEventListener('click', () => copyToClipboard(c.value));
+      const tile = document.createElement("div");
+      tile.className = "tile c-tile";
+      tile.title = "Click to copy";
+      tile.addEventListener("click", () => copyToClipboard(c.value));
 
-      const meta = document.createElement('div');
-      meta.className = 'tile-meta';
-      meta.innerHTML = `<span class="name">${escapeHtml(c.name || c.role || 'Color')}</span><span>${escapeHtml(c.value || '')}</span>`;
+      const meta = document.createElement("div");
+      meta.className = "tile-meta";
+      meta.innerHTML = `<span class="name">${escapeHtml(c.name || c.role || "Color")}</span><span>${escapeHtml(c.value || "")}</span>`;
       tile.appendChild(meta);
 
-      const hero = document.createElement('div');
-      hero.className = 'c-hero';
-      hero.style.background = cssSafe(c.value || '');
+      const hero = document.createElement("div");
+      hero.className = "c-hero";
+      hero.style.background = cssSafe(c.value || "");
       tile.appendChild(hero);
 
       const ramp = synthesizeRamp(c);
       if (ramp.length) {
-        const r = document.createElement('div');
-        r.className = 'c-ramp';
-        r.innerHTML = ramp.map((v) => `<span style="background:${cssSafe(v)}"></span>`).join('');
+        const r = document.createElement("div");
+        r.className = "c-ramp";
+        r.innerHTML = ramp.map((v) => `<span style="background:${cssSafe(v)}"></span>`).join("");
         tile.appendChild(r);
       }
 
       if (c.description) {
-        const d = document.createElement('div');
-        d.className = 'c-desc';
+        const d = document.createElement("div");
+        d.className = "c-desc";
         d.textContent = c.description;
         tile.appendChild(d);
       }
@@ -12027,7 +12948,9 @@ void main() {
   function synthesizeRamp(c) {
     if (c.tonalRamp?.length) return c.tonalRamp;
     // If base value is OKLCH, synthesize an 8-step ramp across lightness.
-    const m = typeof c.value === 'string' && c.value.match(/^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+))?\s*\)$/i);
+    const m =
+      typeof c.value === "string" &&
+      c.value.match(/^oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+))?\s*\)$/i);
     if (!m) return [];
     const [, , chroma, hue] = m;
     const steps = [20, 32, 44, 56, 68, 80, 90, 96];
@@ -12036,41 +12959,41 @@ void main() {
 
   function renderTypeTiles(body, types) {
     for (const t of types) {
-      const tile = document.createElement('div');
-      tile.className = 'tile t-tile';
+      const tile = document.createElement("div");
+      tile.className = "tile t-tile";
 
-      const meta = document.createElement('div');
-      meta.className = 'tile-meta';
-      meta.innerHTML = `<span>${escapeHtml(t.role || '')}</span><span>${escapeHtml(t.weight || '')} ${escapeHtml(t.style === 'italic' ? 'italic' : '')}</span>`;
+      const meta = document.createElement("div");
+      meta.className = "tile-meta";
+      meta.innerHTML = `<span>${escapeHtml(t.role || "")}</span><span>${escapeHtml(t.weight || "")} ${escapeHtml(t.style === "italic" ? "italic" : "")}</span>`;
       tile.appendChild(meta);
 
-      const specimen = document.createElement('div');
-      specimen.className = 't-specimen';
-      specimen.textContent = 'Aa';
+      const specimen = document.createElement("div");
+      specimen.className = "t-specimen";
+      specimen.textContent = "Aa";
       specimen.style.fontFamily = fontStack(t);
       specimen.style.fontWeight = String(t.weight || 400);
-      specimen.style.fontStyle = t.style || 'normal';
-      specimen.style.fontSize = '56px';  // Fixed specimen size - compare faces, not scales.
-      specimen.style.letterSpacing = 'normal';
-      specimen.style.textTransform = 'none';
+      specimen.style.fontStyle = t.style || "normal";
+      specimen.style.fontSize = "56px"; // Fixed specimen size - compare faces, not scales.
+      specimen.style.letterSpacing = "normal";
+      specimen.style.textTransform = "none";
       tile.appendChild(specimen);
 
       // The system's actual sample size for this role, shown as small mono meta below.
       if (t.sampleSize) {
-        const scale = document.createElement('div');
-        scale.style.cssText = 'font-family:' + MONO + '; font-size: 10px; color:' + DP.meta + '; margin-top: 2px;';
+        const scale = document.createElement("div");
+        scale.style.cssText = "font-family:" + MONO + "; font-size: 10px; color:" + DP.meta + "; margin-top: 2px;";
         scale.textContent = t.sampleSize;
         tile.appendChild(scale);
       }
 
-      const family = document.createElement('div');
-      family.className = 't-family';
-      family.textContent = t.family || t.name || '';
+      const family = document.createElement("div");
+      family.className = "t-family";
+      family.textContent = t.family || t.name || "";
       tile.appendChild(family);
 
       if (t.purpose) {
-        const p = document.createElement('div');
-        p.className = 't-purpose';
+        const p = document.createElement("div");
+        p.className = "t-purpose";
         p.textContent = t.purpose;
         tile.appendChild(p);
       }
@@ -12079,38 +13002,38 @@ void main() {
   }
 
   function fontStack(t) {
-    const fam = t.family || '';
-    const fb = t.fallback || '';
+    const fam = t.family || "";
+    const fb = t.fallback || "";
     if (fam && /[,\s]/.test(fam) && !fam.includes("'") && !fam.includes('"')) {
       return `"${fam}", ${fb}`;
     }
-    return fam && fb ? `"${fam}", ${fb}` : (fam || fb);
+    return fam && fb ? `"${fam}", ${fb}` : fam || fb;
   }
 
   function renderRadiiTile(body, radii) {
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-    const meta = document.createElement('div');
-    meta.className = 'tile-meta';
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    const meta = document.createElement("div");
+    meta.className = "tile-meta";
     meta.innerHTML = `<span class="name">Corner Radii</span><span>${radii.length}</span>`;
     tile.appendChild(meta);
 
-    const strip = document.createElement('div');
-    strip.className = 'r-strip';
+    const strip = document.createElement("div");
+    strip.className = "r-strip";
     for (const r of radii) {
-      const item = document.createElement('div');
-      item.className = 'r-item';
-      const s = document.createElement('div');
-      s.className = 'r-sample';
-      s.style.borderRadius = r.value || '0';
+      const item = document.createElement("div");
+      item.className = "r-item";
+      const s = document.createElement("div");
+      s.className = "r-sample";
+      s.style.borderRadius = r.value || "0";
       item.appendChild(s);
-      const lbl = document.createElement('div');
-      lbl.className = 'r-label';
-      lbl.textContent = r.name || '';
+      const lbl = document.createElement("div");
+      lbl.className = "r-label";
+      lbl.textContent = r.name || "";
       item.appendChild(lbl);
-      const val = document.createElement('div');
-      val.className = 'r-val';
-      val.textContent = r.value || '';
+      const val = document.createElement("div");
+      val.className = "r-val";
+      val.textContent = r.value || "";
       item.appendChild(val);
       strip.appendChild(item);
     }
@@ -12120,27 +13043,27 @@ void main() {
 
   function renderShadowTiles(body, shadows) {
     for (const sh of shadows) {
-      const tile = document.createElement('div');
-      tile.className = 'tile s-tile';
+      const tile = document.createElement("div");
+      tile.className = "tile s-tile";
 
-      const meta = document.createElement('div');
-      meta.className = 'tile-meta';
-      meta.innerHTML = `<span class="name">${escapeHtml(sh.name || 'Shadow')}</span><span>Elevation</span>`;
+      const meta = document.createElement("div");
+      meta.className = "tile-meta";
+      meta.innerHTML = `<span class="name">${escapeHtml(sh.name || "Shadow")}</span><span>Elevation</span>`;
       tile.appendChild(meta);
 
-      const surface = document.createElement('div');
-      surface.className = 's-surface';
-      surface.style.boxShadow = sh.value || 'none';
+      const surface = document.createElement("div");
+      surface.className = "s-surface";
+      surface.style.boxShadow = sh.value || "none";
       tile.appendChild(surface);
 
-      const val = document.createElement('div');
-      val.className = 's-value';
-      val.textContent = sh.value || '';
+      const val = document.createElement("div");
+      val.className = "s-value";
+      val.textContent = sh.value || "";
       tile.appendChild(val);
 
       if (sh.purpose) {
-        const p = document.createElement('div');
-        p.className = 's-purpose';
+        const p = document.createElement("div");
+        p.className = "s-purpose";
         p.textContent = sh.purpose;
         tile.appendChild(p);
       }
@@ -12155,29 +13078,28 @@ void main() {
     const groups = groupByKind(components);
 
     for (const group of groups) {
-      const tile = document.createElement('div');
-      tile.className = 'tile cmp-tile';
+      const tile = document.createElement("div");
+      tile.className = "tile cmp-tile";
 
-      const meta = document.createElement('div');
-      meta.className = 'tile-meta';
-      const groupTitle = group.length === 1
-        ? (group[0].name || group[0].kind || 'Component')
-        : titleForKind(group[0].kind, group.length);
-      meta.innerHTML = `<span class="name">${escapeHtml(groupTitle)}</span><span class="cmp-kind">${escapeHtml(group[0].kind || '')}</span>`;
+      const meta = document.createElement("div");
+      meta.className = "tile-meta";
+      const groupTitle =
+        group.length === 1 ? group[0].name || group[0].kind || "Component" : titleForKind(group[0].kind, group.length);
+      meta.innerHTML = `<span class="name">${escapeHtml(groupTitle)}</span><span class="cmp-kind">${escapeHtml(group[0].kind || "")}</span>`;
       tile.appendChild(meta);
 
       for (const c of group) {
-        const stage = document.createElement('div');
-        stage.className = 'cmp-stage';
+        const stage = document.createElement("div");
+        stage.className = "cmp-stage";
 
         // Render the component in its own shadow root so its CSS can't bleed.
-        const host = document.createElement('div');
-        const sub = host.attachShadow({ mode: 'open' });
-        const style = document.createElement('style');
-        style.textContent = c.css || '';
+        const host = document.createElement("div");
+        const sub = host.attachShadow({ mode: "open" });
+        const style = document.createElement("style");
+        style.textContent = c.css || "";
         sub.appendChild(style);
-        const container = document.createElement('div');
-        container.innerHTML = c.html || '';
+        const container = document.createElement("div");
+        container.innerHTML = c.html || "";
         sub.appendChild(container);
         stage.appendChild(host);
 
@@ -12185,9 +13107,9 @@ void main() {
         // or when the component's display name differs from its kind.
         const showSublabel = group.length > 1;
         if (showSublabel) {
-          const lbl = document.createElement('div');
-          lbl.className = 'cmp-sublabel';
-          lbl.textContent = c.name || '';
+          const lbl = document.createElement("div");
+          lbl.className = "cmp-sublabel";
+          lbl.textContent = c.name || "";
           stage.appendChild(lbl);
         }
         tile.appendChild(stage);
@@ -12196,8 +13118,8 @@ void main() {
       // Single shared description if all items carry the same one; otherwise
       // skip - per-item descriptions clutter a grouped tile.
       if (group.length === 1 && group[0].description) {
-        const d = document.createElement('div');
-        d.className = 'c-desc';
+        const d = document.createElement("div");
+        d.className = "c-desc";
         d.textContent = group[0].description;
         tile.appendChild(d);
       }
@@ -12220,55 +13142,55 @@ void main() {
 
   function titleForKind(kind, count) {
     const labels = {
-      button: 'Buttons',
-      input: 'Inputs',
-      nav: 'Navigation',
-      chip: 'Chips',
-      card: 'Cards',
-      custom: 'Components',
+      button: "Buttons",
+      input: "Inputs",
+      nav: "Navigation",
+      chip: "Chips",
+      card: "Cards",
+      custom: "Components",
     };
-    return labels[kind] || (kind ? kind.charAt(0).toUpperCase() + kind.slice(1) + 's' : 'Components');
+    return labels[kind] || (kind ? kind.charAt(0).toUpperCase() + kind.slice(1) + "s" : "Components");
   }
 
   // Collapsibles.
 
   function buildCollapsible(key, label, count) {
-    const wrap = document.createElement('div');
-    wrap.className = 'coll';
-    wrap.setAttribute('data-open', designState.collapsed[key] ? 'false' : 'true');
+    const wrap = document.createElement("div");
+    wrap.className = "coll";
+    wrap.setAttribute("data-open", designState.collapsed[key] ? "false" : "true");
 
-    const head = document.createElement('button');
-    head.className = 'coll-head';
+    const head = document.createElement("button");
+    head.className = "coll-head";
     head.innerHTML = `
       <svg class="coll-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5L8 6 4 9.5"/></svg>
       <span>${escapeHtml(label)}</span>
-      ${count != null ? `<span class="coll-count">${escapeHtml(String(count))}</span>` : ''}
+      ${count != null ? `<span class="coll-count">${escapeHtml(String(count))}</span>` : ""}
     `;
-    head.addEventListener('click', () => {
+    head.addEventListener("click", () => {
       designState.collapsed[key] = !designState.collapsed[key];
       saveDesignPrefs();
       renderDesignBody();
     });
     wrap.appendChild(head);
 
-    const body = document.createElement('div');
-    body.className = 'coll-body';
+    const body = document.createElement("div");
+    body.className = "coll-body";
     wrap.appendChild(body);
     return { wrap, body };
   }
 
   function renderRulesCollapsible(rules) {
-    const { wrap, body } = buildCollapsible('rules', 'Named Rules', rules.length);
+    const { wrap, body } = buildCollapsible("rules", "Named Rules", rules.length);
     for (const r of rules) {
-      const card = document.createElement('div');
-      card.className = 'rule-card';
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.innerHTML = `${escapeHtml(r.name)}${r.section ? `<span class="section">${escapeHtml(r.section)}</span>` : ''}`;
+      const card = document.createElement("div");
+      card.className = "rule-card";
+      const name = document.createElement("div");
+      name.className = "name";
+      name.innerHTML = `${escapeHtml(r.name)}${r.section ? `<span class="section">${escapeHtml(r.section)}</span>` : ""}`;
       card.appendChild(name);
-      const b = document.createElement('div');
-      b.className = 'body';
-      b.textContent = r.body || '';
+      const b = document.createElement("div");
+      b.className = "body";
+      b.textContent = r.body || "";
       card.appendChild(b);
       body.appendChild(card);
     }
@@ -12277,18 +13199,18 @@ void main() {
 
   function renderDosDontsCollapsible(n) {
     const total = (n.dos?.length || 0) + (n.donts?.length || 0);
-    const { wrap, body } = buildCollapsible('dosdonts', "Do's and Don'ts", total);
-    const grid = document.createElement('div');
-    grid.className = 'dos';
+    const { wrap, body } = buildCollapsible("dosdonts", "Do's and Don'ts", total);
+    const grid = document.createElement("div");
+    grid.className = "dos";
     for (const d of n.dos || []) {
-      const el = document.createElement('div');
-      el.className = 'do';
+      const el = document.createElement("div");
+      el.className = "do";
       el.innerHTML = inlineMd(d);
       grid.appendChild(el);
     }
     for (const d of n.donts || []) {
-      const el = document.createElement('div');
-      el.className = 'dont';
+      const el = document.createElement("div");
+      el.className = "dont";
       el.innerHTML = inlineMd(d);
       grid.appendChild(el);
     }
@@ -12297,23 +13219,23 @@ void main() {
   }
 
   function renderOverviewCollapsible(n) {
-    const { wrap, body } = buildCollapsible('overview', 'Overview', null);
-    const ov = document.createElement('div');
-    ov.className = 'overview-body';
+    const { wrap, body } = buildCollapsible("overview", "Overview", null);
+    const ov = document.createElement("div");
+    ov.className = "overview-body";
     if (n.northStar) {
-      const star = document.createElement('span');
-      star.className = 'north-star';
-      star.textContent = '“' + n.northStar + '”';
+      const star = document.createElement("span");
+      star.className = "north-star";
+      star.textContent = "“" + n.northStar + "”";
       ov.appendChild(star);
     }
     if (n.overview) {
-      const p = document.createElement('p');
+      const p = document.createElement("p");
       p.innerHTML = inlineMd(n.overview);
       ov.appendChild(p);
     }
     if (n.keyCharacteristics?.length) {
-      const ul = document.createElement('ul');
-      ul.innerHTML = n.keyCharacteristics.map((k) => `<li>${inlineMd(k)}</li>`).join('');
+      const ul = document.createElement("ul");
+      ul.innerHTML = n.keyCharacteristics.map((k) => `<li>${inlineMd(k)}</li>`).join("");
       ov.appendChild(ul);
     }
     body.appendChild(ov);
@@ -12323,11 +13245,11 @@ void main() {
   function cssSafe(v) {
     // Strip anything outside valid CSS value chars to prevent injection via
     // .impeccable/design.json values rendered into inline style strings.
-    return String(v).replace(/[<>"'`\n]/g, '');
+    return String(v).replace(/[<>"'`\n]/g, "");
   }
 
   function normalizeCssColor(v) {
-    if (!v || typeof v !== 'string') return v;
+    if (!v || typeof v !== "string") return v;
     const s = v.trim();
     const oklch = s.match(/oklch\([^)]+\)/i);
     if (oklch) return oklch[0];
@@ -12335,14 +13257,14 @@ void main() {
     if (hex) return hex[0];
     const rgb = s.match(/rgba?\([^)]+\)/i);
     if (rgb) return rgb[0];
-    return s.replace(/\s+#.*$/, '').trim();
+    return s.replace(/\s+#.*$/, "").trim();
   }
 
   // Raw tab: minimal markdown renderer (subset)
 
   function renderRawTab(body, md) {
-    const wrap = document.createElement('div');
-    wrap.className = 'md';
+    const wrap = document.createElement("div");
+    wrap.className = "md";
     wrap.innerHTML = renderMarkdown(md);
     body.appendChild(wrap);
   }
@@ -12354,12 +13276,12 @@ void main() {
     let inCode = false;
     let codeBuf = [];
     let paraBuf = [];
-    let listBuf = [];  // array of { indent, html }
+    let listBuf = []; // array of { indent, html }
     let listType = null; // 'ul' | 'ol'
 
     const flushPara = () => {
       if (paraBuf.length) {
-        out.push(`<p>${inlineMd(paraBuf.join(' '))}</p>`);
+        out.push(`<p>${inlineMd(paraBuf.join(" "))}</p>`);
         paraBuf = [];
       }
     };
@@ -12370,7 +13292,10 @@ void main() {
         listType = null;
       }
     };
-    const flushAll = () => { flushPara(); flushList(); };
+    const flushAll = () => {
+      flushPara();
+      flushList();
+    };
 
     for (; i < lines.length; i++) {
       const line = lines[i];
@@ -12378,19 +13303,32 @@ void main() {
       // Code fence
       const fence = line.match(/^```(\w*)\s*$/);
       if (fence) {
-        if (!inCode) { flushAll(); inCode = true; codeBuf = []; }
-        else {
-          out.push(`<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`);
+        if (!inCode) {
+          flushAll();
+          inCode = true;
+          codeBuf = [];
+        } else {
+          out.push(`<pre><code>${escapeHtml(codeBuf.join("\n"))}</code></pre>`);
           inCode = false;
         }
         continue;
       }
-      if (inCode) { codeBuf.push(line); continue; }
+      if (inCode) {
+        codeBuf.push(line);
+        continue;
+      }
 
-      if (line.trim() === '') { flushAll(); continue; }
+      if (line.trim() === "") {
+        flushAll();
+        continue;
+      }
 
       const hr = line.match(/^\s*(?:---+|\*\*\*+)\s*$/);
-      if (hr) { flushAll(); out.push('<hr />'); continue; }
+      if (hr) {
+        flushAll();
+        out.push("<hr />");
+        continue;
+      }
 
       const heading = line.match(/^(#{1,4})\s+(.+)$/);
       if (heading) {
@@ -12406,7 +13344,7 @@ void main() {
         flushPara();
         const m = bullet || ordered;
         const indent = Math.floor(m[1].length / 2);
-        const t = bullet ? 'ul' : 'ol';
+        const t = bullet ? "ul" : "ol";
         if (listType && listType !== t) flushList();
         listType = t;
         listBuf.push({ indent, html: inlineMd(m[3]) });
@@ -12417,9 +13355,9 @@ void main() {
     }
     flushAll();
     if (inCode && codeBuf.length) {
-      out.push(`<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`);
+      out.push(`<pre><code>${escapeHtml(codeBuf.join("\n"))}</code></pre>`);
     }
-    return out.join('\n');
+    return out.join("\n");
   }
 
   function buildListHtml(items, type) {
@@ -12442,11 +13380,14 @@ void main() {
     // Code spans
     s = s.replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
     // Links [text](url)
-    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`);
+    s = s.replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      (_, t, u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`
+    );
     // Bold
-    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     // Italic (only single *…*, skip if inside bold already handled)
-    s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+    s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
     return s;
   }
 
@@ -12456,19 +13397,21 @@ void main() {
 
   function escapeHtml(s) {
     return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function copyToClipboard(text) {
     if (!text) return;
     try {
       navigator.clipboard.writeText(text);
-      showToast('Copied: ' + text);
-    } catch { /* ignore */ }
+      showToast("Copied: " + text);
+    } catch {
+      /* ignore */
+    }
   }
 
   //
@@ -12476,7 +13419,9 @@ void main() {
   //
 
   function init() {
-    try { history.scrollRestoration = 'manual'; } catch {}
+    try {
+      history.scrollRestoration = "manual";
+    } catch {}
     initHighlight();
     initEditBadge();
     initAnnotOverlay();
@@ -12488,37 +13433,45 @@ void main() {
     attachSteerFocusGuard();
     initDesignPanel();
     fetchPendingCount();
-    document.addEventListener('mousemove', handleMouseMove, true);
-    document.addEventListener('click', handleClick, true);
-    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener("mousemove", handleMouseMove, true);
+    document.addEventListener("click", handleClick, true);
+    document.addEventListener("keydown", handleKeyDown, true);
     connectSSE();
 
     // Check for an active session to resume (variant wrapper already in DOM after HMR)
     if (!resumeSession()) {
-      console.log('[impeccable] Live variant mode ready. Hover over elements to pick one.');
+      console.log("[impeccable] Live variant mode ready. Hover over elements to pick one.");
       // SvelteKit (and any framework that hydrates after HTML parse) may add
       // the variant wrapper AFTER init runs. Watch for it and retry resume
       // once it appears. Disconnect on first hit.
       const scout = new MutationObserver(() => {
-        const wrapper = document.querySelector('[data-impeccable-variants]');
+        const wrapper = document.querySelector("[data-impeccable-variants]");
         if (!wrapper) return;
         scout.disconnect();
         if (resumeSession()) {
-          console.log('[impeccable] Resumed deferred session ' + currentSessionId + ' (post-hydration).');
+          console.log("[impeccable] Resumed deferred session " + currentSessionId + " (post-hydration).");
         }
       });
       scout.observe(document.body, { childList: true, subtree: true });
     } else {
-      console.log('[impeccable] Resumed active variant session ' + currentSessionId + ' (' + arrivedVariants + '/' + expectedVariants + ' variants).');
+      console.log(
+        "[impeccable] Resumed active variant session " +
+          currentSessionId +
+          " (" +
+          arrivedVariants +
+          "/" +
+          expectedVariants +
+          " variants)."
+      );
     }
 
-    if (state === 'IDLE' && (pickActive || insertActive)) setLiveState('PICKING');
+    if (state === "IDLE" && (pickActive || insertActive)) setLiveState("PICKING");
     syncPageInteractionCursor();
-    syncPageChatFocus('init-complete');
+    syncPageChatFocus("init-complete");
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
   }

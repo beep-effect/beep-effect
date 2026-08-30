@@ -13,9 +13,36 @@ BUN_VERSION="$(tr -d '[:space:]' < .bun-version)"
 export BUN_INSTALL="${HOME}/.bun"
 export PATH="${BUN_INSTALL}/bin:${PATH}"
 
+bootstrap_cache="${XDG_CACHE_HOME:-${HOME}/.cache}/beep/cloud-agent-install"
+install -d -m 0700 "${bootstrap_cache}"
+bootstrap_workdirs=()
+cleanup_bootstrap_workdirs() {
+  local workdir
+  for workdir in "${bootstrap_workdirs[@]}"; do
+    [ -z "${workdir}" ] || rm -rf -- "${workdir}"
+  done
+}
+trap cleanup_bootstrap_workdirs EXIT
+
 # 1. Install the pinned Bun toolchain when it is missing or the wrong version.
 if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version 2>/dev/null)" != "${BUN_VERSION}" ]; then
-  curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"
+  if [ "$(uname -m)" != "x86_64" ]; then
+    echo "ERROR: the pinned cloud bootstrap supports x86_64 only." >&2
+    exit 1
+  fi
+  bun_archive_sha256="$(tr -d '[:space:]' < .bun-linux-x64.sha256)"
+  bun_work="$(mktemp -d "${bootstrap_cache}/bun.XXXXXX")"
+  bootstrap_workdirs+=("${bun_work}")
+  bun_archive="${bun_work}/bun-linux-x64.zip"
+  curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+    --output "${bun_archive}" \
+    "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
+  printf '%s  %s\n' "${bun_archive_sha256}" "${bun_archive}" | sha256sum --check --strict -
+  unzip -oq "${bun_archive}" -d "${bun_work}"
+  install -d -m 0755 "${BUN_INSTALL}/bin"
+  install -m 0755 "${bun_work}/bun-linux-x64/bun" "${BUN_INSTALL}/bin/bun"
+  ln -sfn bun "${BUN_INSTALL}/bin/bunx"
+  rm -rf -- "${bun_work}"
 fi
 
 # Expose bun to every shell (login, non-login, and the agent) regardless of
@@ -69,8 +96,9 @@ OP_GPG_KEY_URL="https://downloads.1password.com/linux/keys/1password.asc"
 # OP_SERVICE_ACCOUNT_TOKEN without a fresh signature check, and would not pick up
 # a bumped OP_PINNED_VERSION. install runs once per environment build (then the
 # snapshot is reused), so re-verifying every run is cheap and fully fail-closed.
+op_work="$(mktemp -d "${bootstrap_cache}/op.XXXXXX")"
+bootstrap_workdirs+=("${op_work}")
 set +e
-op_work="$(mktemp -d)"
 op_ver="v${OP_PINNED_VERSION}"
 op_ok=0
 if curl -fsSLo "${op_work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/${op_ver}/op_linux_amd64_${op_ver}.zip" \
@@ -83,7 +111,7 @@ if curl -fsSLo "${op_work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/
   if curl -fsSL "${OP_GPG_KEY_URL}" | gpg --batch --import >/dev/null 2>&1 \
     && gpg --batch --with-colons --fingerprint 2>/dev/null | grep -q "^fpr:::::::::${OP_GPG_FINGERPRINT}:" \
     && gpg --batch --status-fd=1 --verify "${op_work}/op.sig" "${op_work}/op" 2>/dev/null \
-      | grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"; then
+      | grep -q "^\[GNUPG:\] VALIDSIG ${OP_GPG_FINGERPRINT} "; then
     op_ok=1
   else
     echo "WARN: 1Password CLI signature verification failed; refusing to install op."
