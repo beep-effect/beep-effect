@@ -194,7 +194,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "keeps failed prompts non-sendable while receipt evidence is uncertain",
     Effect.fnUntraced(function* () {
       const verifyUncertainStatus = Effect.fn("verifyUncertainFailedTurnStatus")(function* (
