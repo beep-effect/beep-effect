@@ -372,6 +372,56 @@ describe("makePffexportFileProcessingEngine", () => {
   );
 
   it.effect(
+    "binds an external canonical target reached through a covered shebang symlink",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const fixtureRoot = path.dirname(stubPath);
+        const interpreterPrefix = path.join(fixtureRoot, "interpreter");
+        const interpreterPath = path.join(interpreterPrefix, "bin", "bash");
+        const coveredInterpreterPath = path.join("/var/tmp", `${path.basename(fixtureRoot)}-bash`);
+        const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
+        const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
+        yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
+        yield* fs.copy("/bin/bash", interpreterPath);
+        yield* fs.chmod(interpreterPath, 0o755);
+        yield* Effect.acquireRelease(fs.symlink(interpreterPath, coveredInterpreterPath), () =>
+          fs.remove(coveredInterpreterPath).pipe(Effect.ignore)
+        );
+        yield* fs.writeFileString(
+          launcherPath,
+          stubPffexport.replace("#!/usr/bin/env bash", `#!${coveredInterpreterPath}`)
+        );
+        yield* fs.chmod(launcherPath, 0o755);
+        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        yield* fs.chmod(bwrapPath, 0o755);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            pffexportPath: launcherPath,
+          })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({
+            ...operation,
+            source: SourceArtifact.make(sourceWithoutBytes),
+          })
+        );
+
+        expect(result.children.length).toBeGreaterThan(0);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
     "resolves and binds a bare pffexport executable outside sandbox runtime roots",
     Effect.fnUntraced(
       function* () {

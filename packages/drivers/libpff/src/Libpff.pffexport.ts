@@ -600,7 +600,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       Effect.map((firstLine) => (Str.startsWith("#!")(firstLine) ? Str.trim(Str.slice(2)(firstLine)) : "")),
       Effect.map((shebang) => shebang.split(/\s+/u)[0] ?? "")
     );
-    if (Str.isEmpty(prefix) || !path.isAbsolute(prefix) || sandboxRuntimeCovers(prefix)) return [];
+    if (Str.isEmpty(prefix) || !path.isAbsolute(prefix)) return [];
 
     const canonicalInterpreter = yield* fs
       .realPath(prefix)
