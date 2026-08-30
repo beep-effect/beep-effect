@@ -7,7 +7,8 @@ Verdict: PASS for the owned acceptance matrix
 
 - Provenance now exposes a source-manifestation check that proves the expected
   identity, resolved identity, and SHA-256 digest before an attempt can trust
-  the raw text.
+  the raw text. Its opaque proof holds deeply frozen identity/text snapshots
+  and can verify a candidate batch with one full-source hash.
 - Langextract persists append-only verification and re-anchor attempts. Each
   record keeps the matter reference, expected and resolved source identities,
   raw `GroundedExtraction[]` candidates, attempt and engine identity, engine
@@ -15,6 +16,8 @@ Verdict: PASS for the owned acceptance matrix
 - Only a verified outcome can contain anchor receipts. Empty candidate batches
   persist as `no-candidates` only after source verification. Other failures
   retain a stage, typed reason, and optional candidate index without an anchor.
+- Every verified receipt carries its candidate index; decoding rejects receipt
+  reordering, duplicate/missing associations, or source-authority mutation.
 - Re-anchor requires a retained `stale-source` predecessor. The new source must
   match the re-anchor's expected identity, pass its digest check, and produce
   exact raw slices again. Persistence decode rejects broken links, duplicate
@@ -25,13 +28,14 @@ Verdict: PASS for the owned acceptance matrix
 
 | Requirement | Evidence |
 | --- | --- |
-| Hostile Unicode, raw UTF-16 equality, duplicates, foreign offsets, and page straddle | `VerifiedSpanSpike.test.ts`, 24 passing tests |
-| Exact source identity and anchor proof | provenance package, 3 files and 18 passing tests |
+| Hostile Unicode, raw UTF-16 equality, duplicates, foreign offsets, and page straddle | `VerifiedSpanSpike.test.ts`, 25 passing tests |
+| Exact source identity and anchor proof | provenance package, 3 files and 21 passing tests with 100% package coverage |
 | Drift retention and non-destructive re-anchor | `VerifiedSpanHistory.test.ts` preserves the original receipt, appends `stale-source`, then appends a linked verified re-anchor at new raw offsets |
 | Persistence after restart | `S.fromJsonString(VerifiedSpanHistory)` round-trips success, drift, re-anchor, and negative attempts |
 | Negative extraction policy | Empty candidates persist as `no-candidates` with no anchor or citation-entity field; drifted empty input persists `stale-source` instead |
 | Matter, digest, and version failures | Focused tests persist `cross-scope`, `stale-source`, ambiguity, and `normalization-version-mismatch` without anchors |
-| Schema boundary integrity | Decode tests reject broken predecessor links, invalid re-anchor transitions, source-authority mismatch, and candidates paired with `no-candidates` |
+| Schema boundary integrity | Decode tests reject broken/duplicate links, initial-failure re-anchor, source/matter/version mutation, contradictory failure indices, receipt reordering/source mutation, wrong anchor counts, and candidates paired with `no-candidates` |
+| Coordinated full-source consumer | Workspace resolver integration resolves canonical text, then proves the exact returned identity/text through `verifySourceTextIdentity` |
 
 ## Commands and results
 
@@ -40,18 +44,18 @@ cd packages/foundation/modeling/provenance
 bun run beep:audit
 ```
 
-Passed build, source and test typechecks, 3 test files with 18 tests, and
-Biome.
+Passed build, source and test typechecks, 3 test files with 21 tests, Biome,
+and 100% statements/branches/functions/lines package coverage.
 
 ```sh
 cd packages/foundation/capability/langextract
 bun run beep:audit
 ```
 
-Passed build, source and test typechecks, 7 test files with 77 tests, and
-Biome. The hostile-text and history files account for 30 focused tests.
+Passed build, source and test typechecks, 7 test files with 81 tests, and
+Biome. The hostile-text and history files account for 34 focused tests.
 
-Direct package docgen passed 21 provenance examples and 83 langextract
+Direct package docgen passed 25 provenance examples and 84 langextract
 examples. `bun run beep lint schema-first`, `bun run beep laws native-runtime
 --check`, and `bun run beep laws effect-fn --check` each reported zero findings.
 `bun run beep lint reflection-artifacts` reported zero blocking findings.
@@ -63,9 +67,9 @@ receipt remain the P3 completion gate.
 
 ## Attribution note
 
-An earlier `bun run docgen:local` failed on the unchanged
+An earlier `bun run docgen:local` failed on the inherited
 `professional-desktop` export `dispatchTurnWithConfirm` and its unregistered
-`@category actions`. Both changed packages passed direct docgen, and the later
-full docgen run passed all 130 scheduled packages. The branch did not edit the
-desktop file. The mismatch is recorded in `research/OPPORTUNITIES.md` rather
-than repaired outside this packet.
+`@category actions`. The hosted required Docgen lane failed on the same issue,
+so this review-fix slice changes it to the registered `atoms` category; direct
+desktop docgen then passed 196 examples. The attribution and required-check
+repair are recorded in `research/OPPORTUNITIES.md`.

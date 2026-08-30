@@ -4,24 +4,24 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $LangExtractId } from "@beep/identity";
 import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
+import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
 import {
   toTextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
-  VerifyTextAnchorInput,
+  VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
-  verifyTextAnchor,
+  verifyTextAnchorAgainstVerifiedSource,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Chunk, Effect, Iterable as I, Match, Result } from "effect";
+import { Chunk, Effect, Iterable as I, Result } from "effect";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
-import { dual, flow, identity, pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   MAX_LOCATOR_LENGTH,
@@ -36,11 +36,12 @@ import {
   VerifiedSpanAttemptKind,
   VerifiedSpanAttemptOutcome,
   VerifiedSpanAttemptRecord,
+  VerifiedSpanCandidateAnchorReceipt,
   VerifiedSpanHistory,
 } from "./VerifiedSpan.model.ts";
+import { normalizeTextLocator, normalizeWithRawOffsets } from "./VerifiedSpan.normalization.ts";
 import type { GroundedExtraction } from "@beep/langextract/Extraction";
-import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import type * as Crypto from "effect/Crypto";
 import type {
   BeginVerifiedSpanHistoryInput,
@@ -51,202 +52,16 @@ import type {
   VerifiedSpanAttemptOutcome as VerifiedSpanAttemptOutcomeType,
   VerifiedSpanHistory as VerifiedSpanHistoryType,
 } from "./VerifiedSpan.model.ts";
+import type { NormalizedTextWithRawOffsets } from "./VerifiedSpan.normalization.ts";
 
-const $I = $LangExtractId.create("VerifiedSpan");
-const combiningMarkPattern = /^\p{M}$/u;
-const whitespacePattern = /^\s$/u;
-const CombiningMark = S.String.check(
-  S.isPattern(combiningMarkPattern, {
-    identifier: $I`CombiningMarkCheck`,
-    title: "Combining Mark",
-    description: "Checks for one Unicode combining-mark code point.",
-    message: "Expected one Unicode combining-mark code point.",
-  })
-);
-const WhitespaceCodePoint = S.String.check(
-  S.isPattern(whitespacePattern, {
-    identifier: $I`WhitespaceCodePointCheck`,
-    title: "Whitespace Code Point",
-    description: "Checks for one Unicode whitespace code point.",
-    message: "Expected one Unicode whitespace code point.",
-  })
-);
-
-class NormalizedTextWithRawOffsets extends S.Class<NormalizedTextWithRawOffsets>($I`NormalizedTextWithRawOffsets`)(
-  {
-    ends: S.Array(NonNegativeInt),
-    starts: S.Array(NonNegativeInt),
-    text: S.String,
-  },
-  $I.annote("NormalizedTextWithRawOffsets", {
-    description: "Normalized locator text paired with the raw UTF-16 source range behind each normalized code unit.",
-  })
-) {}
-
-const RawCluster = S.Tuple([NonNegativeInt, NonNegativeInt]).pipe(
-  $I.annoteSchema("RawCluster", {
-    description: "Half-open raw UTF-16 range whose code points normalize as one cluster.",
-  })
-);
-type RawCluster = typeof RawCluster.Type;
-
-type SourceClusterState = readonly [start: NonNegativeInt, clusters: Array<RawCluster>];
-type NormalizationState = readonly [starts: Array<NonNegativeInt>, ends: Array<NonNegativeInt>, points: Array<string>];
-type NormalizedRawPoint = readonly [point: string, sourceStart: NonNegativeInt, sourceEnd: NonNegativeInt];
+const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 type MatchScanState = readonly [matchedLength: number, start: O.Option<number>];
 type ReconstructionState = readonly [expectedStart: NonNegativeInt, parts: Chunk.Chunk<string>];
 
-const rawCluster = (start: NonNegativeInt, end: NonNegativeInt): RawCluster => [start, end];
-const normalizedRawPoint = (
-  point: string,
-  sourceStart: NonNegativeInt,
-  sourceEnd: NonNegativeInt
-): NormalizedRawPoint => [point, sourceStart, sourceEnd];
-const sourceClusterInitial = (): SourceClusterState => [NonNegativeInt.make(0), A.empty()];
-const normalizationInitial = (): NormalizationState => [A.empty(), A.empty(), A.empty()];
 const matchScanInitial = (): MatchScanState => [0, O.none()];
 const reconstructionInitial = (): ReconstructionState => [NonNegativeInt.make(0), Chunk.empty()];
 const missingAnchor = () => "missing-anchor";
 const missingMatch = () => "missing-match";
-
-const isCombiningMark = S.is(CombiningMark);
-const isWhitespace = S.is(WhitespaceCodePoint);
-const normalizeUnicode = Str.normalize("NFKC");
-const joinsNormalizedCluster = (source: string, cluster: RawCluster, point: string): boolean => {
-  const clusterText = Str.slice(cluster[0], cluster[1])(source);
-  return Bool.not(
-    Eq.equals(
-      normalizeUnicode(Str.concat(clusterText, point)),
-      Str.concat(normalizeUnicode(clusterText), normalizeUnicode(point))
-    )
-  );
-};
-
-const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
-  // Performance boundary: one allocation keeps cluster construction linear for
-  // hostile 100k inputs. The completed array is read-only after this function.
-  const [, clusters] = pipe(
-    source,
-    A.fromIterable,
-    A.reduce(sourceClusterInitial(), ([start, clusters], point): SourceClusterState => {
-      const end = NonNegativeInt.make(start + Str.length(point));
-      const next = rawCluster(start, end);
-      return [
-        end,
-        pipe(
-          A.last(clusters),
-          O.match({
-            onNone: () => A.appendInPlace(clusters, next),
-            onSome: (previous) =>
-              pipe(
-                Bool.match(isCombiningMark(point), {
-                  onFalse: () => joinsNormalizedCluster(source, previous, point),
-                  onTrue: () => true,
-                }),
-                Bool.match({
-                  onFalse: () => A.appendInPlace(clusters, next),
-                  onTrue: () => {
-                    A.spliceInPlace(clusters, {
-                      start: A.length(clusters) - 1,
-                      deleteCount: 1,
-                      items: [rawCluster(previous[0], end)],
-                    });
-                    return clusters;
-                  },
-                })
-              ),
-          })
-        ),
-      ];
-    })
-  );
-  return clusters;
-};
-
-const normalizeCluster = flow(normalizeUnicode, Str.replace(/[‘’‚‛]/gu, "'"), Str.replace(/[“”„‟]/gu, '"'));
-
-const appendNormalizedPoint = (
-  [starts, ends, points]: NormalizationState,
-  point: string,
-  sourceStart: NonNegativeInt,
-  sourceEnd: NonNegativeInt
-): NormalizationState =>
-  pipe(
-    isWhitespace(point),
-    Bool.match({
-      onFalse: () => {
-        A.appendAllInPlace(starts, A.replicate(sourceStart, Str.length(point)));
-        A.appendAllInPlace(ends, A.replicate(sourceEnd, Str.length(point)));
-        A.appendInPlace(points, point);
-        return [starts, ends, points];
-      },
-      onTrue: () =>
-        Match.value(O.exists(A.last(points), Eq.equals(" "))).pipe(
-          Match.when(false, (): NormalizationState => {
-            A.appendInPlace(starts, sourceStart);
-            A.appendInPlace(ends, sourceEnd);
-            A.appendInPlace(points, " ");
-            return [starts, ends, points];
-          }),
-          Match.orElse((): NormalizationState => {
-            A.spliceInPlace(ends, {
-              start: A.length(ends) - 1,
-              deleteCount: 1,
-              items: [sourceEnd],
-            });
-            return [starts, ends, points];
-          })
-        ),
-    })
-  );
-
-const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets => {
-  // Performance boundary: these parallel offset maps can hold multiple entries per source
-  // code unit. Mutation stays inside this allocation boundary; the completed
-  // schema value is immutable to every downstream consumer.
-  const [starts, ends, points] = pipe(
-    sourceClusters(source),
-    I.flatMap(([sourceStart, sourceEnd]) =>
-      pipe(
-        source,
-        Str.slice(sourceStart, sourceEnd),
-        normalizeCluster,
-        I.map((point) => normalizedRawPoint(point, sourceStart, sourceEnd))
-      )
-    ),
-    I.reduce(normalizationInitial(), (state, [point, sourceStart, sourceEnd]) =>
-      appendNormalizedPoint(state, point, sourceStart, sourceEnd)
-    )
-  );
-
-  return NormalizedTextWithRawOffsets.make({
-    ends,
-    starts,
-    text: A.join(points, ""),
-  });
-};
-
-/**
- * Normalize text only for deterministic location.
- *
- * **Details**
- *
- * The result uses NFKC, straight quote equivalents, and collapsed whitespace.
- * It is never evidence text: successful APIs always recover and emit a raw
- * source slice.
- *
- * **Example** (Normalize locator candidate text)
- *
- * ```ts import.meta.vitest name="Normalize locator candidate text"
- * import { normalizeTextLocator } from "@beep/langextract/VerifiedSpan"
- *
- * normalizeTextLocator("“ofﬁce”\nrecord") // => "\"office\" record"
- * ```
- *
- * @category normalization
- * @since 0.0.0
- */
-export const normalizeTextLocator = (value: string): string => normalizeWithRawOffsets(value).text;
 
 const fallbackLengths = (prefixTable: ReadonlyArray<number>, matchedLength: number): Iterable<number> =>
   I.unfold(
@@ -420,10 +235,18 @@ const findRawMatches: {
   (sourceText: string, normalizedSource: NormalizedTextWithRawOffsets, locator: string): ReadonlyArray<TextAnchor> => {
     const normalizedLocator = normalizeTextLocator(locator);
     const exactMatches = exactRawMatches(sourceText, locator);
-    return A.match(exactMatches, {
-      onEmpty: () => normalizedRawMatches(sourceText, normalizedSource, normalizedLocator),
-      onNonEmpty: identity,
-    });
+    const additionalNormalizedMatches = pipe(
+      normalizedRawMatches(sourceText, normalizedSource, normalizedLocator),
+      A.filter((normalized) =>
+        Bool.not(
+          A.some(
+            exactMatches,
+            (exact) => normalized.startChar <= exact.startChar && normalized.endChar >= exact.endChar
+          )
+        )
+      )
+    );
+    return pipe(exactMatches, A.appendAll(additionalNormalizedMatches), A.take(2));
   }
 );
 
@@ -727,9 +550,10 @@ const failedAttemptOutcome = (failure: VerifiedSpanAttemptFailure): VerifiedSpan
   VerifiedSpanAttemptOutcome.cases.failed.make({ failure });
 
 const verifiedAttemptOutcome = (
-  receipts: ReadonlyArray<TextAnchorVerificationReceipt>
+  receipts: ReadonlyArray<VerifiedSpanCandidateAnchorReceipt>
 ): VerifiedSpanAttemptOutcomeType =>
   A.match(receipts, {
+    /* v8 ignore next -- successful location preserves one anchor per non-empty candidate batch */
     onEmpty: () => failedAttemptOutcome(attemptFailure("anchor", "invalid-anchor")),
     onNonEmpty: (anchors) => VerifiedSpanAttemptOutcome.cases.verified.make({ anchors }),
   });
@@ -759,22 +583,25 @@ const attemptRecord = (
   });
 
 const verifyLocatedAnchors = (
-  input: AttemptRunInput,
-  expectedSource: SourceTextIdentity,
+  verifiedSource: VerifiedSourceText,
   anchors: ReadonlyArray<TextAnchor>
-): Effect.Effect<VerifiedSpanAttemptOutcomeType, never, Crypto.Crypto> =>
+): Effect.Effect<VerifiedSpanAttemptOutcomeType> =>
   Effect.forEach(
     anchors,
     (anchor, index) =>
-      verifyTextAnchor(
-        VerifyTextAnchorInput.make({
+      verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
           anchor,
-          expectedSource,
-          source: input.source,
-          sourceText: input.sourceText,
+          verifiedSource,
         })
       ).pipe(
-        Effect.map(toTextAnchorVerificationReceipt),
+        Effect.map((verified) =>
+          VerifiedSpanCandidateAnchorReceipt.make({
+            candidateIndex: NonNegativeInt.make(index),
+            receipt: toTextAnchorVerificationReceipt(verified),
+          })
+        ),
+        /* v8 ignore next -- locator output already proves boundaries and exact slices; retain fail-closed defense */
         Effect.mapError((error) => attemptFailure("anchor", error.reason, O.some(NonNegativeInt.make(index))))
       ),
     { concurrency: 1 }
@@ -787,13 +614,13 @@ const verifyLocatedAnchors = (
 
 const locateAttemptOutcome = (
   input: AttemptRunInput,
-  expectedSource: SourceTextIdentity
-): Effect.Effect<VerifiedSpanAttemptOutcomeType, never, Crypto.Crypto> =>
+  verifiedSource: VerifiedSourceText
+): Effect.Effect<VerifiedSpanAttemptOutcomeType> =>
   locateGroundedExtractions(input.candidates, input.sourceText).pipe(
     Effect.matchEffect({
       onFailure: (error) =>
         Effect.succeed(failedAttemptOutcome(attemptFailure("location", error.reason, error.candidateIndex))),
-      onSuccess: (anchors) => verifyLocatedAnchors(input, expectedSource, anchors),
+      onSuccess: (anchors) => verifyLocatedAnchors(verifiedSource, anchors),
     })
   );
 
@@ -844,10 +671,10 @@ const runAttempt = Effect.fnUntraced(function* (
   ).pipe(
     Effect.matchEffect({
       onFailure: (error) => Effect.succeed(failedAttemptOutcome(attemptFailure("source", error.reason))),
-      onSuccess: () =>
+      onSuccess: (verifiedSource) =>
         A.match(input.candidates, {
           onEmpty: () => Effect.succeed(VerifiedSpanAttemptOutcome.cases["no-candidates"].make({})),
-          onNonEmpty: () => locateAttemptOutcome(input, expectedSource),
+          onNonEmpty: () => locateAttemptOutcome(input, verifiedSource),
         }),
     })
   );
@@ -857,8 +684,7 @@ const runAttempt = Effect.fnUntraced(function* (
 
 const lastHistoryAttempt = (
   history: VerifiedSpanHistoryType
-): Effect.Effect<VerifiedSpanAttemptRecord, VerifiedSpanError> =>
-  Effect.fromOption(A.last(history.attempts), () => VerifiedSpanError.fromReason("invalid-history"));
+): Effect.Effect<VerifiedSpanAttemptRecord, VerifiedSpanError> => Effect.succeed(A.lastNonEmpty(history.attempts));
 
 const appendHistoryAttempt = (
   history: VerifiedSpanHistoryType,
@@ -1006,7 +832,15 @@ export const reanchorVerifiedSpanHistory: {
     input: ContinueVerifiedSpanHistoryInput
   ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto> {
     const previous = yield* lastHistoryAttempt(history);
-    if (Bool.or(Bool.not(isStaleSourceFailure(previous.outcome)), containsAttemptId(history, input.attemptId))) {
+    if (
+      Bool.or(
+        Bool.not(Bool.and(isStaleSourceFailure(previous.outcome), O.isSome(previous.previousAttemptId))),
+        Bool.or(
+          Bool.not(sourceTextIdentityEquivalence(input.source, previous.source)),
+          containsAttemptId(history, input.attemptId)
+        )
+      )
+    ) {
       return yield* VerifiedSpanError.fromReason("invalid-history");
     }
     const attempt = yield* runAttempt(

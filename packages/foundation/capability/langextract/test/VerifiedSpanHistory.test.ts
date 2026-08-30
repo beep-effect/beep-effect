@@ -16,7 +16,7 @@ import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Result } from "effect";
+import { Effect, Layer, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
@@ -158,7 +158,7 @@ describe("verified-span persistence and re-anchor history", () => {
       expect(attempt.outcome.status).toBe("verified");
       expect(historyEquivalence(restarted, history)).toBe(true);
       if (VerifiedSpanAttemptOutcome.guards.verified(attempt.outcome)) {
-        const receipt = attempt.outcome.anchors[0];
+        const receipt = attempt.outcome.anchors[0].receipt;
         expect(receipt.anchor.quote).toBe("“ofﬁce  record.”");
         expect(Str.slice(receipt.anchor.startChar, receipt.anchor.endChar)(sourceText)).toBe(receipt.anchor.quote);
         expect(receipt.source).toEqual(source);
@@ -189,6 +189,12 @@ describe("verified-span persistence and re-anchor history", () => {
         initial,
         continuationInput(2, [candidate(locator)], revisedSource, revisedText)
       );
+      const unrelatedText = "Unrelated source.";
+      const unrelatedSource = yield* sourceIdentity(unrelatedText);
+      const unrelatedReanchor = yield* reanchorVerifiedSpanHistory(
+        drifted,
+        continuationInput(4, [candidate("source")], unrelatedSource, unrelatedText)
+      ).pipe(Effect.flip);
       const reanchored = yield* reanchorVerifiedSpanHistory(
         drifted,
         continuationInput(3, [candidate(locator)], revisedSource, revisedText)
@@ -200,6 +206,7 @@ describe("verified-span persistence and re-anchor history", () => {
 
       expect(prematureReanchor.reason).toBe("invalid-history");
       expect(duplicateAttempt.reason).toBe("invalid-history");
+      expect(unrelatedReanchor.reason).toBe("invalid-history");
       expect(reanchored.attempts[0]).toEqual(initial.attempts[0]);
       expect(second.kind).toBe("verification");
       expect(second.previousAttemptId).toEqual(O.some(first.attemptId));
@@ -216,8 +223,8 @@ describe("verified-span persistence and re-anchor history", () => {
         VerifiedSpanAttemptOutcome.guards.verified(first.outcome) &&
         VerifiedSpanAttemptOutcome.guards.verified(third.outcome)
       ) {
-        const originalAnchor = first.outcome.anchors[0].anchor;
-        const revisedAnchor = third.outcome.anchors[0].anchor;
+        const originalAnchor = first.outcome.anchors[0].receipt.anchor;
+        const revisedAnchor = third.outcome.anchors[0].receipt.anchor;
 
         expect(originalAnchor.startChar).not.toBe(revisedAnchor.startChar);
         expect(Str.slice(originalAnchor.startChar, originalAnchor.endChar)(originalText)).toBe(originalAnchor.quote);
@@ -238,15 +245,120 @@ describe("verified-span persistence and re-anchor history", () => {
       const staleNegative = yield* beginVerifiedSpanHistory(
         beginInput(2, [], source, driftedSource, "Different source text.")
       );
+      const reanchorFailure = yield* reanchorVerifiedSpanHistory(
+        history,
+        continuationInput(3, [candidate("engine")], source, sourceText)
+      ).pipe(Effect.flip);
 
       expect(history.attempts[0].outcome.status).toBe("no-candidates");
       expect(encoded.attempts[0].candidates).toEqual([]);
       expect("anchors" in encoded.attempts[0].outcome).toBe(false);
       expect("citationEntity" in encoded.attempts[0]).toBe(false);
       expect(historyEquivalence(restarted, history)).toBe(true);
+      expect(reanchorFailure.reason).toBe("invalid-history");
       expect(staleNegative.attempts[0].outcome.status).toBe("failed");
       if (VerifiedSpanAttemptOutcome.guards.failed(staleNegative.attempts[0].outcome)) {
         expect(staleNegative.attempts[0].outcome.failure.reason).toBe("stale-source");
+      }
+    }, provideTestCrypto)
+  );
+
+  it.effect(
+    "persists absent source text as a typed location failure",
+    Effect.fnUntraced(function* () {
+      const source = yield* sourceIdentity("");
+      const history = yield* beginVerifiedSpanHistory(beginInput(1, [candidate("fact")], source, source, ""));
+      const restarted = yield* persistAndReload(history);
+      const outcome = restarted.attempts[0].outcome;
+
+      expect(outcome.status).toBe("failed");
+      if (VerifiedSpanAttemptOutcome.guards.failed(outcome)) {
+        expect(outcome.failure).toMatchObject({ reason: "absent-text", stage: "location" });
+        expect(outcome.failure.candidateIndex).toEqual(O.none());
+      }
+      expect("anchors" in outcome).toBe(false);
+    }, provideTestCrypto)
+  );
+
+  it.effect(
+    "hashes one verified source only once for a successful candidate batch",
+    Effect.fnUntraced(function* () {
+      const sourceText = "alpha beta";
+      const source = yield* sourceIdentity(sourceText);
+      const digestCalls = yield* Ref.make(0);
+      const CountingCrypto = Layer.succeed(
+        Crypto.Crypto,
+        Crypto.make({
+          digest: (algorithm, data) =>
+            Ref.update(digestCalls, (count) => count + 1).pipe(
+              Effect.andThen(
+                Effect.tryPromise({
+                  catch: (cause) =>
+                    PlatformError.systemError({
+                      _tag: "Unknown",
+                      cause,
+                      description: "Could not compute counted fixture digest",
+                      method: "digest",
+                      module: "VerifiedSpanHistoryTest",
+                    }),
+                  try: () =>
+                    globalThis.crypto.subtle
+                      .digest(algorithm, new Uint8Array(data))
+                      .then((buffer) => new Uint8Array(buffer)),
+                })
+              )
+            ),
+          randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
+        })
+      );
+      const history = yield* beginVerifiedSpanHistory(
+        beginInput(1, [candidate("alpha"), candidate("beta")], source, source, sourceText)
+      ).pipe(provideScopedLayer(CountingCrypto));
+
+      expect(history.attempts[0].outcome.status).toBe("verified");
+      expect(yield* Ref.get(digestCalls)).toBe(1);
+      const encoded = yield* S.encodeEffect(VerifiedSpanHistory)(history);
+      const encodedOutcome = encoded.attempts[0].outcome;
+      if (encodedOutcome.status === "verified") {
+        const swappedAssociations: unknown = {
+          attempts: [
+            {
+              ...encoded.attempts[0],
+              outcome: { ...encodedOutcome, anchors: [encodedOutcome.anchors[1], encodedOutcome.anchors[0]] },
+            },
+          ],
+        };
+        const swappedReceipts: unknown = {
+          attempts: [
+            {
+              ...encoded.attempts[0],
+              outcome: {
+                ...encodedOutcome,
+                anchors: [
+                  { ...encodedOutcome.anchors[0], receipt: encodedOutcome.anchors[1].receipt },
+                  { ...encodedOutcome.anchors[1], receipt: encodedOutcome.anchors[0].receipt },
+                ],
+              },
+            },
+          ],
+        };
+        const duplicatedReceipt: unknown = {
+          attempts: [
+            {
+              ...encoded.attempts[0],
+              outcome: {
+                ...encodedOutcome,
+                anchors: [
+                  encodedOutcome.anchors[0],
+                  { ...encodedOutcome.anchors[1], receipt: encodedOutcome.anchors[0].receipt },
+                ],
+              },
+            },
+          ],
+        };
+        expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(swappedAssociations))).toBe(true);
+        expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(swappedReceipts))).toBe(true);
+        expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(duplicatedReceipt))).toBe(true);
       }
     }, provideTestCrypto)
   );
@@ -258,6 +370,7 @@ describe("verified-span persistence and re-anchor history", () => {
       const duplicateSource = yield* sourceIdentity(duplicateText);
       const crossMatterSource = yield* sourceIdentity(duplicateText, "matter:other");
       const unsupportedSource = yield* sourceIdentity(duplicateText, "matter:verified-span", "2");
+      const mixedVersionSource = yield* sourceIdentity(duplicateText, "matter:verified-span", "2");
       const crossMatter = yield* beginVerifiedSpanHistory(
         beginInput(1, [candidate("same text")], duplicateSource, crossMatterSource, duplicateText)
       );
@@ -267,10 +380,29 @@ describe("verified-span persistence and re-anchor history", () => {
       const unsupported = yield* beginVerifiedSpanHistory(
         beginInput(3, [candidate("same text")], unsupportedSource, unsupportedSource, duplicateText)
       );
+      const mixedVersion = yield* beginVerifiedSpanHistory(
+        beginInput(4, [candidate("same text")], duplicateSource, mixedVersionSource, duplicateText)
+      );
+      const restartedCrossMatter = yield* persistAndReload(crossMatter);
+      const restartedUnsupported = yield* persistAndReload(unsupported);
+      const restartedMixedVersion = yield* persistAndReload(mixedVersion);
+      const encodedUnsupported = yield* S.encodeEffect(VerifiedSpanHistory)(unsupported);
+      const wrongNormalizationMatter: unknown = {
+        attempts: [{ ...encodedUnsupported.attempts[0], matterRef: "matter:other" }],
+      };
+      const wrongNormalizationSourceScope: unknown = {
+        attempts: [
+          {
+            ...encodedUnsupported.attempts[0],
+            source: { ...encodedUnsupported.attempts[0].source, scopeRef: "matter:other" },
+          },
+        ],
+      };
 
       expect(crossMatter.attempts[0].outcome.status).toBe("failed");
       expect(ambiguous.attempts[0].outcome.status).toBe("failed");
       expect(unsupported.attempts[0].outcome.status).toBe("failed");
+      expect(mixedVersion.attempts[0].outcome.status).toBe("failed");
       if (VerifiedSpanAttemptOutcome.guards.failed(crossMatter.attempts[0].outcome)) {
         expect(crossMatter.attempts[0].outcome.failure).toMatchObject({ reason: "cross-scope", stage: "source" });
       }
@@ -287,6 +419,31 @@ describe("verified-span persistence and re-anchor history", () => {
       expect("anchors" in crossMatter.attempts[0].outcome).toBe(false);
       expect("anchors" in ambiguous.attempts[0].outcome).toBe(false);
       expect("anchors" in unsupported.attempts[0].outcome).toBe(false);
+      expect(historyEquivalence(restartedCrossMatter, crossMatter)).toBe(true);
+      expect(historyEquivalence(restartedUnsupported, unsupported)).toBe(true);
+      expect(historyEquivalence(restartedMixedVersion, mixedVersion)).toBe(true);
+      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(wrongNormalizationMatter))).toBe(true);
+      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(wrongNormalizationSourceScope))).toBe(true);
+    }, provideTestCrypto)
+  );
+
+  it.effect(
+    "rejects re-anchor after an initial drift failure with no prior verified authority",
+    Effect.fnUntraced(function* () {
+      const originalText = "Original source.";
+      const revisedText = "Revised source.";
+      const originalSource = yield* sourceIdentity(originalText);
+      const revisedSource = yield* sourceIdentity(revisedText);
+      const initialFailure = yield* beginVerifiedSpanHistory(
+        beginInput(1, [candidate("source")], originalSource, revisedSource, revisedText)
+      );
+      const failure = yield* reanchorVerifiedSpanHistory(
+        initialFailure,
+        continuationInput(2, [candidate("source")], revisedSource, revisedText)
+      ).pipe(Effect.flip);
+
+      expect(initialFailure.attempts[0].outcome.status).toBe("failed");
+      expect(failure.reason).toBe("invalid-history");
     }, provideTestCrypto)
   );
 
@@ -310,29 +467,30 @@ describe("verified-span persistence and re-anchor history", () => {
         continuationInput(3, [candidate(locator)], revisedSource, revisedText)
       );
       const encoded = yield* S.encodeEffect(VerifiedSpanHistory)(reanchored);
+      const first = encoded.attempts[0];
       const second = yield* Effect.fromOption(A.get(encoded.attempts, 1), () => "Missing encoded drift attempt.");
       const third = yield* Effect.fromOption(A.get(encoded.attempts, 2), () => "Missing encoded re-anchor attempt.");
       const tamperedLink: unknown = {
         attempts: [
-          encoded.attempts[0],
+          first,
           second,
           {
             ...third,
-            previousAttemptId: encoded.attempts[0].attemptId,
+            previousAttemptId: first.attemptId,
           },
         ],
       };
       const contradictoryNegative: unknown = {
         attempts: [
           {
-            ...encoded.attempts[0],
+            ...first,
             outcome: { status: "no-candidates" },
           },
         ],
       };
       const reanchorWithoutDrift: unknown = {
         attempts: [
-          encoded.attempts[0],
+          first,
           {
             ...second,
             outcome: {
@@ -348,21 +506,172 @@ describe("verified-span persistence and re-anchor history", () => {
       };
       const reanchorWithMismatchedExpectation: unknown = {
         attempts: [
-          encoded.attempts[0],
+          first,
           second,
           {
             ...third,
-            expectedSource: encoded.attempts[0].source,
+            expectedSource: first.source,
+          },
+        ],
+      };
+      const verifiedWithWrongMatter: unknown = {
+        attempts: [{ ...first, matterRef: "matter:other" }],
+      };
+      const verifiedWithWrongExpectedSource: unknown = {
+        attempts: [{ ...first, expectedSource: third.source }],
+      };
+      const verifiedWithWrongResolvedSource: unknown = {
+        attempts: [{ ...first, source: third.source }],
+      };
+      const wrongNormalizationVersion: unknown = {
+        attempts: [{ ...first, normalizationVersion: "2" }],
+      };
+      const authorityChangingVerification: unknown = {
+        attempts: [
+          first,
+          {
+            ...third,
+            attemptId: second.attemptId,
+            kind: "verification",
+            previousAttemptId: first.attemptId,
+          },
+        ],
+      };
+      const outOfRangeCandidate: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome: {
+              status: "failed",
+              failure: { candidateIndex: 99, reason: "quote-mismatch", stage: "anchor" },
+            },
+          },
+        ],
+      };
+      const indexedSourceFailure: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome: {
+              status: "failed",
+              failure: { candidateIndex: 0, reason: "stale-source", stage: "source" },
+            },
+          },
+        ],
+      };
+      const unindexedAnchorFailure: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome: { status: "failed", failure: { reason: "quote-mismatch", stage: "anchor" } },
+          },
+        ],
+      };
+      const emptyLocationFailure: unknown = {
+        attempts: [
+          {
+            ...first,
+            candidates: [],
+            outcome: { status: "failed", failure: { reason: "not-found", stage: "location" } },
+          },
+        ],
+      };
+      const unindexedCandidateLocationFailure: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome: { status: "failed", failure: { reason: "not-found", stage: "location" } },
+          },
+        ],
+      };
+      const indexedGlobalLocationFailure: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome: {
+              status: "failed",
+              failure: { candidateIndex: 0, reason: "absent-text", stage: "location" },
+            },
+          },
+        ],
+      };
+      const duplicateAttemptId: unknown = {
+        attempts: [first, { ...second, attemptId: first.attemptId }],
+      };
+      const initialStaleThenReanchor: unknown = {
+        attempts: [
+          { ...second, previousAttemptId: undefined },
+          { ...third, previousAttemptId: second.attemptId },
+        ],
+      };
+      const changedReceiptSource: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome:
+              first.outcome.status === "verified"
+                ? {
+                    ...first.outcome,
+                    anchors: [
+                      {
+                        ...first.outcome.anchors[0],
+                        receipt: { ...first.outcome.anchors[0].receipt, source: third.source },
+                      },
+                    ],
+                  }
+                : first.outcome,
+          },
+        ],
+      };
+      const wrongAnchorCount: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome:
+              first.outcome.status === "verified"
+                ? { ...first.outcome, anchors: [first.outcome.anchors[0], first.outcome.anchors[0]] }
+                : first.outcome,
+          },
+        ],
+      };
+      const supportedNormalizationFailure: unknown = {
+        attempts: [
+          {
+            ...first,
+            outcome: {
+              status: "failed",
+              failure: { reason: "normalization-version-mismatch", stage: "source" },
+            },
           },
         ],
       };
 
-      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(tamperedLink))).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(contradictoryNegative))).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(reanchorWithoutDrift))).toBe(true);
-      expect(Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(reanchorWithMismatchedExpectation))).toBe(
-        true
-      );
+      const tamperedHistories = [
+        tamperedLink,
+        contradictoryNegative,
+        reanchorWithoutDrift,
+        reanchorWithMismatchedExpectation,
+        verifiedWithWrongMatter,
+        verifiedWithWrongExpectedSource,
+        verifiedWithWrongResolvedSource,
+        wrongNormalizationVersion,
+        authorityChangingVerification,
+        outOfRangeCandidate,
+        indexedSourceFailure,
+        unindexedAnchorFailure,
+        emptyLocationFailure,
+        unindexedCandidateLocationFailure,
+        indexedGlobalLocationFailure,
+        duplicateAttemptId,
+        initialStaleThenReanchor,
+        changedReceiptSource,
+        wrongAnchorCount,
+        supportedNormalizationFailure,
+      ];
+
+      expect(
+        A.every(tamperedHistories, (history) => Result.isFailure(S.decodeUnknownResult(VerifiedSpanHistory)(history)))
+      ).toBe(true);
     }, provideTestCrypto)
   );
 });

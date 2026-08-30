@@ -17,7 +17,9 @@ import * as Eq from "effect/Equal";
 import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { VERIFIED_SPAN_NORMALIZATION_VERSION } from "./VerifiedSpan.config.ts";
 import { VerifiedSpanErrorReason } from "./VerifiedSpan.errors.ts";
+import { normalizeTextLocator } from "./VerifiedSpan.normalization.ts";
 
 const $I = $LangExtractId.create("VerifiedSpan");
 
@@ -380,8 +382,8 @@ export type VerifiedSpanAttemptFailureReason = typeof VerifiedSpanAttemptFailure
 
 const VerifiedSpanSourceFailureReason = LiteralKit(["cross-scope", "normalization-version-mismatch", "stale-source"]);
 const VerifiedSpanLocationFailureReason = LiteralKit([
+  "absent-text",
   "ambiguous",
-  "invalid-input",
   "invalid-offset",
   "limit-exceeded",
   "malformed-source",
@@ -438,12 +440,46 @@ export class VerifiedSpanAttemptFailure extends S.Class<VerifiedSpanAttemptFailu
   })
 ) {}
 
+/**
+ * Explicit association between one candidate position and its verified anchor
+ * receipt.
+ *
+ * **Details**
+ *
+ * Persisting the candidate position prevents anchor receipts from being
+ * reordered independently of the raw candidate batch.
+ *
+ * **Example** (Inspect candidate-anchor association fields)
+ *
+ * ```ts import.meta.vitest name="Inspect candidate-anchor association fields"
+ * import { VerifiedSpanCandidateAnchorReceipt } from "@beep/langextract/VerifiedSpan"
+ *
+ * VerifiedSpanCandidateAnchorReceipt.fields.candidateIndex !== undefined // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class VerifiedSpanCandidateAnchorReceipt extends S.Class<VerifiedSpanCandidateAnchorReceipt>(
+  $I`VerifiedSpanCandidateAnchorReceipt`
+)(
+  {
+    candidateIndex: NonNegativeInt.annotateKey({
+      description: "Zero-based position of the raw candidate associated with receipt.",
+    }),
+    receipt: TextAnchorVerificationReceipt,
+  },
+  $I.annote("VerifiedSpanCandidateAnchorReceipt", {
+    description: "Verified anchor receipt paired with its stable position in the retained raw candidate batch.",
+  })
+) {}
+
 const VerifiedSpanAttemptOutcomeStatus = LiteralKit(["verified", "failed", "no-candidates"]);
 
 class VerifiedSpanAttemptVerified extends S.Class<VerifiedSpanAttemptVerified>($I`VerifiedSpanAttemptVerified`)(
   {
     status: S.tag("verified"),
-    anchors: S.NonEmptyArray(TextAnchorVerificationReceipt),
+    anchors: S.NonEmptyArray(VerifiedSpanCandidateAnchorReceipt),
   },
   $I.annote("VerifiedSpanAttemptVerified", {
     description: "Successful attempt retaining one exact verified-anchor receipt for every raw candidate.",
@@ -521,6 +557,7 @@ const GroundedExtractionBatch = S.Array(GroundedExtraction).check(
     message: `Verified span attempts must retain at most ${MAX_EXTRACTION_CANDIDATES} candidates.`,
   })
 );
+const VerifiedSpanNormalizationVersion = S.Literal(VERIFIED_SPAN_NORMALIZATION_VERSION);
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 const attemptIdEquivalence = S.toEquivalence(VerifiedSpanAttemptId);
 
@@ -534,7 +571,7 @@ type VerifiedSpanAttemptRecordFields = {
   readonly expectedSource: typeof SourceTextIdentity;
   readonly kind: typeof VerifiedSpanAttemptKind;
   readonly matterRef: typeof S.NonEmptyString;
-  readonly normalizationVersion: typeof S.NonEmptyString;
+  readonly normalizationVersion: typeof VerifiedSpanNormalizationVersion;
   readonly outcome: typeof VerifiedSpanAttemptOutcome;
   readonly previousAttemptId: typeof OptionalVerifiedSpanAttemptId;
   readonly source: typeof SourceTextIdentity;
@@ -548,7 +585,7 @@ const VerifiedSpanAttemptRecordFields: VerifiedSpanAttemptRecordFields = {
   expectedSource: SourceTextIdentity,
   kind: VerifiedSpanAttemptKind,
   matterRef: S.NonEmptyString,
-  normalizationVersion: S.NonEmptyString,
+  normalizationVersion: VerifiedSpanNormalizationVersion,
   outcome: VerifiedSpanAttemptOutcome,
   previousAttemptId: OptionalVerifiedSpanAttemptId,
   source: SourceTextIdentity,
@@ -564,14 +601,88 @@ const hasConsistentAttemptLink = (attempt: VerifiedSpanAttemptRecordStruct): boo
     verification: () => true,
   });
 
+const hasCandidateAt = (
+  candidates: VerifiedSpanAttemptRecordStruct["candidates"],
+  candidateIndex: O.Option<NonNegativeInt>
+): boolean => O.exists(candidateIndex, (index) => index < A.length(candidates));
+
+const isGlobalLocationFailureReason = S.is(LiteralKit(["absent-text", "limit-exceeded"]));
+
+const hasConsistentFailureCandidates = (
+  attempt: VerifiedSpanAttemptRecordStruct,
+  failure: VerifiedSpanAttemptFailureStruct
+): boolean =>
+  VerifiedSpanAttemptFailureStage.$match(failure.stage, {
+    anchor: () =>
+      A.isReadonlyArrayNonEmpty(attempt.candidates) && hasCandidateAt(attempt.candidates, failure.candidateIndex),
+    location: () =>
+      A.isReadonlyArrayNonEmpty(attempt.candidates) &&
+      O.match(failure.candidateIndex, {
+        onNone: () => isGlobalLocationFailureReason(failure.reason),
+        onSome: (index) => index < A.length(attempt.candidates) && !isGlobalLocationFailureReason(failure.reason),
+      }),
+    source: () => O.isNone(failure.candidateIndex),
+  });
+
+const sourceFailureMatchesEvidence = (
+  attempt: VerifiedSpanAttemptRecordStruct,
+  reason: typeof VerifiedSpanSourceFailureReason.Type
+): boolean => {
+  const expectedInMatter = Eq.equals(attempt.matterRef, attempt.expectedSource.scopeRef);
+  const sourceInMatter = Eq.equals(attempt.matterRef, attempt.source.scopeRef);
+  const expectedVersionSupported = Eq.equals(
+    attempt.expectedSource.normalizationVersion,
+    VERIFIED_SPAN_NORMALIZATION_VERSION
+  );
+  const sourceVersionSupported = Eq.equals(attempt.source.normalizationVersion, VERIFIED_SPAN_NORMALIZATION_VERSION);
+
+  return VerifiedSpanSourceFailureReason.$match(reason, {
+    "cross-scope": () => !(expectedInMatter && sourceInMatter),
+    "normalization-version-mismatch": () =>
+      expectedInMatter && sourceInMatter && !(expectedVersionSupported && sourceVersionSupported),
+    "stale-source": () => expectedInMatter && sourceInMatter && expectedVersionSupported && sourceVersionSupported,
+  });
+};
+
+const hasConsistentAttemptSource = (attempt: VerifiedSpanAttemptRecordStruct): boolean => {
+  const hasAuthorizedSource =
+    Eq.equals(attempt.matterRef, attempt.expectedSource.scopeRef) &&
+    Eq.equals(attempt.matterRef, attempt.source.scopeRef) &&
+    Eq.equals(attempt.expectedSource.normalizationVersion, VERIFIED_SPAN_NORMALIZATION_VERSION) &&
+    Eq.equals(attempt.source.normalizationVersion, VERIFIED_SPAN_NORMALIZATION_VERSION) &&
+    sourceTextIdentityEquivalence(attempt.expectedSource, attempt.source);
+
+  return VerifiedSpanAttemptOutcome.match({
+    failed: ({ failure }) =>
+      VerifiedSpanAttemptFailureStage.$match(failure.stage, {
+        anchor: () => hasAuthorizedSource,
+        location: () => hasAuthorizedSource,
+        source: () =>
+          O.exists(O.liftPredicate(isVerifiedSpanSourceFailureReason)(failure.reason), (reason) =>
+            sourceFailureMatchesEvidence(attempt, reason)
+          ),
+      }),
+    "no-candidates": () => hasAuthorizedSource,
+    verified: () => hasAuthorizedSource,
+  })(attempt.outcome);
+};
+
 const hasConsistentAttemptOutcome = (attempt: VerifiedSpanAttemptRecordStruct): boolean =>
   VerifiedSpanAttemptOutcome.match({
-    failed: () => true,
+    failed: ({ failure }) => hasConsistentFailureCandidates(attempt, failure),
     "no-candidates": () => A.isReadonlyArrayEmpty(attempt.candidates),
     verified: ({ anchors }) =>
       A.isReadonlyArrayNonEmpty(attempt.candidates) &&
       Eq.equals(A.length(anchors), A.length(attempt.candidates)) &&
-      A.every(anchors, ({ source }) => sourceTextIdentityEquivalence(source, attempt.source)),
+      A.every(
+        anchors,
+        ({ candidateIndex, receipt }, index) =>
+          Eq.equals(candidateIndex, index) &&
+          sourceTextIdentityEquivalence(receipt.source, attempt.source) &&
+          O.exists(A.get(attempt.candidates, index), ({ text }) =>
+            Eq.equals(normalizeTextLocator(text), normalizeTextLocator(receipt.anchor.quote))
+          )
+      ),
   })(attempt.outcome);
 
 const VerifiedSpanAttemptRecordInvariant = VerifiedSpanAttemptRecordStruct.check(
@@ -582,6 +693,13 @@ const VerifiedSpanAttemptRecordInvariant = VerifiedSpanAttemptRecordStruct.check
       "Checks that every re-anchor attempt identifies its immediate predecessor and makes its newly proven source explicit.",
     message:
       "Expected a re-anchor attempt to carry previousAttemptId and matching expected/resolved source identities.",
+  }),
+  S.makeFilter(hasConsistentAttemptSource, {
+    identifier: $I`VerifiedSpanAttemptSourceCheck`,
+    title: "Verified Span Attempt Source",
+    description:
+      "Checks matter, source, and normalization authority while preserving only evidence-matched source-stage failures.",
+    message: "Expected source authority and any source-stage failure reason to agree with the retained identities.",
   }),
   S.makeFilter(hasConsistentAttemptOutcome, {
     identifier: $I`VerifiedSpanAttemptOutcomeCheck`,
@@ -634,10 +752,12 @@ const hasAllowedAttemptTransition = (
   previous: VerifiedSpanAttemptRecord,
   attempt: VerifiedSpanAttemptRecord
 ): boolean =>
+  sourceTextIdentityEquivalence(attempt.expectedSource, previous.source) &&
   VerifiedSpanAttemptKind.$match(attempt.kind, {
     "re-anchor": () =>
       VerifiedSpanAttemptOutcome.guards.failed(previous.outcome) &&
-      Eq.equals(previous.outcome.failure.reason, "stale-source"),
+      Eq.equals(previous.outcome.failure.reason, "stale-source") &&
+      O.isSome(previous.previousAttemptId),
     verification: () => VerifiedSpanAttemptOutcome.guards.verified(previous.outcome),
   });
 

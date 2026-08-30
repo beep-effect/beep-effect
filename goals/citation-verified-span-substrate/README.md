@@ -62,7 +62,7 @@ the foundation for the completed history work; the coordinated
 resolver/consumer is complete.
 
 [`history/p2/2026-08-27-persistence-reanchor-proof.md`](./history/p2/2026-08-27-persistence-reanchor-proof.md)
-records the 18 provenance tests, 77 langextract tests, persistence restart,
+records the 21 provenance tests, 81 langextract tests, persistence restart,
 negative attempt, source-drift, re-anchor, schema-law, docgen, and Yeet repair
 proof. Full verify and hosted closeout remain.
 

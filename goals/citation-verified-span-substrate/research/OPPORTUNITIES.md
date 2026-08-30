@@ -36,6 +36,11 @@ Receipts recorded during execution, per the repository friction-capture law.
   merge base, report it as inherited and continue checking changed packages.
   The final full proof should still decide whether the branch may publish.
 
+The hosted required Docgen check later failed on the same category. Because
+that check gates this PR regardless of attribution, the review-fix slice
+changes the inherited category to the registered `atoms` category and includes
+the downstream workspace in the release metadata.
+
 ## 2026-08-27: P2 verification and publication recovery
 
 ### The full-proof coordinator needs a fair wait mode
@@ -78,3 +83,18 @@ Receipts recorded during execution, per the repository friction-capture law.
 - **Prevention:** after any required base catch-up, rerun cheap gates before
   entering the heavyweight admission queue and add release metadata while the
   implementation context is still current.
+
+## 2026-08-28: Review-fix proof
+
+### Concurrent filtered coverage lanes can erase Vitest temporary receipts
+
+- **What happened:** a two-package filtered coverage command completed all 21
+  provenance tests at 100% and all 81 langextract tests, then the langextract
+  reporter failed because its temporary V8 receipt disappeared before report
+  assembly.
+- **Evidence:** `bun run coverage -- --filter=@beep/langextract
+  --filter=@beep/provenance` reported `ENOENT .../langextract/coverage/.tmp/
+  coverage-1.json` after the tests passed.
+- **Prevention:** give each coverage lane an isolated temporary report path, or
+  serialize filtered package coverage when another reviewer may be collecting
+  the same package simultaneously.
