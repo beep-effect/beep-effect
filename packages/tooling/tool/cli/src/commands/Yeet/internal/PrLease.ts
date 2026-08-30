@@ -86,6 +86,8 @@ class PrLeaseTransitionContendedError extends S.TaggedError<PrLeaseTransitionCon
 ) {}
 
 const leaseStatus = (lease: YeetPrLease): typeof YeetPrLeaseStatus.Type => lease.status ?? "active";
+const defaultMutexWaitSeconds = 2;
+const receiptRetirementMutexWaitSeconds = 5;
 
 const readLease = Effect.fn("PrLease.read")(function* (leasePath: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -114,7 +116,7 @@ const replaceLeaseGenerationUnderMutex = Effect.fn("PrLease.replaceGenerationUnd
   leasePath: string,
   checkoutRoot: string,
   expectedHeadSha: string,
-  waitForMutex = false
+  mutexWaitSeconds = defaultMutexWaitSeconds
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -149,7 +151,8 @@ mv -- "$temporary" "$lease"
   const exitCode = yield* runToExit({
     command: "flock",
     args: [
-      ...(waitForMutex === true ? [] : ["-w", "2"]),
+      "-w",
+      String(mutexWaitSeconds),
       path.join(inbox, "hook-mutex.lock"),
       "sh",
       "-c",
@@ -212,7 +215,7 @@ const persistLeaseTransition = Effect.fn("PrLease.persistTransition")(function* 
   temporaryPrefix: string,
   checkoutRoot: string,
   expectedHeadSha: string,
-  waitForMutex = false
+  mutexWaitSeconds = defaultMutexWaitSeconds
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -231,7 +234,7 @@ const persistLeaseTransition = Effect.fn("PrLease.persistTransition")(function* 
     leasePath,
     checkoutRoot,
     expectedHeadSha,
-    waitForMutex
+    mutexWaitSeconds
   );
 });
 
@@ -405,7 +408,7 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
   reason: string,
   expectedGeneration: O.Option<string> = O.none(),
   verifyCheckoutHead = true,
-  waitForMutex = false
+  mutexWaitSeconds = defaultMutexWaitSeconds
 ) {
   const transition = Effect.gen(function* () {
     const current = yield* readLease(leasePath);
@@ -448,7 +451,7 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
       "pr-lease-retired",
       checkoutRoot,
       verifyCheckoutHead === true ? targetHeadSha : "",
-      waitForMutex
+      mutexWaitSeconds
     );
     return { changed: true, generationId: current.value.generationId, preservedNewer: false } as const;
   });
@@ -484,7 +487,7 @@ const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(f
   reason: string,
   expectedGeneration: O.Option<string>,
   verifyCheckoutHead: boolean,
-  waitForMutex = false
+  mutexWaitSeconds = defaultMutexWaitSeconds
 ) {
   const path = yield* Path.Path;
   const inbox = path.join(context.repoRoot, ".beep", "inbox");
@@ -497,7 +500,7 @@ const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(f
     reason,
     expectedGeneration,
     verifyCheckoutHead,
-    waitForMutex
+    mutexWaitSeconds
   );
 });
 
@@ -536,6 +539,6 @@ export const retirePublishedPrLeaseReceipt = Effect.fn("PrLease.retirePublishedR
     reason,
     O.some(receipt.generationId),
     false,
-    true
+    receiptRetirementMutexWaitSeconds
   );
 });

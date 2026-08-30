@@ -561,7 +561,7 @@ esac
       )
     ));
 
-  it("bounds receipt retirement retries under persistent transition contention", () =>
+  it("bounds receipt retirement mutex waits and retries under persistent transition contention", () =>
     Effect.runPromise(
       withTrackedFileRepo(({ tempContext, tmpDir }) =>
         Effect.gen(function* () {
@@ -585,7 +585,10 @@ esac
             writePublishedPrLease(tempContext)
           );
           const flockPath = path.join(bin, "flock");
-          yield* fs.writeFileString(flockPath, '#!/bin/sh\nprintf "attempt\\n" >> "$1.attempts"\nexit 73\n');
+          yield* fs.writeFileString(
+            flockPath,
+            '#!/bin/sh\n[ "$1" = "-w" ] || exit 90\n[ "$2" = "5" ] || exit 91\nprintf "attempt\\n" >> "$3.attempts"\nexit 73\n'
+          );
           yield* fs.chmod(flockPath, 0o755);
 
           const error = yield* withEnvVarEffect(
