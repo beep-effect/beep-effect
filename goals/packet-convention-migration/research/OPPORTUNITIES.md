@@ -1109,3 +1109,18 @@
   successful diff, goal-index, Atlas, and CI lint gates instead of changing the
   operator's global environment during closeout.
 - **Owner:** repository Markdown lint entrypoint and Bunx/mise shim precedence.
+
+## 2026-08-30 — Operator scheduler probe omits a now-required JSON flag
+
+- **What happened:** the exact machine-wide lane-probe command supplied for the
+  goal no longer executes; the live CLI treats its only output-format flag as
+  required.
+- **Evidence:** `bun run beep quality scheduler status` exited 1 after printing
+  the command help and `ERROR Missing required flag: --json`.
+- **What would have prevented it:** keep the operator instruction synchronized
+  with the CLI contract, or make human-readable status the default while
+  retaining `--json` as an optional automation format.
+- **Disposition:** operator/runbook drift; retry the read-only probe with
+  `bun run beep quality scheduler status --json` and do not enter admission
+  during the edit loop.
+- **Owner:** scheduler status CLI defaults and operator documentation.
