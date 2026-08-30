@@ -134,9 +134,9 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
 
 const effectiveUserId = (): number => userInfo().uid;
 
-// Locks keep their historical leaf directly under the base root, so sessions
-// that already had XDG_RUNTIME_DIR (or tmpdir) coordinate at the same path as
-// before; only env-scrubbed sessions move (to /run/user/<uid>).
+// Locks keep their historical leaf directly under the base root; resolving the
+// base independently of XDG_RUNTIME_DIR makes configured and scrubbed siblings
+// converge on the same coordinator.
 const proofCoordinatorRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<
   string,
   never,
@@ -157,10 +157,10 @@ const proofCoordinatorDirectoryName = (): string =>
  * path. Equivalent SCP, SSH, HTTPS, and Git URLs therefore share a lock. The
  * normalized identity is hashed before it reaches the path, so a
  * credential-bearing remote URL never appears in a filename. Lock files live
- * under the shared per-user coordination root. Resolution prefers an absolute
- * configured XDG runtime directory, then writable `/run/user/<uid>`, and then
- * the uid-suffixed system-temporary fallback. The namespace includes opaque
- * machine identity plus the effective UID.
+ * under the shared per-user coordination root. Resolution probes
+ * `/run/user/<uid>` by creating a child directory and otherwise uses the
+ * uid-suffixed system-temporary fallback. The namespace includes opaque machine
+ * identity plus the effective UID.
  *
  * **Example** (Share a coordinator across checkouts)
  *

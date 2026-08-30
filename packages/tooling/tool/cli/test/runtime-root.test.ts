@@ -1,5 +1,10 @@
 import { tmpdir, userInfo } from "node:os";
-import { admissionRootFor, perUserRuntimeRoot, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
+import {
+  admissionRootFor,
+  perUserRuntimeRoot,
+  provideRuntimeRootForTesting,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import { proofCoordinatorLockPath } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -32,14 +37,17 @@ const writableRunUser = FileSystem.layerNoop({
     path === runUserDirectory
       ? Effect.succeed(directoryInfo)
       : Effect.fail(new Error(`unexpected stat ${path}`) as never),
-  access: () => Effect.void,
+  makeTempDirectory: () => Effect.succeed(`${runUserDirectory}/.beep-runtime-root-probe-test`),
+  remove: () => Effect.void,
 });
 
-const unwritableRunUser = FileSystem.layerNoop({ stat: () => Effect.succeed(directoryInfo) });
+const unwritableRunUser = FileSystem.layerNoop({
+  stat: () => Effect.succeed(directoryInfo),
+  makeTempDirectory: () => Effect.fail(new Error("unwritable") as never),
+});
 
 const fileAtRunUser = FileSystem.layerNoop({
   stat: () => Effect.succeed({ ...directoryInfo, type: "File" }),
-  access: () => Effect.void,
 });
 
 const resolveWith = (fileSystem: Layer.Layer<FileSystem.FileSystem>, environment: Readonly<Record<string, string>>) =>
@@ -49,14 +57,16 @@ const resolveWith = (fileSystem: Layer.Layer<FileSystem.FileSystem>, environment
   );
 
 describe("per-user runtime root", () => {
-  it.effect("trusts an absolute XDG_RUNTIME_DIR without probing", () =>
+  it.effect("ignores arbitrary XDG_RUNTIME_DIR values and chooses the run-user root", () =>
     Effect.gen(function* () {
-      const choice = yield* resolveWith(FileSystem.layerNoop({}), { XDG_RUNTIME_DIR: "/configured/runtime" });
-      expect(choice).toStrictEqual(RuntimeRootChoice.make({ kind: "configured", root: "/configured/runtime" }));
+      const configured = yield* resolveWith(writableRunUser, { XDG_RUNTIME_DIR: "/configured/runtime" });
+      const scrubbed = yield* resolveWith(writableRunUser, {});
+      expect(configured).toStrictEqual(RuntimeRootChoice.make({ kind: "run-user", root: runUserDirectory }));
+      expect(scrubbed).toStrictEqual(configured);
     })
   );
 
-  it.effect("ignores relative and empty XDG_RUNTIME_DIR values and probes /run/user/<uid>", () =>
+  it.effect("ignores relative and empty XDG_RUNTIME_DIR values", () =>
     Effect.gen(function* () {
       const relative = yield* resolveWith(writableRunUser, { XDG_RUNTIME_DIR: "relative/runtime" });
       const empty = yield* resolveWith(writableRunUser, { XDG_RUNTIME_DIR: "" });
@@ -65,7 +75,7 @@ describe("per-user runtime root", () => {
     })
   );
 
-  it.effect("uses /run/user/<uid> when it is a writable directory", () =>
+  it.effect("uses /run/user/<uid> when a child directory can be created and removed", () =>
     Effect.gen(function* () {
       const choice = yield* resolveWith(writableRunUser, {});
       expect(choice).toStrictEqual(RuntimeRootChoice.make({ kind: "run-user", root: runUserDirectory }));
@@ -93,19 +103,27 @@ describe("per-user runtime root", () => {
     })
   );
 
+  it.effect("accepts an explicit isolated test override", () =>
+    Effect.gen(function* () {
+      const override = RuntimeRootChoice.make({ kind: "test-override", root: "/isolated/runtime" });
+      const choice = yield* perUserRuntimeRoot().pipe(
+        provideRuntimeRootForTesting(override),
+        provideScopedLayer(Layer.mergeAll(FileSystem.layerNoop({}), NodePath.layer))
+      );
+      expect(choice).toStrictEqual(override);
+    })
+  );
+
   it.effect("keeps the admission and proof-lock leaves where they always lived", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const configured = RuntimeRootChoice.make({ kind: "configured", root: "/configured/runtime" });
+      const configured = RuntimeRootChoice.make({ kind: "test-override", root: "/configured/runtime" });
       const temporary = RuntimeRootChoice.make({ kind: "tmpdir", root: tmpdir() });
       expect(admissionRootFor(path, configured)).toBe("/configured/runtime/beep/admit");
       expect(admissionRootFor(path, temporary)).toBe(path.join(tmpdir(), `beep-admit-uid-${uid}`));
 
       const lock = yield* proofCoordinatorLockPath("https://github.com/acme/repo.git").pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({ XDG_RUNTIME_DIR: "/configured/runtime" })
-        ),
+        provideRuntimeRootForTesting(configured),
         provideScopedLayer(FileSystem.layerNoop({}))
       );
       expect(lock.startsWith("/configured/runtime/beep-yeet-proof-locks-")).toBe(true);

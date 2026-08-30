@@ -23,22 +23,22 @@ const $I = $RepoCliId.create("internal/repo-run/RuntimeRoot.schemas");
  * @category models
  * @since 0.0.0
  */
-export const RuntimeRootKind = LiteralKit(["configured", "run-user", "tmpdir"]).pipe(
+export const RuntimeRootKind = LiteralKit(["run-user", "tmpdir", "test-override"]).pipe(
   $I.annoteSchema("RuntimeRootKind", {
     description:
-      "Origin of the chosen runtime root: an absolute XDG_RUNTIME_DIR, a writable /run/user/<uid>, or the system temporary directory.",
+      "Origin of the chosen runtime root: a usable /run/user/<uid>, the system temporary directory, or an injected test override.",
   })
 );
 
 /**
  * The chosen per-user base root plus its origin.
  *
- * **Example** (Construct a configured choice)
+ * **Example** (Construct a run-user choice)
  *
  * ```ts
  * import { RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun"
  *
- * const choice = RuntimeRootChoice.make({ kind: "configured", root: "/run/user/1000" })
+ * const choice = RuntimeRootChoice.make({ kind: "run-user", root: "/run/user/1000" })
  * console.log(choice.root) // "/run/user/1000"
  * ```
  *

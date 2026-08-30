@@ -1,5 +1,5 @@
 import { tmpdir } from "node:os";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
   emptyTurboPlanSnapshot,
   loadYeetInboxView,
@@ -96,7 +96,7 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
     }).pipe(
       // Coordinator locks and admission leases both live under the temp
       // runtime root, so removing tmpDir cleans every artifact.
-      provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_RUNTIME_DIR: `${tmpDir}/runtime` }))),
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
       provideScopedLayer(memoryStatsTestLayer)
     )
   );
@@ -274,8 +274,6 @@ describe("yeet review fixes", () => {
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const repositoryIdentity = "https://github.com/acme/repo.git";
-        // A no-op FileSystem makes the /run/user/<uid> probe fail, so the
-        // fallback is the temporary directory on every host.
         const resolveWithEnvironment = (environment: Readonly<Record<string, string>>) =>
           proofCoordinatorLockPath(repositoryIdentity).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
@@ -290,7 +288,13 @@ describe("yeet review fixes", () => {
 
         expect(missing).toContain(fallbackPrefix);
         expect(relative).toContain(fallbackPrefix);
-        expect(configured).toContain(path.join(configuredRoot, "beep-yeet-proof-locks-"));
+        expect(configured).toContain(fallbackPrefix);
+
+        const overridden = yield* proofCoordinatorLockPath(repositoryIdentity).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: configuredRoot })),
+          provideScopedLayer(FileSystem.layerNoop({}))
+        );
+        expect(overridden).toContain(path.join(configuredRoot, "beep-yeet-proof-locks-"));
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 

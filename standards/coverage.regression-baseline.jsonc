@@ -25285,14 +25285,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PrLease.ts": {
-          "lines": 90.38,
-          "statements": 86.98,
-          "branches": 70.51,
+          "lines": 91.02,
+          "statements": 87.57,
+          "branches": 71.79,
           "functions": 84.37,
           "uncovered": {
-            "lines": 15,
-            "statements": 22,
-            "branches": 23,
+            "lines": 14,
+            "statements": 21,
+            "branches": 22,
             "functions": 5
           }
         },
@@ -26173,14 +26173,14 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 88.94,
-          "statements": 88.75,
-          "branches": 82.14,
-          "functions": 81.15,
+          "lines": 89.03,
+          "statements": 89.08,
+          "branches": 83.03,
+          "functions": 81.42,
           "uncovered": {
             "lines": 43,
-            "statements": 45,
-            "branches": 20,
+            "statements": 44,
+            "branches": 19,
             "functions": 26
           }
         },
