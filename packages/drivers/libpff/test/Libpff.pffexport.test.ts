@@ -542,7 +542,7 @@ exec "$mapped_command" "\${mapped[@]}"`
         yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
           fs.remove(commandPath).pipe(Effect.ignore)
         );
-        const splitString = `${commandName} -c 'exec /bin/bash "$0" "$@"'`;
+        const splitString = `'${commandName}' -c 'exec /bin/bash "$0" "$@"'`;
         yield* fs.writeFileString(
           launcherPath,
           stubPffexport.replace("#!/usr/bin/env bash", `#!/usr/bin/env -S ${splitString}`)
