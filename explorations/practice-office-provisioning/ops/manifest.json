@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "practice-office-provisioning",
+    "title": "Practice Office Provisioning",
+    "status": "active",
+    "stage": "align",
+    "openQuestions": [
+      "Confirm the EOP2-seat default (vs Purview Suite for Business Premium) for PST-import rights on Tom's mailbox; get the CSP/New Commerce quote for term length and dry-run the license assignment before import day (r7 A).",
+      "Box quote items: Governance-add-on eligibility and price on the existing Business plan, Enterprise Plus bundling, Shield pricing; ratify the upgrade-trigger table (r7 B + r1).",
+      "Ownership/collaboration topology: provisioning service account vs Tom-owned matter folders; which existing tenant resources the reconciler adopts vs treats as foreign — the 2026-07 staging drop is invisible to Tom today (R4).",
+      "Document egress exception: does anything ship to SharePoint at all (Sites.Selected needs a named site and purpose), or is the M365 document lane dropped as Box-only (R3)?",
+      "Contacts: which extracted entities become whose contacts, dedup keys, overwrite policy, GAL yes/no (R3).",
+      "FreshBooks: @beep/freshbooks driver goal shape, dev-app redirect URI, production scope set, invoice-to-Box delivery mechanics; live request-limit and webhook-retry numbers unverified (R6 + r7 D).",
+      "Walkthrough artifacts: adopt R5's 8-page outline as the Claude Artifacts content plan; confirm audience framing with Tom; keep malpractice-carrier specifics out of code until the actual policy is read (r7)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-30",
+    "updated": "2026-08-30"
+  }
+}
