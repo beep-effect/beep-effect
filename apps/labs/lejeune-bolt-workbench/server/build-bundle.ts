@@ -31,7 +31,7 @@ import {
   RetentionAuthorizationFromJsonString,
 } from "@/domain/Bundle";
 import { buildFixtureArtifacts, RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
-import { makeProjectionLayer, ProjectionLayerOptions } from "@/runtime/Projections";
+import { makeProjectionLayer, ProjectionLayerOptions, verifyDurableProjectionSnapshot } from "@/runtime/Projections";
 import { verifyFrozenProviderRecording } from "@/workflows/ProviderRecording";
 import { replayOffline } from "@/workflows/Replay";
 
@@ -500,6 +500,21 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
   if (A.isReadonlyArrayEmpty(pgliteEntries)) {
     return yield* bundleBuildError("validation", "The staged PGlite store is empty.");
   }
+  yield* Layer.build(
+    makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath, pgliteDataDir: O.some(pgliteDataDir) }))
+  ).pipe(
+    Effect.flatMap((context) =>
+      verifyDurableProjectionSnapshot(replay.bundle.projection).pipe(Effect.provide(context))
+    ),
+    Effect.scoped,
+    Effect.mapError((cause) =>
+      bundleBuildErrorWithCause(
+        "validation",
+        "The staged durable projection stores failed reopened content validation.",
+        cause
+      )
+    )
+  );
   return replay.receipt;
 });
 
@@ -508,18 +523,29 @@ const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(funct
   publicationRoot: string
 ) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   yield* ensurePublicationRootAbsent(publicationRoot);
+  const publishedContainer = path.join(
+    path.dirname(staging.container),
+    Str.replace(".staging-", ".payload-")(path.basename(staging.container))
+  );
   yield* fs
-    .rename(staging.container, publicationRoot)
+    .rename(staging.container, publishedContainer)
     .pipe(
       Effect.mapError((cause) =>
-        bundleBuildErrorWithCause(
-          "publish",
-          "The complete publication container could not be published atomically.",
-          cause
-        )
+        bundleBuildErrorWithCause("publish", "The validated publication container could not be finalized.", cause)
       )
     );
+  yield* fs.symlink(path.basename(publishedContainer), publicationRoot).pipe(
+    Effect.tapError(() => removeOwnedStaging(publishedContainer)),
+    Effect.mapError((cause) =>
+      bundleBuildErrorWithCause(
+        "publish",
+        "The complete publication container could not claim the write-once root atomically.",
+        cause
+      )
+    )
+  );
 });
 
 /**
@@ -528,7 +554,8 @@ const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(funct
  * **Details**
  *
  * Both final roots must be distinct children of one absent publication root. The operation
- * validates both children in one adjacent staging container, then publishes them with one rename.
+ * validates both children in one adjacent immutable container, then claims the final root with one
+ * atomic symlink creation that refuses every pre-existing file, directory, or link.
  *
  * **Example** (Inspect the returned Effect)
  *

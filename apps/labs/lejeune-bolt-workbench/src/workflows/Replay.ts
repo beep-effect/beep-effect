@@ -99,7 +99,7 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
  * console.log(typeof replayOffline === "function") // true
  * ```
  *
- * @category replay
+ * @category workflows
  * @since 0.0.0
  */
 export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (

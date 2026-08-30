@@ -36,7 +36,7 @@ const $I = $LejeuneBoltWorkbenchId.create("domain/Bundle");
 /** Stable immutable bundle contract revision. @category versions @since 0.0.0 */
 export const BUNDLE_VERSION = "lejeune-demo-bundle/v1";
 
-/** Fixed disposition date for the separately mounted mutable review corpus. @category retention @since 0.0.0 */
+/** Fixed disposition date for the separately mounted mutable review corpus. @category models @since 0.0.0 */
 export const MUTABLE_CORPUS_DISPOSITION_DATE = "2026-09-30";
 
 const RFQ_A_OUTLOOK_SOURCE_TEXT =
@@ -1217,7 +1217,7 @@ export class GoldenReplayReceipt extends S.Class<GoldenReplayReceipt>($I`GoldenR
  * console.log(RetentionAuthorization.fields.newDispositionDate !== undefined) // true
  * ```
  *
- * @category retention
+ * @category models
  * @since 0.0.0
  */
 const RetentionAuthorizationFields = S.Struct({
@@ -1317,7 +1317,7 @@ const MutableRetentionMetadataModel = MutableRetentionMetadataFields.mapFields(i
  * console.log(MutableRetentionMetadata.fields.dispositionDate !== undefined) // true
  * ```
  *
- * @category retention
+ * @category models
  * @since 0.0.0
  */
 export class MutableRetentionMetadata extends S.Class<MutableRetentionMetadata>($I`MutableRetentionMetadata`)(

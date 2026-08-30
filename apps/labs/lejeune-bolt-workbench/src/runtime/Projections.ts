@@ -36,6 +36,7 @@ const PgliteSyntheticRow = S.Struct({ id: S.String, kind: S.String, label: S.Str
 const DuckCountRow = S.Struct({ count: S.Finite });
 const DuckTextHitRow = S.Struct({ id: S.String });
 const DuckCitationRow = S.Struct({ url: S.String });
+const projectionSnapshotEquivalent = S.toEquivalence(ProjectionSnapshot);
 
 const createDuckDbFullTextProjection = [
   `CREATE TEMP TABLE fts_tokens AS
@@ -149,6 +150,44 @@ const decodeRows = <Schema extends S.Codec<unknown>>(stage: string, schema: Sche
     )
   );
 
+const readPgliteProjection = Effect.fnUntraced(function* () {
+  const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+  const quoteRows = yield* sql
+    .unsafe("SELECT id, quantity FROM quote_lines ORDER BY id")
+    .pipe(Effect.flatMap((rows) => decodeRows("pglite-quote-lines", S.Array(PgliteQuoteLineRow), rows)));
+  const ruleRows = yield* sql
+    .unsafe("SELECT case_id, rule_id, disposition FROM rule_results ORDER BY rule_id, case_id")
+    .pipe(Effect.flatMap((rows) => decodeRows("pglite-rules", S.Array(PgliteRuleRow), rows)));
+  const syntheticRows = yield* sql
+    .unsafe("SELECT id, kind, label, observed_at FROM synthetic_records ORDER BY id")
+    .pipe(Effect.flatMap((rows) => decodeRows("pglite-synthetic", S.Array(PgliteSyntheticRow), rows)));
+  return {
+    quoteLines: A.map(quoteRows, (row) => `${row.id}|${row.quantity}`),
+    ruleDispositions: A.map(ruleRows, (row) => `${row.rule_id}|${row.case_id}|${row.disposition}`),
+    syntheticRecords: A.map(syntheticRows, (row) => `${row.id}|${row.kind}|${row.label}|${row.observed_at}`),
+  };
+});
+
+const readDuckDbProjection = Effect.fnUntraced(function* () {
+  const duckdb = yield* DuckDb;
+  const countRows = yield* duckdb
+    .query("SELECT CAST(count(*) AS INTEGER) AS count FROM corpus_documents")
+    .pipe(Effect.flatMap((rows) => decodeRows("duckdb-count", S.NonEmptyArray(DuckCountRow), rows)));
+  const hitRows = yield* duckdb
+    .query("SELECT doc_id AS id FROM fts_bm25 WHERE term = 'a490' ORDER BY score DESC, doc_id")
+    .pipe(Effect.flatMap((rows) => decodeRows("duckdb-full-text", S.NonEmptyArray(DuckTextHitRow), rows)));
+  const citationRows = yield* duckdb
+    .query("SELECT url FROM rule_citations ORDER BY id")
+    .pipe(Effect.flatMap((rows) => decodeRows("duckdb-citations", S.NonEmptyArray(DuckCitationRow), rows)));
+  return {
+    citations: [
+      ...A.map(hitRows, (row) => `full-text:${row.id}`),
+      ...A.map(citationRows, (row) => `source:${row.url}`),
+    ],
+    documentCount: countRows[0].count,
+  };
+});
+
 const pgliteProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
   yield* sql.unsafe(
@@ -203,20 +242,7 @@ const pgliteProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
       ]),
     { concurrency: 1, discard: true }
   );
-  const quoteRows = yield* sql
-    .unsafe("SELECT id, quantity FROM quote_lines ORDER BY id")
-    .pipe(Effect.flatMap((rows) => decodeRows("pglite-quote-lines", S.Array(PgliteQuoteLineRow), rows)));
-  const ruleRows = yield* sql
-    .unsafe("SELECT case_id, rule_id, disposition FROM rule_results ORDER BY rule_id, case_id")
-    .pipe(Effect.flatMap((rows) => decodeRows("pglite-rules", S.Array(PgliteRuleRow), rows)));
-  const syntheticRows = yield* sql
-    .unsafe("SELECT id, kind, label, observed_at FROM synthetic_records ORDER BY id")
-    .pipe(Effect.flatMap((rows) => decodeRows("pglite-synthetic", S.Array(PgliteSyntheticRow), rows)));
-  return {
-    quoteLines: A.map(quoteRows, (row) => `${row.id}|${row.quantity}`),
-    ruleDispositions: A.map(ruleRows, (row) => `${row.rule_id}|${row.case_id}|${row.disposition}`),
-    syntheticRecords: A.map(syntheticRows, (row) => `${row.id}|${row.kind}|${row.label}|${row.observed_at}`),
-  };
+  return yield* readPgliteProjection();
 });
 
 const duckDbProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
@@ -241,22 +267,7 @@ const duckDbProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
     concurrency: 1,
     discard: true,
   });
-  const countRows = yield* duckdb
-    .query("SELECT CAST(count(*) AS INTEGER) AS count FROM corpus_documents")
-    .pipe(Effect.flatMap((rows) => decodeRows("duckdb-count", S.NonEmptyArray(DuckCountRow), rows)));
-  const hitRows = yield* duckdb
-    .query("SELECT doc_id AS id FROM fts_bm25 WHERE term = 'a490' ORDER BY score DESC, doc_id")
-    .pipe(Effect.flatMap((rows) => decodeRows("duckdb-full-text", S.NonEmptyArray(DuckTextHitRow), rows)));
-  const citationRows = yield* duckdb
-    .query("SELECT url FROM rule_citations ORDER BY id")
-    .pipe(Effect.flatMap((rows) => decodeRows("duckdb-citations", S.NonEmptyArray(DuckCitationRow), rows)));
-  return {
-    citations: [
-      ...A.map(hitRows, (row) => `full-text:${row.id}`),
-      ...A.map(citationRows, (row) => `source:${row.url}`),
-    ],
-    documentCount: countRows[0].count,
-  };
+  return yield* readDuckDbProjection();
 });
 
 const ontologyDataset = (rules: ReadonlyArray<RuleResult>): Rdf.Dataset =>
@@ -352,6 +363,52 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
       projectionError("snapshot", "validate", "The projection snapshot violated its fixed contract.", cause)
     )
   );
+});
+
+/**
+ * Reopen the durable projection stores and verify their query results against a committed snapshot.
+ *
+ * **Example** (Inspect the verification constructor)
+ *
+ * ```ts
+ * import { verifyDurableProjectionSnapshot } from "@/runtime/Projections"
+ *
+ * console.log(typeof verifyDurableProjectionSnapshot === "function") // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifyDurableProjectionSnapshot = Effect.fn("lejeune.projection.verify_durable")(function* (
+  expected: ProjectionSnapshot
+) {
+  const [pglite, duckdb] = yield* Effect.all(
+    [
+      readPgliteProjection().pipe(Effect.mapError((cause) => normalizeProjectionError("pglite", "query", cause))),
+      readDuckDbProjection().pipe(Effect.mapError((cause) => normalizeProjectionError("duckdb", "query", cause))),
+    ],
+    { concurrency: 2 }
+  );
+  const actual = yield* S.decodeUnknownEffect(ProjectionSnapshot)({
+    citations: duckdb.citations,
+    documentCount: duckdb.documentCount,
+    ontologyClasses: expected.ontologyClasses,
+    quoteLines: pglite.quoteLines,
+    ruleDispositions: pglite.ruleDispositions,
+    syntheticRecords: pglite.syntheticRecords,
+  }).pipe(
+    Effect.mapError((cause) =>
+      projectionError("snapshot", "validate", "A durable projection store violated the fixed contract.", cause)
+    )
+  );
+  if (!projectionSnapshotEquivalent(actual, expected)) {
+    return yield* projectionError(
+      "snapshot",
+      "validate",
+      "The reopened durable projection stores disagree with the committed bundle snapshot."
+    );
+  }
+  return actual;
 });
 
 /**
