@@ -29,18 +29,25 @@ findings. Census: all 161 manifests including the template are v2; 66 goal
 streams fold with fresh traces. Focused checks, package typecheck/lint, doctor,
 index, explore check, and the full 2,328-test repo-cli suite pass.
 
-## P3 — Yeet: PR to mergeable (IN PROGRESS)
+## P3 — Implementation delivery (COMPLETE BY D27 RECOVERY 2026-08-30)
 
-Publish the single PR and monitor until the implementation head is merge-ready
-with no unresolved review threads. Address every actionable review finding.
+PR #855 merged the implementation at
+`94c7966fa18c5482b6445b5f0ead558822ba866e`, and all 17 review threads were
+resolved. Its final hosted wave did not establish the packet's strict
+exact-head merge-readiness contract: Fallow Advisory Envelopes and Vercel were
+red, and Greptile produced no score. D27 preserves that gap and authorizes the
+separate recovery PR; P3 is terminal under that explicit exception, not by
+retroactive reinterpretation of #855.
 
-## P4 — Close (PENDING)
+## P4 — Close (COMPLETE 2026-08-30)
 
-After the implementation head proves merge-ready, write the `/reflect`
-closeout, mark this goal `completed-retained`, mark the parent exploration
-graduated for this wave, regenerate packet projections, and drive the final
-same-PR head back to merge-ready.
+The recovery PR repaired the public convention-preview runtime, proved a second
+preview empty, added the Codex closeout reflection, marked this goal
+`completed-retained`, and graduated the parent exploration for the candidate-6
+wave. The recovery head itself is accepted only through the current exact-head
+Yeet closeout contract.
 
 ## Current blockers
 
-None.
+None. Candidates 2–5 remain gated re-entry work in the parent exploration and
+are not owned by this closed goal.

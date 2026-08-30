@@ -4,17 +4,18 @@
     "id": "packet-convention-migration",
     "packetId": "goal-packet/v1:4e5241728af3683113e81ea4a35c101c589aa1a0b8a5921754f3f915d90b5a58",
     "title": "Packet Convention Migration",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-26",
-    "updated": "2026-08-26",
+    "updated": "2026-08-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/packet-convention-migration",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Repair forked packet streams and migrate the goal fleet onto the canonical v2 manifest and honest genesis convention.",
-  "statusNote": "P0-P2 are complete in the single packet-convention-migration PR; P3 is driving that implementation head through Yeet before the same-PR P4 closeout.",
+  "statusNote": "Implementation shipped in merged PR #855 at 94c7966fa18c, but its final head did not demonstrate strict Yeet merge readiness and merged before P4. D27 authorizes the separately Yeet-proven recovery PR that restores the public empty-preview command, reflection, lifecycle closeout, and parent graduation.",
   "executionCapable": true,
   "reflectionRequired": true,
+  "mergedPullRequest": 855,
   "provenance": {
     "exploration": "explorations/packet-system-redesign",
     "graduated": "2026-08-26"
@@ -23,7 +24,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "D27 recovery exception: implementation is retained in merged PR #855, while the separate PR carrying the missing reflection, lifecycle reconciliation, parent graduation, and canonical empty-preview repair must be driven to exact-head merge-ready via Yeet. This does not assert that PR #855 itself reached that state.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -52,8 +53,8 @@
     { "id": "P0", "name": "Research and rulings", "status": "complete" },
     { "id": "P1", "name": "Implement", "status": "complete" },
     { "id": "P2", "name": "Fleet apply and verify", "status": "complete" },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "in-progress" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "complete" },
+    { "id": "P4", "name": "Close", "status": "complete" }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/packet-convention-migration/GOAL.md)\" -le 4000",

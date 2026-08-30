@@ -196,3 +196,263 @@
   unit or get reviewer sign-off on `--write-baseline`," not "raise the
   percentage."
 - **Owner:** coverage-ratchet lane maintainers.
+
+## 2026-08-30 — Supplied checkout path omits the repository container directory
+
+- **What happened:** the P3 closeout session opened in the supplied
+  `YeeBois/project/beep-effect2` directory, where the packet was absent and Git
+  reported `not a git repository`. The live checkout was instead under the
+  sibling `YeeBois/projects/beep-effect2` path.
+- **Evidence:** reading `goals/packet-convention-migration/GOAL.md` failed with
+  `No such file or directory`, and `git status --short --branch` failed with
+  `fatal: not a git repository (or any parent up to mount point /)`.
+- **What would have prevented it:** resolve the requested packet relative to a
+  verified Git root before starting the task, or generate the session working
+  directory from the exact owning checkout rather than a hand-entered path.
+- **Disposition:** session-routing friction; work continued only in the
+  verified sibling checkout, without modifying the empty supplied directory.
+- **Owner:** session-launch and checkout-routing maintainers.
+
+## 2026-08-30 — Scheduler status usage requires an undocumented JSON flag
+
+- **What happened:** the operator-prescribed admission probe, `bun run beep
+  quality scheduler status`, failed before reporting lane ownership because
+  the live CLI requires `--json`.
+- **Evidence:** the command printed `ERROR Missing required flag: --json` and
+  exited with code 1, although the Yeet/operator guidance names the unflagged
+  command as the canonical human-readable status probe.
+- **What would have prevented it:** keep the human-readable default accepted,
+  or update the operator and Yeet guidance atomically when the JSON flag becomes
+  mandatory.
+- **Disposition:** CLI/documentation drift; use the explicit `--json` form for
+  the live scheduler snapshot.
+- **Owner:** quality scheduler CLI and Yeet guidance maintainers.
+
+## 2026-08-30 — Packet launcher requests a same-PR closeout after the PR merged
+
+- **What happened:** P3 was resumed with instructions to monitor the open
+  packet PR to merge-ready and then perform P4 on that same PR, but the live
+  repository has no open packet-convention PR. The implementation PR had
+  already merged while the packet remained marked P3 in progress.
+- **Evidence:** `gh pr list --state open` returned only unrelated PR #896;
+  `gh pr view 855` reports `state: MERGED`, head
+  `feat/packet-convention-migration`, merged on 2026-08-27, while
+  `goals/packet-convention-migration/PLAN.md` still says P3 is in progress and
+  P4 is pending.
+- **What would have prevented it:** make the same-PR closeout flip a blocking
+  pre-merge check, and have packet resume validate the referenced PR state
+  before presenting P3 as executable.
+- **Disposition:** closeout-state drift requiring an explicit recovery ruling;
+  a merged PR cannot accept the mandated P4 commit.
+- **Owner:** packet closeout and Yeet merge-gate maintainers.
+
+## 2026-08-30 — Merge protection allowed the packet PR past its declared closeout gates
+
+- **What happened:** the historical implementation PR was merged even though
+  its final head never reached the packet's declared exact-head merge-readiness
+  state. The later closeout session therefore cannot honestly infer P3 success
+  from the merged state alone.
+- **Evidence:** `gh pr checks 855` reports 28 terminal contexts with failures in
+  `Fallow Advisory Envelopes` and `Vercel – oip-web`; the terminal Greptile
+  context is neutral/skipped after an internal review error, so the final-head
+  score and issue count are unknown. The PR did nevertheless merge at head
+  `94c7966fa1`, and all 17 GraphQL review threads are resolved.
+- **What would have prevented it:** make the packet completion contract's
+  required checks and strict Greptile closeout branch-protection gates, and
+  require the same-PR lifecycle flip before merge is enabled.
+- **Disposition:** hosted policy gap; merged status is not a substitute for
+  terminal green checks and a scored review-bot verdict.
+- **Owner:** repository branch protection and Yeet closeout maintainers.
+
+## 2026-08-30 — Isolated recovery worktree cannot run the repo CLI before dependency linking
+
+- **What happened:** the dedicated closeout worktree was created from the
+  verified Git head, but its first scheduler probe could not load the repo CLI
+  because workspace dependencies were unavailable in that worktree.
+- **Evidence:** `bun run beep quality scheduler status --json` failed with
+  `Cannot find module '@beep/utils'` from the repo CLI entrypoint.
+- **What would have prevented it:** have the worktree bootstrap path link or
+  install the owning checkout's verified dependency tree before advertising the
+  worktree as command-ready, or make the scheduler probe available outside the
+  workspace dependency graph.
+- **Disposition:** worktree-bootstrap friction; reuse the existing verified
+  dependency tree before running packet checks.
+- **Owner:** worktree setup and quality scheduler maintainers.
+
+## 2026-08-30 — Post-merge hook runs before an isolated worktree is command-ready
+
+- **What happened:** fast-forwarding the newly attached recovery branch invoked
+  the repository's post-merge version-sync hook before the worktree dependency
+  link had been provisioned. The Git update completed, but its validation hook
+  could not execute.
+- **Evidence:** `git merge --ff-only origin/main` fast-forwarded successfully,
+  then `version-sync-check` failed with `Cannot find module '@beep/utils'` from
+  the repo CLI entrypoint. The same command surface worked after linking the
+  existing verified dependency tree.
+- **What would have prevented it:** provision worktree dependencies as part of
+  worktree creation, before any checkout/switch/merge operation capable of
+  firing repository hooks, or make the hook bootstrap-independent.
+- **Disposition:** worktree/hook ordering friction; rerun the affected
+  validation through the canonical quality path after provisioning.
+- **Owner:** worktree setup and Git-hook maintainers.
+
+## 2026-08-30 — Convention-migration preview cannot construct its PacketEventStore dependency
+
+- **What happened:** the recovery census invoked the packet's canonical second
+  preview to prove that no legacy convention work remained. The command failed
+  before reporting a plan because its runtime layer did not provide the packet
+  event store.
+- **Evidence:** `bun run beep goals migrate-conventions --preview` exited 1 with
+  `Service not found: @beep/repo-cli/commands/Goals/PacketCore/PacketEventStore/PacketEventStore`.
+  In the same checkout, `bun run beep goals set-status --migrate` completed and
+  still planned one manifest repair for `gov-legal-data-driver-delivery`.
+- **What would have prevented it:** exercise the registered CLI command through
+  a runtime-layer smoke test, and compose every PacketCore dependency into the
+  migration command's public provider before declaring the campaign reusable.
+- **Disposition:** repaired in the recovery branch by providing the shared
+  migration layer at the registered command boundary and adding a root-command
+  smoke test. The focused suite passes 60 tests, and the live second preview
+  now reports zero translations, seeds, issues, assumptions, or fleet findings.
+- **Owner:** Goals migration command and PacketCore layer maintainers.
+
+## 2026-08-30 — Reusing a checkout-wide dependency tree crosses worktree source boundaries
+
+- **What happened:** linking the parent checkout's complete `node_modules`
+  tree made the isolated worktree command-capable, but workspace-package links
+  inside that tree still targeted the parent checkout. A scoped repo-cli check
+  therefore compiled a mixture of recovery-worktree and parent-checkout source.
+- **Evidence:** `bunx turbo run check --filter=@beep/repo-cli` resolved
+  foundation source through the sibling `beep-effect2` checkout and failed an
+  unrelated `@beep/duckdb` dependency build on missing runtime types, while the
+  worktree's focused migration suite passed 60 tests.
+- **What would have prevented it:** bootstrap each worktree with a local frozen
+  install whose workspace links target that worktree; reserve a whole-tree
+  dependency symlink for read-only commands that cannot traverse workspace
+  package links.
+- **Disposition:** environment-only mixed-checkout proof failure; replace the
+  validated symlink with a worktree-local frozen install and rerun the scoped
+  check before attributing source failures.
+- **Owner:** worktree dependency-bootstrap maintainers.
+
+## 2026-08-30 — Fleet checks exit successfully while reporting acceptance findings
+
+- **What happened:** both fleet inspection commands completed with exit code 0
+  even though their reports still contained findings that block the packet's
+  literal zero-finding acceptance contract.
+- **Evidence:** `bun run beep explore --check` reported `findings=5`, and the
+  repaired `bun run beep goals migrate-conventions --preview` reported three
+  violation-severity unreachable references, while both processes exited 0.
+- **What would have prevented it:** make `--check` and preview return nonzero
+  when blocking or violation findings are present, or add an explicit
+  `--fail-on-findings` mode and use it in packet/CI acceptance.
+- **Disposition:** proof parsing hazard; this recovery validates the literal
+  report counts instead of treating process success as acceptance. After the
+  reconciliation, both commands report zero findings.
+- **Owner:** Explore check and Goals convention-migration CLI maintainers.
+
+## 2026-08-30 — Package verification exposes opaque failures in unrelated CLI command fixtures
+
+- **What happened:** the required full `@beep/repo-cli` package verifier passed
+  build, typecheck, lint setup, and 2,692 tests, but two agent-effectiveness
+  command tests failed without printing the underlying fixture command output.
+  Diagnosis showed their temp-directory helpers inherited a `TMPDIR` below the
+  user cache, which the production private-home-path scanner correctly rejects.
+- **Evidence:** `bun run beep quality package-verify @beep/repo-cli` reported
+  failures in `agent-effectiveness-command.test.ts` for `emits report-only
+  annotation check JSON` and `defaults Phoenix sync to dry-run JSON`; both
+  surfaced only `CliReportedExit` messages from the command boundary.
+- **What would have prevented it:** have command-fixture failures attach the
+  captured stdout/stderr and resolved fixture path to `CliReportedExit`, and
+  make privacy-sensitive test fixtures allocate below an explicit safe scratch
+  root instead of inheriting an arbitrary `TMPDIR`.
+- **Disposition:** reproduced unchanged on the clean current `origin/main`
+  checkout and isolated by unsetting `TMPDIR`, so it was an
+  environment-sensitive baseline fixture defect rather than a migration
+  regression. Both test-only helpers now allocate beneath `/tmp` with cleanup
+  unchanged; the CLI and AI-metrics suites pass 25/25 tests under both the
+  actual managed `TMPDIR` and an unset `TMPDIR`.
+- **Owner:** Agent Effectiveness command tests and package-verification
+  diagnostics maintainers.
+
+## 2026-08-30 — Lifecycle closeout left executable framing in the packet README
+
+- **What happened:** the goal launcher itself was converted to retained,
+  read-only regression guidance, but the packet README still labeled its
+  command block `Launch`, described `GOAL.md` as an execution launcher, and
+  called `PLAN.md` active.
+- **Evidence:** final-diff review found the stale labels in
+  `goals/packet-convention-migration/README.md` after the canonical lifecycle
+  had already become `completed-retained`.
+- **What would have prevented it:** make lifecycle closeout lint README
+  orientation language, not only the generated lifecycle line, and flag active
+  launcher or plan labels in retained packets.
+- **Disposition:** fixed in the recovery diff by relabeling the command as a
+  retained regression entry point and both documents as terminal/read-only
+  guidance.
+- **Owner:** packet closeout lint and README template maintainers.
+
+## 2026-08-30 — Dirty-worktree cheap gates miss a required product changeset
+
+- **What happened:** the edit-loop cheap-gate proof reported no changed product
+  workspaces, but the first authoritative staged publish committed the same
+  candidate and then failed because `@beep/repo-ai-metrics` lacked a changeset.
+- **Evidence:** before commit, `quality:changeset-status` printed
+  `product_workspaces=0`; during `yeet publish --staged-only --pr --monitor`, it
+  printed `product_workspaces=2` and `changed product workspaces missing an
+  in-range changeset: @beep/repo-ai-metrics`.
+- **What would have prevented it:** have dirty-worktree changeset detection
+  include staged and unstaged paths relative to the base, or make cheap-gates
+  reject an uncommitted candidate instead of returning an incomplete green
+  product-workspace census.
+- **Disposition:** publish stopped before push. The required AI-metrics patch
+  changeset was added and the unpushed recovery commit amended; re-run the
+  authoritative publish proof on the corrected head.
+- **Owner:** changeset-status and Yeet dirty-worktree preflight maintainers.
+
+## 2026-08-30 — Full coverage proof regresses untouched Yeet branch floors
+
+- **What happened:** the corrected committed-head Yeet proof passed every
+  preflight, build, lint, Effect/tsgo, unit, integration, JSDoc, and docgen lane,
+  but its repository CLI coverage shard measured two untouched Yeet internals
+  below their committed branch floors.
+- **Evidence:** `bun run beep yeet verify --collect-all` completed 28 of 29
+  lanes and failed only `quality:coverage`; the ratchet reported
+  `LaneProofReuse.ts` at `86.84 < 92.1` branches and `Planner.ts` at
+  `90.54 < 91.89`, although the CLI shard itself passed 143 test files and
+  2,689 tests plus 5 skips.
+- **What would have prevented it:** ensure per-file coverage floors are derived
+  from a deterministic test/worker configuration, and report whether a
+  regressed row belongs to the changed path set so unrelated baseline drift is
+  distinguishable from a candidate regression.
+- **Disposition:** diagnosed as deterministic inherited-environment drift: the
+  full proof injects lane-proof mode and base variables, so the nested coverage
+  run did not take the three default branches measured by direct baseline
+  generation. Tests now delete those ambient variables around default-contract
+  assertions. A focused coverage run under the injected environment observed
+  every repaired branch, so the higher committed floors remain intact.
+- **Owner:** coverage-ratchet and repository CLI test maintainers.
+
+## 2026-08-30 — Same-origin admission wait is reported as token backpressure
+
+- **What happened:** the repaired exact-head full proof remained first in the
+  admission queue even after available capacity was sufficient, because a
+  publish proof from another checkout of the same origin still held the
+  origin-wide proof lock. The wait message continued to describe machine-budget
+  backpressure instead of the actual same-origin serialization.
+- **Evidence:** `bun run beep quality scheduler status --json` showed capacity
+  recovering from 9 to 10 tokens with 5 active while the queued full proof
+  requested 3, yet `bun run beep yeet verify --collect-all` remained at
+  position 1 through 195 seconds. Both entries had the same `originKey`; the
+  holder was live for roughly 29 minutes, heartbeating, and executing the final
+  `ci local` test-tsgo process. The queued ticket nevertheless reported
+  `blockedOnOriginAtMillis: 0`.
+- **What would have prevented it:** surface the origin lock as an explicit
+  admission blocker in status and wait messages, populate its blocked-since
+  timestamp, and distinguish it from token or memory pressure. Reduce
+  origin-lock hold time by reusing exact-head proof lanes across the serialized
+  cheap-gates, pre-push, and CI-parity batteries where their contracts overlap.
+- **Disposition:** no dead or stale lease was found, so the active holder was
+  left untouched. The not-yet-admitted recovery ticket was canceled to record
+  this evidence before amending and requeueing the exact-head candidate.
+- **Owner:** Yeet admission scheduler, origin-lock observability, and publish
+  proof orchestration maintainers.

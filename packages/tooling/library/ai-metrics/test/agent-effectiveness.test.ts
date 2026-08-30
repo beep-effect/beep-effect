@@ -50,7 +50,7 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
   Effect.acquireUseRelease(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
+      return yield* fs.makeTempDirectory({ directory: "/tmp", prefix: "beep-agent-effectiveness-" });
     }),
     use,
     (tmpDir) =>

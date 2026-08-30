@@ -196,6 +196,18 @@ D25 fixes candidate 6's first slice as the fork-repair applier alone. D26
 supersedes D19's unexecuted docs-only leg and carries the rulings, campaign,
 migration, and closeout in one PR.
 
+## Candidate-6 closeout recovery (2026-08-30)
+
+Candidate 6 shipped its implementation in PR #855, but that PR merged before
+the D26 same-PR reflection and lifecycle closure and did not retain a strict
+final-head Yeet verdict. D27 authorizes one bounded recovery PR to repair and
+prove the canonical empty preview, record the reflection, close the goal, and
+graduate this exploration. D26 remains the historical delivery decision; D27
+supersedes only its now-impossible closeout mechanism.
+
+Sequencing step 3 is complete through that recovery. Candidates 2–5 remain
+gated and unchanged.
+
 ## Candidate Goal Packets
 
 | Order | Proposed slug | Mission | Dependencies | Live capability composition |
@@ -205,7 +217,7 @@ migration, and closeout in one PR.
 | 3 | `packet-projection-migration` (D6 navigation slice shipped 2026-08-27; goal not yet created) | Finish migrating packet control state onto the event fold and generated projections. Ship-velocity P5 already landed wholesale local ATLAS generation and marked README status regions with an explicit manifest-adoption boundary; this packet retains fleet stream adoption, the by-state tree, guarded exploration status writes, and the remaining ratchet. | `packet-control-plane-core`; `packet-convention-migration` must lift Amendment G's stream freeze before fleet event authority; design-gate fields from `packet-design-approval-gate` where tier requires them; KSA Workstream D projection contract. | Reuse the shipped `Explore/Atlas.ts` D3 projector, `packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts`, `Inventory.ts`, `Doctor.ts`, and KSA Workstream D's deterministic projector contract. REMAINING NET-NEW: fleet exploration event migration, by-state tree, golden/upcaster migration fixtures, guarded exploration writers, fork-repair flow, and the wider advisory-to-blocking ratchet. |
 | 4 | `packet-evidence-closure` (not yet created) | Make landed-versus-closed derivable: schema-valid digest-bound evidence receipts, proof-cache keys, systemic OPPORTUNITIES receipts/roll-up, and the four observational flow metrics. | `packet-control-plane-core`; projection consumers from `packet-projection-migration`; lands after the initial self-hosting slice exposes real friction. | Reuse docgen proof-manifest verification/memoization in `packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts` and `Local.ts`, the existing reflection/Yeet evidence surfaces, and per-packet `research/OPPORTUNITIES.md`. NET-NEW: canonical receipt schema, merged-commit subject sealing, landed/closed derivation, opportunity schema/roll-up/mechanical drafts, and approval-wait/parked-age/gate-wall-cache/amendment-rate projections. |
 | 5 | `packets-app-react-v2` (not yet created) | If daily use of KSA’s static v1 proves an interaction gap, ship a read-only React packets viewer over the same projector: pulse first, then kanban/DAG/roadmap/markdown drill-in, with scoped reproject push and ETag-poll fallback. | KSA Workstream D static self-contained HTML v1 must ship and daily-use evidence must identify a concrete interaction gap; `packet-projection-migration` supplies the shared projector and `sourceTip`. | Reuse the KSA projector contract and existing app Vite/portless conventions. NET-NEW: a packets app workspace, read-only React views, custom `packets:projection` HMR invalidation, ETag fallback, and visible source-tip/version/age staleness chrome. No write endpoint, drag-and-drop, or client-side frontier derivation. |
-| 6 | `packet-convention-migration` (created 2026-08-26) | Ship the single-packet fork-repair applier (Amendment G rung 0), then migrate every non-v2 goal manifest onto the canonical v2 convention through a translate-review-amend-rerun loop, lifting the `ops/events/` opt-in freeze. | `packet-control-plane-core` (closed); Amendment G's applier staging; Amendment E's genesis seeder and no-backfill law. | Reuse the shipped `planForkRepair` derivation, PacketCore fold/store/writer, and `beep explore --check`; extend the Goals CLI with actual-shape manifest translation, Violation/Warning severity, breaking/additive/cosmetic drift, fleet lint, and honest genesis seeding. |
+| 6 | `packet-convention-migration` (created 2026-08-26; closed under D27 2026-08-30) | Shipped the single-packet fork-repair applier (Amendment G rung 0), migrated every non-v2 goal manifest onto the canonical v2 convention through a translate-review-amend-rerun loop, and lifted the `ops/events/` opt-in freeze. | `packet-control-plane-core` (closed); Amendment G's applier staging; Amendment E's genesis seeder and no-backfill law. | Reused the shipped `planForkRepair` derivation, PacketCore fold/store/writer, and `beep explore --check`; extended the Goals CLI with actual-shape manifest translation, Violation/Warning severity, breaking/additive/cosmetic drift, fleet lint, and honest genesis seeding. Implementation PR #855 plus the D27 recovery are the retained evidence. |
 
 ## D5 Design-Gate Inventory
 
@@ -220,7 +232,7 @@ seeds; implementation may amend them only through the ratified amendment path.
 | `packet-projection-migration` (D6 navigation slice shipped; goal not yet created) | Extend the shipped Atlas/README projector into fleet event adoption and the Goals/Explore doctor/index surfaces; add migration/upcaster/golden-stream fixtures and the generated by-state tree; add the typed work-plan module and Goals-local sidecar renderer (Amendment H, D20) with render-and-diff migration fixtures. | Shipped: `ExplorationProjectionState`, `ExplorationProjection`, `ExplorationAtlasRow`, README generated regions. Remaining: `PacketProjector`, `PacketProjection`, `sourceTip`, `projectorVersion`, `PacketUpcaster`, `ForkRepairPlan`, `PacketByStateTree`, `PacketWorkPlan`, `WorkPlanStep`, `ResponsibleAgent`, `WorkPlanSidecar`, adoption/migration plan. |
 | `packet-evidence-closure` (not yet created) | Add receipt/closure/opportunity/metric modules under packet-core; extend Yeet/reflection evidence adapters and packet doctor projections; add per-packet opportunity-schema and fleet-roll-up fixtures. | `EvidenceSubject`, `EvidenceReceipt`, `ProofCacheKey`, `LandedState`, `ClosedState`, `OpportunityReceipt`, `FlowMetricSnapshot`, merged-commit seal verifier. |
 | `packets-app-react-v2` (not yet created) | Create the `packets` app under `apps/` (not yet created) through `bun run beep create-package` only after the gate fires; consume the shared projection JSON/API adapter; add pulse, secondary views, staleness chrome, scoped watch/HMR, ETag poll, and browser-QA fixtures. | `PacketProjectionClient`, `PacketPulseView`, `OperatorQueueView`, `PacketStaleness`, `packets:projection` event contract, scoped reproject service, ETag poll fallback. |
-| `packet-convention-migration` (created 2026-08-26) | Add a `Migration/` module beside PacketCore inside the Goals command tree; extend the Explore check with fleet-wide lint results; extend goal-manifest translation fixtures with actual legacy and half-migrated shapes; add applier, translator, seeder, and fleet-lint tests. Packet docs change only through the migration's deterministic output. | `PacketForkRepairApplier`, `ManifestTranslation`, `TranslationReport`, `TranslationAssumption`, `ManifestShapeProbe`, `MigrationSeverity`, `DriftClassification`, `FleetLintFinding`, `PacketGenesisSeed`. |
+| `packet-convention-migration` (closed under D27 2026-08-30) | Shipped a `Migration/` module beside PacketCore inside the Goals command tree; extended Explore check with fleet-wide lint results and goal-manifest translation fixtures with actual legacy and half-migrated shapes; added applier, translator, seeder, fleet-lint, and registered-command runtime tests. | `PacketForkRepairApplier`, `ManifestTranslation`, `TranslationReport`, `TranslationAssumption`, `ManifestShapeProbe`, `MigrationSeverity`, `DriftClassification`, `FleetLintFinding`, `PacketGenesisSeed`. |
 
 The React candidate’s exact home is the future `packets` app under `apps/` (not yet created), resolving D12’s deferred
 home question. That path is a proposal only: the app and goal do not yet exist,
@@ -256,14 +268,13 @@ than guessed telemetry.
 
 ## Sequencing
 
-**Status 2026-08-26 (Session B):** steps 1 and 2 are complete —
+**Status 2026-08-30 (D27 recovery):** steps 1–3 are complete —
 `packet-control-plane-core` shipped the core, self-hosted its own stream, and
 closed `completed-retained` through its guarded writer (#848, #850). D17
-inserts the fleet convention-migration campaign (candidate 6) ahead of step 3:
-the design gate and fleet migration both presuppose packets carrying streams,
-and the Amendment G opt-in freeze holds the fleet at the single pilot stream
-until candidate 6's repair applier ships. The numbered sequence below is
-preserved as the ratified record.
+inserted the fleet convention-migration campaign (candidate 6) ahead of the
+remaining gated packets. PR #855 shipped the migration; D27's bounded recovery
+closed the missed reflection/lifecycle leg and graduated this exploration.
+The numbered sequence below is preserved as the ratified record.
 
 **Projection update 2026-08-27:** ship-velocity P5 pulled D6's Atlas/README
 navigation slice forward without lifting Amendment G's fleet stream freeze.
@@ -278,9 +289,10 @@ This does not reorder candidate 6 ahead of the remaining candidate-3 work.
 2. **Self-hosting adoption slice.** Use the core in advisory mode on these
    graduated candidate goals, evolve `set-status` into the guarded writer,
    and project this campaign’s state without changing canonical authored prose.
-3. **Convention migration.** Prove the fork applier alone, then probe and
-   translate every non-v2 goal manifest, seed honest genesis events, and run
-   the fleet lint plus `beep explore --check` before the campaign closes.
+3. **Convention migration — complete under D27.** Proved the fork applier,
+   translated every non-v2 goal manifest, seeded honest genesis events, and
+   closed with an empty migration preview plus zero `beep explore --check`
+   findings.
 4. **Design approval and projection migration.** Add tiered DESIGN/approval
    gates, then migrate generated ATLAS and README status blocks under an
    advisory-to-blocking ratchet.

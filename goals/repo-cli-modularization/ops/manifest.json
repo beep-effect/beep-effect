@@ -5,7 +5,7 @@
     "title": "@beep/repo-cli Modularization",
     "status": "paused",
     "created": "2026-07-07",
-    "updated": "2026-07-08",
+    "updated": "2026-08-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-modularization",
@@ -130,8 +130,5 @@
     "statement": "Not achieved until the campaign branch ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --message -> monitor).",
     "grandfathered": false
   },
-  "statusNote": "Implementation waves and final local verification are complete, but delivery PR #339 was closed after overlapping standards work landed in #326. Resume for current-main reconciliation, authoritative proof, and a replacement delivery PR.",
-  "blockedBy": [
-    "No merged or mergeable delivery PR exists for the reconciled campaign work."
-  ]
+  "statusNote": "Implementation waves and final local verification are complete, but delivery PR #339 was closed after overlapping standards work landed in #326. Resume for current-main reconciliation, authoritative proof, and a replacement delivery PR. No merged or mergeable delivery PR exists for the reconciled campaign work."
 }
