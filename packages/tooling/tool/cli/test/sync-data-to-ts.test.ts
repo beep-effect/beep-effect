@@ -718,7 +718,7 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
 
       expect(courtVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
       expect(reporterVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
-    }, Effect.provide(NodeCrypto.layer))
+    }, provideScopedLayer(NodeCrypto.layer))
   );
 
   it.effect(
@@ -747,7 +747,7 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
         status: "active",
       });
       expect(retained).toMatchObject([{ id: current[0]?.id, status: "tombstone", successorId: null }]);
-    }, Effect.provide(NodeCrypto.layer))
+    }, provideScopedLayer(NodeCrypto.layer))
   );
 
   it.effect(
@@ -766,7 +766,7 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       );
 
       expect(error.message).toContain("hash collision");
-    })
+    }, provideScopedLayer(NodeCrypto.layer))
   );
 
   it("reads missing and checked-in vocabulary artifacts for identity reconciliation", () =>
@@ -795,11 +795,11 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
         const reporterRecords = yield* projectReporterVocabulary(reporters.reporters, []);
         yield* writeOutputFile(
           "packages/law-practice/domain/src/internal/generated/free-law-project/courts-vocabulary.data.json",
-          JSON.stringify({ records: courtRecords })
+          yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ records: courtRecords })
         );
         yield* writeOutputFile(
           "packages/law-practice/domain/src/internal/generated/free-law-project/reporters-vocabulary.data.json",
-          JSON.stringify({ records: reporterRecords })
+          yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ records: reporterRecords })
         );
 
         expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual(courtRecords);
