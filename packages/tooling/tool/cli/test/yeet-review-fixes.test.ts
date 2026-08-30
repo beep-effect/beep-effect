@@ -279,7 +279,7 @@ describe("yeet review fixes", () => {
         const resolveWithEnvironment = (environment: Readonly<Record<string, string>>) =>
           proofCoordinatorLockPath(repositoryIdentity).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
-            Effect.provide(FileSystem.layerNoop({}))
+            provideScopedLayer(FileSystem.layerNoop({}))
           );
         const fallbackPrefix = path.join(tmpdir(), "beep-yeet-proof-locks-");
         const configuredRoot = path.join(tmpdir(), "configured-yeet-runtime");

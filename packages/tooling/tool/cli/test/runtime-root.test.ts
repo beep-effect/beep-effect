@@ -1,6 +1,7 @@
 import { tmpdir, userInfo } from "node:os";
 import { admissionRootFor, perUserRuntimeRoot, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import { proofCoordinatorLockPath } from "@beep/repo-cli/test/Yeet";
+import { provideScopedLayer } from "@beep/test-utils";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
@@ -44,7 +45,7 @@ const fileAtRunUser = FileSystem.layerNoop({
 const resolveWith = (fileSystem: Layer.Layer<FileSystem.FileSystem>, environment: Readonly<Record<string, string>>) =>
   perUserRuntimeRoot().pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
-    Effect.provide(Layer.mergeAll(fileSystem, NodePath.layer))
+    provideScopedLayer(Layer.mergeAll(fileSystem, NodePath.layer))
   );
 
 describe("per-user runtime root", () => {
@@ -105,10 +106,10 @@ describe("per-user runtime root", () => {
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({ XDG_RUNTIME_DIR: "/configured/runtime" })
         ),
-        Effect.provide(FileSystem.layerNoop({}))
+        provideScopedLayer(FileSystem.layerNoop({}))
       );
       expect(lock.startsWith("/configured/runtime/beep-yeet-proof-locks-")).toBe(true);
       expect(lock).not.toContain("/beep/admit/");
-    }).pipe(Effect.provide(NodePath.layer))
+    }).pipe(provideScopedLayer(NodePath.layer))
   );
 });
