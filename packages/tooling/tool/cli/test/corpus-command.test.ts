@@ -15,6 +15,7 @@ import {
   decodeArchiveLedgerRecordJson,
   decodeCorpusProvenanceRecordJson,
   decodeTransformationLedgerRecordJson,
+  encodeArchiveLedgerRecordJson,
   encodeCorpusProvenanceRecordJson,
   encodeTransformationLedgerRecordJson,
   extractCorpus,
@@ -1865,6 +1866,56 @@ describe("corpus restoration preservation", () => {
         ).pipe(Effect.flip);
 
         expect(error.message).toContain("physical preservation payload");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects systematic seal and terminal-index corruption",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRestorationFixture();
+        yield* preserveRestorationArchive(restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 }));
+        const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
+        const originalLines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+        const records = yield* Effect.forEach(originalLines, decodeArchiveLedgerRecordJson);
+        const seal = A.findFirst(records, (record) => record.recordType === "archive-manifest-seal");
+        const terminal = A.findFirst(
+          records,
+          (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
+        );
+        if (O.isNone(seal) || O.isNone(terminal)) return yield* Effect.die("Expected sealed terminal fixture rows.");
+        const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
+        const withoutTerminal = A.filter(records, (record) => record !== terminal.value);
+        const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
+          withoutSeal,
+          A.append(records, seal.value),
+          A.append(A.prepend(withoutSeal, seal.value), terminal.value),
+          [...withoutSeal, terminal.value, seal.value],
+          withoutTerminal,
+          A.filter(records, (record) => record.recordType !== "inherited-loss"),
+        ];
+
+        yield* Effect.forEach(
+          variants,
+          (variant) =>
+            Effect.gen(function* () {
+              const encoded = yield* Effect.forEach(variant, encodeArchiveLedgerRecordJson);
+              yield* fs.writeFileString(manifestPath, `${A.join(encoded, "\n")}\n`);
+              const exit = yield* verifyRestorationArchive(
+                RestorationVerifyOptions.make({
+                  corpusRoot: fixture.corpusRoot,
+                  runLabel: "synthetic-restoration",
+                })
+              ).pipe(Effect.exit);
+              expect(exit).toMatchObject({ _tag: "Failure" });
+            }),
+          { discard: true }
+        );
       },
       Effect.scoped,
       provideTestLayer
