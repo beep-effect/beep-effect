@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const PROJECTION_REPEAT_RUNS = 20;
 
 const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.scoped(Layer.build(testLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
@@ -118,6 +119,11 @@ describe("exploration projections", () => {
           yield* fs.makeDirectory(path.join(root, "explorations", "_internal"), { recursive: true });
 
           const projection = yield* buildExplorationProjection(root);
+          const repeated = yield* Effect.forEach(
+            A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
+            () => buildExplorationProjection(root),
+            { concurrency: 1 }
+          );
 
           expect(projection.atlasContent).toContain("5 exploration packets.");
           expect(projection.atlasContent).toContain("## Active (2)");
@@ -126,6 +132,19 @@ describe("exploration projections", () => {
           expect(projection.atlasContent).toContain("## Underivable packets (1)");
           expect(projection.atlasContent).toContain("manifest-adoption");
           expect(projection.atlasContent.indexOf("[Alpha]")).toBeLessThan(projection.atlasContent.indexOf("[Zeta]"));
+          expect(A.every(repeated, (next) => next.atlasContent === projection.atlasContent)).toBe(true);
+          expect(
+            A.every(
+              repeated,
+              (next) =>
+                A.length(next.readmes) === A.length(projection.readmes) &&
+                A.every(
+                  A.zip(next.readmes, projection.readmes),
+                  ([nextReadme, firstReadme]) =>
+                    nextReadme.path === firstReadme.path && nextReadme.projected === firstReadme.projected
+                )
+            )
+          ).toBe(true);
           expect(projection.issues).toHaveLength(1);
           expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
 

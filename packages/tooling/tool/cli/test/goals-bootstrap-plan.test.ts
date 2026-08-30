@@ -36,6 +36,7 @@ const FIXTURES_ROOT = new URL("./fixtures/goals-plan", import.meta.url).pathname
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: Local golden regeneration is an explicit uncached test-authoring mode.
 const REGEN = Bun.env.REGEN_GOLDENS === "1";
 const PILOT_SLUG = "knowledge-surface-automation";
+const PROJECTION_REPEAT_RUNS = 20;
 
 const encodeGoalManifest = S.encodeUnknownEffect(GoalManifest);
 
@@ -390,11 +391,17 @@ describe("goals adopt --plan index parity", () => {
             (entry) => entry.path === `${snapshot.packetPath}/ops/manifest.json` && entry.action !== "preserve"
           );
           expect(A.length(manifestWrites)).toBe(0);
-          const first = yield* buildPortfolioIndexContent(repoRoot);
-          const second = yield* buildPortfolioIndexContent(repoRoot);
-          expect(second).toBe(first);
+          const generated = yield* Effect.forEach(
+            A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
+            () => buildPortfolioIndexContent(repoRoot),
+            { concurrency: 1 }
+          );
+          const first = A.head(generated);
+          expect(O.isSome(first)).toBe(true);
+          if (O.isNone(first)) return;
+          expect(A.every(generated, (content) => content === first.value)).toBe(true);
           const local = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`).pipe(Effect.option);
-          if (O.isSome(local)) expect(local.value).toBe(first);
+          if (O.isSome(local)) expect(local.value).toBe(first.value);
         })
       ),
     60_000

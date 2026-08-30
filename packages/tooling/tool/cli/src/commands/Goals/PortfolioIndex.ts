@@ -19,6 +19,7 @@ import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
 import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
@@ -224,7 +225,7 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
     );
   }
 
-  return renderPortfolioIndex(rows, invalid);
+  return renderPortfolioIndex(A.sort(rows, rowBySlug), A.sort(invalid, Order.String));
 });
 
 /**
@@ -244,9 +245,8 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
  * @since 0.0.0
  */
 export const writePortfolioIndex = Effect.fn("Goals.writePortfolioIndex")(function* () {
-  const fs = yield* FileSystem.FileSystem;
   const content = yield* buildPortfolioIndexContent();
-  yield* fs.writeFileString(PORTFOLIO_INDEX_PATH, content);
+  yield* writeContainedFileString(".", PORTFOLIO_INDEX_PATH, content);
   return content;
 });
 

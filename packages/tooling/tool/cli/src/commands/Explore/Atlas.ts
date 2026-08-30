@@ -27,6 +27,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { PacketSlug } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/PacketEventStore.ts";
 import { foldPacketEvents } from "../Goals/PacketCore/PacketFold.ts";
@@ -281,6 +282,14 @@ export class ExplorationProjection extends S.Class<ExplorationProjection>($I`Exp
 ) {}
 
 const rowOrder = Order.mapInput(Order.String, (row: ExplorationAtlasRow) => row.slug);
+const readmeOrder = Order.mapInput(Order.String, (readme: ExplorationReadmeProjection) => readme.path);
+const issueOrder = Order.combine(
+  Order.mapInput(Order.String, (issue: ExplorationProjectionIssue) => issue.slug),
+  Order.combine(
+    Order.mapInput(Order.String, (issue: ExplorationProjectionIssue) => issue.path),
+    Order.mapInput(Order.String, (issue: ExplorationProjectionIssue) => issue.detail)
+  )
+);
 const decodeManifest = S.decodeUnknownEffect(ExplorationManifest);
 const isExplorationStage = S.is(ExplorationStage);
 const isExplorationStatus = S.is(ExplorationStatus);
@@ -520,16 +529,17 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
   const store = yield* PacketEventStore;
   const root = repoRoot ?? (yield* findRepoRoot());
   const explorationsRoot = path.join(root, "explorations");
-  const entries = yield* fs.readDirectory(explorationsRoot);
+  const entries = pipe(
+    yield* fs.readDirectory(explorationsRoot),
+    A.filter((entry) => !Str.startsWith("_")(entry)),
+    A.sort(Order.String)
+  );
   let rows = A.empty<ExplorationAtlasRow>();
   let invalid = A.empty<string>();
   let issues = A.empty<ExplorationProjectionIssue>();
   let readmes = A.empty<ExplorationReadmeProjection>();
 
-  for (const slug of A.sort(
-    A.filter(entries, (entry) => !Str.startsWith("_")(entry)),
-    Order.String
-  )) {
+  for (const slug of entries) {
     const packetPath = path.join(explorationsRoot, slug);
     const stat = yield* fs.stat(packetPath).pipe(Effect.option);
     if (!O.exists(stat, (value) => value.type === "Directory")) continue;
@@ -606,7 +616,14 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
     );
   }
 
-  return ExplorationProjection.make({ root, atlasContent: renderExplorationAtlas(rows, invalid), readmes, issues });
+  const orderedRows = A.sort(rows, rowOrder);
+  const orderedInvalid = A.sort(invalid, Order.String);
+  return ExplorationProjection.make({
+    root,
+    atlasContent: renderExplorationAtlas(orderedRows, orderedInvalid),
+    readmes: A.sort(readmes, readmeOrder),
+    issues: A.sort(issues, issueOrder),
+  });
 });
 
 /**
@@ -664,14 +681,14 @@ export const explorationProjectionDriftPaths: {
   if (O.exists(localAtlas, (content) => content !== projection.atlasContent)) {
     paths = A.append(paths, EXPLORATION_ATLAS_PATH);
   }
-  for (const readme of projection.readmes) {
+  for (const readme of A.sort(projection.readmes, readmeOrder)) {
     if (readme.existing !== readme.projected) paths = A.append(paths, readme.path);
   }
-  return paths;
+  return A.sort(paths, Order.String);
 });
 
 const projectionIssueLines = (projection: ExplorationProjection): ReadonlyArray<string> =>
-  A.map(projection.issues, (issue) => `${issue.path}: ${issue.detail}`);
+  A.map(A.sort(projection.issues, issueOrder), (issue) => `${issue.path}: ${issue.detail}`);
 
 const refuseIssues = (projection: ExplorationProjection) =>
   failWithReportedExit(
@@ -702,12 +719,17 @@ const refuseIssues = (projection: ExplorationProjection) =>
  * @since 0.0.0
  */
 export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(function* () {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const projection = yield* buildExplorationProjection();
   if (A.isReadonlyArrayNonEmpty(projection.issues)) return yield* refuseIssues(projection);
-  yield* fs.writeFileString(path.join(projection.root, EXPLORATION_ATLAS_PATH), projection.atlasContent);
-  for (const readme of projection.readmes) yield* fs.writeFileString(readme.path, readme.projected);
+  yield* writeContainedFileString(
+    projection.root,
+    path.join(projection.root, EXPLORATION_ATLAS_PATH),
+    projection.atlasContent
+  );
+  for (const readme of projection.readmes) {
+    yield* writeContainedFileString(projection.root, readme.path, readme.projected);
+  }
   return projection.atlasContent;
 });
 
