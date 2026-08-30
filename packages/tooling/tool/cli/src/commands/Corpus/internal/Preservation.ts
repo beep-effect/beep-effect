@@ -1311,25 +1311,13 @@ const refreshApprovedPreflight = Effect.fn("Preservation.refreshApprovedPrefligh
   approved: ApprovedCapacityPreflight
 ): Effect.fn.Return<ApprovedCapacityPreflight, PreservationCommandError, PreservationRequirements> {
   const current = yield* measureCapacityForFiles(options, files);
-  if (!Str.Equivalence(approved.measurement.sourceRoot, current.sourceRoot)) {
-    return yield* PreservationPreflightUnapprovedError.make({
-      message: "The approved preflight belongs to a different canonical T7 source root; run preflight again.",
-    });
-  }
-  if (current.requiredBytes > approved.ceilingBytes) {
-    return yield* PreservationCeilingExceededError.make({
-      ceilingBytes: approved.ceilingBytes,
-      measuredBytes: current.requiredBytes,
-      message: "The current preservation requirement exceeds the approved ceiling.",
-    });
-  }
-  if (current.requiredBytes > current.destFreeBytes) {
-    return yield* PreservationCeilingExceededError.make({
-      ceilingBytes: current.destFreeBytes,
-      measuredBytes: current.requiredBytes,
-      message: "The current destination free space is smaller than the preservation requirement.",
-    });
-  }
+  yield* validateRefreshedCapacityForTesting(
+    approved.measurement.sourceRoot,
+    current.sourceRoot,
+    current.requiredBytes,
+    approved.ceilingBytes,
+    current.destFreeBytes
+  );
   const refreshed = CapacityPreflight.cases.approved.make({
     approvedAt: approved.approvedAt,
     approvedBy: approved.approvedBy,
@@ -1339,6 +1327,35 @@ const refreshApprovedPreflight = Effect.fn("Preservation.refreshApprovedPrefligh
   });
   yield* writePreflight(options.corpusRoot, refreshed);
   return refreshed;
+});
+
+/** @category Testing */
+export const validateRefreshedCapacityForTesting = Effect.fnUntraced(function* (
+  approvedSourceRoot: string,
+  currentSourceRoot: string,
+  currentRequiredBytes: number,
+  ceilingBytes: number,
+  destFreeBytes: number
+) {
+  if (!Str.Equivalence(approvedSourceRoot, currentSourceRoot)) {
+    return yield* PreservationPreflightUnapprovedError.make({
+      message: "The approved preflight belongs to a different canonical T7 source root; run preflight again.",
+    });
+  }
+  if (currentRequiredBytes > ceilingBytes) {
+    return yield* PreservationCeilingExceededError.make({
+      ceilingBytes: NonNegativeInt.make(ceilingBytes),
+      measuredBytes: NonNegativeInt.make(currentRequiredBytes),
+      message: "The current preservation requirement exceeds the approved ceiling.",
+    });
+  }
+  if (currentRequiredBytes > destFreeBytes) {
+    return yield* PreservationCeilingExceededError.make({
+      ceilingBytes: NonNegativeInt.make(destFreeBytes),
+      measuredBytes: NonNegativeInt.make(currentRequiredBytes),
+      message: "The current destination free space is smaller than the preservation requirement.",
+    });
+  }
 });
 
 const readCorpusLedger = Effect.fn("Preservation.readCorpusLedger")(function* (
@@ -1401,6 +1418,28 @@ type PreservationCapacityBudget = {
   readonly requiredBytes: MutableRef.MutableRef<number>;
 };
 
+/** @category Testing */
+export const validateCopyTimeCapacityForTesting = Effect.fnUntraced(function* (
+  nextRequiredBytes: number,
+  ceilingBytes: number,
+  destFreeBytes: number
+) {
+  if (nextRequiredBytes > ceilingBytes) {
+    return yield* PreservationCeilingExceededError.make({
+      ceilingBytes: NonNegativeInt.make(ceilingBytes),
+      measuredBytes: NonNegativeInt.make(nextRequiredBytes),
+      message: "Copy-time source growth exceeds the approved preservation ceiling.",
+    });
+  }
+  if (nextRequiredBytes > destFreeBytes) {
+    return yield* PreservationCeilingExceededError.make({
+      ceilingBytes: NonNegativeInt.make(destFreeBytes),
+      measuredBytes: NonNegativeInt.make(nextRequiredBytes),
+      message: "Copy-time source growth exceeds the measured destination free space.",
+    });
+  }
+});
+
 const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal")(function* (
   writer: ArchiveWriterShape,
   manifest: PreservationManifestStoreShape,
@@ -1427,20 +1466,7 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
     );
     const attemptIdentity = O.getOrElse(currentIdentity, () => identity);
     const nextRequiredBytes = MutableRef.get(capacity.requiredBytes) - accountedSizeBytes + attemptIdentity.sizeBytes;
-    if (nextRequiredBytes > capacity.ceilingBytes) {
-      return yield* PreservationCeilingExceededError.make({
-        ceilingBytes: NonNegativeInt.make(capacity.ceilingBytes),
-        measuredBytes: NonNegativeInt.make(nextRequiredBytes),
-        message: "Copy-time source growth exceeds the approved preservation ceiling.",
-      });
-    }
-    if (nextRequiredBytes > capacity.destFreeBytes) {
-      return yield* PreservationCeilingExceededError.make({
-        ceilingBytes: NonNegativeInt.make(capacity.destFreeBytes),
-        measuredBytes: NonNegativeInt.make(nextRequiredBytes),
-        message: "Copy-time source growth exceeds the measured destination free space.",
-      });
-    }
+    yield* validateCopyTimeCapacityForTesting(nextRequiredBytes, capacity.ceilingBytes, capacity.destFreeBytes);
     MutableRef.set(capacity.requiredBytes, nextRequiredBytes);
     accountedSizeBytes = attemptIdentity.sizeBytes;
     const outcome = yield* writer.archiveObject(sourceAbs, destAbs, attemptIdentity);

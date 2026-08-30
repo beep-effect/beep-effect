@@ -394,6 +394,9 @@ const decodeProvenanceLines = Effect.fn("CorpusCommandService.decodeProvenanceLi
   return A.filter(records, isCorpusProvenanceRecord);
 });
 
+/** @category Testing */
+export const decodeProvenanceLinesForTesting = decodeProvenanceLines;
+
 const baseCatalogRunLabel = "base";
 
 class CatalogManifest extends S.Class<CatalogManifest>($I`CatalogManifest`)(

@@ -32,7 +32,10 @@ import {
 import {
   preflightT7PreservationImpl,
   runT7PreservationImpl,
+  validateCopyTimeCapacityForTesting,
+  validateRefreshedCapacityForTesting,
 } from "@beep/repo-cli/commands/Corpus/internal/Preservation";
+import { decodeProvenanceLinesForTesting } from "@beep/repo-cli/commands/Corpus/internal/ServicePrograms";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
@@ -126,6 +129,21 @@ const serviceLayer = (
   ).pipe(Layer.provideMerge(NodeServices.layer));
 
 describe("T7 corpus preservation", () => {
+  it.effect("validates refreshed roots and copy-time destination capacity", () =>
+    Effect.gen(function* () {
+      const rootMismatch = yield* validateRefreshedCapacityForTesting("/approved", "/current", 1, 1, 1).pipe(
+        Effect.flip
+      );
+      expect(rootMismatch._tag).toBe("PreservationPreflightUnapprovedError");
+
+      const destinationExceeded = yield* validateCopyTimeCapacityForTesting(4, 5, 3).pipe(Effect.flip);
+      expect(destinationExceeded._tag).toBe("PreservationCeilingExceededError");
+      if (destinationExceeded._tag === "PreservationCeilingExceededError") {
+        expect(destinationExceeded.ceilingBytes).toBe(3);
+        expect(destinationExceeded.measuredBytes).toBe(4);
+      }
+    })
+  );
   it.effect("refuses missing, unapproved, and undersized capacity preflights", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -990,7 +1008,9 @@ describe("T7 corpus preservation", () => {
         });
         const stream = yield* Effect.forEach([legacy, archive], CorpusLedgerRecordJson.encode);
         const decoded = yield* Effect.forEach(stream, CorpusLedgerRecordJson.decode);
+        const provenanceOnly = yield* decodeProvenanceLinesForTesting(`${A.join(stream, "\n")}\n`);
         expect(decoded).toEqual([legacy, archive]);
+        expect(provenanceOnly).toEqual([legacy]);
       })
     )
   );
