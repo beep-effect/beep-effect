@@ -29,6 +29,10 @@ import {
   T7PreservationOptions,
   verifyT7Preservation,
 } from "@beep/repo-cli/commands/Corpus";
+import {
+  preflightT7PreservationImpl,
+  runT7PreservationImpl,
+} from "@beep/repo-cli/commands/Corpus/internal/Preservation";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
@@ -40,7 +44,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { ChildProcessSpawner } from "effect/unstable/process";
-import { preflightT7PreservationImpl, runT7PreservationImpl } from "../src/commands/Corpus/internal/Preservation.ts";
 
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedLossRow));
