@@ -19,7 +19,7 @@ default-branch reusable workflow and selected organization runner group.
 Scope includes runner-group admission, bootstrap identity, launch and AMI
 configuration, integrity checks, red-team gates, teardown, sanitized evidence,
 and exact-ID closure. It excludes hosted-heavy-lane migration, fleet
-performance work, retained-packet changes, accepted risk, and unrelated CI.
+performance work, accepted risk, and unrelated CI.
 
 Execution:
 
@@ -47,17 +47,16 @@ Execution:
    `32893112867` passed Gates A through M (concurrent JIT replay rejected),
    `AMI_PIN`, live `METADATA_DISABLED`, scoped deregistration, and EC2
    teardown. Post-release replay is untested: SPEC exception E1.
-6. P5 merge gate: complete. Each remediation PR (#796, #800, #805, #808,
-   #814) merged with operator authority before its findings were closed.
-7. P6 and P7: complete 2026-08-25. The six exact IDs are closed as Already
-   fixed (`ops/closures.json`); the reflection is under `history/`.
+6. P5-P7: complete 2026-08-25. The remediation PRs merged before the six
+   exact IDs closed; `ops/closures.json` and `history/` retain the evidence.
+8. P8 Post-release JIT containment: pending. Remove the readable configuration
+   before job privilege can recover it, or prove rejection after the original
+   listener ends from both the original and a second host. Never log the value.
 
-The packet is completed-retained; reopen only for a new operator decision or
-a fleet change that invalidates the deployed proof.
+The packet is active until P8 satisfies the previously unmet acceptance item.
 
-Acceptance requires every `SPEC.md` criterion, the grill record, deployment
-evidence, no usable workload credential path, exact-head proof, and exact-ID
-dashboard reconciliation. Run every manifest command.
+Acceptance requires every `SPEC.md` criterion, no usable workload credential
+path, exact-head proof, and every manifest command.
 
 On rollout failure, stop new admission, drain, and terminate candidates. Heavy
 lanes queue. Do not reroute to hosted runners. Prior launch-template and AMI
@@ -68,5 +67,5 @@ Stop on missing authority, failed integrity or security proof, a credential
 path reachable by job privilege, a hosted-heavy-lane proposal, or fleet-packet
 ownership collision.
 
-Done: deployed proof, green checks, zero review threads, merges, exact-ID
-closure, and a valid reflection are retained.
+Done: P8 live proof, green checks, zero review threads, merge, updated
+lifecycle, and a valid closeout reflection are retained.

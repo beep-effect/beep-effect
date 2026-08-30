@@ -471,3 +471,43 @@ archived observation rows (mechanical parked-run-2), the seat round, TAXONOMY, a
 - Alias rulings folded into the builder: QualityScheduler schema spellings
   (FullProofWork/MergedPreviewWork/PublishWork/ReviewFixWork) are the accepted
   AdmissionWorkKind leaves; TierCiMergeGreen is parked AssuranceTier vocabulary.
+
+## 2026-08-30 — S5 sitting 4 (seat-round ratification; taxonomy RATIFIED)
+
+Seat round: four codex assembly lanes + grok blinded + codex adversary over the 33
+accepted terms and 27 constraints. The blinded seat independently reproduced the
+IDENTICAL term set (39/39, zero membership divergence) with three field divergences;
+the adversary returned 21 PASS / 19 FAIL / 8 INDETERMINATE, validity-audited: the
+FAILs were genuine fidelity/category findings, the INDETERMINATEs restate the §4b
+flagged identity obligations. Rulings:
+
+- **4a — both contested subsumption edges DROPPED** (ScheduleProposal ↛
+  VerificationPlanSpecification, VerificationEvidence ↛ VerificationResultArtifact):
+  blinded and adversary independently concur against assembly; re-proposable at
+  run 2/S8 with identity evidence.
+- **4b — rigidity dropped on instance records** (class-level OntoClean notion);
+  **HardFloorException re-ruled parked-run-2** — its leaf join onto the
+  StarvationException SITUATION class was a domain-name-normalization artifact
+  (classifier value ≠ situation instance).
+- **4c — lane placements stand flagged**: FallowAuditLane and FallowHealthLane stay
+  instance_of WorkUnitSpecification with placement_pending_ratification; run 2
+  carries the named obligation to ratify VerificationLane and re-place them.
+- **4d — closing bundle approved**: members' own ratified identity cards
+  (ic:turbo-cache:020/021/022); domain-membership identity basis on the worksheet
+  leaves; boundary-faithful measurement parameter ranges (AdmissionSnapshot
+  pre-grant / observation boundaries); publish's reserved+uninstantiated status
+  annotations; four constraints waived to run 2 (parked-vocabulary discharge);
+  the 8 INDETERMINATEs acknowledged as flagged obligations; PublishPriority and
+  VerifyPriority excluded (S6 A-Box enumerates the deployed LiteralKit).
+
+(Clarifying supersession: the design-grill phrase "all 89 literal-domain members
+appear as leaf records" is bounded by these sittings — 1a/4b parked the 80 members
+of unratified domains, so the leaf rule covers ACCEPTED members only; the contract
+text is amended accordingly.)
+
+**TAXONOMY RATIFIED at 38 terms** (gate 0 blockers / 0 warns, all 27 constraints
+bound or reason-waived). `apply_s5_dispositions.py` projected the rulings:
+CANDIDATES 32 accepted / 2 merged / 1 deferred-s6 / 139 rejected / 163 parked;
+FACTS 4 accepted / 7 deferred / 206 parked / 821 rejected; LEDGER 27/76/1. The
+s4-lane-contract §5 completion predicate holds: nothing candidate/open remains.
+S5 IS COMPLETE. Next stage: S6 A-Box ratification & predicates.

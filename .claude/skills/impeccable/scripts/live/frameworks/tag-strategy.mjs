@@ -13,20 +13,16 @@
  * extension or a project shape.
  */
 
-import { buildLiveScriptSrc } from "./script-src.mjs";
+import { buildLiveScriptSrc } from './script-src.mjs';
 
-export const MARKER_OPEN_TEXT = "impeccable-live-start";
-export const MARKER_CLOSE_TEXT = "impeccable-live-end";
+export const MARKER_OPEN_TEXT = 'impeccable-live-start';
+export const MARKER_CLOSE_TEXT = 'impeccable-live-end';
 
 /** Markers that identify a file as still carrying our tag-strategy patch. */
-export const TAG_PATCH_MARKERS = Object.freeze([MARKER_OPEN_TEXT, "data-impeccable-csp-original"]);
+export const TAG_PATCH_MARKERS = Object.freeze([MARKER_OPEN_TEXT, 'data-impeccable-csp-original']);
 
-function commentOpen(syntax) {
-  return syntax === "jsx" ? "{/*" : "<!--";
-}
-function commentClose(syntax) {
-  return syntax === "jsx" ? "*/}" : "-->";
-}
+function commentOpen(syntax) { return syntax === 'jsx' ? '{/*' : '<!--'; }
+function commentClose(syntax) { return syntax === 'jsx' ? '*/}' : '-->'; }
 
 /**
  * `scriptAttrs` is a pre-rendered attribute string (trailing space included)
@@ -35,48 +31,34 @@ function commentClose(syntax) {
  * src to its own bundled URL, so `is:inline ` opts out and the literal external
  * src survives.
  */
-export function buildTagBlock(syntax, port, token, scriptAttrs = "") {
+export function buildTagBlock(syntax, port, token, scriptAttrs = '') {
   const open = commentOpen(syntax);
   const close = commentClose(syntax);
   return (
-    open +
-    " " +
-    MARKER_OPEN_TEXT +
-    " " +
-    close +
-    "\n" +
-    "<script " +
-    scriptAttrs +
-    'src="' +
-    buildLiveScriptSrc(port, token) +
-    '"></script>\n' +
-    open +
-    " " +
-    MARKER_CLOSE_TEXT +
-    " " +
-    close +
-    "\n"
+    open + ' ' + MARKER_OPEN_TEXT + ' ' + close + '\n' +
+    '<script ' + scriptAttrs + 'src="' + buildLiveScriptSrc(port, token) + '"></script>\n' +
+    open + ' ' + MARKER_CLOSE_TEXT + ' ' + close + '\n'
   );
 }
 
 function detectLineEnding(content) {
-  if (content.includes("\r\n")) return "\r\n";
-  if (content.includes("\r")) return "\r";
-  return "\n";
+  if (content.includes('\r\n')) return '\r\n';
+  if (content.includes('\r')) return '\r';
+  return '\n';
 }
 
 function normalizeLineEndings(content, lineEnding) {
-  return lineEnding === "\n" ? content : content.replace(/\n/g, lineEnding);
+  return lineEnding === '\n' ? content : content.replace(/\n/g, lineEnding);
 }
 
 function readLineEndingAt(content, index) {
-  if (content[index] === "\r" && content[index + 1] === "\n") return "\r\n";
-  if (content[index] === "\n") return "\n";
-  if (content[index] === "\r") return "\r";
-  return "";
+  if (content[index] === '\r' && content[index + 1] === '\n') return '\r\n';
+  if (content[index] === '\n') return '\n';
+  if (content[index] === '\r') return '\r';
+  return '';
 }
 
-export function insertTag(content, config, port, token, scriptAttrs = "") {
+export function insertTag(content, config, port, token, scriptAttrs = '') {
   const lineEnding = detectLineEnding(content);
   const block = normalizeLineEndings(buildTagBlock(config.commentSyntax, port, token, scriptAttrs), lineEnding);
   // insertBefore: match the LAST occurrence. Anchors like `</body>` naturally
@@ -124,9 +106,9 @@ export function removeTag(content, _syntax) {
     let next = content;
     do {
       content = next;
-      next = content.replace(pat, (_match, leadingIndent, trailing = "") => {
+      next = content.replace(pat, (_match, leadingIndent, trailing = '') => {
         if (/[\r\n]/.test(trailing)) return leadingIndent;
-        return leadingIndent || trailing || "";
+        return leadingIndent || trailing || '';
       });
       if (next !== content) changed = true;
     } while (next !== content);
@@ -155,7 +137,7 @@ export function removeTag(content, _syntax) {
 // Only the in-source meta-tag form gets the auto-patch.
 // ---------------------------------------------------------------------------
 
-const CSP_MARKER_ATTR = "data-impeccable-csp-original";
+const CSP_MARKER_ATTR = 'data-impeccable-csp-original';
 
 function findCspMetaTags(content) {
   const out = [];
@@ -170,23 +152,23 @@ function findCspMetaTags(content) {
 }
 
 function getAttr(attrs, name) {
-  const re = new RegExp(`\\b${name}\\s*=\\s*(['"])([\\s\\S]*?)\\1`, "i");
+  const re = new RegExp(`\\b${name}\\s*=\\s*(['"])([\\s\\S]*?)\\1`, 'i');
   const m = attrs.match(re);
   return m ? { quote: m[1], value: m[2], full: m[0] } : null;
 }
 
 function appendOriginToDirective(csp, directive, origin) {
-  const re = new RegExp(`(^|;)(\\s*)(${directive})\\s+([^;]*)`, "i");
+  const re = new RegExp(`(^|;)(\\s*)(${directive})\\s+([^;]*)`, 'i');
   const m = csp.match(re);
   if (m) {
     const tokens = m[4].trim().split(/\s+/);
     if (tokens.includes(origin)) return csp;
-    return csp.replace(re, `${m[1]}${m[2]}${m[3]} ${[...tokens, origin].join(" ")}`);
+    return csp.replace(re, `${m[1]}${m[2]}${m[3]} ${[...tokens, origin].join(' ')}`);
   }
   // Directive missing — add it. Use 'self' + origin so we don't inadvertently
   // narrow the policy compared to the default-src fallback (most users with
   // an explicit CSP have 'self' there).
-  return csp.trim().replace(/;?\s*$/, "") + `; ${directive} 'self' ${origin}`;
+  return csp.trim().replace(/;?\s*$/, '') + `; ${directive} 'self' ${origin}`;
 }
 
 export function patchCspMeta(content, port) {
@@ -200,21 +182,21 @@ export function patchCspMeta(content, port) {
     const tag = tags[i];
     const attrs = tag.attrs;
     if (getAttr(attrs, CSP_MARKER_ATTR)) continue; // already patched
-    const contentAttr = getAttr(attrs, "content");
+    const contentAttr = getAttr(attrs, 'content');
     if (!contentAttr) continue;
 
     const original = contentAttr.value;
     let patched = original;
-    patched = appendOriginToDirective(patched, "script-src", origin);
-    patched = appendOriginToDirective(patched, "connect-src", origin);
+    patched = appendOriginToDirective(patched, 'script-src', origin);
+    patched = appendOriginToDirective(patched, 'connect-src', origin);
     // The shader overlay during 'generating' creates a screenshot via
     // URL.createObjectURL, producing a `blob:` URL — img-src 'self' rejects
     // those. Add `blob:` so the overlay doesn't throw a CSP violation.
-    patched = appendOriginToDirective(patched, "img-src", "blob:");
+    patched = appendOriginToDirective(patched, 'img-src', 'blob:');
     if (patched === original) continue;
 
     const newContentAttr = `content=${contentAttr.quote}${patched}${contentAttr.quote}`;
-    const marker = `${CSP_MARKER_ATTR}="${Buffer.from(original, "utf-8").toString("base64")}"`;
+    const marker = `${CSP_MARKER_ATTR}="${Buffer.from(original, 'utf-8').toString('base64')}"`;
     // The tagRe captures any whitespace between the last attribute and the
     // closing `/>` as part of `attrs`. Naively appending ` ${marker}` after
     // a replace would land it BEFORE that trailing space, leaving a double
@@ -222,9 +204,9 @@ export function patchCspMeta(content, port) {
     // the trailing whitespace, splice the marker into the attribute body,
     // and re-append the original trailing whitespace so a self-closing
     // `<meta … />` round-trips byte-for-byte.
-    const trailingWs = (attrs.match(/[ \t]*$/) || [""])[0];
+    const trailingWs = (attrs.match(/[ \t]*$/) || [''])[0];
     const attrsBody = attrs.slice(0, attrs.length - trailingWs.length);
-    const newAttrs = attrsBody.replace(contentAttr.full, newContentAttr) + " " + marker + trailingWs;
+    const newAttrs = attrsBody.replace(contentAttr.full, newContentAttr) + ' ' + marker + trailingWs;
     const newTag = tag.full.replace(attrs, newAttrs);
 
     result = result.slice(0, tag.start) + newTag + result.slice(tag.end);
@@ -241,20 +223,17 @@ export function revertCspMeta(content) {
     const tag = tags[i];
     const origAttr = getAttr(tag.attrs, CSP_MARKER_ATTR);
     if (!origAttr) continue;
-    const contentAttr = getAttr(tag.attrs, "content");
+    const contentAttr = getAttr(tag.attrs, 'content');
     if (!contentAttr) continue;
 
     let originalValue;
-    try {
-      originalValue = Buffer.from(origAttr.value, "base64").toString("utf-8");
-    } catch {
-      continue;
-    }
+    try { originalValue = Buffer.from(origAttr.value, 'base64').toString('utf-8'); }
+    catch { continue; }
 
     const newContentAttr = `content=${contentAttr.quote}${originalValue}${contentAttr.quote}`;
     let newAttrs = tag.attrs.replace(contentAttr.full, newContentAttr);
     // Drop the marker attribute and any single space immediately preceding it.
-    newAttrs = newAttrs.replace(new RegExp(`\\s*${origAttr.full}`), "");
+    newAttrs = newAttrs.replace(new RegExp(`\\s*${origAttr.full}`), '');
     const newTag = tag.full.replace(tag.attrs, newAttrs);
 
     result = result.slice(0, tag.start) + newTag + result.slice(tag.end);

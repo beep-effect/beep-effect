@@ -750,6 +750,12 @@
         ]
       },
       {
+        "name": "@beep/todox",
+        "patterns": [
+          "apps/todox/src/**"
+        ]
+      },
+      {
         "name": "@beep/trustgraph-workbench",
         "patterns": [
           "apps/labs/trustgraph-workbench/src/**"
@@ -3433,6 +3439,15 @@
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/todox",
+        "allow": [
+          "@beep/todox"
+        ],
+        "allowTypeOnly": [
+          "@beep/todox"
         ]
       },
       {

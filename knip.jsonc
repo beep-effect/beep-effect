@@ -106,10 +106,8 @@
   // Ops scripts, scratch, test fixtures, runnable examples, and build configs are not part of
   // the analyzable source graph.
   "ignore": [
-    // Impeccable is a vendored agent skill mirrored for Claude Code and GitHub
-    // Copilot. Its standalone detector scripts are invoked by editor hooks and
-    // are not part of the workspace import graph.
-    ".claude/skills/impeccable/**",
+    // The GitHub Copilot Impeccable tree mirrors the Claude Code source, whose
+    // detector CLI is a root package script and therefore an analyzed entry.
     ".github/skills/impeccable/**",
     "goals/**",
     // explorations/ is the fuzzy front end of the goals/ pipeline (capture -> graduate, see
@@ -130,6 +128,21 @@
     "tools/skillopt/**",
     "tools/skillopt/**"
   ],
+  // The Claude Code Impeccable tree is vendored hook code with many standalone
+  // command entries and public test seams. Keep its prior file/export exclusion
+  // while still traversing the detector CLI imports for dependency accounting.
+  "ignoreIssues": {
+    ".claude/skills/impeccable/**": [
+      "files",
+      "unlisted",
+      "exports",
+      "nsExports",
+      "types",
+      "nsTypes",
+      "enumMembers",
+      "namespaceMembers"
+    ]
+  },
   // Browser QA operators copy this documented harness template beside the app under test
   // (see `.claude/skills/browser-qa-loop/SKILL.md`); it is a distributed skill resource,
   // not an import-reachable workspace module.
@@ -144,10 +157,11 @@
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls"
   ],
-  // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy invoked from app scripts —
-  // binaries not provided as a resolvable dependency import. readlink is a POSIX/coreutils
-  // system binary (root `instructions:drift` script), never an npm-installable dependency.
-  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink"],
+  // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy, and uv = the
+  // system Python project runner — binaries not provided as resolvable dependency imports.
+  // readlink is a POSIX/coreutils system binary (root `instructions:drift` script), never an
+  // npm-installable dependency.
+  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink", "uv"],
   // Scratchpad is a private experiment workspace kept in the root install graph
   // for dependency/TS trials but excluded from Knip's package graph. Scaffolded
   // test fixtures are likewise deliberately outside dependency-drift review.

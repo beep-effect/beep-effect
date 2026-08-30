@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "todox-wealth-management-site",
+    "title": "Todox.ai Wealth-Management Sales Site",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": [
+      "research/SOURCES.md",
+      "research/ACCESS-MATRIX.md",
+      "research/SOURCE-MANIFEST.json",
+      "research/CLAIMS.jsonl"
+    ],
+    "links": {
+      "goals": ["goals/todox-marketing-site"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-27",
+    "updated": "2026-08-27"
+  }
+}

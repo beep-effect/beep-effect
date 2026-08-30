@@ -7,23 +7,23 @@
  */
 
 import {
+  SVELTE_LAYOUT_MARKER_OPEN,
+  SVELTE_LIVE_ROOT_COMPONENT,
   applySvelteKitLiveAdapter,
   detectSvelteKitProject,
   removeSvelteKitLiveAdapter,
-  SVELTE_LAYOUT_MARKER_OPEN,
-  SVELTE_LIVE_ROOT_COMPONENT,
   unpatchSvelteLayout,
-} from "../sveltekit-adapter.mjs";
+} from '../sveltekit-adapter.mjs';
 
 export const sveltekit = {
-  name: "sveltekit",
+  name: 'sveltekit',
 
   detect(cwd, config) {
     return detectSvelteKitProject(cwd, config);
   },
 
   inject: {
-    kind: "adapter",
+    kind: 'adapter',
 
     apply({ cwd, port, token, config }) {
       return applySvelteKitLiveAdapter({ cwd, port, token, config });
@@ -42,30 +42,30 @@ export const sveltekit = {
     artifacts({ project }) {
       return [
         {
-          kind: "created",
+          kind: 'created',
           path: SVELTE_LIVE_ROOT_COMPONENT,
-          marker: "impeccable-live-root",
-          pruneTo: "src",
+          marker: 'impeccable-live-root',
+          pruneTo: 'src',
         },
         {
-          kind: "patched",
-          path: project?.layoutFile || "src/routes/+layout.svelte",
-          patch: "sveltekit-layout",
+          kind: 'patched',
+          path: project?.layoutFile || 'src/routes/+layout.svelte',
+          patch: 'sveltekit-layout',
           markers: [SVELTE_LAYOUT_MARKER_OPEN],
         },
       ];
     },
 
     unpatch: {
-      "sveltekit-layout": unpatchSvelteLayout,
+      'sveltekit-layout': unpatchSvelteLayout,
     },
   },
 
   source: {
-    extensions: [".svelte"],
+    extensions: ['.svelte'],
     // Svelte resets component-local state on markup HMR updates, so variants
     // are mounted from generated components rather than written into the route.
-    preview: "component",
-    commentSyntax: "html",
+    preview: 'component',
+    commentSyntax: 'html',
   },
 };

@@ -1151,3 +1151,100 @@
   green checks merely to satisfy an ambiguous local status label.
 - **Owner:** Yeet review-decision policy, closeout exit semantics, and hosted
   proof reconciliation.
+
+## 2026-08-30 — Coverage baseline ratchets collide textually across otherwise independent PRs
+
+- **What happened:** updating PR #906 with current `main` produced a single
+  content conflict in the repository-wide coverage baseline. Both sides had
+  independently remeasured the `@beep/repo-cli` package, so Git could not
+  combine their package and per-file measurements safely.
+- **Evidence:** `git merge --no-ff origin/main` stopped with
+  `CONFLICT (content): Merge conflict in
+  standards/coverage.regression-baseline.jsonc`; the conflict contains the
+  branch's Docgen-focused `@beep/repo-cli` measurements and different current
+  `main` measurements for the same package row.
+- **What would have prevented it:** make the baseline writer able to perform a
+  deterministic three-way merge keyed by package and file, or provide a
+  documented package-scoped regeneration command that remeasures only the
+  conflicted package from the already-merged tree.
+- **Disposition:** merge-forward friction; regenerate the `@beep/repo-cli`
+  baseline from the merged source tree, verify the ratchet, and include the
+  resolved baseline in the merge commit.
+- **Owner:** coverage baseline writer and concurrent-ratchet merge ergonomics.
+
+## 2026-08-30 — Ignored goals-index state makes package coverage nondeterministic after merging main
+
+- **What happened:** the package-scoped coverage regeneration reached the
+  repo-cli tests but failed because a retained, ignored local goals projection
+  still described the pre-merge manifest set. The test regenerated that
+  projection from the merged tree and interpreted the expected update as
+  nondeterminism.
+- **Evidence:** `bun run coverage -- --filter=@beep/repo-cli
+  --write-baseline` failed in
+  `test/goals-bootstrap-plan.test.ts` at `regenerating the local index around a
+  retain-only pilot plan is deterministic`; its diff changed `164 packets: 49
+  active ... 103 completed-retained` to `162 packets: 46 active ... 104
+  completed-retained` after current `main` was merged.
+- **What would have prevented it:** make the test create and compare a
+  fixture-owned index in its temporary repository, or have coverage/test
+  preflight refresh or discard the ignored projection before asserting
+  determinism against the live manifest set.
+- **Disposition:** disposable local-projection friction; regenerate the ignored
+  index from the merged manifests, prove the focused test, then retry the
+  package-scoped coverage writer.
+- **Owner:** goals-index test isolation and repo-cli coverage preflight.
+
+## 2026-08-30 — Merge commits make broad whitespace checks report already-landed main changes
+
+- **What happened:** the normal staged whitespace check was noisy during the
+  merge because its comparison included every file brought forward from
+  `main`, including whitespace already accepted there, rather than only PR
+  #906's surviving delta and conflict resolution.
+- **Evidence:** `git diff --cached --check` reported trailing whitespace and
+  blank-line findings in `.claude/skills/impeccable/reference/*.md` and
+  `scratchpad/partners/REVIEW2_FROM_THE_OTHER_SIDE_OF_THE_HARNESS.md`; the
+  PR-scoped check against the goal, baseline, repo-cli, and changeset paths
+  emitted no finding.
+- **What would have prevented it:** document a merge-in-progress diff-check
+  form that compares the index to current `origin/main`, or make the merge
+  helper distinguish inherited base findings from PR-introduced findings.
+- **Disposition:** inherited merge-diff noise; do not rewrite unrelated
+  already-landed files, and validate the PR-owned/resolved paths plus hosted
+  exact-head gates.
+- **Owner:** merge-validation command guidance and whitespace attribution.
+
+## 2026-08-30 — Ignored exploration Atlas state breaks cheap gates after merging main
+
+- **What happened:** the cheap-gates tier failed only its exploration Atlas
+  lane because the worktree retained an ignored Atlas generated before the
+  newly merged exploration manifests. The other thirteen collected lanes
+  passed.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` reported
+  `cheap-gates:exploration-atlas: exit 1` and every other lane as passed;
+  `git status --ignored --short explorations` identified
+  `explorations/ATLAS.md` as ignored local state, while
+  `bun run beep explore atlas --check` exited 1 without a drift diagnostic.
+- **What would have prevented it:** ignore an existing local Atlas during
+  `--check`, refresh it automatically from authoritative D3 manifests, or emit
+  the specific stale-projection path and supported regeneration command on
+  failure.
+- **Disposition:** disposable local-projection friction; run the documented
+  Atlas writer, then recheck only the failed projection lane.
+- **Owner:** exploration projection preflight and Atlas failure diagnostics.
+
+## 2026-08-30 — Conventional commit enforcement rejects a natural merge subject late
+
+- **What happened:** the resolved merge passed every pre-commit hook, but the
+  commit was rejected afterward because the natural-language merge subject did
+  not include a conventional-commit type.
+- **Evidence:** `git commit -m "merge main into packet convention closeout"`
+  reached the commit-msg hook after instructions-drift, gitleaks, typos, Biome,
+  and JSDoc passed, then commitlint returned `subject may not be empty` and
+  `type may not be empty`.
+- **What would have prevented it:** have the merge workflow propose a compliant
+  subject such as `chore(merge): ...` before running the more expensive
+  pre-commit suite, or make commitlint's diagnostic say that the subject lacks
+  the required `<type>(<scope>): <subject>` shape.
+- **Disposition:** commit-message contract friction; keep the resolved index
+  intact and retry with a conventional merge subject.
+- **Owner:** merge commit UX and commitlint diagnostic ordering.

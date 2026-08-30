@@ -330,3 +330,50 @@ ratifies.
   relation's semantic value separately from an independently selected verbatim evidence quote,
   or prove a bounded chunk-scoped candidate at `decompose`; do not overload generated relation
   prose as its `TextAnchor`.
+
+- **2026-08-30 — The capability handoff gate read stale dependency declarations.** The first
+  `bun run beep quality package-verify @beep/langextract` passed docgen but its audit build
+  reported that five `@beep/provenance/VerifiedTextAnchor` exports used by untouched
+  `VerifiedSpan` code did not exist. Current provenance source contained every export while its
+  ignored `dist/` declarations did not, so focused source checks and all 86 package tests passed
+  while the build lane failed before reaching the fold-alignment diff. Prevention: package
+  verification should build or freshness-check workspace dependency declarations before the
+  target package audit, and its failure capsule should identify a stale dependency artifact
+  separately from a target-source defect.
+
+- **2026-08-30 — A successful Fallow report failed the Yeet wrapper.** During
+  `bun run beep yeet repair`, `fallow dead-code --check` emitted `status:"ok"`, zero introduced
+  findings, and three baseline rows attributed `not-applicable`, then the wrapper printed
+  `Fallow dead-code failed with status ok` and exited 1. Every later branch-relevant lane passed,
+  including full docgen, affected build/check/lint, and 86 LangExtract tests, but the
+  contradictory wrapper result made the overall repair verdict fail. Prevention: the Fallow
+  wrapper must treat an `ok` envelope with zero introduced findings as success regardless of
+  non-applicable baseline rows, or emit a non-`ok` status explaining the actual gate.
+
+- **2026-08-30 — The first hosted review found two aligned-status consumers omitted the new
+  minimal-fold case.** LangExtract's own handoff and service metrics accepted
+  `match_minimal_fold`, but the LeJeune provider recorder and IrToLaw each repeated an older
+  three-member aligned-status list. A valid folded match would therefore be silently discarded
+  by one consumer and reported as unaligned by the other. Fix: both consumers now derive their
+  predicate from `AlignedStatus.Options`, while IrToLaw derives its narrowed type by excluding
+  only the `unaligned` case. Prevention: downstream consumers must derive a positive capability
+  family from its authoritative literal domain instead of copying the current member list.
+
+- **2026-08-30 — The full review-thread audit exposed two missing parts of the E1 uniqueness
+  law.** The first implementation returned an exact or lesser occurrence before asking whether a
+  second fold-equivalent source slice existed, and it applied one keep/drop choice to every
+  end-of-line hyphen in a candidate instead of interpreting each independently. Both behaviors
+  could admit an arbitrary evidence span or miss a mixed split-word/hyphenated-compound quote.
+  Fix: minimal-fold matching now uses one encoded optional-hyphen automaton, rejects multiple raw
+  source spans before preserving a higher-tier status, and covers mixed source and candidate
+  choices. Prevention: translate decision phrases such as "unique across variants" into explicit
+  cross-tier ambiguity and multiple-choice tests before the first hosted review.
+
+- **2026-08-30 — Yeet rejected GitHub's empty encoding of an absent review decision.** The
+  pull request had every required check green, zero unresolved threads, a current 5/5 Greptile
+  review, and a ruleset requiring zero approvals, but `yeet status --remote` still reported
+  `merge-ready: no, blocked on review-decision-acceptable`. Direct GraphQL returned `null` while
+  `gh pr view --json reviewDecision` serialized the same state as `""`; status and watch accepted
+  only `undefined`/`null` or `APPROVED`. Fix: normalize the empty string as absence in both paths
+  and cover the CLI encoding with regressions. Prevention: boundary fixtures for optional GitHub
+  fields must exercise every representation emitted by both GraphQL and `gh` JSON.

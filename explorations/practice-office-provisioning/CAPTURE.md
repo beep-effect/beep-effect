@@ -143,3 +143,24 @@ surface across Outlook mail AND Box documents, which retires the residual
 one-search-box argument for duplicating documents into SharePoint — the
 Box-as-sole-record decision now has a native cross-store search story.
 Copilot connector coverage/limits for Box content belong in align.)
+
+Post-merge additions (PR #904 merged 2026-08-30T19:02Z while its local proof
+was still queued):
+
+> BTW here are the refs for Hubspot:
+>
+> * "op://BEEP_SECRETS/BEEP_SECRETS/CRM_HUBSPOT_PERSONAL_ACCESS_KEY"
+> * "op://BEEP_SECRETS/BEEP_SECRETS/CRM_HUBSPOT_DEVELOPER_API_KEY"
+
+(HubSpot portal "Oppold IP Law", id 246203876, NA2 — matches the connector
+probe. The portal's account screen lists domain `www.opip.law`, not
+`oip.law`: either a typo'd HubSpot account field or a second owned domain —
+flagged for the intake-process design. Also possible align-stage follow-up:
+whether HubSpot participates in the client-intake walkthrough as the
+prospect front-end ahead of Box/FreshBooks.)
+
+Same session: align rounds 1–3 resolved the full seven-item frontier plus
+the reconciler-shape ratification; entries appended to DECISIONS.md. Review
+comments from PR #904 (openclaw + Greptile) were triaged — ten valid fixes
+landed in the follow-up branch; the "r7 missing from PR" finding was
+invalid (both files verified present on main).

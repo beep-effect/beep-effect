@@ -1,0 +1,458 @@
+findings:
+  - term: AdmissionPolicy
+    field: kind
+    attack: policy specification versus operative policy regime
+    verdict: PASS
+    rationale: >-
+      The ratified OTP selects a governed policy-specification information artifact,
+      assigns it rigid and identity-supplying status, and leaves the competing policy-regime
+      model as an explicit steward issue. With no subsumption edge in this lattice, the root
+      class placement preserves that selected referent and introduces no role-as-kind or
+      identity-inheritance error.
+  - term: AdmissionPolicy
+    field: constraint_refs[0]
+    attack: constraint reference without the required policy-fact separation
+    verdict: FAIL
+    rationale: >-
+      The field binds con:admission-scheduler-I04, but neither AdmissionPolicy nor
+      AdmissionPriorityClass records publishAgingSeconds or starvationBoundMs, and the
+      taxonomy has no property or parameter that distinguishes their stipulated sources.
+      This breaks the constraint-discharge rule: citing a constraint is not a discharge when
+      the structure contains none of the facts or separation that the constraint requires.
+  - term: AdmissionPriorityClass
+    field: rigidity
+    attack: controlled vocabulary versus effective-priority phase
+    verdict: INDETERMINATE
+    rationale: >-
+      The record faithfully carries unresolved rigidity from an explicitly deferred OTP.
+      That OTP still leaves open whether the referent is a separately governed vocabulary,
+      a ranking-and-aging specification, or the anti-rigid effective-priority phase of a
+      queued request. There is no parent edge to reject, but the present evidence cannot
+      establish one rigidity value or a settled identity criterion.
+  - term: AdmissionSnapshot
+    field: identity_ref
+    attack: snapshot content identity versus capture-token identity
+    verdict: INDETERMINATE
+    rationale: >-
+      The referenced card leaves individuation unresolved between information content,
+      response value, and a provenance-bearing capture token. The rigid root placement does
+      not itself violate OntoClean, and activeTokens is correctly typed as a recorded value,
+      but the identity reference cannot yet decide whether repeated equal captures are one
+      snapshot or distinct snapshot individuals.
+  - term: AdmissionWorkKind
+    field: kind
+    attack: controlled vocabulary domain as an ontological class
+    verdict: PASS
+    rationale: >-
+      As a root record, AdmissionWorkKind preserves the ratified information-object model
+      for a governed closed domain rather than turning the four work values into subclasses
+      of execution kinds. The record is rigid and identity-supplying exactly as its OTP is;
+      the separate member identity defects are assessed on the member records that assert
+      instance_of.
+  - term: Agent
+    field: rigidity
+    attack: admission owner role modeled as a rigid kind
+    verdict: PASS
+    rationale: >-
+      Agent is explicitly anti-rigid and its identity card carries, rather than supplies,
+      the identity of the causally continuous operating-system process that bears the
+      admission-owner role. With relational dependence and no rigid child edge, the record
+      avoids the role-as-kind error.
+  - term: CachePosture
+    field: kind
+    attack: resolver tag versus governed posture specification
+    verdict: PASS
+    rationale: >-
+      The class denotes governed cache-authority specifications, not transient resolver DTO
+      tags or execution phases. Its rigid, identity-supplying root placement agrees with the
+      ratified OTP, and the three posture records are modeled as individuals rather than
+      subclasses.
+  - term: ContendedResource
+    field: rigidity
+    attack: contended-resource role modeled as a resource kind
+    verdict: PASS
+    rationale: >-
+      The record marks ContendedResource anti-rigid and points to a card whose identity is
+      carried from an underlying coordination target. A target can enter or leave this role
+      while persisting, so the root role class and its relational dependence are consistent
+      with OntoClean.
+  - term: GrantState
+    field: kind
+    attack: grant lifecycle states modeled as phase subclasses
+    verdict: PASS
+    rationale: >-
+      GrantState retains the ratified controlled-vocabulary information-object model and has
+      no subclass edges to ActiveGrant or ReleasedGrant. This avoids treating a changing
+      lease state as a rigid kind of SeatGrant; defects in the two member identity references
+      remain local to those member records.
+  - term: RequiredCheckDesignation
+    field: identity_ref
+    attack: extrinsic mode versus normative relator
+    verdict: INDETERMINATE
+    rationale: >-
+      The OTP explicitly defers the choice between an extrinsic normative mode and a relator
+      connecting the check, target, and policy, and its identity criterion remains unresolved.
+      The root class has no incompatible edge, but the current identity reference does not
+      settle which particulars fall under the class or how they are reidentified.
+  - term: ScheduleProposal
+    field: parents[0]
+    attack: identity-incompatible subsumption under VerificationPlanSpecification
+    verdict: FAIL
+    rationale: >-
+      The parents field asserts ScheduleProposal is-a VerificationPlanSpecification, but the
+      child card individuates materialized proposals by a planning and revision lineage,
+      applicability context, and ordered steps, while the parent card individuates the
+      reusable Yeet full-plan prescription by policy content, version lineage, and selector
+      semantics. Neither card supplies a common inherited criterion. This breaks the
+      OntoClean rule that a child must carry the parent's identity criterion rather than
+      introduce an incompatible token-versus-content criterion on the edge.
+  - term: SeatGrant
+    field: rigidity
+    attack: active lease modeled as a transient phase
+    verdict: PASS
+    rationale: >-
+      The binding precedent treats SeatGrant as an endurant lease information artifact born
+      at promotion and terminated by cleanup, reaping, or rollback. Membership does not
+      change while the same lease persists, so rigid is defensible; its token-count
+      parameters are recorded values and hasOriginKey is a literal relation.
+  - term: SeatRequest
+    field: rigidity
+    attack: queued ticket modeled as a waiting phase of another bearer
+    verdict: PASS
+    rationale: >-
+      The ticket is created by one enqueue act and ceases when promotion or cancellation
+      removes it, rather than persisting as the same individual through a non-request phase.
+      Rigid therefore agrees with the ratified information-artifact identity, and all three
+      measurements in parameters use recorded-value.
+  - term: StarvationException
+    field: identity_ref
+    attack: snapshot-scoped situation identity versus continuous interval identity
+    verdict: INDETERMINATE
+    rationale: >-
+      The referenced card cannot tell whether two below-floor observations belong to one
+      uninterrupted situation because the source lacks threshold-crossing evidence. The
+      root situation class can remain rigid, but its identity is explicitly deferred, so the
+      taxonomy cannot yet pass reidentification of StarvationException particulars.
+  - term: VerificationEvidence
+    field: rigidity
+    attack: evidentiary role treated as an essential artifact kind
+    verdict: INDETERMINATE
+    rationale: >-
+      The parent edge to VerificationResultArtifact is plausible only if evidentiary status
+      is an anti-rigid role that a result artifact can gain or lose without losing artifact
+      identity. The OTP instead leaves rigidity, dependence, and content-versus-token
+      identity unresolved. Because the field remains unresolved rather than falsely rigid,
+      the edge is not a proved OntoClean violation, but it cannot receive a pass.
+  - term: VerificationObligation
+    field: rigidity
+    attack: obligation role confused with its obligated bearer
+    verdict: PASS
+    rationale: >-
+      The record denotes a relationally dependent normative mode, not the bearer that can
+      acquire or discharge it. An obligation particular is essentially an obligation while
+      it exists, so rigid does not make the bearer rigidly obligated, and the root placement
+      introduces no role-as-kind edge.
+  - term: VerificationPlanSpecification
+    field: identity_ref
+    attack: generic plan class backed by a deferred full-selector identity
+    verdict: INDETERMINATE
+    rationale: >-
+      The identity card still leaves open whether full denotes a member-level pre-push
+      prescription, a composite cheap-gates-plus-pre-push plan, or a family of context-bound
+      step specifications. The taxonomy broadens that card into the generic parent class
+      VerificationPlanSpecification without resolving the unity boundary, so its rigid root
+      placement is plausible but its identity criterion is not settled.
+  - term: VerificationPlanSpecification
+    field: constraint_refs[1]
+    attack: missing mode-to-surface relation required by con:literalkits-I19
+    verdict: FAIL
+    rationale: >-
+      The field references con:literalkits-I19, whose affirmative requirement is a ratified
+      mode-to-surface relation with source-domain-qualified members kept distinct. No such
+      members, relation, or parameter occurs anywhere in TAXONOMY.yaml. This breaks the
+      constraint-discharge rule because the reference merely names the unperformed mapping.
+  - term: VerificationPlanSpecification
+    field: constraint_refs[2]
+    attack: missing source-tier-to-assurance mapping required by con:yeet-internals-I01
+    verdict: FAIL
+    rationale: >-
+      The field references con:yeet-internals-I01, but the taxonomy contains neither the
+      YeetProofTier and AssuranceTierId domains nor an explicit mapping between them. The
+      constraint specifically requires that mapping in S5 while preserving the domains as
+      distinct. A bare reference therefore breaks the constraint-discharge rule.
+  - term: VerificationResultArtifact
+    field: identity_ref
+    attack: generic result-artifact identity versus split-stream capture-token identity
+    verdict: INDETERMINATE
+    rationale: >-
+      The referenced card individuates one split-stream result by a capture act and the
+      subprocess execution, while the ratified term definition admits broader transient or
+      retained result artifacts and leaves content-versus-issued-token identity open. The
+      rigid class is defensible, but the card does not yet supply a settled criterion for the
+      whole extension used as VerificationEvidence's parent.
+  - term: WorkUnitSpecification
+    field: kind
+    attack: repeatable prescription collapsed with dated execution
+    verdict: PASS
+    rationale: >-
+      WorkUnitSpecification is rigid, identity-supplying information content whose criterion
+      fixes lane, scope, parameters, ordering semantics, completion, and failure semantics.
+      It is not a dated execution, and admittedBy is typed as an object relation to SeatGrant,
+      so the root class preserves the specification-execution split.
+  - term: WorkUnitSpecification
+    field: constraint_refs[5]
+    attack: missing matrix-row-to-lane ratification required by con:literalkits-I04
+    verdict: FAIL
+    rationale: >-
+      The field references con:literalkits-I04, which requires both source domains to remain
+      distinct and a ratified statement of which matrix rows denote deployed
+      VerificationLanes. TAXONOMY.yaml contains no matrix-row individual, lane relation, or
+      mapping parameter. This breaks the constraint-discharge rule; the reference preserves
+      the reminder but does not satisfy it.
+  - term: activeTokens
+    field: parameters[0]
+    attack: measurement typed as a quality rather than a recorded value
+    verdict: PASS
+    rationale: >-
+      The parameter is a recorded-value xsd:integer on AdmissionSnapshot, which preserves
+      the OTP's immediately pre-grant observation boundary. It neither reifies a timeless
+      token-count quality nor changes the property's declared domain.
+  - term: admissionChargeTokens
+    field: parameters[0]
+    attack: policy charge confused with an estimate or hard capacity limit
+    verdict: PASS
+    rationale: >-
+      The parameter is a recorded-value xsd:integer on SeatRequest or SeatGrant, matching the
+      OTP's policy-defined charge copied across the ticket-to-lease transition. It is not
+      typed as a quality, estimate, percentile, or capacity bound.
+  - term: admittedBy
+    field: parameters[0]
+    attack: execution occurrence substituted for the ratified specification-domain relation
+    verdict: PASS
+    rationale: >-
+      The parameter keeps the ratified projection from WorkUnitSpecification to SeatGrant and
+      uses a class-valued range rather than a literal. The OTP explicitly reserves any
+      temporally qualified admission occurrence for later reification, so this binary
+      projection does not contradict its definition.
+  - term: capacityAtAdmissionTokens
+    field: parameters[0].range
+    attack: pre-grant admission occurrence collapsed into the SeatGrant artifact
+    verdict: FAIL
+    rationale: >-
+      The range field declares domain=SeatGrant, while the ratified OTP defines the relation
+      from a SeatGrant admission occurrence and makes the immediately pre-grant boundary
+      intension-defining. No occurrence or boundary parameter remains in this record. This
+      breaks the parameter-fidelity rule by changing an occurrence-indexed recorded value
+      into an unqualified attribute of the grant artifact.
+  - term: enqueuedAt
+    field: parameters[0]
+    attack: timestamp typed as an intrinsic temporal quality
+    verdict: PASS
+    rationale: >-
+      The property is a recorded-value xsd:dateTime on SeatRequest, matching the unique
+      enqueue boundary that creates the durable ticket. Equal timestamp literals are not
+      used as request identity, so the parameter preserves the OTP semantics.
+  - term: hasOriginKey
+    field: parameters[0]
+    attack: identifier string promoted to repository-origin identity
+    verdict: PASS
+    rationale: >-
+      The range remains xsd:string on SeatRequest or SeatGrant and is marked as a datatype,
+      consistent with the OTP's warning that lexical equality is join evidence rather than
+      the identity criterion of a repository origin or key object.
+  - term: observedQueueWaitMs
+    field: parameters[0].range
+    attack: observation-indexed measurement flattened into a timeless request attribute
+    verdict: FAIL
+    rationale: >-
+      Although range_kind correctly says recorded-value, the range field retains only
+      domain=SeatRequest and xsd:integer. The OTP defines the value for a queued request at a
+      specified observation boundary; omitting that boundary makes several waits at
+      different times indistinguishable. This breaks the parameter-fidelity rule against
+      flattening context-dependent measurements.
+  - term: full-proof
+    field: identity_ref
+    attack: vocabulary identity criterion applied to a member individual
+    verdict: FAIL
+    rationale: >-
+      The field points to ic:sched-core:004, whose criterion compares whole governed
+      AdmissionWorkKind vocabularies by lineage, member set, and authority. The record is a
+      literal-domain-member individual, not a vocabulary. This breaks the identity-domain
+      rule: an instance identity reference must individuate that member rather than the class
+      or vocabulary it instantiates.
+  - term: full-proof
+    field: aliases[0]
+    attack: alias invents a second work-kind referent
+    verdict: PASS
+    rationale: >-
+      FullProofWork is already the ontology member named by the S4 candidate definition and
+      the steward's alias ruling, while full-proof is the deployed AdmissionWorkKind literal.
+      The alias records that existing one-referent mapping and, together with instance_of,
+      does not add a second individual or a subsumption edge.
+  - term: merged-preview
+    field: identity_ref
+    attack: vocabulary identity criterion applied to a member individual
+    verdict: FAIL
+    rationale: >-
+      The field reuses ic:sched-core:004, which identifies the complete governed work-kind
+      vocabulary, for the merged-preview member individual. This breaks the identity-domain
+      rule because sameness of a vocabulary by lineage and closed member set cannot decide
+      sameness of one member value.
+  - term: merged-preview
+    field: aliases[0]
+    attack: alias invents a second preview-work referent
+    verdict: PASS
+    rationale: >-
+      MergedPreviewWork is the existing ontology member to which the S4 candidate definition
+      maps the deployed merged-preview literal. The alias therefore preserves deployed-literal
+      fidelity without adding another individual, renaming a record, or asserting class
+      subsumption.
+  - term: publish
+    field: identity_ref
+    attack: vocabulary identity criterion applied to a member individual
+    verdict: FAIL
+    rationale: >-
+      The field applies ic:sched-core:004's whole-vocabulary criterion to the publish member.
+      A criterion over vocabulary lineage, version, and the complete member set does not
+      individuate this reserved value. This breaks the identity-domain rule for an
+      instance_of record.
+  - term: publish
+    field: aliases[0]
+    attack: cross-domain literal ambiguity creates an unqualified alias
+    verdict: PASS
+    rationale: >-
+      PublishWork is the existing AdmissionWorkKind member named by the source candidate and
+      steward alias ruling. The record's instance_of value qualifies this publish literal
+      against the other parked publish-bearing source domains, so the alias does not collapse
+      those domains or mint a second referent.
+  - term: publish
+    field: constraint_refs[0]
+    attack: reserved and uninstantiated status is cited but not represented
+    verdict: FAIL
+    rationale: >-
+      The field binds con:admission-scheduler-I05, which requires this retained member to be
+      marked reserved and uninstantiated by current admission call sites. The record contains
+      no status, parameter, or annotation expressing either condition. This breaks the
+      constraint-discharge rule: retaining the member and citing the constraint discharges
+      only the retention clause, not the required status clauses.
+  - term: review-fix
+    field: identity_ref
+    attack: vocabulary identity criterion applied to a member individual
+    verdict: FAIL
+    rationale: >-
+      The field points to the AdmissionWorkKind vocabulary card rather than a criterion for
+      the review-fix member. The card compares whole vocabularies by governance lineage and
+      closed member set, so it cannot reidentify this one individual. This breaks the
+      identity-domain rule for instance records.
+  - term: review-fix
+    field: aliases[0]
+    attack: same spelling across source domains collapses distinct values
+    verdict: PASS
+    rationale: >-
+      ReviewFixWork is the existing qualified AdmissionWorkKind member from the candidate and
+      alias ruling. The instance_of field fixes that domain, while review-fix occurrences in
+      parked YeetProofTier and RepoProofSurface domains remain outside this record. The alias
+      therefore preserves, rather than erases, the source-domain distinction.
+  - term: ActiveGrant
+    field: identity_ref
+    attack: grant-state vocabulary identity applied to a state-value individual
+    verdict: FAIL
+    rationale: >-
+      The field points to ic:sched-core:022, whose criterion compares complete GrantState
+      vocabulary specifications and their governed member sets. ActiveGrant is recorded as a
+      member individual. This breaks the identity-domain rule because vocabulary identity
+      does not individuate the active value that instantiates it.
+  - term: ReleasedGrant
+    field: identity_ref
+    attack: grant-state vocabulary identity applied to an unsupported state-value individual
+    verdict: FAIL
+    rationale: >-
+      The field reuses the whole GrantState vocabulary criterion for the ReleasedGrant member,
+      and that card expressly says lease deletion supplies no bearer continuity for a
+      ReleasedGrant phase. This breaks the identity-domain rule for the member individual;
+      neither vocabulary sameness nor deletion evidence reidentifies the value asserted by
+      this record.
+  - term: CallerControlled
+    field: identity_ref
+    attack: ratified individual identity replaced with parent vocabulary identity
+    verdict: FAIL
+    rationale: >-
+      TAXONOMY.yaml uses ic:turbo-cache:019, but the ratified CallerControlled OTP binds
+      ic:turbo-cache:020, whose criterion is the caller-retains-control and no-override
+      normative content. The target card instead identifies CachePosture specifications in
+      general. This breaks the ratified-record fidelity rule and the identity-domain rule by
+      losing the individual's applicable identity criterion.
+  - term: LocalOnly
+    field: identity_ref
+    attack: ratified individual identity replaced with parent vocabulary identity
+    verdict: FAIL
+    rationale: >-
+      TAXONOMY.yaml uses ic:turbo-cache:019, while the ratified LocalOnly OTP binds
+      ic:turbo-cache:021 and its local-read-write with no-remote-access criterion. Replacing
+      that card with the parent CachePosture card breaks the ratified-record fidelity rule
+      and the identity-domain rule because it cannot individuate the LocalOnly member.
+  - term: LocalWriteRemoteRead
+    field: identity_ref
+    attack: ratified individual identity replaced with parent vocabulary identity
+    verdict: FAIL
+    rationale: >-
+      TAXONOMY.yaml uses ic:turbo-cache:019, but the ratified LocalWriteRemoteRead OTP binds
+      ic:turbo-cache:022, which fixes local read-write, remote read-only, and no remote writes.
+      This breaks the ratified-record fidelity rule and the identity-domain rule by
+      substituting a class-level identity card for the accepted member individual's
+      criterion.
+  - term: HardFloorException
+    field: instance_of
+    attack: exception code asserted as an instance of a time-indexed situation class
+    verdict: FAIL
+    rationale: >-
+      StarvationException's ratified category is a situation whose particulars are scoped to
+      a queued request and observation boundary, while HardFloorException is declared a
+      reusable literal-domain member. The instance_of field therefore treats a vocabulary
+      value as one concrete starvation situation and reuses an interval-situation identity
+      card for it. This breaks the instance-category rule separating classifier values from
+      the situations they classify.
+  - term: MachineProofLock
+    field: instance_of
+    attack: named coordination target confused with a ContendedResource subclass
+    verdict: PASS
+    rationale: >-
+      The binding precedent identifies MachineProofLock as a named individual under
+      ContendedResource, and the record uses instance_of rather than parents. A concrete
+      origin coordination target can bear the anti-rigid contended-resource role while its
+      holders change, so this placement avoids both punning and role-as-kind subsumption.
+  - term: DocgenAffectedWorkUnit
+    field: derived_from_otp
+    attack: derived placement invents WorkUnitSpecification membership
+    verdict: PASS
+    rationale: >-
+      The ratified OTP itself defines DocgenAffectedWorkUnit as the WorkUnitSpecification
+      individual for docgen:local over the symbolic affected scope. Its identity card fixes
+      the procedure, scope rule, applicability, completion semantics, and governing revision,
+      which are compatible with the class criterion. The derived flag therefore records an
+      existing commitment rather than manufacturing a placement.
+  - term: FallowAuditLane
+    field: placement_pending_ratification
+    attack: VerificationLane individual placed under WorkUnitSpecification
+    verdict: INDETERMINATE
+    rationale: >-
+      The ratified OTP establishes a Fallow verification-lane procedure individual, while its
+      identity card also fixes a base-selection rule, new-only gate, and verdict semantics
+      that could satisfy the WorkUnitSpecification criterion. The OTP does not itself ratify
+      that instance_of edge. The pending flag accurately exposes the remaining authority and
+      extension question, so the placement is plausible but not yet passable.
+  - term: FallowHealthLane
+    field: instance_of
+    attack: unresolved VerificationLane identity asserted as a complete WorkUnitSpecification
+    verdict: FAIL
+    rationale: >-
+      The field positively asserts WorkUnitSpecification membership, but the ratified OTP
+      establishes only an inventory-declared health-lane prescription and its identity card
+      leaves the input-scope, threshold-policy participation, and output interpretation
+      unresolved. Those are part of WorkUnitSpecification's required scope, parameters,
+      completion, and failure criterion. This breaks the instance-extension rule; the
+      placement_pending_ratification flag does not neutralize the asserted instance_of edge.
+summary:
+  pass: 21
+  fail: 19
+  indeterminate: 8

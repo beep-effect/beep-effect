@@ -16,22 +16,22 @@ export const PLACEHOLDER_MIN_WIDTH = 120;
  * @returns {InsertAxis}
  */
 export function detectInsertAxisFromStyle(style) {
-  const display = style?.display || "block";
-  if (display.includes("flex")) {
-    const dir = style.flexDirection || "row";
-    return dir.startsWith("row") ? "row" : "column";
+  const display = style?.display || 'block';
+  if (display.includes('flex')) {
+    const dir = style.flexDirection || 'row';
+    return dir.startsWith('row') ? 'row' : 'column';
   }
-  if (display === "grid" || display === "inline-grid") {
-    const flow = style.gridAutoFlow || "row";
-    if (flow.includes("column")) return "column";
-    const cols = (style.gridTemplateColumns || "").trim();
-    if (cols && cols !== "none") {
+  if (display === 'grid' || display === 'inline-grid') {
+    const flow = style.gridAutoFlow || 'row';
+    if (flow.includes('column')) return 'column';
+    const cols = (style.gridTemplateColumns || '').trim();
+    if (cols && cols !== 'none') {
       const colCount = cols.split(/\s+/).filter(Boolean).length;
-      if (colCount > 1) return "row";
+      if (colCount > 1) return 'row';
     }
-    return "row";
+    return 'row';
   }
-  return "column";
+  return 'column';
 }
 
 /**
@@ -42,16 +42,16 @@ export function detectInsertAxisFromStyle(style) {
  * @param {InsertAxis} [axis]
  * @returns {InsertPosition}
  */
-export function computeInsertPosition(clientX, clientY, rect, axis = "column") {
-  if (!rect) return "after";
-  if (axis === "row") {
-    if (!Number.isFinite(rect.left) || !Number.isFinite(rect.width) || rect.width <= 0) return "after";
+export function computeInsertPosition(clientX, clientY, rect, axis = 'column') {
+  if (!rect) return 'after';
+  if (axis === 'row') {
+    if (!Number.isFinite(rect.left) || !Number.isFinite(rect.width) || rect.width <= 0) return 'after';
     const mid = rect.left + rect.width / 2;
-    return clientX < mid ? "before" : "after";
+    return clientX < mid ? 'before' : 'after';
   }
-  if (!Number.isFinite(rect.top) || !Number.isFinite(rect.height) || rect.height <= 0) return "after";
+  if (!Number.isFinite(rect.top) || !Number.isFinite(rect.height) || rect.height <= 0) return 'after';
   const mid = rect.top + rect.height / 2;
-  return clientY < mid ? "before" : "after";
+  return clientY < mid ? 'before' : 'after';
 }
 
 /**
@@ -59,16 +59,18 @@ export function computeInsertPosition(clientX, clientY, rect, axis = "column") {
  * Requires a non-empty prompt OR at least one annotation.
  */
 export function canCreateInsert({ prompt, comments, strokes }) {
-  const hasPrompt = typeof prompt === "string" && prompt.trim().length > 0;
+  const hasPrompt = typeof prompt === 'string' && prompt.trim().length > 0;
   const hasComments = Array.isArray(comments) && comments.length > 0;
-  const hasStrokes = Array.isArray(strokes) && strokes.some((s) => Array.isArray(s?.points) && s.points.length >= 2);
+  const hasStrokes = Array.isArray(strokes) && strokes.some(
+    (s) => Array.isArray(s?.points) && s.points.length >= 2,
+  );
   return hasPrompt || hasComments || hasStrokes;
 }
 
 /** Tooltip/title when Create is disabled. */
 export function insertCreateDisabledReason({ prompt, comments, strokes }) {
   if (canCreateInsert({ prompt, comments, strokes })) return null;
-  return "Add a prompt or annotate the placeholder to create";
+  return 'Add a prompt or annotate the placeholder to create';
 }
 
 /**
@@ -77,20 +79,20 @@ export function insertCreateDisabledReason({ prompt, comments, strokes }) {
  * @param {InsertPosition} position
  * @param {InsertAxis} [axis]
  */
-export function insertLineCoords(rect, position, axis = "column") {
-  if (axis === "row") {
+export function insertLineCoords(rect, position, axis = 'column') {
+  if (axis === 'row') {
     const right = rect.right ?? rect.left + rect.width;
-    const x = position === "before" ? rect.left - 2 : right + 2;
-    return { axis: "row", top: rect.top, left: x, width: 0, height: rect.height };
+    const x = position === 'before' ? rect.left - 2 : right + 2;
+    return { axis: 'row', top: rect.top, left: x, width: 0, height: rect.height };
   }
   const bottom = rect.bottom ?? rect.top + rect.height;
-  const y = position === "before" ? rect.top - 2 : bottom + 2;
-  return { axis: "column", top: y, left: rect.left, width: rect.width, height: 0 };
+  const y = position === 'before' ? rect.top - 2 : bottom + 2;
+  return { axis: 'column', top: y, left: rect.left, width: rect.width, height: 0 };
 }
 
 /** Cursor while hovering an insert boundary. */
 export function cursorForInsertAxis(axis) {
-  return axis === "row" ? "ew-resize" : "ns-resize";
+  return axis === 'row' ? 'ew-resize' : 'ns-resize';
 }
 
 function groupSiblingRows(siblings, rowThreshold = 8) {
@@ -152,9 +154,9 @@ export function hitSiblingInsertGap(clientX, clientY, siblings, opts = {}) {
       const midX = (aRight + bLeft) / 2;
       return {
         anchor: b.el,
-        position: "before",
-        axis: "row",
-        line: { axis: "row", left: midX, top, width: 0, height: span },
+        position: 'before',
+        axis: 'row',
+        line: { axis: 'row', left: midX, top, width: 0, height: span },
       };
     }
   }
@@ -175,7 +177,7 @@ export function hitSiblingInsertGap(clientX, clientY, siblings, opts = {}) {
     const overlapLeft = Math.max(a.rect.left, b.rect.left);
     const overlapRight = Math.min(
       a.rect.right ?? a.rect.left + a.rect.width,
-      b.rect.right ?? b.rect.left + b.rect.width
+      b.rect.right ?? b.rect.left + b.rect.width,
     );
     const inY = clientY >= gapTop - slop && clientY <= gapBottom + slop;
     const inX = clientX >= overlapLeft - slop && clientX <= overlapRight + slop;
@@ -184,9 +186,9 @@ export function hitSiblingInsertGap(clientX, clientY, siblings, opts = {}) {
     const midY = (gapTop + gapBottom) / 2;
     return {
       anchor: b.el,
-      position: "before",
-      axis: "column",
-      line: { axis: "column", top: midY, left: overlapLeft, width: overlap, height: 0 },
+      position: 'before',
+      axis: 'column',
+      line: { axis: 'column', top: midY, left: overlapLeft, width: overlap, height: 0 },
     };
   }
 
@@ -211,32 +213,34 @@ export function resolveInsertHover({ clientX, clientY, target, rect, axis, sibli
  * @returns {{ kind: 'flex', flex: string, minWidth: number } | { kind: 'percent' } | { kind: 'auto' } | { kind: 'explicit', width: number }}
  */
 export function placeholderSizing({ axis, parentDisplay, parentWidth, anchorFlex }) {
-  const display = parentDisplay || "block";
+  const display = parentDisplay || 'block';
   const w = Number.isFinite(parentWidth) ? parentWidth : 0;
 
-  if (axis === "row") {
-    if (display.includes("flex")) {
-      const flex = anchorFlex && anchorFlex !== "none" && anchorFlex !== "0 1 auto" ? anchorFlex : "1 1 0";
-      return { kind: "flex", flex, minWidth: 0 };
+  if (axis === 'row') {
+    if (display.includes('flex')) {
+      const flex = anchorFlex && anchorFlex !== 'none' && anchorFlex !== '0 1 auto'
+        ? anchorFlex
+        : '1 1 0';
+      return { kind: 'flex', flex, minWidth: 0 };
     }
-    if (display === "grid" || display === "inline-grid") {
-      return { kind: "auto" };
+    if (display === 'grid' || display === 'inline-grid') {
+      return { kind: 'auto' };
     }
   }
 
   if (w >= PLACEHOLDER_MIN_WIDTH) {
-    return { kind: "percent" };
+    return { kind: 'percent' };
   }
 
   return {
-    kind: "explicit",
+    kind: 'explicit',
     width: Math.max(PLACEHOLDER_MIN_WIDTH, w || PLACEHOLDER_MIN_WIDTH),
   };
 }
 
 /** Width kinds that need materializing to px before edge-resize. */
 export function placeholderWidthIsImplicit(kind) {
-  return kind === "flex" || kind === "percent" || kind === "auto";
+  return kind === 'flex' || kind === 'percent' || kind === 'auto';
 }
 
 /**
@@ -254,9 +258,9 @@ export function clampPlaceholderSize(width, height, parentWidth, opts = {}) {
 
 /** CSS cursor for a placeholder edge resize handle. */
 export function cursorForPlaceholderEdge(edge) {
-  if (edge === "n" || edge === "s") return "ns-resize";
-  if (edge === "e" || edge === "w") return "ew-resize";
-  return "default";
+  if (edge === 'n' || edge === 's') return 'ns-resize';
+  if (edge === 'e' || edge === 'w') return 'ew-resize';
+  return 'default';
 }
 
 /**
@@ -274,20 +278,20 @@ export function resizePlaceholderFromEdge(start, edge, dx, dy, parentWidth, opts
     marginLeft: start.marginLeft ?? 0,
     marginTop: start.marginTop ?? 0,
   };
-  if (edge === "e") base.width = start.width + dx;
-  else if (edge === "w") {
+  if (edge === 'e') base.width = start.width + dx;
+  else if (edge === 'w') {
     base.width = start.width - dx;
     base.marginLeft = start.marginLeft + dx;
-  } else if (edge === "s") base.height = start.height + dy;
-  else if (edge === "n") {
+  } else if (edge === 's') base.height = start.height + dy;
+  else if (edge === 'n') {
     base.height = start.height - dy;
     base.marginTop = start.marginTop + dy;
   }
 
   const clamped = clampPlaceholderSize(base.width, base.height, parentWidth, opts);
-  if (edge === "w") {
+  if (edge === 'w') {
     base.marginLeft = start.marginLeft + start.width - clamped.width;
-  } else if (edge === "n") {
+  } else if (edge === 'n') {
     base.marginTop = start.marginTop + start.height - clamped.height;
   }
 
@@ -332,8 +336,8 @@ export function buildInsertGeneratePayload({
   screenshotPath,
 }) {
   const payload = {
-    type: "generate",
-    mode: "insert",
+    type: 'generate',
+    mode: 'insert',
     id,
     count,
     pageUrl,
@@ -357,7 +361,7 @@ export function buildInsertGeneratePayload({
 export function isVariantShown(el) {
   if (!el) return false;
   if (el.hidden) return false;
-  if (el.style?.display === "none") return false;
+  if (el.style?.display === 'none') return false;
   return true;
 }
 
@@ -369,11 +373,11 @@ export function isVariantShown(el) {
 export function setVariantShown(el, shown) {
   if (!el) return;
   if (shown) {
-    el.removeAttribute?.("hidden");
-    if (el.style) el.style.display = "";
+    el.removeAttribute?.('hidden');
+    if (el.style) el.style.display = '';
   } else {
-    el.setAttribute?.("hidden", "");
-    if (el.style) el.style.display = "none";
+    el.setAttribute?.('hidden', '');
+    if (el.style) el.style.display = 'none';
   }
 }
 
@@ -389,7 +393,14 @@ export function setVariantShown(el, shown) {
  * }} opts
  */
 export function resolveInsertSessionAnchor(opts) {
-  const { wrapper, variantCount = 0, visibleVariant = 0, placeholder, insertAnchor, pickVariantContent } = opts || {};
+  const {
+    wrapper,
+    variantCount = 0,
+    visibleVariant = 0,
+    placeholder,
+    insertAnchor,
+    pickVariantContent,
+  } = opts || {};
   if (wrapper && variantCount > 0 && visibleVariant > 0 && pickVariantContent) {
     const vis = pickVariantContent(wrapper, visibleVariant);
     if (vis) return vis;
@@ -415,13 +426,13 @@ export function buildInsertPlaceholderSnapshot(anchor, placeholder, { position, 
   return {
     width: Math.round(placeholder.offsetWidth || 0),
     height: Math.round(placeholder.offsetHeight || PLACEHOLDER_DEFAULT_HEIGHT),
-    marginLeft: Number.parseFloat(placeholder.style?.marginLeft || "") || 0,
-    marginTop: Number.parseFloat(placeholder.style?.marginTop || "") || 0,
+    marginLeft: parseFloat(placeholder.style?.marginLeft || '') || 0,
+    marginTop: parseFloat(placeholder.style?.marginTop || '') || 0,
     position,
-    layoutAxis: layoutAxis || "column",
-    anchorTag: anchor.tagName || "DIV",
-    anchorClasses: anchor.className || "",
-    anchorText: (anchor.textContent || "").trim().slice(0, 120),
+    layoutAxis: layoutAxis || 'column',
+    anchorTag: anchor.tagName || 'DIV',
+    anchorClasses: anchor.className || '',
+    anchorText: (anchor.textContent || '').trim().slice(0, 120),
   };
 }
 
@@ -434,13 +445,13 @@ export function buildInsertPlaceholderSnapshot(anchor, placeholder, { position, 
 export function findInsertAnchorInDom(doc, snapshot, liveAnchor = null) {
   if (liveAnchor && doc.body.contains(liveAnchor)) return liveAnchor;
   if (!snapshot) return null;
-  const tag = (snapshot.anchorTag || "div").toLowerCase();
-  const cls = (snapshot.anchorClasses || "").split(/\s+/).filter(Boolean)[0];
-  const needle = snapshot.anchorText || "";
+  const tag = (snapshot.anchorTag || 'div').toLowerCase();
+  const cls = (snapshot.anchorClasses || '').split(/\s+/).filter(Boolean)[0];
+  const needle = snapshot.anchorText || '';
   const sel = cls ? `${tag}.${cls}` : tag;
   const candidates = doc.querySelectorAll(sel);
   for (const candidate of candidates) {
-    if (needle && !(candidate.textContent || "").includes(needle.slice(0, 40))) continue;
+    if (needle && !(candidate.textContent || '').includes(needle.slice(0, 40))) continue;
     return candidate;
   }
   return null;

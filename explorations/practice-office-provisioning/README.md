@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `align`
+Stage: `shape`
 Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
@@ -19,19 +19,23 @@ The corpus chain restores the past; this packet gives the practice a present.
 
 ## Next Open Question
 
-Align round 1 over the seven-item frontier in `ops/manifest.json`
-`openQuestions` — lead with the two money decisions (EOP2 seat vs Purview
-Suite for the PST-import rights; Box Governance quote and upgrade triggers)
-and the ownership/collaboration topology, which gates the reconciler's
-adopt-vs-foreign semantics.
+Review [`BRIEF.md`](./BRIEF.md) with the operator until it matches the
+picture in his head, then decompose. The align frontier is fully resolved
+(see the align entries in `DECISIONS.md`); what remains open are
+verification tasks carried in `ops/manifest.json` `openQuestions` (CSP
+quote + license dry-run, Box quote items, CCG platform-app approval on
+Business, FreshBooks live limits, the Purview >100 GB support case).
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
-3. [`DECISIONS.md`](./DECISIONS.md) - pre-seeded 2026-08-30 grilling log: ten
-   ratified constraints (routing, both mail lanes, Box-as-record, auth-lane
-   split, live-first sequencing, versioned provisioning code, …).
+3. [`DECISIONS.md`](./DECISIONS.md) - the 2026-08-30 decision log: the
+   pre-seeded grilling constraints plus the align-round resolutions
+   (routing, both mail lanes, Box-as-record, auth-lane split, live-first
+   sequencing, versioned provisioning code, EOP2 import rights,
+   service-account tree ownership, Box-only documents, Effect-native
+   reconciler, …). The log itself is the count of record.
 4. [`RESEARCH.md`](./RESEARCH.md) - prior art + capability inventory (stage 1, if present).
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, if present).
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
@@ -59,3 +63,24 @@ adopt-vs-foreign semantics.
   eleven decisions pre-ratified in DECISIONS.md; stage advanced to `align`
   on a seven-item frontier. FreshBooks dev app + creds captured; Azure CLI
   access established.
+- 2026-08-30 (post-merge follow-up): PR #904 merged; align rounds resolved
+  the entire frontier (EOP2 import rights, Box-Business-with-visible-blocks,
+  service-account tree ownership, M365 doc lane dropped, contacts shape,
+  FreshBooks driver goal, walkthrough outline) plus the reconciler-shape
+  ratification (Effect-native). PR #904 review findings triaged: ten fixes
+  landed (count reconciliation, r2 AzCopy `--recursive` correction, r4
+  certificate-first credential correction, lane-citation registry, R6
+  reference cleanup, @beep/box brick honesty); the "r7 missing" finding was
+  invalid. HubSpot portal facts captured. Stage advanced to `shape`;
+  BRIEF.md drafted for operator review.
+- 2026-08-30 (PR #909 closeout): #909 merged with all required checks green;
+  its ten review threads triaged and fixed — appetite carve-outs named in
+  the no-gos (PST import + contact-CSV seeding), Box driver managers scoped
+  to the stay-on-Business posture, the write-verbs goal cut to
+  contacts-only (no approved Graph mail-write lane), Box Sign
+  attorney-context and external-collaborator economics added to decisions,
+  FreshBooks invoice-endpoint validation gate + single-use refresh-token
+  rotation added, r2 AzCopy command carries `--recursive=true`, citation
+  registry count clarified. The yeet-inbox hook fences were narrowed on
+  main mid-session (PR #912) after three regression classes hit this
+  session.

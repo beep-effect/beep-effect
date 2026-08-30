@@ -22,6 +22,9 @@
       "path": "apps/storybook"
     },
     {
+      "path": "apps/todox"
+    },
+    {
       "path": "infra"
     },
     {
