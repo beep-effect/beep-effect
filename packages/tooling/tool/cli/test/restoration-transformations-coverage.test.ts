@@ -1248,6 +1248,165 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     })
   );
 
+  it.effect("fails closed on genuine legacy fidelity loss and mid-conversion source drift", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "legacy-fidelity-" });
+      const outputRoot = path.join(root, "output");
+      yield* fs.makeDirectory(outputRoot, { recursive: true });
+      const writeExecutable = Effect.fnUntraced(function* (name: string, script: string) {
+        const filePath = path.join(root, name);
+        yield* fs.writeFileString(filePath, script);
+        yield* fs.chmod(filePath, 0o755);
+        return filePath;
+      });
+      const bwrapPath = yield* writeExecutable(
+        "bwrap",
+        `#!/usr/bin/env bash
+set -eu
+hosts=()
+targets=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --ro-bind|--bind) hosts+=("$2"); targets+=("$3"); shift 3 ;;
+    --) shift; break ;;
+    *) shift ;;
+  esac
+done
+command="$1"
+shift
+mapped_command="$command"
+for index in "\${!targets[@]}"; do
+  if [ "$command" = "\${targets[$index]}" ]; then mapped_command="\${hosts[$index]}"; fi
+done
+mapped=()
+for argument in "$@"; do
+  value="$argument"
+  for index in "\${!targets[@]}"; do
+    target="\${targets[$index]}"
+    host="\${hosts[$index]}"
+    if [ "$argument" = "$target" ]; then value="$host";
+    elif [[ "$argument" = "$target/"* ]]; then value="$host\${argument#$target}"; fi
+  done
+  mapped+=("$value")
+done
+exec "$mapped_command" "\${mapped[@]}"
+`
+      );
+      const converterPath = yield* writeExecutable(
+        "converter",
+        `#!/usr/bin/env bash
+set -eu
+format=""
+outdir=""
+input=""
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = "--convert-to" ]; then format="$argument"; fi
+  if [ "$previous" = "--outdir" ]; then outdir="$argument"; fi
+  previous="$argument"
+  input="$argument"
+done
+mkdir -p "$outdir"
+if [ "$format" = "docx" ]; then cp "$input" "$outdir/source.docx";
+elif [ "$format" = "pdf" ]; then printf '%%PDF-1.4 page\n' > "$outdir/source.pdf";
+else exit 92; fi
+`
+      );
+      const mutatingConverterPath = yield* writeExecutable(
+        "mutating-converter",
+        `#!/usr/bin/env bash
+set -eu
+format=""
+outdir=""
+input=""
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = "--convert-to" ]; then format="$argument"; fi
+  if [ "$previous" = "--outdir" ]; then outdir="$argument"; fi
+  previous="$argument"
+  input="$argument"
+done
+mkdir -p "$outdir"
+if [ "$format" = "docx" ]; then cp "$input" "$outdir/source.docx"; printf x >> "$input";
+elif [ "$format" = "pdf" ]; then printf '%%PDF-1.4 page\n' > "$outdir/source.pdf";
+else exit 92; fi
+`
+      );
+      const tikaPath = yield* writeExecutable("tika", "#!/bin/sh\nprintf 'same normalized text\\n'\n");
+      const pdfinfoPath = yield* writeExecutable("pdfinfo", "#!/bin/sh\nprintf 'Pages: 1\\n'\n");
+      const pdftoppmPath = yield* writeExecutable(
+        "pdftoppm",
+        '#!/bin/sh\nprefix="${@: -1}"\nprintf page > "$prefix-1.png"\n'
+      );
+      const comparePath = yield* writeExecutable("compare", "#!/bin/sh\nprintf '0 (0.25)\\n' >&2\nexit 0\n");
+      const optionsFor = (selectedConverter: string) =>
+        RestorationLegacyWordOptions.make({
+          bwrapPath,
+          comparePath,
+          converterPath: selectedConverter,
+          corpusRoot: root,
+          expectedConverterVersion: "unused",
+          expectedOccurrenceCount: NonNegativeInt.make(1),
+          javaPath: tikaPath,
+          maxElapsedMillis: PosInt.make(10_000),
+          maxTotalElapsedMillis: PosInt.make(10_000),
+          maxTotalOutputBytes: PosInt.make(1_000_000),
+          maxVisualRmse: 0,
+          pdfinfoPath,
+          pdftoppmPath,
+          tikaJarPath: tikaPath,
+        });
+      const legacyContext = {
+        ...context,
+        corpusRoot: root,
+        ledgerPath: path.join(root, "legacy.jsonl"),
+        outputRoot,
+        runRoot: root,
+        startedAt: DateTime.toEpochMillis(yield* DateTime.now),
+      };
+      const cfb = new Uint8Array(64);
+      cfb.set([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+      cfb.fill(0x42, 8);
+      const sourcePath = path.join(root, "source.doc");
+      yield* fs.writeFile(sourcePath, cfb);
+      const digest = Sha256Hex.make(bytesToHex(sha256(cfb)));
+      const pass = ArchiveLedgerRecord.cases["archive-file-pass"].make({
+        ...archivedFile("legacy-fidelity", "legacy/source.doc", cfb.length),
+        sha256: digest,
+      });
+      const candidate = { digest, occurrenceCount: 1, pass, sourcePath };
+      const fidelityFailure = yield* RT.processLegacyWordCandidate(
+        candidate,
+        "engine",
+        legacyContext,
+        optionsFor(converterPath)
+      );
+      expect(fidelityFailure.inputBytes).toBe(cfb.length);
+      expect(fidelityFailure.outputBytes).toBeGreaterThan(0);
+      expect(fidelityFailure.passed).toBe(false);
+      expect(fidelityFailure.unapproved).toBe(true);
+
+      const driftSourcePath = path.join(root, "drift.doc");
+      yield* fs.writeFile(driftSourcePath, cfb);
+      const driftPass = ArchiveLedgerRecord.cases["archive-file-pass"].make({
+        ...archivedFile("legacy-drift", "legacy/drift.doc", cfb.length),
+        sha256: digest,
+      });
+      expect(
+        O.isNone(
+          yield* RT.processLegacyWordCandidate(
+            { digest, occurrenceCount: 1, pass: driftPass, sourcePath: driftSourcePath },
+            "engine",
+            legacyContext,
+            optionsFor(mutatingConverterPath)
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+    })
+  );
+
   it.effect("rejects invalid persisted run-state shapes at each resumability boundary", () =>
     Effect.gen(function* () {
       const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
