@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Local backpressure adapter for Claude Code, Codex, and Grok-compatible tails.
 # The hook never calls GitHub or git. Its hot path reads only .beep/inbox state.
+# Only Bash, Write, Edit, and NotebookEdit can directly mutate this checkout, so
+# lease and one-shot P0 fences apply only to those tools. Harness tools evolve;
+# every other name is context-only except the ratified P0 new-work launches.
+# A live Yeet lease process descended from this hook's parent belongs to the
+# launching harness session; the next unlocked hook refresh records that owner.
 set -u
 
 harness="${1:-claude}"
@@ -62,12 +67,13 @@ fi
 
 mkdir -p "$sessions" 2>/dev/null || exit 0
 
-pretool_mutating=false
+pretool_tool_name=''
+pretool_checkout_mutating=false
 if [ "$event" = "PreToolUse" ]; then
   pretool_tool_name="$(printf '%s' "$payload" | jq -r '.tool_name // empty' 2>/dev/null || true)"
   case "$pretool_tool_name" in
-    Read|Glob|Grep|WebFetch|WebSearch|AskUserQuestion|TaskOutput) pretool_mutating=false ;;
-    *) pretool_mutating=true ;;
+    Bash|Write|Edit|NotebookEdit) pretool_checkout_mutating=true ;;
+    *) pretool_checkout_mutating=false ;;
   esac
 fi
 
@@ -85,6 +91,54 @@ parse_timestamp_epoch() {
   parsed_epoch="$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$normalized_timestamp" +%s 2>/dev/null || true)"
   [ -n "$parsed_epoch" ] || return 1
   printf '%s' "$parsed_epoch"
+}
+
+proc_start() {
+  proc_pid="$1"
+  [ -r "/proc/$proc_pid/stat" ] || return 1
+  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
+  [ -n "$proc_rest" ] || return 1
+  # shellcheck disable=SC2086
+  set -- $proc_rest
+  eval 'printf "%s" "${20:-}"'
+}
+
+proc_state() {
+  proc_pid="$1"
+  [ -r "/proc/$proc_pid/stat" ] || return 1
+  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
+  [ -n "$proc_rest" ] || return 1
+  # shellcheck disable=SC2086
+  set -- $proc_rest
+  printf '%s' "${1:-}"
+}
+
+proc_parent() {
+  proc_pid="$1"
+  [ -r "/proc/$proc_pid/stat" ] || return 1
+  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
+  [ -n "$proc_rest" ] || return 1
+  # shellcheck disable=SC2086
+  set -- $proc_rest
+  [ -n "${2:-}" ] || return 1
+  printf '%s' "$2"
+}
+
+proc_has_ancestor() {
+  lineage_pid="$1"
+  lineage_ancestor="$2"
+  case "$lineage_pid" in ''|*[!0-9]*) return 1 ;; esac
+  case "$lineage_ancestor" in ''|*[!0-9]*) return 1 ;; esac
+  lineage_depth=0
+  while [ "$lineage_pid" -gt 1 ] && [ "$lineage_depth" -lt 64 ]; do
+    [ "$lineage_pid" = "$lineage_ancestor" ] && return 0
+    lineage_parent="$(proc_parent "$lineage_pid" || true)"
+    case "$lineage_parent" in ''|*[!0-9]*) return 1 ;; esac
+    [ "$lineage_parent" != "$lineage_pid" ] || return 1
+    lineage_pid="$lineage_parent"
+    lineage_depth="$((lineage_depth + 1))"
+  done
+  [ "$lineage_pid" = "$lineage_ancestor" ]
 }
 
 active_ack_ids() {
@@ -145,7 +199,7 @@ block_stop_while_mutex_unavailable() {
 }
 
 deny_mutating_nonowner_while_mutex_unavailable() {
-  [ "$pretool_mutating" = true ] || return 0
+  [ "$pretool_checkout_mutating" = true ] || return 0
   unavailable_lease="$inbox/pr-lease.json"
   [ -f "$unavailable_lease" ] && [ ! -L "$unavailable_lease" ] && [ -r "$unavailable_lease" ] || return 0
   unavailable_status="$(jq -r 'select(.schemaVersion == "yeet-pr-lease/v1") | .status // "active"' "$unavailable_lease" 2>/dev/null || true)"
@@ -153,21 +207,17 @@ deny_mutating_nonowner_while_mutex_unavailable() {
   unavailable_session="$(jq -r '.sessionId // empty' "$unavailable_lease" 2>/dev/null || true)"
   unavailable_pid="$(jq -r '.pid // empty' "$unavailable_lease" 2>/dev/null || true)"
   unavailable_start="$(jq -r '.procStart // empty' "$unavailable_lease" 2>/dev/null || true)"
-  current_start=''
-  if [ -r "/proc/$PPID/stat" ]; then
-    current_rest="$(sed 's/^.*) //' "/proc/$PPID/stat" 2>/dev/null || true)"
-    if [ -n "$current_rest" ]; then
-      # shellcheck disable=SC2086
-      set -- $current_rest
-      current_start="${20:-}"
-    fi
-  fi
+  current_start="$(proc_start "$PPID" || true)"
+  unavailable_observed_start="$(proc_start "$unavailable_pid" || true)"
   if [ "$unavailable_session" = "$harness:$session_id" ] || {
     [ "$unavailable_pid" = "$PPID" ] && [ -n "$current_start" ] && [ "$unavailable_start" = "$current_start" ];
+  } || {
+    [ -n "$unavailable_observed_start" ] && [ "$unavailable_start" = "$unavailable_observed_start" ] &&
+      proc_has_ancestor "$unavailable_pid" "$PPID";
   }; then
     return 0
   fi
-  context="Published PR ownership cannot be verified while its mutex is busy. Retry this mutating tool after the active ownership generation settles."
+  context="[lease-mutex-busy] Published PR ownership cannot be verified while its mutex is busy. Retry this checkout-mutating tool after the active ownership generation settles."
   jq -cn --arg context "$context" \
     '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
 }
@@ -294,23 +344,6 @@ pr_lease="$inbox/pr-lease.json"
 pr_lease_retirements="$inbox/pr-lease-retirements"
 current_owner_pid="$PPID"
 
-proc_start() {
-  proc_pid="$1"
-  [ -r "/proc/$proc_pid/stat" ] || return 1
-  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
-  [ -n "$proc_rest" ] || return 1
-  set -- $proc_rest
-  eval 'printf "%s" "${20:-}"'
-}
-
-proc_state() {
-  proc_pid="$1"
-  [ -r "/proc/$proc_pid/stat" ] || return 1
-  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
-  set -- $proc_rest
-  printf '%s' "${1:-}"
-}
-
 current_proc_start="$(proc_start "$current_owner_pid" || true)"
 current_lease_session="$harness:$session_id"
 lease_generation=''
@@ -358,6 +391,8 @@ load_pr_lease() {
   esac
   if [ "$lease_session" = "$current_lease_session" ] || {
     [ "$lease_pid" = "$current_owner_pid" ] && [ -n "$current_proc_start" ] && [ "$lease_proc_start" = "$current_proc_start" ];
+  } || {
+    [ "$lease_owner_alive" = true ] && proc_has_ancestor "$lease_pid" "$current_owner_pid";
   }; then
     lease_owned_by_current=true
   else
@@ -480,10 +515,8 @@ if load_pr_lease; then
   load_pr_lease || true
 fi
 
-mutating_tool="$pretool_mutating"
-
-if [ "$mutating_tool" = true ] && [ -n "$lease_generation" ] && [ "$lease_owned_by_current" = false ]; then
-  context="Published PR ownership belongs to session $lease_session (pid $lease_pid). This session lost lease generation $lease_generation and is fenced from mutating tools."
+if [ "$pretool_checkout_mutating" = true ] && [ -n "$lease_generation" ] && [ "$lease_owned_by_current" = false ]; then
+  context="[lease-nonowner] Published PR ownership belongs to session $lease_session (pid $lease_pid). This session lost lease generation $lease_generation and is fenced from checkout-mutating tools."
   jq -cn --arg context "$context" \
     '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
   exit 0
@@ -513,27 +546,36 @@ case "$harness:$event" in
       incident_id="$(printf '%s' "$state" | jq -r '.incidentId // empty')"
       row_id="$(printf '%s' "$first_p0" | jq -r '.id')"
       context="$(render_context "[$first_p0]")"
-      tool_name="$(printf '%s' "$payload" | jq -r '.tool_name // empty' 2>/dev/null || true)"
       tool_command="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty' 2>/dev/null || true)"
-      unrelated=false
+      p0_new_work=false
 
-      case "$tool_name" in
-        Agent|Task|Skill|EnterPlanMode)
-          unrelated=true
+      # A2-A3 in goals/ship-velocity/SPEC.md ratified re-arming only for
+      # unrelated new work. Agent/Task can launch checkout-mutating children;
+      # Skill, plan/discovery, cancellation, MCP, and unknown tools cannot.
+      case "$pretool_tool_name" in
+        Agent|Task)
+          p0_new_work=true
           ;;
         Bash)
           case "$tool_command" in
             *"git switch"*|*"git checkout -b"*|*"worktree new"*|*"create-package"*|*"goals bootstrap"*)
-              unrelated=true
+              p0_new_work=true
               ;;
           esac
           ;;
       esac
 
-      if [ "$incident_id" != "$row_id" ] || [ "$unrelated" = true ]; then
+      if [ "$p0_new_work" = true ]; then
+        deny_context="[p0-new-work] Unacknowledged P0 work keeps this checkout in incident mode; starting unrelated Agent/Task or workspace/bootstrap work is blocked until ACK.
+$context"
+        jq -cn --arg context "$deny_context" \
+          '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
+      elif [ "$pretool_checkout_mutating" = true ] && [ "$incident_id" != "$row_id" ]; then
         state="$(printf '%s' "$state" | jq -c --arg id "$row_id" '.incidentId = $id')"
         write_state
-        jq -cn --arg context "$context" \
+        deny_context="[p0-attention] The first checkout-mutating tool after a new P0 is interrupted once.
+$context"
+        jq -cn --arg context "$deny_context" \
           '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
       else
         jq -cn --arg context "$context" \
