@@ -1009,8 +1009,10 @@ describe("T7 corpus preservation", () => {
         const stream = yield* Effect.forEach([legacy, archive], CorpusLedgerRecordJson.encode);
         const decoded = yield* Effect.forEach(stream, CorpusLedgerRecordJson.decode);
         const provenanceOnly = yield* decodeProvenanceLinesForTesting(`${A.join(stream, "\n")}\n`);
+        const malformed = yield* decodeProvenanceLinesForTesting("{}\n").pipe(Effect.flip);
         expect(decoded).toEqual([legacy, archive]);
         expect(provenanceOnly).toEqual([legacy]);
+        expect(malformed.message).toContain("Provenance manifest line 1 failed schema validation");
       })
     )
   );
