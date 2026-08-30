@@ -79,9 +79,12 @@ export const spanFromMatch = ([start, text]: MatchedText): Contract.Span =>
 const findExact = (sourceText: string, query: string): UniqueMatchSearch =>
   findUniqueMatch(sourceText, query, (start) => O.some(matchedText(start, query)));
 
-interface NormalizedSourceOffsets {
+interface SourceOffsets {
   readonly ends: ReadonlyArray<number>;
   readonly starts: ReadonlyArray<number>;
+}
+
+interface NormalizedSourceOffsets extends SourceOffsets {
   readonly text: string;
 }
 
@@ -100,10 +103,8 @@ interface MinimalFoldToken {
   readonly sourceStart: number;
 }
 
-interface MinimalFoldSourceOffsets {
+interface MinimalFoldSourceOffsets extends SourceOffsets {
   readonly encoded: string;
-  readonly ends: ReadonlyArray<number>;
-  readonly starts: ReadonlyArray<number>;
 }
 
 const MINIMAL_FOLD_SEGMENTS = /(-[^\S\r\n]*(?:\r\n|[\n\r])[^\S\r\n]*)|(\s+)|([^\s-]+)|(-)/gu;
@@ -248,16 +249,16 @@ const minimalFoldPatterns = (query: string): ReadonlyArray<string> => {
   ]);
 };
 
-const matchedTextFromNormalized = (
-  normalizedSource: NormalizedSourceOffsets,
+const matchedTextFromOffsets = (
+  sourceOffsets: SourceOffsets,
   sourceText: string,
   normalizedStart: number,
-  normalizedQuery: string
+  normalizedLength: number
 ): O.Option<MatchedText> =>
   O.map(
     O.all({
-      end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, Str.length(normalizedQuery)))),
-      start: A.get(normalizedSource.starts, normalizedStart),
+      end: A.get(sourceOffsets.ends, Num.decrement(Num.sum(normalizedStart, normalizedLength))),
+      start: A.get(sourceOffsets.starts, normalizedStart),
     }),
     ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
   );
@@ -269,7 +270,7 @@ const findLesser = (
 ): UniqueMatchSearch => {
   const normalizedQuery = lower(query);
   return findUniqueMatch(normalizedSource.text, normalizedQuery, (normalizedStart) =>
-    matchedTextFromNormalized(normalizedSource, sourceText, normalizedStart, normalizedQuery)
+    matchedTextFromOffsets(normalizedSource, sourceText, normalizedStart, Str.length(normalizedQuery))
   );
 };
 
@@ -297,13 +298,7 @@ const findMinimalFold = (
               ({ encodedStart, encodedText }) => {
                 const normalizedStart = Num.divideUnsafe(encodedStart, 2);
                 const normalizedLength = Num.divideUnsafe(Str.length(encodedText), 2);
-                return O.map(
-                  O.all({
-                    end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, normalizedLength))),
-                    start: A.get(normalizedSource.starts, normalizedStart),
-                  }),
-                  ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
-                );
+                return matchedTextFromOffsets(normalizedSource, sourceText, normalizedStart, normalizedLength);
               }
             )
           )

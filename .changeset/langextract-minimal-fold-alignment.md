@@ -1,5 +1,7 @@
 ---
 "@beep/langextract": minor
+"@beep/law-practice-server": patch
+"@beep/law-practice-use-cases": patch
 ---
 
 Add a deterministic `match_minimal_fold` alignment tier between the existing
