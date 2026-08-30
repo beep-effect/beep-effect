@@ -548,9 +548,13 @@ const promoteVerifiedCopy = Effect.fn("Preservation.promoteVerifiedCopy")(functi
   }
   const sourceHash = yield* digestResult(staged.hasher, staged.stagedBytes + bytesCopied);
   const destinationHash = yield* hashStream(partialAbs);
-  if (!Str.Equivalence(sourceHash.sha256, destinationHash.sha256)) {
+  const settledSourceHash = yield* hashStream(sourceAbs);
+  if (
+    !Str.Equivalence(sourceHash.sha256, destinationHash.sha256) ||
+    !Str.Equivalence(sourceHash.sha256, settledSourceHash.sha256)
+  ) {
     return yield* PreservationArchiveIoError.make({
-      cause: `source=${sourceHash.sha256} destination=${destinationHash.sha256} bytes=${destinationHash.bytes}`,
+      cause: `streamedSource=${sourceHash.sha256} settledSource=${settledSourceHash.sha256} destination=${destinationHash.sha256} bytes=${destinationHash.bytes}`,
       message: "The staged destination failed its copy-boundary digest verification.",
       operation: "copy-verify",
       path: partialAbs,

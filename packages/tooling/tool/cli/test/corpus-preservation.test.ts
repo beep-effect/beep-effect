@@ -288,7 +288,7 @@ describe("T7 corpus preservation", () => {
         const inheritedLossPath = path.join(archiveRoot, "inherited-loss.jsonl");
         const completeInheritedLoss = yield* fs.readFileString(inheritedLossPath);
         const inheritedLossLines = pipe(completeInheritedLoss, Str.split(/\r?\n/u), A.filter(Str.isNonEmpty));
-        const inheritedLoss = yield* Effect.forEach(inheritedLossLines, decodeInheritedLossRow);
+        const inheritedLoss = yield* Effect.forEach(inheritedLossLines, (line) => decodeInheritedLossRow(line));
         expect(A.map(inheritedLoss, (row) => [row.lossClass, row.count])).toEqual([
           ["collector-error", 1],
           ["deliberate-exclusion", 1],
@@ -547,7 +547,7 @@ describe("T7 corpus preservation", () => {
               sourceStatCount += 1;
               if (sourceStatCount !== 2) return info;
               if (race === "unreadable") return yield* fs.stat(path.join(root, "missing-settle-source.bin"));
-              return { ...info, size: info.size + 1n };
+              return { ...info, size: FileSystem.Size(info.size + 1n) };
             }),
           });
           const racingContext = yield* Layer.build(makeArchiveWriterLive()).pipe(
@@ -684,6 +684,36 @@ describe("T7 corpus preservation", () => {
         expect((yield* writer.archiveObject(timestampSource, timestampDest, refreshedTimestampIdentity)).kind).toBe(
           "copied"
         );
+
+        const coarseTimestampSource = path.join(root, "coarse-timestamp-source.bin");
+        const coarseTimestampDest = path.join(root, "archive", "coarse-timestamp.bin");
+        const coarseTimestamp = 1_787_850_001;
+        yield* fs.writeFile(coarseTimestampSource, new Uint8Array([1, 2, 3]));
+        yield* fs.utimes(coarseTimestampSource, coarseTimestamp, coarseTimestamp);
+        const coarseTimestampIdentity = yield* identityFor(coarseTimestampSource, "coarse-timestamp-source.bin").pipe(
+          Effect.provide(baseContext)
+        );
+        const coarseTimestampContext = yield* Layer.build(
+          serviceLayer(
+            path.join(root, "coarse-timestamp-manifest.jsonl"),
+            makeArchiveWriterLive(
+              ArchiveWriterLiveOptions.make({
+                afterPayloadSync: Effect.fn("CorpusPreservationTest.coarseTimestampMutation")(function* ({
+                  sourceAbs,
+                }) {
+                  yield* fs.writeFile(sourceAbs, new Uint8Array([4, 5, 6]));
+                  yield* fs.utimes(sourceAbs, coarseTimestamp, coarseTimestamp);
+                }, Effect.orDie),
+              })
+            )
+          )
+        );
+        const coarseTimestampWriter = yield* ArchiveWriter.pipe(Effect.provide(coarseTimestampContext));
+        const coarseTimestampFailure = yield* coarseTimestampWriter
+          .archiveObject(coarseTimestampSource, coarseTimestampDest, coarseTimestampIdentity)
+          .pipe(Effect.flip);
+        expect(coarseTimestampFailure.operation).toBe("copy-verify");
+        expect(yield* fs.exists(coarseTimestampDest)).toBe(false);
 
         const crashDest = path.join(root, "archive", "crash.bin");
         const landed = yield* writer.archiveObject(source, crashDest, identity);
