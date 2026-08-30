@@ -41,4 +41,5 @@ export class Thread extends ProductEntity.Entity<Thread>()(WorkspaceIdentity.Thr
   })
 ) {
   static readonly decodeUnknownSync = S.decodeUnknownSync(Thread);
+  static readonly encodeSync = S.encodeSync(Thread);
 }

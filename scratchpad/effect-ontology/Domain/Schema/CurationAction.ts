@@ -138,18 +138,6 @@ export const CorrectTripleAction = CurationActionDefinition.cases.CorrectTripleA
 /**
  * Runtime correction command decoded by {@link CorrectTripleAction}.
  *
- * **Example** (Decode CorrectTripleAction)
- *
- * ```ts
- * import { CorrectTripleAction } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeCorrectTripleAction = (_value: CorrectTripleAction): string => "valid correct triple action"
- *
- * console.log(O.map(S.decodeUnknownOption(CorrectTripleAction)({}), summarizeCorrectTripleAction))
- * ```
- *
  * @see {@link CorrectTripleAction} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
@@ -185,18 +173,6 @@ export const MarkAsWrongAction = CurationActionDefinition.cases.MarkAsWrongActio
 
 /**
  * Runtime deprecation command decoded by {@link MarkAsWrongAction}.
- *
- * **Example** (Decode MarkAsWrongAction)
- *
- * ```ts
- * import { MarkAsWrongAction } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeMarkAsWrongAction = (_value: MarkAsWrongAction): string => "valid mark as wrong action"
- *
- * console.log(O.map(S.decodeUnknownOption(MarkAsWrongAction)({}), summarizeMarkAsWrongAction))
- * ```
  *
  * @see {@link MarkAsWrongAction} for the runtime schema and decoding behavior.
  * @category type-level
@@ -235,18 +211,6 @@ export const AddAliasAction = CurationActionDefinition.cases.AddAliasAction.pipe
 /**
  * Runtime alias command decoded by {@link AddAliasAction}.
  *
- * **Example** (Decode AddAliasAction)
- *
- * ```ts
- * import { AddAliasAction } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeAddAliasAction = (_value: AddAliasAction): string => "valid add alias action"
- *
- * console.log(O.map(S.decodeUnknownOption(AddAliasAction)({}), summarizeAddAliasAction))
- * ```
- *
  * @see {@link AddAliasAction} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
@@ -281,18 +245,6 @@ export const PromoteToPreferredAction = CurationActionDefinition.cases.PromoteTo
 );
 /**
  * Runtime promotion command decoded by {@link PromoteToPreferredAction}.
- *
- * **Example** (Decode PromoteToPreferredAction)
- *
- * ```ts
- * import { PromoteToPreferredAction } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizePromoteToPreferredAction = (_value: PromoteToPreferredAction): string => "valid promote to preferred action"
- *
- * console.log(O.map(S.decodeUnknownOption(PromoteToPreferredAction)({}), summarizePromoteToPreferredAction))
- * ```
  *
  * @see {@link PromoteToPreferredAction} for the runtime schema and decoding behavior.
  * @category type-level
@@ -330,18 +282,6 @@ export const LinkToWikidataAction = CurationActionDefinition.cases.LinkToWikidat
 /**
  * Runtime Wikidata-link command decoded by {@link LinkToWikidataAction}.
  *
- * **Example** (Decode LinkToWikidataAction)
- *
- * ```ts
- * import { LinkToWikidataAction } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeLinkToWikidataAction = (_value: LinkToWikidataAction): string => "valid link to wikidata action"
- *
- * console.log(O.map(S.decodeUnknownOption(LinkToWikidataAction)({}), summarizeLinkToWikidataAction))
- * ```
- *
  * @see {@link LinkToWikidataAction} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
@@ -377,18 +317,6 @@ export const CurationAction = CurationActionDefinition.pipe(
 
 /**
  * Runtime action decoded by {@link CurationAction}.
- *
- * **Example** (Decode CurationAction)
- *
- * ```ts
- * import { CurationAction } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeCurationAction = (_value: CurationAction): string => "valid curation action"
- *
- * console.log(O.map(S.decodeUnknownOption(CurationAction)({}), summarizeCurationAction))
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -614,18 +542,6 @@ export const CurationEvent = CurationEventDefinition.pipe(
 /**
  * Runtime event decoded by {@link CurationEvent}.
  *
- * **Example** (Decode CurationEvent)
- *
- * ```ts
- * import { CurationEvent } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeCurationEvent = (_value: CurationEvent): string => "valid curation event"
- *
- * console.log(O.map(S.decodeUnknownOption(CurationEvent)({}), summarizeCurationEvent))
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -733,18 +649,6 @@ export const CurationJob = CurationJobDefinition.pipe(
 
 /**
  * Runtime job decoded by {@link CurationJob}.
- *
- * **Example** (Decode CurationJob)
- *
- * ```ts
- * import { CurationJob } from "@effect-ontology/Domain/Schema/CurationAction"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeCurationJob = (_value: CurationJob): string => "valid curation job"
- *
- * console.log(O.map(S.decodeUnknownOption(CurationJob)({}), summarizeCurationJob))
- * ```
  *
  * @category type-level
  * @since 0.0.0

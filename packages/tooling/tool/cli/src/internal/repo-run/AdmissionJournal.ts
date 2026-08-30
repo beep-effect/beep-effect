@@ -18,7 +18,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Clock, Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { constant, dual } from "effect/Function";
+import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -194,7 +194,7 @@ const pidIsAlive = (pid: number): boolean => {
   }
 };
 
-const lockOwnerPid = (content: string): O.Option<number> => pipe(content, Str.split(":"), A.head, O.flatMap(N.parse));
+const lockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
 
 // A lock replaced between the ownership read and the remove can be reaped
 // fresh; the window is one syscall pair and the cost is one competing

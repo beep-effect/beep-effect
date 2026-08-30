@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/jsdoc-carrier-migration",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 627,
   "mission": "Retire the legacy @example/@remarks carriers across every affected source file via a deterministic codemod with a per-block byte conservation law, using Grok 4.5 as a data-only title and section-routing service, then swap the cleanup-on-touch gate for a repo-wide zero-legacy check.",
   "executionCapable": true,
   "reflectionRequired": true,

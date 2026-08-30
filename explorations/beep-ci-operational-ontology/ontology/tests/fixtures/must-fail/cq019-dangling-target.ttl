@@ -1,0 +1,7 @@
+# Falsifiability (round-3 H W-02, Oxigraph-proven): a provenance edge pointing at an
+# arbitrary IRI (no typed outcome) satisfied arm 2's mere-existence check — arm 4
+# flags the dangling target under closed hasAffectedOutcome.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:ev-dangling a ciops:VerificationEvidence ;
+    ciops:hasScope ciops:AffectedScope ;
+    ciops:scopedByComputation ciops:not-a-computation .

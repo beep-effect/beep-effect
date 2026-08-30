@@ -521,7 +521,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
 
           expect(report.phoenix.status).toBe(AgentEffectivenessStatus.Enum.passed);
           expect(report.phoenix.projectCount).toBe(1);
-          expect(report.phoenix.version).toBe("9.9.9-test");
+          expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
           expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
         }).pipe(provideScopedLayer(phoenixRuntimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
       })
@@ -545,15 +545,33 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
 
           // Reachable, not `unavailable`: one slow aggregate must not take the section down.
           expect(report.phoenix.projectCount).toBe(1);
-          expect(report.phoenix.version).toBe("9.9.9-test");
+          expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
           expect(report.phoenix.projects[0]?.name).toBe("beep-jsdoc-worker-eval");
           // Cheap identity fields still populate.
           expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
           // Aggregates report as not-measured rather than as zero or false, so the
           // report cannot be misread as "Phoenix has no traces".
-          expect(report.phoenix.projects[0]?.hasTraces).toBeNull();
-          expect(report.phoenix.projects[0]?.recordCount).toBeNull();
-          expect(report.phoenix.projects[0]?.traceCount).toBeNull();
+          expect(
+            pipe(
+              A.head(report.phoenix.projects),
+              O.flatMap((project) => project.hasTraces),
+              O.isNone
+            )
+          ).toBe(true);
+          expect(
+            pipe(
+              A.head(report.phoenix.projects),
+              O.flatMap((project) => project.recordCount),
+              O.isNone
+            )
+          ).toBe(true);
+          expect(
+            pipe(
+              A.head(report.phoenix.projects),
+              O.flatMap((project) => project.traceCount),
+              O.isNone
+            )
+          ).toBe(true);
           expect(Str.includes("unmeasured")(report.phoenix.message)).toBe(true);
           // The message must name the mode it actually hit. Reporting a rejected
           // query as a timeout sends an operator after store size instead of the
@@ -588,7 +606,13 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           );
 
           expect(report.phoenix.projectCount).toBe(1);
-          expect(report.phoenix.projects[0]?.traceCount).toBeNull();
+          expect(
+            pipe(
+              A.head(report.phoenix.projects),
+              O.flatMap((project) => project.traceCount),
+              O.isNone
+            )
+          ).toBe(true);
           expect(Str.includes("could not be decoded")(report.phoenix.message)).toBe(true);
           // A 200 carrying an unreadable body is not a rejection and not a timeout.
           expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
@@ -623,7 +647,13 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           // The inventory still answered, so the section stays readable rather
           // than collapsing to `unavailable`.
           expect(report.phoenix.projectCount).toBe(1);
-          expect(report.phoenix.projects[0]?.traceCount).toBeNull();
+          expect(
+            pipe(
+              A.head(report.phoenix.projects),
+              O.flatMap((project) => project.traceCount),
+              O.isNone
+            )
+          ).toBe(true);
           expect(Str.includes("could not be reached")(report.phoenix.message)).toBe(true);
           expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
           expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
@@ -858,11 +888,11 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const calls = {
-          annotations: [] as string[],
-          appends: [] as string[],
-          datasets: [] as string[],
-          experiments: [] as string[],
-          prompts: [] as string[],
+          annotations: A.empty<string>(),
+          appends: A.empty<string>(),
+          datasets: A.empty<string>(),
+          experiments: A.empty<string>(),
+          prompts: A.empty<string>(),
         };
         yield* Effect.gen(function* () {
           const dataRoot = path.join(tmpDir, "metrics");
@@ -927,11 +957,11 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const calls = {
-          annotations: [] as string[],
-          appends: [] as string[],
-          datasets: [] as string[],
-          experiments: [] as string[],
-          prompts: [] as string[],
+          annotations: A.empty<string>(),
+          appends: A.empty<string>(),
+          datasets: A.empty<string>(),
+          experiments: A.empty<string>(),
+          prompts: A.empty<string>(),
         };
         yield* Effect.gen(function* () {
           const dataRoot = path.join(tmpDir, "metrics");
@@ -994,11 +1024,11 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const calls = {
-          annotations: [] as string[],
-          appends: [] as string[],
-          datasets: [] as string[],
-          experiments: [] as string[],
-          prompts: [] as string[],
+          annotations: A.empty<string>(),
+          appends: A.empty<string>(),
+          datasets: A.empty<string>(),
+          experiments: A.empty<string>(),
+          prompts: A.empty<string>(),
         };
         yield* Effect.gen(function* () {
           const dataRoot = path.join(tmpDir, "metrics");
@@ -1064,10 +1094,10 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
             annotations: [
               AgentEffectivenessPlannedAnnotation.make({
                 annotationId: "bad",
-                metadata: { path: "/home/elpresidank/private.txt" },
+                metadata: { path: "/home/test-operator/private.txt" },
                 name: "agent.outcome.note",
                 optimization: "minimize",
-                source: "test",
+                source: "ai-metrics",
                 targetKind: "agent-task",
                 targetRef: "task",
                 value: "api_key=oops",
@@ -1077,7 +1107,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
                 metadata: {},
                 name: "agent.outcome.note",
                 optimization: "minimize",
-                source: "test",
+                source: "ai-metrics",
                 targetKind: "agent-task",
                 targetRef: "task-duplicate",
                 value: "safe",
@@ -1156,11 +1186,11 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const calls = {
-          annotations: [] as string[],
-          appends: [] as string[],
-          datasets: [] as string[],
-          experiments: [] as string[],
-          prompts: [] as string[],
+          annotations: A.empty<string>(),
+          appends: A.empty<string>(),
+          datasets: A.empty<string>(),
+          experiments: A.empty<string>(),
+          prompts: A.empty<string>(),
         };
         yield* Effect.gen(function* () {
           const dataRoot = path.join(tmpDir, "metrics");
@@ -1206,11 +1236,11 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const calls = {
-          annotations: [] as string[],
-          appends: [] as string[],
-          datasets: [] as string[],
-          experiments: [] as string[],
-          prompts: [] as string[],
+          annotations: A.empty<string>(),
+          appends: A.empty<string>(),
+          datasets: A.empty<string>(),
+          experiments: A.empty<string>(),
+          prompts: A.empty<string>(),
         };
         yield* Effect.gen(function* () {
           const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({

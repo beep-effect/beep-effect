@@ -48,7 +48,9 @@ import {
   coverageRegressionBaselinePath,
   coverageRegressionRegenerationCommand,
 } from "../../Quality/internal/CoverageRegression.ts";
+import { defaultJSDocDocumentationInventoryMarkdownPath } from "../../Quality/internal/JSDocDocumentationInventory.ts";
 import {
+  defaultJSDocInventoryPath,
   defaultJSDocTotalsBaselinePath,
   jsdocInventoryRegenerationCommand,
   jsdocTotalsSnapshotCommand,
@@ -339,12 +341,37 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     scope: "goals-packets",
   }),
   GateArtifactDescriptor.make({
-    artifactPath: ".beep/ci/jsdoc-documentation.inventory.jsonc",
+    artifactPath: defaultJSDocInventoryPath,
     gateId: "jsdoc-documentation-inventory",
     kind: "inventory",
-    regenerateCommand: "bun run beep ci lane jsdoc-inventory",
+    regenerateCommand: jsdocInventoryRegenerationCommand,
     scope: "repo-code",
   }),
+];
+
+/**
+ * Generated gate companions that are outputs rather than gate inputs.
+ *
+ * **Details**
+ *
+ * A generator can write more than the single machine-readable artifact a gate
+ * judges. Those companion outputs must be excluded from staleness inputs too,
+ * or write order makes the primary artifact permanently stale against its own
+ * sibling.
+ *
+ * **Example** (Exclude the JSDoc Markdown companion)
+ *
+ * ```ts
+ * import { YEET_GATE_AUXILIARY_ARTIFACT_PATHS } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_GATE_AUXILIARY_ARTIFACT_PATHS[0] === "standards/jsdoc-documentation.inventory.md") // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const YEET_GATE_AUXILIARY_ARTIFACT_PATHS: ReadonlyArray<string> = [
+  defaultJSDocDocumentationInventoryMarkdownPath,
 ];
 
 /**
@@ -627,7 +654,10 @@ export const collectYeetGateStaleness = Effect.fn("Yeet.collectYeetGateStaleness
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const artifactPaths = A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (descriptor) => descriptor.artifactPath);
+  const artifactPaths = [
+    ...A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (descriptor) => descriptor.artifactPath),
+    ...YEET_GATE_AUXILIARY_ARTIFACT_PATHS,
+  ];
   const inputPaths = yield* collectYeetGateInputPaths(context).pipe(
     Effect.map(A.filter((candidate) => !A.contains(artifactPaths, candidate)))
   );

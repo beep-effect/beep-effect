@@ -1,0 +1,6766 @@
+{
+  "pack": "remainder",
+  "modules": [
+    {
+      "file": "metadata/Metadata.models.ts",
+      "pack": "remainder",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "pack": "remainder",
+      "exportCount": 83,
+      "owningExportCount": 83,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "pack": "remainder",
+      "exportCount": 131,
+      "owningExportCount": 131,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "pack": "remainder",
+      "exportCount": 85,
+      "owningExportCount": 85,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "pack": "remainder",
+      "exportCount": 29,
+      "owningExportCount": 29,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "metadata/Metadata.models.ts",
+      "name": "FileCategory",
+      "line": 10,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "metadata/Metadata.models.ts",
+      "name": "FileCategory",
+      "line": 16,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "metadata/Metadata.models.ts",
+      "name": "MetadataSource",
+      "line": 18,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "metadata/Metadata.models.ts",
+      "name": "MetadataSource",
+      "line": 40,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "metadata/Metadata.models.ts",
+      "name": "MetadataConfidence",
+      "line": 42,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "metadata/Metadata.models.ts",
+      "name": "MetadataConfidence",
+      "line": 48,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeErrorType",
+      "line": 32,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeErrorType",
+      "line": 92,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@see",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeWarningType",
+      "line": 108,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeWarningType",
+      "line": 162,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@see",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OcrTimeoutConfig",
+      "line": 178,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OcrConfig",
+      "line": 244,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CommonOfficeParserConfig",
+      "line": 306,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "HtmlParserConfig",
+      "line": 463,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeParserConfig",
+      "line": 526,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "DecompressionLimits",
+      "line": 534,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "FullOfficeParserConfig",
+      "line": 579,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeIssue",
+      "line": 587,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeError",
+      "line": 626,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ConversionResult",
+      "line": 651,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@typeParam",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "UniversalGeneratorFormat",
+      "line": 664,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "SupportedDestination",
+      "line": 672,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "MetadataOverrides",
+      "line": 684,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CommonGeneratorConfig",
+      "line": 732,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "GeneratorConfig",
+      "line": 916,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@typeParam",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeConverterConfig",
+      "line": 926,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@typeParam",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "DeepRequired",
+      "line": 949,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "FullGeneratorConfig",
+      "line": 967,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "HtmlInjectionConfig",
+      "line": 989,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "StandaloneConfig",
+      "line": 1010,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "HtmlGeneratorConfig",
+      "line": 1058,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "PdfGeneratorConfig",
+      "line": 1121,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "StructuredStyleMapping",
+      "line": 1197,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "RtfGeneratorConfig",
+      "line": 1273,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CsvGeneratorConfig",
+      "line": 1283,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "MarkdownDialectPreset",
+      "line": 1314,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "AdmonitionSyntax",
+      "line": 1335,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "HighlightSyntax",
+      "line": 1342,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "StrikethroughSyntax",
+      "line": 1349,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "DefinitionListSyntax",
+      "line": 1356,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "FootnoteSyntax",
+      "line": 1363,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CitationSyntax",
+      "line": 1370,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@citekey",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "WikilinkSyntax",
+      "line": 1377,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "AttributeListSyntax",
+      "line": 1384,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "EmbedSyntax",
+      "line": 1395,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "MarkdownDialectConfig",
+      "line": 1407,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "FallbackToHtmlConfig",
+      "line": 1492,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "MdGeneratorConfig",
+      "line": 1526,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "TextGeneratorConfig",
+      "line": 1569,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ChunkingStrategy",
+      "line": 1611,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "BaseChunkingConfig",
+      "line": 1619,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "FixedSizeChunkingConfig",
+      "line": 1686,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "DocumentStructureChunkingConfig",
+      "line": 1718,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "SemanticChunkingConfig",
+      "line": 1756,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ChunkingConfig",
+      "line": 1813,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeChunk",
+      "line": 1827,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "SupportedFileType",
+      "line": 1867,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "BlobLike",
+      "line": 1890,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeContentNodeType",
+      "line": 1902,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeMimeType",
+      "line": 1935,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "TextAlignment",
+      "line": 1961,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "TextFormatting",
+      "line": 1969,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "SlideMetadata",
+      "line": 2122,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "SheetMetadata",
+      "line": 2150,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "IndentationMetadata",
+      "line": 2165,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "HeadingMetadata",
+      "line": 2182,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ParagraphMetadata",
+      "line": 2201,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ListMetadata",
+      "line": 2218,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CellMetadata",
+      "line": 2310,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "TableMetadata",
+      "line": 2375,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ChartMetadata",
+      "line": 2397,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ImageMetadata",
+      "line": 2420,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "EmbedMetadata",
+      "line": 2493,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "AdmonitionMetadata",
+      "line": 2520,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "PageMetadata",
+      "line": 2534,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "TextMetadata",
+      "line": 2554,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "NoteMetadata",
+      "line": 2608,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "BreakMetadata",
+      "line": 2645,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CodeMetadata",
+      "line": 2677,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "CommentMetadata",
+      "line": 2696,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "HeaderFooterMetadata",
+      "line": 2709,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ContentMetadata",
+      "line": 2719,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "BaseContentNode",
+      "line": 2775,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeContentNode",
+      "line": 2911,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "ChartData",
+      "line": 2976,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeAttachment",
+      "line": 3031,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeMetadata",
+      "line": 3155,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeAuxiliaryContent",
+      "line": 3202,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "metadata/services/officeparser/OfficeParser.models.ts",
+      "name": "OfficeParserAST",
+      "line": 3233,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlYearString",
+      "line": 309,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlYearString",
+      "line": 326,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlMonthString",
+      "line": 345,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlMonthString",
+      "line": 362,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDateString",
+      "line": 381,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDateString",
+      "line": 398,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlYearlessDateString",
+      "line": 417,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlYearlessDateString",
+      "line": 434,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlTimeString",
+      "line": 453,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlTimeString",
+      "line": 470,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlLocalDateTimeString",
+      "line": 489,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlLocalDateTimeString",
+      "line": 504,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlTimeZoneOffsetString",
+      "line": 523,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlTimeZoneOffsetString",
+      "line": 538,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlGlobalDateTimeString",
+      "line": 557,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlGlobalDateTimeString",
+      "line": 574,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlWeekString",
+      "line": 593,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlWeekString",
+      "line": 608,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDurationUnit",
+      "line": 630,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDurationUnit",
+      "line": 644,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlIsoDurationString",
+      "line": 665,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlIsoDurationString",
+      "line": 682,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlHumanDurationString",
+      "line": 701,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlHumanDurationString",
+      "line": 716,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDurationString",
+      "line": 735,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDurationString",
+      "line": 747,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlUrlTokenString",
+      "line": 766,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlUrlTokenString",
+      "line": 788,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlUrlPotentiallySurroundedBySpaces",
+      "line": 807,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlUrlPotentiallySurroundedBySpaces",
+      "line": 825,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "makeHtmlUrlFromString",
+      "line": 851,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataSerializedUrlString",
+      "line": 883,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataSerializedUrlString",
+      "line": 905,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataUrlFromString",
+      "line": 924,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataUrlFromString",
+      "line": 942,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDurationValue",
+      "line": 1073,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "HtmlDurationValue",
+      "line": 1100,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataDurationFromString",
+      "line": 1119,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataDurationFromString",
+      "line": 1148,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataDateTimeFromString",
+      "line": 1177,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataDateTimeFromString",
+      "line": 1195,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdIntegerString",
+      "line": 1214,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdIntegerString",
+      "line": 1231,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdIntegerValue",
+      "line": 1247,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdIntegerValue",
+      "line": 1262,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdIntegerFromString",
+      "line": 1281,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdIntegerFromString",
+      "line": 1304,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdDoubleString",
+      "line": 1345,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdDoubleString",
+      "line": 1366,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdDoubleFromString",
+      "line": 1385,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "XsdDoubleFromString",
+      "line": 1403,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataNumericValueFromString",
+      "line": 1422,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataNumericValueFromString",
+      "line": 1436,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataDataValueFromString",
+      "line": 1467,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataDataValueFromString",
+      "line": 1485,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdDateString",
+      "line": 1511,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdDateString",
+      "line": 1528,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdYearMonthString",
+      "line": 1547,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdYearMonthString",
+      "line": 1568,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdYearString",
+      "line": 1587,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdYearString",
+      "line": 1604,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdTimeString",
+      "line": 1623,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdTimeString",
+      "line": 1640,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdDateTimeString",
+      "line": 1662,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataXsdDateTimeString",
+      "line": 1683,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataRdfTimeValueFromString",
+      "line": 1707,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataRdfTimeValueFromString",
+      "line": 1729,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataRuntimeValueFromString",
+      "line": 1753,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataRuntimeValueFromString",
+      "line": 1772,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardValueType",
+      "line": 1887,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardValueType",
+      "line": 1901,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardValueTypeString",
+      "line": 1922,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardValueTypeString",
+      "line": 1940,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardValueTypeFromString",
+      "line": 1959,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardValueTypeFromString",
+      "line": 1977,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIanaValueTypeString",
+      "line": 1996,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIanaValueTypeString",
+      "line": 2020,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardExperimentalValueTypeString",
+      "line": 2039,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardExperimentalValueTypeString",
+      "line": 2060,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDeclaredValueTypeString",
+      "line": 2079,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDeclaredValueTypeString",
+      "line": 2097,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTextString",
+      "line": 2116,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTextString",
+      "line": 2131,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUriString",
+      "line": 2150,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUriString",
+      "line": 2164,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDateString",
+      "line": 2183,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDateString",
+      "line": 2200,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimeString",
+      "line": 2221,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimeString",
+      "line": 2238,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDateTimeString",
+      "line": 2257,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDateTimeString",
+      "line": 2272,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDateAndOrTimeString",
+      "line": 2296,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardDateAndOrTimeString",
+      "line": 2311,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimestampString",
+      "line": 2330,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimestampString",
+      "line": 2344,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardZonedTimestampString",
+      "line": 2363,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardZonedTimestampString",
+      "line": 2384,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardBooleanString",
+      "line": 2403,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardBooleanString",
+      "line": 2417,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIntegerString",
+      "line": 2436,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIntegerString",
+      "line": 2450,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardFloatString",
+      "line": 2469,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardFloatString",
+      "line": 2485,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUtcOffsetString",
+      "line": 2504,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUtcOffsetString",
+      "line": 2520,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardLanguageTagString",
+      "line": 2539,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardLanguageTagString",
+      "line": 2554,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardBooleanFromString",
+      "line": 2573,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardBooleanFromString",
+      "line": 2593,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIntegerValue",
+      "line": 2609,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIntegerValue",
+      "line": 2624,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIntegerFromString",
+      "line": 2643,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardIntegerFromString",
+      "line": 2666,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardFloatValue",
+      "line": 2683,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardFloatValue",
+      "line": 2719,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardFloatFromString",
+      "line": 2738,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardFloatFromString",
+      "line": 2761,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUtcOffsetValue",
+      "line": 2824,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUtcOffsetValue",
+      "line": 2851,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUtcOffsetFromString",
+      "line": 2870,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUtcOffsetFromString",
+      "line": 2899,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimestampValue",
+      "line": 2941,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimestampValue",
+      "line": 2964,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimestampFromString",
+      "line": 2989,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTimestampFromString",
+      "line": 3009,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUrlFromString",
+      "line": 3028,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardUrlFromString",
+      "line": 3046,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataContextualValueFromString",
+      "line": 3070,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "MicrodataContextualValueFromString",
+      "line": 3090,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTypedScalarFromString",
+      "line": 3114,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "microdata/Microdata.model.ts",
+      "name": "VCardTypedScalarFromString",
+      "line": 3141,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "RequirementType",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "RequirementType",
+      "line": 42,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Requirement",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ExecutionPayloadExecutor",
+      "line": 81,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ExecutionPayloadExecutor",
+      "line": 89,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "DurationFromSeconds",
+      "line": 105,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "DurationFromSeconds",
+      "line": 119,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ExecutionPayload",
+      "line": 131,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "StateUri",
+      "line": 156,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "StateUri",
+      "line": 172,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "StateTransition",
+      "line": 184,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "StateTransitionFromWire",
+      "line": 216,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "StateTransitionFromWire",
+      "line": 226,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ExecutionPayloadFromWire",
+      "line": 244,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ExecutionPayloadFromWire",
+      "line": 254,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SeverityLevel",
+      "line": 268,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SeverityLevel",
+      "line": 276,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "KnowledgeNodeType",
+      "line": 313,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "KnowledgeNodeType",
+      "line": 321,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "KnowledgeNode",
+      "line": 337,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "KnowledgeNodesFromLLM",
+      "line": 402,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "KnowledgeNodesFromLLM",
+      "line": 416,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "CodeAnnotation",
+      "line": 428,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "TableAnnotation",
+      "line": 445,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FlowchartAnnotation",
+      "line": 462,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "TemplateAnnotationType",
+      "line": 481,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "TemplateAnnotationType",
+      "line": 489,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "TemplateAnnotation",
+      "line": 501,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ReferenceFilePurpose",
+      "line": 520,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ReferenceFilePurpose",
+      "line": 528,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ReferenceFile",
+      "line": 540,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Example",
+      "line": 557,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "WorkflowStep",
+      "line": 579,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Workflow",
+      "line": 601,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkillId",
+      "line": 623,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkillId",
+      "line": 639,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "RelationId",
+      "line": 705,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "RelationId",
+      "line": 723,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "IsUserInvocable",
+      "line": 748,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "IsUserInvocable",
+      "line": 755,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkillType",
+      "line": 769,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkillType",
+      "line": 777,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ExtractedSkill",
+      "line": 794,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkillName",
+      "line": 891,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkillName",
+      "line": 902,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FrontmatterDescription",
+      "line": 914,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FrontmatterDescription",
+      "line": 934,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Frontmatter",
+      "line": 946,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FileInfo",
+      "line": 968,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FlowchartType",
+      "line": 992,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FlowchartType",
+      "line": 1000,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ContentBlockType",
+      "line": 1026,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ContentBlockType",
+      "line": 1034,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "CodeBlock",
+      "line": 1046,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "MarkdownTable",
+      "line": 1072,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FlowchartBlock",
+      "line": 1097,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ProcedureStep",
+      "line": 1112,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ProcedureStep",
+      "line": 1153,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ProcedureStep",
+      "line": 1164,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "OrderedProcedure",
+      "line": 1176,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "TemplateBlock",
+      "line": 1201,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Paragraph",
+      "line": 1225,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "BulletItem",
+      "line": 1239,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "BulletItem",
+      "line": 1280,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "BulletItem",
+      "line": 1291,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "BulletListBlock",
+      "line": 1303,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "BlockQuoteBlock",
+      "line": 1326,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "HTMLBlock",
+      "line": 1350,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FrontmatterBlock",
+      "line": 1373,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "HeadingBlock",
+      "line": 1397,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ContentBlock",
+      "line": 1421,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ContentBlock",
+      "line": 1443,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ContentBlock",
+      "line": 1446,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Section",
+      "line": 1529,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Section",
+      "line": 1584,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "Section",
+      "line": 1597,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "ContentExtraction",
+      "line": 1609,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "FlatBlock",
+      "line": 1633,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkeletonNode",
+      "line": 1648,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkeletonNode",
+      "line": 1687,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkeletonNode",
+      "line": 1697,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "SkeletonListItem",
+      "line": 1709,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "DocumentSkeleton",
+      "line": 1729,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "DirectoryScan",
+      "line": 1749,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/OntoSkills.models.ts",
+      "name": "CompiledSkill",
+      "line": 1776,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "TrustTier",
+      "line": 11,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "TrustTier",
+      "line": 21,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "SourceKind",
+      "line": 24,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "SourceKind",
+      "line": 34,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "PackageSkillManifest",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "PackageManifest",
+      "line": 44,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledSkillState",
+      "line": 52,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledSkillStateValueBase",
+      "line": 60,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageVerifiedStateValue",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageOfficialStateValue",
+      "line": 89,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageCommunityStateValue",
+      "line": 99,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageLocalStateValue",
+      "line": 109,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageStateValue",
+      "line": 119,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageStateValue",
+      "line": 133,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageStateBase",
+      "line": 135,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledOntologyPackageState",
+      "line": 145,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledSourcePackageState",
+      "line": 155,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageState",
+      "line": 165,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstalledPackageState",
+      "line": 174,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "RegistryLock",
+      "line": 176,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "RegistrySource",
+      "line": 187,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "RegistryPackageEntry",
+      "line": 201,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "EmbeddingModelInfo",
+      "line": 216,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "RegistryIndex",
+      "line": 231,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "AuthorTarget",
+      "line": 244,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "PackageTarget",
+      "line": 258,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "SkillTarget",
+      "line": 271,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstallTarget",
+      "line": 284,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "ontoskills/registry/Registry.models.ts",
+      "name": "InstallTarget",
+      "line": 297,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "remainder",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    }
+  ]
+}

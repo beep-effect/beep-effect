@@ -620,17 +620,19 @@ const makeConfigService = Effect.gen(function* () {
 /**
  * Application configuration service.
  *
- * **Example** (Access application configuration)
+ * **Example** (Read the configured LLM model)
  *
  * ```ts
- * import { Effect } from "effect"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { Effect, Layer } from "effect"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const program = Effect.gen(function* () {
- *   const config = yield* ConfigService
- *   return config.llm.model
- * })
- * console.log(program)
+ * const model = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* ConfigService
+ *     return config.llm.model
+ *   }).pipe(Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * )
+ * console.log(model)
  * ```
  *
  * @category services
@@ -641,13 +643,19 @@ export class ConfigService extends Context.Service<ConfigService, AppConfig>()($
 /**
  * Live configuration layer backed by the ambient `ConfigProvider`.
  *
- * **Example** (Inspect the live configuration layer)
+ * **Example** (Provide live config and read the LLM model)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { ConfigServiceDefault } from "@effect-ontology/Service/Config"
+ * import { Effect } from "effect"
+ * import { ConfigService, ConfigServiceDefault } from "@effect-ontology/Service/Config"
  *
- * console.log(Layer.isLayer(ConfigServiceDefault)) // true
+ * const model = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* ConfigService
+ *     return config.llm.model
+ *   }).pipe(Effect.provide(ConfigServiceDefault), Effect.orDie)
+ * )
+ * console.log(model)
  * ```
  *
  * @category layers

@@ -193,14 +193,6 @@ export const ERNode = ERNodeDefinition.pipe(
 /**
  * Runtime value decoded by {@link ERNode}.
  *
- * **Example** (Use ERNode)
- * ```ts
- * import type { ERNode } from "@effect-ontology/Model/EntityResolution"
- *
- * const tag = (node: ERNode): ERNode["_tag"] => node._tag
- * console.log(typeof tag) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -307,14 +299,6 @@ export const EREdge = EREdgeDefinition.pipe(
 
 /**
  * Runtime value decoded by {@link EREdge}.
- *
- * **Example** (Use EREdge)
- * ```ts
- * import type { EREdge } from "@effect-ontology/Model/EntityResolution"
- *
- * const tag = (edge: EREdge): EREdge["_tag"] => edge._tag
- * console.log(typeof tag) // "function"
- * ```
  *
  * @category type-level
  * @since 0.0.0

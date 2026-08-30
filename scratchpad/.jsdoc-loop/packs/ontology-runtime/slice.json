@@ -1,0 +1,5014 @@
+{
+  "pack": "ontology-runtime",
+  "modules": [
+    {
+      "file": "effect-ontology/Cluster/BackpressureHandler.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 17,
+      "owningExportCount": 16,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntityHandler.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/index.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/AssetRouter.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/AuthRouter.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 8,
+      "owningExportCount": 7,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ClusterRuntime.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBridge.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 16,
+      "owningExportCount": 16,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpMiddleware.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ImageRouter.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/InferenceRouter.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/JobPushHandler.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/LinkIngestionRouter.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/LlmSemaphore.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/DatabaseReady.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/MigrationRunner.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 14,
+      "owningExportCount": 13,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/index.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 17,
+      "owningExportCount": 16,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/RateLimitedLanguageModel.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Shutdown.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/TestRuntime.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 12,
+      "owningExportCount": 12,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 8,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/EntityFactory.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/MentionFactory.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/RelationFactory.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/index.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 35,
+      "owningExportCount": 35,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolution.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolutionGraph.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/Merge.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtraction.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtractionActivity.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/index.ts",
+      "pack": "ontology-runtime",
+      "exportCount": 4,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    }
+  ],
+  "exports": [
+    {
+      "file": "effect-ontology/Cluster/BackpressureHandler.ts",
+      "name": "ExtractionProgressEvent",
+      "line": 44,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/BackpressureHandler.ts",
+      "name": "BackpressureConfig",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/BackpressureHandler.ts",
+      "name": "withBackpressure",
+      "line": 171,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/BackpressureHandler.ts",
+      "name": "BackpressureMetrics",
+      "line": 254,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/BackpressureHandler.ts",
+      "name": "withBackpressureMetered",
+      "line": 283,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "computeIdempotencyKey, ExtractionParams",
+      "line": 27,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractFromTextPayload",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractFromTextPayload",
+      "line": 82,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractionSummary",
+      "line": 99,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractionSummary",
+      "line": 124,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "GetCachedResultPayload",
+      "line": 141,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "GetCachedResultPayload",
+      "line": 163,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "KnowledgeGraphResult",
+      "line": 180,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "KnowledgeGraphResult",
+      "line": 210,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractFromTextRpc",
+      "line": 238,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "GetCachedResultRpc",
+      "line": 263,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "CancelExtractionRpc",
+      "line": 283,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractionStatus",
+      "line": 315,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "ExtractionStatus",
+      "line": 340,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "GetExtractionStatusRpc",
+      "line": 356,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "KnowledgeGraphExtractor",
+      "line": 390,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntity.ts",
+      "name": "KnowledgeGraphExtractor",
+      "line": 413,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntityHandler.ts",
+      "name": "makeExtractionEntityHandler",
+      "line": 160,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/ExtractionEntityHandler.ts",
+      "name": "ExtractionEntityHandlerLayer",
+      "line": 507,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/index.ts",
+      "name": "*",
+      "line": 15,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@packageDocumentation",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/index.ts",
+      "name": "*",
+      "line": 16,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Cluster/index.ts",
+      "name": "*",
+      "line": 17,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/AssetRouter.ts",
+      "name": "AssetRouter",
+      "line": 42,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/AuthRouter.ts",
+      "name": "AuthRouter",
+      "line": 158,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "CircuitState",
+      "line": 61,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "CircuitState",
+      "line": 82,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "CircuitBreakerConfig",
+      "line": 101,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "CircuitBreakerConfigInput",
+      "line": 127,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "DEFAULT_CIRCUIT_CONFIG",
+      "line": 143,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "makeCircuitBreaker",
+      "line": 176,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "CircuitBreaker",
+      "line": 331,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/CircuitBreaker.ts",
+      "name": "CircuitOpenError",
+      "line": 334,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ClusterRuntime.ts",
+      "name": "ClusterSqliteLive",
+      "line": 47,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ClusterRuntime.ts",
+      "name": "ClusterWithSqlClient",
+      "line": 81,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ClusterRuntime.ts",
+      "name": "ClusterShardingConfigFromEnv",
+      "line": 101,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ClusterRuntime.ts",
+      "name": "ClusterSqliteLiveFromEnv",
+      "line": 120,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ClusterRuntime.ts",
+      "name": "ClusterAutoLiveFromEnv",
+      "line": 150,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "name": "EmbeddingProviderFromConfig",
+      "line": 54,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "name": "EmbeddingRateLimiterFromConfig",
+      "line": 97,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "name": "NomicEmbeddingInfrastructure",
+      "line": 133,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "name": "VoyageEmbeddingInfrastructure",
+      "line": 157,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "name": "EmbeddingInfrastructure",
+      "line": 192,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EmbeddingLayers.ts",
+      "name": "EmbeddingInfrastructureDefault",
+      "line": 225,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBridge.ts",
+      "name": "EventBridgeServiceMethods",
+      "line": 48,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBridge.ts",
+      "name": "EventBridgeService",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBridge.ts",
+      "name": "EventBridgeError",
+      "line": 95,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBridge.ts",
+      "name": "EventBridgeLive",
+      "line": 185,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBridge.ts",
+      "name": "EventBridgeAutoStart",
+      "line": 206,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "BroadcastEvent",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "BroadcastEvent",
+      "line": 105,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@effect",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "PingMessage",
+      "line": 122,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "PingMessage",
+      "line": 148,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@beep",
+        "@effect",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "ConnectedMessage",
+      "line": 165,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "ConnectedMessage",
+      "line": 197,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@beep",
+        "@effect",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "ServerMessage",
+      "line": 214,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "ServerMessage",
+      "line": 236,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastHubMethods",
+      "line": 262,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastHub",
+      "line": 294,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastConfig",
+      "line": 333,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastHubMemory",
+      "line": 523,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastHubPubSub",
+      "line": 539,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastHubLive",
+      "line": 555,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "EventBroadcastRouter",
+      "line": 591,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/EventBroadcastRouter.ts",
+      "name": "broadcastDomainEvent",
+      "line": 733,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "name": "HealthStatus",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "name": "HealthStatus",
+      "line": 79,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "name": "HealthCheckStatus",
+      "line": 95,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "name": "HealthCheckStatus",
+      "line": 116,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "name": "HealthResult",
+      "line": 132,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HealthCheck.ts",
+      "name": "HealthCheckService",
+      "line": 158,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpMiddleware.ts",
+      "name": "CurrentConflictActor",
+      "line": 41,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpMiddleware.ts",
+      "name": "makeAuthMiddleware",
+      "line": 95,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpMiddleware.ts",
+      "name": "makeShutdownMiddleware",
+      "line": 174,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpMiddleware.ts",
+      "name": "makeLoggingMiddleware",
+      "line": 201,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "TimelineRouter",
+      "line": 370,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "SearchRouter",
+      "line": 662,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "ExtractionRouter",
+      "line": 1053,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "HealthRouter",
+      "line": 1097,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "OntologyRouter",
+      "line": 1144,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "ApiRouter",
+      "line": 1191,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "ApiRouterWithoutRepositories",
+      "line": 1219,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "HttpServerLive",
+      "line": 1298,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/HttpServer.ts",
+      "name": "HttpServerWithoutRepositoriesLive",
+      "line": 1314,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ImageRouter.ts",
+      "name": "ImageRouter",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/InferenceRouter.ts",
+      "name": "InferenceJobStore",
+      "line": 56,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/InferenceRouter.ts",
+      "name": "InferenceJobStoreLive",
+      "line": 76,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/InferenceRouter.ts",
+      "name": "InferenceExecutionError",
+      "line": 121,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/InferenceRouter.ts",
+      "name": "InferenceRouter",
+      "line": 367,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/JobPushHandler.ts",
+      "name": "JobPushRouter",
+      "line": 192,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/JobPushHandler.ts",
+      "name": "default",
+      "line": 305,
+      "kind": "value",
+      "exportKind": "default",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/LinkIngestionRouter.ts",
+      "name": "LinkIngestionBackgroundTasks",
+      "line": 73,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/LinkIngestionRouter.ts",
+      "name": "LinkIngestionRouter",
+      "line": 102,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/LlmSemaphore.ts",
+      "name": "SemaphoreTimeoutError",
+      "line": 35,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/LlmSemaphore.ts",
+      "name": "LlmSemaphoreService",
+      "line": 69,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/DatabaseReady.ts",
+      "name": "databaseReady",
+      "line": 27,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/MigrationRunner.ts",
+      "name": "migrationsFolder",
+      "line": 25,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/MigrationRunner.ts",
+      "name": "migrateFromFolder",
+      "line": 41,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/MigrationRunner.ts",
+      "name": "migrateOnBoot",
+      "line": 67,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@beep",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "databaseReady",
+      "line": 28,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PostgresConfig",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PostgresConfig",
+      "line": 76,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PostgresConfigFromEnv",
+      "line": 113,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PgClientLayerFromConfig",
+      "line": 140,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PgClientLive",
+      "line": 168,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "DrizzleLive",
+      "line": 184,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PgDrizzleLive",
+      "line": 200,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "DatabaseReadyLive",
+      "line": 217,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "MessageStorageLive",
+      "line": 247,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "RunnerStorageLive",
+      "line": 274,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "ShardingConfigLive",
+      "line": 298,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PostgresPersistenceLive",
+      "line": 326,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "name": "PostgresPersistenceFromConfig",
+      "line": 345,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/index.ts",
+      "name": "*",
+      "line": 12,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@packageDocumentation",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Persistence/index.ts",
+      "name": "*",
+      "line": 13,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "CentralRateLimiterService, StageTimeoutService, TokenBudgetService",
+      "line": 42,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "CentralRateLimiterServiceLive",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "DEFAULT_SHUTDOWN_CONFIG",
+      "line": 51,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "ExtractionRouter",
+      "line": 52,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "HealthCheckService",
+      "line": 53,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "LlmSemaphoreService",
+      "line": 54,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "ShutdownError",
+      "line": 55,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "ShutdownService",
+      "line": 56,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "StageTimeoutServiceLive",
+      "line": 57,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "TokenBudgetServiceLive",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "UnsupportedLlmProviderError",
+      "line": 75,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "makeLanguageModelLayer",
+      "line": 133,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "ExtractionLayersLive",
+      "line": 165,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "TracingLive",
+      "line": 193,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "ProductionLayersWithTracing",
+      "line": 220,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "LlmControlLive",
+      "line": 270,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@since",
+        "@category"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/ProductionRuntime.ts",
+      "name": "ProductionInfrastructure",
+      "line": 290,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/RateLimitedLanguageModel.ts",
+      "name": "RateLimitedAnthropicClientLayer",
+      "line": 176,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/RateLimitedLanguageModel.ts",
+      "name": "RateLimitedOpenAiClientLayer",
+      "line": 213,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Shutdown.ts",
+      "name": "ShutdownConfig",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Shutdown.ts",
+      "name": "DEFAULT_SHUTDOWN_CONFIG",
+      "line": 61,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Shutdown.ts",
+      "name": "ShutdownError",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/Shutdown.ts",
+      "name": "ShutdownService",
+      "line": 127,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@param",
+        "@returns",
+        "@since",
+        "@category",
+        "@effect"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/TestRuntime.ts",
+      "name": "TestConfigProvider",
+      "line": 107,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/TestRuntime.ts",
+      "name": "MockShaclService",
+      "line": 136,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/TestRuntime.ts",
+      "name": "TestLayers",
+      "line": 267,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/TestRuntime.ts",
+      "name": "TestRuntime",
+      "line": 299,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "CrossBatchEntityResolverBundle",
+      "line": 271,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "ActivityDependenciesLayer",
+      "line": 356,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "BatchExtractionWorkflowWithDepsLayer",
+      "line": 384,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "WorkflowOrchestratorFullLayer",
+      "line": 413,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "CliExtractionLayer",
+      "line": 447,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "makeCliExtractionLayer",
+      "line": 481,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "NlpBundleOpen",
+      "line": 522,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@since",
+        "@effect",
+        "@category"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "EmbeddingBundleOpen",
+      "line": 545,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "RdfBuilderBundleOpen",
+      "line": 571,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "StorageBundleOpen",
+      "line": 591,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "ConfigService",
+      "line": 597,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/WorkflowLayers.ts",
+      "name": "ConfigServiceDefault",
+      "line": 597,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 8,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@packageDocumentation",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 9,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 10,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 11,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "* as Persistence",
+      "line": 12,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 13,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 14,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Runtime/index.ts",
+      "name": "*",
+      "line": 15,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/EntityFactory.ts",
+      "name": "makeEntitySchema",
+      "line": 75,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/EntityFactory.ts",
+      "name": "EntityGraphSchema",
+      "line": 192,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/EntityFactory.ts",
+      "name": "EntityGraph",
+      "line": 210,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/MentionFactory.ts",
+      "name": "Mention",
+      "line": 34,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/MentionFactory.ts",
+      "name": "MentionGraph",
+      "line": 74,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/MentionFactory.ts",
+      "name": "MentionGraph",
+      "line": 109,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/RelationFactory.ts",
+      "name": "makeRelationSchema",
+      "line": 92,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/RelationFactory.ts",
+      "name": "RelationGraphSchema",
+      "line": 222,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/RelationFactory.ts",
+      "name": "RelationGraph",
+      "line": 240,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/index.ts",
+      "name": "EntityGraph, EntityGraphSchema, makeEntitySchema",
+      "line": 13,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@packageDocumentation",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Schema/index.ts",
+      "name": "makeRelationSchema, RelationGraph, RelationGraphSchema",
+      "line": 14,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ResolutionOutput",
+      "line": 127,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ValidationOutput",
+      "line": 156,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "IngestionOutput",
+      "line": 173,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ClaimPersistenceOutput",
+      "line": 194,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "CrossBatchResolutionOutput",
+      "line": 219,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "CrossBatchResolutionInput",
+      "line": 249,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeResolutionActivity",
+      "line": 452,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeValidationActivity",
+      "line": 613,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeIngestionActivity",
+      "line": 765,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ClaimPersistenceInput",
+      "line": 993,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ClaimPersistenceInput",
+      "line": 1019,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeClaimPersistenceActivity",
+      "line": 1046,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeCrossBatchResolutionActivity",
+      "line": 1254,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "InferenceInput",
+      "line": 1361,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "InferenceInput",
+      "line": 1381,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "InferenceOutput",
+      "line": 1398,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "InferenceOutput",
+      "line": 1419,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeInferenceActivity",
+      "line": 1449,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ComputeEmbeddingsInput",
+      "line": 1608,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ComputeEmbeddingsInput",
+      "line": 1621,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ComputeEmbeddingsOutput",
+      "line": 1638,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "ComputeEmbeddingsOutput",
+      "line": 1659,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeComputeEmbeddingsActivity",
+      "line": 1690,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "EntityPair",
+      "line": 1826,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "EntityPair",
+      "line": 1849,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "LlmVerificationInput",
+      "line": 1866,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "LlmVerificationInput",
+      "line": 1881,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "VerifiedPair",
+      "line": 1898,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "VerifiedPair",
+      "line": 1917,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "LlmVerificationOutput",
+      "line": 1934,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "LlmVerificationOutput",
+      "line": 1953,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makeLlmVerificationActivity",
+      "line": 2088,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "PreprocessingOutput",
+      "line": 2250,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "PreprocessingOutput",
+      "line": 2266,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/DurableActivities.ts",
+      "name": "makePreprocessingActivity",
+      "line": 2326,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolution.ts",
+      "name": "EntityResolutionConfig",
+      "line": 45,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolution.ts",
+      "name": "EntityResolutionConfigInput",
+      "line": 71,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@link",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolution.ts",
+      "name": "DEFAULT_CONFIG",
+      "line": 87,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolution.ts",
+      "name": "resolveEntities",
+      "line": 225,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@beep",
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolutionGraph.ts",
+      "name": "clusterEntities",
+      "line": 89,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/EntityResolutionGraph.ts",
+      "name": "buildEntityResolutionGraph",
+      "line": 399,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/Merge.ts",
+      "name": "MergeConflict",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/Merge.ts",
+      "name": "mergeGraphs",
+      "line": 337,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/Merge.ts",
+      "name": "mergeGraphsWithConflicts",
+      "line": 363,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtraction.ts",
+      "name": "makeExtractionWorkflow",
+      "line": 175,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtraction.ts",
+      "name": "ExtractionWorkflowLive",
+      "line": 825,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@since",
+        "@category",
+        "@effect"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtraction.ts",
+      "name": "ExtractionWorkflowDefault",
+      "line": 857,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtractionActivity.ts",
+      "name": "StreamingExtractionOutput",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtractionActivity.ts",
+      "name": "StreamingExtractionOutput",
+      "line": 136,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtractionActivity.ts",
+      "name": "buildRunConfig",
+      "line": 204,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtractionActivity.ts",
+      "name": "enrichEntityMetadata",
+      "line": 278,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/StreamingExtractionActivity.ts",
+      "name": "makeStreamingExtractionActivity",
+      "line": 332,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@effect",
+        "@param",
+        "@returns",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/index.ts",
+      "name": "*",
+      "line": 8,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [
+        "@packageDocumentation",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/index.ts",
+      "name": "*",
+      "line": 9,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/index.ts",
+      "name": "*",
+      "line": 10,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "effect-ontology/Workflow/index.ts",
+      "name": "*",
+      "line": 11,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "ontology-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    }
+  ]
+}

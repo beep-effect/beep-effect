@@ -133,6 +133,48 @@ export const greptileIssueLimitExceededForTesting: {
   (issueCount: number | undefined, limit: number): boolean;
 } = dual(2, greptileIssueLimitExceeded);
 
+const reviewThreadGateIssues = (
+  options: PrCloseoutOptions,
+  actionableReviewThreadCount: number
+): ReadonlyArray<QualityIssue> =>
+  options.requireReviewComments >= 0 && actionableReviewThreadCount > options.requireReviewComments
+    ? [
+        closeoutIssue(
+          "pr-review:required-count",
+          "pr-review",
+          `Expected at most ${options.requireReviewComments} unresolved actionable PR review threads; found ${actionableReviewThreadCount}.`,
+          []
+        ),
+      ]
+    : [];
+
+const greptileIssueUrls = (greptile: GreptileSummary): ReadonlyArray<string> =>
+  pipe(O.fromUndefinedOr(greptile.url), O.toArray);
+
+const greptileScoreGateIssues = (options: PrCloseoutOptions, greptile: GreptileSummary): ReadonlyArray<QualityIssue> =>
+  Str.isNonEmpty(Str.trim(options.requireGreptileScore)) && greptile.score !== options.requireGreptileScore
+    ? [
+        closeoutIssue(
+          "greptile:score",
+          "greptile-review",
+          `Expected Greptile score ${options.requireGreptileScore}; found ${greptile.score ?? "unknown"}.`,
+          greptileIssueUrls(greptile)
+        ),
+      ]
+    : [];
+
+const greptileCountGateIssues = (options: PrCloseoutOptions, greptile: GreptileSummary): ReadonlyArray<QualityIssue> =>
+  greptileIssueLimitExceeded(greptile.issueCount, options.requireGreptileIssues)
+    ? [
+        closeoutIssue(
+          "greptile:issues",
+          "greptile-review",
+          `Expected at most ${options.requireGreptileIssues} Greptile issues; found ${greptile.issueCount ?? "unknown"}.`,
+          greptileIssueUrls(greptile)
+        ),
+      ]
+    : [];
+
 /**
  * Derive blocking closeout issues from review-thread and Greptile gate inputs.
  *
@@ -179,36 +221,9 @@ export const gateIssues: {
     actionableReviewThreadCount: number,
     greptile: GreptileSummary
   ): ReadonlyArray<QualityIssue> => [
-    ...(options.requireReviewComments >= 0 && actionableReviewThreadCount > options.requireReviewComments
-      ? [
-          closeoutIssue(
-            "pr-review:required-count",
-            "pr-review",
-            `Expected at most ${options.requireReviewComments} unresolved actionable PR review threads; found ${actionableReviewThreadCount}.`,
-            []
-          ),
-        ]
-      : []),
-    ...(Str.isNonEmpty(Str.trim(options.requireGreptileScore)) && greptile.score !== options.requireGreptileScore
-      ? [
-          closeoutIssue(
-            "greptile:score",
-            "greptile-review",
-            `Expected Greptile score ${options.requireGreptileScore}; found ${greptile.score ?? "unknown"}.`,
-            [...(greptile.url === undefined ? [] : [greptile.url])]
-          ),
-        ]
-      : []),
-    ...(greptileIssueLimitExceeded(greptile.issueCount, options.requireGreptileIssues)
-      ? [
-          closeoutIssue(
-            "greptile:issues",
-            "greptile-review",
-            `Expected at most ${options.requireGreptileIssues} Greptile issues; found ${greptile.issueCount ?? "unknown"}.`,
-            [...(greptile.url === undefined ? [] : [greptile.url])]
-          ),
-        ]
-      : []),
+    ...reviewThreadGateIssues(options, actionableReviewThreadCount),
+    ...greptileScoreGateIssues(options, greptile),
+    ...greptileCountGateIssues(options, greptile),
   ]
 );
 
@@ -222,8 +237,10 @@ const greptileGateState = (options: PrCloseoutOptions, greptile: GreptileSummary
     detail: options.retriggerGreptile
       ? "Greptile retrigger comment was posted explicitly."
       : `Greptile score=${greptile.score ?? "unknown"} issues=${greptile.issueCount ?? "unknown"}.`,
-    count: greptile.issueCount,
-    url: greptile.url,
+    ...O.getSomesStruct({
+      count: O.fromUndefinedOr(greptile.issueCount),
+      url: O.fromUndefinedOr(greptile.url),
+    }),
   });
 };
 

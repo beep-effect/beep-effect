@@ -1,0 +1,7 @@
+# CQ-016: For each tagged operational change event (vernacular: control intervention), when did it land — the KPI-series partition point? (Before/after KPI distributions are computed by the ETL over episodes partitioned at landedAt; the ontology supplies the partition points.)
+# Expected: non_empty | priority: should_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?iv ?landedAt WHERE {
+  ?iv a ciops:OperationalChangeEvent ; ciops:landedAt ?landedAt .
+}

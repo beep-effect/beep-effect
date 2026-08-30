@@ -1,0 +1,554 @@
+/**
+ * JSONC scanner (lexer): converts a JSONC string into a stream of tokens.
+ *
+ * **Details**
+ *
+ * Private implementation, zero dependencies. There is no public tokenizer
+ * surface — a `Stream<JsoncToken>` tokenizer is deferred until a consumer
+ * materializes. Line/character tracking is intentionally dropped here: the
+ * `Jsonc` facade derives `line`/`character` from a token `offset` against the
+ * source text when it materializes a `JsoncParseErrorDetail`, so the scanner
+ * only needs to track character offsets.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
+import { Match, Schema } from "effect";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("jsonc/internal/scanner");
+
+/**
+ * Token kinds produced by the scanner. Internal — not a public vocabulary.
+ *
+ * **Example** (Guard an opening token)
+ *
+ * ```ts
+ * import { SyntaxKind } from "../../../jsonc/internal/scanner.ts"
+ * import { Schema } from "effect"
+ *
+ * console.log(Schema.is(SyntaxKind)("OpenBrace")) // true
+ * ```
+ *
+ * @see {@link createScanner} for the factory that yields these kinds.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SyntaxKind = Schema.Literals([
+  "OpenBrace",
+  "CloseBrace",
+  "OpenBracket",
+  "CloseBracket",
+  "Comma",
+  "Colon",
+  "Null",
+  "True",
+  "False",
+  "String",
+  "Number",
+  "LineComment",
+  "BlockComment",
+  "LineBreak",
+  "Trivia",
+  "Unknown",
+  "EOF",
+]).pipe(
+  $I.annoteSchema("SyntaxKind", {
+    description: "The closed token-kind vocabulary produced by the internal JSONC scanner.",
+  })
+);
+
+/**
+ * Decoded internal JSONC token kind.
+ *
+ * @see {@link SyntaxKind} for the runtime schema.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SyntaxKind = typeof SyntaxKind.Type;
+
+/**
+ * Scanner-level lexical error codes. Internal — mapped to parse codes by the
+ * parser.
+ *
+ * **Example** (Guard a scanner error)
+ *
+ * ```ts
+ * import { ScanError } from "../../../jsonc/internal/scanner.ts"
+ * import { Schema } from "effect"
+ *
+ * console.log(Schema.is(ScanError)("InvalidUnicode")) // true
+ * ```
+ *
+ * @see {@link scanErrorToCode} for the translation into public parse codes.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ScanError = Schema.Literals([
+  "None",
+  "UnexpectedEndOfComment",
+  "UnexpectedEndOfString",
+  "UnexpectedEndOfNumber",
+  "InvalidUnicode",
+  "InvalidEscapeCharacter",
+  "InvalidCharacter",
+  "InvalidSymbol",
+]).pipe(
+  $I.annoteSchema("ScanError", {
+    description: "The closed lexical-error vocabulary produced by the internal JSONC scanner.",
+  })
+);
+
+/**
+ * Decoded internal JSONC scanner error code.
+ *
+ * @see {@link ScanError} for the runtime schema.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ScanError = typeof ScanError.Type;
+
+/**
+ * Stateful cursor over JSONC text that produces tokens on demand.
+ *
+ * @see {@link createScanner} for the constructor of this cursor.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface Scanner {
+  /** Advance the cursor to the next token and return its {@link SyntaxKind}. */
+  scan(): SyntaxKind;
+  /** Return the current token's {@link SyntaxKind} without advancing. */
+  getToken(): SyntaxKind;
+  /** Return the string value of the current token. */
+  getTokenValue(): string;
+  /** Return the zero-based character offset where the current token begins. */
+  getTokenOffset(): number;
+  /** Return the character length of the current token. */
+  getTokenLength(): number;
+  /** Return the {@link ScanError} for the current token, or `"None"`. */
+  getTokenError(): ScanError;
+}
+
+const isWhitespace = (ch: number): boolean =>
+  ch === 0x20 || ch === 0x09 || ch === 0x0b || ch === 0x0c || ch === 0xa0 || ch === 0xfeff;
+
+const isLineBreak = (ch: number): boolean => ch === 0x0a || ch === 0x0d || ch === 0x2028 || ch === 0x2029;
+
+const isDigit = (ch: number): boolean => ch >= 0x30 && ch <= 0x39;
+
+/**
+ * Create a stateful {@link Scanner} for the given JSONC string.
+ *
+ * **Gotchas**
+ *
+ * `ignoreTrivia` changes whether comments exist as tokens: {@link Jsonc.stripComments}
+ * depends on `false` so line and block comments are visible. The scanner does
+ * not track line/character; those are derived later on {@link JsoncParseErrorDetail}.
+ *
+ * **Example** (Comments vanish when trivia is ignored)
+ *
+ * ```ts
+ * import { createScanner } from "../../../jsonc/internal/scanner.ts";
+ *
+ * const kinds = (ignoreTrivia: boolean): Array<string> => {
+ *   const scanner = createScanner("{ // c\n }", ignoreTrivia);
+ *   const out: Array<string> = [];
+ *   let kind = scanner.scan();
+ *   while (kind !== "EOF") {
+ *     out.push(kind);
+ *     kind = scanner.scan();
+ *   }
+ *   return out;
+ * };
+ *
+ * console.log(kinds(false).includes("LineComment")); // true
+ * console.log(kinds(true).includes("LineComment")); // false
+ * ```
+ *
+ * @param text - JSONC string to tokenize.
+ * @param ignoreTrivia - When `true`, whitespace, line-break and comment tokens
+ *   are skipped so only structural tokens are returned.
+ * @see {@link JsoncParseErrorDetail} for why the scanner stores offsets only.
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
+export const createScanner: {
+  (text: string, ignoreTrivia?: boolean): Scanner;
+  (ignoreTrivia?: boolean): (text: string) => Scanner;
+} = dual(
+  (args) => P.isString(args[0]),
+  (text: string, ignoreTrivia = false): Scanner => {
+    const len = text.length;
+    let pos = 0;
+    let tokenOffset = 0;
+    let token: SyntaxKind = "Unknown";
+    let tokenValue = "";
+    let tokenError: ScanError = "None";
+
+    const scanHexDigits = (count: number): number => {
+      let value = 0;
+      for (let i = 0; i < count; i++) {
+        if (pos >= len) return -1;
+        const ch = text.charCodeAt(pos);
+        if (ch >= 0x30 && ch <= 0x39) {
+          value = value * 16 + (ch - 0x30);
+        } else if (ch >= 0x41 && ch <= 0x46) {
+          value = value * 16 + (ch - 0x41 + 10);
+        } else if (ch >= 0x61 && ch <= 0x66) {
+          value = value * 16 + (ch - 0x61 + 10);
+        } else {
+          return -1;
+        }
+        pos++;
+      }
+      return value;
+    };
+
+    const scanString = (): string => {
+      let result = "";
+      pos++; // skip opening quote
+      let start = pos;
+      while (pos < len) {
+        const ch = text.charCodeAt(pos);
+        if (ch === 0x22) {
+          // closing quote
+          result += text.substring(start, pos);
+          pos++;
+          return result;
+        }
+        if (ch === 0x5c) {
+          // backslash
+          result += text.substring(start, pos);
+          pos++;
+          if (pos >= len) {
+            tokenError = "UnexpectedEndOfString";
+            return result;
+          }
+          const escaped = text.charCodeAt(pos);
+          pos++;
+          Match.value(escaped).pipe(
+            Match.when(0x22, () => {
+              result += '"';
+            }),
+            Match.when(0x5c, () => {
+              result += "\\";
+            }),
+            Match.when(0x2f, () => {
+              result += "/";
+            }),
+            Match.when(0x62, () => {
+              result += "\b";
+            }),
+            Match.when(0x66, () => {
+              result += "\f";
+            }),
+            Match.when(0x6e, () => {
+              result += "\n";
+            }),
+            Match.when(0x72, () => {
+              result += "\r";
+            }),
+            Match.when(0x74, () => {
+              result += "\t";
+            }),
+            Match.when(0x75, () => {
+              const value = scanHexDigits(4);
+              if (value >= 0) {
+                result += String.fromCharCode(value);
+              } else {
+                tokenError = "InvalidUnicode";
+              }
+            }),
+            Match.orElse(() => {
+              tokenError = "InvalidEscapeCharacter";
+            })
+          );
+          start = pos;
+        } else if (isLineBreak(ch)) {
+          tokenError = "UnexpectedEndOfString";
+          return result + text.substring(start, pos);
+        } else if (ch <= 0x1f) {
+          // Unescaped C0 control characters are invalid inside strings (JSON
+          // grammar); keep scanning so the token stays intact for recovery.
+          tokenError = "InvalidCharacter";
+          pos++;
+        } else {
+          pos++;
+        }
+      }
+      tokenError = "UnexpectedEndOfString";
+      return result + text.substring(start, pos);
+    };
+
+    const scanNumber = (): string => {
+      const start = pos;
+      if (text.charCodeAt(pos) === 0x2d) {
+        // minus
+        pos++;
+      }
+      // Integer part
+      if (text.charCodeAt(pos) === 0x30) {
+        pos++;
+      } else {
+        if (!isDigit(text.charCodeAt(pos))) {
+          tokenError = "UnexpectedEndOfNumber";
+          return text.substring(start, pos);
+        }
+        pos++;
+        while (pos < len && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+      }
+      // Fractional part
+      if (pos < len && text.charCodeAt(pos) === 0x2e) {
+        pos++;
+        if (!isDigit(text.charCodeAt(pos))) {
+          tokenError = "UnexpectedEndOfNumber";
+          return text.substring(start, pos);
+        }
+        pos++;
+        while (pos < len && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+      }
+      // Exponent part
+      if (pos < len && (text.charCodeAt(pos) === 0x45 || text.charCodeAt(pos) === 0x65)) {
+        pos++;
+        if (pos < len && (text.charCodeAt(pos) === 0x2b || text.charCodeAt(pos) === 0x2d)) {
+          pos++;
+        }
+        if (!isDigit(text.charCodeAt(pos))) {
+          tokenError = "UnexpectedEndOfNumber";
+          return text.substring(start, pos);
+        }
+        pos++;
+        while (pos < len && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+      }
+      return text.substring(start, pos);
+    };
+
+    // Single-token scan. Trivia skipping happens in the iterative wrapper below —
+    // recursing here per skipped token overflows the stack on comment/blank-line
+    // heavy documents.
+    const scanCore = (): SyntaxKind => {
+      tokenValue = "";
+      tokenError = "None";
+
+      if (pos >= len) {
+        tokenOffset = len;
+        token = "EOF";
+        return token;
+      }
+
+      let ch = text.charCodeAt(pos);
+
+      // Whitespace
+      if (isWhitespace(ch)) {
+        tokenOffset = pos;
+        do {
+          pos++;
+          ch = pos < len ? text.charCodeAt(pos) : 0;
+        } while (isWhitespace(ch));
+        tokenValue = text.substring(tokenOffset, pos);
+        token = "Trivia";
+        return token;
+      }
+
+      // Line breaks
+      if (isLineBreak(ch)) {
+        tokenOffset = pos;
+        pos++;
+        if (ch === 0x0d && pos < len && text.charCodeAt(pos) === 0x0a) {
+          pos++; // \r\n
+        }
+        tokenValue = text.substring(tokenOffset, pos);
+        token = "LineBreak";
+        return token;
+      }
+
+      tokenOffset = pos;
+
+      return Match.value(ch).pipe(
+        Match.when(0x7b, () => {
+          pos++;
+          tokenValue = "{";
+          token = "OpenBrace";
+          return token;
+        }),
+        Match.when(0x7d, () => {
+          pos++;
+          tokenValue = "}";
+          token = "CloseBrace";
+          return token;
+        }),
+        Match.when(0x5b, () => {
+          pos++;
+          tokenValue = "[";
+          token = "OpenBracket";
+          return token;
+        }),
+        Match.when(0x5d, () => {
+          pos++;
+          tokenValue = "]";
+          token = "CloseBracket";
+          return token;
+        }),
+        Match.when(0x3a, () => {
+          pos++;
+          tokenValue = ":";
+          token = "Colon";
+          return token;
+        }),
+        Match.when(0x2c, () => {
+          pos++;
+          tokenValue = ",";
+          token = "Comma";
+          return token;
+        }),
+        Match.when(0x22, () => {
+          tokenValue = scanString();
+          token = "String";
+          return token;
+        }),
+        Match.when(0x2f, () => {
+          const nextCh = pos + 1 < len ? text.charCodeAt(pos + 1) : 0;
+          if (nextCh === 0x2f) {
+            // line comment
+            pos += 2;
+            while (pos < len && !isLineBreak(text.charCodeAt(pos))) {
+              pos++;
+            }
+            tokenValue = text.substring(tokenOffset, pos);
+            token = "LineComment";
+            return token;
+          }
+          if (nextCh === 0x2a) {
+            // block comment
+            pos += 2;
+            const safeLen = len - 1;
+            let commentClosed = false;
+            while (pos < safeLen) {
+              const cch = text.charCodeAt(pos);
+              if (isLineBreak(cch)) {
+                if (cch === 0x0d && pos + 1 < len && text.charCodeAt(pos + 1) === 0x0a) {
+                  pos++;
+                }
+                pos++;
+              } else if (cch === 0x2a && text.charCodeAt(pos + 1) === 0x2f) {
+                pos += 2;
+                commentClosed = true;
+                break;
+              } else {
+                pos++;
+              }
+            }
+            if (!commentClosed) {
+              pos = len;
+              tokenError = "UnexpectedEndOfComment";
+            }
+            tokenValue = text.substring(tokenOffset, pos);
+            token = "BlockComment";
+            return token;
+          }
+          // single slash is unknown
+          pos++;
+          tokenValue = text.substring(tokenOffset, pos);
+          token = "Unknown";
+          tokenError = "InvalidCharacter";
+          return token;
+        }),
+        Match.when(0x2d, () => {
+          if (pos + 1 < len && isDigit(text.charCodeAt(pos + 1))) {
+            tokenValue = scanNumber();
+            token = "Number";
+            return token;
+          }
+          pos++;
+          tokenValue = "-";
+          token = "Unknown";
+          tokenError = "InvalidSymbol";
+          return token;
+        }),
+        Match.orElse(() => {
+          // numbers
+          if (isDigit(ch)) {
+            tokenValue = scanNumber();
+            token = "Number";
+            return token;
+          }
+          // keywords and unknown
+          if (ch >= 0x61 && ch <= 0x7a) {
+            // a-z
+            const start = pos;
+            pos++;
+            while (pos < len) {
+              const kch = text.charCodeAt(pos);
+              if (kch >= 0x61 && kch <= 0x7a) {
+                pos++;
+              } else {
+                break;
+              }
+            }
+            tokenValue = text.substring(start, pos);
+            return Match.value(tokenValue).pipe(
+              Match.when("true", () => {
+                token = "True";
+                return token;
+              }),
+              Match.when("false", () => {
+                token = "False";
+                return token;
+              }),
+              Match.when("null", () => {
+                token = "Null";
+                return token;
+              }),
+              Match.orElse(() => {
+                token = "Unknown";
+                tokenError = "InvalidSymbol";
+                return token;
+              })
+            );
+          }
+          pos++;
+          tokenValue = text.substring(tokenOffset, pos);
+          token = "Unknown";
+          tokenError = "InvalidCharacter";
+          return token;
+        })
+      );
+    };
+
+    const scan = (): SyntaxKind => {
+      let t = scanCore();
+      while (
+        ignoreTrivia === true &&
+        (t === "Trivia" || t === "LineBreak" || t === "LineComment" || t === "BlockComment")
+      ) {
+        t = scanCore();
+      }
+      return t;
+    };
+
+    return {
+      scan,
+      getToken: () => token,
+      getTokenValue: () => tokenValue,
+      getTokenOffset: () => tokenOffset,
+      getTokenLength: () => pos - tokenOffset,
+      getTokenError: () => tokenError,
+    };
+  }
+);

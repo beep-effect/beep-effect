@@ -34,9 +34,10 @@ export const StringOrStringArray = S.Union([S.String, S.Array(S.String)]).pipe(
 );
 
 /**
- * Type for {@link StringOrStringArray}. {@inheritDoc StringOrStringArray}
+ * Decoded value produced by {@link StringOrStringArray}.
  *
- * @category models
+ * @see {@link StringOrStringArray} for the runtime schema and decoding behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type StringOrStringArray = typeof StringOrStringArray.Type;
@@ -52,6 +53,7 @@ export type StringOrStringArray = typeof StringOrStringArray.Type;
  * console.log(Frontmatter.EffortLevel.is.xhigh("xhigh")) // true
  * ```
  *
+ * @see {@link Settings.EffortLevel} for the persisted settings closed set (`max` is frontmatter-only).
  * @category schemas
  * @since 0.0.0
  */
@@ -62,9 +64,10 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"])
 );
 
 /**
- * Type for {@link EffortLevel}. {@inheritDoc EffortLevel}
+ * Decoded value produced by {@link EffortLevel}.
  *
- * @category models
+ * @see {@link EffortLevel} for the runtime schema and decoding behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type EffortLevel = typeof EffortLevel.Type;
@@ -90,15 +93,18 @@ export const FrontmatterShell = LiteralKit(["bash", "powershell"]).pipe(
 );
 
 /**
- * Type for {@link FrontmatterShell}. {@inheritDoc FrontmatterShell}
+ * Decoded value produced by {@link FrontmatterShell}.
  *
- * @category models
+ * @see {@link FrontmatterShell} for the runtime schema and decoding behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type FrontmatterShell = typeof FrontmatterShell.Type;
 
 /**
  * Runtime model for the YAML frontmatter of a Claude Code `SKILL.md` file.
+ *
+ * **Details**
  *
  * Optional wire keys decode to `Option`, keeping absence explicit inside the
  * harness while preserving Claude Code's original optional-key encoding.
@@ -111,10 +117,10 @@ export type FrontmatterShell = typeof FrontmatterShell.Type;
  * import * as S from "effect/Schema"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const skill = yield* S.decodeUnknownEffect(Frontmatter.SkillFrontmatter)({ name: "review" })
- *   console.log(O.getOrNull(skill.name)) // "review"
- * })
+ * const skill = Effect.runSync(
+ *   S.decodeUnknownEffect(Frontmatter.SkillFrontmatter)({ name: "review" })
+ * )
+ * console.log(O.getOrNull(skill.name)) // "review"
  * ```
  *
  * @category models
@@ -149,6 +155,18 @@ export class SkillFrontmatter extends S.Class<SkillFrontmatter>($I`SkillFrontmat
 
 /**
  * Encoded input accepted at the Claude Code skill-frontmatter boundary.
+ *
+ * **Example** (Describe encoded skill frontmatter)
+ *
+ * ```ts
+ * import type { Frontmatter } from "effect-claudecode"
+ *
+ * const input: Frontmatter.SkillFrontmatter.Encoded = {
+ *   name: "review",
+ *   "allowed-tools": ["Read", "Bash"]
+ * }
+ * console.log(input.name)
+ * ```
  *
  * @category dtos
  * @since 0.0.0

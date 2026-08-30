@@ -7,7 +7,7 @@
     "sourceMap": true,
     "stripInternal": true,
     // Environment
-    "target": "ES2022",
+    "target": "es2024",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "moduleDetection": "force",

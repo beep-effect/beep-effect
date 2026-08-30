@@ -190,15 +190,27 @@ const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string)
   return yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text));
 });
 
+const withSeedDerivedIdStatics =
+  (operationName: string, prefix: string) =>
+  <Schema extends S.Top & { readonly Type: string; readonly "~type.make.in": string }>(schema: Schema) =>
+    schema.pipe(
+      SchemaUtils.withStatics(() => ({
+        fromSeed: Effect.fn(operationName)(function* (seed: string) {
+          const digest = yield* digestText(seed);
+          return schema.make(`${prefix}-${Str.takeLeft(12)(digest)}`);
+        }),
+      }))
+    );
+
 /**
  * Deterministic identifier for one mention span.
  *
  * **Example** (Use MentionId)
  * ```ts
- * import { Effect } from "effect"
  * import { MentionId } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(Effect.isEffect(MentionId.fromCoordinates("doc-1", 0, 5))) // true
+ * console.log(MentionId.is("mention-a1b2c3d4e5f6")) // true
+ * console.log(MentionId.is("mention-DEADBEEFCAFE")) // false
  * ```
  *
  * @invariant `mention-` followed by exactly 12 lowercase hexadecimal characters.
@@ -302,15 +314,6 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
 /**
  * Runtime value decoded by {@link MentionEvidence}.
  *
- * **Example** (Use MentionEvidence)
- * ```ts
- * import type { MentionEvidence } from "@effect-ontology/Model/CoreOntology"
- *
- * const width = (evidence: MentionEvidence): number =>
- *   evidence.endChar - evidence.startChar
- * console.log(typeof width) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -360,10 +363,10 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  *
  * **Example** (Use CanonicalEntityId)
  * ```ts
- * import { Effect } from "effect"
  * import { CanonicalEntityId } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(Effect.isEffect(CanonicalEntityId.fromSeed("Bruce Harrell"))) // true
+ * console.log(CanonicalEntityId.is("entity-a1b2c3d4e5f6")) // true
+ * console.log(CanonicalEntityId.is("Bruce Harrell")) // false
  * ```
  *
  * @category identifiers
@@ -386,12 +389,7 @@ export const CanonicalEntityId = S.String.check(
       description: "Stable canonical identifier for a persistent resolved entity.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromSeed: Effect.fn("CanonicalEntityId.fromSeed")(function* (seed: string) {
-        const digest = yield* digestText(seed);
-        return schema.make(`entity-${Str.takeLeft(12)(digest)}`);
-      }),
-    }))
+    withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
   );
 
 /**
@@ -455,7 +453,7 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
   /**
    * Whether at least one other entity was merged into this canonical form.
    *
-   * **Example** (Use EventId)
+   * **Example** (Observe empty mergedFrom)
    * ```ts
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
@@ -482,10 +480,10 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
  *
  * **Example** (Use EventId)
  * ```ts
- * import { Effect } from "effect"
  * import { EventId } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(Effect.isEffect(EventId.fromSeed("announcement-2026-07-25"))) // true
+ * console.log(EventId.is("event-a1b2c3d4e5f6")) // true
+ * console.log(EventId.is("event-DEADBEEFCAFE")) // false
  * ```
  *
  * @category identifiers
@@ -510,11 +508,8 @@ export const EventId = S.String.check(
     SchemaUtils.withCodecStatics,
     SchemaUtils.withStatics((schema) => ({
       fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
-      fromSeed: Effect.fn("EventId.fromSeed")(function* (seed: string) {
-        const digest = yield* digestText(seed);
-        return schema.make(`event-${Str.takeLeft(12)(digest)}`);
-      }),
-    }))
+    })),
+    withSeedDerivedIdStatics("EventId.fromSeed", "event")
   );
 
 /**
@@ -642,14 +637,6 @@ export const EventInterval = EventIntervalDefinition.annotate({
 /**
  * Runtime value decoded by {@link EventInterval}.
  *
- * **Example** (Use EventInterval)
- * ```ts
- * import type { EventInterval } from "@effect-ontology/Model/CoreOntology"
- *
- * const hasEnd = (interval: EventInterval): boolean => interval.end._tag === "Some"
- * console.log(typeof hasEnd) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -736,7 +723,7 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
   /**
    * Whether this event has an explicit instant or interval.
    *
-   * **Example** (Use CoreOperationErrorFields)
+   * **Example** (Observe unspecified EventTime)
    * ```ts
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"

@@ -237,15 +237,13 @@ const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
  *
  * **Example** (Use OntologyEmbeddings)
  * ```ts
- * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { GcsUri } from "@effect-ontology/Identity"
  * import { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const uri = S.decodeUnknownOption(GcsUri)("gs://beep-ontology/ontologies/football/ontology.ttl")
- * console.log(O.map(uri, OntologyEmbeddings.storagePathFor))
- * console.log(Effect.isEffect(OntologyEmbeddings.computeVersion("@prefix ex: <https://example.com/> .")))
+ * console.log(O.getOrThrow(O.map(uri, OntologyEmbeddings.storagePathFor))) // "gs://beep-ontology/ontologies/football/ontology-embeddings.json"
  * ```
  *
  * @invariant Every vector length equals `dimension`; version identity is a
@@ -269,14 +267,6 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
 /**
  * Runtime value decoded by {@link OntologyEmbeddings}.
  *
- * **Example** (Use OntologyEmbeddings)
- * ```ts
- * import type { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
- *
- * const dimension = (artifact: OntologyEmbeddings): number => artifact.dimension
- * console.log(typeof dimension) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -289,10 +279,26 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
  *
  * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
+ * import { OntologyEmbeddings, OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
  *
- * console.log(S.isSchema(OntologyEmbeddingsJson)) // true
+ * const artifact = S.decodeUnknownOption(OntologyEmbeddings)({
+ *   ontologyUri: "gs://beep-ontology/ontologies/football/ontology.ttl",
+ *   version: "a".repeat(64),
+ *   model: "nomic-embed-text-v1.5",
+ *   dimension: 2,
+ *   createdAt: "2026-07-25T10:00:00.000Z",
+ *   classes: [{
+ *     iri: "https://example.com/SportsTeam",
+ *     text: "SportsTeam",
+ *     embedding: [0.1, 0.2]
+ *   }]
+ * })
+ * const encoded = O.flatMap(artifact, (value) => S.encodeUnknownOption(OntologyEmbeddingsJson)(value))
+ * const decoded = O.flatMap(encoded, (json) => S.decodeUnknownOption(OntologyEmbeddingsJson)(json))
+ * console.log(O.map(decoded, (value) => value.dimension)) // Some(2)
+ * console.log(O.map(decoded, (value) => value.classes[0]?.embedding.length)) // Some(2)
  * ```
  *
  * @category codecs
@@ -308,14 +314,6 @@ export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
 
 /**
  * Runtime value decoded by {@link OntologyEmbeddingsJson}.
- *
- * **Example** (Use OntologyEmbeddingsJson)
- * ```ts
- * import type { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
- *
- * const inspect = (value: OntologyEmbeddingsJson): number => value.dimension
- * console.log(typeof inspect) // "function"
- * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -1,0 +1,2595 @@
+{
+  "pack": "claudecode-config",
+  "modules": [
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "pack": "claudecode-config",
+      "exportCount": 7,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Command.ts",
+      "pack": "claudecode-config",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/OutputStyle.ts",
+      "pack": "claudecode-config",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "pack": "claudecode-config",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "pack": "claudecode-config",
+      "exportCount": 7,
+      "owningExportCount": 7,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "pack": "claudecode-config",
+      "exportCount": 8,
+      "owningExportCount": 8,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Subagent.ts",
+      "pack": "claudecode-config",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings.ts",
+      "pack": "claudecode-config",
+      "exportCount": 3,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "pack": "claudecode-config",
+      "exportCount": 24,
+      "owningExportCount": 24,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "pack": "claudecode-config",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "pack": "claudecode-config",
+      "exportCount": 52,
+      "owningExportCount": 52,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "DecodedFrontmatter",
+      "line": 19,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@packageDocumentation",
+        "@since",
+        "@category"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "ParsedFrontmatter, parse, parseCommandFile, parseFile, parseOutputStyleFile, parseSkillFile, parseSubagentFile",
+      "line": 26,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "FrontmatterDocument, render, renderCommand, renderOutputStyle, renderSkill, renderSubagent",
+      "line": 41,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "CommandFrontmatter",
+      "line": 60,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "OutputStyleFrontmatter",
+      "line": 68,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "EffortLevel, FrontmatterShell, SkillFrontmatter, StringOrStringArray",
+      "line": 76,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter.ts",
+      "name": "SubagentColor, SubagentFrontmatter",
+      "line": 89,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Command.ts",
+      "name": "CommandFrontmatter_",
+      "line": 43,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Command.ts",
+      "name": "CommandFrontmatter",
+      "line": 87,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Command.ts",
+      "name": "CommandFrontmatter",
+      "line": 107,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Command.ts",
+      "name": "CommandFrontmatter",
+      "line": 126,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/OutputStyle.ts",
+      "name": "OutputStyleFrontmatter_",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/OutputStyle.ts",
+      "name": "OutputStyleFrontmatter",
+      "line": 68,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/OutputStyle.ts",
+      "name": "OutputStyleFrontmatter",
+      "line": 85,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@see",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/OutputStyle.ts",
+      "name": "OutputStyleFrontmatter",
+      "line": 104,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "ParsedFrontmatter",
+      "line": 46,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "ParsedFrontmatter",
+      "line": 74,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "DecodedFrontmatter",
+      "line": 111,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@typeParam",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "parse",
+      "line": 190,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "parseFile",
+      "line": 229,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effect",
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "parseSkillFile",
+      "line": 260,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effect",
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "parseCommandFile",
+      "line": 289,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effect",
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "parseSubagentFile",
+      "line": 318,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effect",
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Parser.ts",
+      "name": "parseOutputStyleFile",
+      "line": 349,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effect",
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "FrontmatterDocument",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "FrontmatterDocument",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "render",
+      "line": 140,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "renderCommand",
+      "line": 163,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "renderSkill",
+      "line": 187,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "renderSubagent",
+      "line": 214,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Render.ts",
+      "name": "renderOutputStyle",
+      "line": 238,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "StringOrStringArray",
+      "line": 30,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "StringOrStringArray",
+      "line": 42,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@inheritDoc",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "EffortLevel",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "EffortLevel",
+      "line": 70,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@inheritDoc",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "FrontmatterShell",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "FrontmatterShell",
+      "line": 98,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@inheritDoc",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "SkillFrontmatter",
+      "line": 123,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Skill.ts",
+      "name": "SkillFrontmatter",
+      "line": 156,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Frontmatter/Subagent.ts",
+      "name": "SubagentColor",
+      "line": 37,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Subagent.ts",
+      "name": "SubagentColor",
+      "line": 49,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@inheritDoc",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Subagent.ts",
+      "name": "SubagentFrontmatter",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Frontmatter/Subagent.ts",
+      "name": "SubagentFrontmatter",
+      "line": 108,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Settings.ts",
+      "name": "AttributionConfig, DirectorySourceSpec, EffortLevel, EffortLevelEncoded, GithubSourceSpec, GitSourceSpec, HostPatternSourceSpec, Marketplace, MarketplacePolicySourceSpec, MarketplacePolicySourceSpecEncoded, MarketplaceSourceSpec, MarketplaceSourceSpecEncoded, McpServerPolicyMatcher, McpServerPolicyMatcherEncoded, PermissionMode, PermissionModeEncoded, PermissionsConfig, PluginOptionsConfig, PolicyHelperConfig, SandboxConfig, SandboxFilesystemConfig, SandboxNetworkConfig, SettingsFile, SettingsRaw, SettingsRawEncoded, SettingsSourceSpec, StatusLineConfig, VoiceConfig, WorktreeConfig",
+      "line": 18,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@since",
+        "@category"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings.ts",
+      "name": "AgentHookEntry, CommandHookEntry, HookEntry, HookEntryEncoded, HookEntryType, HookEntryTypeEncoded, HookMatcherGroup, HookShell, HookShellEncoded, HooksSection, HooksSectionEncoded, HttpHookEntry, McpToolHookEntry, PromptHookEntry",
+      "line": 60,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings.ts",
+      "name": "LoadOptions, load, localSettingsPath, projectSettingsPath, userSettingsPath",
+      "line": 87,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookEntryType",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookEntryType",
+      "line": 62,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookEntryTypeEncoded",
+      "line": 70,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookShell",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookShell",
+      "line": 98,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookShellEncoded",
+      "line": 106,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "CommandHookEntry",
+      "line": 130,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "CommandHookEntry",
+      "line": 160,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HttpHookEntry",
+      "line": 193,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HttpHookEntry",
+      "line": 221,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "McpToolHookEntry",
+      "line": 257,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "McpToolHookEntry",
+      "line": 285,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "PromptHookEntry",
+      "line": 318,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "PromptHookEntry",
+      "line": 346,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "AgentHookEntry",
+      "line": 379,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "AgentHookEntry",
+      "line": 397,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookEntry",
+      "line": 434,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookEntry",
+      "line": 453,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookEntryEncoded",
+      "line": 461,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookMatcherGroup",
+      "line": 486,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HookMatcherGroup",
+      "line": 502,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HooksSection",
+      "line": 542,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HooksSection",
+      "line": 554,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/HooksSection.ts",
+      "name": "HooksSectionEncoded",
+      "line": 562,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "name": "LoadOptions",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "name": "LoadOptions",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "name": "userSettingsPath",
+      "line": 211,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "name": "projectSettingsPath",
+      "line": 238,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "name": "localSettingsPath",
+      "line": 265,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Loader.ts",
+      "name": "load",
+      "line": 372,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PermissionMode",
+      "line": 37,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PermissionMode",
+      "line": 58,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PermissionModeEncoded",
+      "line": 66,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "EffortLevel",
+      "line": 82,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "EffortLevel",
+      "line": 94,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "EffortLevelEncoded",
+      "line": 102,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PermissionsConfig",
+      "line": 251,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PermissionsConfig",
+      "line": 280,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SandboxFilesystemConfig",
+      "line": 320,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SandboxFilesystemConfig",
+      "line": 349,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SandboxNetworkConfig",
+      "line": 395,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SandboxNetworkConfig",
+      "line": 428,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SandboxConfig",
+      "line": 498,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SandboxConfig",
+      "line": 534,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "StatusLineConfig",
+      "line": 573,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "StatusLineConfig",
+      "line": 601,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "VoiceConfig",
+      "line": 700,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "VoiceConfig",
+      "line": 726,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "McpServerPolicyMatcher",
+      "line": 785,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "McpServerPolicyMatcher",
+      "line": 801,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "McpServerPolicyMatcherEncoded",
+      "line": 809,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "DirectorySourceSpec",
+      "line": 831,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "DirectorySourceSpec",
+      "line": 856,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "GithubSourceSpec",
+      "line": 889,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "GithubSourceSpec",
+      "line": 917,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "GitSourceSpec",
+      "line": 952,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "GitSourceSpec",
+      "line": 980,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "HostPatternSourceSpec",
+      "line": 1015,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "HostPatternSourceSpec",
+      "line": 1040,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsSourceSpec",
+      "line": 1076,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsSourceSpec",
+      "line": 1102,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "MarketplaceSourceSpec",
+      "line": 1137,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "MarketplaceSourceSpec",
+      "line": 1156,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "MarketplaceSourceSpecEncoded",
+      "line": 1164,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "Marketplace",
+      "line": 1184,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "Marketplace",
+      "line": 1200,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "MarketplacePolicySourceSpec",
+      "line": 1300,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@acme",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "MarketplacePolicySourceSpec",
+      "line": 1322,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "MarketplacePolicySourceSpecEncoded",
+      "line": 1330,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "AttributionConfig",
+      "line": 1355,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "AttributionConfig",
+      "line": 1381,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PluginOptionsConfig",
+      "line": 1436,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PluginOptionsConfig",
+      "line": 1460,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "WorktreeConfig",
+      "line": 1496,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "WorktreeConfig",
+      "line": 1523,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PolicyHelperConfig",
+      "line": 1558,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "PolicyHelperConfig",
+      "line": 1584,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsRaw",
+      "line": 1616,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-config",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsRaw",
+      "line": 1628,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsRawEncoded",
+      "line": 1636,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsFile",
+      "line": 1688,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Settings/Schema.ts",
+      "name": "SettingsFile",
+      "line": 1841,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-config",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    }
+  ]
+}

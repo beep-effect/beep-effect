@@ -1,0 +1,606 @@
+{
+  "pack": "memfs",
+  "modules": [
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "pack": "memfs",
+      "exportCount": 13,
+      "owningExportCount": 13,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "memfs/index.ts",
+      "pack": "memfs",
+      "exportCount": 1,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "memfs/internal/volume.ts",
+      "pack": "memfs",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemVolume",
+      "line": 39,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemSyncFileSystem",
+      "line": 145,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@remarks",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemInspectable",
+      "line": 164,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemSeedFile",
+      "line": 175,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemSeedDirectory",
+      "line": 197,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemSeedSymlink",
+      "line": 209,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemSeedEntry",
+      "line": 222,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemSeed",
+      "line": 245,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemFaultMethod",
+      "line": 258,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemFaultHandler",
+      "line": 278,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "memfs",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemTransientFault",
+      "line": 294,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@remarks",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystemFaults",
+      "line": 311,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "memfs",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/MemoryFileSystem.ts",
+      "name": "MemoryFileSystem",
+      "line": 703,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "memfs",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/index.ts",
+      "name": "MemoryFileSystem, MemoryFileSystemFaultHandler, MemoryFileSystemFaultMethod, MemoryFileSystemFaults, MemoryFileSystemInspectable, MemoryFileSystemSeed, MemoryFileSystemSeedDirectory, MemoryFileSystemSeedEntry, MemoryFileSystemSeedFile, MemoryFileSystemSeedSymlink, MemoryFileSystemSyncFileSystem, MemoryFileSystemTransientFault, MemoryFileSystemVolume",
+      "line": 29,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "memfs",
+      "tags": [
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "memfs/internal/volume.ts",
+      "name": "make",
+      "line": 2742,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "memfs",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "memfs/internal/volume.ts",
+      "name": "VolumeEntrySnapshot",
+      "line": 2750,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/internal/volume.ts",
+      "name": "InspectableFileSystem",
+      "line": 2829,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "memfs",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "memfs/internal/volume.ts",
+      "name": "makeInspectable",
+      "line": 2836,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "memfs",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "memfs/internal/volume.ts",
+      "name": "layer",
+      "line": 2842,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "memfs",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2658 @@
+{
+  "pack": "yaml-public",
+  "modules": [
+    {
+      "file": "yaml/Yaml.ts",
+      "pack": "yaml-public",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "pack": "yaml-public",
+      "exportCount": 13,
+      "owningExportCount": 13,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDocument.ts",
+      "pack": "yaml-public",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlEdit.ts",
+      "pack": "yaml-public",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlFormat.ts",
+      "pack": "yaml-public",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "pack": "yaml-public",
+      "exportCount": 10,
+      "owningExportCount": 10,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "pack": "yaml-public",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "pack": "yaml-public",
+      "exportCount": 24,
+      "owningExportCount": 24,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlToken.ts",
+      "pack": "yaml-public",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlVisitor.ts",
+      "pack": "yaml-public",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/index.ts",
+      "pack": "yaml-public",
+      "exportCount": 16,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": true,
+      "hasLegacyExample": false,
+      "findings": []
+    }
+  ],
+  "exports": [
+    {
+      "file": "yaml/Yaml.ts",
+      "name": "YamlParseOptions",
+      "line": 55,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/Yaml.ts",
+      "name": "YamlStringifyOptions",
+      "line": 113,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@parcel",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/Yaml.ts",
+      "name": "YamlParseError",
+      "line": 186,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/Yaml.ts",
+      "name": "YamlStringifyError",
+      "line": 206,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/Yaml.ts",
+      "name": "YamlBoundCodec",
+      "line": 423,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/Yaml.ts",
+      "name": "Yaml",
+      "line": 458,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@remarks",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlLexErrorCode",
+      "line": 29,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlLexErrorCode",
+      "line": 36,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlParseErrorCode",
+      "line": 43,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlParseErrorCode",
+      "line": 50,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlComposerErrorCode",
+      "line": 57,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlComposerErrorCode",
+      "line": 64,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlStringifyErrorCode",
+      "line": 71,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlStringifyErrorCode",
+      "line": 78,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlModifyErrorCode",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlModifyErrorCode",
+      "line": 93,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlErrorCode",
+      "line": 101,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlErrorCode",
+      "line": 114,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDiagnostic.ts",
+      "name": "YamlDiagnostic",
+      "line": 129,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@remarks",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDocument.ts",
+      "name": "YamlDirective",
+      "line": 28,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDocument.ts",
+      "name": "YamlDocument",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlDocument.ts",
+      "name": "documentFromRaw",
+      "line": 235,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-public",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlEdit.ts",
+      "name": "YamlSegment",
+      "line": 22,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlEdit.ts",
+      "name": "YamlPath",
+      "line": 30,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlEdit.ts",
+      "name": "YamlRange",
+      "line": 39,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlEdit.ts",
+      "name": "YamlEdit",
+      "line": 55,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@remarks",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlFormat.ts",
+      "name": "YamlRangeLike",
+      "line": 38,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlFormat.ts",
+      "name": "YamlFormattingOptions",
+      "line": 81,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlFormat.ts",
+      "name": "YamlModificationError",
+      "line": 103,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlFormat.ts",
+      "name": "YamlFormat",
+      "line": 492,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "YamlLintRuleSetting",
+      "line": 30,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "YamlLintRuleSetting",
+      "line": 40,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "YamlLintConfig",
+      "line": 96,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "StyleVoteTally",
+      "line": 199,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "StyleFloorTally",
+      "line": 218,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "StyleEvidence",
+      "line": 263,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "StyleConflict",
+      "line": 343,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "YamlStyleConflictError",
+      "line": 359,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "YamlLintInference",
+      "line": 473,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLint.ts",
+      "name": "YamlLint",
+      "line": 527,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@remarks",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "YamlLintSeverity",
+      "line": 22,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "YamlLintSeverity",
+      "line": 29,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "YamlLintDiagnostic",
+      "line": 43,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "LintLine",
+      "line": 61,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "LintContext",
+      "line": 83,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "StyleVote",
+      "line": 110,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "StyleFloor",
+      "line": 132,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "StyleObservation",
+      "line": 143,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlLintRule.ts",
+      "name": "YamlRule",
+      "line": 164,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "ScalarStyle",
+      "line": 18,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "ScalarStyle",
+      "line": 31,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "CollectionStyle",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "CollectionStyle",
+      "line": 45,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "QuoteStyle",
+      "line": 56,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "QuoteStyle",
+      "line": 63,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "QuoteCompat",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "QuoteCompat",
+      "line": 86,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "ScalarChomp",
+      "line": 94,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "ScalarChomp",
+      "line": 101,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlScalar",
+      "line": 131,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlAlias",
+      "line": 193,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlScalarEncoded",
+      "line": 229,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlMapEncoded",
+      "line": 237,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlSeqEncoded",
+      "line": 245,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlAliasEncoded",
+      "line": 253,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlNode",
+      "line": 269,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@remarks",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlNode",
+      "line": 279,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlPair",
+      "line": 294,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlMap",
+      "line": 314,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "YamlSeq",
+      "line": 359,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "AliasExpansionBudgetExceeded",
+      "line": 538,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "aliasExpansionLimit",
+      "line": 556,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlNode.ts",
+      "name": "nodeToJsValue",
+      "line": 581,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-public",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlToken.ts",
+      "name": "YamlTokenKind",
+      "line": 21,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlToken.ts",
+      "name": "YamlTokenKind",
+      "line": 51,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlToken.ts",
+      "name": "YamlToken",
+      "line": 65,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlToken.ts",
+      "name": "YamlTokens",
+      "line": 119,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlVisitor.ts",
+      "name": "YamlVisitorEvent",
+      "line": 33,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-public",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlVisitor.ts",
+      "name": "YamlVisitorEvent",
+      "line": 84,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/YamlVisitor.ts",
+      "name": "YamlVisitor",
+      "line": 91,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-public",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlBoundCodec",
+      "line": 18,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "yaml-public",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-carrier",
+          "detail": "Re-export JSDoc uses a retired @example or @remarks carrier."
+        }
+      ]
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "Yaml, YamlParseError, YamlParseOptions, YamlStringifyError, YamlStringifyOptions",
+      "line": 19,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlComposerErrorCode, YamlDiagnostic, YamlErrorCode, YamlLexErrorCode, YamlModifyErrorCode, YamlParseErrorCode, YamlStringifyErrorCode",
+      "line": 26,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlDirective, YamlDocument",
+      "line": 35,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlPath, YamlSegment",
+      "line": 36,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlEdit, YamlRange",
+      "line": 37,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlRangeLike",
+      "line": 38,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlFormat, YamlFormattingOptions, YamlModificationError",
+      "line": 39,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlLintInference",
+      "line": 40,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "StyleConflict, StyleEvidence, StyleFloorTally, StyleVoteTally, YamlLint, YamlLintConfig, YamlLintRuleSetting, YamlStyleConflictError",
+      "line": 41,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "LintContext, LintLine, StyleObservation, YamlRule",
+      "line": 51,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "StyleFloor, StyleVote, YamlLintDiagnostic, YamlLintSeverity",
+      "line": 52,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlAliasEncoded, YamlMapEncoded, YamlScalarEncoded, YamlSeqEncoded",
+      "line": 53,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "CollectionStyle, QuoteCompat, QuoteStyle, ScalarChomp, ScalarStyle, YamlAlias, YamlMap, YamlNode, YamlPair, YamlScalar, YamlSeq",
+      "line": 54,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlToken, YamlTokenKind, YamlTokens",
+      "line": 67,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "yaml/index.ts",
+      "name": "YamlVisitor, YamlVisitorEvent",
+      "line": 68,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "yaml-public",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    }
+  ]
+}

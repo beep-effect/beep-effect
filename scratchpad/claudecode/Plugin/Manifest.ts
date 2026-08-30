@@ -1,6 +1,7 @@
 /**
  * Schema for `.claude-plugin/plugin.json` Claude Code plugin manifests.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -71,7 +72,12 @@ export declare namespace AuthorInfo {
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
  *
- * const paths = S.decodeUnknownSync(Plugin.ComponentPathSpec)(["./commands"])
+ * const directory = S.decodeUnknownSync(Plugin.ComponentPathSpec)("./commands")
+ * const directories = S.decodeUnknownSync(Plugin.ComponentPathSpec)(["./commands", "./extra"])
+ *
+ * console.log(directory) // "./commands"
+ * console.log(directories) // ["./commands", "./extra"]
+ * console.log(S.is(Plugin.ComponentPathSpec)(1)) // false
  * ```
  *
  * @category schemas
@@ -100,7 +106,11 @@ export type ComponentPathSpec = typeof ComponentPathSpec.Type;
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
  *
- * const hooks = S.decodeUnknownSync(Plugin.HooksSpec)("./hooks/hooks.json")
+ * const byPath = S.decodeUnknownSync(Plugin.HooksSpec)("./hooks/hooks.json")
+ * const byFiles = S.decodeUnknownSync(Plugin.HooksSpec)(["./hooks/a.json", "./hooks/b.json"])
+ *
+ * console.log(byPath) // "./hooks/hooks.json"
+ * console.log(byFiles) // ["./hooks/a.json", "./hooks/b.json"]
  * ```
  *
  * @category schemas
@@ -129,7 +139,13 @@ export type HooksSpec = typeof HooksSpec.Type;
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
  *
- * const servers = S.decodeUnknownSync(Plugin.ServerConfigSpec)("./.mcp.json")
+ * const byPath = S.decodeUnknownSync(Plugin.ServerConfigSpec)("./.mcp.json")
+ * const inline = S.decodeUnknownSync(Plugin.ServerConfigSpec)({
+ *   docs: { command: "npx" }
+ * })
+ *
+ * console.log(byPath) // "./.mcp.json"
+ * console.log(inline) // { docs: { command: "npx" } }
  * ```
  *
  * @category schemas
@@ -247,7 +263,16 @@ export declare namespace UserConfigEntry {
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
  *
- * const entries = S.decodeUnknownSync(Plugin.UserConfigRecord)({})
+ * const entries = S.decodeUnknownSync(Plugin.UserConfigRecord)({
+ *   token: {
+ *     type: "string",
+ *     title: "Token",
+ *     description: "Service token"
+ *   }
+ * })
+ *
+ * console.log(entries.token.title) // "Token"
+ * console.log(S.is(Plugin.UserConfigRecord)({})) // true
  * ```
  *
  * @category schemas
@@ -376,7 +401,15 @@ export declare namespace PluginDependency {
  * import * as S from "effect/Schema"
  * import { Plugin } from "effect-claudecode"
  *
- * const dependency = S.decodeUnknownSync(Plugin.DependencySpec)("base-plugin")
+ * const byName = S.decodeUnknownSync(Plugin.DependencySpec)("base-plugin")
+ * const structured = S.decodeUnknownSync(Plugin.DependencySpec)({
+ *   name: "base-plugin",
+ *   version: "1.0.0"
+ * })
+ *
+ * console.log(byName) // "base-plugin"
+ * console.log(S.is(Plugin.PluginDependency)(structured) ? structured.name : structured)
+ * // "base-plugin"
  * ```
  *
  * @category schemas

@@ -1,0 +1,13 @@
+# CQ-009: Are any two active origin-keyed admission grants sharing the same origin? (deployed origin-exclusion law; must be zero)
+# Expected: zero_rows | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?g1 ?g2 ?origin WHERE {
+  ?g1 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+      ciops:hasOriginKey ?origin .
+  ?g2 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+      ciops:hasOriginKey ?origin .
+  FILTER (?g1 != ?g2)
+  FILTER (?origin != "")
+}

@@ -29,7 +29,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
 /**
  * Supported embedding provider identifiers managed by circuit breakers.
  *
- *
  * **Example** (Use the EmbeddingProviderId contract)
  *
  * ```ts
@@ -67,18 +66,16 @@ export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
 /**
  * Provider-specific circuit breaker configuration
  *
- *
  * **Example** (Use the ProviderCircuitConfig contract)
  *
  * ```ts
- * import type { ProviderCircuitConfig } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ * import { ProviderCircuitConfig } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
- * const acceptsProviderCircuitConfig = (_value: ProviderCircuitConfig): void => undefined
- *
- * console.log(acceptsProviderCircuitConfig)
+ * const config = ProviderCircuitConfig.make({})
+ * console.log(config.maxFailures) // 3
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`ProviderCircuitConfig`)(
@@ -95,18 +92,20 @@ export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`Pro
 /**
  * Circuit breaker status for observability
  *
- *
  * **Example** (Use the CircuitStatus contract)
  *
  * ```ts
- * import type { CircuitStatus } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ * import { CircuitStatus } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
- * const acceptsCircuitStatus = (_value: CircuitStatus): void => undefined
- *
- * console.log(acceptsCircuitStatus)
+ * const status = CircuitStatus.make({
+ *   providerId: "nomic",
+ *   state: "closed",
+ *   isAvailable: true
+ * })
+ * console.log(status.state) // "closed"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CircuitStatus extends S.Class<CircuitStatus>($I`CircuitStatus`)(
@@ -188,9 +187,15 @@ export interface EmbeddingCircuitBreakerService {
  * **Example** (Inspect embedding circuit breaker)
  *
  * ```ts
- * import { EmbeddingCircuitBreaker } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ * import { Effect } from "effect"
+ * import { EmbeddingCircuitBreaker, EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
- * console.log(EmbeddingCircuitBreaker)
+ * const program = Effect.gen(function* () {
+ *   const breaker = yield* EmbeddingCircuitBreaker
+ *   return breaker
+ * }).pipe(Effect.provide(EmbeddingCircuitBreakerLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -342,9 +347,15 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
  * **Example** (Inspect embedding circuit breaker live)
  *
  * ```ts
- * import { EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ * import { Effect } from "effect"
+ * import { EmbeddingCircuitBreaker, EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
- * console.log(EmbeddingCircuitBreakerLive)
+ * const program = Effect.gen(function* () {
+ *   const breaker = yield* EmbeddingCircuitBreaker
+ *   return breaker
+ * }).pipe(Effect.provide(EmbeddingCircuitBreakerLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
