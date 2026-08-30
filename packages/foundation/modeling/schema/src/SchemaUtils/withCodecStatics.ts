@@ -320,7 +320,7 @@ const validateKeys = (keys: ReadonlyArray<CodecStaticKey>): void => {
 };
 
 const propertyKeyLabel = (key: PropertyKey): string =>
-  typeof key === "string" ? key : typeof key === "symbol" ? (key.description ?? key.toString()) : `${key}`;
+  P.isString(key) ? key : P.isSymbol(key) ? (key.description ?? key.toString()) : `${key}`;
 
 const findCustomOwnKey = (source: CodecSchema, rebuilt: CodecSchema): PropertyKey | undefined => {
   for (const key of Reflect.ownKeys(source)) {

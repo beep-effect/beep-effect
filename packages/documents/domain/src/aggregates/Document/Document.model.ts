@@ -86,7 +86,7 @@ const FilingOutcomeBase = FilingOutcomeKind.toTaggedUnion("kind")({
  * @category value-objects
  * @since 0.0.0
  */
-export const FilingOutcome = FilingOutcomeBase.pipe(
+export const FilingOutcome = S.make<(typeof FilingOutcomeBase)["Rebuild"]>(FilingOutcomeBase.ast).pipe(
   $I.annoteSchema("FilingOutcome", {
     description: "Filing decision outcome: filed under a taxonomy concept, or routed to the intake inbox.",
   }),

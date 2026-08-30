@@ -63,7 +63,9 @@ thread, and monitor until `merge-ready: yes`.
 - Focused selective-static tests pass 8/8; full `@beep/schema` and `@beep/rdf`
   package verification pass, as do the quick lanes for every other touched
   package.
-- Repository test-tsgo has no migration-owned diagnostics; its only remaining
-  failure is the attributed vendored `@pulumi/gharunners` module-format issue.
+- Repository test-tsgo passes after the canonical
+  `bun run infra:prepare-gha-runners` preparation step generated the Pulumi
+  package's expected `bin` boundary; Yeet's frozen exact-head install reproduced
+  that preparation successfully.
 - The mandatory `inline-schema-compile-hard-error` successor packet was
   materialized from the repository bootstrap plan.

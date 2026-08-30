@@ -8,7 +8,7 @@
   `/add-plugin pstack`. Do not want Cursor lock-in: want it for Codex, Grok,
   and Claude too.
 - Want it tailored to this repo and carrying "my principles".
-- Clone for reference: `~/YeeBois/dev/cursor-plugins/pstack`.
+- A local checkout of the upstream pstack plugin was used for reference.
 
 ## 2026-08-29 — facts found while scouting
 
@@ -16,14 +16,15 @@
   serves Codex; `.codex/config.toml` `[[skills.config]]` enumerates enabled
   skills and `bun run beep skills update` keeps lock + config + mirror in sync
   (`packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts`).
-- Grok CLI scans `.claude/skills` and `.agents/skills` at repo tier
-  (`~/.grok/docs/user-guide/08-skills.md`). Cursor scans `.agents/skills`,
-  `.cursor/skills`, `.claude/skills`, `.codex/skills` (cursor.com/docs/context/skills).
+- Grok CLI scans `.claude/skills` and `.agents/skills` at repo tier, according
+  to the locally installed Grok skills guide. Cursor scans `.agents/skills`,
+  `.cursor/skills`, `.claude/skills`, and its Codex-specific skills directory
+  (cursor.com/docs/context/skills).
   So one vendored tree reaches all four harnesses with no extra plumbing.
 - pstack: 157 files, ~560 KB markdown. 33 skill dirs (21 `principle-*`),
-  `poteto-mode` with 22 playbooks + `scripts/orch` + `scripts/watch-pr` (TS),
-  2 agents (`poteto-agent`, `Comment Sicko`), `automations/benny` (Slack
-  triage), `docs/guide` (10 pages).
+  `poteto-mode` with 22 playbooks plus its TypeScript orchestration and PR
+  watcher scripts, 2 agents (`poteto-agent`, `Comment Sicko`),
+  `automations/benny` (Slack triage), and a 10-page guide.
 - Name collisions with repo skills: `unslop` (repo copy is a softened edit of
   pstack's), `teach` (repo = mattpocock teaching-workspace skill; pstack =
   how+why explainer), `reflect` (repo = goal-packet reflection artifact;

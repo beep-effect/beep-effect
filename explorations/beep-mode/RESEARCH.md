@@ -5,14 +5,14 @@
 ## 2026-08-29 — pstack distillation (four Codex lanes, `--effort medium`)
 
 Upstream: `cursor/plugins` `pstack/` at rev `68836dd` (v0.14.5, MIT, Lauren
-Tan). Local clone `~/YeeBois/dev/cursor-plugins/pstack`. Reports:
+Tan). A local checkout was used for the following reports:
 
 1. [`01-poteto-mode-and-playbooks.md`](./research/pstack-distillation/01-poteto-mode-and-playbooks.md)
    — the mode's non-negotiables, autonomy, subagent defaults, reply rules,
    sticky-mode frontmatter; all 23 playbooks with baked-in assumptions
    (Graphite, Cursor `Task`, model slugs, control-ui/cli, deslop, Bugbot,
-   `/loop`) mapped to repo equivalents; `scripts/orch` and `scripts/watch-pr`
-   assessed against `bun run beep yeet monitor`; disposition table (1 keep,
+   `/loop`) mapped to repo equivalents; the upstream orchestration and PR
+   watcher scripts assessed against `bun run beep yeet monitor`; disposition table (1 keep,
    18 adapt, 4 drop).
 2. [`02-principles-vs-repo-doctrine.md`](./research/pstack-distillation/02-principles-vs-repo-doctrine.md)
    — rule/trigger/tell for each of the 21 principles; matrix against
@@ -38,8 +38,8 @@ Tan). Local clone `~/YeeBois/dev/cursor-plugins/pstack`. Reports:
   kept in sync by `bun run beep skills update`
   (`packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts`,
   `skills-lock.json`). Grok CLI scans `.claude/skills` + `.agents/skills`
-  (`~/.grok/docs/user-guide/08-skills.md`); Cursor scans `.agents/skills`,
-  `.cursor/skills`, `.claude/skills`, `.codex/skills`
+  (per the locally installed Grok skills guide); Cursor scans `.agents/skills`,
+  `.cursor/skills`, `.claude/skills`, and its Codex-specific skills directory
   (cursor.com/docs/context/skills).
 - Agents: `.claude/agents/*.md` (7) hand-mirrored to `.codex/agents/*.toml`.
 - Overlapping skills: `adhd`, `grilling`/`grill-me`/`grill-with-docs`,

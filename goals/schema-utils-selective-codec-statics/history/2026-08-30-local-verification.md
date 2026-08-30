@@ -22,14 +22,15 @@
 - Goals doctor and generated index check: pass with no introduced blocking
   findings.
 
-## Attributed Failure
+## Repository Preparation
 
-`bun run beep quality test-tsgo` reports no changed-source diagnostics. It
-fails only while compiling vendored `infra/node_modules/@pulumi/gharunners`
-sources under the infra test project, principally TS1295 CommonJS versus
-`verbatimModuleSyntax` diagnostics. This environment/dependency failure was
-reproduced independently of the migration-owned fixes and is recorded in
-`research/OPPORTUNITIES.md`.
+The first `bun run beep quality test-tsgo` attempt reached raw
+`infra/node_modules/@pulumi/gharunners` sources because its generated `bin`
+artifacts were absent. The root postinstall path normally creates them through
+`bun run infra:prepare-gha-runners`. Running that canonical preparation step
+restored the expected package boundary; repository test-tsgo then passed with
+950 files across 135 packages, and Yeet's frozen exact-head install reproduced
+the same preparation successfully.
 
 ## Census
 

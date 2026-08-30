@@ -49,15 +49,17 @@
   statics such as `cases`, `guards`, and `match`. The closing inventory now
   records those source traits and rejects risky ordering.
 
-## 2026-08-30 — Vendored Pulumi sources block repository test-tsgo proof
+## 2026-08-30 — Missing generated Pulumi boundary obscures repository test-tsgo proof
 
 - **What I was doing:** Re-running the repository-wide test tsgo lane after all
   migration-owned package checks were green.
 - **Evidence:** `bun run beep quality test-tsgo` failed only in
   `infra/node_modules/@pulumi/gharunners` with TS1295 CommonJS versus
-  `verbatimModuleSyntax` diagnostics and related vendored-source errors. The
-  same failure existed before the final migration fixes; no changed source
-  file remained in the diagnostic set.
-- **What would have prevented it:** The infra test project should exclude
-  dependency source files or the installed Pulumi package should publish
-  module metadata compatible with the repository's TypeScript configuration.
+  `verbatimModuleSyntax` diagnostics and related source errors because the
+  generated package `bin` directory was absent. Running
+  `bun run infra:prepare-gha-runners` generated the expected JavaScript and
+  declarations; repository test-tsgo then passed, and Yeet's frozen install
+  reproduced the preparation through root postinstall.
+- **What would have prevented it:** Run the repository preparation/postinstall
+  path before direct compiler lanes, or have the lane detect the missing
+  generated `@pulumi/gharunners` boundary and name the preparation command.

@@ -20,7 +20,7 @@ assumptions (Graphite, `Task` model slugs, `~/.cursor/rules`, cursor-team-kit).
 
 None — align frontier empty (18 decisions in `DECISIONS.md`), pending the
 operator's shared-understanding confirmation. Next stage: shape (`BRIEF.md`),
-then decompose (`MAP.md`) into `goals/beep-mode/` with three phased PRs.
+then decompose (`MAP.md`) into a future `beep-mode` goal with three phased PRs.
 
 ## Read This First
 

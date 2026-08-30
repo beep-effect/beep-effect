@@ -15,11 +15,11 @@ tracked?
 **Answer:** Curated repo-local fork. Port the mode, the principles, and the
 situational skills that add capability; rewire playbooks to repo machinery
 (`yeet`, `browser-qa-loop`, `explore`, `reflect`); drop Cursor-only pieces
-(`setup-pstack`, `make-bot-ui`, `automations/benny`, `scripts/orch`,
-`scripts/watch-pr` pending round 3). Provenance is `repo-local` in
+(`setup-pstack`, `make-bot-ui`, `automations/benny`, and the upstream
+orchestration and PR watcher scripts pending round 3). Provenance is `repo-local` in
 `skills-lock.json` with the upstream rev (`68836dd`, v0.14.5) and MIT notice
 recorded in the skill; upstream updates are manual diff-merges against the
-`~/YeeBois/dev/cursor-plugins` clone.
+local cursor-plugins checkout.
 
 **Rationale:** A tailored fork always reports `RemoteSkillDrift` under
 `beep skills update`, so GitHub-tracked provenance and tailoring are mutually
@@ -44,8 +44,8 @@ modes; no mode at all (loses playbook routing and todo-list-first discipline).
 
 **Question:** Direct PR, goal packet, or exploration packet?
 
-**Answer:** Exploration packet (`explorations/beep-mode/`), this grill as its
-align stage, graduating to a goal packet for the PRs (vendor + tailor,
+**Answer:** This exploration packet, with this grill as its align stage,
+graduating to a future `beep-mode` goal packet for the PRs (vendor + tailor,
 model-role routing, eval). The `agent-config-canonicalization` INBOX bullet
 stays a separate capture; this packet is an instance of it, not its owner.
 
@@ -148,8 +148,8 @@ mode's routing section, not in the principle index.
 
 ## 2026-08-29 — pstack scripts (agent-made, flagged for review)
 
-**Question:** What happens to `scripts/orch`, `scripts/watch-pr`, and
-`show-me-your-work/scripts/log.sh`?
+**Question:** What happens to the upstream orchestration script, PR watcher,
+and `show-me-your-work/scripts/log.sh`?
 
 **Answer:** Drop `watch-pr` (`bun run beep yeet monitor --watch --until-event`,
 `status --remote`, `closeout`, `reply` already own single-PR babysitting; no
@@ -269,7 +269,7 @@ only.
 
 **Question:** Where do the MIT notice and upstream provenance live?
 
-**Answer:** `.claude/skills/beep-mode/LICENSE.pstack.md` carries the full
+**Answer:** The future beep-mode skill's pstack license file carries the full
 upstream MIT text (copyright 2026 Lauren Tan). Every ported skill's `SKILL.md`
 opens with an HTML comment naming upstream path, rev `68836dd` (v0.14.5), and
 "beep-effect bindings" (the same shape `grilling` uses for its mattpocock
@@ -313,7 +313,7 @@ ship-observe-iterate (no evidence).
 
 **Question:** How does the work decompose into goal packets and PRs?
 
-**Answer:** One goal, `goals/beep-mode/`, three phased PRs: P1 mode core
+**Answer:** One future `beep-mode` goal, delivered in three phased PRs: P1 mode core
 (SKILL.md, 19 playbooks, 27 principle leaves, `beep-agent` + `comment-sicko`
 with Codex mirrors, `model-roles.md`, `LICENSE.pstack.md`, AGENTS.md row,
 `beep skills update`); P2 the 13 situational skills, `explain`, merged
