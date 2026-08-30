@@ -5,7 +5,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
+import { DateTime, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -196,7 +196,7 @@ describe("LeJeune transactional bundle builder", () => {
     }).pipe(provideTestRuntime)
   );
 
-  it.effect("removes a committed publication when its claiming fiber is interrupted", () =>
+  it.effect("defers interruption after the atomic publication claim", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -204,25 +204,30 @@ describe("LeJeune transactional bundle builder", () => {
       const publicationRoot = path.join(parent, "publication");
       const bundleRoot = path.join(publicationRoot, "bundle");
       const mutableRoot = path.join(publicationRoot, "review");
+      const claimed = yield* Deferred.make<void>();
+      const releaseClaim = yield* Deferred.make<void>();
       const interruptingFileSystem = FileSystem.FileSystem.of({
         ...fs,
         symlink: Effect.fn("LeJeuneBundleBuilderTest.interruptingSymlink")((target, linkPath) =>
-          fs.symlink(target, linkPath).pipe(Effect.andThen(Effect.interrupt))
+          fs
+            .symlink(target, linkPath)
+            .pipe(Effect.andThen(Deferred.succeed(claimed, undefined)), Effect.andThen(Deferred.await(releaseClaim)))
         ),
       });
 
-      const exit = yield* buildBundle(
+      const build = yield* buildBundle(
         inputFor(bundleRoot, mutableRoot, path.resolve("src/fixtures/provider-recording.json"))
-      ).pipe(Effect.provideService(FileSystem.FileSystem, interruptingFileSystem), Effect.exit);
+      ).pipe(Effect.provideService(FileSystem.FileSystem, interruptingFileSystem), Effect.forkChild);
+      yield* Deferred.await(claimed);
+      const interrupt = yield* Effect.forkChild(Fiber.interrupt(build));
+      yield* Deferred.succeed(releaseClaim, undefined);
+      const exit = yield* Fiber.await(build);
+      yield* Fiber.join(interrupt);
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(yield* fs.exists(publicationRoot)).toBe(false);
-      expect(
-        A.every(
-          yield* fs.readDirectory(parent),
-          (entry) => !Str.includes(".staging-")(entry) && !Str.includes(".payload-")(entry)
-        )
-      ).toBe(true);
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(yield* fs.exists(path.join(bundleRoot, "bundle.json"))).toBe(true);
+      expect(yield* fs.exists(path.join(mutableRoot, "review-ledger.json"))).toBe(true);
+      expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
     }).pipe(provideTestRuntime)
   );
 
