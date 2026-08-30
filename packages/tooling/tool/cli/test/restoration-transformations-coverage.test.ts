@@ -9,6 +9,7 @@ import {
   RestorationAcceptanceRecord,
   RestorationLegacyWordOptions,
   RestorationMailOptions,
+  RestorationRecycleOptions,
   TransformationLedgerRecord,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
@@ -349,10 +350,70 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const unsupportedDirectory = path.join(root, "unsupported-directory");
       const unsupportedDestination = path.join(outputRoot, "unsupported-directory");
       yield* fs.makeDirectory(unsupportedDirectory);
-      yield* fs.symlink(fifo, path.join(unsupportedDirectory, "fifo-link"));
+      expect((yield* RT.runLegacyStep("mkfifo", [path.join(unsupportedDirectory, "fifo")], 2_000)).exitCode).toBe(0);
       expect(
         O.isNone(
           yield* RT.exclusiveCopyDirectory(unsupportedDirectory, unsupportedDestination, outputRoot).pipe(Effect.option)
+        )
+      ).toBe(true);
+    })
+  );
+
+  it.effect("denies recycle copies that exceed elapsed, output, or free-space ceilings", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "recycle-capacity-" });
+      const options = RestorationRecycleOptions.make({
+        corpusRoot: root,
+        expectedMissingContentCount: NonNegativeInt.make(0),
+        expectedSurfaceCount: NonNegativeInt.make(1),
+        maxTotalElapsedMillis: PosInt.make(10_000),
+        maxTotalOutputBytes: PosInt.make(100),
+      });
+      const capacityContext = (name: string) => ({
+        ...context,
+        corpusRoot: root,
+        family: "recycle" as const,
+        ledgerPath: path.join(root, `${name}.jsonl`),
+        outputRoot: path.join(root, name),
+        runRoot: root,
+      });
+      expect(
+        O.isNone(
+          yield* RT.requireRecycleCopyCapacity(
+            capacityContext("elapsed"),
+            { sha256: sha("payload"), sizeBytes: 1 },
+            { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
+            options,
+            -10_001
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+      expect(
+        O.isNone(
+          yield* RT.requireRecycleCopyCapacity(
+            capacityContext("output"),
+            { sha256: sha("payload"), sizeBytes: 2 },
+            { inputBytes: 0, mappingCount: 0, outputBytes: 99 },
+            options,
+            DateTime.toEpochMillis(yield* DateTime.now)
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+      const enormousOptions = RestorationRecycleOptions.make({
+        ...options,
+        maxTotalOutputBytes: PosInt.make(Number.MAX_SAFE_INTEGER),
+      });
+      expect(
+        O.isNone(
+          yield* RT.requireRecycleCopyCapacity(
+            capacityContext("free-space"),
+            { sha256: sha("payload"), sizeBytes: Number.MAX_SAFE_INTEGER },
+            { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
+            enormousOptions,
+            DateTime.toEpochMillis(yield* DateTime.now)
+          ).pipe(Effect.option)
         )
       ).toBe(true);
     })
@@ -372,6 +433,8 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const ordinary = archivedFile("ordinary", "docs/readme.txt");
       const pst = archivedFile("pst", "$Recycle.Bin/S-1/$RSTORE.PST", 2 * 1024 * 1024);
       const pstLarger = archivedFile("pst-larger", "$Recycle.Bin/S-1/$RSTORE2.PST", 3 * 1024 * 1024);
+      const rootPst = archivedFile("root-pst", "$RROOT.PST", 2 * 1024 * 1024);
+      const undersizedPst = archivedFile("undersized-pst", "$RSMALL.PST", 1024);
       const eml = archivedFile("eml", "mail/one.EML");
       const residue = archivedFile("residue", "mail/folder.export/item.txt");
       const residueDuplicate = archivedFile("residue-duplicate", "mail/folder.export/other.txt");
@@ -380,10 +443,21 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         ...archivedFile("doc-a-copy", "legacy/a-copy.doc"),
         sha256: docA.sha256,
       });
-      const records = [ordinary, pst, pstLarger, eml, residue, residueDuplicate, docA, docADuplicate];
+      const records = [
+        ordinary,
+        pst,
+        pstLarger,
+        rootPst,
+        undersizedPst,
+        eml,
+        residue,
+        residueDuplicate,
+        docA,
+        docADuplicate,
+      ];
 
       const mail = RT.mailCandidates(path, "/archive", records);
-      expect(mail.map((candidate) => candidate.family)).toEqual(["eml", "pst", "pst", "residue"]);
+      expect(mail.map((candidate) => candidate.family)).toEqual(["eml", "pst", "pst", "pst", "pst", "residue"]);
       expect(RT.selectMailCandidates(path, "full", mail)).toEqual(mail);
       expect(RT.selectMailCandidates(path, "slice", mail).map((candidate) => candidate.objectId)).toEqual(["pst"]);
 
@@ -2227,6 +2301,9 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const interruptedRoot = path.join(mailRoot, "interrupted/attempt-1");
       yield* fs.makeDirectory(interruptedRoot, { recursive: true });
       yield* fs.writeFileString(path.join(interruptedRoot, "retained.txt"), "retained");
+      const interruptedChildPath = path.join(interruptedRoot, "final/child.txt");
+      yield* fs.makeDirectory(path.dirname(interruptedChildPath), { recursive: true });
+      yield* fs.writeFileString(interruptedChildPath, "child");
       const interruptedDigest = yield* RT.hashTransformationTree(interruptedRoot);
       const interrupted = TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
         ...identity,
@@ -2241,6 +2318,16 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         retryOrdinal: NonNegativeInt.make(0),
         sourceId: "source-1",
       });
+      yield* RT.rehashMailChildren(mailContext, [{ ...child, attemptId: interrupted.attemptId }], [interrupted]);
+      expect(
+        O.isNone(
+          yield* RT.rehashMailChildren(
+            mailContext,
+            [{ ...child, attemptId: interrupted.attemptId }],
+            [{ ...interrupted, retainedOutputRelativePath: "../../escape" }]
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
       yield* RT.rehashInterruptedOutputs(mailContext, [interrupted]);
       expect(
         O.isNone(
@@ -2253,6 +2340,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const recycleRoot = path.join(root, "recycle");
       yield* fs.makeDirectory(path.join(recycleRoot, "restored"), { recursive: true });
       const recycleContext = { ...context, corpusRoot: root, family: "recycle" as const, outputRoot: recycleRoot };
+      yield* RT.rehashRetainedFamilyOutputs(recycleContext, []);
       yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [], []);
       yield* fs.writeFileString(path.join(recycleRoot, "rogue.txt"), "rogue");
       expect(O.isNone(yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [], []).pipe(Effect.option))).toBe(

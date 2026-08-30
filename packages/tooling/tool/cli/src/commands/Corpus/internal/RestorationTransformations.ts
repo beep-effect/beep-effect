@@ -5057,6 +5057,7 @@ export const restorationTransformationTesting = {
   rehashLegacyOutputs,
   rehashMailChildren,
   rehashMailExceptionOutputs,
+  rehashRetainedFamilyOutputs,
   rehashRecycleOutputs,
   retainInterruptedAttempt,
   recycleGroupSourceObjectIds,
