@@ -5,8 +5,12 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { Effect, FileSystem, Path } from "effect";
+import * as S from "effect/Schema";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
+
+const $I = $RepoCliId.create("commands/Files/internal/FileTransaction");
 
 const targetCandidateExists = Effect.fn("Files.targetCandidateExists")(function* (
   candidate: string,
@@ -27,17 +31,22 @@ const targetCandidateExists = Effect.fn("Files.targetCandidateExists")(function*
  * Mutable transaction state for one staged file and its optional prior target.
  *
  * @internal
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface StagedFileCommitRecord {
-  backedUp: boolean;
-  readonly backupPath: string;
-  committed: boolean;
-  readonly description: string;
-  readonly stagedPath: string;
-  readonly targetPath: string;
-}
+export class StagedFileCommitRecord extends S.Class<StagedFileCommitRecord>($I`StagedFileCommitRecord`)(
+  {
+    backedUp: S.Boolean.pipe(S.mutableKey),
+    backupPath: S.String,
+    committed: S.Boolean.pipe(S.mutableKey),
+    description: S.String,
+    stagedPath: S.String,
+    targetPath: S.String,
+  },
+  $I.annote("StagedFileCommitRecord", {
+    description: "Mutable commit progress and immutable paths for one staged filesystem replacement.",
+  })
+) {}
 
 /**
  * Resolves a target through its nearest existing ancestor without creating it.
