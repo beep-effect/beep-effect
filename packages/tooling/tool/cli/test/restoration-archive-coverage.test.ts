@@ -1,9 +1,10 @@
 import { CollectorManifestRecord, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus";
 import { restorationArchiveTesting as RA } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { Effect, FileSystem, HashMap, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -543,6 +544,35 @@ describe("restoration archive boundary helpers", () => {
             sourceInfo,
             sourceInfo
           ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        expect(
+          yield* Effect.scoped(
+            RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, sha256.create())
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        const options = preserveOptions(sourceRoot, sourcePath, root, path.join(root, "collector.jsonl"));
+        const sourceStat = RA.sourceStat(sourceInfo);
+        const copiedDigest = Sha256Hex.make("0".repeat(64));
+        const promotedDestination = path.join(destinationDirectory, "promoted.bin");
+        const promotedPartial = `${promotedDestination}.partial`;
+        const promoteContext = {
+          ...context,
+          destinationPath: promotedDestination,
+          partialPath: promotedPartial,
+        };
+        yield* fs.link(sourcePath, promotedPartial);
+        expect(
+          yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+        yield* fs.writeFileString(promotedPartial, "source-bytes");
+        expect(
+          yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
+            Effect.exit
+          )
         ).toMatchObject({ _tag: "Failure" });
       },
       Effect.scoped,

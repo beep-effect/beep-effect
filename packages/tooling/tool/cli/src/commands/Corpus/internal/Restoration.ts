@@ -2634,6 +2634,7 @@ const resolveVerificationArchiveRoot = Effect.fn("CorpusRestoration.resolveVerif
 export const restorationArchiveTesting = {
   acquireObservedRestorationWriterClaim,
   archiveInventorySignature,
+  appendProvenance,
   availableRestorationBytesAt,
   collectorRelativePath,
   collectArchiveInventory,
@@ -2641,6 +2642,7 @@ export const restorationArchiveTesting = {
   decodeObservedWriterClaim,
   encodeRestorationWriterClaim,
   filesystemRootFor,
+  hashResumedArchivePrefix,
   indexArchiveTerminals,
   inspectArchiveAttemptSource,
   inspectCanonicalPath,
@@ -2658,6 +2660,7 @@ export const restorationArchiveTesting = {
   persistVerificationReport,
   prefixMatches,
   processStartTime,
+  promoteAndVerifyArchiveCopy,
   readCanonicalCoordinationFile,
   reconcileCompleteArchiveDestination,
   reconcileCollectorHistoricalIdentities,
