@@ -114,22 +114,3 @@ url = "https://arizeai-433a7140.mintlify.app/mcp"
 [mcp_servers.phoenix]
 url = "https://dankserver.tailc7c348.ts.net:8447/mcp"
 
-[mcp_servers.basic-memory]
-command = "uvx"
-args = [
-    "basic-memory@0.22.1",
-    "mcp",
-    "--project",
-    "beep-shared",
-]
-
-[mcp_servers.codegraph]
-command = "codegraph"
-args = [
-    "serve",
-    "--mcp",
-]
-
-[mcp_servers.codegraph.env]
-DO_NOT_TRACK = "1"
-CODEGRAPH_NO_UPDATE_CHECK = "1"
