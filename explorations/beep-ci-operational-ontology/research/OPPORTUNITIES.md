@@ -43,3 +43,18 @@
   content-addressed path (for example `work/proposals/history/<sha256>.yaml`) and the validator
   should verify each round's `target_sha256` against it; commit `work/` at every round boundary
   so git history keeps the bytes even before the skill does.
+
+## 2026-08-30: an unrelated format sweep rewrote digest-locked run evidence
+
+- **Work:** starting the S5 stint on fresh main after the §4b packet merged (PR #889).
+- **Evidence:** PR #865 (court-reporter vocabulary) carried a repo-wide Biome write sweep that
+  reformatted `ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.ts` (line joins,
+  interface key sorting) and `adapters/golden/typescript/input.ts` without touching the
+  `adapter-typescript.ts.sha256` sidecar — on main the frozen adapter failed its own engine
+  check (tree sha `ee276c25…` vs sidecar `fc6dec09…`).
+- **Cost:** the committed copy of the run's engine diverged from the archived manifest and the
+  pin; anyone replaying the adapter got a hard verify_engine refusal until the bytes were
+  restored from the retention tag lineage.
+- **Prevention:** Biome `files.includes` now excludes the packet's `adapters/` and `runs/`
+  trees (this change); frozen evidence must always ship with a formatter exemption in the same
+  PR that freezes it, since a digest lock can only detect corruption, not stop a write sweep.

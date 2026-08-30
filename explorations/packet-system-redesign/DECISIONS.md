@@ -621,3 +621,35 @@ that is reverified after the implementation head reaches merge-ready. *Rejected:
 preserve the docs-only split after the operator requested one PR (contradicts
 the current delivery instruction); silently ignore D19 (erases why the changed
 delivery shape is valid).
+
+## 2026-08-30 — D27: A bounded recovery PR closes the already-merged candidate-6 packet
+
+**Question.** PR #855 merged before candidate 6's reflection, lifecycle flip,
+and parent-exploration graduation landed, and its terminal head did not produce
+the declared strict Yeet closeout. May a separate recovery PR perform P4, or
+must the packet remain indefinitely active because D26 required one PR?
+
+**Answer.** The operator authorizes one bounded recovery PR. It repairs and
+re-proves the packet's canonical empty-preview command, records the Codex
+reflection, reconciles the goal to `completed-retained`, and graduates this
+exploration for the candidate-6 wave. The recovery PR itself must be driven to
+exact-head merge-ready through Yeet before the lifecycle and graduation claims
+are accepted.
+
+This is an explicit exception to D26's same-PR closeout shape, not a claim that
+PR #855 satisfied it. PR #855 remains the implementation artifact at head
+`94c7966fa18c5482b6445b5f0ead558822ba866e`: all 17 review threads were
+resolved, but its final wave had failed Fallow Advisory Envelopes and Vercel
+contexts and no scored Greptile verdict. `completionGate.grandfathered` remains
+false.
+
+**Rationale.** A merged PR and deleted branch cannot receive the missing P4
+commit. Leaving the packet `active` presents executable P3 work that no longer
+exists, while calling merged state equivalent to merge-ready would erase the
+exact-head evidence gap. A separately proven recovery PR is the smallest
+auditable correction: it preserves the historical failure, restores the
+canonical preview, supplies the required reflection, and makes current packet
+state truthful. *Rejected:* reopen or rewrite #855 (impossible and
+history-destroying); infer merge-ready from merged state (false); grandfather
+the packet (the gate predates this work); leave P3 active forever (misleading
+and unactionable).
