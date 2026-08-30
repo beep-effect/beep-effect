@@ -212,6 +212,7 @@ if _args.s5:
             for parent in t.get("parents") or []:
                 if parent not in accepted_terms:
                     blocker(f"taxonomy {t.get('term')}: parent {parent} is not an accepted term")
+                    continue
                 if kind != "class" or terms[parent].get("kind") != "class":
                     blocker(f"taxonomy {t.get('term')}: parents is class-subsumption only")
             io = t.get("instance_of")
