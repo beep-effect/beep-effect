@@ -610,8 +610,63 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         preservationRecord: { ...metadataRecord, sizeBytes: NonNegativeInt.make(65 * 1024) },
       };
       expect(O.isNone(yield* RT.readRecycleMetadata(oversized).pipe(Effect.option))).toBe(true);
+      const directoryMetadata = {
+        ...pair.metadata,
+        preservationRecord: ArchiveLedgerRecord.cases["archive-directory-pass"].make({
+          destinationRelativePath: metadataRecord.destinationRelativePath,
+          objectId: metadataRecord.objectId,
+          objectKind: "directory",
+          recordedAt: metadataRecord.recordedAt,
+          recordType: "archive-directory-pass",
+          runId: metadataRecord.runId,
+          schemaVersion: metadataRecord.schemaVersion,
+          sourceLabel: metadataRecord.sourceLabel,
+          sourceRelativePath: metadataRecord.sourceRelativePath,
+        }),
+      };
+      const directoryMetadataError = yield* RT.readRecycleMetadata(directoryMetadata).pipe(Effect.flip);
+      expect(directoryMetadataError.message).toContain("Recycle metadata occurrence is not a preserved bounded file");
       yield* fs.writeFileString(metadataPath, "drift");
       expect(O.isNone(yield* RT.readRecycleMetadata(pair.metadata).pipe(Effect.option))).toBe(true);
+
+      yield* fs.writeFile(metadataPath, metadataBytes);
+      yield* fs.writeFileString(contentPath, "recycle");
+      yield* fs.writeFileString(retainedPath, "recycle");
+      const recycleStart = familyRunStart("recycle", 1);
+      const recycleAttempt = familyAttemptStart("recycle", pair.content.objectId, digest.sha256);
+      const encodedInterruptedSeed = yield* Effect.forEach(
+        [recycleStart, recycleAttempt],
+        encodeTransformationLedgerRecordJson
+      );
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedInterruptedSeed.join("\n")}\n`);
+      yield* RT.recoverRecycleInterruptedAttempts(recycleContext, [pair]);
+      expect(yield* fs.exists(path.join(recycleContext.outputRoot, `interrupted/${recycleAttempt.attemptId}`))).toBe(
+        true
+      );
+
+      const encodedTooManyMappings = yield* Effect.forEach(
+        [recycleStart, recycleAttempt, mapping],
+        encodeTransformationLedgerRecordJson
+      );
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedTooManyMappings.join("\n")}\n`);
+      const tooManyMappingsError = yield* RT.recycleResumeState(
+        recycleContext,
+        MutableHashMap.empty(),
+        outputRoot,
+        0
+      ).pipe(Effect.flip);
+      expect(tooManyMappingsError.message).toContain(
+        "Prior recycle checkpoints do not form a complete deterministic mapping prefix"
+      );
+
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedInterruptedSeed.join("\n")}\n`);
+      const invalidLifecycleError = yield* RT.recycleResumeState(
+        recycleContext,
+        MutableHashMap.empty(),
+        outputRoot,
+        0
+      ).pipe(Effect.flip);
+      expect(invalidLifecycleError.message).toContain("Prior recycle checkpoints contain unsupported or out-of-order");
     })
   );
 
@@ -1593,6 +1648,103 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     })
   );
 
+  it.effect("fails PST finalization on cumulative output exhaustion and source drift", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "pst-finalization-" });
+      const sourcePath = path.join(root, "store.pst");
+      const ledgerPath = path.join(root, "ledgers/mail/full.jsonl");
+      yield* fs.writeFileString(sourcePath, "before");
+      yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
+      const pass = ArchiveLedgerRecord.cases["archive-file-pass"].make({
+        ...archivedFile("pst-finalization", "mail/store.pst", 6),
+        sha256: sha("before"),
+      });
+      const candidate = {
+        family: "pst" as const,
+        objectId: pass.objectId,
+        pass: O.some(pass),
+        sourcePath,
+      };
+      const mailContext = {
+        ...context,
+        corpusRoot: root,
+        family: "mail" as const,
+        ledgerPath,
+        mailScope: O.some<"full" | "slice">("full"),
+        outputRoot: path.join(root, "output"),
+        runRoot: root,
+      };
+      const options = RestorationMailOptions.make({
+        corpusRoot: root,
+        expectedStoreCount: NonNegativeInt.make(1),
+        maxAmplificationRatio: 100,
+        maxElapsedMillis: PosInt.make(10_000),
+        maxTotalElapsedMillis: PosInt.make(10_000),
+        maxTotalOutputBytes: PosInt.make(1_000),
+        pffexportPath: "pffexport",
+        scope: "full",
+        tikaJarPath: "/tika.jar",
+      });
+      const result = ArchiveExportResult.make({
+        children: [],
+        engine: "libpff",
+        operationId: OperationId.make(`operation:${sha("pst-finalization")}`),
+        sourceArtifactId: ArtifactId.make(`artifact:${sha("pst-finalization")}`),
+        warnings: [],
+      });
+      const validated = { engineFiles: [], enginePaths: MutableHashSet.empty<string>(), result };
+      const sourceBefore = { sha256: sha("before"), sizeBytes: 6 };
+      const startedAt = DateTime.toEpochMillis(yield* DateTime.now);
+      const exhaustedPartial = path.join(root, "attempts/exhausted.partial");
+      yield* fs.makeDirectory(exhaustedPartial, { recursive: true });
+      yield* fs.writeFileString(path.join(exhaustedPartial, "message.eml"), "message");
+      const exhausted = yield* RT.finishPstAttempt(
+        {
+          attemptId: "attempt-exhausted",
+          attemptOutputCeiling: 100,
+          candidate,
+          context: mailContext,
+          finalRoot: path.join(root, "attempts/exhausted"),
+          options,
+          partialRoot: exhaustedPartial,
+          pass,
+          sourceBefore,
+          startedAt,
+        },
+        validated,
+        0
+      );
+      expect(exhausted).toEqual({ inputBytes: 6, outputBytes: 7, passed: false, unapproved: true });
+
+      const driftPartial = path.join(root, "attempts/drift.partial");
+      yield* fs.makeDirectory(driftPartial, { recursive: true });
+      yield* fs.writeFileString(path.join(driftPartial, "message.eml"), "message");
+      yield* fs.writeFileString(sourcePath, "after!");
+      const drifted = yield* RT.finishPstAttempt(
+        {
+          attemptId: "attempt-drift",
+          attemptOutputCeiling: 100,
+          candidate,
+          context: mailContext,
+          finalRoot: path.join(root, "attempts/drift"),
+          options,
+          partialRoot: driftPartial,
+          pass,
+          sourceBefore,
+          startedAt: DateTime.toEpochMillis(yield* DateTime.now),
+        },
+        validated,
+        100
+      );
+      expect(drifted).toEqual({ inputBytes: 6, outputBytes: 7, passed: false, unapproved: true });
+      const ledger = yield* fs.readFileString(ledgerPath);
+      expect(ledger).toContain("exceeded its approved elapsed-time or disk-amplification ceiling");
+      expect(ledger).toContain("source bytes changed before terminal PASS publication");
+    })
+  );
+
   it.effect("rejects drifted PST bytes and records an exhausted-budget terminal", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -2122,6 +2274,12 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         surfaceId: "surface-1",
       });
       yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [mapping], []);
+      const { mailScope: _mailScope, ...interruptedWithoutScope } = interrupted;
+      yield* RT.requireRecyclePhysicalEntriesOwned(
+        recycleContext,
+        [mapping],
+        [{ ...interruptedWithoutScope, family: "recycle" }]
+      );
       yield* RT.rehashRecycleOutputs(recycleContext, [mapping]);
       expect(
         O.isNone(

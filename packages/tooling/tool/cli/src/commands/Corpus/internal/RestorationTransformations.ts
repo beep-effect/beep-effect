@@ -2227,9 +2227,6 @@ const mailResumeState = Effect.fn("CorpusRestoration.mailResumeState")(function*
 export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(function* (
   options: RestorationMailOptions
 ): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, TransformationRequirements> {
-  if (options.maxAmplificationRatio <= 0 || options.maxTotalOutputBytes <= 0) {
-    return yield* transformationError("Mail amplification ratio must be greater than zero.");
-  }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const prepared = yield* prepareTransformationRun(options.corpusRoot, options.runLabel, "mail", options.scope);
