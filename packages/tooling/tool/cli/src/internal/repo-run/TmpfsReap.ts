@@ -251,28 +251,50 @@ const censusWithinLimits = (census: DanglingStubCensus): boolean =>
   census.entries <= DANGLING_STUB_ENTRY_LIMIT &&
   BigInt.isLessThanOrEqualTo(census.bytes, DANGLING_STUB_BYTE_LIMIT);
 
-const censusDirectory = (
+const censusEntry = Effect.fnUntraced(function* (
+  candidateRoot: string,
+  entryPath: string,
+  census: DanglingStubCensus
+): Effect.fn.Return<DanglingStubCensus, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+    return { ...census, complete: false };
+  }
+  const info = yield* fs.stat(entryPath).pipe(Effect.option);
+  if (O.isNone(info)) {
+    return { ...census, complete: false };
+  }
+  const next = {
+    bytes: Str.Equivalence(info.value.type, "Directory") ? census.bytes : BigInt.sum(census.bytes, info.value.size),
+    complete: true,
+    entries: N.increment(census.entries),
+  } satisfies DanglingStubCensus;
+  return Str.Equivalence(info.value.type, "Directory") && censusWithinLimits(next)
+    ? yield* censusDirectory(candidateRoot, entryPath, next)
+    : next;
+});
+
+const censusDirectory = Effect.fnUntraced(function* (
   candidateRoot: string,
   directory: string,
   initial: DanglingStubCensus
-): Effect.Effect<DanglingStubCensus, never, FileSystem.FileSystem | Path.Path> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const pathService = yield* Path.Path;
-    const names = yield* readDirectoryOption(directory);
-    if (O.isNone(names)) {
-      return { ...initial, complete: false };
-    }
-    return yield* Effect.reduce(
-      names.value,
-      () => initial,
-      (census, name) => {
-        if (!censusWithinLimits(census)) {
-          return Effect.succeed(census);
-        }
-        const entryPath = pathService.join(directory, name);
-        if (Str.Equivalence(directory, candidateRoot) && Str.Equivalence(name, ".git")) {
-          return fs.stat(entryPath).pipe(
+): Effect.fn.Return<DanglingStubCensus, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  const names = yield* readDirectoryOption(directory);
+  if (O.isNone(names)) {
+    return { ...initial, complete: false };
+  }
+  return yield* Effect.reduce(
+    names.value,
+    () => initial,
+    (census, name) => {
+      if (!censusWithinLimits(census)) {
+        return Effect.succeed(census);
+      }
+      const entryPath = pathService.join(directory, name);
+      return Str.Equivalence(directory, candidateRoot) && Str.Equivalence(name, ".git")
+        ? fs.stat(entryPath).pipe(
             Effect.option,
             Effect.map(
               O.match({
@@ -280,30 +302,11 @@ const censusDirectory = (
                 onSome: (info) => ({ ...census, bytes: BigInt.sum(census.bytes, info.size) }),
               })
             )
-          );
-        }
-        return Effect.gen(function* () {
-          if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
-            return { ...census, complete: false };
-          }
-          const info = yield* fs.stat(entryPath).pipe(Effect.option);
-          if (O.isNone(info)) {
-            return { ...census, complete: false };
-          }
-          const next = {
-            bytes: Str.Equivalence(info.value.type, "Directory")
-              ? census.bytes
-              : BigInt.sum(census.bytes, info.value.size),
-            complete: true,
-            entries: N.increment(census.entries),
-          } satisfies DanglingStubCensus;
-          return Str.Equivalence(info.value.type, "Directory") && censusWithinLimits(next)
-            ? yield* censusDirectory(candidateRoot, entryPath, next)
-            : next;
-        });
-      }
-    );
-  });
+          )
+        : censusEntry(candidateRoot, entryPath, census);
+    }
+  );
+});
 
 const danglingStubContentsWithinLimits = Effect.fnUntraced(function* (
   candidatePath: string
