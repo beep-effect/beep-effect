@@ -348,6 +348,46 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         O.isNone(yield* RT.copyRecycleContent(outputRoot, source, partialDestination, sourceDigest).pipe(Effect.option))
       ).toBe(true);
 
+      const wrongDigestDestination = path.join(outputRoot, "wrong-digest.txt");
+      const wrongDigestError = yield* RT.copyRecycleContent(
+        outputRoot,
+        source,
+        wrongDigestDestination,
+        sha("wrong")
+      ).pipe(Effect.flip);
+      expect(wrongDigestError.message).toContain("copy digest does not match");
+
+      const appearedDestination = path.join(outputRoot, "appeared.txt");
+      let appearedChecks = 0;
+      const appearingFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        exists: (filePath) =>
+          filePath === appearedDestination ? Effect.succeed((appearedChecks += 1) > 1) : fs.exists(filePath),
+      };
+      const appearedError = yield* RT.copyRecycleContent(outputRoot, source, appearedDestination, sourceDigest).pipe(
+        Effect.provideService(FileSystem.FileSystem, appearingFileSystem),
+        Effect.flip
+      );
+      expect(appearedError.message).toContain("destination appeared during staged copy");
+
+      const identityDestination = path.join(outputRoot, "identity-race.txt");
+      const identityFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        stat: (filePath) =>
+          fs
+            .stat(filePath)
+            .pipe(
+              Effect.map((info) =>
+                filePath === identityDestination ? { ...info, ino: O.map(info.ino, (inode) => inode + 1) } : info
+              )
+            ),
+      };
+      const identityError = yield* RT.exclusiveCopyFile(source, identityDestination, outputRoot).pipe(
+        Effect.provideService(FileSystem.FileSystem, identityFileSystem),
+        Effect.flip
+      );
+      expect(identityError.message).toContain("destination identity changed before first write");
+
       const sourceDirectory = path.join(root, "source-directory");
       yield* fs.makeDirectory(path.join(sourceDirectory, "nested"), { recursive: true });
       yield* fs.writeFileString(path.join(sourceDirectory, "a.txt"), "a");
@@ -678,6 +718,45 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         O.isNone(yield* RT.validateRecycleMappingPrefix(recycleContext, outputRoot, [mapping], []).pipe(Effect.option))
       ).toBe(true);
 
+      const raceRunRoot = path.join(root, "race-output");
+      const raceRestoredRoot = path.join(raceRunRoot, "restored");
+      yield* fs.makeDirectory(raceRestoredRoot, { recursive: true });
+      const raceContext = {
+        ...recycleContext,
+        ledgerPath: path.join(root, "race-recycle.jsonl"),
+        outputRoot: raceRunRoot,
+      };
+      let restoreContentOpens = 0;
+      const restoreRaceFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        open: (filePath, options) => {
+          if (filePath !== contentPath) return fs.open(filePath, options);
+          restoreContentOpens += 1;
+          return restoreContentOpens === 3
+            ? fs.writeFileString(filePath, "changed").pipe(Effect.andThen(fs.open(filePath, options)))
+            : fs.open(filePath, options);
+        },
+      };
+      const restoreSourceDriftError = yield* RT.restoreRecyclePair(
+        pair.metadata,
+        pair.content,
+        pair.group,
+        raceContext,
+        raceRestoredRoot,
+        MutableHashMap.empty(),
+        { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
+        RestorationRecycleOptions.make({
+          corpusRoot: root,
+          expectedMissingContentCount: NonNegativeInt.make(0),
+          expectedSurfaceCount: NonNegativeInt.make(1),
+          maxTotalElapsedMillis: PosInt.make(10_000),
+          maxTotalOutputBytes: PosInt.make(1_000),
+        }),
+        DateTime.toEpochMillis(yield* DateTime.now)
+      ).pipe(Effect.provideService(FileSystem.FileSystem, restoreRaceFileSystem), Effect.flip);
+      expect(restoreSourceDriftError.message).toContain("source bytes changed while parsing or copying");
+      yield* fs.writeFileString(contentPath, "recycle");
+
       yield* fs.writeFileString(retainedPath, "drifted");
       expect(
         O.isNone(
@@ -691,7 +770,25 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         )
       ).toBe(true);
       yield* fs.writeFileString(retainedPath, "recycle");
-      yield* fs.writeFileString(contentPath, "changed");
+      let checkpointContentOpens = 0;
+      const checkpointRaceFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        open: (filePath, options) => {
+          if (filePath !== contentPath) return fs.open(filePath, options);
+          checkpointContentOpens += 1;
+          return checkpointContentOpens === 2
+            ? fs.writeFileString(filePath, "changed").pipe(Effect.andThen(fs.open(filePath, options)))
+            : fs.open(filePath, options);
+        },
+      };
+      const checkpointSourceDriftError = yield* RT.validateRecycleMappingCheckpoint(
+        recycleContext,
+        outputRoot,
+        pair,
+        mapping,
+        MutableHashMap.empty()
+      ).pipe(Effect.provideService(FileSystem.FileSystem, checkpointRaceFileSystem), Effect.flip);
+      expect(checkpointSourceDriftError.message).toContain("checkpoint source bytes drifted from preservation");
       expect(O.isNone(yield* RT.hashPreservedRecycleContent(pair.content).pipe(Effect.option))).toBe(true);
 
       const oversized = {
@@ -1102,6 +1199,14 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
 
   it.effect("runs bounded legacy subprocess probes and rejects exhausted budgets", () =>
     Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const runtimeFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        exists: (filePath) => (filePath === "/lib64" ? Effect.succeed(false) : fs.exists(filePath)),
+      };
+      expect(
+        yield* RT.sandboxRuntimeBinds().pipe(Effect.provideService(FileSystem.FileSystem, runtimeFileSystem))
+      ).not.toContain("/lib64");
       const captured = yield* RT.runLegacyStep("sh", ["-c", "printf semantic-proof"], 2_000, "stdout");
       expect(captured.exitCode).toBe(0);
       expect(captured.output).toBe("semantic-proof");
@@ -1247,6 +1352,29 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
           )
         )
       ).toBe(true);
+      const stagedRaceRoot = path.join(root, "staged-race");
+      yield* fs.makeDirectory(stagedRaceRoot);
+      const stagedRaceDigest = sha("staged-race");
+      const stagedRacePartial = path.join(stagedRaceRoot, "converted", `${stagedRaceDigest}.docx.partial`);
+      let stagedRaceOpens = 0;
+      const stagedRaceFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        open: (filePath, options) => {
+          if (filePath !== stagedRacePartial) return fs.open(filePath, options);
+          stagedRaceOpens += 1;
+          return stagedRaceOpens === 2
+            ? fs.writeFileString(filePath, "drift").pipe(Effect.andThen(fs.open(filePath, options)))
+            : fs.open(filePath, options);
+        },
+      };
+      const stagedRaceError = yield* RT.promoteLegacyWordOutput(
+        converted,
+        stagedRaceDigest,
+        stagedRaceRoot,
+        root,
+        PosInt.make(100)
+      ).pipe(Effect.provideService(FileSystem.FileSystem, stagedRaceFileSystem), Effect.flip);
+      expect(stagedRaceError.message).toContain("atomic staging digest does not match");
 
       const pass = ArchiveLedgerRecord.cases["archive-file-pass"].make({
         ...archivedFile("legacy-source", "legacy/source.doc", 7),
@@ -2300,7 +2428,7 @@ else exit 92; fi
       yield* fs.writeFileString(emptyTika, "#!/bin/sh\nprintf text\n");
       yield* fs.chmod(emptyTika, 0o755);
       const emptyRepairError = yield* RT.repairDetectedAttachment(
-        { absolutePath: zeroAttachment, relativePath: "Attachment-empty.bin", sizeBytes: 0 },
+        { absolutePath: zeroAttachment, relativePath: "Attachment-empty.bin" },
         "pdf",
         attemptRoot,
         "attempt-empty",
