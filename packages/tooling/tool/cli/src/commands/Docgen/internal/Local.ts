@@ -28,6 +28,7 @@ import {
   analyzePackageDocumentation,
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
+  loadDocgenConfigDocument,
   resolveDocgenWorkspacePackage,
 } from "./Operations.ts";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
@@ -36,7 +37,7 @@ import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { DocgenPackageAnalysis, DocgenWorkspacePackage } from "./Operations.ts";
+import type { DocgenConfigDocument, DocgenPackageAnalysis, DocgenWorkspacePackage } from "./Operations.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/Local");
 
@@ -879,15 +880,67 @@ const checkPackageDocumentation = Effect.fn("DocgenLocal.checkPackageDocumentati
   }
 });
 
-const aggregatePackages = Effect.fn("DocgenLocal.aggregatePackages")(function* (
+/**
+ * Decide whether a Docgen configuration emits the canonical aggregate input.
+ *
+ * **Example** (Exclude a focused quality-analysis output)
+ *
+ * ```ts
+ * import { DocgenConfigDocument, isCanonicalDocgenAggregateConfigForTesting } from "@beep/repo-cli/test/Docgen"
+ *
+ * const config = DocgenConfigDocument.make({
+ *   srcDir: ".",
+ *   outDir: ".jsdoc-loop/generated-docs"
+ * })
+ * console.log(isCanonicalDocgenAggregateConfigForTesting(config)) // false
+ * ```
+ *
+ * @param config - Parsed package-local Docgen configuration.
+ * @returns Whether the configured output is the canonical `docs/modules` tree.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isCanonicalDocgenAggregateConfigForTesting = (config: DocgenConfigDocument): boolean =>
+  P.isUndefined(config.outDir) || config.outDir === "docs";
+
+/**
+ * Aggregate canonical Docgen outputs while ignoring focused auxiliary outputs.
+ *
+ * **Example** (Build the aggregate effect)
+ *
+ * ```ts
+ * import { aggregateDocgenPackagesForTesting } from "@beep/repo-cli/test/Docgen"
+ *
+ * const aggregate = aggregateDocgenPackagesForTesting([])
+ * console.log(aggregate)
+ * ```
+ *
+ * Exposed through the test kit so the canonical and non-canonical configuration
+ * branches can be exercised without spawning Turbo.
+ *
+ * @param packages - Resolved workspace packages emitted by the scoped Turbo plan.
+ * @returns An effect yielding the number of packages that produced aggregate output.
+ * @category testing
+ * @since 0.0.0
+ */
+export const aggregateDocgenPackagesForTesting = Effect.fn("DocgenLocal.aggregatePackages")(function* (
   packages: ReadonlyArray<DocgenWorkspacePackage>
 ) {
+  let aggregateCount = 0;
   for (const pkg of packages) {
+    const config = yield* loadDocgenConfigDocument(pkg.absolutePath);
+    if (!isCanonicalDocgenAggregateConfigForTesting(config)) {
+      yield* Console.log(`docgen:local: skipped aggregation for ${pkg.name} (non-canonical outDir: ${config.outDir})`);
+      continue;
+    }
+
     const results = yield* aggregateGeneratedDocs({ package: pkg.relativePath });
+    aggregateCount += A.length(results);
     for (const result of results) {
       yield* Console.log(`docgen:local: aggregated ${result.packagePath} -> docs/generated/${result.docsOutputPath}`);
     }
   }
+  return aggregateCount;
 });
 
 const verifyPackageProofManifest = (pkg: DocgenWorkspacePackage) =>
@@ -1111,9 +1164,9 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
   // Previously nothing was logged between turbo's own summary and the first
   // "aggregated" line, so a stall in between was invisible.
   yield* Console.log(`docgen:local: aggregating ${A.length(packages)} package(s) into docs/generated`);
-  const [aggregateElapsed] = yield* Effect.timed(aggregatePackages(packages));
+  const [aggregateElapsed, aggregateCount] = yield* Effect.timed(aggregateDocgenPackagesForTesting(packages));
   yield* Console.log(
-    `docgen:local: aggregated ${A.length(packages)} package(s) in ${Duration.format(aggregateElapsed)}`
+    `docgen:local: aggregated ${aggregateCount} of ${A.length(packages)} package(s) in ${Duration.format(aggregateElapsed)}`
   );
 });
 

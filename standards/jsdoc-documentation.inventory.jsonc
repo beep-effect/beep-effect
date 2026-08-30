@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-30T11:19:29.667Z",
+  "generatedAt": "2026-08-30T19:19:10.090Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 73,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 58,
-    "publicModules": 2950,
-    "publicExports": 20563,
+    "publicModules": 2951,
+    "publicExports": 20573,
     "openModules": 347,
     "openExports": 99,
     "missingExportExamples": 4,
@@ -39018,7 +39018,7 @@
         "srcDir": "src",
         "sourceFileCount": 223,
         "publicModuleCount": 221,
-        "publicExportCount": 1758
+        "publicExportCount": 1765
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -40075,7 +40075,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -40097,7 +40097,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 16,
+          "exportCount": 22,
           "remediationStatus": "resolved"
         },
         {
@@ -49827,8 +49827,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.command.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-command-ts-411-corpuscommand",
+          "line": 780,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-command-ts-780-corpuscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -50160,8 +50160,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.recyclebin.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.recyclebin.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-recyclebin-ts-201-pairrecyclebinentries",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-recyclebin-ts-203-pairrecyclebinentries",
           "currentTags": [
             "@param",
             "@returns",
@@ -50334,12 +50334,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./internal/Salvage.schemas.ts\";",
+          "symbolName": "export * from \"./internal/Restoration.schemas.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Corpus/Corpus.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
           "line": 63,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-schemas-ts-63-export-from-internal-salvage-schemas-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-schemas-ts-63-export-from-internal-restoration-schemas-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./internal/Salvage.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Corpus/Corpus.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+          "line": 70,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-schemas-ts-70-export-from-internal-salvage-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -50360,8 +50382,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 62,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-62-export-extractcorpusdocket-from-internal-docket-ts",
+          "line": 76,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-76-export-extractcorpusdocket-from-internal-docket-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -50382,8 +50404,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-87-corpuscommandserviceshape",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-101-corpuscommandserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -50404,8 +50426,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 181,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-181-corpuscommandservice",
+          "line": 247,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-247-corpuscommandservice",
           "currentTags": [
             "@category",
             "@since"
@@ -50426,8 +50448,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 241,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-241-corpuscommandservicelive",
+          "line": 325,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-325-corpuscommandservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -50448,8 +50470,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 268,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-268-archivemovecorpus",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-352-archivemovecorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -50473,8 +50495,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 295,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-295-catalogcorpus",
+          "line": 379,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-379-catalogcorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -50498,8 +50520,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 328,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-328-extractcorpus",
+          "line": 412,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-412-extractcorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -50523,8 +50545,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 355,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-355-enrichcorpus",
+          "line": 439,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-439-enrichcorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -50548,8 +50570,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 382,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-382-organizecorpus",
+          "line": 466,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-466-organizecorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -50573,8 +50595,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 412,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-412-salvagecorpus",
+          "line": 496,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-496-salvagecorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -50598,8 +50620,158 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 439,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-439-verifysalvage",
+          "line": 523,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-523-verifysalvage",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "preserveRestorationArchive",
+          "exportKind": "const",
+          "filePath": "src/commands/Corpus/Corpus.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "line": 565,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-565-preserverestorationarchive",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "reconcileRestorationAcceptance",
+          "exportKind": "const",
+          "filePath": "src/commands/Corpus/Corpus.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "line": 593,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-593-reconcilerestorationacceptance",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "restoreMail",
+          "exportKind": "const",
+          "filePath": "src/commands/Corpus/Corpus.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "line": 631,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-631-restoremail",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "restoreLegacyWord",
+          "exportKind": "const",
+          "filePath": "src/commands/Corpus/Corpus.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "line": 669,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-669-restorelegacyword",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "restoreRecycle",
+          "exportKind": "const",
+          "filePath": "src/commands/Corpus/Corpus.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "line": 703,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-703-restorerecycle",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "verifyRestorationArchive",
+          "exportKind": "const",
+          "filePath": "src/commands/Corpus/Corpus.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "line": 731,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-731-verifyrestorationarchive",
           "currentTags": [
             "@param",
             "@returns",
@@ -50623,8 +50795,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 461,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-461-preflightt7preservation",
+          "line": 753,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-753-preflightt7preservation",
           "currentTags": [
             "@category",
             "@since"
@@ -50645,8 +50817,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 482,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-482-approvet7preservation",
+          "line": 774,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-774-approvet7preservation",
           "currentTags": [
             "@category",
             "@since"
@@ -50667,8 +50839,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 505,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-505-runt7preservation",
+          "line": 797,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-797-runt7preservation",
           "currentTags": [
             "@category",
             "@since"
@@ -50689,8 +50861,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 526,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-526-verifyt7preservation",
+          "line": 818,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-818-verifyt7preservation",
           "currentTags": [
             "@category",
             "@since"
@@ -50711,8 +50883,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Corpus/Corpus.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-          "line": 547,
-          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-547-printcorpusindex",
+          "line": 839,
+          "anchor": "packages-tooling-tool-cli-src-commands-corpus-corpus-service-ts-839-printcorpusindex",
           "currentTags": [
             "@effects",
             "@category",
@@ -145736,9 +145908,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 6,
-        "publicModuleCount": 6,
-        "publicExportCount": 35
+        "sourceFileCount": 7,
+        "publicModuleCount": 7,
+        "publicExportCount": 38
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -145892,6 +146064,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/SystemTemp.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
+          "line": 1,
+          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
           "line": 1,
@@ -145910,7 +146104,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         }
       ],
@@ -146588,6 +146782,53 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "privacySafeSystemTempRootForTesting",
+          "exportKind": "const",
+          "filePath": "src/SystemTemp.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
+          "line": 57,
+          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-57-privacysafesystemtemprootfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "privacySafeSystemTempRoot",
+          "exportKind": "const",
+          "filePath": "src/SystemTemp.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
+          "line": 85,
+          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-85-privacysafesystemtemproot",
+          "currentTags": [
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./Entity.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
@@ -146682,6 +146923,28 @@
           "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
           "line": 44,
           "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-44-export-from-sqltest-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./SystemTemp.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
+          "line": 51,
+          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-51-export-from-systemtemp-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -295930,8 +296193,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.errors.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.errors.ts",
-          "line": 31,
-          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-31-libpfferrorreason",
+          "line": 36,
+          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-36-libpfferrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -295952,8 +296215,8 @@
           "exportKind": "type",
           "filePath": "src/Libpff.errors.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.errors.ts",
-          "line": 53,
-          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-53-libpfferrorreason",
+          "line": 58,
+          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-58-libpfferrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -295974,8 +296237,8 @@
           "exportKind": "class",
           "filePath": "src/Libpff.errors.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.errors.ts",
-          "line": 71,
-          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-71-libpfferroroptions",
+          "line": 76,
+          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-76-libpfferroroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -295996,8 +296259,8 @@
           "exportKind": "class",
           "filePath": "src/Libpff.errors.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.errors.ts",
-          "line": 100,
-          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-100-libpfferror",
+          "line": 108,
+          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-108-libpfferror",
           "currentTags": [
             "@category",
             "@since"
@@ -296018,8 +296281,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.errors.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.errors.ts",
-          "line": 157,
-          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-157-makelibpfferror",
+          "line": 172,
+          "anchor": "packages-drivers-libpff-src-libpff-errors-ts-172-makelibpfferror",
           "currentTags": [
             "@category",
             "@since"
@@ -296106,8 +296369,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 104,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-104-pffexportmode",
+          "line": 106,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-106-pffexportmode",
           "currentTags": [
             "@category",
             "@since"
@@ -296128,8 +296391,8 @@
           "exportKind": "type",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 125,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-125-pffexportmode",
+          "line": 127,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-127-pffexportmode",
           "currentTags": [
             "@category",
             "@since"
@@ -296150,8 +296413,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 139,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-139-pffexportformat",
+          "line": 141,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-141-pffexportformat",
           "currentTags": [
             "@category",
             "@since"
@@ -296172,8 +296435,8 @@
           "exportKind": "type",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 160,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-160-pffexportformat",
+          "line": 162,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-162-pffexportformat",
           "currentTags": [
             "@category",
             "@since"
@@ -296194,8 +296457,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 175,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-175-pffexportexistingexportpolicy",
+          "line": 177,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-177-pffexportexistingexportpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -296216,8 +296479,8 @@
           "exportKind": "type",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 197,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-197-pffexportexistingexportpolicy",
+          "line": 199,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-199-pffexportexistingexportpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -296238,8 +296501,8 @@
           "exportKind": "class",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 213,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-213-pffexportengineconfig",
+          "line": 215,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-215-pffexportengineconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -296260,8 +296523,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.pffexport.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-          "line": 464,
-          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-464-makepffexportfileprocessingengine",
+          "line": 498,
+          "anchor": "packages-drivers-libpff-src-libpff-pffexport-ts-498-makepffexportfileprocessingengine",
           "currentTags": [
             "@effects",
             "@category",
