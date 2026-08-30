@@ -783,6 +783,26 @@ describe("practice KG projections", () => {
         })
       ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
       expect(oversizedFailure.message).toContain("Normalized patent document exceeds 2097152 bytes");
+
+      const byteOversizedDocument = PatentApplicationDocument.make({
+        claims: document.claims,
+        sections: document.sections,
+        sourceText: `${document.sourceText}\n${Str.repeat(1_100_000)("é")}`,
+      });
+      const byteOversizedFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({
+          bundleOut,
+          inputs,
+          patentDocuments: [
+            PracticeKgPatentDocumentInput.make({
+              docket: "20001US08",
+              document: byteOversizedDocument,
+              sourceFile: "20001US08-byte-oversized-patent.md",
+            }),
+          ],
+        })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(byteOversizedFailure.message).toContain("Normalized patent document exceeds 2097152 bytes");
     }, provideTestLayer),
     { timeout: 120_000 }
   );

@@ -431,20 +431,11 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       const identityDigest = yield* decodeContentDigest(`sha256:${identityHex}`);
       const operationId = yield* decodeOperationId(`operation:${digestHex}`);
       const baseSeed = (Number.parseInt(Str.slice(0, 8)(identityHex), 16) % 20_000_000) + 1;
-      const claimsHeading = yield* Effect.fromOption(
-        A.findFirst(input.document.sections, ({ role }) => Eq.equals(role, "claims")),
-        () =>
-          PracticeKgClaimsError.make({
-            message: `Normalized patent document has no claims section: ${input.sourceFile}`,
-          })
+      // PatentApplicationDocument's coherence schema guarantees this section.
+      const claimsSectionIndex = O.getOrThrow(
+        A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims"))
       );
-      const claimsSectionIndex = yield* Effect.fromOption(
-        A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims")),
-        () =>
-          PracticeKgClaimsError.make({
-            message: `Normalized patent document has no claims section: ${input.sourceFile}`,
-          })
-      );
+      const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
       const claimsSectionStart = Num.sum(
         pipe(
           input.document.sections,
