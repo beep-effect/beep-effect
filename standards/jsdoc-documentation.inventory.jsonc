@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-30T19:58:49.425Z",
+  "generatedAt": "2026-08-30T21:45:37.262Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -60613,8 +60613,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PacketCore/PacketEventStore.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts",
-          "line": 387,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-packetcore-packeteventstore-ts-387-packeteventstorelive",
+          "line": 390,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-packetcore-packeteventstore-ts-390-packeteventstorelive",
           "currentTags": [
             "@category",
             "@since"
@@ -397099,8 +397099,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 116,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-116-filingoutcome",
+          "line": 120,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-120-filingoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -397121,8 +397121,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 134,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-134-documentcontentdigest",
+          "line": 138,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-138-documentcontentdigest",
           "currentTags": [
             "@category",
             "@since"
@@ -397143,8 +397143,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 157,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-157-documentcontentdigest",
+          "line": 161,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-161-documentcontentdigest",
           "currentTags": [
             "@category",
             "@since"
@@ -397165,8 +397165,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 190,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-190-document",
+          "line": 194,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-194-document",
           "currentTags": [
             "@category",
             "@since"
@@ -432341,8 +432341,8 @@
           "exportKind": "const",
           "filePath": "src/SchemaUtils/internal/staticDescriptors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/internal/staticDescriptors.ts",
-          "line": 108,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-internal-staticdescriptors-ts-108-staticdescriptorinstaller",
+          "line": 113,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-internal-staticdescriptors-ts-113-staticdescriptorinstaller",
           "currentTags": [
             "@internal",
             "@category",
@@ -433083,8 +433083,8 @@
           "exportKind": "const",
           "filePath": "src/SchemaUtils/withStatics.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts",
-          "line": 83,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withstatics-ts-83-withstatics",
+          "line": 98,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-withstatics-ts-98-withstatics",
           "currentTags": [
             "@category",
             "@since"
