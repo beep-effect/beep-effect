@@ -99,6 +99,25 @@ describe("withCodecStatics", () => {
     expect(Reflect.has(Annotated, "decodeEffect")).toBe(false);
   });
 
+  it("preserves rebuilt schema-owned statics through compatible legacy wrappers", () => {
+    const Selected = S.Union([
+      S.Struct({ type: S.Literal("first"), value: S.String }),
+      S.Struct({ type: S.Literal("second"), value: S.Finite }),
+    ]).pipe(withCodecStatics(["decodeUnknownSync", "is"]));
+    const Tagged = Selected.pipe(
+      S.toTaggedUnion("type"),
+      withStatics(() => ({ decodeUnknownSync: Selected.decodeUnknownSync, is: Selected.is }))
+    );
+    const Annotated = Tagged.annotate({ title: "Annotated tagged union" });
+
+    expect(Annotated.decodeUnknownSync({ type: "first", value: "ok" })).toStrictEqual({
+      type: "first",
+      value: "ok",
+    });
+    expect(Annotated.is({ type: "second", value: 42 })).toBe(true);
+    expect(Annotated.is).not.toBe(Selected.is);
+  });
+
   it("rejects duplicate keys and pre-attached custom statics", () => {
     const FreshCount = Count.rebuild(Count.ast);
     const WithCustomIs = FreshCount.pipe(withStatics(() => ({ is: () => true })));

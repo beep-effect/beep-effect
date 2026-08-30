@@ -14,6 +14,7 @@ const $I = $SchemaId.create("SchemaUtils/internal/staticDescriptors");
 type WithStatics<Target extends object, Statics extends Record<string, unknown>> = Target & Statics;
 type StaticDescriptorMode = "legacy" | "strict";
 type StrictConflictHandler = (key: string) => never;
+type ExistingStaticPreserver = (key: string) => boolean;
 
 class StaticDescriptorRedefinitionError extends S.TaggedError<StaticDescriptorRedefinitionError>(
   $I`StaticDescriptorRedefinitionError`
@@ -43,7 +44,8 @@ const shouldInstallDescriptor = (
   key: string,
   nextValue: unknown,
   mode: StaticDescriptorMode,
-  onStrictConflict?: StrictConflictHandler
+  onStrictConflict?: StrictConflictHandler,
+  preserveExisting?: ExistingStaticPreserver
 ): boolean => {
   const existing = Reflect.getOwnPropertyDescriptor(target, key);
   if (existing === undefined) {
@@ -51,6 +53,9 @@ const shouldInstallDescriptor = (
   }
   if (mode === "strict") {
     return failDefinition(key, `Cannot redefine existing static '${key}' in strict mode.`, onStrictConflict);
+  }
+  if (preserveExisting?.(key) === true) {
+    return false;
   }
   if (Object.is(descriptorValue(target, key, existing), nextValue)) {
     return false;
@@ -110,10 +115,20 @@ export const staticDescriptorInstaller = {
     target: Target,
     statics: Statics,
     mode: StaticDescriptorMode = "legacy",
-    onStrictConflict?: StrictConflictHandler
+    onStrictConflict?: StrictConflictHandler,
+    preserveExisting?: ExistingStaticPreserver
   ): WithStatics<Target, Statics> {
     for (const [key, descriptor] of R.toEntries(Object.getOwnPropertyDescriptors(statics))) {
-      if (!shouldInstallDescriptor(target, key, descriptorValue(statics, key, descriptor), mode, onStrictConflict)) {
+      if (
+        !shouldInstallDescriptor(
+          target,
+          key,
+          descriptorValue(statics, key, descriptor),
+          mode,
+          onStrictConflict,
+          preserveExisting
+        )
+      ) {
         continue;
       }
       defineStaticDescriptor(target, key, descriptorForMode(descriptor, mode), onStrictConflict);

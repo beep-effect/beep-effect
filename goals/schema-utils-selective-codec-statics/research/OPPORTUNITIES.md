@@ -63,3 +63,16 @@
 - **What would have prevented it:** Run the repository preparation/postinstall
   path before direct compiler lanes, or have the lane detect the missing
   generated `@pulumi/gharunners` boundary and name the preparation command.
+
+## 2026-08-30 — Aggregate coverage found rebuild behavior missed by package tests
+
+- **What I was doing:** Regenerating the coverage baseline after focused
+  package verification had passed.
+- **Evidence:** The aggregate import graph exposed two load-time failures:
+  `withStatics` attempted to replace a rebuilt, non-configurable selected
+  static after `S.toTaggedUnion`, and `S.make(RawLexicalNode.ast)` had erased
+  the runtime `members` required by `S.toTaggedUnion`.
+- **What would have prevented it:** Add a focused compatibility test for
+  selected statics carried through legacy wrappers and annotations, and avoid
+  generic `S.make(ast)` rebuilds when a schema combinator requires specialized
+  runtime structure such as union `members`.

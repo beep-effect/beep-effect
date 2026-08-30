@@ -2581,7 +2581,7 @@ const RawLexicalNode = S.Union([
  * @since 0.0.0
  */
 export const LexicalNode = pipe(
-  S.make<(typeof RawLexicalNode)["Rebuild"]>(RawLexicalNode.ast).check(
+  RawLexicalNode.check(
     S.makeFilter(isStrictLexicalNode, {
       identifier: $I`StrictLexicalNodeTreeCheck`,
       title: "Strict Lexical Node",

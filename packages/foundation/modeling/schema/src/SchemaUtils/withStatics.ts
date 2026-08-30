@@ -4,8 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { staticDescriptorInstaller } from "./internal/staticDescriptors.ts";
 
 /**
@@ -26,16 +28,28 @@ type WithStaticsTransform<Schema extends object, Statics extends Record<string, 
 
 const attachStatics = <S extends object, M extends Record<string, unknown>>(
   schema: S,
-  methods: (schema: S) => M
+  methods: (schema: S) => M,
+  schemaOwnedKeys: ReadonlyArray<string> = []
 ): WithStatics<S, M> => {
   const originalAnnotate = Reflect.get(schema, "annotate");
   const statics = methods(schema);
-  staticDescriptorInstaller.install(schema, statics);
+  const nextSchemaOwnedKeys = A.dedupe(
+    A.appendAll(
+      schemaOwnedKeys,
+      A.filter(R.keys(statics), (key) => {
+        const descriptor = Reflect.getOwnPropertyDescriptor(schema, key);
+        return descriptor !== undefined && Object.is(Reflect.get(schema, key), Reflect.get(statics, key));
+      })
+    )
+  );
+  staticDescriptorInstaller.install(schema, statics, "legacy", undefined, (key) =>
+    A.contains(nextSchemaOwnedKeys, key)
+  );
 
   if (P.isFunction(originalAnnotate)) {
     Reflect.defineProperty(schema, "annotate", {
       value(annotation: unknown) {
-        return attachStatics(originalAnnotate.call(schema, annotation), methods);
+        return attachStatics(originalAnnotate.call(schema, annotation), methods, nextSchemaOwnedKeys);
       },
       enumerable: false,
       writable: false,
@@ -52,10 +66,11 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
  *
  * **Gotchas**
  *
- * Existing configurable properties may be replaced, identical statics are
- * ignored, and conflicting non-configurable properties raise an internal
- * tagged error. Use this for schema companion helpers that should travel with
- * the schema value instead of living as separate module-level functions.
+ * Existing configurable properties may be replaced, identical statics already
+ * owned by the schema remain schema-owned across rebuilds, and conflicting
+ * non-configurable properties raise an internal tagged error. Use this for
+ * schema companion helpers that should travel with the schema value instead of
+ * living as separate module-level functions.
  *
  * **Example** (Attach companion empty static)
  *
