@@ -1,7 +1,7 @@
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { PosInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -39,11 +39,18 @@ const input = (
   identityHex: string,
   claimsHeading = "CLAIMS (CONTINUED)",
   candidateClaim: PatentClaim = claim,
-  candidateSourceText = sourceText
-) =>
-  PatentClaimCandidateInput.make({
+  candidateSourceText = sourceText,
+  boundedStart?: number,
+  boundedEnd?: number
+) => {
+  const headingIndex = O.getOrElse(Str.lastIndexOf(claimsHeading)(candidateSourceText), () => -1);
+  const claimsSectionStart = boundedStart ?? (headingIndex < 0 ? 0 : headingIndex + claimsHeading.length + 1);
+  const claimsSectionEnd = boundedEnd ?? (headingIndex < 0 ? 0 : candidateSourceText.length);
+  return PatentClaimCandidateInput.make({
     claim: candidateClaim,
     claimsHeading,
+    claimsSectionEnd: NonNegativeInt.make(claimsSectionEnd),
+    claimsSectionStart: NonNegativeInt.make(claimsSectionStart),
     digest,
     docket: "20001US05",
     entitySeed: PosInt.make(1),
@@ -52,6 +59,7 @@ const input = (
     sourceFile: "20001US05-patent.md",
     sourceText: candidateSourceText,
   });
+};
 
 describe("PatentClaimCandidate", () => {
   it.effect(
@@ -86,7 +94,7 @@ describe("PatentClaimCandidate", () => {
   );
 
   it.effect(
-    "anchors evidence to the last matching claims heading when earlier content duplicates it",
+    "uses structural claims-section bounds when earlier content duplicates the heading and claim",
     Effect.fnUntraced(function* () {
       const duplicateHeadingSource = ["CLAIMS (CONTINUED)", `1. ${evidenceQuote}`, sourceText].join("\n");
       const mapped = yield* patentClaimCandidateFrom(
@@ -98,6 +106,24 @@ describe("PatentClaimCandidate", () => {
       expect(Str.slice(mapped.evidence.span.startChar, mapped.evidence.span.endChar)(duplicateHeadingSource)).toBe(
         evidenceQuote
       );
+    })
+  );
+
+  it.effect(
+    "uses structural claims-section bounds when later content duplicates the heading and claim",
+    Effect.fnUntraced(function* () {
+      const laterDuplicate = `${sourceText}\nABSTRACT\nCLAIMS (CONTINUED)\n1. ${evidenceQuote}`;
+      const actualHeading = O.getOrThrow(Str.indexOf("CLAIMS (CONTINUED)")(laterDuplicate));
+      const actualStart = actualHeading + "CLAIMS (CONTINUED)".length + 1;
+      const mapped = yield* patentClaimCandidateFrom(
+        input(Str.repeat(64)("6"), "CLAIMS (CONTINUED)", claim, laterDuplicate, actualStart, sourceText.length)
+      );
+
+      expect(mapped.evidence.span.startChar).toBeGreaterThan(actualHeading);
+      expect(Str.slice(mapped.evidence.span.startChar, mapped.evidence.span.endChar)(laterDuplicate)).toBe(
+        evidenceQuote
+      );
+      expect(mapped.evidence.span.endChar).toBeLessThanOrEqual(sourceText.length);
     })
   );
 });

@@ -9,7 +9,7 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { Defect, PosInt } from "@beep/schema";
+import { Defect, NonNegativeInt, PosInt } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
@@ -31,7 +31,7 @@ const decodeEvidence = S.decodeUnknownEffect(Evidence);
  * ```ts
  * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
  * import { PatentClaimCandidateInput } from "@beep/law-practice-use-cases/PatentClaimCandidate"
- * import { PosInt } from "@beep/schema"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const claim = PatentClaim.cases.independent.make({
  *   body: "a sensor",
@@ -53,6 +53,12 @@ export class PatentClaimCandidateInput extends S.Class<PatentClaimCandidateInput
     }),
     claimsHeading: S.NonEmptyString.annotateKey({
       description: "Recognized claims-section heading used to constrain evidence alignment.",
+    }),
+    claimsSectionEnd: NonNegativeInt.annotateKey({
+      description: "Exclusive source-text boundary of the structurally normalized claims section.",
+    }),
+    claimsSectionStart: NonNegativeInt.annotateKey({
+      description: "Inclusive source-text boundary of the structurally normalized claims section content.",
     }),
     digest: ContentDigest.annotateKey({
       description: "Content digest of the normalized patent document.",
@@ -125,46 +131,33 @@ const whitespaceFlexiblePattern: (value: string) => string = flow(
 
 const claimEvidenceFrom = (
   sourceText: string,
-  claimsHeading: string,
+  claimsSectionStart: number,
+  claimsSectionEnd: number,
   claim: PatentClaim
-): O.Option<readonly [startChar: number, quote: string]> =>
-  pipe(
-    Str.matchAll(new RegExp(`(?:^|\\n)[\\t ]*${escapeRegExp(claimsHeading)}[\\t ]*(?:\\n|$)`, "giu"))(sourceText),
-    A.fromIterable,
-    A.reverse,
-    A.reduce(O.none<readonly [startChar: number, quote: string]>(), (evidence, headingMatch) =>
-      O.isSome(evidence)
-        ? evidence
-        : pipe(
-            O.fromUndefinedOr(headingMatch.index),
-            O.map((headingStart) => Num.sum(headingStart, Str.length(headingMatch[0]))),
-            O.flatMap((claimsStart) => {
-              const claimsText = Str.slice(claimsStart)(sourceText);
-              const claimPattern = new RegExp(
-                `(?:^|\\n)[\\t ]*${claim.claimNumber}\\.[\\t ]+(${whitespaceFlexiblePattern(claim.claimText)})`,
-                "iu"
-              );
-              return pipe(
-                Str.match(claimPattern)(claimsText),
-                O.flatMap((claimMatch) =>
-                  pipe(
-                    O.all({
-                      matchStart: O.fromUndefinedOr(claimMatch.index),
-                      quote: A.get(claimMatch, 1),
-                    }),
-                    O.flatMap(({ matchStart, quote }) =>
-                      pipe(
-                        Str.indexOf(quote)(claimMatch[0]),
-                        O.map((quoteOffset) => [Num.sum(claimsStart, Num.sum(matchStart, quoteOffset)), quote] as const)
-                      )
-                    )
-                  )
-                )
-              );
-            })
+): O.Option<readonly [startChar: number, quote: string]> => {
+  const claimsText = Str.slice(claimsSectionStart, claimsSectionEnd)(sourceText);
+  const claimPattern = new RegExp(
+    `(?:^|\\n)[\\t ]*${claim.claimNumber}\\.[\\t ]+(${whitespaceFlexiblePattern(claim.claimText)})`,
+    "iu"
+  );
+  return pipe(
+    Str.match(claimPattern)(claimsText),
+    O.flatMap((claimMatch) =>
+      pipe(
+        O.all({
+          matchStart: O.fromUndefinedOr(claimMatch.index),
+          quote: A.get(claimMatch, 1),
+        }),
+        O.flatMap(({ matchStart, quote }) =>
+          pipe(
+            Str.indexOf(quote)(claimMatch[0]),
+            O.map((quoteOffset) => [Num.sum(claimsSectionStart, Num.sum(matchStart, quoteOffset)), quote] as const)
           )
+        )
+      )
     )
   );
+};
 
 /**
  * Map a typed patent claim directly into candidate and evidence entities.
@@ -184,7 +177,7 @@ const claimEvidenceFrom = (
  *   PatentClaimCandidateInput,
  *   patentClaimCandidateFrom
  * } from "@beep/law-practice-use-cases/PatentClaimCandidate"
- * import { PosInt } from "@beep/schema"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import * as Effect from "effect/Effect"
  *
  * const claimText = "A system comprising a sensor."
@@ -198,6 +191,8 @@ const claimEvidenceFrom = (
  * const program = patentClaimCandidateFrom(PatentClaimCandidateInput.make({
  *   claim,
  *   claimsHeading: "CLAIMS",
+ *   claimsSectionEnd: NonNegativeInt.make(44),
+ *   claimsSectionStart: NonNegativeInt.make(21),
  *   digest: ContentDigest.make("sha256:0000000000000000000000000000000000000000000000000000000000000000"),
  *   docket: "US-EXAMPLE-1",
  *   entitySeed: PosInt.make(1),
@@ -218,7 +213,7 @@ export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(f
   input: PatentClaimCandidateInput
 ): Effect.fn.Return<OfficeActionCandidateExtraction, PatentClaimCandidateError> {
   const [startChar, evidenceQuote] = yield* Effect.fromOption(
-    claimEvidenceFrom(input.sourceText, input.claimsHeading, input.claim),
+    claimEvidenceFrom(input.sourceText, input.claimsSectionStart, input.claimsSectionEnd, input.claim),
     () =>
       patentClaimCandidateError(`Claim ${input.claim.claimNumber} does not align to the normalized patent source text.`)
   );
