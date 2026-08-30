@@ -179,26 +179,6 @@ const withTempDirectory = <Result, Error, Requirements>(
       })
   ).pipe(provideScopedLayer(PlatformLayer));
 
-const withEnvVarEffect = <Out, Error, Requirements>(
-  name: string,
-  value: string | undefined,
-  use: Effect.Effect<Out, Error, Requirements>
-): Effect.Effect<Out, Error, Requirements> =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const previous = Bun.env[name];
-      if (value === undefined) delete Bun.env[name];
-      else Bun.env[name] = value;
-      return previous;
-    }),
-    () => use,
-    (previous) =>
-      Effect.sync(() => {
-        if (previous === undefined) delete Bun.env[name];
-        else Bun.env[name] = previous;
-      })
-  );
-
 const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {
   const previous = Bun.env[name];
   if (value === undefined) delete Bun.env[name];
