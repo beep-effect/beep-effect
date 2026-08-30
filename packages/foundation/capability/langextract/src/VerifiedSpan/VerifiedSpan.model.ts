@@ -549,7 +549,7 @@ export const VerifiedSpanAttemptOutcome = VerifiedSpanAttemptOutcomeStatus.mapMe
  */
 export type VerifiedSpanAttemptOutcome = typeof VerifiedSpanAttemptOutcome.Type;
 
-const GroundedExtractionBatch = S.Array(GroundedExtraction).check(
+const GroundedExtractionBatch: S.Schema<ReadonlyArray<GroundedExtraction>> = S.Array(GroundedExtraction).check(
   S.isMaxLength(MAX_EXTRACTION_CANDIDATES, {
     identifier: $I`VerifiedSpanAttemptCandidatesMaxLengthCheck`,
     title: "Verified Span Attempt Candidate Limit",
