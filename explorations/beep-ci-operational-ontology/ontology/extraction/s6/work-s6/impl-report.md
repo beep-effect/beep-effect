@@ -144,17 +144,12 @@ the repository and no network fetch was used. The legacy validator imports `rdfl
 at module load even in default and S5 modes, so those two commands inherited the
 already-cached `rdflib` and `pyparsing` archives through `PYTHONPATH`.
 
-Environment used for the exact acceptance commands:
-
-The public-repo rendering below replaces the absolute home-directory prefix with
-`~`; the shell command is otherwise unchanged.
-
-```sh
-export UV_CACHE_DIR=/tmp/beep-s6-uv-subset
-export UV_OFFLINE=1
-export UV_PYTHON=/usr/bin/python3.14
-export PYTHONPATH=~/.cache/uv/archive-v0/ycTSDtY9NyNqVDD0:~/.cache/uv/archive-v0/EBmnurdJTFAYTEfR
-```
+Environment used for the exact acceptance commands (host paths elided per the
+public-repo knowledge-refs law): a session-local `UV_CACHE_DIR` under the system
+temp dir, `UV_OFFLINE=1`, `UV_PYTHON` pointed at the system python 3.14, and a
+`PYTHONPATH` listing the two already-cached uv archive directories carrying
+`rdflib` and `pyparsing`. The commands themselves were byte-identical to the
+contract invocations.
 
 Commands and results, all run from the packet root:
 

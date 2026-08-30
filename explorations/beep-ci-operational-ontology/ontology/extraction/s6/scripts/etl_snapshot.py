@@ -108,15 +108,22 @@ def safe_nonce(value: object) -> str:
     return nonce
 
 
+# Committed artifacts carry no live host paths (knowledge-refs law): the source
+# path is recorded as a portable descriptor, never the machine-literal location.
+PORTABLE_SOURCE_PATH = "<system-temp>/beep-admit-uid-<uid>/journal.ndjson"
+
+
 def _source_block(pinned: bool, events, removed: int, redacted_bytes: bytes) -> dict:
-    """The transform stats describe how RAW was captured from /tmp; a pinned rerun
-    reads RAW itself, so the capture-time block is carried forward verbatim."""
+    """The transform stats describe how RAW was captured from the admission root;
+    a pinned rerun reads RAW itself, so the capture-time block is carried forward
+    (with the path kept portable)."""
     if pinned and MANIFEST.is_file():
         prior = yaml.safe_load(MANIFEST.read_text())
         if isinstance(prior, dict) and isinstance(prior.get("source"), dict):
+            prior["source"]["path"] = PORTABLE_SOURCE_PATH
             return prior["source"]
     return {
-        "path": SOURCE.as_posix(),
+        "path": PORTABLE_SOURCE_PATH,
         "copied_to": "snapshot/raw/journal.ndjson",
         "event_count": len(events),
         "transform": {

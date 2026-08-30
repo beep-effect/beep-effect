@@ -2,13 +2,13 @@
 # Public snapshot receipt; source journal was copied and never modified.
 # Redaction drops pid and procStart only; grant state/kind/priority remain manifest tallies.
 generated_by: scripts/etl_snapshot.py
-corpus_commit: 2c5bc5974742ef982a808826dea589422cf7a52e
+corpus_commit: dcc2ee6e46a2d1cd8ee6357974b575333600be1f
 snapshot_instant: '2026-08-30T22:04:02.475Z'
 snapshot_instant_millis: 1788127442475
 graph: graphs/snapshot-20260830T220402Z.ttl
 manifest_graph: graphs/manifest-20260830T220402Z.ttl
 source:
-  path: /tmp/beep-admit-uid-1000/journal.ndjson
+  path: <system-temp>/beep-admit-uid-<uid>/journal.ndjson
   copied_to: snapshot/raw/journal.ndjson
   event_count: 79
   transform:

@@ -600,6 +600,9 @@ touching ratified content:
   tallies remain manifest counts and the predicate stays a vocabulary gap.
 
 The closure amendment and the moving corpus pin change the CENSUS/MANIFEST
-digests (now cd197cd7a7a8 / bc3375beb3b2 in ABOX.yaml); the ratified snapshot
-content — the redacted journal bytes cf30b993a38d and every policy/enumeration
-fact — is byte-identical to what sitting 2 ratified.
+digests — ABOX.yaml is the digest of record and the byte-verifying gate keeps
+it honest; the ratified snapshot content — the redacted journal bytes
+cf30b993a38d and every policy/enumeration fact — is byte-identical to what
+sitting 2 ratified. A follow-up hardening in the same review arc removed every
+committed live host path (the manifest source path is now a portable
+descriptor; the impl-report environment transcript is prose-elided).

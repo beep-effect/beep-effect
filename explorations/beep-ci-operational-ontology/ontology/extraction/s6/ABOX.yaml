@@ -3,7 +3,7 @@
 # Census and snapshot enter this surface by generator/output digest, not by copied triples.
 generated_by: scripts/build_abox.py
 contract: ontology/docs/s6-abox-contract.md
-corpus_commit: 2c5bc5974742ef982a808826dea589422cf7a52e
+corpus_commit: dcc2ee6e46a2d1cd8ee6357974b575333600be1f
 policy:
   individual: ciops:YeetWeightedAdmissionV1
   instance_of: ciops:AdmissionPolicy
@@ -247,7 +247,7 @@ snapshot:
   artifact: snapshot/raw/MANIFEST.yaml
   instant: '2026-08-30T22:04:02.475Z'
   redacted_sha256_12: cf30b993a38d
-  manifest_sha256_12: bc3375beb3b2
+  manifest_sha256_12: dc96d4c13a61
   graph: graphs/snapshot-20260830T220402Z.ttl
   manifest_graph: graphs/manifest-20260830T220402Z.ttl
   counts:
