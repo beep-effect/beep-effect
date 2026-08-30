@@ -2123,7 +2123,8 @@ describe("corpus restoration mail", () => {
         const { records } = yield* readTransformationLedgerFixture(ledgerPath);
         const repairs = A.filter(
           records,
-          (record) => record.recordType === "attachment-type-repair" && record.repairStatus === "repaired"
+          (record): record is Extract<TransformationLedgerRecord, { readonly recordType: "attachment-type-repair" }> =>
+            record.recordType === "attachment-type-repair" && record.repairStatus === "repaired"
         );
         const derivativePaths = A.map(repairs, (record) => record.derivedRelativePath);
 
