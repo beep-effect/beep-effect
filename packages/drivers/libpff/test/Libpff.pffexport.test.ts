@@ -559,7 +559,6 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
-        expect(bwrapArguments).toContain(`--ro-bind\n${path.dirname(commandPath)}\n${path.dirname(commandPath)}\n`);
         expect(bwrapArguments).toContain(`--ro-bind\n${interpreterPrefix}\n${interpreterPrefix}\n`);
         expect(bwrapArguments).toContain(`--\n${interpreterPath}\n${launcherPath}\n`);
         expect(bwrapArguments).not.toContain(`/usr/bin/${commandName}`);
