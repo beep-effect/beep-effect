@@ -41,7 +41,7 @@ const PgliteSyntheticRow = S.Struct({ id: S.String, kind: S.String, label: S.Str
 const DuckCountRow = S.Struct({ count: S.Finite });
 const DuckDocumentDigestRow = S.Struct({ digest: S.String, id: S.String });
 const DuckTextHitRow = S.Struct({ id: S.String });
-const DuckCitationRow = S.Struct({ url: S.String });
+const DuckCitationRow = S.Struct({ id: S.String, url: S.String });
 const projectionSnapshotEquivalent = S.toEquivalence(ProjectionSnapshot);
 
 const createDuckDbFullTextProjection = [
@@ -191,12 +191,12 @@ const readDuckDbProjection = Effect.fnUntraced(function* () {
     .query("SELECT doc_id AS id FROM fts_bm25 WHERE term = 'a490' ORDER BY score DESC, doc_id")
     .pipe(Effect.flatMap((rows) => decodeRows("duckdb-full-text", S.NonEmptyArray(DuckTextHitRow), rows)));
   const citationRows = yield* duckdb
-    .query("SELECT url FROM rule_citations ORDER BY id")
+    .query("SELECT id, url FROM rule_citations ORDER BY id")
     .pipe(Effect.flatMap((rows) => decodeRows("duckdb-citations", S.NonEmptyArray(DuckCitationRow), rows)));
   return {
     citations: [
       ...A.map(hitRows, (row) => `full-text:${row.id}`),
-      ...A.map(citationRows, (row) => `source:${row.url}`),
+      ...A.map(citationRows, (row) => `source:${row.id}|${row.url}`),
     ],
     documentCount: countRows[0].count,
     documentDigests: A.map(digestRows, (row) => `${row.id}|${row.digest}`),

@@ -795,9 +795,9 @@ export class ProjectionSnapshot extends S.Class<ProjectionSnapshot>($I`Projectio
   {
     citations: S.Tuple([
       S.Literal("full-text:rfq-b-pdf-schedule"),
-      S.Literal("source:https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/"),
-      S.Literal("source:https://blueprint.fastenal.com/structural-bolts.html"),
-      S.Literal("source:https://www.portlandbolt.com/technical/specifications/astm-f959/"),
+      S.Literal("source:aisc-matched-assembly|https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/"),
+      S.Literal("source:fastenal-a490-coating|https://blueprint.fastenal.com/structural-bolts.html"),
+      S.Literal("source:portland-bolt-astm-f959|https://www.portlandbolt.com/technical/specifications/astm-f959/"),
     ]),
     documentCount: S.Literal(4),
     documentDigests: S.Tuple([

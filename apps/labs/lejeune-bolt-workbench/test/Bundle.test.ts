@@ -373,6 +373,31 @@ describe("LeJeune deterministic fixture bundle", () => {
     })
   );
 
+  it.live(
+    "rejects a persisted citation identifier associated with the wrong source URL",
+    Effect.fnUntraced(function* () {
+      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
+      const fixtures = yield* buildNormalizedFixtures(artifacts);
+      const rules = yield* evaluateRules(fixtures);
+      const referenceData = buildReferenceData(fixtures);
+      const input = ProjectionInput.make({
+        certificates: referenceData.certificates,
+        fixtures,
+        offers: referenceData.offers,
+        rules,
+      });
+      const failure = yield* Effect.flip(
+        Effect.gen(function* () {
+          const expected = yield* buildProjectionSnapshot(input);
+          const duckdb = yield* DuckDb;
+          yield* duckdb.run("UPDATE rule_citations SET id = 'wrong-source-id' WHERE id = 'aisc-matched-assembly'");
+          return yield* verifyDurableProjectionSnapshot(expected);
+        }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
+      );
+      expect(failure._tag).toBe("ProjectionError");
+    })
+  );
+
   it.effect(
     "maps a reused projection store failure into the declared projection error",
     Effect.fnUntraced(function* () {
