@@ -17,7 +17,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { freemem, tmpdir, totalmem, userInfo } from "node:os";
+import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as OptionUtils from "@beep/utils/Option";
 import {
@@ -41,7 +41,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../cli/EnvConfig.ts";
 import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
@@ -60,6 +59,7 @@ import {
   runScopeUnitName,
   stopRunScopeForReap,
 } from "./RunScope.ts";
+import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
@@ -284,19 +284,15 @@ interface AdmissionDirectories {
   readonly root: string;
 }
 
-const admissionRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<string, never, Path.Path> {
+// The base root is shared with the proof-lock coordinator (RuntimeRoot.ts), so
+// every session on the machine coordinates under one tree.
+const admissionRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<
+  string,
+  never,
+  FileSystem.FileSystem | Path.Path
+> {
   const path = yield* Path.Path;
-  const configured = yield* configStringOption("XDG_RUNTIME_DIR");
-  return pipe(
-    configured,
-    O.filter(Str.isNonEmpty),
-    O.filter(path.isAbsolute),
-    O.match({
-      // Shared tmpdir fallback gets a uid suffix; XDG_RUNTIME_DIR is per-user.
-      onNone: () => path.join(tmpdir(), `beep-admit-uid-${userInfo().uid}`),
-      onSome: (root) => path.join(root, "beep", "admit"),
-    })
-  );
+  return admissionRootFor(path, yield* perUserRuntimeRoot());
 });
 
 /**
