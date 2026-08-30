@@ -36,3 +36,10 @@ v4 APIs against `.repos/effect`; no webhook tunnel, no cgroup freezing, no blank
 SPEC). Update PLAN checkmarks and the parity ledger as work lands; record friction receipts in
 `research/OPPORTUNITIES.md` at the moment it happens. The operator-authorized 2026-08-27
 closeout bundles all remaining items into one Yeet-published PR.
+
+Closeout status (2026-08-30): the operator accepted the concentrated 24-hour production sample
+instead of the original seven-day duration proxy. Continue from
+`research/metrics-closeout.md`; do not reopen satisfied evidence families. The terminal
+same-origin dual proof is green. The remaining gates are an authenticated cross-checkout
+remote-cache read sample after `op signin` (the reference set already exists) and Yeet
+`merge-ready: yes` for the final closeout PR. Keep lifecycle active until both are true.

@@ -1,6 +1,7 @@
 # Ship velocity representative observation
 
-Status: fresh repair observation active; first current-main validation green.
+Status: operator-authorized evidence volume accepted; concurrency green; authenticated cache
+observation and final closeout PR remain open.
 
 ## Window
 
@@ -231,9 +232,32 @@ Across the 17 merged PRs from the #874 anchor through this snapshot, only #874 i
 `goals/INDEX.md` or `explorations/ATLAS.md`. The 16 subsequent merges touched neither projection,
 and no sampled publish failure named either path as its retry cause.
 
-### Closeout state at this snapshot
+### Terminal dual-full-proof receipt
 
-The evidence-volume ruling closes the calendar-duration question, not the operational gates. The
-packet remains active until an authorized 1Password session produces a fresh remote-read
-observation from every active root and two current-protocol sibling full proofs complete concurrently
-without OOM. Lifecycle and P5 status remain unchanged until both terminal receipts exist.
+Two independent frozen-install clones at commit `70883b352406f78789acb9c88012c2fa4fd43e4c`
+ran full Yeet verification under `scheduler-origin-concurrency/v1`. Both used origin key
+`4cc31eeb4dec`, held three admission tokens, and completed every preflight, build, lint,
+typecheck, coverage, Desktop IPC, unit, integration, JSDoc, and full docgen lane at exit 0.
+
+- proof C admitted at `2026-08-30T21:04:51.871Z` and released at
+  `2026-08-30T21:58:52.316Z`; its verdict elapsed 3,240,467 ms and recorded 10,878,916 KiB for
+  cheap gates and 17,966,264 KiB for pre-push;
+- proof D admitted at `2026-08-30T21:10:03.115Z` and released at
+  `2026-08-30T22:03:21.782Z`; its verdict elapsed 3,203,699 ms and recorded 11,005,400 KiB for
+  cheap gates and 18,001,708 KiB for pre-push;
+- the admission intervals overlapped for 2,929,201 ms, or 48 minutes 49.201 seconds;
+- capacity contracted below the six already-admitted full-proof tokens during pressure and later
+  recovered to ten without engaging the hard floor, killing a lease, or quarantining state;
+- both terminal verdicts report `outcome: success`; no OOM or interrupted proof occurred.
+
+The durable journal retains both admitted and released timestamps, but its event schema does not
+carry the coordination protocol and both release rows omitted the verdict's available peak RSS.
+`OPPORTUNITIES.md` records that evidence-join gap rather than overstating the journal.
+
+### Closeout state after the terminal trial
+
+The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
+closes the concurrency condition. The packet remains active only because an authorized
+1Password session must produce a fresh remote-read observation from every active root and the
+final closeout PR must reach Yeet `merge-ready: yes`. Lifecycle and P5 status remain unchanged
+until both gates are satisfied.

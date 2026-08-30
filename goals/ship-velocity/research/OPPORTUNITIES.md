@@ -932,3 +932,34 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
 - What would have prevented it: stop repair feedback before heavyweight lanes whenever the
   collected cheap-gate wave is red, or admit the feedback phase through the same weighted
   scheduler used by full verification.
+
+## 2026-08-30 — Concurrent linked-worktree verifies raced during origin refresh
+
+- What was happening: launching the repaired live dual-proof trial from two clean detached
+  worktrees at the same commit.
+- Evidence: both Yeet processes refreshed `origin/main` during startup. One completed the fetch and
+  joined the scheduler queue; the other exited before admission because its quiet Git fetch could
+  not update the shared linked-worktree ref concurrently. No quality lane ran in the failed
+  process, and retrying after the first refresh completed avoided the collision.
+- What would have prevented it: serialize origin refresh through the repository's shared Git
+  common directory, or make a ref-lock collision retry with bounded backoff before Yeet treats the
+  refresh as a terminal command failure.
+
+The same linked-worktree setup later exposed a second isolation gap. A root `node_modules` symlink
+did not supply the worktree-local `infra/node_modules/@pulumi/gharunners` output created by the
+install hook, so the 951-file TypeScript test gate failed in `infra`. Disposable full checkouts
+with independent Git metadata and their own frozen install avoid both defects. A reusable proof
+worktree provisioner should install the complete workspace instead of linking only root packages.
+
+## 2026-08-30 — Durable admission rows omit the protocol and terminal memory receipt
+
+- What was happening: extracting the terminal evidence for two same-origin full proofs admitted
+  under `scheduler-origin-concurrency/v1`.
+- Evidence: live scheduler status identified both current-protocol leases and their overlap. The
+  durable admission journal recorded admitted and released rows, but the rows do not carry
+  `coordinationProtocol`, and the first successful release omitted `memoryPeakBytes` even though
+  its Yeet verdict recorded peak RSS for both heavyweight steps. Establishing the receipt required
+  correlating ephemeral status, journal timestamps, terminal exit, and the branch-local verdict.
+- What would have prevented it: include the coordination protocol in both journal event variants
+  and copy the verdict or scheduler peak into every terminal release row, then expose a bounded
+  closeout query that joins the records by nonce.

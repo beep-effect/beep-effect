@@ -41,6 +41,9 @@ The remaining P2-P5 engineering backlog was completed in the 2026-08-27 closeout
 adds hook-driven inbox enforcement and takeover, full local/hosted parity planning and proof
 reuse, weighted admission with RSS telemetry, cache warming and first-touch evidence, local-only
 portfolio projections, contention families, goals-only required-check skips, and the live E7/E8
-evaluations. The initiative intentionally remains active until the final PR is merge-ready and a
-representative post-merge week satisfies the completion gate; see
+evaluations. On 2026-08-30 the operator accepted a concentrated 24-hour production sample in
+place of the original seven-day duration proxy. Two independent same-origin full proofs then
+overlapped for 48 minutes 49.201 seconds and both completed every lane at exit 0. The initiative
+remains active because an authorized 1Password session is still required for the cross-checkout
+remote-read sample and the closeout PR has not yet reached Yeet `merge-ready: yes`; see
 [research/metrics-closeout.md](research/metrics-closeout.md).

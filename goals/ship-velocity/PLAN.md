@@ -139,6 +139,10 @@ the C5 metric correction and the new C7 item below.
   non-cancelled main-push success rate is 65.4%, below the 80% gate, and workflows have no
   `merge_group` coverage. Queue stays off; strict required checks stay false. See
   `research/merge-queue-evaluation.md`.
-- **Metrics observation gate remains open.** Implementation receipts and the post-merge sampling
-  protocol are in `research/metrics-closeout.md`. The representative week cannot begin until this
-  PR lands, so the initiative remains active and no target is claimed from synthetic evidence.
+- **Metrics observation gate remains open.** On 2026-08-30 the operator accepted the observed
+  24-hour event volume in place of the original seven-day duration proxy without waiving any
+  outcome condition. Backpressure, takeover, parity, and hot-file receipts now satisfy the
+  authorized sample. Two independent same-origin full proofs overlapped for 48 minutes 49.201
+  seconds and both completed every lane at exit 0. An authorized 1Password session is required
+  for the cross-checkout remote-read observation, and the final closeout PR must reach Yeet
+  `merge-ready: yes`; see `research/metrics-closeout.md`.
