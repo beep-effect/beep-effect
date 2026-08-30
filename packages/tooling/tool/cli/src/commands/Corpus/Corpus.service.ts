@@ -19,6 +19,13 @@ import {
   runT7PreservationImpl,
   verifyT7PreservationImpl,
 } from "./internal/Preservation.ts";
+import { preserveRestorationArchiveImpl, verifyRestorationArchiveImpl } from "./internal/Restoration.ts";
+import {
+  reconcileRestorationAcceptanceImpl,
+  restoreLegacyWordImpl,
+  restoreMailImpl,
+  restoreRecycleImpl,
+} from "./internal/RestorationTransformations.ts";
 import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
@@ -40,6 +47,13 @@ import type {
   CorpusSalvageSummary,
   PreservationRunSummary,
   PreservationVerificationReport,
+  RestorationAcceptanceRecord,
+  RestorationLegacyWordOptions,
+  RestorationMailOptions,
+  RestorationPreserveOptions,
+  RestorationRecycleOptions,
+  RestorationRunSummary,
+  RestorationVerifyOptions,
   T7PreservationOptions,
 } from "./Corpus.schemas.ts";
 
@@ -135,6 +149,49 @@ export interface CorpusCommandServiceShape {
     options: T7PreservationOptions
   ) => Effect.Effect<CapacityPreflight, PreservationCommandError>;
 
+  /**
+   * Preserve the ratified corpus state through the resumable archive boundary.
+   *
+   * @since 0.0.0
+   */
+  readonly preserveRestorationArchive: (
+    options: RestorationPreserveOptions
+  ) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
+
+  /**
+   * Reconcile preservation and all transformation families into separate immutable acceptance records.
+   *
+   * @since 0.0.0
+   */
+  readonly reconcileRestorationAcceptance: (
+    options: RestorationVerifyOptions
+  ) => Effect.Effect<ReadonlyArray<RestorationAcceptanceRecord>, CorpusCommandError>;
+
+  /**
+   * Convert every distinct legacy-Word digest through the pinned sandboxed fidelity pipeline.
+   *
+   * @since 0.0.0
+   */
+  readonly restoreLegacyWord: (
+    options: RestorationLegacyWordOptions
+  ) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
+
+  /**
+   * Restore the selected mail slice or full mail estate after preservation passes.
+   *
+   * @since 0.0.0
+   */
+  readonly restoreMail: (options: RestorationMailOptions) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
+
+  /**
+   * Restore all recycle surfaces through the four-class occurrence join.
+   *
+   * @since 0.0.0
+   */
+  readonly restoreRecycle: (
+    options: RestorationRecycleOptions
+  ) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
+
   /** Run the approved T7 preservation archive operation. @since 0.0.0 */
   readonly runT7Preservation: (
     options: T7PreservationOptions
@@ -146,6 +203,15 @@ export interface CorpusCommandServiceShape {
    * @since 0.0.0
    */
   readonly salvageCorpus: (options: CorpusSalvageOptions) => Effect.Effect<CorpusSalvageSummary, CorpusCommandError>;
+
+  /**
+   * Independently reparse and verify a sealed restoration archive.
+   *
+   * @since 0.0.0
+   */
+  readonly verifyRestorationArchive: (
+    options: RestorationVerifyOptions
+  ) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
 
   /**
    * Re-hash salvaged raw/ files against the provenance manifest.
@@ -205,6 +271,21 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
     organizeCorpus: Effect.fn("CorpusCommandService.organizeCorpus")((options) =>
       organizeCorpusImpl(options).pipe(Effect.provide(runtimeContext))
     ),
+    preserveRestorationArchive: Effect.fn("CorpusCommandService.preserveRestorationArchive")((options) =>
+      preserveRestorationArchiveImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    reconcileRestorationAcceptance: Effect.fn("CorpusCommandService.reconcileRestorationAcceptance")((options) =>
+      reconcileRestorationAcceptanceImpl(options.corpusRoot, options.runLabel).pipe(Effect.provide(runtimeContext))
+    ),
+    restoreMail: Effect.fn("CorpusCommandService.restoreMail")((options) =>
+      restoreMailImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    restoreLegacyWord: Effect.fn("CorpusCommandService.restoreLegacyWord")((options) =>
+      restoreLegacyWordImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    restoreRecycle: Effect.fn("CorpusCommandService.restoreRecycle")((options) =>
+      restoreRecycleImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     preflightT7Preservation: Effect.fn("CorpusCommandService.preflightT7Preservation")((options) =>
       preflightT7PreservationImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -216,6 +297,9 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
     ),
     verifySalvage: Effect.fn("CorpusCommandService.verifySalvage")((options) =>
       verifySalvageImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    verifyRestorationArchive: Effect.fn("CorpusCommandService.verifyRestorationArchive")((options) =>
+      verifyRestorationArchiveImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     verifyT7Preservation: Effect.fn("CorpusCommandService.verifyT7Preservation")((corpusRoot) =>
       verifyT7PreservationImpl(corpusRoot).pipe(Effect.provide(runtimeContext))
@@ -441,6 +525,214 @@ export const verifySalvage = Effect.fn("Corpus.verifySalvage")(function* (
 ): Effect.fn.Return<CorpusSalvageSummary, CorpusCommandError, CorpusCommandService> {
   const corpus = yield* CorpusCommandService;
   return yield* corpus.verifySalvage(options);
+});
+
+/**
+ * Preserve a ratified corpus snapshot through a resumable, durably synced archive boundary.
+ *
+ * **Example** (Build a preservation program)
+ *
+ * ```ts
+ * import { preserveRestorationArchive, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ *
+ * const program = preserveRestorationArchive(RestorationPreserveOptions.make({
+ *   absentRecycleTreePath: "/archive/absent",
+ *   capacityCeilingBytes: PosInt.make(8),
+ *   corpusRoot: "/archive/corpus",
+ *   expectedCollectorRowCount: NonNegativeInt.make(1),
+ *   expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+ *   expectedMutatedDestinationCount: NonNegativeInt.make(0),
+ *   expectedRootArchiveBytes: NonNegativeInt.make(4),
+ *   expectedSourceDirectoryCount: NonNegativeInt.make(1),
+ *   expectedSourceFileCount: NonNegativeInt.make(1),
+ *   expectedSourceTreeBytes: NonNegativeInt.make(4),
+ *   minimumFreeAfterBytes: NonNegativeInt.make(0),
+ *   rootArchivePath: "/source/archive.zip",
+ *   sourceManifestPath: "/source/manifest.jsonl",
+ *   sourceRoot: "/source/tree"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Explicit source paths, opening denominators, and approved byte ceilings.
+ * @returns Aggregate object, byte, elapsed-time, and unapproved-terminal counts.
+ * @effects Delegates to `CorpusCommandService`; the live service reconciles opening evidence, streams bytes into atomic destinations, fsyncs payload and ledger boundaries, and appends provenance.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const preserveRestorationArchive = Effect.fn("Corpus.preserveRestorationArchive")(function* (
+  options: RestorationPreserveOptions
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.preserveRestorationArchive(options);
+});
+
+/**
+ * Reconcile the four restoration families into separate immutable acceptance records.
+ *
+ * **Example** (Build final acceptance reconciliation)
+ *
+ * ```ts
+ * import { reconcileRestorationAcceptance, RestorationVerifyOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const program = reconcileRestorationAcceptance(
+ *   RestorationVerifyOptions.make({ corpusRoot: "/archive/corpus", runLabel: "restoration-1" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Corpus root and immutable preservation run label shared by the transformation wave.
+ * @returns Four separately persisted aggregate-only PASS records.
+ * @effects Delegates to `CorpusCommandService`; the live service re-verifies P0, decodes and reconciles every transformation family, and atomically writes acceptance JSON outside the repo.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const reconcileRestorationAcceptance = Effect.fn("Corpus.reconcileRestorationAcceptance")(function* (
+  options: RestorationVerifyOptions
+): Effect.fn.Return<ReadonlyArray<RestorationAcceptanceRecord>, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.reconcileRestorationAcceptance(options);
+});
+
+/**
+ * Restore the selected mail slice or full estate through the public source-path libpff runner.
+ *
+ * **Example** (Build a full mail restoration program)
+ *
+ * ```ts
+ * import { restoreMail, RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ *
+ * const program = restoreMail(RestorationMailOptions.make({
+ *   corpusRoot: "/archive/corpus",
+ *   expectedStoreCount: NonNegativeInt.make(1),
+ *   maxAmplificationRatio: 4,
+ *   maxElapsedMillis: PosInt.make(60_000),
+ *   maxTotalElapsedMillis: PosInt.make(60_000),
+ *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
+ *   pffexportPath: "/usr/bin/pffexport",
+ *   runLabel: "restoration-1",
+ *   scope: "full",
+ *   tikaJarPath: "/opt/tika/tika-app.jar"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Frozen engine paths, scope, denominator, and resource ceilings.
+ * @returns Aggregate mail-store, child-byte, exception, and unapproved-terminal counts.
+ * @effects Delegates to `CorpusCommandService`; the live service verifies P0, invokes libpff serially, preserves raw attempts, repairs attachment types non-destructively, and writes terminal ledgers.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const restoreMail = Effect.fn("Corpus.restoreMail")(function* (
+  options: RestorationMailOptions
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.restoreMail(options);
+});
+
+/**
+ * Convert all distinct legacy-Word digests through a pinned sandboxed fidelity pipeline.
+ *
+ * **Example** (Build legacy-Word restoration)
+ *
+ * ```ts
+ * import { restoreLegacyWord, RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ *
+ * const program = restoreLegacyWord(RestorationLegacyWordOptions.make({
+ *   converterPath: "/usr/bin/soffice",
+ *   corpusRoot: "/archive/corpus",
+ *   expectedConverterVersion: "LibreOffice 26.2.5.2",
+ *   expectedOccurrenceCount: NonNegativeInt.make(1),
+ *   maxElapsedMillis: PosInt.make(60_000),
+ *   maxTotalElapsedMillis: PosInt.make(60_000),
+ *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
+ *   maxVisualRmse: 0.15,
+ *   runLabel: "restoration-1",
+ *   tikaJarPath: "/opt/tika/tika-app.jar"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Pinned converter identity, source denominator, sandbox tools, and fidelity ceilings.
+ * @returns Aggregate occurrence, terminal, byte, and unapproved counts.
+ * @effects Delegates to `CorpusCommandService`; the live service verifies P0, converts distinct CFB digests inside bubblewrap, compares normalized text and rendered pages, and writes terminal ledgers.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const restoreLegacyWord = Effect.fn("Corpus.restoreLegacyWord")(function* (
+  options: RestorationLegacyWordOptions
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.restoreLegacyWord(options);
+});
+
+/**
+ * Restore every preserved recycle surface through an occurrence-preserving join.
+ *
+ * **Example** (Build recycle restoration)
+ *
+ * ```ts
+ * import { restoreRecycle, RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ *
+ * const program = restoreRecycle(RestorationRecycleOptions.make({
+ *   corpusRoot: "/archive/corpus",
+ *   expectedMissingContentCount: NonNegativeInt.make(0),
+ *   expectedSurfaceCount: NonNegativeInt.make(1),
+ *   maxTotalElapsedMillis: PosInt.make(60_000),
+ *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
+ *   runLabel: "restoration-1"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Frozen preservation label and approved surface and missing-content denominators.
+ * @returns Aggregate occurrence, mapping, exception, and byte counts.
+ * @effects Delegates to `CorpusCommandService`; the live service verifies P0, performs the four-class join, applies a sanitized collision-aware path policy, and writes durable mapping evidence.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const restoreRecycle = Effect.fn("Corpus.restoreRecycle")(function* (
+  options: RestorationRecycleOptions
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.restoreRecycle(options);
+});
+
+/**
+ * Independently reparse a sealed restoration ledger and verify every terminal destination.
+ *
+ * **Example** (Build an independent verification program)
+ *
+ * ```ts
+ * import { verifyRestorationArchive, RestorationVerifyOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const program = verifyRestorationArchive(
+ *   RestorationVerifyOptions.make({ corpusRoot: "/archive/corpus", runLabel: "restoration-1" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Corpus root and immutable restoration run label.
+ * @returns Aggregate terminal counts and verified byte measurements.
+ * @effects Delegates to `CorpusCommandService`; the live service reads and schema-decodes the sealed ledger and streams destination bytes without modifying payloads.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const verifyRestorationArchive = Effect.fn("Corpus.verifyRestorationArchive")(function* (
+  options: RestorationVerifyOptions
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.verifyRestorationArchive(options);
 });
 
 /**

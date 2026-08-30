@@ -55,6 +55,13 @@ export * from "./internal/Preservation.schemas.ts";
  */
 export * from "./internal/RecycleBin.schemas.ts";
 /**
+ * Preservation and restoration schema exports for corpus curation commands.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/Restoration.schemas.ts";
+/**
  * Salvage schema exports for corpus curation commands.
  *
  * @category schemas

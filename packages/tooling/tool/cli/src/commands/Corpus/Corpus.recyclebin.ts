@@ -162,7 +162,9 @@ export const classifyRecycleBinName = (
   fileName: string
 ): O.Option<{ readonly kind: RecycleBinEntryKind; readonly pairKey: string }> =>
   pipe(
-    O.fromNullishOr(recycleBinNamePattern.exec(fileName)),
+    Str.toLowerCase(fileName) === "$recycle.bin"
+      ? O.none<RegExpExecArray>()
+      : O.fromNullishOr(recycleBinNamePattern.exec(fileName)),
     O.map((match) => ({
       kind: match[1] === "I" ? ("metadata" as const) : ("content" as const),
       pairKey: match[2] ?? "",
