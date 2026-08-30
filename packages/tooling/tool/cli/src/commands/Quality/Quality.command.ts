@@ -2805,8 +2805,53 @@ const renderTmpfsCandidateLine = (candidate: TmpfsReapReport["candidates"][numbe
     O.map((reason) => ` reason=${reason}`),
     O.getOrElse(() => "")
   );
-  return `- ${candidate.action} class=${candidate.reapClass} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
+  const root = pipe(
+    O.fromUndefinedOr(candidate.root),
+    O.map((value) => ` root=${value}`),
+    O.getOrElse(() => "")
+  );
+  return `- ${candidate.action} class=${candidate.reapClass}${root} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
 };
+
+const renderTmpfsReportLines = (report: TmpfsReapReport, apply: boolean): ReadonlyArray<string> => [
+  apply
+    ? "TMPFS REAP APPLY — removing only classified, idle artifacts with zero live references"
+    : "TMPFS REAP DRY RUN — nothing will be removed; pass --apply to reap eligible artifacts",
+  `scratch roots: ${A.join(
+    O.getOrElse(O.fromUndefinedOr(report.tmpRoots), () => [report.tmpRoot]),
+    ", "
+  )}`,
+  ...A.map(report.candidates, renderTmpfsCandidateLine),
+  `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
+  ...A.map(report.warnings, (warning) => `warning: ${warning}`),
+];
+
+/**
+ * Render the operator-facing tmpfs janitor report without running the command.
+ *
+ * **Example** (Render a dry-run report)
+ *
+ * ```ts
+ * import { TmpfsReapReport } from "@beep/repo-cli/test/RepoRun"
+ * import { renderTmpfsReportLinesForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const report = TmpfsReapReport.make({
+ *   scannedAt: "2026-08-30T12:00:00.000Z", tmpRoot: "/tmp", applied: false,
+ *   candidates: [], reapedCount: 0, reclaimedBytes: 0, warnings: [],
+ * })
+ * console.log(renderTmpfsReportLinesForTesting(report, false)[1]) // "scratch roots: /tmp"
+ * ```
+ *
+ * @param report - Completed janitor report to render.
+ * @param apply - Whether the command was invoked in apply mode.
+ * @returns Operator-facing summary, candidate, total, and warning lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const renderTmpfsReportLinesForTesting: {
+  (report: TmpfsReapReport, apply: boolean): ReadonlyArray<string>;
+  (apply: boolean): (report: TmpfsReapReport) => ReadonlyArray<string>;
+} = dual(2, renderTmpfsReportLines);
 
 const tmpfsReapCommand = Command.make(
   "tmpfs-reap",
@@ -2827,18 +2872,11 @@ const tmpfsReapCommand = Command.make(
       yield* printLines([yield* jsonStringifyPretty(encoded)]);
       return;
     }
-    yield* printLines([
-      apply
-        ? "TMPFS REAP APPLY — removing only classified, idle artifacts with zero live references"
-        : "TMPFS REAP DRY RUN — nothing will be removed; pass --apply to reap eligible artifacts",
-      ...A.map(report.candidates, renderTmpfsCandidateLine),
-      `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
-      ...A.map(report.warnings, (warning) => `warning: ${warning}`),
-    ]);
+    yield* printLines(renderTmpfsReportLines(report, apply));
   })
 ).pipe(
   Command.withDescription(
-    "Dry-run-first janitor for idle tmpfs worktrees and tool artifacts; pass --apply from the janitor timer"
+    "Dry-run-first janitor for idle artifacts under /tmp and a distinct absolute TMPDIR; includes Vitest forks scratch and dangling worktree stubs"
   )
 );
 
