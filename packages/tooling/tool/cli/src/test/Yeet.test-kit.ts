@@ -56,6 +56,7 @@ export * from "../commands/Yeet/internal/QualityIssueIndex.ts";
 export * from "../commands/Yeet/internal/Remediation.ts";
 export * from "../commands/Yeet/internal/Reply.schemas.ts";
 export * from "../commands/Yeet/internal/Reply.ts";
+export { GhStatusCheck, summarizeRemoteChecksForTesting } from "../commands/Yeet/internal/Status.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";
 export * from "../commands/Yeet/internal/TurboQuery.ts";

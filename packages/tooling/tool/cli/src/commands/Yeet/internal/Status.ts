@@ -424,7 +424,13 @@ export class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatu
   $I.annote("GhStatusWorkflowRun", { description: "GitHub workflow run used for rerun-failed guidance." })
 ) {}
 
-class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
+/**
+ * GitHub check row used to derive required and optional status counts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
   {
     bucket: S.String,
     name: S.String,
@@ -620,6 +626,94 @@ const checkIsPending = (check: GhStatusCheck): boolean => {
     A.contains(["pending", "in_progress", "queued", "waiting"], state)
   );
 };
+
+type RemoteCheckSummary = {
+  readonly checkCount: O.Option<number>;
+  readonly failingCheckCount: O.Option<number>;
+  readonly pendingCheckCount: O.Option<number>;
+  readonly requiredCheckCount: O.Option<number>;
+  readonly failingRequiredCheckCount: O.Option<number>;
+  readonly pendingRequiredCheckCount: O.Option<number>;
+  readonly optionalCheckCount: O.Option<number>;
+  readonly failingOptionalCheckCount: O.Option<number>;
+  readonly pendingOptionalCheckCount: O.Option<number>;
+};
+
+/**
+ * Summarize all, required, and optional pull-request checks for status output.
+ *
+ * **Details**
+ *
+ * GitHub returns required checks as a second filtered view of the complete
+ * check list. Optional checks are therefore the complete rows whose names do
+ * not appear in that required view. When either capture is unavailable the
+ * optional split remains unknown rather than being reported as empty.
+ *
+ * @param checks - Complete check-list capture, when available.
+ * @param requiredChecks - Required-only check-list capture, when available.
+ * @returns Optional counts for each observed check partition.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const summarizeRemoteChecksForTesting: {
+  (
+    requiredChecks: O.Option<ReadonlyArray<GhStatusCheck>>
+  ): (checks: O.Option<ReadonlyArray<GhStatusCheck>>) => RemoteCheckSummary;
+  (
+    checks: O.Option<ReadonlyArray<GhStatusCheck>>,
+    requiredChecks: O.Option<ReadonlyArray<GhStatusCheck>>
+  ): RemoteCheckSummary;
+} = dual(
+  2,
+  (
+    checks: O.Option<ReadonlyArray<GhStatusCheck>>,
+    requiredChecks: O.Option<ReadonlyArray<GhStatusCheck>>
+  ): RemoteCheckSummary => {
+    const checkCount = pipe(checks, O.map(A.length));
+    const failingCheckCount = pipe(
+      checks,
+      O.map((values) => A.length(A.filter(values, checkIsFailing)))
+    );
+    const pendingCheckCount = pipe(
+      checks,
+      O.map((values) => A.length(A.filter(values, checkIsPending)))
+    );
+    const requiredCheckCount = pipe(requiredChecks, O.map(A.length));
+    const failingRequiredCheckCount = pipe(
+      requiredChecks,
+      O.map((values) => A.length(A.filter(values, checkIsFailing)))
+    );
+    const pendingRequiredCheckCount = pipe(
+      requiredChecks,
+      O.map((values) => A.length(A.filter(values, checkIsPending)))
+    );
+    const optionalChecks = O.all({ checks, requiredChecks }).pipe(
+      O.map(({ checks: all, requiredChecks: requiredRows }) =>
+        A.filter(all, (check) => !A.some(requiredRows, (requiredCheck) => requiredCheck.name === check.name))
+      )
+    );
+    const optionalCheckCount = pipe(optionalChecks, O.map(A.length));
+    const failingOptionalCheckCount = pipe(
+      optionalChecks,
+      O.map((values) => A.length(A.filter(values, checkIsFailing)))
+    );
+    const pendingOptionalCheckCount = pipe(
+      optionalChecks,
+      O.map((values) => A.length(A.filter(values, checkIsPending)))
+    );
+    return {
+      checkCount,
+      failingCheckCount,
+      pendingCheckCount,
+      requiredCheckCount,
+      failingRequiredCheckCount,
+      pendingRequiredCheckCount,
+      optionalCheckCount,
+      failingOptionalCheckCount,
+      pendingOptionalCheckCount,
+    };
+  }
+);
 
 const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function* (
   context: RepoRunContext,
@@ -856,41 +950,10 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     ...A.map(unresolved, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
     ...(reviewThreads.pageInfo.hasNextPage ? ["additional review threads omitted after the first 100"] : []),
   ];
-  const checkCount = pipe(checks, O.map(A.length));
-  const failingCheckCount = pipe(
-    checks,
-    O.map((values) => A.length(A.filter(values, checkIsFailing)))
-  );
-  const pendingCheckCount = pipe(
-    checks,
-    O.map((values) => A.length(A.filter(values, checkIsPending)))
-  );
-  const requiredCheckCount = pipe(requiredChecks, O.map(A.length));
-  const failingRequiredCheckCount = pipe(
-    requiredChecks,
-    O.map((values) => A.length(A.filter(values, checkIsFailing)))
-  );
-  const pendingRequiredCheckCount = pipe(
-    requiredChecks,
-    O.map((values) => A.length(A.filter(values, checkIsPending)))
-  );
-  const optionalChecks = O.all({ checks, requiredChecks }).pipe(
-    O.map(({ checks: all, requiredChecks: requiredRows }) =>
-      A.filter(all, (check) => !A.some(requiredRows, (requiredCheck) => requiredCheck.name === check.name))
-    )
-  );
-  const optionalCheckCount = pipe(optionalChecks, O.map(A.length));
-  const failingOptionalCheckCount = pipe(
-    optionalChecks,
-    O.map((values) => A.length(A.filter(values, checkIsFailing)))
-  );
-  const pendingOptionalCheckCount = pipe(
-    optionalChecks,
-    O.map((values) => A.length(A.filter(values, checkIsPending)))
-  );
+  const checkSummary = summarizeRemoteChecksForTesting(checks, requiredChecks);
   const workflowRuns = yield* collectRemoteWorkflowRuns(context);
   const hasFailingCheck = pipe(
-    failingCheckCount,
+    checkSummary.failingCheckCount,
     O.exists((count) => count > 0)
   );
   // A same-SHA failed run stays in `gh run list` after a rerun turns the checks
@@ -919,15 +982,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     unresolvedThreads: O.some(unresolvedThreads),
     headSha: O.some(view.headRefOid),
     ...O.getSomesStruct({
-      checkCount,
-      failingCheckCount,
-      pendingCheckCount,
-      requiredCheckCount,
-      failingRequiredCheckCount,
-      pendingRequiredCheckCount,
-      optionalCheckCount,
-      failingOptionalCheckCount,
-      pendingOptionalCheckCount,
+      ...checkSummary,
       rerunFailedCommand,
       rerunFailedDecision,
     }),

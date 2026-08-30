@@ -1,9 +1,11 @@
 import {
   deriveYeetMergeReady,
   GateUnproven,
+  GhStatusCheck,
   PrCloseoutReport,
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
+  summarizeRemoteChecksForTesting,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusReviewThread,
@@ -355,6 +357,37 @@ describe("yeet merge readiness", () => {
   });
 });
 
+describe("yeet remote check partitions", () => {
+  it("counts required and optional failures independently", () => {
+    const required = GhStatusCheck.make({ bucket: "pass", name: "Check / Lint", state: "SUCCESS" });
+    const optionalFailure = GhStatusCheck.make({ bucket: "fail", name: "Vercel", state: "FAILURE" });
+    const optionalPending = GhStatusCheck.make({ bucket: "pending", name: "Preview", state: "IN_PROGRESS" });
+    const summary = summarizeRemoteChecksForTesting(
+      O.some([required, optionalFailure, optionalPending]),
+      O.some([required])
+    );
+
+    expect(O.getOrThrow(summary.checkCount)).toBe(3);
+    expect(O.getOrThrow(summary.failingCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.pendingCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.requiredCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.failingRequiredCheckCount)).toBe(0);
+    expect(O.getOrThrow(summary.pendingRequiredCheckCount)).toBe(0);
+    expect(O.getOrThrow(summary.optionalCheckCount)).toBe(2);
+    expect(O.getOrThrow(summary.failingOptionalCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.pendingOptionalCheckCount)).toBe(1);
+  });
+
+  it("keeps the optional partition unknown when the required capture is unavailable", () => {
+    const required = GhStatusCheck.make({ bucket: "pass", name: "Check / Lint", state: "SUCCESS" });
+    const summary = summarizeRemoteChecksForTesting(O.some([required]), O.none());
+
+    expect(O.getOrThrow(summary.checkCount)).toBe(1);
+    expect(summary.requiredCheckCount).toStrictEqual(O.none());
+    expect(summary.optionalCheckCount).toStrictEqual(O.none());
+  });
+});
+
 describe("yeet status snapshot rendering and encoding", () => {
   const remote = openRemote({
     checkCount: 24,
@@ -398,6 +431,31 @@ describe("yeet status snapshot rendering and encoding", () => {
 
     expect(summary).toContain("gate staleness: 0 stale, 1 unproven");
     expect(summary).not.toContain("gate staleness: none");
+  });
+
+  it("renders legacy unsplit and unavailable check snapshots without overstating required-check state", () => {
+    const legacySummary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: YeetStatusRemote.make({
+          available: true,
+          checked: true,
+          checkCount: 18,
+          detail: "PR #560 OPEN",
+          failingCheckCount: 1,
+          pendingCheckCount: 2,
+        }),
+      })
+    );
+    const unavailableSummary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: YeetStatusRemote.make({ available: true, checked: true, detail: "PR #560 OPEN" }),
+      })
+    );
+
+    expect(legacySummary).toContain("checks: 18 total, 1 failing, 2 pending (legacy unsplit snapshot)");
+    expect(unavailableSummary).toContain("checks: not checked");
   });
 
   it.effect("round-trips through the status JSON codec instead of leaking Option runtime objects", () =>
