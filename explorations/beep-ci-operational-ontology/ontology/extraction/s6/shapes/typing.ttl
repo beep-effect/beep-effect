@@ -1,0 +1,138 @@
+# S6 ratified-graph typing and datatype SHACL.
+#
+# The target list is the S5-ratified 18-class lattice.  The generic shape checks
+# that every targeted CI-ops individual has only ratified rdf:type values.  More
+# specific shapes enforce the seven AdmissionPolicy parameters, work-kind token
+# weights, snapshot request/grant datatypes, non-negative waits, and the exact
+# two collision-qualified AdmissionPriorityClass members.  census.ttl is never
+# supplied to this shape because its vocabulary is provisional.
+
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ciops:RatifiedIndividualShape
+    a sh:NodeShape ;
+    sh:targetSubjectsOf rdf:type ;
+    sh:targetClass ciops:AdmissionPolicy ;
+    sh:targetClass ciops:AdmissionPriorityClass ;
+    sh:targetClass ciops:AdmissionSnapshot ;
+    sh:targetClass ciops:AdmissionWorkKind ;
+    sh:targetClass ciops:Agent ;
+    sh:targetClass ciops:CachePosture ;
+    sh:targetClass ciops:ContendedResource ;
+    sh:targetClass ciops:GrantState ;
+    sh:targetClass ciops:RequiredCheckDesignation ;
+    sh:targetClass ciops:ScheduleProposal ;
+    sh:targetClass ciops:SeatGrant ;
+    sh:targetClass ciops:SeatRequest ;
+    sh:targetClass ciops:StarvationException ;
+    sh:targetClass ciops:VerificationEvidence ;
+    sh:targetClass ciops:VerificationObligation ;
+    sh:targetClass ciops:VerificationPlanSpecification ;
+    sh:targetClass ciops:VerificationResultArtifact ;
+    sh:targetClass ciops:WorkUnitSpecification ;
+    sh:targetSubjectsOf ciops:activeTokens ;
+    sh:targetSubjectsOf ciops:admissionChargeTokens ;
+    sh:targetSubjectsOf ciops:admissionTokenWeight ;
+    sh:targetSubjectsOf ciops:admittedBy ;
+    sh:targetSubjectsOf ciops:capacityAtAdmissionTokens ;
+    sh:targetSubjectsOf ciops:capacityMaxTokens ;
+    sh:targetSubjectsOf ciops:enqueuedAt ;
+    sh:targetSubjectsOf ciops:hardFloorGib ;
+    sh:targetSubjectsOf ciops:hasOriginKey ;
+    sh:targetSubjectsOf ciops:heartbeatSeconds ;
+    sh:targetSubjectsOf ciops:observedQueueWaitMs ;
+    sh:targetSubjectsOf ciops:publishAgingSeconds ;
+    sh:targetSubjectsOf ciops:reserveGib ;
+    sh:targetSubjectsOf ciops:reviewFixClassCap ;
+    sh:targetSubjectsOf ciops:slotSizeGib ;
+    sh:nodeKind sh:IRI ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:minCount 1 ;
+        sh:in (
+            ciops:AdmissionPolicy
+            ciops:AdmissionPriorityClass
+            ciops:AdmissionSnapshot
+            ciops:AdmissionWorkKind
+            ciops:Agent
+            ciops:CachePosture
+            ciops:ContendedResource
+            ciops:GrantState
+            ciops:RequiredCheckDesignation
+            ciops:ScheduleProposal
+            ciops:SeatGrant
+            ciops:SeatRequest
+            ciops:StarvationException
+            ciops:VerificationEvidence
+            ciops:VerificationObligation
+            ciops:VerificationPlanSpecification
+            ciops:VerificationResultArtifact
+            ciops:WorkUnitSpecification
+        ) ;
+        sh:message "a ratified-graph individual must be typed only to a ratified S5 class"
+    ] .
+
+ciops:AdmissionPolicyShape
+    a sh:NodeShape ;
+    sh:targetClass ciops:AdmissionPolicy ;
+    sh:property [ sh:path ciops:capacityMaxTokens ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:slotSizeGib ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:reserveGib ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:hardFloorGib ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:heartbeatSeconds ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:publishAgingSeconds ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:reviewFixClassCap ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] .
+
+ciops:AdmissionWorkKindShape
+    a sh:NodeShape ;
+    sh:targetClass ciops:AdmissionWorkKind ;
+    sh:property [
+        sh:path ciops:admissionTokenWeight ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 0
+    ] .
+
+ciops:SeatRequestShape
+    a sh:NodeShape ;
+    sh:targetClass ciops:SeatRequest ;
+    sh:property [ sh:path ciops:enqueuedAt ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path ciops:observedQueueWaitMs ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:hasOriginKey ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+ciops:SeatGrantShape
+    a sh:NodeShape ;
+    sh:targetClass ciops:SeatGrant ;
+    sh:property [ sh:path ciops:admissionChargeTokens ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ciops:hasOriginKey ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+ciops:AdmissionPriorityEnumerationShape
+    a sh:NodeShape ;
+    sh:targetNode ciops:AdmissionPriorityClass ;
+    sh:sparql [
+        sh:message "AdmissionPriorityClass instances must be exactly the qualified publish and verify members" ;
+        sh:select """
+            SELECT $this WHERE {
+              { FILTER NOT EXISTS {
+                  ciops:AdmissionPriority-publish rdf:type ciops:AdmissionPriorityClass
+                }
+              }
+              UNION
+              { FILTER NOT EXISTS {
+                  ciops:AdmissionPriority-verify rdf:type ciops:AdmissionPriorityClass
+                }
+              }
+              UNION
+              { ?other rdf:type ciops:AdmissionPriorityClass .
+                FILTER (?other NOT IN (
+                  ciops:AdmissionPriority-publish,
+                  ciops:AdmissionPriority-verify
+                ))
+              }
+            }
+        """
+    ] .

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-30T21:37:00.418Z
+Generated: 2026-08-30T23:26:59.763Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 74 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2952 |
-| publicExports | 20576 |
+| publicModules | 2953 |
+| publicExports | 20579 |
 | openModules | 347 |
 | openExports | 99 |
 | missingExportExamples | 4 |
@@ -101,7 +101,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 44 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 15 | 0 | 0 |
 | 45 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 15 |
 | 46 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 89 | 1 | 0 |
-| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 35 | 1 | 0 |
+| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 7 | 38 | 1 | 0 |
 | 48 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 12 | 0 | 0 |
 | 49 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 86 | 0 | 0 |
 | 50 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
