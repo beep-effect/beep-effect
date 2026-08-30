@@ -291,6 +291,7 @@ fi
 # state. Hooks refresh the current owner, CAS-take over a dead/frozen owner,
 # and fence mutations from a zombie session that lost ownership.
 pr_lease="$inbox/pr-lease.json"
+pr_lease_retirements="$inbox/pr-lease-retirements"
 current_owner_pid="$PPID"
 
 proc_start() {
@@ -365,6 +366,68 @@ load_pr_lease() {
   return 0
 }
 
+apply_pr_lease_retirement_requests() {
+  [ -d "$pr_lease_retirements" ] && [ ! -L "$pr_lease_retirements" ] || return 0
+  for retirement_path in "$pr_lease_retirements"/*.json; do
+    [ -e "$retirement_path" ] || continue
+    [ -f "$retirement_path" ] && [ ! -L "$retirement_path" ] && [ -r "$retirement_path" ] || continue
+    retirement_request="$(jq -c '
+      select(
+        .schemaVersion == "yeet-pr-lease-retirement/v1"
+        and (.generationId | type) == "string"
+        and (.headSha | type) == "string"
+        and (.prNumber | type) == "number"
+        and (.reason | type) == "string"
+      )
+    ' "$retirement_path" 2>/dev/null || true)"
+    [ -n "$retirement_request" ] || continue
+    if [ ! -f "$pr_lease" ] || [ -L "$pr_lease" ] || [ ! -r "$pr_lease" ]; then
+      rm -f "$retirement_path" 2>/dev/null || true
+      continue
+    fi
+    retirement_generation="$(printf '%s' "$retirement_request" | jq -r '.generationId')"
+    retirement_head="$(printf '%s' "$retirement_request" | jq -r '.headSha')"
+    retirement_pr="$(printf '%s' "$retirement_request" | jq -r '.prNumber | tostring')"
+    retirement_reason="$(printf '%s' "$retirement_request" | jq -r '.reason')"
+    observed_lease="$(jq -c 'select(.schemaVersion == "yeet-pr-lease/v1")' "$pr_lease" 2>/dev/null || true)"
+    [ -n "$observed_lease" ] || continue
+    observed_generation="$(printf '%s' "$observed_lease" | jq -r '.generationId // empty')"
+    observed_status="$(printf '%s' "$observed_lease" | jq -r '.status // "active"')"
+    if [ "$observed_generation" != "$retirement_generation" ] || [ "$observed_status" = "retired" ]; then
+      rm -f "$retirement_path" 2>/dev/null || true
+      continue
+    fi
+    [ "$observed_status" = "active" ] || continue
+    observed_head="$(printf '%s' "$observed_lease" | jq -r '.headSha // empty')"
+    observed_pr="$(printf '%s' "$observed_lease" | jq -r '.prNumber // empty | tostring')"
+    [ "$observed_head" = "$retirement_head" ] && [ "$observed_pr" = "$retirement_pr" ] || continue
+    lease_tmp="$(mktemp "$inbox/.pr-lease-retired.XXXXXX" 2>/dev/null || true)"
+    [ -n "$lease_tmp" ] || continue
+    retired_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    if jq -c \
+      --arg generation "$retirement_generation" \
+      --arg head "$retirement_head" \
+      --arg pr "$retirement_pr" \
+      --arg retired_at "$retired_at" \
+      --arg reason "$retirement_reason" \
+      'select(
+         .generationId == $generation
+         and .headSha == $head
+         and (.prNumber | tostring) == $pr
+         and (.status // "active") == "active"
+       )
+       | .status = "retired"
+       | .retiredAt = $retired_at
+       | .refreshedAt = $retired_at
+       | .retireReason = ("requested:" + $reason)' \
+      "$pr_lease" >"$lease_tmp" 2>/dev/null && [ -s "$lease_tmp" ] && mv -f "$lease_tmp" "$pr_lease" 2>/dev/null; then
+      rm -f "$retirement_path" 2>/dev/null || true
+    else
+      rm -f "$lease_tmp" 2>/dev/null || true
+    fi
+  done
+}
+
 write_pr_lease_generation() {
   expected_generation="$1"
   takeover_reason="${2:-}"
@@ -399,6 +462,8 @@ write_pr_lease_generation() {
     rm -f "$lease_tmp" 2>/dev/null || true
   fi
 }
+
+apply_pr_lease_retirement_requests
 
 if load_pr_lease; then
   observed_generation="$lease_generation"

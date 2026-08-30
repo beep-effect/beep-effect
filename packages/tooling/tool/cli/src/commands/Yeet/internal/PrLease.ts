@@ -72,6 +72,24 @@ class PublishedPrLeaseReceipt extends S.Class<PublishedPrLeaseReceipt>($I`Publis
   })
 ) {}
 
+class PublishedPrLeaseRetirementRequest extends S.Class<PublishedPrLeaseRetirementRequest>(
+  $I`PublishedPrLeaseRetirementRequest`
+)(
+  {
+    schemaVersion: S.Literal("yeet-pr-lease-retirement/v1"),
+    generationId: S.String,
+    headSha: S.String,
+    prNumber: PosInt,
+    reason: S.String,
+    requestedAt: S.String,
+  },
+  $I.annote("PublishedPrLeaseRetirementRequest", {
+    description: "Generation-fenced retirement request recovered by the next inbox hook mutex owner.",
+  })
+) {}
+
+const PublishedPrLeaseRetirementRequestJson = JsonStringCodec(PublishedPrLeaseRetirementRequest);
+
 class PrLeaseTransitionContendedError extends S.TaggedError<PrLeaseTransitionContendedError>(
   $I`PrLeaseTransitionContendedError`
 )(
@@ -518,12 +536,51 @@ export const retirePublishedPrLease = Effect.fn("PrLease.retirePublished")(funct
   yield* retirePublishedPrLeaseForContext(context, PosInt.make(prNumber), headSha, reason, O.none(), true);
 });
 
+const queuePublishedPrLeaseRetirement = Effect.fn("PrLease.queueRetirement")(function* (
+  context: RepoRunContext,
+  receipt: PublishedPrLeaseReceipt,
+  reason: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = path.join(context.repoRoot, ".beep", "inbox", "pr-lease-retirements");
+  yield* fs
+    .makeDirectory(directory, { recursive: true, mode: 0o700 })
+    .pipe(Effect.mapError(YeetCommandError.new("Failed to create the PR lease retirement queue.")));
+  const requestedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const request = PublishedPrLeaseRetirementRequest.make({
+    schemaVersion: "yeet-pr-lease-retirement/v1",
+    generationId: receipt.generationId,
+    headSha: receipt.headSha,
+    prNumber: receipt.prNumber,
+    reason,
+    requestedAt,
+  });
+  const text = yield* PublishedPrLeaseRetirementRequestJson.encode(request).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to encode the PR lease retirement request."))
+  );
+  const requestId = randomUUID();
+  const temporary = path.join(directory, `.${requestId}.tmp`);
+  const destination = path.join(directory, `${requestId}.json`);
+  yield* fs
+    .writeFileString(temporary, `${text}\n`, { mode: 0o600 })
+    .pipe(Effect.mapError(YeetCommandError.new("Failed to stage the PR lease retirement request.")));
+  yield* fs
+    .rename(temporary, destination)
+    .pipe(
+      Effect.mapError(YeetCommandError.new("Failed to publish the PR lease retirement request.")),
+      Effect.ensuring(fs.remove(temporary).pipe(Effect.ignore))
+    );
+});
+
 /**
  * Retire the exact lease generation established by an earlier write.
  *
  * The generation receipt is the compare-and-swap fence, so this failure path
  * needs neither a fresh GitHub lookup nor a checkout HEAD lookup and preserves
- * any concurrent replacement generation.
+ * any concurrent replacement generation. If bounded direct retirement cannot
+ * acquire the mutex or wins no generation race, it atomically queues the exact
+ * receipt for the next inbox hook mutex owner to retire before applying fences.
  *
  * @category persistence
  */
@@ -540,5 +597,15 @@ export const retirePublishedPrLeaseReceipt = Effect.fn("PrLease.retirePublishedR
     O.some(receipt.generationId),
     false,
     receiptRetirementMutexWaitSeconds
+  ).pipe(
+    Effect.catchTag("YeetCommandError", (error) =>
+      queuePublishedPrLeaseRetirement(context, receipt, reason).pipe(
+        Effect.tap(() =>
+          Console.log(
+            `[yeet] queued retirement of PR ownership generation ${receipt.generationId} after direct retirement failed: ${error.message}`
+          )
+        )
+      )
+    )
   );
 });

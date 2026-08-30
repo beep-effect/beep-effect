@@ -124,6 +124,17 @@ const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeLeaseSummary = S.decodeUnknownSync(
   S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Finite, status: S.optionalKey(S.String) }))
 );
+const decodeLeaseRetirementRequest = S.decodeUnknownSync(
+  S.fromJsonString(
+    S.Struct({
+      schemaVersion: S.Literal("yeet-pr-lease-retirement/v1"),
+      generationId: S.String,
+      headSha: S.String,
+      prNumber: S.Finite,
+      reason: S.String,
+    })
+  )
+);
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
@@ -591,17 +602,27 @@ esac
           );
           yield* fs.chmod(flockPath, 0o755);
 
-          const error = yield* withEnvVarEffect(
+          yield* withEnvVarEffect(
             "PATH",
             `${bin}:${Bun.env.PATH ?? ""}`,
-            retirePublishedPrLeaseReceipt(tempContext, receipt, "start-pr-early-failed").pipe(Effect.flip)
+            retirePublishedPrLeaseReceipt(tempContext, receipt, "start-pr-early-failed")
           );
 
-          expect(error.message).toContain("after repeated contention");
           expect(Str.split(/\r?\n/u)(Str.trim(yield* fs.readFileString(attemptsPath)))).toHaveLength(4);
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
             generationId: receipt.generationId,
             status: "active",
+          });
+          const retirementQueue = path.join(inbox, "pr-lease-retirements");
+          const retirementRequests = yield* fs.readDirectory(retirementQueue);
+          expect(retirementRequests).toHaveLength(1);
+          expect(
+            decodeLeaseRetirementRequest(yield* fs.readFileString(path.join(retirementQueue, retirementRequests[0]!)))
+          ).toMatchObject({
+            generationId: receipt.generationId,
+            headSha: receipt.headSha,
+            prNumber: receipt.prNumber,
+            reason: "start-pr-early-failed",
           });
         })
       )

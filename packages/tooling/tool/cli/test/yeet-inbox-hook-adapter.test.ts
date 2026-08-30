@@ -254,6 +254,69 @@ describe("Yeet inbox harness adapter", () => {
   );
 
   itEffect(
+    "applies a generation-fenced retirement request before fencing a repair session",
+    () =>
+      withInbox(({ ack, root }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const inbox = path.join(root, ".beep", "inbox");
+          const leasePath = path.join(inbox, "pr-lease.json");
+          const retirementQueue = path.join(inbox, "pr-lease-retirements");
+          const liveOtherStat = yield* fs.readFileString("/proc/1/stat");
+          const liveOtherStart = O.getOrThrow(parseProcStatStartTime(liveOtherStat));
+          const lease = yield* encodeUnknown({
+            schemaVersion: "yeet-pr-lease/v1",
+            generationId: "retirement-requested",
+            sessionId: "codex:still-live-owner",
+            pid: 1,
+            procStart: liveOtherStart,
+            checkoutRoot: root,
+            branch: "feature/lease",
+            headSha: "abc123",
+            prNumber: 900,
+            acquiredAt: "2026-08-27T00:00:00Z",
+            refreshedAt: "2026-08-27T00:00:00Z",
+            status: "active",
+          });
+          const retirementRequest = yield* encodeUnknown({
+            schemaVersion: "yeet-pr-lease-retirement/v1",
+            generationId: "retirement-requested",
+            headSha: "abc123",
+            prNumber: 900,
+            reason: "start-pr-early-failed",
+            requestedAt: "2026-08-27T00:00:01Z",
+          });
+          yield* Effect.all([
+            fs.writeFileString(leasePath, `${lease}\n`),
+            fs.makeDirectory(retirementQueue, { recursive: true }),
+            ack("coverage-live"),
+            ack("thread-live"),
+            ack("drift-live"),
+          ]);
+          yield* fs.writeFileString(path.join(retirementQueue, "request.json"), `${retirementRequest}\n`);
+
+          const result = yield* runHook(root, "codex", {
+            cwd: root,
+            hook_event_name: "PreToolUse",
+            session_id: "repair-session",
+            tool_input: { command: "git commit -m repair" },
+            tool_name: "Bash",
+          });
+
+          expect(result).toMatchObject({ exitCode: 0, stderr: "", stdout: "" });
+          expect(decodeObject(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: "retirement-requested",
+            status: "retired",
+            retireReason: "requested:start-pr-early-failed",
+          });
+          expect(yield* fs.readDirectory(retirementQueue)).toEqual([]);
+        })
+      ).pipe(provideTestLayer),
+    15_000
+  );
+
+  itEffect(
     "injects each severity at the intended Claude session boundary and deduplicates it",
     () =>
       withInbox(({ root }) =>
