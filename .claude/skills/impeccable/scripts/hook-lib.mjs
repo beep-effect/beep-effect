@@ -43,74 +43,53 @@
  *   `cli/engine/detect-antipatterns.mjs` (running from source).
  */
 
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { extractPlatform, loadContext } from "./context.mjs";
-import { IMPECCABLE_COMMAND } from "./lib/provider.mjs";
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { extractPlatform, loadContext } from './context.mjs';
+import { IMPECCABLE_COMMAND } from './lib/provider.mjs';
 // `detector.extensions` (issue #316) is shared with Live's source search, which
 // needs the same answer for `.heex` / `.blade.php` when it hunts for session
 // markers. lib/template-extensions.mjs owns the shape; re-exported here because
 // hook-lib has been the import site for matchConfiguredExtension since #347.
-import { matchConfiguredExtension, mergeExtensions } from "./lib/template-extensions.mjs";
+import {
+  matchConfiguredExtension,
+  mergeExtensions,
+} from './lib/template-extensions.mjs';
 
 export { matchConfiguredExtension };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const ENVELOPE_PREFIX = "[impeccable@1]";
+export const ENVELOPE_PREFIX = '[impeccable@1]';
 
 export const ALLOWED_EXTS = new Set([
-  ".tsx",
-  ".jsx",
-  ".html",
-  ".htm",
-  ".vue",
-  ".svelte",
-  ".astro",
-  ".css",
-  ".scss",
-  ".sass",
-  ".less",
-  ".ts",
-  ".js",
+  '.tsx', '.jsx', '.html', '.htm', '.vue', '.svelte', '.astro',
+  '.css', '.scss', '.sass', '.less', '.ts', '.js',
 ]);
 
 export const ACK_EXTS = new Set([
-  ".tsx",
-  ".jsx",
-  ".html",
-  ".htm",
-  ".vue",
-  ".svelte",
-  ".astro",
-  ".css",
-  ".scss",
-  ".sass",
-  ".less",
+  '.tsx', '.jsx', '.html', '.htm', '.vue', '.svelte', '.astro',
+  '.css', '.scss', '.sass', '.less',
 ]);
 
 // Hard-skip regex for sensitive files. Cannot be turned off via config.
 // Match tokenized secret/credential filenames, not UI names such as
 // CredentialForm.tsx, SecretPage.jsx, or secretary-dashboard.vue.
-export const SENSITIVE_PATH = new RegExp(
-  [
-    String.raw`(?:^|[/\\])\.env(?:\.|$)`,
-    String.raw`(?:^|[/\\])\.git(?:[/\\]|$)`,
-    String.raw`(?:^|[/\\])id_rsa(?:$|[._-])[^/\\]*$`,
-    String.raw`(?:^|[/\\])[^/\\]*\.pem$`,
-    String.raw`(?:^|[/\\])(?:[^/\\]*[._-])?(?:secret|secrets|credential|credentials)(?=[._-])[^/\\]*\.(?:json|ya?ml|toml|ini|conf|config|env|txt|key|cert|crt|pem|js|ts)$`,
-  ].join("|"),
-  "i"
-);
+export const SENSITIVE_PATH = new RegExp([
+  String.raw`(?:^|[/\\])\.env(?:\.|$)`,
+  String.raw`(?:^|[/\\])\.git(?:[/\\]|$)`,
+  String.raw`(?:^|[/\\])id_rsa(?:$|[._-])[^/\\]*$`,
+  String.raw`(?:^|[/\\])[^/\\]*\.pem$`,
+  String.raw`(?:^|[/\\])(?:[^/\\]*[._-])?(?:secret|secrets|credential|credentials)(?=[._-])[^/\\]*\.(?:json|ya?ml|toml|ini|conf|config|env|txt|key|cert|crt|pem|js|ts)$`,
+].join('|'), 'i');
 
 // Hard-skip regex for generated, lock, minified, and build-output paths.
 // `generated` is matched as a whole path segment so authored names such as
 // `generated-utils.ts` or `CodeGenerator.tsx` still get scanned.
-export const GENERATED_PATH =
-  /(?:\.generated\.[a-z]+$|\.d\.ts$|\.min\.[a-z]+$|[/\\]node_modules[/\\]|[/\\]generated[/\\]|[/\\](?:dist|build|out|\.next|\.cache|coverage)[/\\]|[/\\]?[^/\\]+\.lock(?:\.json)?$)/i;
+export const GENERATED_PATH = /(?:\.generated\.[a-z]+$|\.d\.ts$|\.min\.[a-z]+$|[/\\]node_modules[/\\]|[/\\]generated[/\\]|[/\\](?:dist|build|out|\.next|\.cache|coverage)[/\\]|[/\\]?[^/\\]+\.lock(?:\.json)?$)/i;
 
 export const TRUTHY = /^(1|true|yes|on)$/i;
 
@@ -133,22 +112,22 @@ export const TRUTHY = /^(1|true|yes|on)$/i;
 // behavior with `.impeccable/config.json` → `hook: { "perEditRules": "all" }`.
 export const IMMEDIATE_TIER_RULES = new Set([
   // Broken output.
-  "broken-image",
-  "text-overflow",
-  "clipped-overflow-container",
-  "body-text-viewport-edge",
+  'broken-image',
+  'text-overflow',
+  'clipped-overflow-container',
+  'body-text-viewport-edge',
   // Objective contrast / legibility failures.
-  "low-contrast",
-  "gray-on-color",
-  "tiny-text",
+  'low-contrast',
+  'gray-on-color',
+  'tiny-text',
   // Single-property mechanical slop, trivial to fix at the edit site.
-  "gradient-text",
-  "dark-glow",
+  'gradient-text',
+  'dark-glow',
   // Design-system drift compounds if not corrected at edit time.
-  "design-system-font",
-  "design-system-color",
-  "design-system-radius",
-  "design-system-font-size",
+  'design-system-font',
+  'design-system-color',
+  'design-system-radius',
+  'design-system-font-size',
 ]);
 
 // ── Advisory rules ────────────────────────────────────────────────────────
@@ -162,7 +141,9 @@ export const IMMEDIATE_TIER_RULES = new Set([
 // mirroring how IMMEDIATE_TIER_RULES lists rule ids inline so the hook stays
 // self-contained and testable without loading the detector. Keep it in sync
 // with the registry (cli/engine/registry/antipatterns.mjs).
-export const ADVISORY_RULES = new Set(["em-dash-overuse"]);
+export const ADVISORY_RULES = new Set([
+  'em-dash-overuse',
+]);
 
 export function isAdvisoryFinding(finding) {
   const id = finding && normalizeIgnoreRule(finding.antipattern);
@@ -178,10 +159,10 @@ export const DEFAULT_CONFIG = Object.freeze({
   ignoreFiles: [],
   ignoreValues: [],
   extensions: [],
-  perEditRules: "immediate",
+  perEditRules: 'immediate',
   // Advisory rules are skipped unless a project sets detector.advisoryRules to
   // "include". See ADVISORY_RULES above.
-  advisoryRules: "exclude",
+  advisoryRules: 'exclude',
   // maxFileBytes: not every generated artifact lives under a path we can
   // recognize. Committed browser bundles and vendored detector copies sit
   // next to source and run 200KB+, while genuinely authored stylesheets in
@@ -191,18 +172,18 @@ export const DEFAULT_CONFIG = Object.freeze({
 });
 
 export const HOOK_LOCAL_IGNORE_PATTERNS = Object.freeze([
-  ".impeccable/hook.cache.json",
-  ".impeccable/hook.pending.json",
-  ".impeccable/config.local.json",
+  '.impeccable/hook.cache.json',
+  '.impeccable/hook.pending.json',
+  '.impeccable/config.local.json',
 ]);
 
-const HOOK_IGNORE_MARKER_OPEN = "# impeccable-hook-ignore-start";
-const HOOK_IGNORE_MARKER_CLOSE = "# impeccable-hook-ignore-end";
+const HOOK_IGNORE_MARKER_OPEN = '# impeccable-hook-ignore-start';
+const HOOK_IGNORE_MARKER_CLOSE = '# impeccable-hook-ignore-end';
 const CACHE_MAX_SESSIONS = 8;
 export const EDIT_COUNT_THRESHOLD = 6;
 
 export function truthy(value) {
-  return typeof value === "string" && TRUTHY.test(value);
+  return typeof value === 'string' && TRUTHY.test(value);
 }
 
 function depthIsSet(value) {
@@ -215,44 +196,38 @@ function depthIsSet(value) {
 
 function safeReadJson(filePath) {
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   } catch {
     return null;
   }
 }
 
 export function getConfigPath(cwd) {
-  return path.join(cwd, ".impeccable", "config.json");
+  return path.join(cwd, '.impeccable', 'config.json');
 }
 
 export function getLocalConfigPath(cwd) {
-  return path.join(cwd, ".impeccable", "config.local.json");
+  return path.join(cwd, '.impeccable', 'config.local.json');
 }
 
 export function getCachePath(cwd) {
-  return path.join(cwd, ".impeccable", "hook.cache.json");
+  return path.join(cwd, '.impeccable', 'hook.cache.json');
 }
 
 export function getPendingPath(cwd) {
-  return path.join(cwd, ".impeccable", "hook.pending.json");
+  return path.join(cwd, '.impeccable', 'hook.pending.json');
 }
 
 export function resolveProjectCwd(event, fallback = process.cwd()) {
-  return (
-    event?.cwd ||
-    (Array.isArray(event?.workspace_roots) && event.workspace_roots[0]) ||
-    envProjectDir(fallback) ||
-    fallback
-  );
+  return event?.cwd
+    || (Array.isArray(event?.workspace_roots) && event.workspace_roots[0])
+    || envProjectDir(fallback)
+    || fallback;
 }
 
 function looksLikeProjectRoot(dir) {
-  return [".git", "package.json", ".impeccable"].some((marker) => {
-    try {
-      return fs.existsSync(path.join(dir, marker));
-    } catch {
-      return false;
-    }
+  return ['.git', 'package.json', '.impeccable'].some((marker) => {
+    try { return fs.existsSync(path.join(dir, marker)); } catch { return false; }
   });
 }
 
@@ -265,7 +240,7 @@ function looksLikeProjectRoot(dir) {
 // cwd when no marker is found.
 export function resolveCacheCwd(primaryFile, sessionCwd) {
   const base = path.resolve(sessionCwd || process.cwd());
-  if (!primaryFile || typeof primaryFile !== "string" || hasPathTraversal(primaryFile)) return base;
+  if (!primaryFile || typeof primaryFile !== 'string' || hasPathTraversal(primaryFile)) return base;
   if (looksLikeProjectRoot(base)) return base;
   let dir;
   try {
@@ -300,7 +275,7 @@ export function resolveProjectPlatform(cwd) {
 }
 
 export function isNativePlatform(platform) {
-  return platform === "ios" || platform === "android" || platform === "adaptive";
+  return platform === 'ios' || platform === 'android' || platform === 'adaptive';
 }
 
 export function readConfig(cwd) {
@@ -318,13 +293,13 @@ export function readConfig(cwd) {
 
 // The hook settings subtree of a unified config.json / config.local.json.
 function hookSection(raw) {
-  if (!raw || typeof raw !== "object") return null;
-  return raw.hook && typeof raw.hook === "object" && !Array.isArray(raw.hook) ? raw.hook : null;
+  if (!raw || typeof raw !== 'object') return null;
+  return raw.hook && typeof raw.hook === 'object' && !Array.isArray(raw.hook) ? raw.hook : null;
 }
 
 function detectorSection(raw) {
-  if (!raw || typeof raw !== "object") return null;
-  return raw.detector && typeof raw.detector === "object" && !Array.isArray(raw.detector) ? raw.detector : null;
+  if (!raw || typeof raw !== 'object') return null;
+  return raw.detector && typeof raw.detector === 'object' && !Array.isArray(raw.detector) ? raw.detector : null;
 }
 
 function numberOr(value, fallback) {
@@ -344,13 +319,13 @@ function cloneDefaultConfig() {
 }
 
 function applyDetectorConfigSource(config, raw) {
-  if (!raw || typeof raw !== "object") return config;
+  if (!raw || typeof raw !== 'object') return config;
   // `detector.advisoryRules: "include"` opts the hook into advisory rules
   // (em-dash overuse, etc.). Any other value keeps the default "exclude".
-  if (raw.advisoryRules === "include" || raw.advisoryRules === "exclude") {
+  if (raw.advisoryRules === 'include' || raw.advisoryRules === 'exclude') {
     config.advisoryRules = raw.advisoryRules;
   }
-  if (raw.designSystem && typeof raw.designSystem === "object" && !Array.isArray(raw.designSystem)) {
+  if (raw.designSystem && typeof raw.designSystem === 'object' && !Array.isArray(raw.designSystem)) {
     config.designSystem = {
       ...config.designSystem,
       enabled: raw.designSystem.enabled === false ? false : true,
@@ -372,21 +347,21 @@ function applyDetectorConfigSource(config, raw) {
 }
 
 function applyConfigSource(config, raw) {
-  if (!raw || typeof raw !== "object") return config;
-  if (Object.prototype.hasOwnProperty.call(raw, "enabled")) {
+  if (!raw || typeof raw !== 'object') return config;
+  if (Object.prototype.hasOwnProperty.call(raw, 'enabled')) {
     config.enabled = raw.enabled === false ? false : true;
   }
-  if (Object.prototype.hasOwnProperty.call(raw, "quiet")) {
+  if (Object.prototype.hasOwnProperty.call(raw, 'quiet')) {
     config.quiet = raw.quiet === true;
   }
-  if (raw.perEditRules === "all" || raw.perEditRules === "immediate") {
+  if (raw.perEditRules === 'all' || raw.perEditRules === 'immediate') {
     config.perEditRules = raw.perEditRules;
   }
-  if (typeof raw.auditLog === "string" && raw.auditLog.trim()) {
+  if (typeof raw.auditLog === 'string' && raw.auditLog.trim()) {
     config.auditLog = raw.auditLog.trim();
   }
   applyDetectorConfigSource(config, raw);
-  if (raw.limits && typeof raw.limits === "object") {
+  if (raw.limits && typeof raw.limits === 'object') {
     config.limits = {
       maxFindings: numberOr(raw.limits.maxFindings, config.limits.maxFindings),
       maxChars: numberOr(raw.limits.maxChars, config.limits.maxChars),
@@ -401,30 +376,26 @@ function uniqueStrings(values) {
 }
 
 export function normalizeIgnoreValue(value) {
-  return String(value || "")
+  return String(value || '')
     .trim()
-    .replace(/^["']|["']$/g, "")
-    .replace(/\+/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/^["']|["']$/g, '')
+    .replace(/\+/g, ' ')
+    .replace(/\s+/g, ' ')
     .toLowerCase();
 }
 
 function normalizeIgnoreRule(rule) {
-  return String(rule || "")
-    .trim()
-    .toLowerCase();
+  return String(rule || '').trim().toLowerCase();
 }
 
 function colorIgnoreKey(value) {
   const color = parseIgnoreColor(value);
-  if (!color) return "";
+  if (!color) return '';
   return `${color.r},${color.g},${color.b},${Math.round(color.a * 255)}`;
 }
 
 function parseIgnoreColor(value) {
-  const text = String(value || "")
-    .trim()
-    .toLowerCase();
+  const text = String(value || '').trim().toLowerCase();
   if (!text) return null;
 
   const hex = text.match(/^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
@@ -459,45 +430,36 @@ function parseIgnoreColor(value) {
 
 function parseHexIgnoreColor(hex) {
   if (hex.length === 3 || hex.length === 4) {
-    const r = Number.parseInt(hex[0] + hex[0], 16);
-    const g = Number.parseInt(hex[1] + hex[1], 16);
-    const b = Number.parseInt(hex[2] + hex[2], 16);
-    const a = hex.length === 4 ? Number.parseInt(hex[3] + hex[3], 16) / 255 : 1;
+    const r = parseInt(hex[0] + hex[0], 16);
+    const g = parseInt(hex[1] + hex[1], 16);
+    const b = parseInt(hex[2] + hex[2], 16);
+    const a = hex.length === 4 ? parseInt(hex[3] + hex[3], 16) / 255 : 1;
     return { r, g, b, a };
   }
-  const r = Number.parseInt(hex.slice(0, 2), 16);
-  const g = Number.parseInt(hex.slice(2, 4), 16);
-  const b = Number.parseInt(hex.slice(4, 6), 16);
-  const a = hex.length === 8 ? Number.parseInt(hex.slice(6, 8), 16) / 255 : 1;
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  const a = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
   return { r, g, b, a };
 }
 
 function splitColorArgs(body) {
-  const text = String(body || "").trim();
+  const text = String(body || '').trim();
   if (!text) return [];
-  if (text.includes(",")) {
-    const parts = text
-      .split(",")
-      .map((part) => part.trim())
-      .filter(Boolean);
+  if (text.includes(',')) {
+    const parts = text.split(',').map((part) => part.trim()).filter(Boolean);
     const last = parts[parts.length - 1];
-    if (last && last.includes("/")) {
-      const split = last
-        .split("/")
-        .map((part) => part.trim())
-        .filter(Boolean);
+    if (last && last.includes('/')) {
+      const split = last.split('/').map((part) => part.trim()).filter(Boolean);
       return [...parts.slice(0, -1), ...split];
     }
     return parts;
   }
-  return text
-    .replace(/\s*\/\s*/g, " / ")
-    .split(/\s+/)
-    .filter((part) => part && part !== "/");
+  return text.replace(/\s*\/\s*/g, ' / ').split(/\s+/).filter((part) => part && part !== '/');
 }
 
 function parseRgbChannel(raw) {
-  const text = String(raw || "").trim();
+  const text = String(raw || '').trim();
   const match = text.match(/^(-?\d*\.?\d+)(%)?$/);
   if (!match) return null;
   const value = Number.parseFloat(match[1]);
@@ -508,7 +470,7 @@ function parseRgbChannel(raw) {
 }
 
 function parseAlphaChannel(raw) {
-  const text = String(raw || "").trim();
+  const text = String(raw || '').trim();
   const match = text.match(/^(-?\d*\.?\d+)(%)?$/);
   if (!match) return null;
   const value = Number.parseFloat(match[1]);
@@ -518,20 +480,20 @@ function parseAlphaChannel(raw) {
 }
 
 function parseHueChannel(raw) {
-  const text = String(raw || "").trim();
+  const text = String(raw || '').trim();
   const match = text.match(/^(-?\d*\.?\d+)(deg|rad|turn|grad)?$/);
   if (!match) return null;
   const value = Number.parseFloat(match[1]);
   if (!Number.isFinite(value)) return null;
-  const unit = match[2] || "deg";
-  if (unit === "turn") return value * 360;
-  if (unit === "rad") return value * (180 / Math.PI);
-  if (unit === "grad") return value * 0.9;
+  const unit = match[2] || 'deg';
+  if (unit === 'turn') return value * 360;
+  if (unit === 'rad') return value * (180 / Math.PI);
+  if (unit === 'grad') return value * 0.9;
   return value;
 }
 
 function parsePercentChannel(raw) {
-  const text = String(raw || "").trim();
+  const text = String(raw || '').trim();
   const match = text.match(/^(-?\d*\.?\d+)%$/);
   if (!match) return null;
   const value = Number.parseFloat(match[1]);
@@ -545,7 +507,9 @@ function hslToRgb(hue, saturation, lightness, alpha) {
     const gray = clampByte(Math.round(lightness * 255));
     return { r: gray, g: gray, b: gray, a: alpha };
   }
-  const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+  const q = lightness < 0.5
+    ? lightness * (1 + saturation)
+    : lightness + saturation - lightness * saturation;
   const p = 2 * lightness - q;
   const toRgb = (t) => {
     let channel = t;
@@ -570,7 +534,7 @@ function clampByte(value) {
 
 function ignoreValueMatches(rule, entryValue, findingValue) {
   if (entryValue === findingValue) return true;
-  if (rule !== "design-system-color") return false;
+  if (rule !== 'design-system-color') return false;
   const entryColor = colorIgnoreKey(entryValue);
   return Boolean(entryColor && entryColor === colorIgnoreKey(findingValue));
 }
@@ -579,25 +543,23 @@ export function normalizeIgnoreValueEntries(entries) {
   if (!Array.isArray(entries)) return [];
   const out = [];
   for (const entry of entries) {
-    if (!entry || typeof entry !== "object") continue;
+    if (!entry || typeof entry !== 'object') continue;
     const rule = normalizeIgnoreRule(entry.rule);
     const value = normalizeIgnoreValue(entry.value);
     if (!rule || !value) continue;
     const normalized = { rule, value };
     const files = uniqueStrings([
-      ...(typeof entry.file === "string" && entry.file.trim() ? [entry.file.trim()] : []),
-      ...(Array.isArray(entry.files)
-        ? entry.files.filter((v) => typeof v === "string" && v.trim()).map((v) => v.trim())
-        : []),
+      ...(typeof entry.file === 'string' && entry.file.trim() ? [entry.file.trim()] : []),
+      ...(Array.isArray(entry.files) ? entry.files.filter(v => typeof v === 'string' && v.trim()).map(v => v.trim()) : []),
     ]);
     if (files.length > 0) normalized.files = files;
     // Key order is rule, value, files, createdAt, reason and must stay that way:
     // normalizing runs on every write, so emitting a different order than the one
     // already on disk rewrites every untouched entry and churns the diff.
-    if (typeof entry.createdAt === "string" && entry.createdAt.trim()) {
+    if (typeof entry.createdAt === 'string' && entry.createdAt.trim()) {
       normalized.createdAt = entry.createdAt.trim();
     }
-    if (typeof entry.reason === "string" && entry.reason.trim()) {
+    if (typeof entry.reason === 'string' && entry.reason.trim()) {
       normalized.reason = entry.reason.trim();
     }
     out.push(normalized);
@@ -619,17 +581,17 @@ function mergeIgnoreValues(existing, incoming) {
 function ignoreValueFilesKey(files) {
   // Sort before joining: a scope is a set, so an entry already on disk in another
   // order must compare equal rather than dedup as two distinct entries.
-  return Array.isArray(files) && files.length > 0 ? [...files].sort().join("\x1f") : "";
+  return Array.isArray(files) && files.length > 0 ? [...files].sort().join('\x1f') : '';
 }
 
 export function readCache(cwd) {
   const raw = safeReadJson(getCachePath(cwd));
-  if (!raw || typeof raw !== "object" || raw.version !== 1) {
+  if (!raw || typeof raw !== 'object' || raw.version !== 1) {
     return { version: 1, sessions: {} };
   }
   return {
     version: 1,
-    sessions: raw.sessions && typeof raw.sessions === "object" ? raw.sessions : {},
+    sessions: raw.sessions && typeof raw.sessions === 'object' ? raw.sessions : {},
   };
 }
 
@@ -661,40 +623,40 @@ export function ensureHookGitExcludes(cwd = process.cwd()) {
   try {
     const target = resolveHookGitExcludeTarget(cwd);
     if (!target) {
-      return { mode: "none", changed: false, patterns: [...HOOK_LOCAL_IGNORE_PATTERNS] };
+      return { mode: 'none', changed: false, patterns: [...HOOK_LOCAL_IGNORE_PATTERNS] };
     }
 
     const patterns = target.patternPrefix
       ? HOOK_LOCAL_IGNORE_PATTERNS.map((pattern) => `${target.patternPrefix}/${pattern}`)
       : [...HOOK_LOCAL_IGNORE_PATTERNS];
-    const markerSuffix = target.patternPrefix || ".";
+    const markerSuffix = target.patternPrefix || '.';
     const markerOpen = `${HOOK_IGNORE_MARKER_OPEN} ${markerSuffix}`;
     const markerClose = `${HOOK_IGNORE_MARKER_CLOSE} ${markerSuffix}`;
-    const existing = fs.existsSync(target.path) ? fs.readFileSync(target.path, "utf-8") : "";
-    const block = [markerOpen, ...patterns, markerClose].join("\n");
+    const existing = fs.existsSync(target.path) ? fs.readFileSync(target.path, 'utf-8') : '';
+    const block = [markerOpen, ...patterns, markerClose].join('\n');
     const markerRe = new RegExp(`${escapeRegExp(markerOpen)}[\\s\\S]*?${escapeRegExp(markerClose)}`);
 
     let updated;
     if (markerRe.test(existing)) {
       updated = existing.replace(markerRe, block);
     } else {
-      const prefix = existing.length === 0 ? "" : existing.endsWith("\n") ? existing : `${existing}\n`;
-      updated = `${prefix}${prefix.endsWith("\n\n") || prefix === "" ? "" : "\n"}${block}\n`;
+      const prefix = existing.length === 0 ? '' : existing.endsWith('\n') ? existing : `${existing}\n`;
+      updated = `${prefix}${prefix.endsWith('\n\n') || prefix === '' ? '' : '\n'}${block}\n`;
     }
 
     if (updated !== existing) {
       fs.mkdirSync(path.dirname(target.path), { recursive: true });
-      fs.writeFileSync(target.path, updated, "utf-8");
+      fs.writeFileSync(target.path, updated, 'utf-8');
     }
 
     return {
-      mode: "git-info-exclude",
-      file: path.relative(path.resolve(cwd), target.path).split(path.sep).join("/"),
+      mode: 'git-info-exclude',
+      file: path.relative(path.resolve(cwd), target.path).split(path.sep).join('/'),
       changed: updated !== existing,
       patterns,
     };
   } catch {
-    return { mode: "error", changed: false, patterns: [...HOOK_LOCAL_IGNORE_PATTERNS] };
+    return { mode: 'error', changed: false, patterns: [...HOOK_LOCAL_IGNORE_PATTERNS] };
   }
 }
 
@@ -702,14 +664,14 @@ function resolveHookGitExcludeTarget(cwd) {
   const start = path.resolve(cwd);
   let dir = start;
   while (true) {
-    const dotGit = path.join(dir, ".git");
+    const dotGit = path.join(dir, '.git');
     if (fs.existsSync(dotGit)) {
       const gitDir = resolveGitDir(dotGit, dir);
       if (!gitDir) return null;
-      const relPrefix = path.relative(dir, start).split(path.sep).join("/");
+      const relPrefix = path.relative(dir, start).split(path.sep).join('/');
       return {
-        path: path.join(gitDir, "info", "exclude"),
-        patternPrefix: relPrefix && relPrefix !== "." ? relPrefix : "",
+        path: path.join(gitDir, 'info', 'exclude'),
+        patternPrefix: relPrefix && relPrefix !== '.' ? relPrefix : '',
       };
     }
     const parent = path.dirname(dir);
@@ -723,14 +685,14 @@ function resolveGitDir(dotGit, worktreeDir) {
   if (stat.isDirectory()) return dotGit;
   if (!stat.isFile()) return null;
 
-  const body = fs.readFileSync(dotGit, "utf-8").trim();
+  const body = fs.readFileSync(dotGit, 'utf-8').trim();
   const match = body.match(/^gitdir:\s*(.+)$/i);
   if (!match) return null;
   return path.isAbsolute(match[1]) ? match[1] : path.resolve(worktreeDir, match[1]);
 }
 
 function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function ensureSession(cache, sessionId) {
@@ -769,34 +731,27 @@ export function suppressionNotice(filePath) {
 
 // Glob → RegExp. Supports `**`, `*`, `?`, and `{a,b}` alternation.
 function globToRegex(glob) {
-  let re = "^";
+  let re = '^';
   let i = 0;
   while (i < glob.length) {
     const c = glob[i];
-    if (c === "*") {
-      if (glob[i + 1] === "*") {
-        re += ".*";
+    if (c === '*') {
+      if (glob[i + 1] === '*') {
+        re += '.*';
         i += 2;
-        if (glob[i] === "/") i += 1;
+        if (glob[i] === '/') i += 1;
       } else {
-        re += "[^/]*";
+        re += '[^/]*';
         i += 1;
       }
-    } else if (c === "?") {
-      re += "[^/]";
+    } else if (c === '?') {
+      re += '[^/]';
       i += 1;
-    } else if (c === "{") {
-      const end = glob.indexOf("}", i);
-      if (end === -1) {
-        re += "\\{";
-        i += 1;
-        continue;
-      }
-      const parts = glob
-        .slice(i + 1, end)
-        .split(",")
-        .map((p) => p.replace(/[.+^$()|[\]\\]/g, "\\$&"));
-      re += `(?:${parts.join("|")})`;
+    } else if (c === '{') {
+      const end = glob.indexOf('}', i);
+      if (end === -1) { re += '\\{'; i += 1; continue; }
+      const parts = glob.slice(i + 1, end).split(',').map((p) => p.replace(/[.+^$()|[\]\\]/g, '\\$&'));
+      re += `(?:${parts.join('|')})`;
       i = end + 1;
     } else if (/[.+^$()|[\]\\]/.test(c)) {
       re += `\\${c}`;
@@ -806,20 +761,20 @@ function globToRegex(glob) {
       i += 1;
     }
   }
-  re += "$";
+  re += '$';
   return new RegExp(re);
 }
 
 export function matchesAnyGlob(filePath, globs) {
   if (!Array.isArray(globs) || globs.length === 0) return false;
-  const normalized = filePath.split(path.sep).join("/");
+  const normalized = filePath.split(path.sep).join('/');
   for (const glob of globs) {
     try {
       const re = globToRegex(String(glob));
       if (re.test(normalized)) return true;
       // Match against basename too for convenience: `*.generated.tsx` should
       // catch `src/foo.generated.tsx` without requiring `**/`.
-      const base = normalized.split("/").pop();
+      const base = normalized.split('/').pop();
       if (re.test(base)) return true;
     } catch {
       /* malformed glob, skip */
@@ -834,9 +789,9 @@ export function filterFindings(findings, _content, _ext, config) {
   const ignoreValues = normalizeIgnoreValueEntries(config.ignoreValues || []);
   // Advisory rules are skipped by default so the hook never nags about them;
   // a project opts in with detector.advisoryRules: "include".
-  const includeAdvisory = (config?.advisoryRules || DEFAULT_CONFIG.advisoryRules) === "include";
+  const includeAdvisory = (config?.advisoryRules || DEFAULT_CONFIG.advisoryRules) === 'include';
   return findings.filter((f) => {
-    if (!f || typeof f !== "object") return false;
+    if (!f || typeof f !== 'object') return false;
     if (!includeAdvisory && isAdvisoryFinding(f)) return false;
     if (ignoreRules.has(normalizeIgnoreRule(f.antipattern))) return false;
     if (isIgnoredFindingValue(f, ignoreValues)) return false;
@@ -865,8 +820,8 @@ export function splitFindingsByTier(findings) {
 // our Stop hook; Cursor and GitHub Copilot have no deep pass wired, so
 // deferring for them would silently drop the non-immediate rules entirely.
 export function perEditTieringActive(config, harness) {
-  if (harness === "cursor" || harness === "github") return false;
-  return (config?.perEditRules || DEFAULT_CONFIG.perEditRules) !== "all";
+  if (harness === 'cursor' || harness === 'github') return false;
+  return (config?.perEditRules || DEFAULT_CONFIG.perEditRules) !== 'all';
 }
 
 function isIgnoredFindingValue(finding, ignoreValues) {
@@ -877,7 +832,7 @@ function isIgnoredFindingValue(finding, ignoreValues) {
   const value = extractFindingIgnoreValue(finding);
   return ignoreValues.some((entry) => {
     if (entry.rule !== rule) return false;
-    const wildcardValue = entry.value === "*";
+    const wildcardValue = entry.value === '*';
     if (!wildcardValue && (!value || !ignoreValueMatches(rule, entry.value, value))) return false;
     if (!Array.isArray(entry.files) || entry.files.length === 0) return !wildcardValue;
     return findingMatchesScopedIgnoreFile(finding, entry.files);
@@ -885,41 +840,41 @@ function isIgnoredFindingValue(finding, ignoreValues) {
 }
 
 function findingMatchesScopedIgnoreFile(finding, globs) {
-  const filePath = String(finding?.file || "").trim();
+  const filePath = String(finding?.file || '').trim();
   if (!filePath) return false;
   if (matchesAnyGlob(filePath, globs)) return true;
 
-  const normalized = filePath.split(path.sep).join("/");
-  const parts = normalized.split("/").filter(Boolean);
+  const normalized = filePath.split(path.sep).join('/');
+  const parts = normalized.split('/').filter(Boolean);
   for (let i = 0; i < parts.length; i++) {
-    const suffix = parts.slice(i).join("/");
+    const suffix = parts.slice(i).join('/');
     if (matchesAnyGlob(suffix, globs)) return true;
   }
   return false;
 }
 
 export function extractFindingIgnoreValue(finding) {
-  if (!finding || typeof finding !== "object") return "";
+  if (!finding || typeof finding !== 'object') return '';
   const rule = normalizeIgnoreRule(finding.antipattern);
   const directValueRules = new Set([
-    "overused-font",
-    "bounce-easing",
-    "design-system-font",
-    "design-system-color",
-    "design-system-radius",
-    "design-system-font-size",
+    'overused-font',
+    'bounce-easing',
+    'design-system-font',
+    'design-system-color',
+    'design-system-radius',
+    'design-system-font-size',
   ]);
-  if (!directValueRules.has(rule)) return "";
+  if (!directValueRules.has(rule)) return '';
   return normalizeIgnoreValue(extractFindingIgnoreValueRaw(finding, rule));
 }
 
 function extractFindingIgnoreValueRaw(finding, rule = normalizeIgnoreRule(finding?.antipattern)) {
-  const direct = cleanIgnoreValueDisplay(finding.ignoreValue || finding.value || "");
+  const direct = cleanIgnoreValueDisplay(finding.ignoreValue || finding.value || '');
   if (direct) return direct;
 
-  const candidates = [finding.detail, finding.snippet].filter((v) => typeof v === "string" && v);
+  const candidates = [finding.detail, finding.snippet].filter((v) => typeof v === 'string' && v);
   for (const text of candidates) {
-    if (rule === "bounce-easing") {
+    if (rule === 'bounce-easing') {
       const motion = extractMotionIgnoreValue(text);
       if (motion) return motion;
       continue;
@@ -944,7 +899,7 @@ function extractFindingIgnoreValueRaw(finding, rule = normalizeIgnoreRule(findin
     }
   }
 
-  return "";
+  return '';
 }
 
 function extractMotionIgnoreValue(text) {
@@ -956,19 +911,21 @@ function extractMotionIgnoreValue(text) {
 
   const animation = text.match(/animation(?:-name)?\s*:\s*([^;\n]+)/i);
   if (animation) {
-    const token = animation[1].split(/[,\s]+/).find((part) => /bounce|elastic|wobble|jiggle|spring/i.test(part));
+    const token = animation[1]
+      .split(/[,\s]+/)
+      .find((part) => /bounce|elastic|wobble|jiggle|spring/i.test(part));
     if (token) return cleanIgnoreValueDisplay(token);
   }
 
-  return "";
+  return '';
 }
 
 function cleanIgnoreValueDisplay(value) {
-  return String(value || "")
+  return String(value || '')
     .trim()
-    .replace(/^["']|["']$/g, "")
-    .replace(/\+/g, " ")
-    .replace(/\s+/g, " ");
+    .replace(/^["']|["']$/g, '')
+    .replace(/\+/g, ' ')
+    .replace(/\s+/g, ' ');
 }
 
 export function dedupeAgainstCache(findings, cache, sessionId, filePath) {
@@ -997,7 +954,7 @@ export function dedupeAgainstCache(findings, cache, sessionId, filePath) {
 // Callers must pass the complete current finding set, not just the fresh ones.
 export function rememberFindings(cache, sessionId, filePath, findings) {
   const fileEntry = ensureFile(cache, sessionId, filePath);
-  const keys = new Set((findings || []).map((f) => findingCacheKey(f)));
+  const keys = new Set((findings || []).map(f => findingCacheKey(f)));
   fileEntry.findings = Array.from(keys);
   ensureSession(cache, sessionId).updatedAt = Date.now();
 }
@@ -1008,14 +965,12 @@ function findingCacheKey(finding) {
   if (line > 0 && value) return `${finding.antipattern}:${line}:${value}`;
   if (line > 0) return `${finding.antipattern}:${line}`;
   if (value) return `${finding.antipattern}:0:${value}`;
-  const snippet = String(finding?.snippet || "")
-    .trim()
-    .slice(0, 80);
+  const snippet = String(finding?.snippet || '').trim().slice(0, 80);
   return snippet ? `${finding.antipattern}:0:${snippet}` : `${finding.antipattern}:0`;
 }
 
 export function renderTemplate(findings, filePath, config, opts = {}) {
-  if (!Array.isArray(findings) || findings.length === 0) return "";
+  if (!Array.isArray(findings) || findings.length === 0) return '';
   const limits = config?.limits || DEFAULT_CONFIG.limits;
   const cap = Math.max(1, limits.maxFindings || DEFAULT_CONFIG.limits.maxFindings);
   // reserveChars holds back room for a note the caller appends after render
@@ -1035,14 +990,16 @@ export function renderTemplate(findings, filePath, config, opts = {}) {
   const header = `${ENVELOPE_PREFIX} Design hook findings requiring review in ${display} (${total} issue(s)):`;
   const seenRules = new Set();
   const lines = shown.map((f) => formatDedupedFindingLine(f, seenRules));
-  const more = remaining > 0 ? `... and ${remaining} more (see ${IMPECCABLE_COMMAND} audit).` : null;
+  const more = remaining > 0
+    ? `... and ${remaining} more (see ${IMPECCABLE_COMMAND} audit).`
+    : null;
   const footer = directiveFooter({ mode: opts.footer });
 
   const blocks = [header, ...lines];
   if (more) blocks.push(more);
-  blocks.push("");
+  blocks.push('');
   blocks.push(footer);
-  let text = blocks.join("\n");
+  let text = blocks.join('\n');
 
   if (text.length > maxChars) {
     text = clampToBudget(header, lines, more, footer, maxChars);
@@ -1052,7 +1009,7 @@ export function renderTemplate(findings, filePath, config, opts = {}) {
 
 function renderGroupedTemplate(groups, config, opts = {}) {
   const realGroups = groups.filter((group) => Array.isArray(group.findings) && group.findings.length > 0);
-  if (realGroups.length === 0) return "";
+  if (realGroups.length === 0) return '';
   if (realGroups.length === 1) {
     const [group] = realGroups;
     return renderTemplate(group.findings, group.filePath, config, opts);
@@ -1086,7 +1043,7 @@ function renderGroupedTemplate(groups, config, opts = {}) {
   }
 
   const footer = directiveFooter({ mode: opts.footer });
-  let text = [header, ...lines, "", footer].join("\n");
+  let text = [header, ...lines, '', footer].join('\n');
   if (text.length > maxChars) {
     text = clampGroupedToBudget(header, lines, footer, maxChars);
   }
@@ -1099,21 +1056,24 @@ function renderGroupedTemplate(groups, config, opts = {}) {
 // policy rather than sacrifice findings that fit beside it. A result that
 // dropped every finding line (a grouped render can fit a bare file header)
 // does not count as a fit: findings are why the emission exists.
-const isFindingLine = (line) => line.startsWith("- ");
+const isFindingLine = (line) => line.startsWith('- ');
 
 function footerFallbacks(footer) {
-  const short = directiveFooter({ mode: "short" });
+  const short = directiveFooter({ mode: 'short' });
   return footer === short ? [footer] : [footer, short];
 }
 
 function clampGroupedToBudget(header, lines, footer, maxChars) {
-  const assemble = (linesArr, omitted, footerText) =>
-    [header, ...linesArr, ...(omitted ? [`... and more (see ${IMPECCABLE_COMMAND} audit).`] : []), "", footerText].join(
-      "\n"
-    );
+  const assemble = (linesArr, omitted, footerText) => [
+    header,
+    ...linesArr,
+    ...(omitted ? [`... and more (see ${IMPECCABLE_COMMAND} audit).`] : []),
+    '',
+    footerText,
+  ].join('\n');
 
   for (const footerText of footerFallbacks(footer)) {
-    const working = lines.slice();
+    let working = lines.slice();
     let omitted = false;
     let assembled = assemble(working, omitted, footerText);
     while (assembled.length > maxChars && working.length > 1) {
@@ -1123,25 +1083,22 @@ function clampGroupedToBudget(header, lines, footer, maxChars) {
     }
     if (assembled.length <= maxChars && working.some(isFindingLine)) return assembled;
   }
-  return clampLastLine(
-    (linesArr, footerText) => assemble(linesArr, true, footerText),
-    lines.find(isFindingLine) || lines[0],
-    maxChars
-  );
+  return clampLastLine((linesArr, footerText) => assemble(linesArr, true, footerText),
+    lines.find(isFindingLine) || lines[0], maxChars);
 }
 
 function clampToBudget(header, lines, more, footer, maxChars) {
   const assemble = (linesArr, moreText, footerText) => {
     const blocks = [header, ...linesArr];
     if (moreText) blocks.push(moreText);
-    blocks.push("");
+    blocks.push('');
     blocks.push(footerText);
-    return blocks.join("\n");
+    return blocks.join('\n');
   };
 
   let lastMore = more;
   for (const footerText of footerFallbacks(footer)) {
-    const working = lines.slice();
+    let working = lines.slice();
     let moreText = more;
     let assembled = assemble(working, moreText, footerText);
     while (assembled.length > maxChars && working.length > 1) {
@@ -1152,18 +1109,15 @@ function clampToBudget(header, lines, more, footer, maxChars) {
     lastMore = moreText;
     if (assembled.length <= maxChars) return assembled;
   }
-  return clampLastLine(
-    (linesArr, footerText) => assemble(linesArr, lastMore, footerText),
-    lines.find(isFindingLine) || lines[0],
-    maxChars
-  );
+  return clampLastLine((linesArr, footerText) => assemble(linesArr, lastMore, footerText),
+    lines.find(isFindingLine) || lines[0], maxChars);
 }
 
 // Last resort with one finding line left: the short policy gets the budget
 // first, the line is clipped to what remains. The pre-fix tail-slice cut
 // whatever happened to be last, which was always the footer.
 function clampLastLine(build, line, maxChars) {
-  const footerText = directiveFooter({ mode: "short" });
+  const footerText = directiveFooter({ mode: 'short' });
   const bare = build([], footerText);
   // +1 for the newline the line itself brings when it joins the blocks.
   const room = maxChars - bare.length - 1;
@@ -1187,15 +1141,15 @@ function clampLastLine(build, line, maxChars) {
 // rule id, name, and their own ignore hint (values differ per line, so the
 // hint must survive the dedupe).
 function formatFindingLine(f, opts = {}) {
-  const prefix = f.line && f.line > 0 ? `- L${f.line}` : "-";
-  const desc = opts.compact ? "" : (f.description || "").trim();
-  const name = (f.name || "").trim();
+  const prefix = f.line && f.line > 0 ? `- L${f.line}` : '-';
+  const desc = opts.compact ? '' : (f.description || '').trim();
+  const name = (f.name || '').trim();
   // Description from the registry already ends in punctuation; join with a
   // single space. `name` may have a trailing period already, keep it clean.
-  const nameSegment = name ? `${name.replace(/\.+\s*$/, "")}.` : "";
+  const nameSegment = name ? `${name.replace(/\.+\s*$/, '')}.` : '';
   const ignoreHint = formatFindingIgnoreHint(f);
-  const ignoreSegment = ignoreHint ? ` If intentional: \`${ignoreHint}\`.` : "";
-  return `${prefix} [${f.antipattern}] ${nameSegment} ${desc}${ignoreSegment}`.replace(/\s+/g, " ").trim();
+  const ignoreSegment = ignoreHint ? ` If intentional: \`${ignoreHint}\`.` : '';
+  return `${prefix} [${f.antipattern}] ${nameSegment} ${desc}${ignoreSegment}`.replace(/\s+/g, ' ').trim();
 }
 
 // Dedupe applied in shown-line order, so the first rendered occurrence of a
@@ -1214,17 +1168,17 @@ function formatDedupedFindingLine(finding, seenRules) {
 // contract, and the disclosure rule live in the directive footer, stated once
 // instead of per line.
 function formatFindingIgnoreHint(finding) {
-  if (!finding || typeof finding !== "object") return "";
+  if (!finding || typeof finding !== 'object') return '';
   const rule = normalizeIgnoreRule(finding.antipattern);
-  if (!rule) return "";
+  if (!rule) return '';
   const normalizedValue = extractFindingIgnoreValue(finding);
-  if (!normalizedValue) return "";
+  if (!normalizedValue) return '';
   const valueArg = quoteCommandArg(extractFindingIgnoreValueRaw(finding));
   return `ignore-value ${rule} ${valueArg}`;
 }
 
 function quoteCommandArg(value) {
-  const text = String(value || "").trim();
+  const text = String(value || '').trim();
   if (/^[A-Za-z0-9._:-]+$/.test(text)) return text;
   // The suggestion is meant to be run on this same machine, so quote for its
   // shell. POSIX /bin/sh still expands $(...), backticks, and ${} inside
@@ -1235,8 +1189,8 @@ function quoteCommandArg(value) {
   // than a grouping delimiter, so a value or path containing spaces has to
   // stay double-quoted there (Greptile #533). Keep the pre-existing
   // double-quote escaping on Windows so that path's behavior is unchanged.
-  if (process.platform === "win32") {
-    return `"${text.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  if (process.platform === 'win32') {
+    return `"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
   }
   return `'${text.replace(/'/g, `'\\''`)}'`;
 }
@@ -1244,8 +1198,8 @@ function quoteCommandArg(value) {
 function relativize(filePath, cwd) {
   try {
     const rel = path.relative(cwd, filePath);
-    if (!rel || rel.startsWith("..")) return filePath;
-    return rel.split(path.sep).join("/");
+    if (!rel || rel.startsWith('..')) return filePath;
+    return rel.split(path.sep).join('/');
   } catch {
     return filePath;
   }
@@ -1258,10 +1212,10 @@ function relativize(filePath, cwd) {
 const APPLY_PATCH_FILE_RE = /^\*\*\* (?:Update|Add) File: (.+)$/gm;
 
 export function parseApplyPatchPaths(command, projectCwd) {
-  if (!command || typeof command !== "string") return [];
+  if (!command || typeof command !== 'string') return [];
   const out = [];
   for (const m of command.matchAll(APPLY_PATCH_FILE_RE)) {
-    let p = (m[1] || "").trim();
+    let p = (m[1] || '').trim();
     if (!p) continue;
     if (!path.isAbsolute(p)) p = path.resolve(projectCwd, p);
     out.push(p);
@@ -1273,21 +1227,21 @@ export function resolveTargetFiles(event, projectCwd) {
   const ti = event?.tool_input;
   const out = [];
   const add = (filePath) => {
-    if (typeof filePath !== "string" || !filePath) return;
+    if (typeof filePath !== 'string' || !filePath) return;
     if (!out.includes(filePath)) out.push(filePath);
   };
 
-  if (event?.tool_name === "apply_patch" && ti && typeof ti.command === "string") {
+  if (event?.tool_name === 'apply_patch' && ti && typeof ti.command === 'string') {
     for (const filePath of parseApplyPatchPaths(ti.command, projectCwd)) add(filePath);
   }
-  if (ti && typeof ti.file_path === "string" && ti.file_path) {
+  if (ti && typeof ti.file_path === 'string' && ti.file_path) {
     add(ti.file_path);
   }
   // Cursor Write / StrReplace use `path`, not `file_path`.
-  if (ti && typeof ti.path === "string" && ti.path) {
+  if (ti && typeof ti.path === 'string' && ti.path) {
     add(ti.path);
   }
-  if (typeof event?.file_path === "string" && event.file_path) {
+  if (typeof event?.file_path === 'string' && event.file_path) {
     add(event.file_path);
   }
   return out;
@@ -1295,52 +1249,50 @@ export function resolveTargetFiles(event, projectCwd) {
 
 export function resolveHarness(env = {}, event = null) {
   const explicit = env?.IMPECCABLE_HOOK_HARNESS;
-  if (explicit === "cursor") return "cursor";
-  if (explicit === "github") return "github";
-  if (explicit === "grok") return "grok";
-  if (explicit === "claude") return "claude";
-  if (explicit === "codex") return "codex";
+  if (explicit === 'cursor') return 'cursor';
+  if (explicit === 'github') return 'github';
+  if (explicit === 'grok') return 'grok';
+  if (explicit === 'claude') return 'claude';
+  if (explicit === 'codex') return 'codex';
   // Grok Build sends camelCase `toolName`/`toolInput`/`hookEventName` and no
   // snake_case pair. GitHub Copilot sends camelCase `toolName`/`toolArgs`.
   // Check Grok first: the old GitHub heuristic (`toolName` and no
   // `tool_input`) also matches Grok, which is how live PostToolUse was
   // classified as Copilot and then skipped with no-file-path (#646).
-  if (looksLikeGrokEnvelope(event)) return "grok";
-  if (
-    event &&
-    typeof event === "object" &&
-    (typeof event.toolName === "string" || event.toolArgs !== undefined) &&
-    event.tool_name === undefined &&
-    event.tool_input === undefined
-  ) {
-    return "github";
+  if (looksLikeGrokEnvelope(event)) return 'grok';
+  if (event && typeof event === 'object'
+    && (typeof event.toolName === 'string' || event.toolArgs !== undefined)
+    && event.tool_name === undefined && event.tool_input === undefined) {
+    return 'github';
   }
-  if (typeof event?.conversation_id === "string" && event.conversation_id) return "cursor";
+  if (typeof event?.conversation_id === 'string' && event.conversation_id) return 'cursor';
   // Codex turn-scoped events carry `turn_id`. Claude Code does not. Detecting
   // it here means an already-installed Codex hook emits the Codex Stop
   // contract without rewriting the hook command to set IMPECCABLE_HOOK_HARNESS.
   // https://developers.openai.com/codex/hooks#stop
-  if (typeof event?.turn_id === "string" && event.turn_id) return "codex";
-  return "claude";
+  if (typeof event?.turn_id === 'string' && event.turn_id) return 'codex';
+  return 'claude';
 }
 
 function looksLikeGrokEnvelope(event) {
-  if (!event || typeof event !== "object") return false;
-  if (event.hook_event_name !== undefined || event.tool_name !== undefined || event.tool_input !== undefined) {
+  if (!event || typeof event !== 'object') return false;
+  if (event.hook_event_name !== undefined
+    || event.tool_name !== undefined
+    || event.tool_input !== undefined) {
     return false;
   }
   if (event.toolArgs !== undefined) return false;
-  if (typeof event.hookEventName === "string") return true;
-  return typeof event.toolName === "string" && event.toolInput !== undefined;
+  if (typeof event.hookEventName === 'string') return true;
+  return typeof event.toolName === 'string' && event.toolInput !== undefined;
 }
 
 // Stop arrives as Claude's `hook_event_name: "Stop"` or Grok Build's
 // `hookEventName: "stop"`. hook.mjs routes on the raw stdin, before any
 // normalize, so both casings must match here.
 export function isStopEvent(event) {
-  if (!event || typeof event !== "object") return false;
+  if (!event || typeof event !== 'object') return false;
   const name = event.hook_event_name || event.hookEventName;
-  return typeof name === "string" && name.toLowerCase() === "stop";
+  return typeof name === 'string' && name.toLowerCase() === 'stop';
 }
 
 // GitHub Copilot's postToolUse payload is
@@ -1353,11 +1305,11 @@ export function isStopEvent(event) {
 // normalizeGitHubEvent). The detector reads the file from disk after the tool
 // ran, so only the path (not the proposed content) is needed here.
 export function parseGitHubToolArgs(toolArgs) {
-  if (toolArgs && typeof toolArgs === "object" && !Array.isArray(toolArgs)) return toolArgs;
-  if (typeof toolArgs === "string" && toolArgs.trim()) {
+  if (toolArgs && typeof toolArgs === 'object' && !Array.isArray(toolArgs)) return toolArgs;
+  if (typeof toolArgs === 'string' && toolArgs.trim()) {
     try {
       const parsed = JSON.parse(toolArgs);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
     } catch {
       return {};
     }
@@ -1376,7 +1328,7 @@ export function parseGitHubToolArgs(toolArgs) {
 const APPLY_PATCH_MARKER = /\*\*\* (?:Begin Patch|Add File:|Update File:|Delete File:)/;
 
 function looksLikeApplyPatch(rawArgs) {
-  if (typeof rawArgs !== "string" || !APPLY_PATCH_MARKER.test(rawArgs)) return false;
+  if (typeof rawArgs !== 'string' || !APPLY_PATCH_MARKER.test(rawArgs)) return false;
   // Guard against an edit/create payload whose edited *content* happens to
   // contain patch markers: that payload is a JSON object string, whereas a real
   // apply_patch payload is a raw patch string that does not parse as JSON. Only
@@ -1384,47 +1336,45 @@ function looksLikeApplyPatch(rawArgs) {
   // `path` extracted.
   try {
     const parsed = JSON.parse(rawArgs);
-    if (parsed && typeof parsed === "object") return false;
-  } catch {
-    /* not JSON → genuine raw patch */
-  }
+    if (parsed && typeof parsed === 'object') return false;
+  } catch { /* not JSON → genuine raw patch */ }
   return true;
 }
 
 function applyPatchText(rawArgs) {
-  if (typeof rawArgs === "string") {
+  if (typeof rawArgs === 'string') {
     if (APPLY_PATCH_MARKER.test(rawArgs)) return rawArgs;
     // Defensive: a future Copilot build might JSON-wrap the patch.
     const parsed = parseGitHubToolArgs(rawArgs);
-    return parsed.patch || parsed.input || parsed.command || "";
+    return parsed.patch || parsed.input || parsed.command || '';
   }
-  if (rawArgs && typeof rawArgs === "object" && !Array.isArray(rawArgs)) {
-    return rawArgs.patch || rawArgs.input || rawArgs.command || "";
+  if (rawArgs && typeof rawArgs === 'object' && !Array.isArray(rawArgs)) {
+    return rawArgs.patch || rawArgs.input || rawArgs.command || '';
   }
-  return "";
+  return '';
 }
 
 function normalizeGitHubEvent(event, projectCwd) {
   const cwd = event.cwd || envProjectDir(projectCwd) || projectCwd;
-  const sessionId = event.sessionId || event.session_id || "unknown";
+  const sessionId = event.sessionId || event.session_id || 'unknown';
   const toolName = event.toolName || event.tool_name || null;
-  const toolInput = event.tool_input && typeof event.tool_input === "object" ? { ...event.tool_input } : {};
+  const toolInput = event.tool_input && typeof event.tool_input === 'object' ? { ...event.tool_input } : {};
   const rawArgs = event.toolArgs;
 
   let normalizedToolName = toolName;
-  if (toolName === "apply_patch" || looksLikeApplyPatch(rawArgs)) {
+  if (toolName === 'apply_patch' || looksLikeApplyPatch(rawArgs)) {
     // resolveTargetFiles() reads the touched paths from tool_input.command when
     // tool_name is 'apply_patch', so normalize the name even if a future build
     // sends the patch under a different tool label.
     const patch = applyPatchText(rawArgs);
     if (patch) {
       toolInput.command = patch;
-      normalizedToolName = "apply_patch";
+      normalizedToolName = 'apply_patch';
     }
   } else {
     const args = parseGitHubToolArgs(rawArgs);
     const filePath = args.path || args.file_path || args.filePath || args.target_file;
-    if (typeof filePath === "string" && filePath) toolInput.file_path = filePath;
+    if (typeof filePath === 'string' && filePath) toolInput.file_path = filePath;
   }
 
   return {
@@ -1444,9 +1394,11 @@ function normalizeGitHubEvent(event, projectCwd) {
 // (isStopEvent) and nothing downstream reads `hook_event_name`.
 function normalizeGrokEvent(event, projectCwd) {
   const cwd = event.cwd || event.workspaceRoot || envProjectDir(projectCwd) || projectCwd;
-  const sessionId = event.sessionId || event.session_id || "unknown";
+  const sessionId = event.sessionId || event.session_id || 'unknown';
   const rawInput = event.toolInput ?? event.tool_input;
-  const toolInput = rawInput && typeof rawInput === "object" && !Array.isArray(rawInput) ? { ...rawInput } : {};
+  const toolInput = rawInput && typeof rawInput === 'object' && !Array.isArray(rawInput)
+    ? { ...rawInput }
+    : {};
   const out = {
     ...event,
     cwd,
@@ -1460,20 +1412,19 @@ function normalizeGrokEvent(event, projectCwd) {
   return out;
 }
 
-export function normalizeHookEvent(event, projectCwd, harness = "claude") {
-  if (!event || typeof event !== "object") return event;
-  if (harness === "github") return normalizeGitHubEvent(event, projectCwd);
-  if (harness === "grok") return normalizeGrokEvent(event, projectCwd);
-  if (harness !== "cursor") return event;
+export function normalizeHookEvent(event, projectCwd, harness = 'claude') {
+  if (!event || typeof event !== 'object') return event;
+  if (harness === 'github') return normalizeGitHubEvent(event, projectCwd);
+  if (harness === 'grok') return normalizeGrokEvent(event, projectCwd);
+  if (harness !== 'cursor') return event;
 
-  const cwd =
-    event.cwd ||
-    (Array.isArray(event.workspace_roots) && event.workspace_roots[0]) ||
-    envProjectDir(projectCwd) ||
-    projectCwd;
-  const sessionId = event.session_id || event.conversation_id || "unknown";
+  const cwd = event.cwd
+    || (Array.isArray(event.workspace_roots) && event.workspace_roots[0])
+    || envProjectDir(projectCwd)
+    || projectCwd;
+  const sessionId = event.session_id || event.conversation_id || 'unknown';
 
-  const ti = event.tool_input && typeof event.tool_input === "object" ? event.tool_input : {};
+  const ti = event.tool_input && typeof event.tool_input === 'object' ? event.tool_input : {};
   const filePath = ti.file_path || ti.path || event.file_path;
   if (filePath) {
     return {
@@ -1488,7 +1439,7 @@ export function normalizeHookEvent(event, projectCwd, harness = "claude") {
 }
 
 function envProjectDir(fallback) {
-  if (typeof process.env.CURSOR_PROJECT_DIR === "string" && process.env.CURSOR_PROJECT_DIR) {
+  if (typeof process.env.CURSOR_PROJECT_DIR === 'string' && process.env.CURSOR_PROJECT_DIR) {
     return process.env.CURSOR_PROJECT_DIR;
   }
   return fallback;
@@ -1497,39 +1448,27 @@ function envProjectDir(fallback) {
 // UI components often keep slop in a sibling/co-located stylesheet while the
 // JSX edit is what triggered PostToolUse. Scan those styles too so an App.jsx
 // patch doesn't report "clean" while styles.css still has Inter/bounce/etc.
-const UI_CODE_EXTS = new Set([".jsx", ".tsx", ".vue", ".svelte", ".astro"]);
-const STYLE_EXTS = new Set([".css", ".scss", ".sass", ".less"]);
+const UI_CODE_EXTS = new Set(['.jsx', '.tsx', '.vue', '.svelte', '.astro']);
+const STYLE_EXTS = new Set(['.css', '.scss', '.sass', '.less']);
 const CO_SCAN_STYLE_NAMES = [
-  "styles.css",
-  "styles.scss",
-  "styles.sass",
-  "styles.less",
-  "index.css",
-  "index.scss",
-  "index.sass",
-  "index.less",
-  "global.css",
-  "global.scss",
-  "global.sass",
-  "global.less",
-  "globals.css",
-  "globals.scss",
-  "globals.sass",
-  "globals.less",
+  'styles.css', 'styles.scss', 'styles.sass', 'styles.less',
+  'index.css', 'index.scss', 'index.sass', 'index.less',
+  'global.css', 'global.scss', 'global.sass', 'global.less',
+  'globals.css', 'globals.scss', 'globals.sass', 'globals.less',
 ];
 const MAX_SCAN_TARGETS = 6;
 
 const STATIC_STYLE_IMPORT_RE = /import\s+(?:[\w*{}\s,$]+\s+from\s+)?['"]([^'"]+\.(?:css|scss|sass|less))['"]/gi;
 
 function hasPathTraversal(filePath) {
-  return typeof filePath === "string" && filePath.includes("..");
+  return typeof filePath === 'string' && filePath.includes('..');
 }
 
 function isInsideProject(filePath, projectCwd) {
   if (!filePath || !projectCwd || hasPathTraversal(filePath)) return false;
   try {
     const rel = path.relative(projectCwd, filePath);
-    return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
   } catch {
     return false;
   }
@@ -1556,9 +1495,7 @@ function canonicalPath(p) {
     try {
       canonical = tail.length ? path.join(fs.realpathSync(dir), ...tail) : fs.realpathSync(dir);
       break;
-    } catch {
-      /* keep climbing */
-    }
+    } catch { /* keep climbing */ }
     const parent = path.dirname(dir);
     if (parent === dir) break;
     tail.unshift(path.basename(dir));
@@ -1583,13 +1520,13 @@ export function isScanTargetInsideProject(filePath, projectCwd) {
 }
 
 export function parseStaticStyleImports(content, fromFile, projectCwd) {
-  if (!content || typeof content !== "string") return [];
+  if (!content || typeof content !== 'string') return [];
   const dir = path.dirname(fromFile);
   const out = [];
   for (const m of content.matchAll(STATIC_STYLE_IMPORT_RE)) {
-    let p = (m[1] || "").trim();
+    let p = (m[1] || '').trim();
     if (!p) continue;
-    if (p.startsWith(".")) p = path.resolve(dir, p);
+    if (p.startsWith('.')) p = path.resolve(dir, p);
     else if (!path.isAbsolute(p)) p = path.resolve(projectCwd, p);
     if (!isInsideProject(p, projectCwd)) continue;
     out.push(p);
@@ -1647,7 +1584,7 @@ export function expandScanTargets(primaryTargets, projectCwd) {
   const baseCwd = projectCwd || process.cwd();
   const add = (p) => {
     if (ordered.length >= MAX_SCAN_TARGETS) return;
-    const abs = hasPathTraversal(p) ? p : path.isAbsolute(p) ? p : path.resolve(baseCwd, p);
+    const abs = hasPathTraversal(p) ? p : (path.isAbsolute(p) ? p : path.resolve(baseCwd, p));
     if (seen.has(abs)) return;
     seen.add(abs);
     ordered.push(abs);
@@ -1663,12 +1600,8 @@ export function expandScanTargets(primaryTargets, projectCwd) {
     const ext = path.extname(p).toLowerCase();
     if (STYLE_EXTS.has(ext) || !UI_CODE_EXTS.has(ext)) continue;
 
-    let content = "";
-    try {
-      content = fs.readFileSync(p, "utf-8");
-    } catch {
-      /* unreadable primary */
-    }
+    let content = '';
+    try { content = fs.readFileSync(p, 'utf-8'); } catch { /* unreadable primary */ }
 
     for (const imp of parseStaticStyleImports(content, p, projectCwd)) {
       add(imp);
@@ -1687,28 +1620,24 @@ export function writeAuditLog(env, entry, cwd = process.cwd()) {
   // The event's project root (entry.cwd) when present, else the passed cwd. Both
   // config reads and relative log paths resolve against this, since the hook
   // process cwd can differ from the project being edited.
-  const baseCwd = entry && typeof entry.cwd === "string" && entry.cwd ? entry.cwd : cwd;
+  const baseCwd = entry && typeof entry.cwd === 'string' && entry.cwd ? entry.cwd : cwd;
   // Env wins; otherwise fall back to the unified config's hook.auditLog path.
   let target = env?.IMPECCABLE_HOOK_LOG;
-  if (!target || typeof target !== "string") {
-    try {
-      target = readConfig(baseCwd).auditLog;
-    } catch {
-      target = null;
-    }
+  if (!target || typeof target !== 'string') {
+    try { target = readConfig(baseCwd).auditLog; } catch { target = null; }
   }
-  if (!target || typeof target !== "string") return false;
+  if (!target || typeof target !== 'string') return false;
   try {
     let expanded;
-    if (target.startsWith("~/")) {
-      expanded = path.join(process.env.HOME || process.env.USERPROFILE || ".", target.slice(2));
+    if (target.startsWith('~/')) {
+      expanded = path.join(process.env.HOME || process.env.USERPROFILE || '.', target.slice(2));
     } else if (path.isAbsolute(target)) {
       expanded = target;
     } else {
       expanded = path.resolve(baseCwd, target);
     }
     fs.mkdirSync(path.dirname(expanded), { recursive: true });
-    const line = JSON.stringify({ ts: new Date().toISOString(), ...entry }) + "\n";
+    const line = JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n';
     fs.appendFileSync(expanded, line);
     return true;
   } catch {
@@ -1717,9 +1646,9 @@ export function writeAuditLog(env, entry, cwd = process.cwd()) {
 }
 
 const DETECTOR_CANDIDATES = [
-  path.join(__dirname, "detector", "detect-antipatterns.mjs"),
-  path.join(__dirname, "..", "..", "cli", "engine", "detect-antipatterns.mjs"),
-  path.join(__dirname, "..", "..", "..", "cli", "engine", "detect-antipatterns.mjs"),
+  path.join(__dirname, 'detector', 'detect-antipatterns.mjs'),
+  path.join(__dirname, '..', '..', 'cli', 'engine', 'detect-antipatterns.mjs'),
+  path.join(__dirname, '..', '..', '..', 'cli', 'engine', 'detect-antipatterns.mjs'),
 ];
 
 let detectorCache = null;
@@ -1767,8 +1696,7 @@ export function setDetectorForTesting(impl) {
 // session" so the model knows it's a re-mind, not a new finding.
 // ────────────────────────────────────────────────────────────────────────
 
-const STEER_LINE =
-  "That does not mean the design is good: keep following the project design system and the impeccable skill guidance.";
+const STEER_LINE = 'That does not mean the design is good: keep following the project design system and the impeccable skill guidance.';
 
 export function renderCleanAck(filePath, opts = {}) {
   const cwd = opts.cwd || process.cwd();
@@ -1781,22 +1709,22 @@ export function renderPendingAck(filePath, knownFindings, opts = {}) {
   const display = relativize(filePath, cwd);
   const count = knownFindings.length;
   // `knownFindings` here are the cache strings like "side-tab:3".
-  const sample = knownFindings.slice(0, 3).join(", ");
-  const more = count > 3 ? `, +${count - 3} more` : "";
+  const sample = knownFindings.slice(0, 3).join(', ');
+  const more = count > 3 ? `, +${count - 3} more` : '';
   return `${ENVELOPE_PREFIX} Design hook scanned ${display}. Still has ${count} finding(s) flagged earlier this session (${sample}${more}). Handle them before finalizing — the previous reminder still applies.`;
 }
 
 export function shouldEmitAckForFile(filePath, config = null) {
-  if (ACK_EXTS.has(path.extname(String(filePath || "")).toLowerCase())) return true;
+  if (ACK_EXTS.has(path.extname(String(filePath || '')).toLowerCase())) return true;
   // Configured html-engine extensions are declared UI markup, so they get the
   // clean/pending acks; text-engine ones stay quiet like plain .ts/.js.
   const configured = matchConfiguredExtension(filePath, config?.extensions);
-  return Boolean(configured && configured.engine === "html");
+  return Boolean(configured && configured.engine === 'html');
 }
 
 export function designSystemOptions(config, detector, projectCwd) {
   if (config?.designSystem?.enabled === false) return {};
-  if (!detector || typeof detector.loadDesignSystemForCwd !== "function") return {};
+  if (!detector || typeof detector.loadDesignSystemForCwd !== 'function') return {};
   try {
     const designSystem = detector.loadDesignSystemForCwd(projectCwd);
     return designSystem ? { designSystem } : {};
@@ -1836,7 +1764,7 @@ export function appendDesignSystemNoteOnce(text, scanOptions, cache, sessionId, 
   if (!text || !scanOptions?.designSystem?.mdNewerThanJson) return text;
   const maxChars = Math.max(500, config?.limits?.maxChars || DEFAULT_CONFIG.limits.maxChars);
   if (text.length + DESIGN_STALE_NOTE.length + 2 > maxChars) return text;
-  if (!consumeSessionNoticeFlag(cache, sessionId, "designNoteShown")) return text;
+  if (!consumeSessionNoticeFlag(cache, sessionId, 'designNoteShown')) return text;
   return appendDesignSystemNote(text, scanOptions);
 }
 
@@ -1859,7 +1787,7 @@ export function designNoteReserve(scanOptions, cache, sessionId) {
 // reached the output. Matching the whole footer text (not a sentinel) keeps
 // the flag honest against any truncation that spares the opening words.
 export function footerModeForSession(cache, sessionId) {
-  return ensureSession(cache, sessionId).footerShown ? "short" : "full";
+  return ensureSession(cache, sessionId).footerShown ? 'short' : 'full';
 }
 
 export function commitFooterShown(cache, sessionId, text) {
@@ -1870,7 +1798,7 @@ export function commitFooterShown(cache, sessionId, text) {
   session.updatedAt = Date.now();
 }
 
-const HOOK_ADMIN_COMMAND = `node ${quoteCommandArg(path.join(__dirname, "hook-admin.mjs"))}`;
+const HOOK_ADMIN_COMMAND = `node ${quoteCommandArg(path.join(__dirname, 'hook-admin.mjs'))}`;
 
 // The directive footer is the part of the hook output that steers model
 // behavior. Intentional moves, in order:
@@ -1892,19 +1820,19 @@ const HOOK_ADMIN_COMMAND = `node ${quoteCommandArg(path.join(__dirname, "hook-ad
 //   6. **Once per session.** The full policy emits on the session's first
 //      fire; later emissions carry the one-line short form (mode 'short').
 function directiveFooter(opts = {}) {
-  if (opts.mode === "short") {
+  if (opts.mode === 'short') {
     // No command path here: the session's first emission already gave the
     // runnable hook-admin.mjs invocation, and restating ~70 chars of absolute
     // path on every repeat is the duplication this mode exists to cut.
-    return "Triage per the session policy: fix real problems; persist confident false-positive or sanctioned-exception ignores via `hook-admin.mjs ignore-value` and disclose them in your reply; unsure, ask in one line.";
+    return 'Triage per the session policy: fix real problems; persist confident false-positive or sanctioned-exception ignores via `hook-admin.mjs ignore-value` and disclose them in your reply; unsure, ask in one line.';
   }
   return [
-    "Triage each finding, then state in your reply what you fixed, what you suppressed, and what you left standing:",
-    "- Real design problem: fix it. Keep intentional design as designed.",
+    'Triage each finding, then state in your reply what you fixed, what you suppressed, and what you left standing:',
+    '- Real design problem: fix it. Keep intentional design as designed.',
     `- Confident false positive or sanctioned exception (an intentional demo or fixture, documentation of bad design, literal or domain-appropriate motion, a choice the user confirmed): persist the narrowest ignore yourself and disclose it. Run \`${HOOK_ADMIN_COMMAND} ignore-value <rule> "<value>" --reason "<who decided: evidence>"\` with the pair shown on the finding line, or value "*" plus \`--file <path>\` when the line shows none. Write "user confirmed" in a reason only when the user did.`,
-    "- Unsure: leave it as is and ask the user in one line.",
+    '- Unsure: leave it as is and ask the user in one line.',
     `Self-serve ends at ignore-value: \`ignore-file\` and \`ignore-rule\` need the user's explicit approval, and never add an ignore to push a blocked write through. Full suppression ladder: ${IMPECCABLE_COMMAND} hooks.`,
-  ].join("\n");
+  ].join('\n');
 }
 
 /**
@@ -1914,8 +1842,8 @@ function directiveFooter(opts = {}) {
  * Never throws. All errors are converted to `exitCode: 0` + audit entry.
  */
 export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = Date.now, detector } = {}) {
-  const audit = { ts: new Date(now()).toISOString(), event: "PostToolUse" };
-  const result = (extra) => ({ exitCode: 0, stdout: "", audit: { ...audit, ...extra } });
+  const audit = { ts: new Date(now()).toISOString(), event: 'PostToolUse' };
+  const result = (extra) => ({ exitCode: 0, stdout: '', audit: { ...audit, ...extra } });
 
   try {
     // Re-entrancy guard.
@@ -1924,19 +1852,19 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
     }
 
     if (truthy(env.IMPECCABLE_HOOK_DISABLED)) {
-      return result({ skipped: "env-disabled", durationMs: 0 });
+      return result({ skipped: 'env-disabled', durationMs: 0 });
     }
 
     const started = Date.now();
 
     let event;
     try {
-      event = typeof stdinJson === "string" ? JSON.parse(stdinJson) : stdinJson;
+      event = typeof stdinJson === 'string' ? JSON.parse(stdinJson) : stdinJson;
     } catch {
-      return result({ skipped: "stdin-malformed", durationMs: Date.now() - started });
+      return result({ skipped: 'stdin-malformed', durationMs: Date.now() - started });
     }
-    if (!event || typeof event !== "object") {
-      return result({ skipped: "stdin-empty", durationMs: Date.now() - started });
+    if (!event || typeof event !== 'object') {
+      return result({ skipped: 'stdin-empty', durationMs: Date.now() - started });
     }
 
     const harness = resolveHarness(env, event);
@@ -1953,25 +1881,25 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
     if (event.tool_name) audit.tool = event.tool_name;
 
     if (targetFiles.length === 0) {
-      return result({ skipped: "no-file-path", durationMs: Date.now() - started });
+      return result({ skipped: 'no-file-path', durationMs: Date.now() - started });
     }
 
     const config = readConfig(projectCwd);
     if (config.enabled === false) {
-      return result({ skipped: "config-disabled", durationMs: Date.now() - started });
+      return result({ skipped: 'config-disabled', durationMs: Date.now() - started });
     }
 
     const platform = resolveProjectPlatform(projectCwd);
     if (isNativePlatform(platform)) {
-      return result({ skipped: "native-platform", platform, durationMs: Date.now() - started });
+      return result({ skipped: 'native-platform', platform, durationMs: Date.now() - started });
     }
 
     const cache = readCache(projectCwd);
-    const sessionId = event.session_id || "unknown";
-    const det = detector || (await loadDetector());
-    if (!det || typeof det.detectText !== "function") {
+    const sessionId = event.session_id || 'unknown';
+    const det = detector || await loadDetector();
+    if (!det || typeof det.detectText !== 'function') {
       // Cache is not mutated yet at this point; nothing to persist.
-      return result({ skipped: "detector-missing", durationMs: Date.now() - started });
+      return result({ skipped: 'detector-missing', durationMs: Date.now() - started });
     }
     const scanOptions = designSystemOptions(config, det, projectCwd);
     const tiered = perEditTieringActive(config, harness);
@@ -1984,7 +1912,7 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
     let skippedBytes = 0;
     const quietMode = truthy(env.IMPECCABLE_HOOK_QUIET) || config.quiet === true;
     let detectorThrewAny = false;
-    let lastSkip = "no-scannable-file";
+    let lastSkip = 'no-scannable-file';
     let suppressedHit = false;
     let cacheDirty = false;
     let deferredTotal = 0;
@@ -1993,11 +1921,11 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
       audit.file = filePath;
 
       if (hasPathTraversal(filePath) || SENSITIVE_PATH.test(filePath)) {
-        lastSkip = "sensitive";
+        lastSkip = 'sensitive';
         continue;
       }
       if (GENERATED_PATH.test(filePath)) {
-        lastSkip = "generated";
+        lastSkip = 'generated';
         continue;
       }
 
@@ -2005,35 +1933,31 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
       const configuredExt = matchConfiguredExtension(filePath, config.extensions);
       audit.ext = configuredExt ? configuredExt.ext : ext;
       if (!ALLOWED_EXTS.has(ext) && !configuredExt) {
-        lastSkip = "extension";
+        lastSkip = 'extension';
         continue;
       }
 
       const relForMatch = relativize(filePath, projectCwd);
       if (matchesAnyGlob(relForMatch, config.ignoreFiles) || matchesAnyGlob(filePath, config.ignoreFiles)) {
-        lastSkip = "config-ignore-file";
+        lastSkip = 'config-ignore-file';
         continue;
       }
       if (!fs.existsSync(filePath)) {
-        lastSkip = "file-missing";
+        lastSkip = 'file-missing';
         continue;
       }
       if (!isScanTargetInsideProject(filePath, projectCwd)) {
-        lastSkip = "outside-project";
+        lastSkip = 'outside-project';
         continue;
       }
 
       const maxFileBytes = config.limits?.maxFileBytes ?? DEFAULT_CONFIG.limits.maxFileBytes;
       if (maxFileBytes > 0) {
         let size = 0;
-        try {
-          size = fs.statSync(filePath).size;
-        } catch {
-          size = 0;
-        }
+        try { size = fs.statSync(filePath).size; } catch { size = 0; }
         if (size > maxFileBytes) {
           skippedBytes = size;
-          lastSkip = "too-large";
+          lastSkip = 'too-large';
           continue;
         }
       }
@@ -2048,37 +1972,31 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
           if (wasJustCrossed && !suppressionWinner) {
             suppressionWinner = { filePath };
           }
-          lastSkip = "suppressed";
+          lastSkip = 'suppressed';
           suppressedHit = true;
           continue;
         }
       }
 
-      const content = fs.readFileSync(filePath, "utf-8");
+      const content = fs.readFileSync(filePath, 'utf-8');
       let findings;
       let detectorThrew = false;
-      const useHtmlEngine = configuredExt ? configuredExt.engine === "html" : ext === ".html" || ext === ".htm";
-      if (useHtmlEngine && typeof det.detectHtml === "function") {
-        try {
-          findings = await det.detectHtml(filePath, scanOptions);
-        } catch {
-          findings = [];
-          detectorThrew = true;
-        }
+      const useHtmlEngine = configuredExt
+        ? configuredExt.engine === 'html'
+        : (ext === '.html' || ext === '.htm');
+      if (useHtmlEngine && typeof det.detectHtml === 'function') {
+        try { findings = await det.detectHtml(filePath, scanOptions); } catch { findings = []; detectorThrew = true; }
       } else {
-        try {
-          findings = await det.detectText(content, filePath, scanOptions);
-        } catch {
-          findings = [];
-          detectorThrew = true;
-        }
+        try { findings = await det.detectText(content, filePath, scanOptions); } catch { findings = []; detectorThrew = true; }
       }
 
       const filtered = filterFindings(findings || [], content, ext, config);
       // Per-edit only surfaces the immediate tier; the rest waits for the
       // Stop deep pass. The file is still marked touched so the deep pass
       // knows to re-scan it.
-      const { immediate, deferred } = tiered ? splitFindingsByTier(filtered) : { immediate: filtered, deferred: [] };
+      const { immediate, deferred } = tiered
+        ? splitFindingsByTier(filtered)
+        : { immediate: filtered, deferred: [] };
       if (deferred.length > 0) {
         touchFile(cache, sessionId, filePath);
         cacheDirty = true;
@@ -2104,7 +2022,7 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
       // Grok ignores PostToolUse stdout, so Stop is the user-visible pass.
       // Remembering here would dedupe those findings out of Stop. Touch the
       // file so Stop has it, and leave the finding list empty.
-      if (harness === "grok") {
+      if (harness === 'grok') {
         touchFile(cache, sessionId, filePath);
       } else {
         rememberFindings(cache, sessionId, filePath, immediate);
@@ -2118,7 +2036,7 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
 
       if (immediate.length > 0 && !pendingWinner) {
         // Count the live scan, not the session's history.
-        pendingWinner = { filePath, known: immediate.map((f) => findingCacheKey(f)) };
+        pendingWinner = { filePath, known: immediate.map(f => findingCacheKey(f)) };
       } else if (immediate.length === 0 && !cleanWinner) {
         // The clean ack carries no finding, only the standing steer that a
         // silent hook is not a verdict on the design. Repeating it on every
@@ -2154,10 +2072,7 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
           footer: footerMode,
           reserveChars: designNoteReserve(scanOptions, cache, sessionId),
         }),
-        scanOptions,
-        cache,
-        sessionId,
-        config
+        scanOptions, cache, sessionId, config,
       );
       commitFooterShown(cache, sessionId, text);
       // Fresh findings always earn the cache write, including creating
@@ -2166,9 +2081,9 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
       const allFindings = freshGroups.flatMap((group) => group.findings);
       return {
         exitCode: 0,
-        stdout: payload(text, "PostToolUse", harness),
+        stdout: payload(text, 'PostToolUse', harness),
         emission: {
-          kind: "fresh",
+          kind: 'fresh',
           file: firstGroup.filePath,
           findings: firstGroup.findings,
           groups: freshGroups,
@@ -2193,31 +2108,13 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
     let ack = null;
     if (!quietMode && pendingWinner && shouldEmitAckForFile(pendingWinner.filePath, config)) {
       ack = {
-        kind: "pending",
-        text: appendDesignSystemNoteOnce(
-          renderPendingAck(pendingWinner.filePath, pendingWinner.known, { cwd: projectCwd }),
-          scanOptions,
-          cache,
-          sessionId,
-          config
-        ),
+        kind: 'pending',
+        text: appendDesignSystemNoteOnce(renderPendingAck(pendingWinner.filePath, pendingWinner.known, { cwd: projectCwd }), scanOptions, cache, sessionId, config),
       };
-    } else if (
-      !quietMode &&
-      !suppressionWinner &&
-      cleanWinner &&
-      !cleanAckDeduped &&
-      shouldEmitAckForFile(cleanWinner.filePath, config)
-    ) {
+    } else if (!quietMode && !suppressionWinner && cleanWinner && !cleanAckDeduped && shouldEmitAckForFile(cleanWinner.filePath, config)) {
       ack = {
-        kind: "clean",
-        text: appendDesignSystemNoteOnce(
-          renderCleanAck(cleanWinner.filePath, { cwd: projectCwd }),
-          scanOptions,
-          cache,
-          sessionId,
-          config
-        ),
+        kind: 'clean',
+        text: appendDesignSystemNoteOnce(renderCleanAck(cleanWinner.filePath, { cwd: projectCwd }), scanOptions, cache, sessionId, config),
       };
     }
 
@@ -2226,29 +2123,29 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
     // `.impeccable/` dir marks a project that opted in. A non-UI edit, or a
     // clean UI edit in a project with no Impeccable footprint, must be a
     // no-op on disk (issues #344, #305).
-    if (deferredTotal > 0 || (cacheDirty && fs.existsSync(path.join(projectCwd, ".impeccable")))) {
+    if (deferredTotal > 0 || (cacheDirty && fs.existsSync(path.join(projectCwd, '.impeccable')))) {
       persistCache(projectCwd, cache);
     }
 
     if (detectorThrewAny && !pendingWinner && !cleanWinner) {
-      return result({ emitted: false, error: "detector-threw", durationMs: Date.now() - started });
+      return result({ emitted: false, error: 'detector-threw', durationMs: Date.now() - started });
     }
 
     if (quietMode) {
       return result({ emitted: false, quiet: true, durationMs: Date.now() - started });
     }
 
-    if (ack?.kind === "pending") {
+    if (ack?.kind === 'pending') {
       const text = ack.text;
       return {
         exitCode: 0,
-        stdout: payload(text, "PostToolUse", harness),
-        emission: { kind: "pending", file: pendingWinner.filePath, known: pendingWinner.known },
+        stdout: payload(text, 'PostToolUse', harness),
+        emission: { kind: 'pending', file: pendingWinner.filePath, known: pendingWinner.known },
         audit: {
           ...audit,
           file: pendingWinner.filePath,
           emitted: true,
-          kind: "pending",
+          kind: 'pending',
           pending: pendingWinner.known.length,
           chars: text.length,
           durationMs: Date.now() - started,
@@ -2260,8 +2157,8 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
       const text = suppressionNotice(relativize(suppressionWinner.filePath, projectCwd));
       return {
         exitCode: 0,
-        stdout: payload(text, "PostToolUse", harness),
-        emission: { kind: "suppression", file: suppressionWinner.filePath },
+        stdout: payload(text, 'PostToolUse', harness),
+        emission: { kind: 'suppression', file: suppressionWinner.filePath },
         audit: {
           ...audit,
           file: suppressionWinner.filePath,
@@ -2272,17 +2169,17 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
       };
     }
 
-    if (ack?.kind === "clean") {
+    if (ack?.kind === 'clean') {
       const text = ack.text;
       return {
         exitCode: 0,
-        stdout: payload(text, "PostToolUse", harness),
-        emission: { kind: "clean", file: cleanWinner.filePath },
+        stdout: payload(text, 'PostToolUse', harness),
+        emission: { kind: 'clean', file: cleanWinner.filePath },
         audit: {
           ...audit,
           file: cleanWinner.filePath,
           emitted: true,
-          kind: "clean",
+          kind: 'clean',
           chars: text.length,
           durationMs: Date.now() - started,
         },
@@ -2290,17 +2187,17 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
     }
 
     if (pendingWinner) {
-      return result({ emitted: false, skipped: "non-ui-ack", durationMs: Date.now() - started });
+      return result({ emitted: false, skipped: 'non-ui-ack', durationMs: Date.now() - started });
     }
 
     // Distinct from non-ui-ack so the audit log shows noise being suppressed on
     // purpose rather than a file the hook could not classify.
     if (cleanWinner) {
-      return result({ emitted: false, skipped: "non-ui-ack", durationMs: Date.now() - started });
+      return result({ emitted: false, skipped: 'non-ui-ack', durationMs: Date.now() - started });
     }
 
     if (cleanAckDeduped) {
-      return result({ emitted: false, skipped: "clean-ack-deduped", durationMs: Date.now() - started });
+      return result({ emitted: false, skipped: 'clean-ack-deduped', durationMs: Date.now() - started });
     }
 
     if (suppressedHit) {
@@ -2309,13 +2206,13 @@ export async function runHook({ stdinJson, env = {}, cwd = process.cwd(), now = 
 
     return result({
       skipped: lastSkip,
-      ...(lastSkip === "too-large" ? { bytes: skippedBytes } : {}),
+      ...(lastSkip === 'too-large' ? { bytes: skippedBytes } : {}),
       durationMs: Date.now() - started,
     });
   } catch (err) {
     return {
       exitCode: 0,
-      stdout: "",
+      stdout: '',
       audit: { ...audit, error: String(err && err.message ? err.message : err) },
     };
   }
@@ -2340,8 +2237,8 @@ export const STOP_MAX_FILES = 20;
  * can act.
  */
 export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), now = Date.now, detector } = {}) {
-  const audit = { ts: new Date(now()).toISOString(), event: "Stop" };
-  const result = (extra) => ({ exitCode: 0, stdout: "", audit: { ...audit, ...extra } });
+  const audit = { ts: new Date(now()).toISOString(), event: 'Stop' };
+  const result = (extra) => ({ exitCode: 0, stdout: '', audit: { ...audit, ...extra } });
 
   try {
     // Re-entrancy guard, same as the per-edit pass.
@@ -2349,19 +2246,19 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
       return result({ reentrant: true, durationMs: 0 });
     }
     if (truthy(env.IMPECCABLE_HOOK_DISABLED)) {
-      return result({ skipped: "env-disabled", durationMs: 0 });
+      return result({ skipped: 'env-disabled', durationMs: 0 });
     }
 
     const started = Date.now();
 
     let event;
     try {
-      event = typeof stdinJson === "string" ? JSON.parse(stdinJson) : stdinJson;
+      event = typeof stdinJson === 'string' ? JSON.parse(stdinJson) : stdinJson;
     } catch {
-      return result({ skipped: "stdin-malformed", durationMs: Date.now() - started });
+      return result({ skipped: 'stdin-malformed', durationMs: Date.now() - started });
     }
-    if (!event || typeof event !== "object") {
-      return result({ skipped: "stdin-empty", durationMs: Date.now() - started });
+    if (!event || typeof event !== 'object') {
+      return result({ skipped: 'stdin-empty', durationMs: Date.now() - started });
     }
 
     const harness = resolveHarness(env, event);
@@ -2384,15 +2281,15 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
     // cache key's line-number sensitivity (out of scope here; see
     // findingCacheKey).
     if (event.stop_hook_active === true) {
-      return result({ skipped: "stop-hook-active", durationMs: Date.now() - started });
+      return result({ skipped: 'stop-hook-active', durationMs: Date.now() - started });
     }
 
     // Grok fires Stop twice: `end_turn` (the gate that can inject
     // additionalContext) then an observe-only `shutdown`. A second deep
     // pass would re-emit the same findings. Claude omits `reason`; only
     // skip when Grok named a reason that is not end_turn.
-    if (harness === "grok" && typeof event.reason === "string" && event.reason !== "end_turn") {
-      return result({ skipped: "stop-reason", reason: event.reason, durationMs: Date.now() - started });
+    if (harness === 'grok' && typeof event.reason === 'string' && event.reason !== 'end_turn') {
+      return result({ skipped: 'stop-reason', reason: event.reason, durationMs: Date.now() - started });
     }
 
     // A Stop event carries no file, so the session cwd is the project.
@@ -2401,28 +2298,28 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
     // guessing which child project the session was about.
     const projectCwd = path.resolve(event.cwd || cwd);
     audit.cwd = projectCwd;
-    const sessionId = event.session_id || "unknown";
+    const sessionId = event.session_id || 'unknown';
     audit.session = sessionId;
 
     const config = readConfig(projectCwd);
     if (config.enabled === false) {
-      return result({ skipped: "config-disabled", durationMs: Date.now() - started });
+      return result({ skipped: 'config-disabled', durationMs: Date.now() - started });
     }
 
     const cache = readCache(projectCwd);
     const touched = Object.keys(cache.sessions?.[sessionId]?.files || {});
     if (touched.length === 0) {
-      return result({ skipped: "no-touched-files", durationMs: Date.now() - started });
+      return result({ skipped: 'no-touched-files', durationMs: Date.now() - started });
     }
 
     const platform = resolveProjectPlatform(projectCwd);
     if (isNativePlatform(platform)) {
-      return result({ skipped: "native-platform", platform, durationMs: Date.now() - started });
+      return result({ skipped: 'native-platform', platform, durationMs: Date.now() - started });
     }
 
-    const det = detector || (await loadDetector());
-    if (!det || typeof det.detectText !== "function") {
-      return result({ skipped: "detector-missing", durationMs: Date.now() - started });
+    const det = detector || await loadDetector();
+    if (!det || typeof det.detectText !== 'function') {
+      return result({ skipped: 'detector-missing', durationMs: Date.now() - started });
     }
     const scanOptions = designSystemOptions(config, det, projectCwd);
 
@@ -2445,31 +2342,19 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
       if (!isScanTargetInsideProject(filePath, projectCwd)) continue;
 
       scanned += 1;
-      let content = "";
-      try {
-        content = fs.readFileSync(filePath, "utf-8");
-      } catch {
-        continue;
-      }
+      let content = '';
+      try { content = fs.readFileSync(filePath, 'utf-8'); } catch { continue; }
 
       let findings;
       let detectorThrew = false;
-      const useHtmlEngine = configuredExt ? configuredExt.engine === "html" : ext === ".html" || ext === ".htm";
+      const useHtmlEngine = configuredExt
+        ? configuredExt.engine === 'html'
+        : (ext === '.html' || ext === '.htm');
 
-      if (useHtmlEngine && typeof det.detectHtml === "function") {
-        try {
-          findings = await det.detectHtml(filePath, scanOptions);
-        } catch {
-          findings = [];
-          detectorThrew = true;
-        }
+      if (useHtmlEngine && typeof det.detectHtml === 'function') {
+        try { findings = await det.detectHtml(filePath, scanOptions); } catch { findings = []; detectorThrew = true; }
       } else {
-        try {
-          findings = await det.detectText(content, filePath, scanOptions);
-        } catch {
-          findings = [];
-          detectorThrew = true;
-        }
+        try { findings = await det.detectText(content, filePath, scanOptions); } catch { findings = []; detectorThrew = true; }
       }
 
       // A detector failure tells us nothing about the file. Leave whatever
@@ -2494,7 +2379,7 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
 
     if (freshGroups.length === 0) {
       if (cacheDirty) persistCache(projectCwd, cache);
-      return result({ emitted: false, skipped: "stop-clean", durationMs: Date.now() - started });
+      return result({ emitted: false, skipped: 'stop-clean', durationMs: Date.now() - started });
     }
 
     // A per-edit fire earlier in this session already consumed the footer
@@ -2506,10 +2391,7 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
         footer: footerMode,
         reserveChars: designNoteReserve(scanOptions, cache, sessionId),
       }),
-      scanOptions,
-      cache,
-      sessionId,
-      config
+      scanOptions, cache, sessionId, config,
     );
     commitFooterShown(cache, sessionId, text);
 
@@ -2518,9 +2400,9 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
     persistCache(projectCwd, cache);
     return {
       exitCode: 0,
-      stdout: payload(text, "Stop", harness),
+      stdout: payload(text, 'Stop', harness),
       emission: {
-        kind: "stop-deep-pass",
+        kind: 'stop-deep-pass',
         groups: freshGroups,
       },
       audit: {
@@ -2535,19 +2417,19 @@ export async function runStopHook({ stdinJson, env = {}, cwd = process.cwd(), no
   } catch (err) {
     return {
       exitCode: 0,
-      stdout: "",
+      stdout: '',
       audit: { ...audit, error: String(err && err.message ? err.message : err) },
     };
   }
 }
 
-export function payload(text, eventName = "PostToolUse", harness = "claude") {
-  if (harness === "cursor") {
+export function payload(text, eventName = 'PostToolUse', harness = 'claude') {
+  if (harness === 'cursor') {
     return JSON.stringify({ additional_context: text });
   }
   // GitHub Copilot's postToolUse hook injects context via a top-level
   // `additionalContext` string (alongside an optional `modifiedResult`).
-  if (harness === "github") {
+  if (harness === 'github') {
     return JSON.stringify({ additionalContext: text });
   }
   // Codex shares Claude Code's PostToolUse additional-context shape, but its
@@ -2555,9 +2437,9 @@ export function payload(text, eventName = "PostToolUse", harness = "claude") {
   // turn must be a top-level blocking decision.
   // https://developers.openai.com/codex/hooks#stop (schema of record:
   // codex-rs/hooks/src/schema.rs, StopCommandOutputWire)
-  if (harness === "codex" && eventName === "Stop") {
-    if (!String(text ?? "").trim()) return "";
-    return JSON.stringify({ decision: "block", reason: text });
+  if (harness === 'codex' && eventName === 'Stop') {
+    if (!String(text ?? '').trim()) return '';
+    return JSON.stringify({ decision: 'block', reason: text });
   }
   return JSON.stringify({
     hookSpecificOutput: { hookEventName: eventName, additionalContext: text },

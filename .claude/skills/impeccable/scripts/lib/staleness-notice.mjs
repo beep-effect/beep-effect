@@ -20,22 +20,23 @@
  * someone else's dismissals.
  */
 
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const RENOTIFY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Resolved per call rather than at import so a test (or a sandboxed run) can
 // redirect the cache without reloading the module.
 function cachePath() {
-  return process.env.IMPECCABLE_STALENESS_CACHE || path.join(os.homedir(), ".impeccable", "staleness-check.json");
+  return process.env.IMPECCABLE_STALENESS_CACHE
+    || path.join(os.homedir(), '.impeccable', 'staleness-check.json');
 }
 
 function readCache() {
   try {
-    const raw = JSON.parse(fs.readFileSync(cachePath(), "utf-8"));
-    return raw && typeof raw === "object" && raw.projects ? raw : { projects: {} };
+    const raw = JSON.parse(fs.readFileSync(cachePath(), 'utf-8'));
+    return raw && typeof raw === 'object' && raw.projects ? raw : { projects: {} };
   } catch {
     return { projects: {} };
   }
@@ -50,8 +51,8 @@ function readCache() {
 function pruneCache(cache, now) {
   const projects = {};
   for (const [key, entries] of Object.entries(cache.projects || {})) {
-    if (!entries || typeof entries !== "object") continue;
-    const stamps = Object.values(entries).filter((value) => typeof value === "number");
+    if (!entries || typeof entries !== 'object') continue;
+    const stamps = Object.values(entries).filter((value) => typeof value === 'number');
     if (stamps.length && now - Math.max(...stamps) < RENOTIFY_INTERVAL_MS) projects[key] = entries;
   }
   return { projects };
@@ -70,7 +71,7 @@ function writeCache(cache) {
 
 function readJson(filePath) {
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   } catch {
     return null;
   }
@@ -86,9 +87,9 @@ export function stalenessCheckDisabled(roots = [process.cwd()]) {
   let value;
   for (const root of roots) {
     if (!root) continue;
-    for (const name of ["config.json", "config.local.json"]) {
-      const raw = readJson(path.join(root, ".impeccable", name));
-      if (raw && typeof raw === "object" && typeof raw.stalenessCheck === "boolean") {
+    for (const name of ['config.json', 'config.local.json']) {
+      const raw = readJson(path.join(root, '.impeccable', name));
+      if (raw && typeof raw === 'object' && typeof raw.stalenessCheck === 'boolean') {
         value = raw.stalenessCheck;
       }
     }
@@ -103,17 +104,17 @@ export function stalenessCheckDisabled(roots = [process.cwd()]) {
  */
 export function filterFreshFindings(findings, { projectRoot, now = Date.now() } = {}) {
   if (!findings.length) return [];
-  const auto = findings.filter((entry) => entry.severity === "auto");
-  const notifiable = findings.filter((entry) => entry.severity !== "auto");
+  const auto = findings.filter((entry) => entry.severity === 'auto');
+  const notifiable = findings.filter((entry) => entry.severity !== 'auto');
   if (!notifiable.length) return auto;
 
   const key = path.resolve(projectRoot || process.cwd());
   const cache = readCache();
-  const seen = cache.projects[key] && typeof cache.projects[key] === "object" ? cache.projects[key] : {};
+  const seen = cache.projects[key] && typeof cache.projects[key] === 'object' ? cache.projects[key] : {};
 
   const fresh = notifiable.filter((entry) => {
     const last = seen[entry.id];
-    return !(typeof last === "number" && now - last < RENOTIFY_INTERVAL_MS);
+    return !(typeof last === 'number' && now - last < RENOTIFY_INTERVAL_MS);
   });
 
   // Forget stamps for findings that no longer fire, so a recurrence after a
@@ -121,7 +122,9 @@ export function filterFreshFindings(findings, { projectRoot, now = Date.now() } 
   // This has to run even when nothing is fresh: the common shape is one
   // finding fixed while another is still inside its window.
   const live = new Set(notifiable.map((entry) => entry.id));
-  const next = Object.fromEntries(Object.entries(seen).filter(([id]) => live.has(id)));
+  const next = Object.fromEntries(
+    Object.entries(seen).filter(([id]) => live.has(id)),
+  );
   for (const entry of fresh) next[entry.id] = now;
 
   const changed = JSON.stringify(next) !== JSON.stringify(seen);
@@ -147,22 +150,20 @@ export function buildStalenessDirective(findings) {
     fix: entry.fix,
   }));
 
-  const hasReportable = findings.some((entry) => entry.severity !== "auto");
+  const hasReportable = findings.some((entry) => entry.severity !== 'auto');
   const lines = [
     `CONTEXT_STALE:\n${JSON.stringify(payload, null, 2)}`,
-    "Impeccable's own project files have drifted from what this version reads. " +
-      "Do not stop, reorder, or expand the requested task for any of this.",
-    "By severity: `auto` is a migration the next write to that file performs anyway, so apply it then and do not " +
-      "raise it with the user. `mention` gets one short line in your reply with the offered fix. `route` names the " +
-      "command that owns the repair; offer it, and run it only if the user asks.",
-    "A finding that reports a deprecated field is binding: treat that field as absent for every decision in this " +
-      "session, whatever value it holds.",
+    "Impeccable's own project files have drifted from what this version reads. "
+      + 'Do not stop, reorder, or expand the requested task for any of this.',
+    'By severity: `auto` is a migration the next write to that file performs anyway, so apply it then and do not '
+      + 'raise it with the user. `mention` gets one short line in your reply with the offered fix. `route` names the '
+      + 'command that owns the repair; offer it, and run it only if the user asks.',
+    'A finding that reports a deprecated field is binding: treat that field as absent for every decision in this '
+      + 'session, whatever value it holds.',
   ];
   if (hasReportable) {
-    lines.push(
-      "Surface the reportable findings once, after the task response, in at most two sentences. " +
-        "They are already throttled, so say them plainly rather than hedging about whether they matter."
-    );
+    lines.push('Surface the reportable findings once, after the task response, in at most two sentences. '
+      + 'They are already throttled, so say them plainly rather than hedging about whether they matter.');
   }
-  return lines.join(" ");
+  return lines.join(' ');
 }

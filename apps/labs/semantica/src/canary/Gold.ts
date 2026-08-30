@@ -424,14 +424,16 @@ const anchorDistance = (candidate: number, claimed: number): number =>
   N.max(N.subtract(candidate, claimed), N.subtract(claimed, candidate));
 
 const exactOccurrences = (text: string, quote: string): ReadonlyArray<number> =>
-  A.unfold(0, (searchStart) =>
-    Str.indexOf(quote)(Str.slice(searchStart)(text)).pipe(
-      O.map((relativeStart) => {
-        const start = N.sum(searchStart, relativeStart);
-        return [start, N.sum(start, 1)] as const;
-      })
-    )
-  );
+  Str.isEmpty(quote)
+    ? A.empty()
+    : A.unfold(0, (searchStart) =>
+        Str.indexOf(quote)(Str.slice(searchStart)(text)).pipe(
+          O.map((relativeStart) => {
+            const start = N.sum(searchStart, relativeStart);
+            return [start, N.sum(start, 1)] as const;
+          })
+        )
+      );
 
 const nearestStartWithinWindow = (occurrences: ReadonlyArray<number>, claimedStart: number): O.Option<number> =>
   A.reduce(occurrences, O.none<{ readonly distance: number; readonly start: number }>(), (best, start) => {
@@ -504,6 +506,9 @@ const nearestWhitespaceFoldedSpan = (
 ): O.Option<readonly [startChar: number, endChar: number]> => {
   const foldedText = foldWhitespace(text);
   const foldedQuote = foldWhitespace(quote).text;
+  if (Str.isEmpty(foldedQuote)) {
+    return O.none();
+  }
   const candidates = A.getSomes(
     A.map(exactOccurrences(foldedText.text, foldedQuote), (foldedStart) => {
       const foldedEnd = N.sum(foldedStart, Str.length(foldedQuote));
@@ -557,6 +562,9 @@ export const resolveGoldQuoteAnchor: {
     claimedStart: number
   ): O.Option<readonly [startChar: number, endChar: number, quote: string]>;
 } = dual(3, (text: string, quote: string, claimedStart: number) => {
+  if (Str.isEmpty(quote)) {
+    return O.none();
+  }
   const quoteLength = Str.length(quote);
   const claimedEnd = N.sum(claimedStart, quoteLength);
   const exactAtClaim = O.some(claimedStart).pipe(

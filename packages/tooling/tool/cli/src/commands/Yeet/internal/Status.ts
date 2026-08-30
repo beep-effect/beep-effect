@@ -1022,7 +1022,7 @@ const mergeStateIsAcceptable = (remote: YeetStatusRemote): boolean =>
 const reviewDecisionIsAcceptable = (remote: YeetStatusRemote): boolean =>
   O.match(O.fromUndefinedOr(remote.reviewDecision), {
     onNone: () => true,
-    onSome: (decision) => Str.toUpperCase(decision) === "APPROVED",
+    onSome: (decision) => Str.isEmpty(decision) || Str.toUpperCase(decision) === "APPROVED",
   });
 
 const sameHeadSha = S.toEquivalence(S.String);

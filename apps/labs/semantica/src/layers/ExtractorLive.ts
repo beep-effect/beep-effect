@@ -371,6 +371,7 @@ const locateExtraction = (extraction: GroundedExtraction): Result.Result<Located
     match_exact: alignedExtraction,
     match_fuzzy: alignedExtraction,
     match_lesser: alignedExtraction,
+    match_minimal_fold: alignedExtraction,
     unaligned: () => Result.failVoid,
   });
 

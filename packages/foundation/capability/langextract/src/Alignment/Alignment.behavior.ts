@@ -79,18 +79,68 @@ export const spanFromMatch = ([start, text]: MatchedText): Contract.Span =>
 const findExact = (sourceText: string, query: string): UniqueMatchSearch =>
   findUniqueMatch(sourceText, query, (start) => O.some(matchedText(start, query)));
 
-interface NormalizedSourceOffsets {
+interface SourceOffsets {
   readonly ends: ReadonlyArray<number>;
   readonly starts: ReadonlyArray<number>;
+}
+
+interface NormalizedSourceOffsets extends SourceOffsets {
   readonly text: string;
 }
 
 interface PreparedAlignmentSource {
   readonly lesser: NormalizedSourceOffsets;
+  readonly minimalFold: MinimalFoldSourceOffsets;
   readonly source: AlignmentSource;
 }
 
 type NormalizedSegment = readonly [sourceStart: number, sourceEnd: number, text: string];
+
+interface MinimalFoldToken {
+  readonly encoded: string;
+  readonly optionalHyphen: boolean;
+  readonly sourceEnd: number;
+  readonly sourceStart: number;
+}
+
+interface MinimalFoldSourceOffsets extends SourceOffsets {
+  readonly encoded: string;
+}
+
+const MINIMAL_FOLD_SEGMENTS = /(-[^\S\r\n]*(?:\r\n|[\n\r])[^\S\r\n]*)|(\s+)|([^\s-]+)|(-)/gu;
+const MINIMAL_FOLD_LITERAL_BASE = 0x10_000;
+const MINIMAL_FOLD_OPTIONAL_HYPHEN = globalThis.String.fromCodePoint(0x20_000);
+const MINIMAL_FOLD_HYPHEN = globalThis.String.fromCodePoint(MINIMAL_FOLD_LITERAL_BASE + 0x2d);
+
+const normalizedSegment = (sourceStart: number, sourceEnd: number, text: string): NormalizedSegment => [
+  sourceStart,
+  sourceEnd,
+  text,
+];
+
+const normalizedSourceOffsets = (segments: ReadonlyArray<NormalizedSegment>): NormalizedSourceOffsets => ({
+  ends: A.flatMap(segments, ([, sourceEnd, text]) => {
+    const codeUnits = A.take(Str.split(text, ""), Str.length(text));
+    return A.map(codeUnits, () => sourceEnd);
+  }),
+  starts: A.flatMap(segments, ([sourceStart, , text]) => {
+    const codeUnits = A.take(Str.split(text, ""), Str.length(text));
+    return A.map(codeUnits, () => sourceStart);
+  }),
+  text: A.join(
+    A.map(segments, ([, , text]) => text),
+    ""
+  ),
+});
+
+const lowerSegments = (sourceStart: number, text: string): ReadonlyArray<NormalizedSegment> =>
+  pipe(
+    A.mapAccum(A.fromIterable(text), sourceStart, (pointStart, point): readonly [number, NormalizedSegment] => {
+      const pointEnd = Num.sum(pointStart, Str.length(point));
+      return [pointEnd, normalizedSegment(pointStart, pointEnd, lower(point))];
+    }),
+    ([, segments]) => segments
+  );
 
 const lowerWithSourceOffsets = (sourceText: string): NormalizedSourceOffsets =>
   pipe(
@@ -98,20 +148,119 @@ const lowerWithSourceOffsets = (sourceText: string): NormalizedSourceOffsets =>
       const sourceEnd = Num.sum(sourceStart, Str.length(segment));
       return [sourceEnd, [sourceStart, sourceEnd, lower(segment)]];
     }),
-    ([, segments]): NormalizedSourceOffsets => ({
-      ends: A.flatMap(segments, ([, sourceEnd, text]) => {
-        const codeUnits = A.take(Str.split(text, ""), Str.length(text));
-        return A.map(codeUnits, () => sourceEnd);
-      }),
-      starts: A.flatMap(segments, ([sourceStart, , text]) => {
-        const codeUnits = A.take(Str.split(text, ""), Str.length(text));
-        return A.map(codeUnits, () => sourceStart);
-      }),
-      text: A.join(
-        A.map(segments, ([, , text]) => text),
-        ""
-      ),
-    })
+    ([, segments]) => normalizedSourceOffsets(segments)
+  );
+
+const encodedMinimalFoldLiteral = (text: string): string =>
+  globalThis.String.fromCodePoint(Num.sum(MINIMAL_FOLD_LITERAL_BASE, O.getOrThrow(Str.charCodeAt(text, 0))));
+
+const minimalFoldLiteralTokens = ([sourceStart, sourceEnd, text]: NormalizedSegment): ReadonlyArray<MinimalFoldToken> =>
+  pipe(
+    Str.split(text, ""),
+    A.take(Str.length(text)),
+    A.map((codeUnit) => ({
+      encoded: encodedMinimalFoldLiteral(codeUnit),
+      optionalHyphen: false,
+      sourceEnd,
+      sourceStart,
+    }))
+  );
+
+const minimalFoldTokens = (sourceText: string): ReadonlyArray<MinimalFoldToken> =>
+  pipe(
+    sourceText,
+    Str.matchAll(MINIMAL_FOLD_SEGMENTS),
+    A.fromIterable,
+    A.flatMap(
+      (match): ReadonlyArray<MinimalFoldToken> =>
+        pipe(
+          O.fromUndefinedOr(match.index),
+          O.map((sourceStart): ReadonlyArray<MinimalFoldToken> => {
+            const text = match[0];
+            const segmentKind = {
+              endOfLineHyphen: match[1] !== undefined,
+              whitespace: match[2] !== undefined,
+            };
+            return Match.value(segmentKind).pipe(
+              Match.when({ endOfLineHyphen: true }, () => [
+                {
+                  encoded: MINIMAL_FOLD_OPTIONAL_HYPHEN,
+                  optionalHyphen: true,
+                  sourceEnd: Num.sum(sourceStart, Str.length(text)),
+                  sourceStart,
+                },
+              ]),
+              Match.when({ whitespace: true }, () => {
+                const sourceEnd = Num.sum(sourceStart, Str.length(text));
+                return minimalFoldLiteralTokens(normalizedSegment(sourceStart, sourceEnd, " "));
+              }),
+              Match.orElse(() => A.flatMap(lowerSegments(sourceStart, text), minimalFoldLiteralTokens))
+            );
+          }),
+          O.getOrElse(A.empty)
+        )
+    )
+  );
+
+const minimalFoldWithSourceOffsets = (sourceText: string): MinimalFoldSourceOffsets => {
+  const tokens = minimalFoldTokens(sourceText);
+  return {
+    encoded: A.join(
+      A.map(tokens, (token) => token.encoded),
+      ""
+    ),
+    ends: A.map(tokens, (token) => token.sourceEnd),
+    starts: A.map(tokens, (token) => token.sourceStart),
+  };
+};
+
+const minimalFoldPatternForTokens = (
+  tokens: ReadonlyArray<MinimalFoldToken>,
+  optionalHyphensRequired: boolean
+): string => {
+  const optionalSourceHyphens = `(?:${MINIMAL_FOLD_OPTIONAL_HYPHEN})*`;
+  const tokenPatterns = A.map(tokens, (token) =>
+    token.optionalHyphen
+      ? `(?:${MINIMAL_FOLD_HYPHEN}|${MINIMAL_FOLD_OPTIONAL_HYPHEN})${optionalHyphensRequired ? "" : "?"}`
+      : Eq.equals(token.encoded, MINIMAL_FOLD_HYPHEN)
+        ? `(?:${MINIMAL_FOLD_HYPHEN}|${MINIMAL_FOLD_OPTIONAL_HYPHEN})`
+        : token.encoded
+  );
+
+  return A.join(tokenPatterns, optionalSourceHyphens);
+};
+
+const minimalFoldPatterns = (query: string): ReadonlyArray<string> => {
+  const tokens = minimalFoldTokens(query);
+  if (A.every(tokens, (token) => token.optionalHyphen)) {
+    return [minimalFoldPatternForTokens(A.take(tokens, 1), true)];
+  }
+
+  const withoutTrailingOptionalHyphens = pipe(
+    tokens,
+    A.reverse,
+    A.dropWhile((token) => token.optionalHyphen),
+    A.reverse
+  );
+
+  return A.dedupe([
+    minimalFoldPatternForTokens(tokens, false),
+    minimalFoldPatternForTokens(withoutTrailingOptionalHyphens, false),
+  ]);
+};
+
+const matchedTextFromOffsets = (
+  sourceOffsets: SourceOffsets,
+  sourceText: string,
+  normalizedStart: number,
+  normalizedLength: number
+): O.Option<MatchedText> =>
+  O.map(
+    O.all({
+      end: A.get(sourceOffsets.ends, Num.decrement(Num.sum(normalizedStart, normalizedLength))),
+      start: A.get(sourceOffsets.starts, normalizedStart),
+    }),
+    ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
   );
 
 const findLesser = (
@@ -120,18 +269,49 @@ const findLesser = (
   query: string
 ): UniqueMatchSearch => {
   const normalizedQuery = lower(query);
-  if (Str.isEmpty(normalizedQuery)) {
-    return noMatch;
-  }
-
   return findUniqueMatch(normalizedSource.text, normalizedQuery, (normalizedStart) =>
-    O.map(
-      O.all({
-        end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, Str.length(normalizedQuery)))),
-        start: A.get(normalizedSource.starts, normalizedStart),
-      }),
-      ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
-    )
+    matchedTextFromOffsets(normalizedSource, sourceText, normalizedStart, Str.length(normalizedQuery))
+  );
+};
+
+const sameMatchedText = (left: MatchedText, right: MatchedText): boolean =>
+  Num.Equivalence(left[0], right[0]) && Eq.equals(left[1], right[1]);
+
+const findMinimalFold = (
+  normalizedSource: MinimalFoldSourceOffsets,
+  sourceText: string,
+  query: string
+): UniqueMatchSearch => {
+  const matches = pipe(
+    minimalFoldPatterns(query),
+    A.flatMap((pattern) =>
+      pipe(
+        Str.matchAll(new RegExp(`(?=(${pattern}))`, "gu"))(normalizedSource.encoded),
+        A.fromIterable,
+        A.flatMap((match) =>
+          A.fromOption(
+            O.flatMap(
+              O.all({
+                encodedStart: O.fromUndefinedOr(match.index),
+                encodedText: O.fromUndefinedOr(match[1]),
+              }),
+              ({ encodedStart, encodedText }) => {
+                const normalizedStart = Num.divideUnsafe(encodedStart, 2);
+                const normalizedLength = Num.divideUnsafe(Str.length(encodedText), 2);
+                return matchedTextFromOffsets(normalizedSource, sourceText, normalizedStart, normalizedLength);
+              }
+            )
+          )
+        )
+      )
+    ),
+    A.dedupeWith(sameMatchedText)
+  );
+
+  return Match.value(A.length(matches)).pipe(
+    Match.when(0, () => noMatch),
+    Match.when(1, () => ({ ambiguous: false, match: A.head(matches) })),
+    Match.orElse(() => ({ ambiguous: true, match: O.none() }))
   );
 };
 
@@ -191,10 +371,6 @@ const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): 
   }
 
   const normalizedQuery = Str.trim(query);
-  if (Str.isEmpty(normalizedQuery)) {
-    return O.none();
-  }
-
   const queryWordCount = A.length(Str.split(normalizedQuery, /\s+/u));
   const words = wordsWithOffsets(sourceText);
   if (A.length(words) < queryWordCount) {
@@ -230,33 +406,34 @@ const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): 
 
 const prepareAlignmentSource = (source: AlignmentSource): PreparedAlignmentSource => ({
   lesser: lowerWithSourceOffsets(source.sourceText),
+  minimalFold: minimalFoldWithSourceOffsets(source.sourceText),
   source,
 });
 
 const bestAlignedMatch = (prepared: PreparedAlignmentSource, query: string): O.Option<AlignedMatch> => {
-  const exact = findExact(prepared.source.sourceText, query);
-  if (exact.ambiguous) {
+  const minimalFold = findMinimalFold(prepared.minimalFold, prepared.source.sourceText, query);
+  if (minimalFold.ambiguous) {
     return O.none();
   }
 
+  const exact = findExact(prepared.source.sourceText, query);
+  if (O.isSome(exact.match)) {
+    return O.some(alignedMatch("match_exact", exact.match.value));
+  }
+
+  const lesser = findLesser(prepared.lesser, prepared.source.sourceText, query);
+  if (O.isSome(lesser.match)) {
+    return O.some(alignedMatch("match_lesser", lesser.match.value));
+  }
+
   return pipe(
-    exact.match,
-    O.map((match) => alignedMatch("match_exact", match)),
-    O.orElse(() => {
-      const lesser = findLesser(prepared.lesser, prepared.source.sourceText, query);
-      if (lesser.ambiguous) {
-        return O.none();
-      }
-      return pipe(
-        lesser.match,
-        O.map((match) => alignedMatch("match_lesser", match)),
-        O.orElse(() =>
-          O.map(findFuzzy(prepared.source.sourceText, query, prepared.source.fuzzyThreshold), (match) =>
-            alignedMatch("match_fuzzy", match)
-          )
-        )
-      );
-    })
+    minimalFold.match,
+    O.map((match) => alignedMatch("match_minimal_fold", match)),
+    O.orElse(() =>
+      O.map(findFuzzy(prepared.source.sourceText, query, prepared.source.fuzzyThreshold), (match) =>
+        alignedMatch("match_fuzzy", match)
+      )
+    )
   );
 };
 
@@ -277,6 +454,13 @@ const alignPreparedCandidate = (
         ),
         Match.when("match_lesser", () =>
           GroundedExtraction.cases.match_lesser.make({
+            ...candidateFields(candidate),
+            matchedText: text,
+            span: spanFromMatch([start, text]),
+          })
+        ),
+        Match.when("match_minimal_fold", () =>
+          GroundedExtraction.cases.match_minimal_fold.make({
             ...candidateFields(candidate),
             matchedText: text,
             span: spanFromMatch([start, text]),

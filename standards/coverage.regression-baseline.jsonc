@@ -20497,15 +20497,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.79,
-      "statements": 78.59,
-      "branches": 67.84,
-      "functions": 72.62,
+      "lines": 78.84,
+      "statements": 78.62,
+      "branches": 67.89,
+      "functions": 72.56,
       "uncovered": {
-        "lines": 8298,
-        "statements": 8772,
-        "branches": 4745,
-        "functions": 3202
+        "lines": 8387,
+        "statements": 8871,
+        "branches": 4810,
+        "functions": 3246
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21985,10 +21985,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts": {
-          "lines": 98.9,
-          "statements": 98.9,
-          "branches": 85.18,
-          "functions": 94.11,
+          "lines": 98.79,
+          "statements": 98.79,
+          "branches": 84,
+          "functions": 93.75,
           "uncovered": {
             "lines": 1,
             "statements": 1,
@@ -22178,9 +22178,9 @@
         },
         "packages/tooling/tool/cli/src/commands/Files/Files.command.ts": {
           "lines": 100,
-          "statements": 98.97,
+          "statements": 99.1,
           "branches": 100,
-          "functions": 92.85,
+          "functions": 93.33,
           "uncovered": {
             "lines": 0,
             "statements": 1,
@@ -22261,10 +22261,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/Files.service.ts": {
-          "lines": 88.48,
-          "statements": 88.12,
+          "lines": 88.55,
+          "statements": 88.19,
           "branches": 81,
-          "functions": 79.54,
+          "functions": 79.85,
           "uncovered": {
             "lines": 73,
             "statements": 78,
@@ -22368,6 +22368,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Files/internal/FileTransaction.ts": {
+          "lines": 91.42,
+          "statements": 91.66,
+          "branches": 87.5,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Files/internal/FlattenMedia.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -22417,15 +22429,39 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts": {
-          "lines": 52.81,
-          "statements": 50.39,
-          "branches": 40.29,
-          "functions": 39.18,
+          "lines": 52.12,
+          "statements": 49.67,
+          "branches": 39,
+          "functions": 39.86,
           "uncovered": {
-            "lines": 277,
-            "statements": 317,
-            "branches": 123,
-            "functions": 90
+            "lines": 271,
+            "statements": 311,
+            "branches": 122,
+            "functions": 86
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts": {
+          "lines": 80.46,
+          "statements": 79.35,
+          "branches": 71.49,
+          "functions": 63.77,
+          "uncovered": {
+            "lines": 92,
+            "statements": 102,
+            "branches": 65,
+            "functions": 46
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts": {

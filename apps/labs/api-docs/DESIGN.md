@@ -16,6 +16,11 @@ catalog (contract entries + spec-file entries); v1 coverage below.
   (memoized). Use it for raw `openapi.json` routes.
 - rc.112 inlines the spec into the Scalar HTML (~3.1MB page, bundled JS, no CDN
   fetch). No separate spec route is registered by the layer; we add our own.
+- Committed-spec pages serve the installed Effect runtime's embedded Scalar
+  bundle from a versioned same-origin `/assets/scalar-api-reference-<version>.js`
+  route. Their CSP is `script-src 'self'`; CDN scripts are not permitted. Effect
+  upgrades must revalidate the internal embedded-module path, the Scalar version,
+  the public asset path, and their pinned route regression together.
 - Boot pattern (already in `src/main.ts`, keep it): route layers require
   `HttpRouter`; `HttpRouter.serve(App)` provides the router; provide
   `BunHttpServer.layer`; `BunRuntime.runMain(Layer.launch(...))`.
@@ -31,7 +36,8 @@ catalog (contract entries + spec-file entries); v1 coverage below.
 | --- | --- |
 | `GET /` | index page: catalog grouped `served` / `consumed`, links to docs + raw spec |
 | `GET /health` | scaffold health endpoint (keep as-is) |
-| `GET /apis/<slug>/docs` | docs UI. Contract entry: `HttpApiScalar.layer(api, { path })`. Spec entry: hand-rolled HTML embedding Scalar via jsDelivr CDN with `data-url` pointing at our spec route. JSON-Schema dialect entries get no docs page (raw link only). |
+| `GET /apis/<slug>/docs` | docs UI. Contract entry: `HttpApiScalar.layer(api, { path })`. Spec entry: hand-rolled HTML loading the installed, version-pinned Scalar asset from the same origin, with `data-url` pointing at our spec route and a self-only script CSP. JSON-Schema dialect entries get no docs page (raw link only). |
+| `GET /assets/scalar-api-reference-<version>.js` | immutable same-origin Scalar bundle extracted from Effect's installed embedded Scalar module. The route version and regression test must move together on upgrade. |
 | `GET /apis/<slug>/openapi.json` (or `.yaml`) | raw spec. Contract entry: `HttpServerResponse.jsonUnsafe(OpenApi.fromApi(api))`. Spec entry: file bytes with correct content type, read per request (fresh on every reload; no caching). |
 
 ## Files (all under `src/`)
@@ -54,8 +60,9 @@ catalog (contract entries + spec-file entries); v1 coverage below.
   at `apps/labs/api-docs/src/`, so root is four dirs up) via the Path service,
   never from cwd.
 - `Docs.routes.ts` — fold `CatalogEntry -> Layer` (Scalar layer + spec route
-  for contract entries; embed page + file route for spec entries), plus the
-  index route. Merge with `Layer.mergeAll`.
+  for contract entries; same-origin embed page + file route for spec entries),
+  serve the pinned installed Scalar asset with a self-only script CSP, and add
+  the index route. Merge with `Layer.mergeAll`.
 - `runtime/Layer.ts` — keep the health `ApiLive`, merge in the catalog layers.
 - `test/` — keep health test; add: catalog invariants (slugs unique, spec files
   exist on disk, every contract entry's `OpenApi.fromApi` succeeds — this is a
@@ -88,9 +95,10 @@ oracle stays private (`govinfo-full` spec covers it).
 
 ## Index page
 
-Server-rendered HTML string, no framework, no external assets (Scalar CDN on
-embed pages is the one exception). Two sections: "APIs we serve" and "APIs we
-consume". Each row: title, slug, description, links to docs UI + raw spec.
+Server-rendered HTML string, no framework, no external assets. Scalar on embed
+pages is served from the versioned same-origin asset route. Two sections:
+"APIs we serve" and "APIs we consume". Each row: title, slug, description,
+links to docs UI + raw spec.
 Style: minimal inline CSS, dark background with green accents (repo taste),
 readable without JS.
 
@@ -119,5 +127,6 @@ readable without JS.
 3. Boot via the diagnostic bypass; curl and confirm: `/` lists all 9 entries;
    `/apis/qa-collector/docs` returns Scalar HTML; `/apis/qa-collector/openapi.json`
    is valid JSON with the collector paths un-prefixed; `/apis/govinfo-full/openapi.json`
-   serves the committed file; `/apis/venice-ai/docs` returns the CDN embed page;
+   serves the committed file; `/apis/venice-ai/docs` returns the self-only CSP
+   embed page and loads the installed version-pinned Scalar asset from the same origin;
    `/apis/acp/openapi.json` serves the JSON Schema and no acp docs page exists.

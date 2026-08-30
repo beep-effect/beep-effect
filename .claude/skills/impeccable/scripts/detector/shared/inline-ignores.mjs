@@ -40,9 +40,7 @@ const DIRECTIVE_RE = /impeccable-(disable-next-line|disable-line|disable)\b[ \t]
 const TRAILING_CLOSER_RE = /\s*(?:\*\/\}?|--+>|\*\}|#\}|%>|\}\})\s*$/;
 
 function normalizeRule(token) {
-  return String(token || "")
-    .trim()
-    .toLowerCase();
+  return String(token || '').trim().toLowerCase();
 }
 
 // Split the directive remainder into rule tokens, dropping any human reason that
@@ -50,17 +48,12 @@ function normalizeRule(token) {
 // contain single hyphens (`overused-font`, `bounce-easing`), so `--` and `:`
 // are unambiguous separators.
 function parseRuleList(remainder) {
-  let text = String(remainder || "")
-    .replace(TRAILING_CLOSER_RE, "")
-    .trim();
+  let text = String(remainder || '').replace(TRAILING_CLOSER_RE, '').trim();
   // Cut off a human reason at the first `--` (eslint) or `:` (biome) separator.
   const reasonSep = text.match(/\s*(?:--+|:)\s*/);
   if (reasonSep) text = text.slice(0, reasonSep.index);
-  const tokens = text
-    .split(/[\s,]+/)
-    .map(normalizeRule)
-    .filter(Boolean);
-  if (tokens.length === 0 || tokens.includes("*")) return ["*"];
+  const tokens = text.split(/[\s,]+/).map(normalizeRule).filter(Boolean);
+  if (tokens.length === 0 || tokens.includes('*')) return ['*'];
   return tokens;
 }
 
@@ -90,7 +83,7 @@ function getSet(map, key) {
  */
 function parseInlineIgnores(content) {
   const result = { file: new Set(), line: new Map(), nextLine: new Map() };
-  const text = typeof content === "string" ? content : "";
+  const text = typeof content === 'string' ? content : '';
   // Cheap bail-out: the substring must be present for any directive to exist.
   // Case-insensitive to match DIRECTIVE_RE's `i` flag (e.g. `Impeccable-Disable`).
   if (!/impeccable-disable/i.test(text)) return result;
@@ -99,16 +92,16 @@ function parseInlineIgnores(content) {
   // keys line up with finding `line` values (incl. on `\r`-only line endings).
   // The directive regex excludes `\r`, so a trailing `\r` on `\r\n` files is
   // never captured into the rule list.
-  const lines = text.split("\n");
+  const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
     DIRECTIVE_RE.lastIndex = 0;
     let m;
     while ((m = DIRECTIVE_RE.exec(lines[i])) !== null) {
       const variant = m[1].toLowerCase();
       const rules = parseRuleList(m[2]);
-      if (variant === "disable") {
+      if (variant === 'disable') {
         addRules(result.file, rules);
-      } else if (variant === "disable-line") {
+      } else if (variant === 'disable-line') {
         addRules(getSet(result.line, i + 1), rules);
       } else {
         // disable-next-line on line i+1 targets line i+2.
@@ -120,7 +113,7 @@ function parseInlineIgnores(content) {
 }
 
 function setMatches(set, rule) {
-  return Boolean(set) && (set.has("*") || set.has(rule));
+  return Boolean(set) && (set.has('*') || set.has(rule));
 }
 
 function isInlineIgnored(finding, directives) {
@@ -152,4 +145,4 @@ function applyInlineIgnores(findings, content) {
   return findings.filter((finding) => !isInlineIgnored(finding, directives));
 }
 
-export { applyInlineIgnores, isInlineIgnored, parseInlineIgnores };
+export { parseInlineIgnores, applyInlineIgnores, isInlineIgnored };

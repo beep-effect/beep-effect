@@ -114,6 +114,9 @@ sst-env.d.ts
 .beep/*
 **/.beep/*
 
+# Impeccable question servers persist live process metadata only locally.
+**/.impeccable/questions/*.state.json
+
 # Deterministic packet navigation projections; manifests are authoritative.
 /goals/INDEX.md
 /explorations/ATLAS.md

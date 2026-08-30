@@ -23,7 +23,7 @@
  */
 
 /** Id prefix every Live chrome element carries. Mirrored by PREFIX in live-browser.js. */
-export const LIVE_UI_PREFIX = "impeccable-live";
+export const LIVE_UI_PREFIX = 'impeccable-live';
 
 const id = (suffix) => `${LIVE_UI_PREFIX}-${suffix}`;
 
@@ -31,63 +31,45 @@ const id = (suffix) => `${LIVE_UI_PREFIX}-${suffix}`;
  * The mount contract every Live chrome adapter (DOM, Svelte, ...) satisfies.
  * Published alongside the surfaces on __IMPECCABLE_LIVE_CHROME_CORE__.
  */
-export const LIVE_CHROME_MOUNT_CONTRACT = Object.freeze(["root", "transport", "state", "actions"]);
+export const LIVE_CHROME_MOUNT_CONTRACT = Object.freeze(['root', 'transport', 'state', 'actions']);
 
-export const LIVE_UI_SURFACES = Object.freeze(
-  [
-    {
-      key: "global-bottom-bar",
-      ids: [
-        id("global-bar"),
-        id("global-bar-brand"),
-        id("pick-toggle"),
-        id("insert-toggle"),
-        id("detect-toggle"),
-        id("detect-badge"),
-        id("design-toggle"),
-        id("page-chat"),
-        id("page-chat-input"),
-        id("page-chat-voice"),
-        id("page-chat-send"),
-      ],
-    },
-    { key: "pending-copy-edit-dock", ids: [id("pending-dock")] },
-    {
-      key: "element-selection-chrome",
-      ids: [
-        id("highlight"),
-        id("tooltip"),
-        id("bar"),
-        id("selection-pill"),
-        id("input"),
-        id("configure-voice"),
-        id("configure-bar-tooltip"),
-      ],
-    },
-    { key: "action-picker", ids: [id("picker")] },
-    { key: "edit-chrome", ids: [id("edit-badge")] },
-    { key: "generating-row", ids: [id("bar"), id("shader")] },
-    { key: "variant-cycling-row", ids: [id("bar"), id("params-panel")] },
-    { key: "variant-params-panel", ids: [id("params-panel")] },
-    { key: "saving-confirmed-rows", ids: [id("bar")] },
-    {
-      key: "insert-mode-chrome",
-      ids: [
-        id("insert-line"),
-        id("insert-placeholder"),
-        id("placeholder-resize"),
-        id("insert-input"),
-        id("insert-voice"),
-        id("insert-create"),
-        id("insert-create-tooltip"),
-      ],
-    },
-    { key: "annotation-chrome", ids: [id("annot"), id("annot-svg"), id("annot-pins"), id("annot-clear")] },
-    { key: "design-system-panel", ids: [id("design-host")] },
-    { key: "toasts-and-errors", ids: [id("toast"), id("mount-error")] },
-    { key: "css-isolation-boundary", ids: [id("root")] },
-  ].map((surface) => Object.freeze({ ...surface, ids: Object.freeze(surface.ids) }))
-);
+export const LIVE_UI_SURFACES = Object.freeze([
+  {
+    key: 'global-bottom-bar',
+    ids: [
+      id('global-bar'), id('global-bar-brand'), id('pick-toggle'), id('insert-toggle'),
+      id('detect-toggle'), id('detect-badge'), id('design-toggle'), id('page-chat'),
+      id('page-chat-input'), id('page-chat-voice'), id('page-chat-send'),
+    ],
+  },
+  { key: 'pending-copy-edit-dock', ids: [id('pending-dock')] },
+  {
+    key: 'element-selection-chrome',
+    ids: [
+      id('highlight'), id('tooltip'), id('bar'), id('selection-pill'), id('input'),
+      id('configure-voice'), id('configure-bar-tooltip'),
+    ],
+  },
+  { key: 'action-picker', ids: [id('picker')] },
+  { key: 'edit-chrome', ids: [id('edit-badge')] },
+  { key: 'generating-row', ids: [id('bar'), id('shader')] },
+  { key: 'variant-cycling-row', ids: [id('bar'), id('params-panel')] },
+  { key: 'variant-params-panel', ids: [id('params-panel')] },
+  { key: 'saving-confirmed-rows', ids: [id('bar')] },
+  {
+    key: 'insert-mode-chrome',
+    ids: [
+      id('insert-line'), id('insert-placeholder'), id('placeholder-resize'), id('insert-input'),
+      id('insert-voice'), id('insert-create'), id('insert-create-tooltip'),
+    ],
+  },
+  { key: 'annotation-chrome', ids: [id('annot'), id('annot-svg'), id('annot-pins'), id('annot-clear')] },
+  { key: 'design-system-panel', ids: [id('design-host')] },
+  { key: 'toasts-and-errors', ids: [id('toast'), id('mount-error')] },
+  { key: 'css-isolation-boundary', ids: [id('root')] },
+].map((surface) => Object.freeze({ ...surface, ids: Object.freeze(surface.ids) })));
 
 /** Every id any surface owns, de-duplicated, in surface order. */
-export const LIVE_UI_COMPONENT_IDS = Object.freeze([...new Set(LIVE_UI_SURFACES.flatMap((surface) => surface.ids))]);
+export const LIVE_UI_COMPONENT_IDS = Object.freeze([
+  ...new Set(LIVE_UI_SURFACES.flatMap((surface) => surface.ids)),
+]);

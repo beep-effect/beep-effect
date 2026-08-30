@@ -235,8 +235,80 @@ The package binary works the same way:
 bunx @beep/repo-cli files <subcommand> [options]
 ```
 
-Except for `flatten-media`, `files` subcommands work on direct children of
-`--dir`; they do not recurse into nested directories.
+Except for `flatten-media` and an explicitly recursive `match-person` run,
+`files` subcommands work on direct children of `--dir`; they do not recurse
+into nested directories.
+
+#### `files match-person`
+
+Find photos containing one target person using a trusted directory of
+single-person reference photos. Matching is fully local: the command runs the
+InsightFace `buffalo_l` SCRFD detector and ArcFace recognizer through a pinned
+Python 3.12/ONNX Runtime CPU environment, never uploads photos, and never writes
+raw face embeddings to disk.
+
+```bash
+bun run files match-person \
+  --references ./known-person \
+  --dir ./mixed-photos \
+  --manifest ./person-match.json \
+  --out-dir ./person-match-output \
+  --accept-model-license
+```
+
+The InsightFace source code is MIT-licensed, but its published model weights
+are restricted to non-commercial research use. Review the upstream
+[`buffalo_l` model licensing terms](https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md)
+before passing `--accept-model-license`; the command refuses to acquire or run
+the model without that explicit acknowledgement. The first run creates an
+isolated `uv` environment and downloads the hash-verified model into
+`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`. That default keeps both the
+environment and model outside the repository; an explicit `--cache-dir`
+controls their location. Set `BEEP_UV_PATH` to an absolute trusted `uv`
+executable when it is not installed in a standard system location or
+`$HOME/.local/bin`.
+
+References must contain exactly one detected face. Use several clear photos
+covering different ages, expressions, lighting, eyewear, and hair styles. A
+candidate image is scored against a robust aggregate of all accepted reference
+faces; cosine similarity scores are model-specific measurements, not
+probabilities. The precision-first defaults are `0.50` for a match and `0.35`
+for the lower review boundary. Calibrate those thresholds against a labeled
+sample from the actual library before relying on a large scan.
+
+The scanner includes JPG/JPEG, PNG, and WebP files. Other formats, including
+HEIC and TIFF, are skipped and therefore do not appear in manifest totals;
+normalize or convert them first when they need to participate in the scan.
+
+The source library is immutable. `--out-dir` only copies useful candidates into
+reviewable buckets while preserving their relative paths:
+
+| Bucket | Meaning |
+| --- | --- |
+| `accepted/` | One confident target face and no quality warning |
+| `group-review/` | The target appears with one or more other faces |
+| `quality-review/` | The target matches, but its face is small, blurry, dark, bright, or strongly turned |
+| `identity-review/` | Similarity falls between the review and match thresholds |
+
+No-match, no-face, and unreadable images remain only in the manifest; unreadable
+entries include a reason and are counted separately from images where face
+detection ran successfully but found no face. Copies and the manifest are
+staged first, committed one file at a time without partial file contents, and
+rolled back together after handled in-process commit failures. An incomplete
+rollback reports the retained recovery directory; the operation is not a
+crash-consistent filesystem transaction. Existing manifest or copied files are
+preserved unless `--overwrite` is supplied. The manifest, output, and cache
+paths must not overlap. Do not mutate the candidate, reference, output, or
+manifest paths concurrently with a run. Add `--recursive` to scan nested
+candidate and reference directories. Accepted recursive reference photos must
+have unique file names so per-face evidence is unambiguous. Add `--json` to
+print the schema-versioned report after writing it.
+
+This is target-person verification, not a claim of Google Photos parity.
+Google can combine proprietary models and contextual album signals that are
+not available to a face-only open pipeline. For personal dataset curation,
+multiple trusted references plus a human-review band is the safer operating
+model.
 
 #### `files flatten-media`
 
