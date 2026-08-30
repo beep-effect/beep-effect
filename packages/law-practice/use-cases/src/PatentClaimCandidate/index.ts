@@ -8,7 +8,7 @@
 /**
  * Typed patent-claim candidate mapping exports.
  *
- * @category mappings
+ * @category mapping
  * @since 0.0.0
  */
 export * from "./PatentClaimCandidate.ts";
