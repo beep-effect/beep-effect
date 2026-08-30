@@ -9,10 +9,10 @@ Status: `pending`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | pending | Operator-attended Entra app registration (certificate credential); mailbox access granted exclusively via the Exchange RBAC-for-Applications assignment scoped to the attorney's mailbox (never the unscoped tenant-wide Entra contacts role — grants are additive), proven with `Test-ServicePrincipalAuthorization`; confirm the seeding job's home; census the salvaged CSV columns (counts and headers only — no contact content in the repo). | Registration + scoped-grant proof in `history/`; job home chosen; CSV census recorded. |
-| P1 Implement | pending | Auth-lane config split and confidential-client constructor → write-safe HTTP executor → contact schemas + create/list verbs → seeding job with dedup/tagging. Schema → service contract → implementation, in that order. | Acceptance criteria for lanes, verbs, and the dry-run seeding report are met. |
-| P2 Verify | pending | Fixture proofs for both lanes; credential-gated live smoke (mutation opt-in, self-cleaning); executed seeding run with rollback path recorded; package-verify handoff. | Verification matrix green; seeding receipt in `history/`. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. On the packet's final work PR, the P4 closeout edits are committed before this phase's publish, so the merge-ready verdict binds the head that actually merges. | `bun run beep yeet monitor` reports `merge-ready: yes` (the aggregate hard gate); zero unresolved review threads. |
-| P4 Close | pending | Land the closeout reflection and packet-state flip in the same PR as the final work (same-PR packet-state flips) — these edits ride that PR before its publish, never a post-merge follow-up. | The final work PR contains the reflection and status flip; P3's merge-ready verdict covers it. |
+| P1 Implement | pending | Auth-lane config split and confidential-client constructor → write-safe HTTP executor → contact and contact-folder schemas with their create/list verbs → seeding job (folder discover-or-create, dedup, tagging). Schema → service contract → implementation, in that order. | Acceptance criteria for lanes, contact and folder verbs, and the dry-run seeding report are met. |
+| P2 Verify | pending | Fixture proofs for both lanes across contact and contact-folder verbs; credential-gated live smoke (mutation opt-in, self-cleaning); executed seeding run with rollback path recorded; package-verify handoff. | Verification matrix green; seeding receipt in `history/`. |
+| P3 Yeet: PR to mergeable | pending | Publish work commits through yeet and drive the PR toward mergeable: required checks green, review comments answered and resolved. The packet's final merge-ready verdict is deliberately not taken here — it belongs to P4, after the closeout edits are published on the same PR. | Checks green and zero unresolved review threads on the latest work head. |
+| P4 Close | pending | Land the closeout reflection and packet-state flip in the same PR as the final work (same-PR packet-state flips — never a post-merge follow-up), publish that closeout head through yeet, and take the packet's final gate on it. | `bun run beep yeet monitor` reports `merge-ready: yes` on the head that contains the reflection and status flip. |
 
 ## P4 Closeout Checklist
 
@@ -27,6 +27,9 @@ packet-state flips), never as a post-merge follow-up:
    `reflectionRequired: true`).
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json`
    phase statuses + `initiative.status`.
+4. Publish the closeout commit through yeet and run
+   `bun run beep yeet monitor` until it reports `merge-ready: yes` on that
+   head — the packet's final gate.
 
 ## Execution Notes
 

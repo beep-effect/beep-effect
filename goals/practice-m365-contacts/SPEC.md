@@ -23,7 +23,10 @@ contacts, every seeded contact tagged for rollback.
 - No PST or historical mailbox import through Graph.
 - No exposure of the new write verbs through `@beep/m365-mcp` in this goal.
 - No tenant app-registration automation — the Entra app registration and
-  admin consent are operator-attended P0 steps, recorded as evidence.
+  the Exchange RBAC-for-Applications assignment are operator-attended P0
+  steps, recorded as evidence. No application-role admin consent is
+  performed in this goal: the scoped RBAC assignment is the exclusive
+  app-only grant, and the delegated lane keeps its existing PKCE scopes.
 
 ## Source Hierarchy
 
