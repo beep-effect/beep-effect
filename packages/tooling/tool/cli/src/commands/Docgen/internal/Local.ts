@@ -1066,7 +1066,10 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
   if (A.every(proofStatuses, (status) => status.status === "current")) {
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
-    yield* checkPackageDocumentation(packages, plan.parallel);
+    const selectedPackages = A.filter(packages, (pkg) =>
+      A.some(plan.selectedPackages, (selected) => selected.name === pkg.name)
+    );
+    yield* checkPackageDocumentation(selectedPackages, plan.parallel);
     yield* runStepWithStallWatchdog(
       "turbo docgen",
       turboBinaryPath(repoRoot),
