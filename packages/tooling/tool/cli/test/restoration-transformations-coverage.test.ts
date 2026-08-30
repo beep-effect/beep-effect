@@ -2,13 +2,16 @@ import {
   ArchiveLedgerRecord,
   encodeArchiveLedgerRecordJson,
   encodeRestorationAcceptanceRecordJson,
+  encodeTransformationLedgerRecordJson,
   RestorationAcceptanceRecord,
+  RestorationLegacyWordOptions,
+  RestorationMailOptions,
   TransformationLedgerRecord,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -36,6 +39,21 @@ const context = {
   startedAt: 0,
   transformationRunId: identity.transformationRunId,
 };
+const legacyOptions = RestorationLegacyWordOptions.make({
+  comparePath: "compare",
+  converterPath: "soffice",
+  corpusRoot: "/corpus",
+  expectedConverterVersion: "LibreOffice test",
+  expectedOccurrenceCount: NonNegativeInt.make(0),
+  maxElapsedMillis: PosInt.make(100),
+  maxTotalElapsedMillis: PosInt.make(100),
+  maxTotalOutputBytes: PosInt.make(100),
+  maxVisualRmse: 0.2,
+  pdfinfoPath: "pdfinfo",
+  pdftoppmPath: "pdftoppm",
+  tikaJarPath: "/tika.jar",
+});
+const legacyBudget = { attemptStartedAt: 0, context, familyStartedAt: 0 };
 const archivedFile = (objectId: string, sourceRelativePath: string, sizeBytes = 2) =>
   ArchiveLedgerRecord.cases["archive-file-pass"].make({
     attemptId: `attempt-${objectId}`,
@@ -55,7 +73,7 @@ const archivedFile = (objectId: string, sourceRelativePath: string, sizeBytes = 
     sourceRelativePath,
   });
 
-describe("restoration transformation semantic helpers", () => {
+layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation semantic helpers", (it) => {
   it("classifies bounded mail failures and attachment signatures", () => {
     expect(RT.classifyMailFailure("PASSWORD protected")).toBe("password");
     expect(RT.classifyMailFailure("encrypted store")).toBe("password");
@@ -106,7 +124,7 @@ describe("restoration transformation semantic helpers", () => {
       ]);
       expect(RT.relativePathIsUnder(path, "a/b/c", ["a/b"])).toBe(true);
       expect(RT.relativePathIsUnder(path, "a/bad", ["a/b"])).toBe(false);
-    }).pipe(Effect.provide(NodeServices.layer))
+    })
   );
 
   it("accounts counters, digests, parser results, and fidelity ceilings", () => {
@@ -143,19 +161,18 @@ describe("restoration transformation semantic helpers", () => {
     expect(O.isNone(RT.parseNormalizedRmse("missing"))).toBe(true);
     expect(RT.isCompoundFileBinary(Uint8Array.of(0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1))).toBe(true);
     expect(RT.isCompoundFileBinary(Uint8Array.of(0xd0))).toBe(false);
-    const options = { maxElapsedMillis: PosInt.make(100), maxVisualRmse: 0.2 };
     expect(
       RT.legacyFidelityPasses(
         { convertedPath: "/x", normalizedTextSha256: sha("x"), pageCountDelta: 0, visualRmse: 0.1 },
         100,
-        options
+        legacyOptions
       )
     ).toBe(true);
     expect(
       RT.legacyFidelityPasses(
         { convertedPath: "/x", normalizedTextSha256: sha("x"), pageCountDelta: 1, visualRmse: 0 },
         0,
-        options
+        legacyOptions
       )
     ).toBe(false);
   });
@@ -186,12 +203,12 @@ describe("restoration transformation semantic helpers", () => {
         "file",
       ]);
       expect((yield* RT.hashTransformationTree(tree)).sizeBytes).toBe(3);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 
   it.effect("returns infinity without invoking page comparison for mismatched page sets", () =>
     Effect.gen(function* () {
-      const value = yield* RT.maximumPageRmse(["one"], [], Object.create(null), Object.create(null));
+      const value = yield* RT.maximumPageRmse(["one"], [], legacyOptions, legacyBudget);
       expect(value).toBe(Number.POSITIVE_INFINITY);
     })
   );
@@ -251,7 +268,7 @@ describe("restoration transformation semantic helpers", () => {
         "orphan-content",
         1,
       ]);
-    }).pipe(Effect.provide(NodeServices.layer))
+    })
   );
 
   it.effect("publishes immutable acceptance evidence idempotently and rejects conflicting bytes", () =>
@@ -309,7 +326,7 @@ describe("restoration transformation semantic helpers", () => {
       yield* fs.writeFileString(outside, "x");
       const escaped = yield* RT.requireCanonicalContainedPath(directory, outside).pipe(Effect.option);
       expect(O.isNone(escaped)).toBe(true);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
   );
 
   it("validates resumable family and attempt checkpoint ordering", () => {
@@ -401,8 +418,8 @@ describe("restoration transformation semantic helpers", () => {
       expect(captured.output).toBe("semantic-proof");
       const exhausted = yield* RT.runLegacyStep("sh", ["-c", "exit 0"], 0).pipe(Effect.option);
       expect(O.isNone(exhausted)).toBe(true);
-      expect(yield* RT.maximumPageRmse([], [], Object.create(null), Object.create(null))).toBe(0);
-    }).pipe(Effect.provide(NodeServices.layer))
+      expect(yield* RT.maximumPageRmse([], [], legacyOptions, legacyBudget)).toBe(0);
+    })
   );
 
   it.effect("rejects invalid persisted run-state shapes at each resumability boundary", () =>
@@ -519,6 +536,121 @@ describe("restoration transformation semantic helpers", () => {
       const emptyFile = path.join(root, "empty.bin");
       yield* fs.writeFile(emptyFile, new Uint8Array());
       expect((yield* RT.readPrefix(emptyFile)).byteLength).toBe(0);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    })
+  );
+
+  it.effect("checkpoints attachment repairs idempotently and rejects identity conflicts", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "attachment-checkpoints-" });
+      const ledgerPath = path.join(root, "ledgers/mail/full.jsonl");
+      yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
+      const mailContext = {
+        ...context,
+        corpusRoot: root,
+        family: "mail" as const,
+        ledgerPath,
+        mailScope: O.some<"full" | "slice">("full"),
+        outputRoot: path.join(root, "output"),
+        runRoot: root,
+      };
+      yield* RT.appendAttachmentRepair(
+        mailContext,
+        "attempt-1",
+        "object-1",
+        "attachments/file.bin",
+        "pdf",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      );
+      const first = yield* fs.readFileString(ledgerPath);
+      yield* RT.appendAttachmentRepair(
+        mailContext,
+        "attempt-1",
+        "object-1",
+        "attachments/file.bin",
+        "pdf",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      );
+      expect(yield* fs.readFileString(ledgerPath)).toBe(first);
+      const conflict = yield* RT.appendAttachmentRepair(
+        mailContext,
+        "attempt-1",
+        "object-1",
+        "attachments/file.bin",
+        "png",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      ).pipe(Effect.option);
+      expect(O.isNone(conflict)).toBe(true);
+    })
+  );
+
+  it.effect("resumes empty and persisted family ledgers through their distinct callbacks", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "family-resume-" });
+      const ledgerPath = path.join(root, "legacy.jsonl");
+      const runContext = {
+        ...context,
+        corpusRoot: root,
+        ledgerPath,
+        outputRoot: path.join(root, "output"),
+        runRoot: root,
+      };
+      const fresh = yield* RT.resumeFamilyCandidates(runContext, ["candidate"], 7, () => Effect.die("unreachable"));
+      expect(fresh).toEqual({
+        candidates: ["candidate"],
+        counters: { exceptionCount: 0, inputBytes: 0, outputBytes: 7, passCount: 0, unapprovedCount: 0 },
+      });
+
+      const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
+        ...identity,
+        expectedCount: NonNegativeInt.make(1),
+        family: "legacy-word",
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        policySha256: sha("policy"),
+        recordType: "family-run-start",
+      });
+      yield* fs.writeFileString(ledgerPath, `${yield* encodeTransformationLedgerRecordJson(runStart)}\n`);
+      const resumed = yield* RT.resumeFamilyCandidates(runContext, ["candidate"], 7, (records) =>
+        Effect.succeed({ candidates: [], counters: { ...RT.emptyFamilyCounters(), inputBytes: records.length } })
+      );
+      expect(resumed.candidates).toEqual([]);
+      expect(resumed.counters.inputBytes).toBe(1);
+    })
+  );
+
+  it.effect("fails closed when a PST candidate has no preservation pass", () =>
+    Effect.gen(function* () {
+      const options = RestorationMailOptions.make({
+        corpusRoot: "/corpus",
+        expectedStoreCount: NonNegativeInt.make(0),
+        maxAmplificationRatio: 1,
+        maxElapsedMillis: PosInt.make(100),
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        pffexportPath: "pffexport",
+        scope: "full",
+        tikaJarPath: "/tika.jar",
+      });
+      expect(
+        yield* RT.processPstCandidate(
+          { family: "pst", objectId: "missing", pass: O.none(), sourcePath: "/missing.pst" },
+          options,
+          { ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") },
+          100,
+          100,
+          "attempt-1"
+        )
+      ).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
+    })
   );
 });
