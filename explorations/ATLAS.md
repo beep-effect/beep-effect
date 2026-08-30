@@ -38,6 +38,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`beep-mode`](./beep-mode/README.md) — align (grilling in progress)
 
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
