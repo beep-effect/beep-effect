@@ -37,6 +37,13 @@ export * as IrToLaw from "./IrToLaw/index.ts";
  */
 export * as OfficeActionReview from "./OfficeActionReview/index.ts";
 /**
+ * Typed patent-claim candidate mapping exports.
+ *
+ * @category mappings
+ * @since 0.0.0
+ */
+export * from "./PatentClaimCandidate/index.ts";
+/**
  * Practice knowledge-graph MCP declaration exports.
  *
  * **Example** (Count practice KG tools)
