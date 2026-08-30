@@ -1,0 +1,23 @@
+id: so:sha256:9fe9baa78f11c76c5b82ba90bee6ff3418996fb542e2e1f25df60e5b3fa198ea
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 434
+  end_line: 441
+  content_sha256: f92e58a858fc0d2f9616fb57251a3315ee07670cc8d8030c97f68a6eee982d14
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::SpawnFields
+  lexical_name: SpawnFields
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: SpawnFields
+source_excerpt: type SpawnFields = {
+epistemic_status: parser_derived

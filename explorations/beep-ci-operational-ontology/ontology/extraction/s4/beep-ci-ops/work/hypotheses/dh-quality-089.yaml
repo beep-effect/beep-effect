@@ -1,0 +1,21 @@
+id: "dh:quality:089"
+observation_refs:
+  - "so:sha256:bd57e3db3d255524b844d1f9e6a284ba2fd1fabda1090f165eca11b772e43d6a"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration runTurboConfigProof in TurboConfigProof.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by runTurboConfigProof"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only source export or declaration structure for runTurboConfigProof. Export visibility and lexical suggestiveness are compatible with implementation plumbing and provide no observed operational bearer, occurrence, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

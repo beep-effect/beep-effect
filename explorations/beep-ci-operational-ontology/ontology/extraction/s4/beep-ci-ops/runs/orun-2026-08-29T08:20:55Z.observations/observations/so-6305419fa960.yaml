@@ -1,0 +1,23 @@
+id: so:sha256:6305419fa96099617bb98162ac43d2718d51c1b66bcee82bc34027b762df7e60
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+source_span:
+  start_line: 203
+  end_line: 203
+  content_sha256: 7e42961f261a5f709104530c4ce33f8b70a762dd698385b3fde123982ac407da
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts::PrCloseoutReportJson
+  lexical_name: PrCloseoutReportJson
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: PrCloseoutReportJson
+source_excerpt: export const PrCloseoutReportJson = JsonStringCodec(PrCloseoutReport);
+epistemic_status: parser_derived

@@ -1,0 +1,21 @@
+id: "dh:worktree-config:013"
+observation_refs:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:a56b779098239e2c5a7dc016448e4f6c069488fae5ad5719d39843a6d18d323f"
+cq_warrants:
+  - "CQ-002"
+proposed_referent:
+  label: "affected docgen work-unit specification"
+  description: "A repeatable docgen prescription scoped to origin/main through HEAD plus dirty files for edit loops, not an execution occurrence."
+representation_status: information_artifact
+alternatives:
+  - label: "an affected docgen execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The cited repository rule governs the edit-loop docgen procedure by fixing its affected scope; it is an operative prescription rather than an incidental command serialization."
+  discriminator: "For edit loops, the governing repository rule requires docgen:local to operate only over origin/main through HEAD plus the current dirty files."
+epistemic_status: proposed
+confidence: {value: 0.93, use_for_acceptance: false}

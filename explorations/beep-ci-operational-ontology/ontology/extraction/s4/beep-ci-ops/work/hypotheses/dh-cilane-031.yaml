@@ -1,0 +1,26 @@
+id: "dh:cilane:031"
+observation_refs:
+  - "so:sha256:12d2efba2ce0a9f13d62a37d0a3f3929edecfeac1493ae26835ade5c451a57e9"
+  - "so:sha256:2c901715cf9fb19aa1e36f65bb55d1e369257a8411bc3e9f7db9535043a55a89"
+  - "so:sha256:71c92be71af0e19e7a7a3bbb1550ecf0e16881b26ae297949d6b87b7cdb44b2d"
+  - "so:sha256:cc751c9ce484bf89fb77cd69b4c33d122e2e47e459786e7f10add419b8e03559"
+cq_warrants: []
+proposed_referent:
+  label: "CI lane execution-control implementation"
+  description: "The declarations for rendering a step, running a process, running a step lane, and dispatching a lane."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "repeatable verification-lane execution procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "record of a WorkUnit execution"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The records provide declaration names and signature excerpts, not an execution occurrence, execution record, or procedure identity independent of the code. An implementation control-flow cluster fully accounts for them."
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

@@ -1,0 +1,22 @@
+id: "fa:alt1:009"
+hypothesis_ref: "dh:sched-core:018"
+identity_card_ref: "ic:alt1:009"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "computed duration reported by the progress logger"
+    still_viable: true
+  - label: "the wait process itself"
+    still_viable: false
+  - label: "temporary local arithmetic value with no operational role"
+    still_viable: false
+strongest_counterexample: "noteAdmissionWait uses waitedMillis both for progress printing and
+  for 2-minute/10-minute escalation, so it is not a throwaway local; it is still a measurement
+  of a wait, not the wait."
+verdict: "analyzed"
+needed_evidence: "Whether CQ-023 reidentifies elapsed wait independently of the progress
+  logger's computed number. If the question is always answered from waitedMillis, the
+  information-object and quality models are observationally equivalent."

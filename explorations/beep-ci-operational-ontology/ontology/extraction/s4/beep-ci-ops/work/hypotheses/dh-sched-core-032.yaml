@@ -1,0 +1,20 @@
+id: "dh:sched-core:032"
+observation_refs:
+  - "so:sha256:2fcff2e89d35d38d10b76ba060d72652afa63b7fa848aee9bccd1cfe52f9c3c7"
+  - "so:sha256:487ea7ef4c75e71f12939a3a28fde7caabba9b8b204c811b4d82b9281b2ea2c8"
+  - "so:sha256:ad120680e575c4c2c3796485798bf6ba91a9a901a640186409e26b07faaf1a3a"
+cq_warrants: []
+proposed_referent:
+  label: "lease serialization codec implementation"
+  description: "The schema-based JSON encoding and decoding plumbing for active admission-lease values."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "serialization specification for lease records"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Encoding, decoding, and error-wrapping helpers concern representation transfer; no supplied discriminator shows that the codec itself is a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.97, use_for_acceptance: false}

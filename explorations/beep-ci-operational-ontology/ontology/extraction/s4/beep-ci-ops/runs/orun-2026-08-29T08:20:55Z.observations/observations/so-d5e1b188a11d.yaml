@@ -1,0 +1,25 @@
+id: so:sha256:d5e1b188a11d80b9489f3616a3b705634c3b4fdecee69ef7180d463c7f2dee85
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 170
+  end_line: 181
+  content_sha256: cd25901f04000f0d7a17d652bb3f8feb09f4501da66d5d21b2f0537515ef610d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::GateArtifactDescriptor
+  lexical_name: GateArtifactDescriptor
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: GateArtifactDescriptor
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class GateArtifactDescriptor extends S.Class<GateArtifactDescriptor>($I`GateArtifactDescriptor`)(
+epistemic_status: parser_derived

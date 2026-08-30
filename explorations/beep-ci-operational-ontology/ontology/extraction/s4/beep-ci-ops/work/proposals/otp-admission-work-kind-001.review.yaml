@@ -1,0 +1,63 @@
+target: "otp:admission-work-kind:001"
+target_sha256: "fb678eef6fb74c540eae12d34615baab852158b311352d83967003cc85d1c0ea"
+chain_sha256: "72ee5ffbc03b8677e60f9299728eefd080c34e45045a76b1f2be1e0fb9ad10f6"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no is-a edge or valid subsumption relation is proposed to test."
+attacks:
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two schedulers can expose the same four literal spellings while assigning
+      different meanings and charges. The card expressly requires governed lineage,
+      stipulated meanings, and versioned authority, so it separates those vocabularies
+      instead of treating the technical strings as identity.
+    outcome: survived
+  - surface: identity
+    rule: identity-and-foundational-record-agreement
+    counterexample: >-
+      A proposal marked `supplies` whose IdentityCard only carried identity without supplying it, or a
+      proposal marked `analyzed` over an FA with a different verdict, would
+      launder an unresolved identity decision. Here the card records
+      supplies_identity=true and carries_identity=true, and the FA
+      verdict is `analyzed`; both agree with the proposal, so this
+      consistency attack is survived.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-term
+    counterexample: >-
+      Without AdmissionWorkKind, CQ-021 cannot return a governed kind for each queued
+      request and its required class list is unsatisfied. The CQ requires the domain,
+      rather than merely mentioning one of its member spellings.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-not-in-observations
+    counterexample: >-
+      The observations record the LiteralKit members, the existence of an
+      admissionTokenWeight function, and the phrase "Token weight for each admission
+      kind"; they do not record any branch values or establish that different kinds
+      receive different charges. A function returning one for every member produces
+      the same observation records.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Even if the unobserved function assigns different numbers, a pure enum used as a
+      switch key in scheduler code does exactly that without denoting a separately
+      governed information object. The claimed behavior is therefore true in the null
+      world as well.
+    outcome: landed
+rival_models_still_viable:
+  - "The members are controlled lexical aliases that denote operational work categories without themselves forming a class taxonomy."
+evidence:
+  - "so:sha256:52812cd00f245efb47e28b49b04b48f05de8a7fae89b4f413ebf61b3fc57cb86"
+  - "so:sha256:ebee067e625c3a5650da8dd8f45209c9f1ecba5607feb53883b955501198153c"
+  - "po:sha256:1df4ac671a4779bf2519466b2ecb2dcc2b23e9ba22e02ad5cebe87366eca3566"
+  - "CQ-021"

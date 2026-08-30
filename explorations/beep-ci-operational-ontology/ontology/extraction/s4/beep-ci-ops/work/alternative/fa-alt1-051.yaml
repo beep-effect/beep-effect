@@ -1,0 +1,19 @@
+id: "fa:alt1:051"
+hypothesis_ref: "dh:turbo-cache:019"
+identity_card_ref: "ic:alt1:051"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "a Storybook-start service procedure specification with richer content than ordering"
+    still_viable: true
+  - label: "a verification lane"
+    still_viable: false
+strongest_counterexample: "Starting Storybook is an execution; the turbo.json storybook:start
+  entry is the specification that orders that start after storybook:build. Persistent
+  cache-false is specification content, not a running server."
+verdict: "analyzed"
+needed_evidence: "Whether storybook:start is invoked as a long-running service independently of
+  verification. No cited observation establishes a verification role."

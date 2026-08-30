@@ -5,6 +5,12 @@
  * @since 0.0.0
  */
 
+/**
+ * Exploration Atlas projection and README stage-region writer.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export * from "./Atlas.ts";
 /**
  * Read-only packet-stream check.

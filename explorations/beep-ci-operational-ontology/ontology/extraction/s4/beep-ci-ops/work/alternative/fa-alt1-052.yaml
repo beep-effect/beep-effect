@@ -1,0 +1,26 @@
+id: "fa:alt1:052"
+hypothesis_ref: "dh:turbo-cache:023"
+identity_card_ref: "ic:alt1:052"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "the local-only tag as information content inside a resolved LocalOnlyTurboCache plan
+      record"
+    still_viable: true
+  - label: "a quality of the invocation (cache-transfer quale)"
+    still_viable: true
+  - label: "a lexical alias for a CLI argument value"
+    still_viable: false
+strongest_counterexample: "The local-only branch emits --cache=local:rw because a plan tagged
+  local-only was resolved from env sources; the argument is produced from the posture/plan, not
+  identical with it. The module documentation frames this as a decision about whether a
+  workstation may read the shared remote cache, which is not a free-standing token."
+verdict: "analyzed"
+needed_evidence: "Whether operations reidentify LocalOnlyTurboCache records or the transfer
+  posture of invocations. If every use reads the tagged plan and its missing-env list, the
+  information-object rival is at least as well supported and the models are observationally
+  equivalent. A property of the posture that is not stored on the plan would favor
+  mode/quality."

@@ -1,0 +1,32 @@
+id: "dh:cilane:037"
+observation_refs:
+  - "so:sha256:0966b954c5b2ebc5ae8978aa8b13d7de590eecf4be4e42b92924a0255656ed95"
+  - "so:sha256:10bec2b3f66e7fd71538616e418126dfb1d28e427186fd3ce5b04fc14ceafe7c"
+  - "so:sha256:2e3e81e835f2ea841bac3ef7b4255235beaaf5b2cc8002c38934bfbb52946467"
+  - "so:sha256:409b6bdb5f8e8cb482df7dfce402d35ae5566bd461c15f16701098f39d1a58f2"
+  - "so:sha256:4cb726bc897c8609cccd96a4543854e36711dca0c9388735c5736d3b24f3fb09"
+  - "so:sha256:77ec3c4ba711535418140ce8f610ed076fe7c21a4259a46c37799aa08c20a87e"
+  - "so:sha256:98b1822a69c811967dd47dbbc40e65de02acbb208582e141cd641aa4d78348aa"
+  - "so:sha256:fabc73b14fe99cf58f58f01e9235b784ce2f0f644407e4cbf0ecd200267a24b7"
+  - "so:sha256:fea4547037b7686b179c4ee217be84fb9a7ea36a99c15c726b7ffd9d2b3d780f"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "fallow lane helper implementation"
+  description: "The advisory and blocking lists, report-path and envelope constants, step builders, phase builder, and runner declaration for fallow checks."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fallow verification-lane procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "fallow verification-evidence envelope specification"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations record declarations and constant spellings but no produced envelope, verification evidence, execution, or advisory-versus-blocking outcome. They therefore do not force a domain procedure or information-object referent."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

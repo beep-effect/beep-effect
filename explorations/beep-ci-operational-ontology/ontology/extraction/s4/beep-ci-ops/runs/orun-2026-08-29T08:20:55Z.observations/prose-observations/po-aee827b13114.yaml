@@ -1,0 +1,10 @@
+id: po:sha256:aee827b131144943a11501c5c91faf52917d871d2de3f937b55887708e44b8a1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 141
+  end_line: 141
+quote: '"install-failure",'
+epistemic_status: quoted_prose

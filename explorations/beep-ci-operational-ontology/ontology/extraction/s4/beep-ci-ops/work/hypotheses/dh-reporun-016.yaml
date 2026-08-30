@@ -1,0 +1,26 @@
+id: "dh:reporun:016"
+observation_refs:
+  - "so:sha256:fd30915e1d17659297436b33480b65b1417ff9b0274b7beafa8b70cd814d4596"
+  - "so:sha256:a64dc174173ded5009d4e8d1b7c7f0e8aa1ab75aa53e55eddbf0ab021e440325"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "repository-plan step scope vocabulary"
+  description: "The package, repository, and git scope codes recorded on a planned repository command."
+representation_status: unresolved
+alternatives:
+  - label: "Scope information carried by a ScheduleStep"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Internal command-routing selector"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "CQ-020 warrants scope information, but the observations do not establish how package, repo, and git correspond to the CQ suite's operational Scope individuals or whether these codes are only planner routing. The null remains unrejected."
+epistemic_status: proposed
+confidence:
+  value: 0.57
+  use_for_acceptance: false
+

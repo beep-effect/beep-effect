@@ -1,0 +1,18 @@
+id: "dh:worktree-config:045"
+observation_refs:
+  - "so:sha256:b5bb753b2ab1bee2777b81452104dc02b3a1a6e44c54dc499a5f3dc2d8bdb2a6"
+cq_warrants: []
+proposed_referent:
+  label: "worktree parser prefix constant"
+  description: "An internal variable declaration named WORKTREE_PREFIX whose excerpt contains the string worktree."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Git worktree record marker"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is an unrepresentable variable declaration; a parser token does not warrant a domain-ontology referent."
+epistemic_status: proposed
+confidence: {value: 0.97, use_for_acceptance: false}

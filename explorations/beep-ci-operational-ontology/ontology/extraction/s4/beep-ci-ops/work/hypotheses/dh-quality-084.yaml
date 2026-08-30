@@ -1,0 +1,22 @@
+id: "dh:quality:084"
+observation_refs:
+  - "so:sha256:ae669145faaccc61fda70059d730335ef3601833e26bc3f66d29eaeeaf236063"
+  - "so:sha256:cc2e93695bc67cde6ec421f8b280ec2a6375dbac485ad24b2f96dbdc62781c14"
+cq_warrants: []
+proposed_referent:
+  label: "GithubCheckLaneStage source vocabulary"
+  description: "A source-controlled lexical vocabulary containing \"diff-security\", \"environment\", \"repo-quality\", \"repo-sanity\". The record supports those spellings, not independently existing domain individuals or kinds."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational classification corresponding to GithubCheckLaneStage"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only literal membership, aliasing, or export facts for GithubCheckLaneStage. Those facts are fully compatible with a code-only vocabulary and do not observe policies, states, events, or other domain instances carrying the labels."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

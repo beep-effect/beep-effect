@@ -1,0 +1,46 @@
+target: "otp:fallow-audit-lane:001"
+target_sha256: "d5429a33ec39fc23bab9331de3e8885859cccf7ae78c912b5da50abe1e553d97"
+chain_sha256: "c5b1b5e539e6317643d855dd3521f5eefb508bf38a157467a2c3a382295fe8a2"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-lineage-and-execution-test
+    counterexample: >-
+      Equal audit prescriptions can be copied across repository histories, and
+      one dated audit can fail while the reusable prescription persists. The
+      card identifies normalized command, base rule, gate, and verdict semantics,
+      treats lineage as provenance, and keeps dated executions distinct.
+    outcome: survived
+  - surface: warrant
+    rule: governed-lane-inventory-completeness
+    counterexample: >-
+      Enumerating unrelated lanes can make CQ-001 non-empty but cannot answer
+      what verification lanes exist. The dated inventory records the distinct
+      Fallow audit prescription, base, new-only gate, and verdict; omitting this
+      governed lane makes the requested inventory incomplete.
+    outcome: survived
+  - surface: null_discriminator
+    rule: dated-execution-prescription-discriminator
+    counterexample: >-
+      A dormant command row can carry the same string, but it cannot also
+      preserve the dated origin/main invocation, new-only gate, recorded fail
+      verdict, and matching root audit gate. The deployed audit establishes
+      operative repeatable procedure content beyond inert configuration.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048"
+  - "po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c"
+  - "CQ-001"

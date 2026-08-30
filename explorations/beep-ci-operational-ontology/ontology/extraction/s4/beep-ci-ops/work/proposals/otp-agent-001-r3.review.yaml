@@ -1,0 +1,47 @@
+target: "otp:agent:001"
+target_sha256: "423d346e2647f038d764902349eb01702a6276356d18d0fa49151a5681ff9871"
+chain_sha256: "0468fbb789d1179ed320376d0803043b7f6dde8260eda635673e59e1b5a1ff8d"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: role-bearer-and-identifier-test
+    counterexample: >-
+      A process can stop owning request R1 and later own R2 without ceasing to
+      be that process, while a reused pid can belong to a different process.
+      The card makes ownership anti-rigid, carries process identity, and treats
+      pid and procStart as evidence rather than the identity criterion.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-term
+    counterexample: >-
+      CQ-021 explicitly asks which Agent owns each queued SeatRequest and
+      requires Agent plus requestedBy. Removing the owner role makes that
+      projected answer unavailable.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A serialized owner tuple alone cannot preserve the cited liveness rule:
+      the scheduler queries the actual operating-system process and terminates
+      ownership when pid liveness or process-start continuity fails. That
+      world-side bearer makes the implementation-only tuple insufficient.
+    outcome: survived
+rival_models_still_viable:
+  - "The ontology may choose the underlying operating-system process rather than its admission-owner role."
+  - "The serialized owner-coordinate tuple remains a distinct information artifact."
+evidence:
+  - "so:sha256:158ec65eb4daf515df44b62ed4d173fcf19cbb58751efa0712d91e162a4ce1ea"
+  - "po:sha256:792fb0d34c7c5554dc9c45ed05aa5f4cff6d5e0c28734d16a0ac63a889eba819"
+  - "po:sha256:ff814eb11e80dc2620c720557874ef4c1137e1346a8ce8a03e917e5da315a71a"
+  - "CQ-021"

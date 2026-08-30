@@ -1,0 +1,23 @@
+id: so:sha256:c09b165d2b3f335fdffe7f413cd2fd94fc96641256a05740402ac7f316c9d018
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 141
+  end_line: 141
+  content_sha256: 8da63a50c131bee66aba4e4dbd812cc5dd7548687aef56da0961d74c1b9e3dfa
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::jsonObjectTextFromMixedOutputForTesting
+  lexical_name: jsonObjectTextFromMixedOutputForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: jsonObjectTextFromMixedOutputForTesting
+source_excerpt: export const jsonObjectTextFromMixedOutputForTesting = jsonObjectTextFromMixedOutput;
+epistemic_status: parser_derived

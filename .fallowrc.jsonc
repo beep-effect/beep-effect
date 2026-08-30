@@ -124,6 +124,14 @@
     // LeJeune Bolt exploration ops script is packet tooling (machine-local corpus
     // miner run ad hoc via `bun run`), not a package/app entrypoint.
     "explorations/lejeune-bolt-agentic-demo/ops/**",
+    // beep-ci-operational-ontology §4b: the ontology-foundational-auditor
+    // SourceObservation adapter (TS compiler API extractor) and its golden
+    // fixture input are digest-locked run evidence (script_sha256_12 in the
+    // archived run manifest + .sha256 sidecar), invoked ad hoc through the
+    // python wrapper via `bun run` — packet tooling, not a package/app
+    // entrypoint, and its bytes cannot change without breaking the recorded
+    // run provenance (so no in-file suppressions).
+    "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/**",
     // @beep/html: generated AST (one TaggedClass per HTML element) is intentionally
     // repetitive; the codegen script and vendored spec data are tooling, not
     // hand-authored source subject to dead-code/duplication/complexity review.

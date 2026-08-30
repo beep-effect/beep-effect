@@ -1,0 +1,21 @@
+id: "dh:quality:092"
+observation_refs:
+  - "so:sha256:c3e30f5b0418ac3d0176afb335481f96e7c977a690fc83b254f5c3f3cbcfd843"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration selectPackageVerifyTargetForTesting in PackageVerify.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by selectPackageVerifyTargetForTesting"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only source export or declaration structure for selectPackageVerifyTargetForTesting. Export visibility and lexical suggestiveness are compatible with implementation plumbing and provide no observed operational bearer, occurrence, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

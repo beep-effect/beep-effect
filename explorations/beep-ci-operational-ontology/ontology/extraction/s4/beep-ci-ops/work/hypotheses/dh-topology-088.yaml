@@ -1,0 +1,25 @@
+id: "dh:topology:088"
+observation_refs:
+  - "po:sha256:7cc1403b1ec8121ed56d3b024d269690ddf0ec678139e405e6ecbd1009179e2b"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/ontology-server workspace package"
+  description: "The workspace software package information artifact identified by @beep/ontology-server in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/ontology-server as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The topology-row DTO counterexample wins: @beep/ontology-server 36 can be parsed and consumed by CQ-004 without establishing a governed package-reference artifact or software-package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

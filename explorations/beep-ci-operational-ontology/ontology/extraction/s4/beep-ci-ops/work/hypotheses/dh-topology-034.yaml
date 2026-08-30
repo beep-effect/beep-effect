@@ -1,0 +1,25 @@
+id: "dh:topology:034"
+observation_refs:
+  - "po:sha256:2f71eb83186f9922f0c35a933d89ab21866d1724fb03b2da49ecfc13e7e70a0a"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/dock-react workspace package"
+  description: "The workspace software package information artifact identified by @beep/dock-react in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/dock-react as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The topology-row DTO counterexample wins: @beep/dock-react 34 can be parsed and consumed by CQ-004 without establishing a governed package-reference artifact or software-package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

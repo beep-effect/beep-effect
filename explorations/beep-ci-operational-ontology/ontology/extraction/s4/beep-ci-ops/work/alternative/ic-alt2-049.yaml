@@ -1,0 +1,33 @@
+id: ic:alt2:049
+hypothesis_ref: dh:turbo-cache:011
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two audit task specifications are the same iff they prescribe the same repeatable audit work with the same observed upstream
+    audit dependency selector; the task name is evidence rather than the criterion.
+  reidentification_key:
+  - turbo.json tasks.audit
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One specification per distinct Turbo task prescription named audit.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    The observations do not say what checks audit performs, so two different audit implementations behind the same key would
+    still be unobserved as distinct specifications.
+- description: >-
+    Editing outputs or env of the audit entry while keeping the same prescribed work is state change of one specification,
+    not a second task.
+status: proposed

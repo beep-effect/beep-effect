@@ -1,0 +1,17 @@
+id: "fa:turbo-cache:002"
+hypothesis_ref: "dh:turbo-cache:002"
+identity_card_ref: "ic:turbo-cache:002"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A verification lane is realized by the build specification but is distinct from the specification information object."
+    still_viable: true
+  - label: "The declaration is a template for several package-specific build specifications rather than one atomic specification."
+    still_viable: true
+  - label: "The referent is one particular build execution."
+    still_viable: false
+strongest_counterexample: "One root build declaration can govern distinct package build tasks with different package scripts and dependency instances, challenging the claim that it individuates one work-unit specification."
+verdict: analyzed

@@ -1,0 +1,48 @@
+target: "otp:architecture-boundary-obligation:001"
+target_sha256: "5e8effa1f896f70bc7d715b54f3484d4061fade392968f99f69f7cacd353814e"
+chain_sha256: "93464eb7aa12fe246cc7e03fca74a9e00ab1f5af1e1852796f78fe8d8a89c84e"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: deferred-obligation-activation-identity
+    counterexample: >-
+      One proposal can incur, discharge, and later reacquire the same kind of
+      architecture contradiction under one rule version. The card correctly
+      makes uninterrupted normative position part of identity and the proposal
+      remains explicitly deferred pending case provenance.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      VerificationEvidence can record the tree, epoch, producing lane, result,
+      and obligation-discharge edge required by CQ-006 without classifying any
+      requirement as an ArchitectureBoundaryObligation. Generic lane evidence
+      and unrelated command output remain distinguishable through provenance,
+      so this specialized support class is not necessary.
+    outcome: landed
+  - surface: null_discriminator
+    rule: normative-prose-discriminator
+    counterexample: >-
+      A passive DTO or source label cannot require that a contradicting proposal
+      change or that the governing architecture document be amended. The quoted
+      rule states that normative consequence directly, so the null attack does
+      not erase the obligation referent.
+    outcome: survived
+rival_models_still_viable:
+  - "Model only the architecture-policy information object."
+  - "Model a normative relator connecting authority, bearer, contradiction, and correction."
+evidence:
+  - "po:sha256:a8f45d7aff5dac863717489999e1c1b730d1b57612435ac657d3bab1a0f533ea"
+  - "po:sha256:18ce6572b69bdaf8e3e4542f8b754842f0a93567e33c7d48d0a9f2b3a0bc95f3"
+  - "CQ-006"

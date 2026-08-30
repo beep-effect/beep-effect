@@ -1,0 +1,35 @@
+id: "ic:alt1:006"
+hypothesis_ref: "dh:sched-core:005"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission token-weight mapping specifications are the same iff they
+    assign the same nominal token charge to each admission work kind. The numeric literals in
+    the switch are evidence of the present mapping, never themselves the mapping's identity."
+  reidentification_key:
+    - "admissionTokenWeight"
+    - "full-proof:3"
+    - "merged-preview:5"
+    - "review-fix:1"
+    - "publish:1"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one policy mapping as a single information object from work kind to nominal charge"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "quality"
+  existential_dependencies:
+    - "AdmissionWorkKind"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "withQualityAdmission clamps a requested weight to the machine ceiling, so the
+      charged tokens on a live lease can differ from this mapping; treating the mapping as the
+      intrinsic cost of a work kind, or as the charged quality of a particular lease, is already
+      false on that clamp."
+status: "proposed"

@@ -2,10 +2,10 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
-Start only on Benjamin's signal. This packet owns the day 1-3 data outcomes and provides
-`lejeune/demo-corpus-and-ontology` to the lab packet.
+P0-P2 are complete. P3 repository review, publication, and hosted merge-readiness are in
+progress. This packet provides `lejeune/demo-corpus-and-ontology` to the lab packet.
 
 ## Phases
 
@@ -13,10 +13,10 @@ Phase ids and titles match `ops/manifest.json`.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Fixture and ontology freeze proof | pending | Freeze the two RFQ pairs, 12 classes, three cited rules, golden expectations, and data boundary. | Fixture manifest, source hashes, exact expected spans, missing fields, synthetic labels, and rule citations are reviewed; one live provider path is proven or a same-day fallback is selected. |
-| P1 Bundle build (parse -> spans -> projections) | pending | Build the immutable replay bundle and deterministic PGlite, DuckDB, and bounded Oxigraph projections. | Both layouts extract exact spans; projection rebuild returns committed results; raw corpus payloads remain machine-local. |
-| P2 Rule checks, citations, and replay recording | pending | Prove the three rule checks and capture the provider outputs required for offline replay. | Positive and refusal fixtures pass; every result opens evidence; network-off replay matches the golden bundle. |
-| P3 Close | pending | Complete repository proof, PR delivery, reflection, and packet state flip. | Completion gate is met; evidence and 2026-09-30 disposition are recorded; reflection validates; packet is `completed-retained`. |
+| P0 Fixture and ontology freeze proof | complete | Freeze the two RFQ pairs, 12 classes, three cited rules, golden expectations, and data boundary. | Fixture manifest, source hashes, exact expected spans, missing fields, synthetic labels, and rule citations are reviewed; one live provider path is proven or a same-day fallback is selected. |
+| P1 Bundle build (parse -> spans -> projections) | complete | Build the immutable replay bundle and deterministic PGlite, DuckDB, and bounded Oxigraph projections. | Both layouts extract exact spans; projection rebuild returns committed results; raw corpus payloads remain machine-local. |
+| P2 Rule checks, citations, and replay recording | complete | Prove the three rule checks and capture the provider outputs required for offline replay. | Positive and refusal fixtures pass; every result opens evidence; network-off replay matches the golden bundle. |
+| P3 Close | in-progress | Complete repository proof, PR delivery, reflection, and packet state flip. | Completion gate is met; evidence and 2026-09-30 disposition are recorded; reflection validates; packet is `completed-retained`. |
 
 ## Five-Day Walking-Skeleton Schedule
 

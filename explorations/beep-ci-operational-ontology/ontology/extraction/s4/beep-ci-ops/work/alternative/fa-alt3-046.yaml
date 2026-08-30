@@ -1,0 +1,25 @@
+id: fa:alt3:046
+hypothesis_ref: dh:topology:140
+identity_card_ref: ic:alt3:046
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: 'kind: @beep/workspace-use-cases as an identity-providing workspace package unit'
+  still_viable: true
+- label: 'information_object: @beep/workspace-use-cases as a software information artifact'
+  still_viable: true
+- label: 'role: being a member of this workspace, borne by a package named @beep/workspace-use-cases'
+  still_viable: true
+strongest_counterexample: The cited observation is only the capture line naming @beep/workspace-use-cases
+  plus a rank. File contents of @beep/workspace-use-cases can change while the workspace still
+  treats it as the same affected-closure participant, which the kind reading uses; a content-addressed
+  tarball with another name would favor the information-object reading.
+verdict: analyzed
+needed_evidence: Whether CI reidentifies @beep/workspace-use-cases across content change via
+  the workspace name (kind) or treats a content-identical artifact as the same information
+  object independently of the name; and whether @beep/workspace-use-cases outside this workspace
+  is still the same entity (role versus kind). The models are observationally equivalent on
+  the topo-sort line alone.

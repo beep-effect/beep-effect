@@ -1,0 +1,21 @@
+id: fa:alt2:051
+hypothesis_ref: dh:turbo-cache:020
+identity_card_ref: ic:alt2:051
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo test:storybook work-unit specification'
+  still_viable: true
+- label: 'kind: Storybook-test verification lane'
+  still_viable: true
+- label: 'process: a particular test:storybook execution'
+  still_viable: false
+strongest_counterexample: >-
+  The test:storybook entry asserts dependsOn ^build, prescribing repeatable ordering rather than a particular Storybook run.
+verdict: analyzed
+needed_evidence: >-
+  Observed Storybook checks or a proof-surface mapping for test:storybook would decide specification-only versus verification-lane
+  kind.

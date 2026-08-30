@@ -67,6 +67,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/md": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",

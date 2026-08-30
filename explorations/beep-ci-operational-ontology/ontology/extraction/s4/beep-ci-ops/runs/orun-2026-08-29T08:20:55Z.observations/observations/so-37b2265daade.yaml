@@ -1,0 +1,23 @@
+id: so:sha256:37b2265daade88bbb20f29e63dcdfd56ecc326f6d81263baff14434ffb369057
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1023
+  end_line: 1067
+  content_sha256: 0e48d11dfb34c1dc15508bc6ac3b1c9f1598952a997d6fb687438c2149049f1e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runCloseoutMode
+  lexical_name: runCloseoutMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
+epistemic_status: parser_derived

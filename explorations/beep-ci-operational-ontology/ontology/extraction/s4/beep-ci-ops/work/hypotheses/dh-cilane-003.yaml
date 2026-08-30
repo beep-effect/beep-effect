@@ -1,0 +1,25 @@
+id: "dh:cilane:003"
+observation_refs:
+  - "po:sha256:456ebb71c232a6d9fe14711e2d61dd28e0f8eef5fe6c42170aeb57f589414ffb"
+  - "po:sha256:89eb6f6802438278dec020f020b1afcd18a16df2669e5140f55964ff8f6b816d"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "codegen verification lane"
+  description: "A possible operational verification lane named by the quoted codegen token; the records do not establish the corresponding work."
+representation_status: lexical_alias
+alternatives:
+  - label: "codegen command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "code-generation task-family label"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical evidence is limited to the codegen string occurring in the identifier list. It does not record a runnable procedure, work specification, execution, or result distinct from the source representation."
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

@@ -1,0 +1,25 @@
+id: so:sha256:612c7e8405c36b730f55df1ebec5588625a43101ca64081816285c743f42fed3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1217
+  end_line: 1217
+  content_sha256: 670bdb63807ce92da3acb38f9162e9a5a68f440d537cd568ce388503e36f14f1
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::YeetVerdictExtrasForTesting
+  lexical_name: YeetVerdictExtrasForTesting
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetVerdictExtrasForTesting
+- predicate: exports_symbol
+  object: YeetVerdictExtrasForTesting
+source_excerpt: export type YeetVerdictExtrasForTesting = YeetVerdictExtras;
+epistemic_status: parser_derived

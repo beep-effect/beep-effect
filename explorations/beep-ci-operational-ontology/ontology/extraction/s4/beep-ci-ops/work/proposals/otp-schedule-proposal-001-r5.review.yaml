@@ -1,0 +1,55 @@
+target: "otp:schedule-proposal:001"
+target_sha256: "4cc92149ded4fbeb74b1479d2fd4441def778a4bbce05f074ca7f07c98d3ef9c"
+chain_sha256: "d37410f165737321d2f05000ea18f1bea0263ac95282e5a73a431907c057758c"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  A deployed retention or materialization trace that links one RepoRunPlan
+  output to a persisted ScheduleProposal instance and records the associated
+  VerificationEpisode hasCurrentProposal update would decide between the
+  materialized artifact and transient planner-DTO models.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: provenance-bearing-plan-identity
+    counterexample: >-
+      Two planning acts can produce byte-equal ordered steps for the same
+      repository coordinates, while one plan can be copied between carriers.
+      The card distinguishes independent planning lineages and preserves
+      identity across faithful copies, so neither step-array equality nor a
+      storage identifier controls identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-current-ordered-prescription
+    counterexample: >-
+      CQ-020 cannot identify an episode's current proposal or prescribed
+      WorkUnit order from isolated step specifications. ScheduleProposal
+      supplies the current ordered prescription genuinely required by the
+      question.
+    outcome: survived
+  - surface: null_discriminator
+    rule: unconditional-materialization-overclaim
+    counterexample: >-
+      A transient RepoRunPlan DTO can contain a run context and deterministic
+      phase-then-identifier step array, drive immediate execution, and then be
+      discarded. The proposal does not assert that such a value is a retained
+      ScheduleProposal: its definition is conditional on materialization and
+      its open issue preserves the transient-DTO rival pending a deployment
+      trace.
+    outcome: survived
+rival_models_still_viable:
+  - "A materialized current ScheduleProposal linked to a VerificationEpisode."
+  - "A transient planner DTO used only to order immediate execution."
+evidence:
+  - "so:sha256:b1addafaac37d8ae5ba61d331e1478b13bf74addcbb005c427cb6cd00da76fc3"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+  - "CQ-020"

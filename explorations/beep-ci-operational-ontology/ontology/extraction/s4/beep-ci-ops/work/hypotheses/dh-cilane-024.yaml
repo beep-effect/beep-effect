@@ -1,0 +1,28 @@
+id: "dh:cilane:024"
+observation_refs:
+  - "so:sha256:285b29df5aeba61f4deaac7c1dcdae549d8f3388c880af37ca6b36f95c02f93a"
+  - "so:sha256:39f0dd193f0c9b322758bdb995e506d8fe23dd2c2a8d2f51dc50c43381b40dc3"
+  - "so:sha256:a7965db42efc92da8c696563096f3da5c53a87a9b85f085c06218737bf405e64"
+  - "so:sha256:eeffed6d5e59caf6332ca07f31e67deca1179f4047934b65075cd2d95fa302e8"
+  - "po:sha256:bd03b2a0113a7e1c132d55398dc79c3d6f3a81051d6eed2856c5ac08dc646ac5"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "CiLaneId source vocabulary"
+  description: "The code-level value, derived type, guard, and LiteralKit construction used to represent allowed lane identifiers."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "controlled vocabulary of runnable verification lanes"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "lexical aliases for verification-lane specifications"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The records establish an exported value, a derived alias, a guard declaration, and construction from a literal list. Each is compatible with type-safe routing infrastructure, and none records a lane bearer or execution outside that representation."
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

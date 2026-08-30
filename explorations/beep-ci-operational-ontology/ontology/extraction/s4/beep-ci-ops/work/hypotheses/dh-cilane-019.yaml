@@ -1,0 +1,24 @@
+id: "dh:cilane:019"
+observation_refs:
+  - "po:sha256:184a30a7033da8a1b98cfbddc05c823305330ae4c08f4c61d276497c8bfa14fe"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "SAST verification lane"
+  description: "A possible static-application-security-testing lane named by the quoted sast token."
+representation_status: lexical_alias
+alternatives:
+  - label: "sast command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "static security-analysis procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Expansion of the acronym is not supplied evidence. The quotation merely places sast in a string list and records no analysis procedure, target, execution, or finding that would falsify the null."
+epistemic_status: proposed
+confidence:
+  value: 0.4
+  use_for_acceptance: false

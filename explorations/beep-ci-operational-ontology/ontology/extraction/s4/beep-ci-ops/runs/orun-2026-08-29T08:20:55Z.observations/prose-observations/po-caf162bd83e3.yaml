@@ -1,0 +1,10 @@
+id: po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 775
+  end_line: 775
+quote: Roll back an admission that overshot capacity because two observers promoted
+epistemic_status: quoted_prose

@@ -1,0 +1,28 @@
+id: ic:alt4:003
+hypothesis_ref: dh:reporun:026
+identity:
+  supplies_identity: true
+  identity_criterion: Two repository-run plans are the same when they compose the same run context with the same collection of planned command steps under the phase-then-slot ordering; a dated execution of those steps is a different individual.
+  reidentification_key:
+    - RepoRunPlan
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Run context plus the ordered array of planned steps compose one plan; the comparator supplies the order of parts, not a second plan.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies:
+    - RepoRunContext
+    - RepoPlanStep
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: RepoStepRunResult records dated command outcomes and is not this plan.
+  - description: An empty steps array still yields a plan individual, so execution success is not required for plan identity.
+status: proposed

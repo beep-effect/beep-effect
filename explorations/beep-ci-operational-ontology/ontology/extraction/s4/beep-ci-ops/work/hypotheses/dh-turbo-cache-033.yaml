@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:033"
+observation_refs:
+  - "so:sha256:01016b42b9106a70cc31d3de5f2e4076d4538d2cb76d856923109b168d0ea109"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation predicate for whether a cache environment needs a secret session"
+  description: "An exported boolean helper over the internal Turbo cache environment representation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A secret-session requirement borne by an invocation environment"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "An obligation to establish a secret session"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation supplies only the exported helper signature; it establishes neither a requirement instance nor an obligation distinct from the predicate implementation."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false

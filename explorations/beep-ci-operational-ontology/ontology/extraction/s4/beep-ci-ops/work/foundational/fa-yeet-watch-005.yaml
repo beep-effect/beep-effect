@@ -1,0 +1,25 @@
+id: "fa:yeet-watch:005"
+hypothesis_ref: "dh:yeet-watch:026"
+identity_card_ref: "ic:yeet-watch:005"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Subkind of hosted-job failure occurrences extensionally defined by the strict TS2589 predicate"
+    still_viable: true
+  - label: "Anti-rigid rerun-authorized role borne by a diagnostic pattern under the current Yeet policy"
+    still_viable: true
+  - label: "Particular failed hosted-job occurrence or detector execution"
+    still_viable: false
+  - label: "TS2589-no-location literal with no denoted recognition prescription"
+    still_viable: false
+strongest_counterexample: >-
+  One recognition prescription can classify multiple distinct hosted-job
+  failures, and it exists even when no job currently matches it. Conversely,
+  changing diagnostic-completeness or Turbo-attribution semantics changes the
+  prescription without requiring the token to change. This separates the
+  specification from its matches and executions, while a failure-occurrence
+  subkind and a current-policy role remain viable rival models.
+verdict: analyzed

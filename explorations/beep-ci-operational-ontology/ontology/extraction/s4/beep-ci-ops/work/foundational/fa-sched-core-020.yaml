@@ -1,0 +1,17 @@
+id: "fa:sched-core:020"
+hypothesis_ref: "dh:sched-core:021"
+identity_card_ref: "ic:sched-core:020"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "The referent is the gate service or lock artifact rather than a contended-resource role borne by an origin target."
+    still_viable: true
+  - label: "Each held proof lock is a relator mediating a holder process and repository origin."
+    still_viable: true
+  - label: "AdmissionOriginGate is only a generic interface with no origin-scoped resource referent."
+    still_viable: false
+strongest_counterexample: "The resource persists while no holder exists and across replacement of the gate object, whereas an acquisition relator exists only while a particular holder relation obtains."
+verdict: "analyzed"

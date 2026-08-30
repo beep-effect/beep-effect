@@ -1,0 +1,34 @@
+target: "otp:schedule-proposal:001"
+target_sha256: "e0270468da9795f77ce9664bf0c04bfca4aa75b7fd8593e0040473c2e69278ea"
+chain_sha256: "7942f9809debe7c7574c7e21acb9e103edbbbf4317999908d1f9e273aed84ee3"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: "A materialization and retention trace must link RepoRunPlan outputs to persisted ScheduleProposal A-Box records and the hasCurrentProposal update for an episode; without that trace, the same observed shape and ordering are compatible with a transient planner DTO."
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "plan-identity-vs-step-identifiers"
+    counterexample: "Two planning acts can emit byte-equal ordered steps for different repository contexts. The card uses planning provenance, applicability context, and ordered prescription rather than step identifiers alone, so it keeps those plan specifications distinct."
+    outcome: survived
+  - surface: warrant
+    rule: "cq-required-term"
+    counterexample: "Removing ScheduleProposal makes CQ-020 unable to traverse hasCurrentProposal or return the current ordered step sequence. The CQ explicitly requires the class and its step relations, so this is a genuine decision-term warrant."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "null-rival-still-viable"
+    counterexample: "A transient planner DTO can hold a context and step array, sort it deterministically, feed an executor, and then be discarded. Every cited observation and the claimed ordering behavior remain true while no materialized current ScheduleProposal exists."
+    outcome: landed
+rival_models_still_viable:
+  - "A transient planner DTO with no retained domain role"
+  - "A materialized current schedule information artifact"
+evidence:
+  - "so:sha256:b1addafaac37d8ae5ba61d331e1478b13bf74addcbb005c427cb6cd00da76fc3"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+  - "CQ-020"

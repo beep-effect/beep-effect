@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:020"
+observation_refs:
+  - "so:sha256:12665698353ca588722eac79a38812af2c4efe4e29a070c482eebeea2627d2b2"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for feedbackFilterArgs in Planner.ts"
+  description: "No separate domain referent is established for the feedbackFilterArgs declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::feedbackFilterArgs"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

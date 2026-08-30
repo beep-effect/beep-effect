@@ -1,0 +1,20 @@
+id: fa:alt4:057
+hypothesis_ref: dh:yeet-watch:014
+identity_card_ref: ic:alt4:057
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "information object: snapshot fail-classification value"
+    still_viable: true
+  - label: quality or phase of the watched check (observationally equivalent on current evidence)
+    still_viable: true
+  - label: committed failure occurrence
+    still_viable: false
+  - label: the check execution itself
+    still_viable: false
+strongest_counterexample: classifyYeetCheckOutcome maps failing buckets and states onto fail, stores that on YeetWatchCheck, diffs it between snapshots, and counts it; collapsing that classification into the hosted check run would treat a cancelled-while-queued check as the same individual as a failed execution.
+verdict: analyzed
+needed_evidence: A watched check whose classified fail outcome diverges from GitHub conclusion, or a check that changes outcome across snapshots while remaining the same named check, would discriminate snapshot information from a phase of the check.

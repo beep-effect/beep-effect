@@ -1,0 +1,23 @@
+id: so:sha256:ccbe7f4010f5b71be4f9e4fb5602a04da974667632a189e853714ba82f3f6fc3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 183
+  end_line: 226
+  content_sha256: 4d8f3ea836146827ff288e0b94153dfb72cabe0588c186045f21e92930b09ea6
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::audit
+  lexical_name: audit
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^audit
+source_excerpt: '"audit": {'
+epistemic_status: parser_derived

@@ -1,0 +1,25 @@
+id: so:sha256:3e296553a20a27503388bc986394099c7c5581a8666a9fdd199ce051bdf89b3f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 183
+  end_line: 193
+  content_sha256: 64ac001b6a8daad710698399a2bf314210c4a75186eb69fa5a4bc2cf3cc0ed26
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::PackageVerifyReport
+  lexical_name: PackageVerifyReport
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: PackageVerifyReport
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class PackageVerifyReport extends S.Class<PackageVerifyReport>($I`PackageVerifyReport`)(
+epistemic_status: parser_derived

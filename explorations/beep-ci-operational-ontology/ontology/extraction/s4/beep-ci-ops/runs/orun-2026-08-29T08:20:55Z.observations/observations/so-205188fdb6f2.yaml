@@ -1,0 +1,25 @@
+id: so:sha256:205188fdb6f27e3dda0ab655f04e9db1a92801228d2325cef0f008725cb486c5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 645
+  end_line: 645
+  content_sha256: 44555491f05e0d96fadb303d922ad6de29a3cbce0b42933d443c0765f5daf5de
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::FallowQualityPromotionStatus
+  lexical_name: FallowQualityPromotionStatus
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FallowQualityPromotionStatus
+- predicate: exports_symbol
+  object: FallowQualityPromotionStatus
+source_excerpt: export type FallowQualityPromotionStatus = typeof FallowQualityPromotionStatus.Type;
+epistemic_status: parser_derived

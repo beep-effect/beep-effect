@@ -1,0 +1,25 @@
+id: "dh:sched-core:016"
+observation_refs:
+  - "so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+cq_warrants: ["CQ-023"]
+proposed_referent:
+  label: "hard-floor-engaged admission state"
+  description: "A time-dependent machine condition in which available memory is below the configured hard floor and admission capacity is forced to zero."
+representation_status: domain_referent
+alternatives:
+  - label: "Boolean snapshot assertion about the hard-floor condition"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "implementation branch with no modeled exception semantics"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The Boolean snapshot alone is equivocal, but the cited capacity branch ties the recorded condition to a scheduler action over a measured machine resource rather than to inert serialization."
+  discriminator: "Whenever measured availableGib falls below hardFloorGib, admissionCapacityTokensFor forces admission capacity to zero, and snapshotAdmissionState records the same live comparison as hardFloorEngaged."
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

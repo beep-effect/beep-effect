@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:074"
+observation_refs:
+  - "so:sha256:d7a0f61ba65081db0a312062314292f042b24fa17180fd4271bc61e67bde6be1"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for emptyTurboPlanSnapshot in Planner.ts"
+  description: "No separate domain referent is established for the source declaration emptyTurboPlanSnapshot."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::emptyTurboPlanSnapshot"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records an exported source declaration but no fact about its behavior, represented subject, persistence, or domain identity; export visibility alone cannot reject the implementation-only null."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

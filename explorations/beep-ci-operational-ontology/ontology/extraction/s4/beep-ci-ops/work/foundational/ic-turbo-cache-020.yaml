@@ -1,0 +1,34 @@
+id: ic:turbo-cache:020
+hypothesis_ref: dh:turbo-cache:022
+identity:
+  supplies_identity: false
+  identity_criterion: 'This individual carries the CachePosture identity criterion: it is the same caller-controlled posture
+    specification across invocations and copies exactly while its normative content leaves cache arguments under CI or explicit
+    caller control and injects no local override; the caller-controlled tag is evidence, not identity.'
+  reidentification_key:
+  - caller-retains-control rule
+  - no-override behavior
+  - CachePosture vocabulary version
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One governed posture value covering the CI-controlled and explicit-cache-argument reasons that retain caller authority.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a separate per-invocation cache mode
+  - a tagged resolver DTO
+  existential_dependencies:
+  - the CachePosture specification
+  - a policy or software carrier
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - superseded if the caller-control or no-override semantics change
+counterexamples:
+- description: A CI invocation and an explicit-cache-argument invocation produce different resolver records and reasons but
+    instantiate the same governed caller-controlled posture value.
+status: proposed

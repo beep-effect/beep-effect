@@ -1,0 +1,29 @@
+id: "dh:yeet-watch:035"
+observation_refs:
+  - "so:sha256:7e67f7b06265be0ec54e4ebe28735bb85838a711dfa92a9aa672599fa8f5bce2"
+  - "so:sha256:1efc334a9b629eff423a0552052ab54d930eb977cf8f589312d570039b1a4552"
+  - "so:sha256:9c2a11a6bffc97e78e10274dcf01c806b0e6308397bfddeb7d0c9ea22e9e098d"
+  - "so:sha256:967bc1c9455289f0a20ca61244ea78bbb9119ecdd9da1d73df038ca215b0ae1e"
+  - "so:sha256:1979940815dd6ac7d4f168970a3269ab04f9c571f651ddacfe40016f9163101f"
+  - "so:sha256:142cdf7ed9e4ec9033cdb37ce4e2bf4fdd030d12b8d7f3d950310f7b386f92d7"
+  - "so:sha256:2d29b10e7be9942692eac2bec73f2f2b0dce79c261a0b36e86ded8dd6bdbdaac"
+cq_warrants: []
+proposed_referent:
+  label: "GitHub failed-log normalization and matching procedure"
+  description: "Implementation helpers that strip GitHub log decoration and compare normalized text with configured fingerprints."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "normalized failed-log information artifact"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "failure-signature matching process"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The regular expressions and string helpers specify how this implementation recognizes evidence; no separate normalized-log record or matching execution is observed."
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false

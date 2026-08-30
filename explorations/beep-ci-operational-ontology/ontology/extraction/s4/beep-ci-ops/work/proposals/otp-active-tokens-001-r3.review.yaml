@@ -1,0 +1,49 @@
+target: "otp:active-tokens:001"
+target_sha256: "ecbfaac2364a168036bb484b22eb92ce75153ff13116f71e8c74ad2b906e8416"
+chain_sha256: "fcd36529222c0d29ece4a0026cc58b5585f1ec5721ce355a7f2b1f7fb30ba8b5"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-assertion-identity
+    counterexample: >-
+      Machine A and machine B can each have five active tokens, and machine A
+      can return to five after an intervening lease change. The revised card
+      keys assertions to admission context, observation boundary, and token
+      convention, so equal values do not merge those operational facts.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      A grant record can retain capacityAtAdmissionTokens as the immediately
+      pre-grant remainder and admissionChargeTokens as the candidate charge,
+      while the ETL computes that remainder directly from the live grants.
+      CQ-010 remains answerable and the remainder remains definable without
+      materializing any activeTokens assertion, so this support property is
+      not necessary for the decision term.
+    outcome: landed
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A detached status DTO could display a summed number, but it would not
+      preserve the cited runtime fact that the scheduler gates promotion on
+      the live charge and rolls back a newly staged lease after an overshoot.
+      The operational discriminator therefore survives the null-world test.
+    outcome: survived
+rival_models_still_viable:
+  - "The pre-grant remainder can be retained without a separate activeTokens property."
+evidence:
+  - "so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+  - "CQ-010"

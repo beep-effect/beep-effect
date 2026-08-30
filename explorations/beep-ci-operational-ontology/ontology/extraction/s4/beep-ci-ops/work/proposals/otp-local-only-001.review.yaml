@@ -1,0 +1,59 @@
+target: "otp:local-only:001"
+target_sha256: "1fc00c530f5afcc790666c2676bcf027c6dc48ea1fc9daebe594e849852fb6ba"
+chain_sha256: "9ae111dbec384628f2fef01b0fb6e8a9ffdafd3ff40de191c24261ed5bef7afe"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no is-a edge or valid subsumption relation is proposed to test."
+attacks:
+  - surface: identity
+    rule: unresolved-takes-precedence
+    counterexample: >-
+      Two executions can both emit `local:rw`. The IdentityCard calls them two
+      invocation-borne posture particulars, while the proposal mints one named LocalOnly
+      individual and the FA keeps a reusable controlled-vocabulary individual viable.
+      The same term therefore both merges and separates those two executions depending
+      on which unresolved model is silently chosen.
+    outcome: landed
+  - surface: identity
+    rule: identity-and-foundational-record-agreement
+    counterexample: >-
+      A proposal marked `none` whose IdentityCard supplied or carried identity despite the proposal declaring none, or a
+      proposal marked `analyzed` over an FA with a different verdict, would
+      launder an unresolved identity decision. Here the card records
+      supplies_identity=false and carries_identity=false, and the FA
+      verdict is `analyzed`; both agree with the proposal, so this
+      consistency attack is survived.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-domain-member
+    counterexample: >-
+      CQ-024 explicitly asks whether each execution ran local-only,
+      local-write-remote-read, or caller-controlled, and its notes declare that closed
+      three-arm domain. Removing LocalOnly leaves executions emitting `local:rw`
+      unclassifiable under the stated answer contract, so the direct warrant survives.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A tagged cache-plan DTO can map `LocalOnly` to `local:rw` and emit that CLI
+      argument without a posture particular or reusable ontology individual. The
+      mapping and branch emission are precisely implementation behavior and remain true
+      under the null.
+    outcome: landed
+rival_models_still_viable:
+  - "Information content inside an invocation-scoped cache-plan decision record"
+  - "One reusable controlled-vocabulary individual in the closed CachePosture domain"
+  - "A fallback situation individuated partly by why remote reads were unavailable"
+evidence:
+  - "so:sha256:c5efde190ee92ca63e6e934eb78e8deb7bec01d061e7f60a251c65bc458a5eee"
+  - "po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c"
+  - "po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d"
+  - "po:sha256:f145ee478d3d0a92bbbe070e06d3596bffb5b28c620dc5d1f60eaa02a14cba7a"
+  - "CQ-024"

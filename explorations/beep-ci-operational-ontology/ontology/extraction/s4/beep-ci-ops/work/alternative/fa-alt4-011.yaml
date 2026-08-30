@@ -1,0 +1,18 @@
+id: fa:alt4:011
+hypothesis_ref: dh:topology:001
+identity_card_ref: ic:alt4:011
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: PackageRef as catalog-identity descriptor for workspace packages"
+    still_viable: true
+  - label: "kind: workspace software package as identity-bearing operational participant (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: PackageRef as only a query-vocabulary label
+    still_viable: false
+strongest_counterexample: The cited observation is a pre-glossary row scoping PackageRef to @beep workspace package identity; that is a modeling descriptor, and treating it as the Kind of software packages overclaims a CSV note.
+verdict: analyzed
+needed_evidence: A source-level package identity rule that reidentifies workspace packages without PackageRef, or PackageRef used only in queries with no closure participation, would discriminate catalog descriptor from package Kind.

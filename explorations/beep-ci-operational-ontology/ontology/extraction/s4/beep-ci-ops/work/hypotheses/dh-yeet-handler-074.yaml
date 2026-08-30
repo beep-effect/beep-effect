@@ -1,0 +1,24 @@
+id: "dh:yeet-handler:074"
+observation_refs:
+  - "po:sha256:698e57ebfd5f300db72965bcf84f6b21f63a77c7d7e7d140e18778f9906782aa"
+  - "po:sha256:3bc149ec75d7c1a121f803babb7e571a65fc0ab06d2c64b0e88bd68dd953f5a1"
+  - "po:sha256:b65e0e68bbb5981ce81ee8b57fa4190ac28002320d6abe0be269266c45a90fcd"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "full-proof admission work-kind token"
+  description: "A lexical alias for the full-proof work category assigned to an admission request."
+representation_status: lexical_alias
+alternatives:
+  - label: "full-proof work category"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "arbitrary request discriminator"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The handler uses contrasting values in the same kind slot across admission requests, so the token labels a requested operational work category rather than an executable helper."
+  discriminator: "Admission call sites populate the same kind slot with full-proof, merged-preview, and review-fix, making full-proof one observed operational work-kind alternative."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

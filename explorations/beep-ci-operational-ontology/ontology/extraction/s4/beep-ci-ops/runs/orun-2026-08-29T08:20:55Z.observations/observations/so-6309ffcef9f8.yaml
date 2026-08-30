@@ -1,0 +1,23 @@
+id: so:sha256:6309ffcef9f86b3d4c172c54454c30fd8984fd966c6fcb358f92f210038a8610
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 44
+  end_line: 44
+  content_sha256: 2834080eeb7c57a6aa9dba171c38697a22cb9268f86bfa38680e49a5ad9e9539
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
+epistemic_status: parser_derived

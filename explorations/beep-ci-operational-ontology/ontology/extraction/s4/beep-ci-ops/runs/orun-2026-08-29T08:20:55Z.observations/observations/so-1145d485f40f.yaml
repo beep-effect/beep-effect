@@ -1,0 +1,25 @@
+id: so:sha256:1145d485f40fdf8cb62c8be4071026c16d8edc02376a5eb9c7187eef0f446f87
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 96
+  end_line: 96
+  content_sha256: 5879e5a6d7fff0a97c8eba9d96ad90c25548c52dddb100d95fd741e3324e2bda
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::TurboConfigProofSelectorMode
+  lexical_name: TurboConfigProofSelectorMode
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: TurboConfigProofSelectorMode
+- predicate: exports_symbol
+  object: TurboConfigProofSelectorMode
+source_excerpt: export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.Type;
+epistemic_status: parser_derived

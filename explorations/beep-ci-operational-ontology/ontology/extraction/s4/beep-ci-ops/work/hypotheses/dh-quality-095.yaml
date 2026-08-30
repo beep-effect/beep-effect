@@ -1,0 +1,21 @@
+id: "dh:quality:095"
+observation_refs:
+  - "so:sha256:ce71231d698a937bc32a67943b5d61668b3d491d23e6501b55e6055227026c29"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration $I in Quality.schemas.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A module-identifier information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

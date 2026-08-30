@@ -1,0 +1,45 @@
+target: "otp:work-unit-specification:001"
+target_sha256: "5d0e441fbae90e6bfbc03103284b34de69a73a57b743eb0c7972fc9f01a02610"
+chain_sha256: "22072ae3274a1a09e05ac8387aa80a7549a11e404d023e10e9d05d5582b12fe4"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edges, so there is no proposed subsumption relation to test; no valid subsumption relation is the present result."
+attacks:
+  - surface: identity
+    rule: "policy-version-identity-conflict"
+    counterexample: "A policy revision can alter an unrelated lint rule while retaining the docgen lane, scope rule, parameters, and completion semantics word for word. The card nevertheless makes governing policy version identity-defining, separating unchanged WorkUnitSpecification content."
+    outcome: landed
+  - surface: identity
+    rule: "analysis-card-consistency"
+    counterexample: "The proposal supplies identity and says analyzed, matching ic:worktree-config:005 and fa:worktree-config:005."
+    outcome: survived
+  - surface: warrant
+    rule: "decision-term-warrant"
+    counterexample: "CQ-002 asks for the admissible lane-by-scope scheduling object, and that object must be distinct from the dated WorkUnitExecution under the standing split. The generic WorkUnitSpecification term is therefore necessary."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-policy-text"
+    counterexample: "A stale README can contain the same affected-scope and full-repository docgen recommendations while no scheduler retains or identifies WorkUnitSpecification objects. The two quoted command descriptions alone are therefore true in the implementation-documentation null world."
+    outcome: landed
+  - surface: identity
+    rule: "workunit-specification-execution-split"
+    counterexample: "Two concurrent runs can realize the same lane-by-scope prescription with distinct times, costs, and outcomes. The proposal explicitly keeps those executions separate, so the mandated split survives."
+    outcome: survived
+  - surface: identity
+    rule: "rival-model-disclosure"
+    counterexample: "Reusable plan-content and bound scheduling-request models remain viable and are both named in open_issues."
+    outcome: survived
+rival_models_still_viable:
+  - "Reusable lane-by-scope plan information content"
+  - "Bound scheduling-request information object distinct from the reusable WorkUnit specification"
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4"
+  - "CQ-002"

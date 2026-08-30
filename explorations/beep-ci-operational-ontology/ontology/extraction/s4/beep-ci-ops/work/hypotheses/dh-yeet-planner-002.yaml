@@ -1,0 +1,35 @@
+id: dh:yeet-planner:002
+observation_refs:
+- so:sha256:7796f616a217b54e8df2f48fbb0f01d5db11232605b3d1b24cb97268fc2a0113
+- so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f
+- so:sha256:7143eaf354ebb320ca07a95f3274f3aae0cb0323f9e3d1117b88128e4ed6e826
+- so:sha256:8de7e1574f6bb139c82c1a54e58cc377cb9b2425574eb104ef6e6d47a051f173
+- po:sha256:906d0d377522942bb9220bd290bcb71907aa56c1ce497dc2cca550419419d2f8
+- po:sha256:de71f16e82547bcd1c61213b48a0db513d48052cf55563ebb1634d1680d59f53
+- po:sha256:6e6961e95ee4bef3649372773b103fb170b76da19c610a817da19676417eebad
+- po:sha256:86e624235b616a7cec93d1021d31f6e3b7de441af825fd16034e8e7cde6621b0
+- po:sha256:9a531bd73c66cc707e1fd26fe320212022ca346d0bdcf26d549a103cd3fea88c
+cq_warrants:
+- CQ-022
+proposed_referent:
+  label: Verification attempt occurrence
+  description: A verification process occurrence potentially recorded by start and finish journal events sharing
+    an attempt identifier.
+representation_status: unresolved
+alternatives:
+- label: Attempt-journal event information artifacts
+  representation_status: information_artifact
+  plausibility: viable
+- label: Serialization union and data-transfer records
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: The paired event labels, UUID fields, union declaration, and verdict field are all compatible with
+    a pure journal-record protocol; the supplied observations do not establish that an independently identifiable
+    verification process occurrence is instantiated.
+epistemic_status: proposed
+confidence:
+  value: 0.48
+  use_for_acceptance: false

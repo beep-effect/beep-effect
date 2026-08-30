@@ -1,0 +1,26 @@
+id: "dh:quality:028"
+observation_refs:
+  - "so:sha256:2b388d19da81fa9a2d1cfbd7ffe5b5136329ba86dff44f9fbe6beec0dbf8a560"
+  - "so:sha256:32958d46f3f0c73fbe8e62676360c9a27901cb4017a92f88b3518494258c82bd"
+  - "so:sha256:86499b783c43c133332cf4bfe40ef5b5fdafb8b08b5be971b2f0d32e2d3e8373"
+  - "po:sha256:54cbadb10b0fa6a8f1ec24acba8b92460cdfdf8bd195bb7efac168e234a6f129"
+  - "po:sha256:ae64821b574310e683ecf5e51f124b3462285b77b4e6ce103b86ed541fd1cb5a"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "\"docgen\" label in TurboConfigProofTaskName"
+  description: "The observed token is retained only as a lexical member of the TurboConfigProofTaskName source vocabulary. The harvested claim that it denotes a scoped Turbo verification-lane specification remains possible but is not established by these records."
+representation_status: lexical_alias
+alternatives:
+  - label: "A reusable scoped Turbo verification-lane specification denoted by \"docgen\""
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied observations establish \"docgen\" only as a literal or backing-array member of TurboConfigProofTaskName. They do not observe an operational bearer, stable specification identity, execution occurrence, or lifecycle corresponding to that token, so the implementation-only null stands."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

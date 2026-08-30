@@ -1,0 +1,23 @@
+id: so:sha256:22cb642a4b9bcd68a25e5b6d998d0103241a06fe39dc05a2e8e35d9cfe2430a2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 689
+  end_line: 689
+  content_sha256: f6d1686492e601c1a208f5456b4f99bcfb96383df8d59a8f82cdbd195b5f3622
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::HOSTED_16GB_TURBO_CONCURRENCY_ARG
+  lexical_name: HOSTED_16GB_TURBO_CONCURRENCY_ARG
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+epistemic_status: parser_derived

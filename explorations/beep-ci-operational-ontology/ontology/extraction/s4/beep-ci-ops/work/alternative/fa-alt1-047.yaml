@@ -1,0 +1,24 @@
+id: "fa:alt1:047"
+hypothesis_ref: "dh:turbo-cache:001"
+identity_card_ref: "ic:alt1:047"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "a collection of independent configuration assertions rather than one document-level
+      information object"
+    still_viable: true
+  - label: "serialization-only repository artifact with no operational denotation"
+    still_viable: false
+strongest_counterexample: "The document binds a Turborepo schema and jointly declares
+  affected-selection flags, global inputs, environment inputs, and a task collection; those are
+  operational prescriptions. Whether they form one individual or several is not settled by the
+  file existing."
+verdict: "analyzed"
+needed_evidence: "Whether competency questions treat turbo.json as one configurable individual
+  or quantify independently over task entries and global flags. If a change to one task is
+  modeled as a new document, the collection rival dies; if tasks are independently reidentified,
+  the document-level individual is a mere container. Observationally equivalent on current
+  evidence."

@@ -1,0 +1,25 @@
+id: so:sha256:d6168d2c3d304ab7f89b4d3fa7a1f4e7a3227aa5fe6af21cc9c58320c8cee633
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 138
+  end_line: 138
+  content_sha256: da251b49ee49546f48078891956c7a4f3490349ac753f498c81411769bec8e6c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::RepoPlanStepResume
+  lexical_name: RepoPlanStepResume
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: RepoPlanStepResume
+- predicate: exports_symbol
+  object: RepoPlanStepResume
+source_excerpt: export type RepoPlanStepResume = typeof RepoPlanStepResume.Type;
+epistemic_status: parser_derived

@@ -16,6 +16,7 @@ import { Effect, Runtime } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { RunScopeRecord } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
 
@@ -173,6 +174,7 @@ export class YeetAdmissionLease extends S.Class<YeetAdmissionLease>($I`YeetAdmis
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))
     ),
+    runScope: S.optionalKey(RunScopeRecord),
   },
   $I.annote("YeetAdmissionLease", {
     description: "One machine-wide admission lease charging heavy repository work against memory capacity.",

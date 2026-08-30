@@ -1,0 +1,35 @@
+target: "otp:admission-charge-tokens:001"
+target_sha256: "299f2b7ac0599275c7a7955c4c1b801e1f9444c744892e8a85da8d61d75e294a"
+chain_sha256: "5aac216cee351024411b9d37cb1c389d0a85e2567c2db2ae80c38356e32d7ee0"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "entity-kind-analysis-mismatch"
+    counterexample: "Request A and request B can each bear a distinct three-token admission-charge quality while yielding the same numeric data-property value. The current IdentityCard individuates those qualities, but the revised term is a data property and still labels its foundational category as quality, so the analysis supplies no identity account for the proposed entity kind."
+    outcome: landed
+  - surface: warrant
+    rule: "cq-required-term"
+    counterexample: "A graph with a SeatGrant and WorkUnit but no admissionChargeTokens value cannot bind ?charge in CQ-010, and a queued SeatRequest without that value cannot answer CQ-021. Both CQs explicitly require this property, so the direct warrant survives."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "A pure scheduler DTO can copy an integer weightTokens field from ticket to lease and compare it with capacity while no admission-charge quality or independently governed domain relation is recognized. Every cited observation remains true in that null world."
+    outcome: landed
+rival_models_still_viable:
+  - "A numeric DTO field with no reified admission-charge quality"
+  - "A reified policy-assignment relator connecting subject, policy, unit, and magnitude"
+evidence:
+  - "so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5"
+  - "po:sha256:7133fd16712631ed47e3cc1618eb4043126bbb8ad13ddcc94dd120afebb1c174"
+  - "po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f"
+  - "CQ-010"
+  - "CQ-021"

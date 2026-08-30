@@ -1,0 +1,56 @@
+target: otp:capacity-at-admission-tokens:001
+target_sha256: cb343577135cdae83f349d136d63085e39192edea24d1bb7fca12f47df973c12
+chain_sha256: 0090a73ca8a56457b6b371edb506d9d68a9fc05fb61875c7931f7c49b1df69ba
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The proposal asserts no parents edge; no subsumption relation is proposed, so no valid subsumption relation is available to test.
+attacks:
+- surface: identity
+  rule: identifier-is-identity
+  counterexample: Two different admission attempts can both expose capacityAtAdmissionTokens equal to ten without being one quality or one assertion. The card separates them by request, policy, provenance, and pre-staging boundary rather than treating the field name or numeric value as identity evidence.
+  outcome: survived
+- surface: identity
+  rule: property-quality-category-conflict
+  counterexample: Two admission attempts can expose the same numeric remainder through the same data property while no remaining-capacity quality individual exists in either attempt. The revised definition expressly permits that data-relation-only world, but the unchanged foundational block and card still require contextual quality instances with pre-grant identity criteria; a property assertion cannot inherit the identity of those absent quality individuals.
+  outcome: landed
+- surface: identity
+  rule: identity-criterion
+  counterexample: Two admission attempts can have the same numeric remainder while involving different requests or pre-staging boundaries; the criterion separates them by admission context, request, policy version, and immediate boundary rather than identifying them by the number alone.
+  outcome: survived
+- surface: identity
+  rule: identity-card-consistency
+  counterexample: Assigning identity supply to the numeric relation would invent a provider absent from the card; both card and proposal instead use identity none.
+  outcome: survived
+- surface: identity
+  rule: foundational-status-mismatch
+  counterexample: Calling the term analyzed would conceal the missing atomic admission record named by the foundational analysis; both records remain explicitly_deferred.
+  outcome: survived
+- surface: identity
+  rule: rival-model-hidden
+  counterexample: A derived number with no quality token and an ETL-created admission-event record have different identity conditions; both remain explicit steward choices in open_issues.
+  outcome: survived
+- surface: warrant
+  rule: cq-requires-term
+  counterexample: CQ-010 compares admissionChargeTokens with capacityAtAdmissionTokens and lists the latter as required; deleting this relation makes the deployed overrun invariant unanswerable.
+  outcome: survived
+- surface: null_discriminator
+  rule: discriminator-true-of-derived-value
+  counterexample: A program can evaluate activeTokenTotal plus weightTokens against capacityTokens and expose capacity minus active charges as an ephemeral arithmetic value without any persisted quality or domain relation; extensional equivalence to the inequality is true in that implementation-only null world.
+  outcome: landed
+rival_models_still_viable:
+- Remaining capacity is only a derived numeric value and no separately individuated quality exists.
+- An ETL-created admission-event record reifies the pre-grant remainder as information rather than as a world quality.
+evidence:
+- so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f
+- so:sha256:bd4d9d95ea3664e0b47b1f4d327e89339b981cbbdac3508b0ecd1853b610c278
+- so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451
+- po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f
+- po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16
+- CQ-010

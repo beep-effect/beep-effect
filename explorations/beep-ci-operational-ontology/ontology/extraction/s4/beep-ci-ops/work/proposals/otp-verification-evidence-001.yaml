@@ -1,0 +1,62 @@
+id: otp:verification-evidence:001
+hypothesis_ref: dh:worktree-config:008
+identity_card_ref: ic:worktree-config:004
+foundational_status: explicitly_deferred
+term:
+  local_name: VerificationEvidence
+  preferred_label: verification evidence
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationEvidence
+  owl_entity_kind: class
+definition:
+  text: An information artifact bearing an evidentiary role under a verification policy by recording a result together
+    with the tree state, cache epoch, procedure, and provenance needed to determine applicability and discharge
+    a verification obligation. CQ-005 and CQ-006 require the evidence record; its content-versus-token identity
+    and custody semantics remain unresolved.
+  source:
+  - CQ-005
+  - CQ-006
+  - po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a
+  - po:sha256:c13db8addc9d014305ab9aee478dec45f03d3b3cc65a65889949dbaf72b49303
+  - po:sha256:c51e70098e7cb7f6170bccb102a0436b5741f45bbba0c983f6c9461886ece32d
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-005
+  - CQ-006
+alternatives_rejected:
+- 'Implementation-artifact-only null rejected. Rationale: The policy explicitly requires recorded evidence and identifies
+  repository-wide output as proof, giving the record an evidentiary role. Discriminator: The browser-QA quotation
+  requires evidence recorded through record, extract, and judge stages; that persisted result is distinct from the
+  command or code producing it.'
+- 'Rejected weak denotation alternative: verification execution outcome.'
+- 'Rejected non-viable foundational model: Verification outcome situation or execution occurrence itself.'
+open_issues:
+- Steward must choose among one result-content object with multiple faithful concretizations, distinct issued record
+  tokens with custody histories, and an existing result record contingently bearing the evidence role.
+- An artifact identity and custody contract must state how copying, generation, correction, invalidation, supersession,
+  and loss of faithful bearers affect identity before the explicitly deferred fields can close.
+revision_log:
+- from_sha256: ea35d0d251b79961243b5281ae0e9c9de97b62a4e9cce1d17f5df20f5ff84b79
+  addressed:
+  - identity-content-token-underdetermined
+  - discriminator-role-vs-artifact-underdetermined
+- from_sha256: 5602817ee959c2ea5aa9d1e2f5ae8b688564899ac9bf187bb7432722639ce9f3
+  addressed:
+  - content-token-identity-underdetermined
+  - role-bearer-model-underdetermined
+- from_sha256: d2100ce95692a3dbf619ba1161fbea9bcd404f108288768ab43887fda869f295
+  addressed:
+  - content-token-identity-underdetermined
+  - role-bearer-model-underdetermined
+revision_requests: []
+status: proposed

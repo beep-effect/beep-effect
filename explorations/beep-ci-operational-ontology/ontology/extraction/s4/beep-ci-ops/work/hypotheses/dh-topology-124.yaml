@@ -1,0 +1,25 @@
+id: "dh:topology:124"
+observation_refs:
+  - "po:sha256:685e2064a83a60d8c47aa5557ec42c4de3868fb12395ccb83a679791ae361049"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/storybook workspace package"
+  description: "The workspace software package information artifact identified by @beep/storybook in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/storybook as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The topology-row DTO counterexample wins: @beep/storybook 56 can be parsed and consumed by CQ-004 without establishing a governed package-reference artifact or software-package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

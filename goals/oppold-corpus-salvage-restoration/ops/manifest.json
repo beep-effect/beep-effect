@@ -5,7 +5,7 @@
     "title": "Oppold Corpus Salvage Restoration",
     "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-24",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
@@ -47,7 +47,7 @@
     {
       "id": "P0",
       "name": "Preservation gate",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",

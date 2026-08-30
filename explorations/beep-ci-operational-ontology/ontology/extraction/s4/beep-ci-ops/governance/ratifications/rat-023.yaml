@@ -1,0 +1,9 @@
+id: rat:23
+proposal_ref: otp:caller-controlled:001
+proposal_sha256: 6fb3a0cc7a1cb3bc9e0a5debbf76ea14d8e0be45ce247606dc8074d54e736286
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept CallerControlled — the deployed third member; without it the enumeration lies.

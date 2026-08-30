@@ -1,0 +1,25 @@
+id: so:sha256:abac752ac37354d5eedde577bf15ec6abf059d5a07396b61a3817eed3e9c7645
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 397
+  end_line: 406
+  content_sha256: 820667cd50c2cbc2219cfb3496cabbb2226f0cdc9f767aa7327c70cd7c803808
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::RemoteReadTurboCache
+  lexical_name: RemoteReadTurboCache
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: RemoteReadTurboCache
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class RemoteReadTurboCache extends S.Class<RemoteReadTurboCache>($I`RemoteReadTurboCache`)(
+epistemic_status: parser_derived

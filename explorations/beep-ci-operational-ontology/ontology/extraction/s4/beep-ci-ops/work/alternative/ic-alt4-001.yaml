@@ -1,0 +1,27 @@
+id: ic:alt4:001
+hypothesis_ref: dh:reporun:007
+identity:
+  supplies_identity: true
+  identity_criterion: Two cheap-gates procedure specifications are the same when they prescribe the same proof-surface membership together with the same executable argument sequence ending in cheap-gates and --collect-all; the surface token is evidence, never the sameness criterion.
+  reidentification_key:
+    - cheap-gates
+    - full:00-cheap-gates
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The proof-surface membership and the prescribed beep argument sequence compose one command prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: The quality surface also maps to a github-checks command, so sharing that verb does not make it the cheap-gates specification.
+  - description: A dated run of those arguments is a verification occurrence, not this repeatable prescription.
+status: proposed

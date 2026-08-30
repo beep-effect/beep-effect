@@ -1,0 +1,2123 @@
+- candidate: PackageRef
+  kind: class
+  definition: An @beep/* workspace package identity represented in the materialized package topology.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Defines the package identities returned by CQ-004's touched-package dependency closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:12 — 'PackageRef,class,CQ-004,"@beep/*
+    workspace package identity"'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:5 — '@beep/hubspot
+    4'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: dependsOn
+  kind: property
+  definition: Relates a PackageRef to a directly declared @beep/* dependency or devDependency PackageRef.
+  domain: PackageRef
+  range: PackageRef
+  admission_kind: semantic-support
+  supports:
+  - dependsOnTransitive
+  decision_relevance: Supplies the direct base edges from which CQ-004's dependency closure is computed.
+  evidence:
+  - 'explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:55 — ''dependsOn,property,CQ-004,"direct
+    workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint''s
+    base relation (round-3 I-03/H-09 licensing fix)"'''
+  - 'packages/drivers/hubspot/package.json:62 — ''"@beep/identity": "workspace:^",'''
+  - 'packages/drivers/hubspot/package.json:68 — ''"@beep/test-utils": "workspace:^",'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: dependsOnTransitive
+  kind: property
+  definition: Relates a PackageRef to every PackageRef reachable through the Datalog fixpoint over dependsOn.
+  domain: PackageRef
+  range: PackageRef
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides the dependency-closure relation queried by CQ-004.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:54 — 'dependsOnTransitive,property,CQ-004,"Datalog
+    fixpoint over dependsOn (rule-compiled)"'
+  - explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml:116 — '?pkg ciops:dependsOnTransitive
+    ?touched .'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/acp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/acp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:97 — '@beep/acp
+    96'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/agents-client'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/agents-client.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:116 — '@beep/agents-client
+    115'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/agents-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/agents-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:6 — '@beep/agents-domain
+    5'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/agents-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/agents-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:26 — '@beep/agents-server
+    25'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/agents-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/agents-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:59 — '@beep/agents-tables
+    58'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/agents-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/agents-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:40 — '@beep/agents-use-cases
+    39'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ai-provider-cli'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ai-provider-cli.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:34 — '@beep/ai-provider-cli
+    33'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ai-sync'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ai-sync.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:25 — '@beep/ai-sync
+    24'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/anthropic'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/anthropic.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:89 — '@beep/anthropic
+    88'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/api-docs'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/api-docs.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:39 — '@beep/api-docs
+    38'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/api-transport'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/api-transport.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:83 — '@beep/api-transport
+    82'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-client'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-client.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:21 — '@beep/architecture-lab-client
+    20'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-config'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-config.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:108 — '@beep/architecture-lab-config
+    107'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:135 — '@beep/architecture-lab-domain
+    134'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-proof'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-proof.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:118 — '@beep/architecture-lab-proof
+    117'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:112 — '@beep/architecture-lab-server
+    111'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:74 — '@beep/architecture-lab-tables
+    73'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-ui'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-ui.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:9 — '@beep/architecture-lab-ui
+    8'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/architecture-lab-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/architecture-lab-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:93 — '@beep/architecture-lab-use-cases
+    92'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/box'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/box.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:84 — '@beep/box
+    83'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/brand'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/brand.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:133 — '@beep/brand
+    132'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/chalk'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/chalk.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:45 — '@beep/chalk
+    44'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/codegen-kit'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/codegen-kit.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:134 — '@beep/codegen-kit
+    133'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/colors'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/colors.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:38 — '@beep/colors
+    37'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/cosmos'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/cosmos.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:43 — '@beep/cosmos
+    42'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/data'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/data.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:110 — '@beep/data
+    109'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/db-admin'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/db-admin.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:15 — '@beep/db-admin
+    14'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/discord'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/discord.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:17 — '@beep/discord
+    16'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/doc-text'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/doc-text.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:140 — '@beep/doc-text
+    139'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/dock'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/dock.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:22 — '@beep/dock
+    21'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/dock-react'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/dock-react.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:35 — '@beep/dock-react
+    34'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/documents-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/documents-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:103 — '@beep/documents-domain
+    102'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/documents-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/documents-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:87 — '@beep/documents-server
+    86'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/documents-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/documents-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:130 — '@beep/documents-tables
+    129'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/documents-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/documents-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:141 — '@beep/documents-use-cases
+    140'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/drizzle'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/drizzle.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:81 — '@beep/drizzle
+    80'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/duckdb'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/duckdb.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:113 — '@beep/duckdb
+    112'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ecfr'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ecfr.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:95 — '@beep/ecfr
+    94'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/editor'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/editor.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:28 — '@beep/editor
+    27'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/effect-drizzle'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/effect-drizzle.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:52 — '@beep/effect-drizzle
+    51'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-client'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-client.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:46 — '@beep/epistemic-client
+    45'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-config'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-config.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:119 — '@beep/epistemic-config
+    118'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:91 — '@beep/epistemic-domain
+    90'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:105 — '@beep/epistemic-server
+    104'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:138 — '@beep/epistemic-tables
+    137'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-ui'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-ui.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:69 — '@beep/epistemic-ui
+    68'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/epistemic-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/epistemic-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:120 — '@beep/epistemic-use-cases
+    119'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/exiftool'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/exiftool.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:58 — '@beep/exiftool
+    57'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/face-detection'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/face-detection.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:18 — '@beep/face-detection
+    17'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/fc-runs'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/fc-runs.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:101 — '@beep/fc-runs
+    100'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ffmpeg'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ffmpeg.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:114 — '@beep/ffmpeg
+    113'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/file-processing'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/file-processing.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:32 — '@beep/file-processing
+    31'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/firecrawl'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/firecrawl.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:94 — '@beep/firecrawl
+    93'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/gov-legal-mcp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/gov-legal-mcp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:19 — '@beep/gov-legal-mcp
+    18'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/govinfo'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/govinfo.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:109 — '@beep/govinfo
+    108'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/graph-3d'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/graph-3d.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:78 — '@beep/graph-3d
+    77'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/html'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/html.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:124 — '@beep/html
+    123'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/hubspot'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/hubspot.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:5 — '@beep/hubspot
+    4'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/identity'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/identity.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:79 — '@beep/identity
+    78'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/infra'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/infra.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:99 — '@beep/infra
+    98'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/langextract'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/langextract.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:62 — '@beep/langextract
+    61'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/law-practice-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/law-practice-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:30 — '@beep/law-practice-domain
+    29'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/law-practice-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/law-practice-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:14 — '@beep/law-practice-server
+    13'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/law-practice-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/law-practice-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:51 — '@beep/law-practice-tables
+    50'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/law-practice-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/law-practice-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:68 — '@beep/law-practice-use-cases
+    67'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/lexical-schema'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/lexical-schema.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:61 — '@beep/lexical-schema
+    60'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/libpff'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/libpff.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:76 — '@beep/libpff
+    75'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/lint-rules'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/lint-rules.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:36 — '@beep/lint-rules
+    35'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/m365'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/m365.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:121 — '@beep/m365
+    120'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/m365-mcp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/m365-mcp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:42 — '@beep/m365-mcp
+    41'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/mcp-kit'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/mcp-kit.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:13 — '@beep/mcp-kit
+    12'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/md'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/md.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:65 — '@beep/md
+    64'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/n3'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/n3.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:125 — '@beep/n3
+    124'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/nlp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/nlp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:98 — '@beep/nlp
+    97'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/nlp-mcp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/nlp-mcp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:29 — '@beep/nlp-mcp
+    28'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/nlp-processing'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/nlp-processing.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:88 — '@beep/nlp-processing
+    87'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/obs'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/obs.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:115 — '@beep/obs
+    114'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/observability'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/observability.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:122 — '@beep/observability
+    121'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/oip-web'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/oip-web.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:56 — '@beep/oip-web
+    55'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/onepassword-cli'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/onepassword-cli.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:107 — '@beep/onepassword-cli
+    106'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:7 — '@beep/ontology
+    6'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology-client'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology-client.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:92 — '@beep/ontology-client
+    91'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology-config'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology-config.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:33 — '@beep/ontology-config
+    32'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:60 — '@beep/ontology-domain
+    59'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:37 — '@beep/ontology-server
+    36'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology-ui'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology-ui.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:82 — '@beep/ontology-ui
+    81'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ontology-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ontology-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:20 — '@beep/ontology-use-cases
+    19'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/openai'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/openai.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:129 — '@beep/openai
+    128'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/openai-compat'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/openai-compat.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:85 — '@beep/openai-compat
+    84'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/openclaw'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/openclaw.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:50 — '@beep/openclaw
+    49'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/oxigraph'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/oxigraph.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:96 — '@beep/oxigraph
+    95'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/pacer'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/pacer.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:11 — '@beep/pacer
+    10'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/pandoc-ast'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/pandoc-ast.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:127 — '@beep/pandoc-ast
+    126'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/pglite'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/pglite.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:24 — '@beep/pglite
+    23'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/phoenix'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/phoenix.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:48 — '@beep/phoenix
+    47'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/postgres'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/postgres.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:132 — '@beep/postgres
+    131'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/practice-kg-mcp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/practice-kg-mcp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:66 — '@beep/practice-kg-mcp
+    65'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/pretext'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/pretext.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:136 — '@beep/pretext
+    135'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/professional-desktop'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/professional-desktop.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:90 — '@beep/professional-desktop
+    89'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/provenance'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/provenance.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:137 — '@beep/provenance
+    136'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/qa-capture'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/qa-capture.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:139 — '@beep/qa-capture
+    138'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/rdf'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/rdf.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:106 — '@beep/rdf
+    105'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/rdf-canonize'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/rdf-canonize.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:8 — '@beep/rdf-canonize
+    7'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/repo-ai-metrics'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/repo-ai-metrics.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:73 — '@beep/repo-ai-metrics
+    72'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/repo-cli'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/repo-cli.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:23 — '@beep/repo-cli
+    22'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/repo-configs'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/repo-configs.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:128 — '@beep/repo-configs
+    127'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/repo-docgen'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/repo-docgen.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:31 — '@beep/repo-docgen
+    30'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/repo-utils'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/repo-utils.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:102 — '@beep/repo-utils
+    101'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/root'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/root.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:10 — '@beep/root
+    9'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/runpod'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/runpod.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:100 — '@beep/runpod
+    99'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/sanity'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/sanity.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:142 — '@beep/sanity
+    141'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/schema'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/schema.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:104 — '@beep/schema
+    103'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/scratchpad'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/scratchpad.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:64 — '@beep/scratchpad
+    63'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/semantic-web'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/semantic-web.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:71 — '@beep/semantic-web
+    70'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/semantica'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/semantica.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:54 — '@beep/semantica
+    53'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/shacl'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/shacl.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:86 — '@beep/shacl
+    85'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/shared-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/shared-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:16 — '@beep/shared-domain
+    15'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/shared-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/shared-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:63 — '@beep/shared-tables
+    62'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/shared-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/shared-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:49 — '@beep/shared-use-cases
+    48'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/skill-contract'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/skill-contract.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:41 — '@beep/skill-contract
+    40'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/storybook'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/storybook.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:57 — '@beep/storybook
+    56'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/tailscale'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/tailscale.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:67 — '@beep/tailscale
+    66'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/test-utils'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/test-utils.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:53 — '@beep/test-utils
+    52'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/tika'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/tika.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:75 — '@beep/tika
+    74'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/trustgraph-workbench'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/trustgraph-workbench.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:80 — '@beep/trustgraph-workbench
+    79'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/tsgo-shim'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/tsgo-shim.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:123 — '@beep/tsgo-shim
+    122'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/types'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/types.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:55 — '@beep/types
+    54'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/ui'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/ui.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:126 — '@beep/ui
+    125'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/uspto'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/uspto.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:47 — '@beep/uspto
+    46'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/uspto-mcp'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/uspto-mcp.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:117 — '@beep/uspto-mcp
+    116'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/utils'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/utils.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:72 — '@beep/utils
+    71'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/venice-ai'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/venice-ai.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:77 — '@beep/venice-ai
+    76'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/wink'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/wink.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:131 — '@beep/wink
+    130'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/workspace-domain'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/workspace-domain.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:70 — '@beep/workspace-domain
+    69'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/workspace-server'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/workspace-server.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:44 — '@beep/workspace-server
+    43'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/workspace-tables'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/workspace-tables.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:12 — '@beep/workspace-tables
+    11'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/workspace-use-cases'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/workspace-use-cases.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:27 — '@beep/workspace-use-cases
+    26'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: '@beep/xai'
+  kind: individual
+  definition: A PackageRef individual whose source package name is @beep/xai.
+  admission_kind: decision
+  cq_justification:
+  - CQ-004
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
+  evidence:
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:111 — '@beep/xai
+    110'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-package-topology

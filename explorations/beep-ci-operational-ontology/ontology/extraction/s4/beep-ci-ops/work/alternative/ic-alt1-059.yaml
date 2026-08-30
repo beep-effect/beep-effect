@@ -1,0 +1,36 @@
+id: "ic:alt1:059"
+hypothesis_ref: "dh:yeet-watch:028"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two setup-5xx failure signature specifications are the same iff they are
+    the same environment-only rerun-licensing criterion that the merge monitor attaches to a
+    failed hosted job when the job matches the setup-step-failure shape (or the same named flake
+    class used that way). The member spelling is reidentification evidence, never the sameness
+    criterion."
+  reidentification_key:
+    - "setup-5xx"
+    - "YeetMonitorFlakeClass"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one rerun-licensing signature as a single information object; matching jobs are not
+    parts of the signature"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "classifyJob copies a detected GithubJobShapeClass onto
+      YeetMonitorFailedJob.flakeClass and planYeetMonitorReruns converts a present signature
+      into a bounded rerun. A particular setup failure occurrence is not the signature:
+      rerunning creates another job. Treating the monitor's flake class as identical with
+      JobShape's shape criterion would also ignore that JobShape reports shape not flakiness,
+      while the monitor treats the match as environment-only rerun license."
+status: "proposed"

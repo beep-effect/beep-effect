@@ -1,0 +1,18 @@
+id: "dh:sched-core:040"
+observation_refs:
+  - "so:sha256:a316b04a8c295530cd614abc1b3053b8555c12b7f0a5bfb77bf040e38f2962a7"
+cq_warrants: []
+proposed_referent:
+  label: "no-origin-gate sentinel"
+  description: "A no-op gate value used by admission kinds that require no origin-scoped resource."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "explicit absence of an origin-resource obligation"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The exported value supplies immediately successful acquire and no-op release behavior; no observation establishes a domain individual corresponding to that sentinel."
+epistemic_status: proposed
+confidence: {value: 0.97, use_for_acceptance: false}

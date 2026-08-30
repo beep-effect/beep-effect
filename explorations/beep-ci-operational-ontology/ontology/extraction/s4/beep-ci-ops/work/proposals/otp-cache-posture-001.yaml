@@ -1,0 +1,64 @@
+id: otp:cache-posture:001
+hypothesis_ref: dh:turbo-cache:021
+identity_card_ref: ic:turbo-cache:019
+foundational_status: analyzed
+term:
+  local_name: CachePosture
+  preferred_label: cache posture
+  proposed_iri: https://oip.law/ontology/ci-ops#CachePosture
+  owl_entity_kind: class
+definition:
+  text: A class of governed cache-posture specifications used to classify the effective local and remote cache authority of
+    a WorkUnit execution as caller-controlled, local-only, or local-write-remote-read. Without this class, the three CQ-024
+    posture values have no common operational semantics or closed range and can be confused with transient resolver DTO tags
+    rather than the effective posture asserted for the execution.
+  source:
+  - CQ-024
+  - so:sha256:0952b7b2035197b1af67acb93f317c9c4423d512ef37c1901ef400ebc0582d5d
+  - so:sha256:5d0e6acd290b5196f60564db2ff96d372e58be87e73858be2e1509acd8ec9120
+  - so:sha256:851e5258ae9f3445d2fb705147e3436235ae76d5f67e2077f865f5f4ebafcd09
+  - so:sha256:fda192fc3bca2db51e31f137d0a04b20e2767c62fc68bec4e1154294ecda4319
+  - po:sha256:0c1451cdc80d47a798ce0094c28a4bdb1bab2f1618bbcac3fdba9ab8d605328b
+  - po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c
+  - po:sha256:1ffc862ba7eec6d7ee7eed682dfb86f65db7fa7e01fb60878af8add3eea3e6be
+  - po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d
+  - po:sha256:72dda28d4621e5ab4bf1a1f2d85ef9ae34b2393bde139ab0360ca629281cbebd
+  - po:sha256:796a368eab4715c8836bd1377c8315816c521bd1e74c85c89948d33d2216e7a0
+  - po:sha256:8719ca78bfb189d92f0013582af164aaa9206f715bad8caee214eabaad8cd954
+  - po:sha256:a3f91e775ab382cb51a66901aaa9aa972fc7a4759a43a8680846173d9301a919
+  - po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5
+  - po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+revision_log:
+- from_sha256: 38893d8a3373183d7d1f7227e20cbc7edd61429fece888599f97a0c09c2535c9
+  addressed:
+  - token-content-identity-conflict
+  - cq-referent-mismatch
+  - discriminator-true-of-tagged-dto
+- from_sha256: 32230663caf27c3d9993e28128a4da0cd94db5755ee616ca2f65ba2e8e9eb724
+  addressed:
+  - token-content-identity-conflict
+  - cq-referent-mismatch
+  - discriminator-true-of-tagged-dto
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+  - otp:caller-controlled:001
+  - otp:local-only:001
+  - otp:local-write-remote-read:001
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: For each Turbo invocation, the resolved plan injects local-only
+  cache arguments, carries the selected remote-read mode, or leaves CI and explicit cache arguments caller-controlled.'
+- 'Rejected weak alternative: Only the tagged-union representation used by the CLI.'
+open_issues: []
+revision_requests: []
+status: proposed

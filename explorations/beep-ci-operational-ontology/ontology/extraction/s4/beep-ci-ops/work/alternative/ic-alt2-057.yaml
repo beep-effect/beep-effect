@@ -1,0 +1,34 @@
+id: ic:alt2:057
+hypothesis_ref: dh:yeet-planner:009
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two review-fix planner procedure specifications are the same iff they prescribe the same repair-loop proof plan that binds
+    base and head revision endpoints and selects an empty GitHub-check lane collection; the YeetProofTier member is evidence
+    rather than the criterion.
+  reidentification_key:
+  - YeetProofTier.review-fix
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One specification per distinct review-fix proof-plan prescription in the planner.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    This planner specification binds --base and --head and contributes an empty GithubCheckLaneSpec collection; the RepoProofSurface
+    review-fix command bundle (quality/github-checks/review-fix) is a different encoding and is not automatically the same
+    specification.
+- description: >-
+    The assurance-tier token review-fix is not the procedure: full and cheap-gates are other members of the same kit with
+    different lane mappings.
+status: proposed

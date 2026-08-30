@@ -1,0 +1,72 @@
+target: "otp:hard-floor-engaged-situation:001"
+target_sha256: "0026292412b05e886f4a571860c98155fc68b81eb1b106ed4fd1afd02dac8e28"
+chain_sha256: "1170221221a81684135cf750b82377b851d23e922dcc66b694abdfe6dd092f31"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edges, so it contributes no is-a
+    relation whose rigidity, identity inheritance, dependence, unity, or absence
+    can be tested.
+attacks:
+  - surface: identity
+    rule: rigidity-identity-conflict
+    counterexample: >-
+      Under the card's maximal-interval criterion, situation S ceases when memory
+      recovers above the floor; S never persists while leaving the class. Membership
+      is therefore essential to S, yet the proposal marks the class anti_rigid as if
+      S could cease being hard-floor-engaged and remain the same situation.
+    outcome: landed
+  - surface: identity
+    rule: identity-continuity-evidence-gap
+    counterexample: >-
+      Snapshot A at 10:00 and snapshot B at 10:02 can both report below-floor and
+      zero capacity even though memory recovered at 10:01. Treating A and B as one
+      continuous situation wrongly identifies two episodes, and the cited snapshots
+      contain no continuity evidence to prevent that error.
+    outcome: landed
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two episodes separated by an above-floor reading share the same Boolean value
+      hardFloorEngaged=true. The card uses machine, policy, and maximal continuous
+      interval, so the Boolean identifier alone does not merge them.
+    outcome: survived
+  - surface: identity
+    rule: foundational-status-and-rival-disclosure
+    counterexample: >-
+      Phase, Boolean-snapshot, and implementation-branch models remain viable. The
+      proposal's analyzed status matches the FA and its open issue exposes all three
+      rather than silently choosing among them.
+    outcome: survived
+  - surface: warrant
+    rule: support-not-necessary-for-decision-term
+    counterexample: >-
+      CQ-010 compares a materialized pre-grant capacity number with a charge. It can
+      be answered when capacityAtAdmissionTokens is recorded directly, without any
+      HardFloorEngagedSituation individual or class. The proposed situation is not
+      semantically necessary for that decision property.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-boolean-branch
+    counterexample: >-
+      A pure control-flow branch can compare availableGib with hardFloorGib, return
+      zero, and serialize hardFloorEngaged=true in a snapshot DTO. Those facts do
+      not require a world-level situation and remain true under the implementation-
+      only null.
+    outcome: landed
+rival_models_still_viable:
+  - "An intrinsic phase of the machine admission regime"
+  - "A Boolean assertion in an admission snapshot"
+  - "An implementation branch with no separately modeled situation"
+evidence:
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+  - "CQ-010"
+  - "CQ-023"

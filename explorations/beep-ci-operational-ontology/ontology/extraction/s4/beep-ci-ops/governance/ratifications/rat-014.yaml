@@ -1,0 +1,9 @@
+id: rat:14
+proposal_ref: otp:active-tokens:001
+proposal_sha256: 260751bc63ae5a3bc1d9354a1c0f0c7cdd7f76997e954209597784d9f9a7bdd6
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept activeTokens — necessity is the computable pre-grant remainder from a snapshot.

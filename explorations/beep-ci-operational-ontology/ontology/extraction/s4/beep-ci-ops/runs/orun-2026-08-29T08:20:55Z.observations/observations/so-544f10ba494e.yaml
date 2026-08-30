@@ -1,0 +1,23 @@
+id: so:sha256:544f10ba494e47d860040ba0e1b3a2dd055d5aee2376a1c4dba859413dff1448
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 897
+  end_line: 935
+  content_sha256: bd1c39305a3c1e2de538307776b9b36c60c946ecf0c88a73dcc94363872541b3
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runMonitorPhase
+  lexical_name: runMonitorPhase
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
+epistemic_status: parser_derived

@@ -1,0 +1,21 @@
+id: "dh:reporun:011"
+observation_refs:
+  - "so:sha256:66117a2c2a3ba18d1d0a3c01fe431122acd9dd4af04d4b7aa962df29facecd5a"
+cq_warrants: []
+proposed_referent:
+  label: "RepoRun.models module identifier binding"
+  description: "The local identifier-factory binding used to annotate repository-run model declarations."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Identifier for a repository-run domain module"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only observed fact is an unrepresentable identifier-factory variable declaration. It establishes annotation plumbing and no referent in repository operations."
+epistemic_status: proposed
+confidence:
+  value: 0.98
+  use_for_acceptance: false
+

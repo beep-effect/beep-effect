@@ -1,0 +1,10 @@
+id: po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: AGENTS.md
+source_span:
+  start_line: 81
+  end_line: 83
+quote: recorded evidence via `bun run beep qa` (record → extract → judge)
+epistemic_status: quoted_prose

@@ -1,0 +1,24 @@
+id: so:sha256:435c62050b8e226812199466cee9a86715b2571a2a9e069732597092cc6b9a1f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 443
+  end_line: 446
+  content_sha256: be535137463c19c33ab84aa417aab582ba8286ba1d23a270d8aeb43f0d7f75bf
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::normalizeProofTasks
+  lexical_name: normalizeProofTasks
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const normalizeProofTasks = (tasks: ReadonlyArray<string>): ReadonlyArray<TurboConfigProofTaskName>
+  => {'
+epistemic_status: parser_derived

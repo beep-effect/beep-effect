@@ -1,0 +1,22 @@
+# Ratification — the ONLY authoritative record. AUTHORED BY THE HUMAN STEWARD, one
+# decision per proposal. The agent may scribe the steward's VERBATIM per-proposal
+# decision (quoted below); a blanket "looks good" over a summary table ratifies
+# NOTHING. File layout: ontologies/{name}/governance/ratifications/rat-<nnn>.yaml.
+id: "rat:<nnn>"
+proposal_ref: "otp:..."
+proposal_sha256: "<sha256 of the proposal FILE bytes the steward saw>"
+                                  # REQUIRED (validator-enforced): the decision
+                                  # authorizes THOSE bytes — if the proposal file
+                                  # changes afterward, the ratification is STALE
+                                  # and the validator rejects it; re-present the
+                                  # changed proposal to the steward
+decision: accept | reject | revise
+steward: {id: "", name: ""}
+decided_at: "<ISO8601>"
+verbatim_decision: ""             # the steward's actual words for THIS proposal — must
+                                  # NAME it (local_name or proposal slug); the validator
+                                  # rejects unnamed verbatims and byte-identical verbatims
+                                  # across records ("accept all 12" copied N times is one
+                                  # decision, not N — re-present each proposal, scribe
+                                  # each answer)
+rationale: ""                     # required for reject/revise; feeds the rejection ledger

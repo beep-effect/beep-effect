@@ -1,0 +1,30 @@
+id: "dh:sched-core:010"
+observation_refs:
+  - "so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5"
+  - "so:sha256:5b05efc61c2fd7de3c28414678dfa7302018d4fafd6f02a307ac897623489193"
+  - "so:sha256:63ba4aaa9693ba692dbd1089e69855e4c4e78f7b3d6005e529431e9a96163c70"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1"
+  - "po:sha256:7ac375710c80682c25f8e9effab735affd8a22a5d27df4ba806992d64c780f03"
+  - "po:sha256:afa600fec9889222d94fb5a29bc4aa8e748edd9baaa22ceb1f64db174a9be2a6"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+cq_warrants: []
+proposed_referent:
+  label: "admission-state snapshot"
+  description: "A point-in-time information artifact containing current capacity, active charges, live leases, queued tickets, memory availability, and exceptional record lists."
+representation_status: information_artifact
+alternatives:
+  - label: "the live admission state at the observation instant"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "status-response DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "A status schema and reader could be only an API response representation."
+  discriminator: "The quoted prose calls it a point-in-time view of machine-wide admission state, and the observed snapshot procedure materializes live capacity, charges, leases, tickets, and memory readings."
+epistemic_status: proposed
+confidence: {value: 0.94, use_for_acceptance: false}

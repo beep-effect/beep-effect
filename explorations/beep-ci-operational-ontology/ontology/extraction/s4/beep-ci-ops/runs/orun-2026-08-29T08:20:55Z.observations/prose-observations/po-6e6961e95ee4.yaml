@@ -1,0 +1,10 @@
+id: po:sha256:6e6961e95ee4bef3649372773b103fb170b76da19c610a817da19676417eebad
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 100
+  end_line: 105
+quote: export const YeetAttemptJournalEvent = S.Union([YeetAttemptStarted, YeetAttemptFinished]).pipe(
+epistemic_status: quoted_prose

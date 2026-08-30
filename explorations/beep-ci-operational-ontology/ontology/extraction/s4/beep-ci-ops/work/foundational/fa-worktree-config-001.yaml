@@ -1,0 +1,24 @@
+id: "fa:worktree-config:001"
+hypothesis_ref: "dh:worktree-config:001"
+identity_card_ref: "ic:worktree-config:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Architecture-policy information object without separately individuated obligation tokens"
+    still_viable: true
+  - label: "Normative relator connecting policy authority, obligated bearer, contradiction, and correction"
+    still_viable: true
+strongest_counterexample: >-
+  One policy sentence governs many proposals, while each proposal can incur and
+  discharge its requirement separately. Treating the sentence, every resulting
+  obligation, and the procedure that detects contradiction as one individual
+  collapses distinct bearers and lifecycles.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A case record linking one proposal, responsible bearer, architecture-rule
+  version, contradiction finding, and discharge event would decide whether the
+  source supports obligation tokens rather than only a generic policy
+  specification.

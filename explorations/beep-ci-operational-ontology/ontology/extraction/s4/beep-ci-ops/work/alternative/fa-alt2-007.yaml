@@ -1,0 +1,22 @@
+id: fa:alt2:007
+hypothesis_ref: dh:sched-core:011
+identity_card_ref: ic:alt2:007
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: the GiB reading supplied to the admission snapshot'
+  still_viable: true
+- label: 'quality: the machine''s memory-availability quality'
+  still_viable: true
+- label: 'implementation_artifact_only: operating-system adapter service'
+  still_viable: true
+strongest_counterexample: >-
+  availableGib is re-read on every evaluation and copied into the snapshot, so treating the service tag MemoryStats as the
+  domain quality skips the information/world split the snapshot itself performs.
+verdict: analyzed
+needed_evidence: >-
+  A CQ or procedure that reasons about memory as a persisting machine quality without going through snapshot readings would
+  keep the quality rival as a separately admitted term; otherwise the observation is the only operational handle.

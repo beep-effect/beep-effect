@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
+import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { CorpusCommandError } from "./Corpus.errors.ts";
@@ -19,21 +20,38 @@ import {
   CorpusOrganizeOptions,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
+  RestorationLegacyWordOptions,
+  RestorationMailOptions,
+  RestorationPreserveOptions,
+  RestorationRecycleOptions,
+  RestorationVerifyOptions,
+  T7PreservationOptions,
 } from "./Corpus.schemas.ts";
 import {
+  approveT7Preservation,
   archiveMoveCorpus,
   CorpusCommandServiceLive,
   catalogCorpus,
   enrichCorpus,
   extractCorpus,
   organizeCorpus,
+  preflightT7Preservation,
+  preserveRestorationArchive,
   printCorpusIndex,
+  reconcileRestorationAcceptance,
+  restoreLegacyWord,
+  restoreMail,
+  restoreRecycle,
+  runT7Preservation,
   salvageCorpus,
+  verifyRestorationArchive,
   verifySalvage,
+  verifyT7Preservation,
 } from "./Corpus.service.ts";
 
 /** @since 0.0.0 */
 const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(
+  Flag.withFallbackConfig(Config.string("BEEP_OPPOLD_CORPUS_ROOT")),
   Flag.withDescription(
     "Salvaged corpus root containing raw/provenance.jsonl; outputs land under <corpus-root>/catalog and <corpus-root>/staging"
   )
@@ -123,6 +141,132 @@ const archiveMoveProvenanceFlag = Flag.file("provenance", { mustExist: true }).p
   Flag.withDescription("Run provenance.jsonl used to prove every source file before moving; repeat if needed"),
   Flag.atLeast(1)
 );
+/** @since 0.0.0 */
+const t7RootFlag = Flag.directory("t7-root", { mustExist: true }).pipe(
+  Flag.withFallbackConfig(Config.string("BEEP_T7_ROOT")),
+  Flag.withDescription("Mounted T7 root containing the salvage tree and the separate root archive object")
+);
+/** @since 0.0.0 */
+const preservationCeilingFlag = Flag.integer("ceiling-bytes").pipe(
+  Flag.withDescription("Operator-approved maximum bytes for the measured preservation scope")
+);
+/** @since 0.0.0 */
+const preservationApproverFlag = Flag.string("approved-by").pipe(
+  Flag.withDescription("Non-secret operator label approving the measured byte ceiling")
+);
+
+const restorationSourceRootFlag = Flag.directory("source-root", { mustExist: true }).pipe(
+  Flag.withDescription("Current source tree to preserve without transformation")
+);
+const restorationRootArchiveFlag = Flag.file("root-archive", { mustExist: true }).pipe(
+  Flag.withDescription("Separately addressable verbatim root archive object")
+);
+const restorationCollectorManifestFlag = Flag.file("collector-manifest", { mustExist: true }).pipe(
+  Flag.withDescription("Inherited collector JSONL ledger reconciled row by row before preservation")
+);
+const restorationAbsentTreeFlag = Flag.string("absent-recycle-tree").pipe(
+  Flag.withDescription("Recorded absent recycle-tree path that must remain absent during opening reconciliation")
+);
+const restorationCapacityCeilingFlag = Flag.integer("capacity-ceiling-bytes").pipe(
+  Flag.withDescription("Operator-approved maximum preserved payload bytes; required and checked before payload writes")
+);
+const restorationMinimumFreeFlag = Flag.integer("minimum-free-after-bytes").pipe(
+  Flag.withDescription("Operator-approved free-space floor retained after the full required payload")
+);
+const restorationCollectorRowsFlag = Flag.integer("expected-collector-rows").pipe(
+  Flag.withDefault(28_508),
+  Flag.withDescription("Frozen inherited collector row denominator")
+);
+const restorationMissingRecycleFlag = Flag.integer("expected-missing-recycle-payloads").pipe(
+  Flag.withDefault(13),
+  Flag.withDescription("Ratified missing recycle-payload opening balance")
+);
+const restorationMutatedDestinationFlag = Flag.integer("expected-mutated-destinations").pipe(
+  Flag.withDefault(1_021),
+  Flag.withDescription("Ratified post-staging destination-mutation denominator")
+);
+const restorationRootArchiveBytesFlag = Flag.integer("expected-root-archive-bytes").pipe(
+  Flag.withDefault(147_731_138_560),
+  Flag.withDescription("Frozen byte denominator for the separately preserved root archive")
+);
+const restorationSourceDirectoriesFlag = Flag.integer("expected-source-directories").pipe(
+  Flag.withDefault(755),
+  Flag.withDescription("Frozen current-source directory denominator")
+);
+const restorationSourceFilesFlag = Flag.integer("expected-source-files").pipe(
+  Flag.withDefault(12_156),
+  Flag.withDescription("Frozen current-source file denominator")
+);
+const restorationSourceTreeBytesFlag = Flag.integer("expected-source-tree-bytes").pipe(
+  Flag.withDefault(207_772_579_526),
+  Flag.withDescription("Frozen current-source file-byte denominator")
+);
+const restorationChunkSizeFlag = Flag.integer("chunk-size-bytes").pipe(
+  Flag.withDefault(8 * 1024 * 1024),
+  Flag.withDescription("Bounded streaming copy and hashing chunk size")
+);
+const restorationRunLabelFlag = Flag.string("run-label").pipe(
+  Flag.withDefault("t7-salvage-2026-08-10"),
+  Flag.withDescription("Immutable destination label under corpus raw storage")
+);
+const restorationCrashPointFlag = Flag.choiceWithValue("crash-point", [
+  ["none", "none"],
+  ["after-payload-sync", "after-payload-sync"],
+  ["after-rename", "after-rename"],
+  ["before-pass", "before-pass"],
+]).pipe(Flag.withDefault("none"), Flag.withDescription("Synthetic interruption boundary for recovery proofs"));
+const restorationMailScopeFlag = Flag.choiceWithValue("scope", [
+  ["slice", "slice"],
+  ["full", "full"],
+]).pipe(Flag.withDefault("slice"), Flag.withDescription("One metadata-selected PST or the complete mail estate"));
+const restorationExpectedStoresFlag = Flag.integer("expected-stores").pipe(
+  Flag.withDescription("Frozen terminal mail-store denominator for the selected scope")
+);
+const restorationMaxAmplificationFlag = Flag.float("max-amplification-ratio").pipe(
+  Flag.withDescription("Approved maximum output-bytes to input-bytes ratio for each PST attempt")
+);
+const restorationMaxElapsedFlag = Flag.integer("max-elapsed-millis").pipe(
+  Flag.withDescription("Approved maximum elapsed milliseconds for each individual transformation attempt")
+);
+const restorationMaxTotalOutputFlag = Flag.integer("max-total-output-bytes").pipe(
+  Flag.withDescription("Approved cumulative retained-output byte ceiling for the selected restoration family")
+);
+const restorationMaxTotalElapsedFlag = Flag.integer("max-total-elapsed-millis").pipe(
+  Flag.withDescription("Approved cumulative elapsed-time ceiling for the selected restoration family")
+);
+const restorationExpectedRecycleSurfacesFlag = Flag.integer("expected-surfaces").pipe(
+  Flag.withDefault(3),
+  Flag.withDescription("Frozen recycle-surface denominator")
+);
+const restorationConverterFlag = Flag.string("converter").pipe(
+  Flag.withDescription("Absolute pinned LibreOffice converter path")
+);
+const restorationExpectedConverterVersionFlag = Flag.string("expected-converter-version").pipe(
+  Flag.withDescription("Exact approved output of the pinned converter --version probe")
+);
+const restorationExpectedLegacyWordOccurrencesFlag = Flag.integer("expected-occurrences").pipe(
+  Flag.withDefault(564),
+  Flag.withDescription("Frozen legacy .doc occurrence denominator before distinct-digest grouping")
+);
+const restorationMaxVisualRmseFlag = Flag.float("max-visual-rmse").pipe(
+  Flag.withDescription("Approved maximum normalized rendered-page RMSE")
+);
+const restorationBwrapFlag = Flag.string("bwrap").pipe(
+  Flag.withDefault("bwrap"),
+  Flag.withDescription("bubblewrap binary used to isolate transformation subprocesses")
+);
+const restorationCompareFlag = Flag.string("compare").pipe(
+  Flag.withDefault("compare"),
+  Flag.withDescription("ImageMagick compare binary used for rendered-page fidelity measurements")
+);
+const restorationPdfinfoFlag = Flag.string("pdfinfo").pipe(
+  Flag.withDefault("pdfinfo"),
+  Flag.withDescription("Poppler pdfinfo binary used to count converted PDF pages")
+);
+const restorationPdftoppmFlag = Flag.string("pdftoppm").pipe(
+  Flag.withDefault("pdftoppm"),
+  Flag.withDescription("Poppler pdftoppm binary used to render fidelity-check pages")
+);
 
 const parseSalvageSourceSpec = Effect.fn("CorpusCommand.parseSalvageSourceSpec")(function* (
   value: string
@@ -173,6 +317,7 @@ const corpusExtractCommand = Command.make(
     source: sourceLabelFlag,
     tikaJar: tikaJarFlag,
   },
+  // fallow-ignore-next-line complexity -- pre-existing extract-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({
     concurrency,
     corpusRoot,
@@ -276,6 +421,7 @@ const corpusSalvageCommand = Command.make(
     sampleStride: sampleStrideFlag,
     source: salvageSourceFlag,
   },
+  // fallow-ignore-next-line complexity -- pre-existing salvage-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({ corpusRoot, dedupe, runLabel, sampleStride, source }) {
     const sources = yield* Effect.forEach(source, parseSalvageSourceSpec);
     const options = CorpusSalvageOptions.make({
@@ -289,6 +435,250 @@ const corpusSalvageCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Copy labeled sources into raw/ with provenance, or verify an existing raw/provenance.jsonl"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationPreserveCommand = Command.make(
+  "restore-preserve",
+  {
+    absentRecycleTree: restorationAbsentTreeFlag,
+    capacityCeilingBytes: restorationCapacityCeilingFlag,
+    chunkSizeBytes: restorationChunkSizeFlag,
+    collectorManifest: restorationCollectorManifestFlag,
+    corpusRoot: corpusRootFlag,
+    crashPoint: restorationCrashPointFlag,
+    expectedCollectorRows: restorationCollectorRowsFlag,
+    expectedMissingRecyclePayloads: restorationMissingRecycleFlag,
+    expectedMutatedDestinations: restorationMutatedDestinationFlag,
+    expectedRootArchiveBytes: restorationRootArchiveBytesFlag,
+    expectedSourceDirectories: restorationSourceDirectoriesFlag,
+    expectedSourceFiles: restorationSourceFilesFlag,
+    expectedSourceTreeBytes: restorationSourceTreeBytesFlag,
+    minimumFreeAfterBytes: restorationMinimumFreeFlag,
+    rootArchive: restorationRootArchiveFlag,
+    runLabel: restorationRunLabelFlag,
+    sourceRoot: restorationSourceRootFlag,
+  },
+  Effect.fn(function* ({
+    absentRecycleTree,
+    capacityCeilingBytes,
+    chunkSizeBytes,
+    collectorManifest,
+    corpusRoot,
+    crashPoint,
+    expectedCollectorRows,
+    expectedMissingRecyclePayloads,
+    expectedMutatedDestinations,
+    expectedRootArchiveBytes,
+    expectedSourceDirectories,
+    expectedSourceFiles,
+    expectedSourceTreeBytes,
+    minimumFreeAfterBytes,
+    rootArchive,
+    runLabel,
+    sourceRoot,
+  }) {
+    const options = yield* S.decodeEffect(RestorationPreserveOptions)({
+      absentRecycleTreePath: absentRecycleTree,
+      capacityCeilingBytes,
+      chunkSizeBytes,
+      corpusRoot,
+      crashPoint,
+      expectedCollectorRowCount: expectedCollectorRows,
+      expectedMissingRecyclePayloadCount: expectedMissingRecyclePayloads,
+      expectedMutatedDestinationCount: expectedMutatedDestinations,
+      expectedRootArchiveBytes,
+      expectedSourceDirectoryCount: expectedSourceDirectories,
+      expectedSourceFileCount: expectedSourceFiles,
+      expectedSourceTreeBytes,
+      minimumFreeAfterBytes,
+      rootArchivePath: rootArchive,
+      runLabel,
+      sourceManifestPath: collectorManifest,
+      sourceRoot,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration preservation options."));
+    yield* preserveRestorationArchive(options).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Preserve the ratified corpus state through the bounded bar-v2 archive boundary"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationVerifyCommand = Command.make(
+  "restore-verify",
+  {
+    corpusRoot: corpusRootFlag,
+    runLabel: restorationRunLabelFlag,
+  },
+  Effect.fn(function* ({ corpusRoot, runLabel }) {
+    const options = yield* S.decodeEffect(RestorationVerifyOptions)({ corpusRoot, runLabel }).pipe(
+      CorpusCommandError.mapError("Invalid restoration verification options.")
+    );
+    yield* verifyRestorationArchive(options).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Fresh-process verification of every terminal restoration archive object"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationAcceptanceCommand = Command.make(
+  "restore-accept",
+  {
+    corpusRoot: corpusRootFlag,
+    runLabel: restorationRunLabelFlag,
+  },
+  Effect.fn(function* ({ corpusRoot, runLabel }) {
+    const options = yield* S.decodeEffect(RestorationVerifyOptions)({ corpusRoot, runLabel }).pipe(
+      CorpusCommandError.mapError("Invalid restoration acceptance options.")
+    );
+    yield* reconcileRestorationAcceptance(options).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Reconcile four separate aggregate-only restoration acceptance records"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationMailCommand = Command.make(
+  "restore-mail",
+  {
+    bwrap: restorationBwrapFlag,
+    corpusRoot: corpusRootFlag,
+    expectedStores: restorationExpectedStoresFlag,
+    java: javaFlag,
+    maxAmplificationRatio: restorationMaxAmplificationFlag,
+    maxElapsedMillis: restorationMaxElapsedFlag,
+    maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
+    maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    pffexport: pffexportFlag,
+    runLabel: restorationRunLabelFlag,
+    scope: restorationMailScopeFlag,
+    tikaJar: tikaJarFlag,
+  },
+  Effect.fn(function* ({
+    bwrap,
+    corpusRoot,
+    expectedStores,
+    java,
+    maxAmplificationRatio,
+    maxElapsedMillis,
+    maxTotalElapsedMillis,
+    maxTotalOutputBytes,
+    pffexport,
+    runLabel,
+    scope,
+    tikaJar,
+  }) {
+    const options = yield* S.decodeEffect(RestorationMailOptions)({
+      bwrapPath: bwrap,
+      corpusRoot,
+      expectedStoreCount: expectedStores,
+      javaPath: O.getOrElse(java, () => "java"),
+      maxAmplificationRatio,
+      maxElapsedMillis,
+      maxTotalElapsedMillis,
+      maxTotalOutputBytes,
+      pffexportPath: O.getOrElse(pffexport, () => "pffexport"),
+      runLabel,
+      scope,
+      tikaJarPath: tikaJar,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration mail options."));
+    yield* restoreMail(options).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Restore one metadata-selected PST or the complete mail estate at concurrency one"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationRecycleCommand = Command.make(
+  "restore-recycle",
+  {
+    corpusRoot: corpusRootFlag,
+    expectedMissingContent: restorationMissingRecycleFlag,
+    expectedSurfaces: restorationExpectedRecycleSurfacesFlag,
+    maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
+    maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    runLabel: restorationRunLabelFlag,
+  },
+  Effect.fn(function* ({
+    corpusRoot,
+    expectedMissingContent,
+    expectedSurfaces,
+    maxTotalElapsedMillis,
+    maxTotalOutputBytes,
+    runLabel,
+  }) {
+    const options = yield* S.decodeEffect(RestorationRecycleOptions)({
+      corpusRoot,
+      expectedMissingContentCount: expectedMissingContent,
+      expectedSurfaceCount: expectedSurfaces,
+      maxTotalElapsedMillis,
+      maxTotalOutputBytes,
+      runLabel,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration recycle options."));
+    yield* restoreRecycle(options).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Restore all recycle surfaces through a four-class occurrence join"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationLegacyWordCommand = Command.make(
+  "restore-legacy-word",
+  {
+    bwrap: restorationBwrapFlag,
+    compare: restorationCompareFlag,
+    converter: restorationConverterFlag,
+    corpusRoot: corpusRootFlag,
+    expectedConverterVersion: restorationExpectedConverterVersionFlag,
+    expectedOccurrences: restorationExpectedLegacyWordOccurrencesFlag,
+    java: javaFlag,
+    maxElapsedMillis: restorationMaxElapsedFlag,
+    maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
+    maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    maxVisualRmse: restorationMaxVisualRmseFlag,
+    pdfinfo: restorationPdfinfoFlag,
+    pdftoppm: restorationPdftoppmFlag,
+    runLabel: restorationRunLabelFlag,
+    tikaJar: tikaJarFlag,
+  },
+  Effect.fn(function* ({
+    bwrap,
+    compare,
+    converter,
+    corpusRoot,
+    expectedConverterVersion,
+    expectedOccurrences,
+    java,
+    maxElapsedMillis,
+    maxTotalElapsedMillis,
+    maxTotalOutputBytes,
+    maxVisualRmse,
+    pdfinfo,
+    pdftoppm,
+    runLabel,
+    tikaJar,
+  }) {
+    const options = yield* S.decodeEffect(RestorationLegacyWordOptions)({
+      bwrapPath: bwrap,
+      comparePath: compare,
+      converterPath: converter,
+      corpusRoot,
+      expectedConverterVersion,
+      expectedOccurrenceCount: expectedOccurrences,
+      javaPath: O.getOrElse(java, () => "java"),
+      maxElapsedMillis,
+      maxTotalElapsedMillis,
+      maxTotalOutputBytes,
+      maxVisualRmse,
+      pdfinfoPath: pdfinfo,
+      pdftoppmPath: pdftoppm,
+      runLabel,
+      tikaJarPath: tikaJar,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration legacy-Word options."));
+    yield* restoreLegacyWord(options).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Convert every distinct legacy .doc digest inside a pinned fidelity sandbox"),
   Command.provide(CorpusCommandServiceLive)
 );
 
@@ -314,6 +704,64 @@ const corpusArchiveMoveCommand = Command.make(
   Command.provide(CorpusCommandServiceLive)
 );
 
+const corpusPreservePreflightCommand = Command.make(
+  "preflight",
+  { corpusRoot: corpusRootFlag, t7Root: t7RootFlag },
+  Effect.fn(function* ({ corpusRoot, t7Root }) {
+    yield* preflightT7Preservation(T7PreservationOptions.make({ corpusRoot, t7Root })).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Measure the bounded T7 preservation scope and destination free space"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveApproveCommand = Command.make(
+  "approve",
+  {
+    approvedBy: preservationApproverFlag,
+    ceilingBytes: preservationCeilingFlag,
+    corpusRoot: corpusRootFlag,
+  },
+  Effect.fn(function* ({ approvedBy, ceilingBytes, corpusRoot }) {
+    yield* approveT7Preservation(corpusRoot, ceilingBytes, approvedBy).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Approve the persisted preservation measurement with an explicit byte ceiling"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveRunCommand = Command.make(
+  "run",
+  { corpusRoot: corpusRootFlag, t7Root: t7RootFlag },
+  Effect.fn(function* ({ corpusRoot, t7Root }) {
+    yield* runT7Preservation(T7PreservationOptions.make({ corpusRoot, t7Root })).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Run the approved one-pass T7 archive operation"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveVerifyCommand = Command.make(
+  "verify",
+  { corpusRoot: corpusRootFlag },
+  Effect.fn(function* ({ corpusRoot }) {
+    yield* verifyT7Preservation(corpusRoot).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Freshly reparse the preservation manifest and re-hash terminal destinations"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveCommand = Command.make("preserve", {}, () => printCorpusIndex).pipe(
+  Command.withDescription("T7 restoration-bar-v2 preservation commands"),
+  Command.withSubcommands([
+    corpusPreserveApproveCommand,
+    corpusPreservePreflightCommand,
+    corpusPreserveRunCommand,
+    corpusPreserveVerifyCommand,
+  ])
+);
+
 /**
  * Corpus curation command group.
  *
@@ -337,6 +785,13 @@ export const corpusCommand = Command.make("corpus", {}, () => printCorpusIndex).
     corpusEnrichCommand,
     corpusExtractCommand,
     corpusOrganizeCommand,
+    corpusRestorationPreserveCommand,
+    corpusRestorationAcceptanceCommand,
+    corpusRestorationLegacyWordCommand,
+    corpusRestorationMailCommand,
+    corpusRestorationRecycleCommand,
+    corpusRestorationVerifyCommand,
+    corpusPreserveCommand,
     corpusSalvageCommand,
   ])
 );

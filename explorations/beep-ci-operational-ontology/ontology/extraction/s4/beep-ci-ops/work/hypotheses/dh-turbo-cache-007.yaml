@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:007"
+observation_refs:
+  - "so:sha256:7f88e0f638d4590b5d8e0fb7dfb19dd840a0f0176f6a51a31dc4c25928d5bcae"
+  - "po:sha256:c9f5d07607b2864f5bc0e2760c4239bf6b243287842dad29768da4ad281736f0"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named test:integration"
+  description: "A repeatable task specification with an observed upstream build dependency."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An integration-test verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A particular integration-test execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A root Turbo configuration row can carry test:integration and its upstream build selector and prescribe ordering exactly as cited, without evidence of a separately governed task-specification artifact."
+epistemic_status: proposed
+confidence:
+  value: 0.76
+  use_for_acceptance: false

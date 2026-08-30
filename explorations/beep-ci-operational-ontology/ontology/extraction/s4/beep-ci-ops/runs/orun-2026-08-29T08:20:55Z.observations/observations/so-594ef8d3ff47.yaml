@@ -1,0 +1,23 @@
+id: so:sha256:594ef8d3ff47d0a7fbf33e9a364cac73ecdb5636b038d7ce3490998293f429b1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 185
+  end_line: 211
+  content_sha256: f631bce5bcd7cca638a68a3e565371016de43f4a430297e4ac0f95cd67b9153d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::bunRunStep
+  lexical_name: bunRunStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const bunRunStep = (
+epistemic_status: parser_derived

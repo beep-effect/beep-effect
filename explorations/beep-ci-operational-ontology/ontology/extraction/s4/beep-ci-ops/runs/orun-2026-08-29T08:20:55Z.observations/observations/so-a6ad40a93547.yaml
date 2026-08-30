@@ -1,0 +1,23 @@
+id: so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 519
+  end_line: 520
+  content_sha256: 37bcf53110532257989b2bb719bc802b89da9cb1379e682c199e905045e5fa52
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::isConservativeResumeCandidate
+  lexical_name: isConservativeResumeCandidate
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: isConservativeResumeCandidate
+source_excerpt: 'export const isConservativeResumeCandidate = (step: RepoPlanStep): boolean =>'
+epistemic_status: parser_derived

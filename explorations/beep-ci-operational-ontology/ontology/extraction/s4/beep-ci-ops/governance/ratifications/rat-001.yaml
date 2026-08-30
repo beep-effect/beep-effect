@@ -1,0 +1,10 @@
+id: rat:1
+proposal_ref: otp:observed-queue-wait-ms:001
+proposal_sha256: 70422af10d32a3043d3cb559d087bffe8e6f8143fe70b457474d4bdbf729bb64
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept observedQueueWaitMs — recorded value, not a quality; this is the precedent for every measurement
+  property.

@@ -1,0 +1,10 @@
+id: po:sha256:07350ed24a5ad10ca9a6a0af85ae646487c62e7c63e760eeb8305d395e223b25
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 188
+  end_line: 230
+quote: 'One durable queue ticket: a contender waiting for admission.'
+epistemic_status: quoted_prose
