@@ -2687,6 +2687,7 @@ export const restorationArchiveTesting = {
   validateArchiveTerminalIndex,
   validateCanonicalArchivePaths,
   validateCurrentArchiveRun,
+  validateFinalArchiveInventory,
   validateOpenedArchiveCopy,
   verifyArchiveDirectory,
   verifyArchiveFile,

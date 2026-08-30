@@ -278,6 +278,68 @@ describe("restoration archive boundary helpers", () => {
           yield* RA.collectArchiveInventory({ ...canonicalPaths, rootArchivePath: sourceFile }).pipe(Effect.exit)
         ).toMatchObject({ _tag: "Failure" });
 
+        const inventory = yield* RA.collectArchiveInventory(canonicalPaths);
+        const approvedOptions = RestorationPreserveOptions.make({
+          ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
+          capacityCeilingBytes: PosInt.make(1024),
+          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
+          expectedSourceDirectoryCount: NonNegativeInt.make(1),
+          expectedSourceFileCount: NonNegativeInt.make(1),
+          expectedSourceTreeBytes: NonNegativeInt.make("source".length),
+        });
+        const context = {
+          archiveRoot,
+          availableBytes: 1024,
+          canonicalPaths,
+          capacityApproved: true,
+          collector: { collectorErrorCount: 0, mutatedDestinationCount: 0, rowCount: 0 },
+          inventory,
+          manifestPath: path.join(archiveRoot, "final-inventory.jsonl"),
+          options: approvedOptions,
+          provenancePath: path.join(archiveRoot, "provenance.jsonl"),
+          runId: "final-inventory-run",
+          startedAt: 0,
+        };
+        expect(
+          yield* RA.validateFinalArchiveInventory(
+            {
+              ...context,
+              canonicalPaths: { ...canonicalPaths, sourceRoot: sourceFile },
+              manifestPath: path.join(archiveRoot, "collect-failure.jsonl"),
+            },
+            inventory
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateFinalArchiveInventory(
+            {
+              ...context,
+              manifestPath: path.join(archiveRoot, "denominator-failure.jsonl"),
+              options: RestorationPreserveOptions.make({
+                ...approvedOptions,
+                expectedSourceFileCount: NonNegativeInt.make(2),
+              }),
+            },
+            inventory
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateFinalArchiveInventory(
+            { ...context, manifestPath: path.join(archiveRoot, "signature-failure.jsonl") },
+            { ...inventory, signature: Sha256Hex.make("0".repeat(64)) }
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateFinalArchiveInventory(
+            {
+              ...context,
+              manifestPath: path.join(archiveRoot, "capacity-failure.jsonl"),
+              options: RestorationPreserveOptions.make({ ...approvedOptions, capacityCeilingBytes: PosInt.make(1) }),
+            },
+            inventory
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
         expect(yield* RA.requireInventoryDenominator("files", 1, 2).pipe(Effect.exit)).toMatchObject({
           _tag: "Failure",
         });
