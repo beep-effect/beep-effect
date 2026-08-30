@@ -99,7 +99,7 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
     yield* ensureStoredDigest(rows, stored.digest);
   });
 
-  const appendDocument = Ledger.of({
+  return Ledger.of({
     appendDocument: Effect.fn("Ledger.appendDocument")(function* (document, outcome, canonical, chunks, events) {
       const transaction = Effect.gen(function* () {
         const storedDocument = yield* encodePayload(SourceDocument, document);
@@ -111,7 +111,12 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
           storedDocument.digest
         );
 
-        const parseSnapshot = LedgerDocumentSnapshot.make({ canonical, chunks, document, outcome });
+        const parseSnapshot = LedgerDocumentSnapshot.make({
+          canonical,
+          chunks,
+          document,
+          outcome,
+        });
         const storedParse = yield* encodePayload(LedgerDocumentSnapshot, parseSnapshot);
         yield* sql`INSERT INTO parse_outcomes (id, document, digest, payload)
             VALUES (${document.id}, ${document.id}, ${storedParse.digest}, ${storedParse.payload})
@@ -135,7 +140,10 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
           }),
           { concurrency: 1, discard: true }
         );
-        yield* Effect.forEach(events, appendEvent, { concurrency: 1, discard: true });
+        yield* Effect.forEach(events, appendEvent, {
+          concurrency: 1,
+          discard: true,
+        });
       });
       return yield* recoverSql(sql.withTransaction(transaction));
     }),
@@ -179,7 +187,10 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
             { concurrency: 1, discard: true }
           );
         }
-        yield* Effect.forEach(events, appendEvent, { concurrency: 1, discard: true });
+        yield* Effect.forEach(events, appendEvent, {
+          concurrency: 1,
+          discard: true,
+        });
       });
       return yield* recoverSql(sql.withTransaction(transaction));
     }),
@@ -211,11 +222,14 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
       const events = yield* Effect.forEach(readRows.events, (row) => decodePayload(ProvenanceEvent, row.payload), {
         concurrency: 1,
       });
-      return LedgerSnapshot.make({ batches, documents, events, run: requestedRun });
+      return LedgerSnapshot.make({
+        batches,
+        documents,
+        events,
+        run: requestedRun,
+      });
     }),
   });
-
-  return appendDocument;
 });
 
 /**
