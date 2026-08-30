@@ -463,7 +463,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
                 claudePath,
                 yield* encodeJson({
                   permissions: { ...repoSafeClaudePermissions, allow: [permission] },
-                  enabledMcpjsonServers: ["codegraph"],
+                  enabledMcpjsonServers: ["phoenix"],
                 })
               );
               assert.strictEqual(

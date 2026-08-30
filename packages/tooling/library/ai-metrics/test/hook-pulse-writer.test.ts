@@ -39,6 +39,7 @@ import { ChildProcess } from "effect/unstable/process";
 // checkout path containing a space or `#` would yield an unspawnable writer path.
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
+const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
@@ -158,6 +159,7 @@ const runWriter = Effect.fnUntraced(function* (
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
     readonly viaXdgFallback?: boolean;
+    readonly writerPath?: string;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -173,6 +175,13 @@ const runWriter = Effect.fnUntraced(function* (
     yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
   }
 
+  const childStdin = O.match(O.fromUndefinedOr(options.disarmSentinel), {
+    // The kill-switch guard exits before the writer reads stdin. Ignoring the pipe in
+    // that case avoids racing a payload write against the child's intentional exit.
+    onSome: () => "ignore" as const,
+    onNone: () => ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true }) as const,
+  });
+
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
   // `node:child_process`. Measured: inside a vitest worker under the coverage script
   // (`bunx vitest run --coverage`, a different runtime from `bunx --bun vitest run`),
@@ -183,7 +192,7 @@ const runWriter = Effect.fnUntraced(function* (
   // and never the `coverage` one, so no local proof could reach it. The spawner behind
   // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
-  const handle = yield* ChildProcess.make(writerPath, [], {
+  const handle = yield* ChildProcess.make(options.writerPath ?? writerPath, [], {
     cwd: repoRoot,
     // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
     // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
@@ -228,7 +237,7 @@ const runWriter = Effect.fnUntraced(function* (
     // `endOnDone` is stated rather than left to its `true` default: closing stdin once
     // the payload is written is the whole reason this run terminates, so it is part of
     // what the helper promises and not an incidental default someone may retune.
-    stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },
+    stdin: childStdin,
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -515,6 +524,17 @@ const expectSilentRefusal = (run: WriterRun): void => {
 };
 
 layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
+  it.effect("tags Codex hook rows as codex-cli", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const run = yield* runWriter(encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
+      })
+    )
+  );
+
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
       Effect.scoped(

@@ -88,4 +88,3 @@
 - `ontoskills/registry/Registry.models.ts:271` `SkillTarget` (value/class) missing=@category|@since|@example findings=missing-required-tags
 - `ontoskills/registry/Registry.models.ts:284` `InstallTarget` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `ontoskills/registry/Registry.models.ts:297` `InstallTarget` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
-

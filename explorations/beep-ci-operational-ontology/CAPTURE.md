@@ -81,7 +81,7 @@ will cheapen anything about the `yeet` process."
    "veins" for prose extraction: aws cloudwatch, PRs, github, commit history, goal &
    exploration packet data, phoenix traces, ai-metrics-stack, .beep, memories, transcripts,
    OPPORTUNITIES.md, repo laws & quality/CI rules & standards, package & dependency
-   surface, package topology (`bun run beep topo sort`), architectural doctrine, official
+   surface, package topology (`bun run beep topo-sort`), architectural doctrine, official
    library docs. "VERY IMPORTANT TO CONSTANTLY CAPTURE PROSE DURING THE ENTIRETY OF OUR
    SESSION SO THAT NOTHING IS LOST IN TRANSIT OR PASSING!"
 3. Exhaustively enumerate the named classes of things (adversarial taxonomist debate,

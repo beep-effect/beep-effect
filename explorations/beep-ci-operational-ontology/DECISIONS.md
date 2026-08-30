@@ -59,7 +59,7 @@ semantic-web dogfood and validation tooling).
 
 **Answer:** Formal-first bootstrap: mechanically extract candidate classes from the typed
 corpus (schemas, LiteralKits, `turbo.json` task definitions, fallow boundaries,
-`bun run beep topo sort`, repo laws), then tiered prose-vein mining fills gaps and supplies
+`bun run beep topo-sort`, repo laws), then tiered prose-vein mining fills gaps and supplies
 A-Box/cost evidence. Adversarial loops debate the residue, not what the type system states.
 
 **Rationale:** The repo is already a typed corpus with zero-hallucination extraction cost.

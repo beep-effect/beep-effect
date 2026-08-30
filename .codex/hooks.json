@@ -1,11 +1,38 @@
 {
+  "description": "Checkout-local Yeet inbox backpressure, agent-effectiveness pulses, and UI design hooks.",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/packet-projections.sh\"",
+            "timeout": 30,
+            "statusMessage": "Refreshing packet projections"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Reading Yeet inbox"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Checking Yeet inbox"
           }
         ]
       }
@@ -22,7 +49,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|apply_patch",
         "hooks": [
           {
             "type": "command",
@@ -67,6 +94,13 @@
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Reading Yeet inbox"
           }
         ]
       }
@@ -77,6 +111,12 @@
           {
             "type": "command",
             "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "statusMessage": "Checking Yeet inbox"
           }
         ]
       },

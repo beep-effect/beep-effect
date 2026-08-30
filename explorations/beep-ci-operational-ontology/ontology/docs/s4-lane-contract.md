@@ -148,9 +148,9 @@ review 2). The gate between lane merge (§5) and S5 admission is the
 abridgment (round-3 seat I-02 killed the previous paraphrase). Canonical install:
 `~/.claude/skills/ontology-foundational-auditor/` with the family contracts at
 `~/.claude/skills/_shared/` (all eight `schemas/*.schema.yaml` exist there; the
-the Codex skills mirror is STALE and lacks them — **S4 LAUNCH PRECONDITION:
+Codex's skills mirror is STALE and lacks them. **S4 LAUNCH PRECONDITION:
 re-sync the mirror or pass `$SKILL`/`$SHARED` paths pointing at the canonical Claude skills installation
-explicitly**, since codex lanes resolve the mirror).
+explicitly**, since Codex lanes resolve the mirror).
 
 The skill's artifact chain is
 `SourceObservation → DenotationHypothesis → FoundationalAnalysis(+IdentityCard) →
@@ -158,7 +158,7 @@ OntologyTermProposal`, with: a pinned run manifest; SCRIPT-produced observations
 parseable source (per-run adapter + golden fixture — an LLM transcribing syntax is
 not a parser); null-hypothesis discriminators; a blinded alternative seat + an
 OntoClean adversary seat (independent by construction); the MECHANICAL `--gate` mode
-of `scripts/validate_artifacts.py`; per-proposal STEWARD ratification (the operator);
+of the skill's validation script; per-proposal STEWARD ratification (the operator);
 and a total dispositions index. Working directory:
 `ontology/extraction/s4/beep-ci-ops/` plays the skill's `ontologies/{name}/` ROOT
 role (`{name}` = `beep-ci-ops`): the validator hard-requires the literal layout
@@ -190,7 +190,7 @@ precisely because this skill amortizes the worksheet. The ruled splits are stand
 mandates the analysis applies: obligation/procedure (requiresLane),
 WorkUnitSpecification/WorkUnitExecution, SeatRequest-ticket/SeatGrant-lease.
 FREEZE (round-3 H-14): lane/gate telemetry records the skill's `SKILL.md`,
-`scripts/validate_artifacts.py`, every `prompts/*.md`, and every
+the skill's validation script, every `prompts/*.md`, and every
 `_shared/schemas/*.schema.yaml` digest alongside the five packet frozen inputs — a
 normalization run under unpinned contracts is invalid. The forbidden-LLM-decisions
 table binds: lanes and the auditor PROPOSE; the steward (operator) ratifies.

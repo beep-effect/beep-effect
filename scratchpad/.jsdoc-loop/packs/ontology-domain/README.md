@@ -73,4 +73,3 @@
 - `effect-ontology/Domain/Schema/Batch.ts:423` `ValidationPolicy` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/Domain/Schema/LinkIngestion.ts:18` `HttpUrl` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/Domain/Schema/Timeline.ts:33` `ClaimRank` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

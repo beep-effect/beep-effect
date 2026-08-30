@@ -31,6 +31,13 @@ const pngBytes = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const sharedIsoMediaSignature = [0x66, 0x74, 0x79, 0x70, 0x4d, 0x34, 0x56, 0x20];
 const webmDocType = [0x42, 0x82, 0x84, 0x77, 0x65, 0x62, 0x6d];
 const matroskaDocType = [0x42, 0x82, 0x88, 0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61];
+const flacWithFinalStreamInfo = pipe(
+  [
+    0x66, 0x4c, 0x61, 0x43, 0x80, 0x00, 0x00, 0x22, 0x10, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a,
+    0xc4, 0x42, 0xf0, 0x00, 0x00, 0x00, 0x00,
+  ],
+  A.appendAll(A.replicate(0, 16))
+);
 const signatureEquivalence = S.toEquivalence(FileSignature);
 const fileTypeEquivalence = S.toEquivalence(FileType);
 
@@ -281,6 +288,11 @@ describe("detectFile", () => {
     expect(O.getOrThrow(detectFile(DetectFileOptions.make({ chunkSize: pngBytes.length }))(view)).extension).toBe(
       "png"
     );
+  });
+
+  it("accepts FLAC when STREAMINFO is the final metadata block", () => {
+    expect(O.getOrThrow(detectFile(flacWithFinalStreamInfo)).extension).toBe("flac");
+    expect(validateFileType(flacWithFinalStreamInfo, ["flac"])).toBe(true);
   });
 
   it("returns none for empty, invalid, detached, unknown, truncated, and inconclusive input", () => {

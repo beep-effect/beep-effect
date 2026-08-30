@@ -1046,11 +1046,7 @@ export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullPr
   lockPath: string,
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
-): Effect.fn.Return<
-  O.Option<YeetProofLockLease>,
-  YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
-> {
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const prepared = yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
   if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
     return O.some(prepared.lease);

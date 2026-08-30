@@ -73,4 +73,3 @@
 
 - `effect-ontology/Utils/IdempotencyKey.ts:36` `IdempotencyKey` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/drizzle.config.ts:9` `default` (value/default) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

@@ -73,4 +73,3 @@
 - `glob/internal/types.ts:96` `ParseReturnFiltered` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
 - `glob/internal/types.ts:97` `ParseReturn` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
 - `glob/internal/unescape.ts:45` `unescape` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

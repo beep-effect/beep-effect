@@ -95,6 +95,26 @@ class ManagerMethod extends S.Class<ManagerMethod>($I`ManagerMethod`)(
   })
 ) {}
 
+class GeneratedMethodDisposition extends S.TaggedClass<GeneratedMethodDisposition>($I`GeneratedMethodDisposition`)(
+  "generated",
+  { method: ManagerMethod },
+  $I.annote("GeneratedMethodDisposition", { description: "A Box SDK method accepted for JSON code generation." })
+) {}
+
+class NamedMethodDisposition extends S.TaggedClass<NamedMethodDisposition>($I`NamedMethodDisposition`)(
+  "deprecated",
+  { name: S.String },
+  $I.annote("NamedMethodDisposition", { description: "A deprecated Box SDK method excluded from generation." })
+) {}
+
+class SkippedMethodDisposition extends S.TaggedClass<SkippedMethodDisposition>($I`SkippedMethodDisposition`)(
+  "skipped",
+  { name: S.String },
+  $I.annote("SkippedMethodDisposition", { description: "A non-JSON Box SDK method excluded from generation." })
+) {}
+
+type MethodDisposition = GeneratedMethodDisposition | NamedMethodDisposition | SkippedMethodDisposition;
+
 class ManagerProperty extends S.Class<ManagerProperty>($I`ManagerProperty`)(
   {
     className: S.String,
@@ -157,58 +177,51 @@ const literalExpression = (value: string | number | boolean): string => JSON.str
 
 const schemaArray = (items: ReadonlyArray<string>): string => `[${A.join(items, ", ")}]`;
 
-// crispen: kept native — this is a character-level scanner for balanced `.pipe(` at
-// the top level of a generated schema expression; `Str.*` helpers cannot express
-// positional `startsWith`/index reads, and it is a trust boundary for output shape.
+interface PipeScanState {
+  readonly depth: number;
+  readonly escaped: boolean;
+  readonly index: number;
+  readonly pipeOpenIndex: number | undefined;
+  readonly quoted: '"' | "'" | "`" | undefined;
+}
+
+const scanQuotedCharacter = (state: PipeScanState, character: string): PipeScanState =>
+  Match.value(character).pipe(
+    Match.when(
+      () => state.escaped,
+      () => ({ ...state, escaped: false, index: state.index + 1 })
+    ),
+    Match.when("\\", () => ({ ...state, escaped: true, index: state.index + 1 })),
+    Match.when(state.quoted ?? "", () => ({ ...state, index: state.index + 1, quoted: undefined })),
+    Match.orElse(() => ({ ...state, index: state.index + 1 }))
+  );
+
+const scanUnquotedCharacter = (expression: string, state: PipeScanState, character: string): PipeScanState =>
+  Match.value(character).pipe(
+    Match.whenOr('"', "'", "`", (quoted) => ({ ...state, index: state.index + 1, quoted })),
+    Match.when(
+      () => state.depth === 0 && expression.startsWith(".pipe(", state.index),
+      () => ({ ...state, index: state.index + 1, pipeOpenIndex: state.index + ".pipe(".length })
+    ),
+    Match.whenOr("(", "[", "{", () => ({ ...state, depth: state.depth + 1, index: state.index + 1 })),
+    Match.whenOr(")", "]", "}", () => ({ ...state, depth: state.depth - 1, index: state.index + 1 })),
+    Match.orElse(() => ({ ...state, index: state.index + 1 }))
+  );
+
 const finalTopLevelPipeOpenIndex = (expression: string): number | undefined => {
-  let depth = 0;
-  let pipeOpenIndex: number | undefined;
-  let quoted: '"' | "'" | "`" | undefined;
-  let escaped = false;
-
-  for (let index = 0; index < expression.length; index += 1) {
-    const character = expression[index];
-
-    if (character === undefined) {
-      continue;
-    }
-
-    if (quoted !== undefined) {
-      if (escaped) {
-        escaped = false;
-        continue;
-      }
-      if (character === "\\") {
-        escaped = true;
-        continue;
-      }
-      if (character === quoted) {
-        quoted = undefined;
-      }
-      continue;
-    }
-
-    if (character === '"' || character === "'" || character === "`") {
-      quoted = character;
-      continue;
-    }
-
-    if (depth === 0 && expression.startsWith(".pipe(", index)) {
-      pipeOpenIndex = index + ".pipe(".length;
-      continue;
-    }
-
-    if (character === "(" || character === "[" || character === "{") {
-      depth += 1;
-      continue;
-    }
-
-    if (character === ")" || character === "]" || character === "}") {
-      depth -= 1;
-    }
-  }
-
-  return depth === 0 && pipeOpenIndex !== undefined && expression.endsWith(")") ? pipeOpenIndex : undefined;
+  const initialState: PipeScanState = {
+    depth: 0,
+    escaped: false,
+    index: 0,
+    pipeOpenIndex: undefined,
+    quoted: undefined,
+  };
+  const finalState = A.reduce(A.fromIterable(expression), initialState, (state, character) =>
+    state.quoted === undefined
+      ? scanUnquotedCharacter(expression, state, character)
+      : scanQuotedCharacter(state, character)
+  );
+  return finalState.depth === 0 && Str.endsWith(")")(expression) ? finalState.pipeOpenIndex : undefined;
 };
 
 const pipeExpression = (expression: string, operation: string): string => {
@@ -221,12 +234,12 @@ const pipeExpression = (expression: string, operation: string): string => {
 
 const optionalExpression = (expression: string): string => pipeExpression(expression, "S.optionalKey");
 
+const SKIPPED_DECLARATION_NAMES = MutableHashSet.fromIterable(["Authentication", "NetworkSession", "FetchResponse"]);
+
 const shouldSkipDeclaration = (name: string): boolean =>
   Str.endsWith("Manager")(name) ||
   Str.endsWith("ManagerInput")(name) ||
-  name === "Authentication" ||
-  name === "NetworkSession" ||
-  name === "FetchResponse";
+  MutableHashSet.has(SKIPPED_DECLARATION_NAMES, name);
 
 const fieldSchema = (field: GeneratedField): string =>
   field.optional ? optionalExpression(field.schemaExpression) : field.schemaExpression;
@@ -281,22 +294,15 @@ const extractPropertyName = (name: ts.PropertyName): string | undefined => {
 const typeNameText = (node: ts.EntityName): string =>
   ts.isIdentifier(node) ? node.text : `${typeNameText(node.left)}.${node.right.text}`;
 
-const literalValue = (node: ts.LiteralTypeNode): string | number | boolean | null | undefined => {
-  const literal = node.literal;
-  if (ts.isStringLiteral(literal) || ts.isNumericLiteral(literal)) {
-    return ts.isNumericLiteral(literal) ? Number(literal.text) : literal.text;
-  }
-  if (literal.kind === ts.SyntaxKind.TrueKeyword) {
-    return true;
-  }
-  if (literal.kind === ts.SyntaxKind.FalseKeyword) {
-    return false;
-  }
-  if (literal.kind === ts.SyntaxKind.NullKeyword) {
-    return null;
-  }
-  return undefined;
-};
+const literalValue = (node: ts.LiteralTypeNode): string | number | boolean | null | undefined =>
+  Match.value(node.literal).pipe(
+    Match.when(ts.isStringLiteral, (literal) => literal.text),
+    Match.when(ts.isNumericLiteral, (literal) => Number(literal.text)),
+    Match.when({ kind: ts.SyntaxKind.TrueKeyword }, () => true),
+    Match.when({ kind: ts.SyntaxKind.FalseKeyword }, () => false),
+    Match.when({ kind: ts.SyntaxKind.NullKeyword }, () => null),
+    Match.orElse(() => undefined)
+  );
 
 const schemaForLiteral = (value: string | number | boolean | null | undefined): string => {
   if (value === null) {
@@ -339,309 +345,304 @@ const schemaForReference = (name: string, state: GenerationState): string =>
     Match.orElse(() => (MutableHashSet.has(state.declarationNames, name) ? `S.suspend(() => ${name})` : "S.Unknown"))
   );
 
+const typeLiteralProperty = (member: ts.PropertySignature, state: GenerationState): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(member.type),
+    O.flatMap((memberType) =>
+      pipe(
+        extractPropertyName(member.name),
+        O.fromUndefinedOr,
+        O.filter((name) => name !== "rawData"),
+        O.map((name) => {
+          const schema = schemaForType(memberType, state);
+          return `${propertyName(name)}: ${member.questionToken === undefined ? schema : optionalExpression(schema)},`;
+        })
+      )
+    )
+  );
+
+const typeLiteralIndex = (member: ts.IndexSignatureDeclaration, state: GenerationState): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(member.type),
+    O.map((memberType) => `S.Record(S.String, ${schemaForType(memberType, state)})`)
+  );
+
 const schemaForTypeLiteral = (node: ts.TypeLiteralNode, state: GenerationState): string => {
-  let fields = A.empty<string>();
-  let indexSignatures = A.empty<string>();
+  const fields = A.getSomes(
+    A.map(node.members, (member) =>
+      ts.isPropertySignature(member) ? typeLiteralProperty(member, state) : O.none<string>()
+    )
+  );
+  const indexSignatures = A.getSomes(
+    A.map(node.members, (member) =>
+      ts.isIndexSignatureDeclaration(member) ? typeLiteralIndex(member, state) : O.none<string>()
+    )
+  );
+  return A.match(fields, {
+    onEmpty: () =>
+      pipe(
+        A.head(indexSignatures),
+        O.getOrElse(() => "S.Record(S.String, S.Unknown)")
+      ),
+    onNonEmpty: (values) => `S.Struct({ ${A.join(values, " ")} })`,
+  });
+};
 
-  for (const member of node.members) {
-    if (ts.isPropertySignature(member) && member.type !== undefined) {
-      const name = extractPropertyName(member.name);
-      if (name === undefined || name === "rawData") {
-        continue;
-      }
-      const schema = schemaForType(member.type, state);
-      fields = A.append(
-        fields,
-        `${propertyName(name)}: ${member.questionToken === undefined ? schema : optionalExpression(schema)},`
-      );
-    }
-    if (ts.isIndexSignatureDeclaration(member) && member.type !== undefined) {
-      indexSignatures = A.append(indexSignatures, `S.Record(S.String, ${schemaForType(member.type, state)})`);
-    }
-  }
+interface UnionParts {
+  readonly hasNull: boolean;
+  readonly hasUndefined: boolean;
+  readonly literalValues: ReadonlyArray<string | number | boolean>;
+  readonly schemas: ReadonlyArray<string>;
+}
 
-  if (A.isArrayEmpty(fields)) {
-    return pipe(
-      A.head(indexSignatures),
-      O.getOrElse(() => "S.Record(S.String, S.Unknown)")
-    );
-  }
+const appendUnionLiteral = (parts: UnionParts, value: string | number | boolean | null | undefined): UnionParts =>
+  Match.value(value).pipe(
+    Match.when(null, () => ({ ...parts, hasNull: true })),
+    Match.when(undefined, () => ({ ...parts, hasUndefined: true })),
+    Match.orElse((literal) => ({ ...parts, literalValues: A.append(parts.literalValues, literal) }))
+  );
 
-  return `S.Struct({ ${A.join(fields, " ")} })`;
+const collectUnionPart = (state: GenerationState, parts: UnionParts, type: ts.TypeNode): UnionParts =>
+  Match.value(type).pipe(
+    Match.when({ kind: ts.SyntaxKind.StringKeyword }, () => ({
+      ...parts,
+      schemas: A.append(parts.schemas, "S.String"),
+    })),
+    Match.when({ kind: ts.SyntaxKind.NumberKeyword }, () => ({
+      ...parts,
+      schemas: A.append(parts.schemas, "S.Finite"),
+    })),
+    Match.when({ kind: ts.SyntaxKind.BooleanKeyword }, () => ({
+      ...parts,
+      schemas: A.append(parts.schemas, "S.Boolean"),
+    })),
+    Match.when({ kind: ts.SyntaxKind.NullKeyword }, () => ({ ...parts, hasNull: true })),
+    Match.when({ kind: ts.SyntaxKind.UndefinedKeyword }, () => ({ ...parts, hasUndefined: true })),
+    Match.when(ts.isLiteralTypeNode, (literal) => appendUnionLiteral(parts, literalValue(literal))),
+    Match.orElse((other) => ({ ...parts, schemas: A.append(parts.schemas, schemaForType(other, state)) }))
+  );
+
+const unionBaseSchema = (parts: UnionParts): string => {
+  const literalSchema = A.match(parts.literalValues, {
+    onEmpty: O.none<string>,
+    onNonEmpty: (values) => O.some(`LiteralKit([${A.join(A.map(values, literalExpression), ", ")}])`),
+  });
+  const schemas = A.dedupe(
+    pipe(
+      literalSchema,
+      O.map((schema) => A.prepend(parts.schemas, schema)),
+      O.getOrElse(() => parts.schemas)
+    )
+  );
+  return A.match(schemas, {
+    onEmpty: () => "S.Unknown",
+    onNonEmpty: (values) => (A.length(values) === 1 ? values[0] : `S.Union(${schemaArray(values)})`),
+  });
 };
 
 const schemaForUnion = (node: ts.UnionTypeNode, state: GenerationState): string => {
-  let literalValues = A.empty<string | number | boolean>();
-  let otherSchemas = A.empty<string>();
-  let hasStringKeyword = false;
-  let hasNumberKeyword = false;
-  let hasBooleanKeyword = false;
-  let hasNull = false;
-  let hasUndefined = false;
-
-  for (const type of node.types) {
-    if (type.kind === ts.SyntaxKind.StringKeyword) {
-      hasStringKeyword = true;
-      continue;
-    }
-    if (type.kind === ts.SyntaxKind.NumberKeyword) {
-      hasNumberKeyword = true;
-      continue;
-    }
-    if (type.kind === ts.SyntaxKind.BooleanKeyword) {
-      hasBooleanKeyword = true;
-      continue;
-    }
-    if (type.kind === ts.SyntaxKind.NullKeyword) {
-      hasNull = true;
-      continue;
-    }
-    if (type.kind === ts.SyntaxKind.UndefinedKeyword) {
-      hasUndefined = true;
-      continue;
-    }
-    if (ts.isLiteralTypeNode(type)) {
-      const value = literalValue(type);
-      if (value === null) {
-        hasNull = true;
-        continue;
-      }
-      if (value === undefined) {
-        hasUndefined = true;
-        continue;
-      }
-      literalValues = A.append(literalValues, value);
-      continue;
-    }
-    otherSchemas = A.append(otherSchemas, schemaForType(type, state));
-  }
-
-  if (hasStringKeyword) {
-    otherSchemas = A.append(otherSchemas, "S.String");
-  }
-  if (hasNumberKeyword) {
-    otherSchemas = A.append(otherSchemas, "S.Finite");
-  }
-  if (hasBooleanKeyword) {
-    otherSchemas = A.append(otherSchemas, "S.Boolean");
-  }
-
-  const literalSchema = A.isArrayEmpty(literalValues)
-    ? O.none<string>()
-    : O.some(`LiteralKit([${A.join(A.map(literalValues, literalExpression), ", ")}])`);
-  const baseSchemas = O.match(literalSchema, {
-    onNone: () => otherSchemas,
-    onSome: (schema) => A.prepend(otherSchemas, schema),
-  });
-  const uniqueSchemas = A.dedupe(baseSchemas);
-  const base =
-    A.length(uniqueSchemas) === 0
-      ? "S.Unknown"
-      : A.length(uniqueSchemas) === 1
-        ? pipe(
-            A.head(uniqueSchemas),
-            O.getOrElse(() => "S.Unknown")
-          )
-        : `S.Union(${schemaArray(uniqueSchemas)})`;
-  const nullable = hasNull ? pipeExpression(base, "S.NullOr") : base;
-  return hasUndefined ? pipeExpression(nullable, "S.UndefinedOr") : nullable;
+  const initialParts: UnionParts = {
+    hasNull: false,
+    hasUndefined: false,
+    literalValues: A.empty<string | number | boolean>(),
+    schemas: A.empty<string>(),
+  };
+  const parts = A.reduce(node.types, initialParts, (acc, type) => collectUnionPart(state, acc, type));
+  const base = unionBaseSchema(parts);
+  const nullable = parts.hasNull ? pipeExpression(base, "S.NullOr") : base;
+  return parts.hasUndefined ? pipeExpression(nullable, "S.UndefinedOr") : nullable;
 };
 
-const schemaForType = (node: ts.TypeNode, state: GenerationState): string => {
-  if (ts.isParenthesizedTypeNode(node)) {
-    return schemaForType(node.type, state);
-  }
-  if (ts.isArrayTypeNode(node)) {
-    return pipeExpression(schemaForType(node.elementType, state), "S.Array");
-  }
-  if (ts.isTypeOperatorNode(node)) {
-    return schemaForType(node.type, state);
-  }
-  if (ts.isUnionTypeNode(node)) {
-    return schemaForUnion(node, state);
-  }
-  if (ts.isIntersectionTypeNode(node)) {
-    MutableHashSet.add(state.constrainedTypes, node.getText());
-    return "S.Unknown";
-  }
-  if (ts.isLiteralTypeNode(node)) {
-    return schemaForLiteral(literalValue(node));
-  }
-  if (ts.isTypeLiteralNode(node)) {
-    return schemaForTypeLiteral(node, state);
-  }
-  if (ts.isTypeReferenceNode(node)) {
-    const name = typeNameText(node.typeName);
-    const typeArguments = node.typeArguments ?? A.empty<ts.TypeNode>();
-    if (name === "Array" || name === "ReadonlyArray") {
-      return pipeExpression(
-        schemaForType(
-          pipe(
-            A.get(typeArguments, 0),
-            O.getOrElse(() => node)
-          ),
-          state
-        ),
-        "S.Array"
-      );
-    }
-    if (name === "Record") {
-      return `S.Record(S.String, ${schemaForType(
-        pipe(
-          A.get(typeArguments, 1),
-          O.getOrElse(() => node)
-        ),
-        state
-      )})`;
-    }
-    if (name === "Promise") {
-      return schemaForType(
-        pipe(
-          A.get(typeArguments, 0),
-          O.getOrElse(() => node)
-        ),
-        state
-      );
-    }
-    return schemaForReference(name, state);
-  }
+const typeArgumentOrSelf = (node: ts.TypeReferenceNode, index: number): ts.TypeNode =>
+  pipe(
+    A.get(node.typeArguments ?? A.empty<ts.TypeNode>(), index),
+    O.getOrElse(() => node)
+  );
 
-  return Match.value(node.kind).pipe(
+const schemaForTypeReference = (node: ts.TypeReferenceNode, state: GenerationState): string =>
+  Match.value(typeNameText(node.typeName)).pipe(
+    Match.whenOr("Array", "ReadonlyArray", () =>
+      pipeExpression(schemaForType(typeArgumentOrSelf(node, 0), state), "S.Array")
+    ),
+    Match.when("Record", () => `S.Record(S.String, ${schemaForType(typeArgumentOrSelf(node, 1), state)})`),
+    Match.when("Promise", () => schemaForType(typeArgumentOrSelf(node, 0), state)),
+    Match.orElse((name) => schemaForReference(name, state))
+  );
+
+const constrainedTypeSchema = (node: ts.TypeNode, state: GenerationState): string => {
+  MutableHashSet.add(state.constrainedTypes, node.getText());
+  return "S.Unknown";
+};
+
+const schemaForSyntaxKind = (node: ts.TypeNode, state: GenerationState): string =>
+  Match.value(node.kind).pipe(
     Match.when(ts.SyntaxKind.StringKeyword, () => "S.String"),
     Match.when(ts.SyntaxKind.NumberKeyword, () => "S.Finite"),
     Match.when(ts.SyntaxKind.BooleanKeyword, () => "S.Boolean"),
-    Match.whenOr(ts.SyntaxKind.UnknownKeyword, ts.SyntaxKind.AnyKeyword, ts.SyntaxKind.ObjectKeyword, () => {
-      MutableHashSet.add(state.constrainedTypes, node.getText());
-      return "S.Unknown";
-    }),
+    Match.whenOr(ts.SyntaxKind.UnknownKeyword, ts.SyntaxKind.AnyKeyword, ts.SyntaxKind.ObjectKeyword, () =>
+      constrainedTypeSchema(node, state)
+    ),
     Match.when(ts.SyntaxKind.UndefinedKeyword, () => "S.Undefined"),
     Match.when(ts.SyntaxKind.NullKeyword, () => "S.Null"),
-    Match.orElse(() => {
-      MutableHashSet.add(state.constrainedTypes, node.getText());
-      return "S.Unknown";
-    })
+    Match.orElse(() => constrainedTypeSchema(node, state))
   );
-};
+
+const schemaForType = (node: ts.TypeNode, state: GenerationState): string =>
+  Match.value(node).pipe(
+    Match.when(ts.isParenthesizedTypeNode, (parenthesized) => schemaForType(parenthesized.type, state)),
+    Match.when(ts.isArrayTypeNode, (array) => pipeExpression(schemaForType(array.elementType, state), "S.Array")),
+    Match.when(ts.isTypeOperatorNode, (operator) => schemaForType(operator.type, state)),
+    Match.when(ts.isUnionTypeNode, (union) => schemaForUnion(union, state)),
+    Match.when(ts.isIntersectionTypeNode, (intersection) => constrainedTypeSchema(intersection, state)),
+    Match.when(ts.isLiteralTypeNode, (literal) => schemaForLiteral(literalValue(literal))),
+    Match.when(ts.isTypeLiteralNode, (literal) => schemaForTypeLiteral(literal, state)),
+    Match.when(ts.isTypeReferenceNode, (reference) => schemaForTypeReference(reference, state)),
+    Match.orElse((other) => schemaForSyntaxKind(other, state))
+  );
+
+const propertyField = (
+  member: ts.PropertyDeclaration | ts.PropertySignature,
+  state: GenerationState
+): O.Option<GeneratedField> =>
+  pipe(
+    O.fromUndefinedOr(member.type),
+    O.flatMap((memberType) =>
+      pipe(
+        extractPropertyName(member.name),
+        O.fromUndefinedOr,
+        O.filter((name) => name !== "rawData"),
+        O.map((name) => ({
+          name: propertyName(name),
+          optional: member.questionToken !== undefined,
+          schemaExpression: schemaForType(memberType, state),
+        }))
+      )
+    )
+  );
+
+const indexField = (member: ts.IndexSignatureDeclaration, state: GenerationState): O.Option<GeneratedField> =>
+  pipe(
+    O.fromUndefinedOr(member.type),
+    O.map((memberType) => ({
+      name: "[key: string]",
+      optional: false,
+      schemaExpression: schemaForType(memberType, state),
+    }))
+  );
+
+const fieldFromMember = (member: ts.ClassElement | ts.TypeElement, state: GenerationState): O.Option<GeneratedField> =>
+  Match.value(member).pipe(
+    Match.whenOr(ts.isPropertyDeclaration, ts.isPropertySignature, (property) => propertyField(property, state)),
+    Match.when(ts.isIndexSignatureDeclaration, (index) => indexField(index, state)),
+    Match.orElse(O.none<GeneratedField>)
+  );
 
 const collectFields = (
   members: ts.NodeArray<ts.ClassElement | ts.TypeElement>,
   state: GenerationState
-): ReadonlyArray<GeneratedField> => {
-  let fields = A.empty<GeneratedField>();
+): ReadonlyArray<GeneratedField> =>
+  pipe(
+    members,
+    A.map((member) => fieldFromMember(member, state)),
+    A.getSomes,
+    A.filter((field) => field.name !== "[key: string]")
+  );
 
-  for (const member of members) {
-    if ((ts.isPropertyDeclaration(member) || ts.isPropertySignature(member)) && member.type !== undefined) {
-      const name = extractPropertyName(member.name);
-      if (name === undefined || name === "rawData") {
-        continue;
-      }
-      fields = A.append(fields, {
-        name: propertyName(name),
-        optional: member.questionToken !== undefined,
-        schemaExpression: schemaForType(member.type, state),
-      });
-    }
-    if (ts.isIndexSignatureDeclaration(member) && member.type !== undefined) {
-      fields = A.append(fields, {
-        name: "[key: string]",
-        optional: false,
-        schemaExpression: schemaForType(member.type, state),
-      });
-    }
-  }
+const declarationName = (statement: ts.Statement): string | undefined =>
+  Match.value(statement).pipe(
+    Match.when(ts.isInterfaceDeclaration, (declaration) => declaration.name.text),
+    Match.when(ts.isClassDeclaration, (declaration) => declaration.name?.text),
+    Match.when(ts.isTypeAliasDeclaration, (declaration) => declaration.name.text),
+    Match.orElse(() => undefined)
+  );
 
-  return A.filter(fields, (field) => field.name !== "[key: string]");
+const memberReferencesNonJson = (member: ts.TypeElement, state: GenerationState): boolean => {
+  const memberType: ts.TypeNode | undefined = Match.value(member).pipe(
+    Match.when(ts.isPropertySignature, (property) => property.type),
+    Match.when(ts.isIndexSignatureDeclaration, (index) => index.type),
+    Match.orElse(() => undefined)
+  );
+  return pipe(
+    O.fromUndefinedOr(memberType),
+    O.exists((type) => typeReferencesNonJson(type, state))
+  );
 };
 
-const declarationName = (statement: ts.Statement): string | undefined => {
-  if (
-    (ts.isInterfaceDeclaration(statement) ||
-      ts.isClassDeclaration(statement) ||
-      ts.isTypeAliasDeclaration(statement)) &&
-    statement.name !== undefined
-  ) {
-    return statement.name.text;
-  }
-  return undefined;
-};
+const referenceTypeReferencesNonJson = (node: ts.TypeReferenceNode, state: GenerationState): boolean =>
+  MutableHashSet.has(state.nonJsonDeclarationNames, typeNameText(node.typeName)) ||
+  A.some(node.typeArguments ?? A.empty<ts.TypeNode>(), (argument) => typeReferencesNonJson(argument, state));
 
-const typeReferencesNonJson = (node: ts.TypeNode, state: GenerationState): boolean => {
-  if (BYTE_OR_EVENT_PATTERN.test(node.getText())) {
-    return true;
-  }
-  if (ts.isParenthesizedTypeNode(node)) {
-    return typeReferencesNonJson(node.type, state);
-  }
-  if (ts.isArrayTypeNode(node)) {
-    return typeReferencesNonJson(node.elementType, state);
-  }
-  if (ts.isTypeOperatorNode(node)) {
-    return typeReferencesNonJson(node.type, state);
-  }
-  if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node)) {
-    return A.some(node.types, (type) => typeReferencesNonJson(type, state));
-  }
-  if (ts.isTypeLiteralNode(node)) {
-    return A.some(node.members, (member) => {
-      if ((ts.isPropertySignature(member) || ts.isIndexSignatureDeclaration(member)) && member.type !== undefined) {
-        return typeReferencesNonJson(member.type, state);
-      }
-      return false;
-    });
-  }
-  if (ts.isTypeReferenceNode(node)) {
-    const name = typeNameText(node.typeName);
-    return (
-      MutableHashSet.has(state.nonJsonDeclarationNames, name) ||
-      A.some(node.typeArguments ?? A.empty<ts.TypeNode>(), (typeArgument) => typeReferencesNonJson(typeArgument, state))
-    );
-  }
+const typeReferencesNonJson = (node: ts.TypeNode, state: GenerationState): boolean =>
+  BYTE_OR_EVENT_PATTERN.test(node.getText()) ||
+  Match.value(node).pipe(
+    Match.when(ts.isParenthesizedTypeNode, (parenthesized) => typeReferencesNonJson(parenthesized.type, state)),
+    Match.when(ts.isArrayTypeNode, (array) => typeReferencesNonJson(array.elementType, state)),
+    Match.when(ts.isTypeOperatorNode, (operator) => typeReferencesNonJson(operator.type, state)),
+    Match.when(ts.isUnionTypeNode, (union) => A.some(union.types, (type) => typeReferencesNonJson(type, state))),
+    Match.when(ts.isIntersectionTypeNode, (intersection) =>
+      A.some(intersection.types, (type) => typeReferencesNonJson(type, state))
+    ),
+    Match.when(ts.isTypeLiteralNode, (literal) =>
+      A.some(literal.members, (member) => memberReferencesNonJson(member, state))
+    ),
+    Match.when(ts.isTypeReferenceNode, (reference) => referenceTypeReferencesNonJson(reference, state)),
+    Match.orElse(() => false)
+  );
 
-  return false;
-};
+const classBaseName = (statement: ts.ClassDeclaration, state: GenerationState): string | undefined =>
+  pipe(
+    A.fromIterable(statement.heritageClauses ?? A.empty<ts.HeritageClause>()),
+    A.flatMap((clause) => A.fromIterable(clause.types)),
+    A.map((heritage) => heritage.expression.getText(statement.getSourceFile())),
+    A.findFirst((candidate) => MutableHashSet.has(state.declarationNames, candidate)),
+    O.getOrUndefined
+  );
 
-const declarationFromStatement = (statement: ts.Statement, state: GenerationState): O.Option<GeneratedDeclaration> => {
-  const name = declarationName(statement);
-  if (name === undefined || !hasExportModifier(statement) || shouldSkipDeclaration(name)) {
-    return O.none();
-  }
-
-  if (ts.isInterfaceDeclaration(statement)) {
-    return O.some({
-      fields: collectFields(statement.members, state),
-      kind: "interface",
+const supportedDeclaration = (
+  statement: ts.ClassDeclaration | ts.InterfaceDeclaration | ts.TypeAliasDeclaration,
+  state: GenerationState,
+  name: string
+): GeneratedDeclaration =>
+  Match.value(statement).pipe(
+    Match.when(ts.isInterfaceDeclaration, (declaration) => ({
+      fields: collectFields(declaration.members, state),
+      kind: "interface" as const,
       name,
-    });
-  }
+    })),
+    Match.when(ts.isClassDeclaration, (declaration) => ({
+      ...pipe(
+        classBaseName(declaration, state),
+        O.fromUndefinedOr,
+        O.map((baseName) => ({ baseName })),
+        O.getOrElse(() => ({}))
+      ),
+      fields: collectFields(declaration.members, state),
+      kind: "class" as const,
+      name,
+    })),
+    Match.when(ts.isTypeAliasDeclaration, (declaration) => ({
+      kind: "type" as const,
+      name,
+      schemaExpression: schemaForType(declaration.type, state),
+    })),
+    Match.exhaustive
+  );
 
-  if (ts.isClassDeclaration(statement)) {
-    const baseName = O.getOrUndefined(
-      pipe(
-        A.fromIterable(statement.heritageClauses ?? A.empty<ts.HeritageClause>()),
-        A.flatMap((clause) => A.fromIterable(clause.types)),
-        A.map((heritage) => heritage.expression.getText(statement.getSourceFile())),
-        A.findFirst((candidate) => MutableHashSet.has(state.declarationNames, candidate))
+const declarationFromStatement = (statement: ts.Statement, state: GenerationState): O.Option<GeneratedDeclaration> =>
+  pipe(
+    declarationName(statement),
+    O.fromUndefinedOr,
+    O.filter(() => hasExportModifier(statement)),
+    O.filter((name) => !shouldSkipDeclaration(name)),
+    O.flatMap((name) =>
+      Match.value(statement).pipe(
+        Match.when(ts.isClassDeclaration, (declaration) => O.some(supportedDeclaration(declaration, state, name))),
+        Match.when(ts.isInterfaceDeclaration, (declaration) => O.some(supportedDeclaration(declaration, state, name))),
+        Match.when(ts.isTypeAliasDeclaration, (declaration) => O.some(supportedDeclaration(declaration, state, name))),
+        Match.orElse(O.none<GeneratedDeclaration>)
       )
-    );
-
-    return O.some({
-      ...(baseName === undefined ? {} : { baseName }),
-      fields: collectFields(statement.members, state),
-      kind: "class",
-      name,
-    });
-  }
-
-  if (ts.isTypeAliasDeclaration(statement)) {
-    return O.some({
-      kind: "type",
-      name,
-      schemaExpression: schemaForType(statement.type, state),
-    });
-  }
-
-  return O.none();
-};
+    )
+  );
 
 const sortDeclarations = (declarations: ReadonlyArray<GeneratedDeclaration>): ReadonlyArray<GeneratedDeclaration> => {
   const declarationsByName = HashMap.fromIterable(
@@ -868,44 +869,35 @@ const resolveBoxPaths = Effect.fnUntraced(function* () {
   } satisfies BoxSdkPaths;
 });
 
-const collectDeclarationNames = Effect.fn("Box.generate.collectDeclarationNames")(function* (
-  files: ReadonlyArray<string>
+const collectStatementNames = Effect.fn("Box.generate.collectStatementNames")(function* (
+  files: ReadonlyArray<string>,
+  include: (statement: ts.Statement, sourceFile: ts.SourceFile, name: string) => boolean
 ) {
-  const names = MutableHashSet.empty<string>();
-
-  for (const file of files) {
-    const sourceFile = yield* sourceFileFor(file);
-    for (const statement of sourceFile.statements) {
-      const name = declarationName(statement);
-      if (name !== undefined && hasExportModifier(statement) && !shouldSkipDeclaration(name)) {
-        MutableHashSet.add(names, name);
-      }
-    }
-  }
-
-  return names;
+  const sourceFiles = yield* Effect.forEach(files, sourceFileFor, { concurrency: "unbounded" });
+  return MutableHashSet.fromIterable(
+    A.getSomes(
+      A.flatMap(sourceFiles, (sourceFile) =>
+        A.map(sourceFile.statements, (statement) =>
+          pipe(
+            declarationName(statement),
+            O.fromUndefinedOr,
+            O.filter((name) => hasExportModifier(statement) && include(statement, sourceFile, name))
+          )
+        )
+      )
+    )
+  );
 });
+
+const collectDeclarationNames = (files: ReadonlyArray<string>) =>
+  collectStatementNames(files, (_statement, _sourceFile, name) => !shouldSkipDeclaration(name));
 
 const collectNonJsonDeclarationNames = Effect.fn("Box.generate.collectNonJsonDeclarationNames")(function* (
   files: ReadonlyArray<string>
 ) {
-  const names = MutableHashSet.empty<string>();
-
-  for (const file of files) {
-    const sourceFile = yield* sourceFileFor(file);
-    for (const statement of sourceFile.statements) {
-      const name = declarationName(statement);
-      if (
-        name !== undefined &&
-        hasExportModifier(statement) &&
-        BYTE_OR_EVENT_PATTERN.test(statement.getText(sourceFile))
-      ) {
-        MutableHashSet.add(names, name);
-      }
-    }
-  }
-
-  return names;
+  return yield* collectStatementNames(files, (statement, sourceFile) =>
+    BYTE_OR_EVENT_PATTERN.test(statement.getText(sourceFile))
+  );
 });
 
 const collectDeclarations = Effect.fn("Box.generate.collectDeclarations")(function* (
@@ -939,30 +931,30 @@ const collectHandWrittenModelRoots = Effect.fn("Box.generate.collectHandWrittenM
   return A.dedupe(A.sort(names, ascending));
 });
 
+const managerPropertyFromMember = (member: ts.ClassElement): O.Option<ManagerProperty> =>
+  pipe(
+    O.liftPredicate(ts.isPropertyDeclaration)(member),
+    O.filter((property) => ts.isIdentifier(property.name)),
+    O.flatMap((property) =>
+      pipe(
+        O.fromUndefinedOr(property.type),
+        O.filter(ts.isTypeReferenceNode),
+        O.map((reference) => ({ className: typeNameText(reference.typeName), managerName: property.name.getText() }))
+      )
+    ),
+    O.filter((property) => Str.endsWith("Manager")(property.className))
+  );
+
 const collectManagerProperties = Effect.fn("Box.generate.collectManagerProperties")(function* (clientPath: string) {
   const sourceFile = yield* sourceFileFor(clientPath);
-  let properties = A.empty<ManagerProperty>();
-
-  for (const statement of sourceFile.statements) {
-    if (!ts.isClassDeclaration(statement) || statement.name?.text !== "BoxClient") {
-      continue;
-    }
-
-    for (const member of statement.members) {
-      if (!ts.isPropertyDeclaration(member) || !ts.isIdentifier(member.name) || member.type === undefined) {
-        continue;
-      }
-      if (!ts.isTypeReferenceNode(member.type)) {
-        continue;
-      }
-      const className = typeNameText(member.type.typeName);
-      if (Str.endsWith("Manager")(className)) {
-        properties = A.append(properties, { className, managerName: member.name.text });
-      }
-    }
-  }
-
-  return A.sort(properties, managerPropertyOrder);
+  return pipe(
+    sourceFile.statements,
+    A.findFirst((statement) => ts.isClassDeclaration(statement) && statement.name?.text === "BoxClient"),
+    O.filter(ts.isClassDeclaration),
+    O.map((declaration) => A.getSomes(A.map(declaration.members, managerPropertyFromMember))),
+    O.getOrElse(A.empty<ManagerProperty>),
+    A.sort(managerPropertyOrder)
+  );
 });
 
 const unwrapPromise = (typeNode: ts.TypeNode): ts.TypeNode =>
@@ -977,79 +969,152 @@ const methodHasDeprecatedTag = (member: ts.MethodDeclaration): boolean =>
   A.some(ts.getJSDocTags(member), (tag) => tag.tagName.text === "deprecated") ||
   Str.includes("@deprecated")(member.getFullText(member.getSourceFile()));
 
+const managerMethodCandidate = (member: ts.ClassElement): O.Option<ts.MethodDeclaration> =>
+  pipe(
+    O.liftPredicate(ts.isMethodDeclaration)(member),
+    O.filter((method) => ts.isIdentifier(method.name)),
+    O.filter((method) => method.type !== undefined)
+  );
+
+const methodReferencesNonJson = (member: ts.MethodDeclaration, state: GenerationState): boolean =>
+  pipe(
+    O.fromUndefinedOr(member.type),
+    O.exists((returnType) => typeReferencesNonJson(returnType, state))
+  ) ||
+  A.some(
+    member.parameters,
+    (parameter) => parameter.type !== undefined && typeReferencesNonJson(parameter.type, state)
+  );
+
+const generatedManagerMethod = (
+  property: ManagerProperty,
+  member: ts.MethodDeclaration,
+  returnType: ts.TypeNode,
+  sourceFile: ts.SourceFile,
+  fileName: string,
+  state: GenerationState
+): ManagerMethod => {
+  const methodName = member.name.getText(sourceFile);
+  const operationName = `${toIdentifier(property.managerName)}${toIdentifier(methodName)}`;
+  return {
+    className: property.className,
+    fileName,
+    fullMethodName: `${property.managerName}.${methodName}`,
+    managerName: property.managerName,
+    methodName,
+    parameters: A.map(member.parameters, (parameter) => ({
+      name: parameter.name.getText(sourceFile),
+      optional: parameter.questionToken !== undefined,
+      schemaExpression: parameter.type === undefined ? "S.Unknown" : schemaForType(parameter.type, state),
+      typeText: parameter.type?.getText(sourceFile) ?? "unknown",
+    })),
+    payloadName: `${operationName}Payload`,
+    returnType: returnType.getText(sourceFile),
+    successName: `${operationName}Success`,
+    successSchemaExpression: schemaForType(unwrapPromise(returnType), state),
+  };
+};
+
+const classifyManagerMethod = (
+  property: ManagerProperty,
+  member: ts.MethodDeclaration,
+  sourceFile: ts.SourceFile,
+  fileName: string,
+  state: GenerationState
+): MethodDisposition => {
+  const methodName = member.name.getText(sourceFile);
+  const fullMethodName = `${property.managerName}.${methodName}`;
+  return Match.value(methodHasDeprecatedTag(member)).pipe(
+    Match.when(true, () => NamedMethodDisposition.make({ name: fullMethodName })),
+    Match.when(false, () =>
+      pipe(
+        O.fromUndefinedOr(member.type),
+        O.match({
+          onNone: () => SkippedMethodDisposition.make({ name: fullMethodName }),
+          onSome: (returnType) => {
+            const signatureText = `${returnType.getText(sourceFile)} ${A.join(
+              A.map(member.parameters, (parameter) => parameter.type?.getText(sourceFile) ?? ""),
+              " "
+            )}`;
+            return Match.value(
+              BYTE_OR_EVENT_PATTERN.test(signatureText) || methodReferencesNonJson(member, state)
+            ).pipe(
+              Match.when(true, () => SkippedMethodDisposition.make({ name: fullMethodName })),
+              Match.when(false, () =>
+                GeneratedMethodDisposition.make({
+                  method: generatedManagerMethod(property, member, returnType, sourceFile, fileName, state),
+                })
+              ),
+              Match.exhaustive
+            );
+          },
+        })
+      )
+    ),
+    Match.exhaustive
+  );
+};
+
+const generatedDispositionMethod = (disposition: MethodDisposition): O.Option<ManagerMethod> =>
+  disposition._tag === "generated" ? O.some(disposition.method) : O.none();
+
+const deprecatedDispositionName = (disposition: MethodDisposition): O.Option<string> =>
+  disposition._tag === "deprecated" ? O.some(disposition.name) : O.none();
+
+const skippedDispositionName = (disposition: MethodDisposition): O.Option<string> =>
+  disposition._tag === "skipped" ? O.some(disposition.name) : O.none();
+
+const wrappedDispositionName = (disposition: MethodDisposition): O.Option<string> =>
+  Match.value(disposition).pipe(
+    Match.tag("generated", ({ method }) => O.some(method.fullMethodName)),
+    Match.tag("skipped", ({ name }) => O.some(name)),
+    Match.tag("deprecated", O.none<string>),
+    Match.exhaustive
+  );
+
+const managerClassMethods = (
+  property: ManagerProperty,
+  sourceFile: ts.SourceFile,
+  fileName: string,
+  state: GenerationState
+): ReadonlyArray<MethodDisposition> =>
+  pipe(
+    sourceFile.statements,
+    A.findFirst((statement) => ts.isClassDeclaration(statement) && statement.name?.text === property.className),
+    O.filter(ts.isClassDeclaration),
+    O.map((declaration) =>
+      A.getSomes(
+        A.map(declaration.members, (member) =>
+          pipe(
+            managerMethodCandidate(member),
+            O.map((method) => classifyManagerMethod(property, method, sourceFile, fileName, state))
+          )
+        )
+      )
+    ),
+    O.getOrElse(A.empty<MethodDisposition>)
+  );
+
 const collectManagerMethods = Effect.fn("Box.generate.collectManagerMethods")(function* (
   managerProperties: ReadonlyArray<ManagerProperty>,
   state: GenerationState,
   sdkRoot: string
 ) {
   const path = yield* Path.Path;
-  let generated = A.empty<ManagerMethod>();
-  let skipped = A.empty<string>();
-  let deprecated = A.empty<string>();
-  let wrapped = A.empty<string>();
+  const dispositions = yield* Effect.forEach(
+    managerProperties,
+    Effect.fnUntraced(function* (property) {
+      const managerFile = path.resolve(sdkRoot, "lib/managers", `${property.managerName}.d.ts`);
+      const sourceFile = yield* sourceFileFor(managerFile);
+      return managerClassMethods(property, sourceFile, path.basename(managerFile), state);
+    }),
+    { concurrency: "unbounded" }
+  ).pipe(Effect.map(A.flatten));
 
-  for (const property of managerProperties) {
-    const managerFile = path.resolve(sdkRoot, "lib/managers", `${property.managerName}.d.ts`);
-    const sourceFile = yield* sourceFileFor(managerFile);
-
-    for (const statement of sourceFile.statements) {
-      if (!ts.isClassDeclaration(statement) || statement.name?.text !== property.className) {
-        continue;
-      }
-
-      for (const member of statement.members) {
-        if (!ts.isMethodDeclaration(member) || !ts.isIdentifier(member.name) || member.type === undefined) {
-          continue;
-        }
-
-        const methodName = member.name.text;
-        const fullMethodName = `${property.managerName}.${methodName}`;
-        const signatureText = `${member.type.getText(sourceFile)} ${A.join(
-          A.map(member.parameters, (parameter) => parameter.type?.getText(sourceFile) ?? ""),
-          " "
-        )}`;
-        const referencesNonJson =
-          typeReferencesNonJson(member.type, state) ||
-          A.some(
-            member.parameters,
-            (parameter) => parameter.type !== undefined && typeReferencesNonJson(parameter.type, state)
-          );
-
-        if (methodHasDeprecatedTag(member)) {
-          deprecated = A.append(deprecated, fullMethodName);
-          continue;
-        }
-
-        wrapped = A.append(wrapped, fullMethodName);
-
-        if (BYTE_OR_EVENT_PATTERN.test(signatureText) || referencesNonJson) {
-          skipped = A.append(skipped, fullMethodName);
-          continue;
-        }
-
-        const parameters = A.map(member.parameters, (parameter) => ({
-          name: parameter.name.getText(sourceFile),
-          optional: parameter.questionToken !== undefined,
-          schemaExpression: parameter.type === undefined ? "S.Unknown" : schemaForType(parameter.type, state),
-          typeText: parameter.type?.getText(sourceFile) ?? "unknown",
-        }));
-        const operationName = `${toIdentifier(property.managerName)}${toIdentifier(methodName)}`;
-
-        generated = A.append(generated, {
-          className: property.className,
-          fileName: path.basename(managerFile),
-          fullMethodName,
-          managerName: property.managerName,
-          methodName,
-          parameters,
-          payloadName: `${operationName}Payload`,
-          returnType: member.type.getText(sourceFile),
-          successName: `${operationName}Success`,
-          successSchemaExpression: schemaForType(unwrapPromise(member.type), state),
-        });
-      }
-    }
-  }
+  const generated = A.getSomes(A.map(dispositions, generatedDispositionMethod));
+  const deprecated = A.getSomes(A.map(dispositions, deprecatedDispositionName));
+  const skipped = A.getSomes(A.map(dispositions, skippedDispositionName));
+  const wrapped = A.getSomes(A.map(dispositions, wrappedDispositionName));
 
   return {
     deprecated: A.sort(deprecated, ascending),
@@ -1059,16 +1124,11 @@ const collectManagerMethods = Effect.fn("Box.generate.collectManagerMethods")(fu
   };
 });
 
-const renderDeclaration = (declaration: GeneratedDeclaration): string => {
-  const description = `Generated Box SDK schema for ${declaration.name}.`;
-  const schemaConst = renderGeneratedSchemaConst(
-    declaration.name,
-    description,
-    declaration.schemaExpression ?? "S.Unknown"
-  );
-
-  if (declaration.kind === "type") {
-    return `/**
+const renderTypeDeclaration = (
+  declaration: GeneratedDeclaration,
+  description: string,
+  schemaConst: string
+): string => `/**
  * ${description}
  *
  * **Example** (Inspect the ${declaration.name} schema)
@@ -1100,14 +1160,13 @@ ${schemaConst};
  */
 export type ${declaration.name} = typeof ${declaration.name}.Type;
 `;
-  }
 
-  const fields = renderStructFields(
-    pipe(declaration.fields ?? A.empty<GeneratedField>(), A.map(renderField), A.join("\n    "))
-  );
-
-  if (declaration.baseName !== undefined) {
-    return `/**
+const renderExtendedClassDeclaration = (
+  declaration: GeneratedDeclaration,
+  description: string,
+  fields: string,
+  baseName: string
+): string => `/**
  * ${description}
  *
  * **Example** (Inspect the ${declaration.name} schema)
@@ -1121,16 +1180,19 @@ export type ${declaration.name} = typeof ${declaration.name}.Type;
  * @category models
  * @since 0.0.0
  */
-export class ${declaration.name} extends ${declaration.baseName}.extend<${declaration.name}>($I\`${declaration.name}\`)(
+export class ${declaration.name} extends ${baseName}.extend<${declaration.name}>($I\`${declaration.name}\`)(
   {${fields}},
   $I.annote(${stringLiteral(declaration.name)}, {
     description: ${stringLiteral(description)}
   })
 ) {}
 `;
-  }
 
-  return `/**
+const renderStandaloneClassDeclaration = (
+  declaration: GeneratedDeclaration,
+  description: string,
+  fields: string
+): string => `/**
  * ${description}
  *
  * **Example** (Inspect the ${declaration.name} schema)
@@ -1151,6 +1213,26 @@ export class ${declaration.name} extends S.Class<${declaration.name}>($I\`${decl
   })
 ) {}
 `;
+
+const renderDeclaration = (declaration: GeneratedDeclaration): string => {
+  const description = `Generated Box SDK schema for ${declaration.name}.`;
+  if (declaration.kind === "type") {
+    return renderTypeDeclaration(
+      declaration,
+      description,
+      renderGeneratedSchemaConst(declaration.name, description, declaration.schemaExpression ?? "S.Unknown")
+    );
+  }
+  const fields = renderStructFields(
+    pipe(declaration.fields ?? A.empty<GeneratedField>(), A.map(renderField), A.join("\n    "))
+  );
+  return pipe(
+    O.fromUndefinedOr(declaration.baseName),
+    O.match({
+      onNone: () => renderStandaloneClassDeclaration(declaration, description, fields),
+      onSome: (baseName) => renderExtendedClassDeclaration(declaration, description, fields, baseName),
+    })
+  );
 };
 
 const renderPayload = (method: ManagerMethod): string => {

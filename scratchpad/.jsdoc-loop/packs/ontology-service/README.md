@@ -99,4 +99,3 @@
 - `effect-ontology/Service/Shacl.ts:44` `ShaclValidationReport` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/Service/Shacl.ts:44` `ValidationPolicy` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/Service/WorkflowOrchestrator.ts:1161` `BatchWorkflowPayload` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

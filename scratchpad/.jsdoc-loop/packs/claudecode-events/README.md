@@ -192,4 +192,3 @@
 - `claudecode/Hook/Events/index.ts:87` `UserPromptSubmit` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `claudecode/Hook/Events/index.ts:88` `WorktreeCreate` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `claudecode/Hook/Events/index.ts:89` `WorktreeRemove` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

@@ -34,4 +34,3 @@
 - `claudecode/Settings/HooksSection.ts:502` `HookMatcherGroup` (value/namespace) missing=@example findings=missing-required-tags
 - `claudecode/Settings/Schema.ts:1200` `Marketplace` (value/namespace) missing=@example findings=missing-required-tags
 - `claudecode/Settings/Schema.ts:1841` `SettingsFile` (value/namespace) missing=@example findings=missing-required-tags
-

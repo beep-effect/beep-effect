@@ -108,6 +108,61 @@ const emptyReport: typeof OxlintReport.Type = {};
 /** Decode oxlint's stdout, tolerating non-JSON noise by returning an empty report. */
 const parseReport = jsonReportParser(OxlintReport, emptyReport);
 
+class OxlintFixture extends S.Class<OxlintFixture>("OxlintFixture")({
+  configPath: S.String,
+  sourcePath: S.String,
+  tempDir: S.String,
+}) {}
+
+const writeSupportingFile = Effect.fnUntraced(function* (
+  tempDir: string,
+  [supportingPath, supportingSource]: readonly [path: string, source: string]
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absoluteSupportingPath = path.join(tempDir, supportingPath);
+  yield* fs.makeDirectory(path.dirname(absoluteSupportingPath), { recursive: true });
+  yield* fs.writeFileString(absoluteSupportingPath, `${supportingSource}\n`);
+});
+
+const makeOxlintFixture = Effect.fn("oxlintHarness.makeOxlintFixture")(function* (
+  tempDir: string,
+  rule: OxlintRule,
+  source: string,
+  filename: string,
+  supportingFiles: ReadonlyArray<readonly [path: string, source: string]>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const configPath = path.join(tempDir, "oxlintrc.json");
+  const sourcePath = path.join(tempDir, filename);
+
+  yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
+  yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
+  yield* fs.writeFileString(sourcePath, `${source}\n`);
+  yield* Effect.forEach(supportingFiles, (supportingFile) => writeSupportingFile(tempDir, supportingFile), {
+    discard: true,
+  });
+
+  return OxlintFixture.make({ configPath, sourcePath, tempDir });
+});
+
+const withOxlintFixture = Effect.fn("oxlintHarness.withOxlintFixture")(function* <Success, Error, Requirements>(
+  prefix: string,
+  rule: OxlintRule,
+  source: string,
+  filename: string,
+  supportingFiles: ReadonlyArray<readonly [path: string, source: string]>,
+  use: (fixture: OxlintFixture) => Effect.Effect<Success, Error, Requirements>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* Effect.acquireUseRelease(
+    fs.makeTempDirectory({ prefix }),
+    (tempDir) => makeOxlintFixture(tempDir, rule, source, filename, supportingFiles).pipe(Effect.flatMap(use)),
+    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+  );
+});
+
 /** Strip the `beep(<slug>)` wrapper oxlint puts around the rule id in `code`. */
 const ruleIdOf = (code: string | undefined): O.Option<string> =>
   O.map(O.fromUndefinedOr(code), (raw) => raw.replace(/^beep\(/u, "").replace(/\)$/u, ""));
@@ -132,29 +187,14 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
   filename = "fixture.ts",
   supportingFiles: ReadonlyArray<readonly [path: string, source: string]> = []
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-
-  return yield* Effect.acquireUseRelease(
-    fs.makeTempDirectory({ prefix: "beep-oxlint-rule-" }),
-    (tempDir) =>
+  return yield* withOxlintFixture(
+    "beep-oxlint-rule-",
+    rule,
+    source,
+    filename,
+    supportingFiles,
+    ({ configPath, sourcePath }) =>
       Effect.gen(function* () {
-        const configPath = path.join(tempDir, "oxlintrc.json");
-        const sourcePath = path.join(tempDir, filename);
-
-        yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
-        yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
-        yield* fs.writeFileString(sourcePath, `${source}\n`);
-        yield* Effect.forEach(
-          supportingFiles,
-          Effect.fnUntraced(function* ([supportingPath, supportingSource]) {
-            const absoluteSupportingPath = path.join(tempDir, supportingPath);
-            yield* fs.makeDirectory(path.dirname(absoluteSupportingPath), { recursive: true });
-            yield* fs.writeFileString(absoluteSupportingPath, `${supportingSource}\n`);
-          }),
-          { discard: true }
-        );
-
         const stdout = yield* Effect.sync(() => {
           // Run from the package root so `bunx oxlint` and the plugin's `@oxlint/plugins` /
           // `effect` imports resolve against the repo's node_modules; the config and fixture
@@ -178,8 +218,7 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
               }))
           )
         );
-      }),
-    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+      })
   );
 });
 
@@ -201,28 +240,14 @@ export const runOxlintRuleFix = Effect.fn("oxlintHarness.runOxlintRuleFix")(func
   supportingFiles: ReadonlyArray<readonly [path: string, source: string]> = []
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-
-  return yield* Effect.acquireUseRelease(
-    fs.makeTempDirectory({ prefix: "beep-oxlint-fix-" }),
-    (tempDir) =>
+  return yield* withOxlintFixture(
+    "beep-oxlint-fix-",
+    rule,
+    source,
+    filename,
+    supportingFiles,
+    ({ configPath, sourcePath }) =>
       Effect.gen(function* () {
-        const configPath = path.join(tempDir, "oxlintrc.json");
-        const sourcePath = path.join(tempDir, filename);
-
-        yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
-        yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
-        yield* fs.writeFileString(sourcePath, `${source}\n`);
-        yield* Effect.forEach(
-          supportingFiles,
-          Effect.fnUntraced(function* ([supportingPath, supportingSource]) {
-            const absoluteSupportingPath = path.join(tempDir, supportingPath);
-            yield* fs.makeDirectory(path.dirname(absoluteSupportingPath), { recursive: true });
-            yield* fs.writeFileString(absoluteSupportingPath, `${supportingSource}\n`);
-          }),
-          { discard: true }
-        );
-
         yield* Effect.sync(() => {
           Bun.spawnSync(["bunx", "oxlint", "--fix", `--config=${configPath}`, sourcePath], {
             cwd: packageRoot,
@@ -232,7 +257,6 @@ export const runOxlintRuleFix = Effect.fn("oxlintHarness.runOxlintRuleFix")(func
         });
 
         return yield* fs.readFileString(sourcePath);
-      }),
-    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+      })
   );
 });

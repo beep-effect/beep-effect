@@ -270,4 +270,3 @@
 - `yaml/internal/stringifier.ts:1892` `stringifyDocument` (value/function) missing=@category|@since|@example findings=missing-required-tags
 - `yaml/internal/token.ts:6` `YamlTokenKind` (type/type) missing=@category|@since findings=missing-required-tags
 - `yaml/internal/token.ts:35` `YamlToken` (type/interface) missing=@category|@since findings=missing-required-tags
-

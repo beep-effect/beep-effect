@@ -135,4 +135,3 @@
 - `toml/internal/stringifyValue.ts:95` `renderKey` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `toml/internal/stringifyValue.ts:213` `renderInlineValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `toml/internal/stringifyValue.ts:296` `stringifyValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
-

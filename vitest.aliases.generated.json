@@ -505,9 +505,6 @@
   "@beep/repo-cli/commands/Quality": [
     "./packages/tooling/tool/cli/src/commands/Quality/index.ts"
   ],
-  "@beep/repo-cli/commands/Reuse": [
-    "./packages/tooling/tool/cli/src/commands/Reuse/index.ts"
-  ],
   "@beep/repo-cli/commands/Root": [
     "./packages/tooling/tool/cli/src/commands/Root.ts"
   ],
@@ -1796,6 +1793,9 @@
   ],
   "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
   "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
+  "@beep/repo-cli/commands/Cache": [
+    "./packages/tooling/tool/cli/src/commands/Cache/index.ts"
+  ],
   "@beep/schema/ArrayBuffer": [
     "./packages/foundation/modeling/schema/src/ArrayBuffer.ts"
   ],

@@ -371,13 +371,18 @@ const envelopeToObject = (
     sourcePathHash: envelope.sourcePathHash,
   });
 
-const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject")(function* (archivePath: string) {
+const readArchiveEnvelopeText = Effect.fn("AiMetrics.readArchiveEnvelopeText")(function* (
+  archivePath: string,
+  failureMessage: string
+) {
   const fs = yield* FileSystem.FileSystem;
-  const envelopeText = yield* fs
+  return yield* fs
     .readFileString(archivePath)
-    .pipe(
-      Effect.mapError((cause) => archiveFailure(`Failed to read existing archive object "${archivePath}".`, cause))
-    );
+    .pipe(Effect.mapError((cause) => archiveFailure(`${failureMessage} "${archivePath}".`, cause)));
+});
+
+const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject")(function* (archivePath: string) {
+  const envelopeText = yield* readArchiveEnvelopeText(archivePath, "Failed to read existing archive object");
   const envelope = yield* AiMetricsEncryptedRawArchiveEnvelope.decodeUnknownEffectFromJsonString(envelopeText).pipe(
     Effect.mapError((cause) => archiveFailure(`Failed to decode existing archive object "${archivePath}".`, cause))
   );
@@ -582,10 +587,7 @@ export const decryptEncryptedRawArchiveEnvelope = Effect.fn("AiMetrics.decryptEn
 export const readEncryptedRawArchiveEnvelope = Effect.fn("AiMetrics.readEncryptedRawArchiveEnvelope")(function* (
   archivePath: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const envelopeText = yield* fs
-    .readFileString(archivePath)
-    .pipe(Effect.mapError((cause) => archiveFailure(`Failed to read archive envelope "${archivePath}".`, cause)));
+  const envelopeText = yield* readArchiveEnvelopeText(archivePath, "Failed to read archive envelope");
 
   return yield* AiMetricsEncryptedRawArchiveEnvelope.decodeUnknownEffectFromJsonString(envelopeText).pipe(
     Effect.mapError((cause) => archiveFailure(`Failed to decode archive envelope "${archivePath}".`, cause))

@@ -1,6 +1,6 @@
 # Pack fix report: codemode-openapi-stdlib (round 1)
 
-Fixer: jsdoc-annotation-specialist  
+Fixer: jsdoc-annotation-specialist
 Filter: `scratchpad/codemode/openapi/` and `scratchpad/codemode/stdlib/` only
 
 ## Changed files

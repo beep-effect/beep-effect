@@ -5,11 +5,12 @@
     "title": "Agentic Governance Laws",
     "status": "active",
     "created": "2026-08-06",
-    "updated": "2026-08-06",
+    "updated": "2026-08-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agentic-governance-laws",
   "lifecycle": "active",
+  "statusNote": "Authored but not started: all phases remain pending. The next work is P0 source re-verification when this packet is explicitly prioritized.",
   "mission": "Give three repo-wide governance laws an owner with enforcement: a minting process cannot raise its own ceiling, capped walks declare per-edge lifetime caps and record a stop reason, and every law scanner asserts its own scan matched something.",
   "executionCapable": true,
   "reflectionRequired": true,

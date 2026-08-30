@@ -115,4 +115,3 @@
 - `yaml/YamlVisitor.ts:33` `YamlVisitorEvent` (type/type) missing=@category|@since findings=missing-required-tags
 - `yaml/YamlVisitor.ts:84` `YamlVisitorEvent` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `yaml/YamlVisitor.ts:91` `YamlVisitor` (value/class) missing=@category|@since|@example findings=missing-required-tags
-

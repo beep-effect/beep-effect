@@ -11,6 +11,29 @@ import * as S from "effect/Schema";
 
 const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReadyFromEncoded);
 
+const currentCriteria = (
+  overrides: Partial<{
+    readonly closeoutRun: boolean;
+    readonly mergeStateAcceptable: boolean;
+    readonly mergeable: boolean;
+    readonly notDraft: boolean;
+    readonly prOpen: boolean;
+    readonly requiredChecksGreen: boolean;
+    readonly reviewDecisionAcceptable: boolean;
+    readonly threadsResolved: boolean;
+  }> = {}
+) => ({
+  prOpen: true,
+  notDraft: true,
+  closeoutRun: true,
+  requiredChecksGreen: true,
+  threadsResolved: true,
+  mergeable: true,
+  mergeStateAcceptable: true,
+  reviewDecisionAcceptable: true,
+  ...overrides,
+});
+
 // A verdict document whose only variable part is the merge-readiness record, so
 // a decode failure can only come from the cross-field check.
 const verdictJsonWithMergeReady = (mergeReady: string): string =>
@@ -26,12 +49,12 @@ describe("YeetMergeReady coherence", () => {
     Effect.gen(function* () {
       const decoded = yield* decodeMergeReady({
         ready: false,
-        failing: "checks-green",
-        criteria: { closeoutRun: true, checksGreen: false, threadsResolved: true },
+        failing: "required-checks-green",
+        criteria: currentCriteria({ requiredChecksGreen: false }),
       });
 
       expect(decoded.ready).toBe(false);
-      expect(decoded.failing).toStrictEqual(O.some("checks-green"));
+      expect(decoded.failing).toStrictEqual(O.some("required-checks-green"));
     })
   );
 
@@ -39,7 +62,7 @@ describe("YeetMergeReady coherence", () => {
     Effect.gen(function* () {
       const decoded = yield* decodeMergeReady({
         ready: true,
-        criteria: { closeoutRun: true, checksGreen: true, threadsResolved: true, greptileScore: "5/5" },
+        criteria: { ...currentCriteria(), greptileScore: "5/5" },
       });
 
       expect(decoded.ready).toBe(true);
@@ -55,8 +78,8 @@ describe("YeetMergeReady coherence", () => {
       const exit = yield* Effect.exit(
         decodeMergeReady({
           ready: true,
-          failing: "checks-green",
-          criteria: { closeoutRun: true, checksGreen: false, threadsResolved: true },
+          failing: "required-checks-green",
+          criteria: currentCriteria({ requiredChecksGreen: false }),
         })
       );
 
@@ -70,7 +93,7 @@ describe("YeetMergeReady coherence", () => {
         decodeMergeReady({
           ready: false,
           failing: "threads-resolved",
-          criteria: { closeoutRun: true, checksGreen: true, threadsResolved: true },
+          criteria: currentCriteria(),
         })
       );
 
@@ -83,7 +106,7 @@ describe("YeetMergeReady coherence", () => {
       const exit = yield* Effect.exit(
         decodeMergeReady({
           ready: false,
-          criteria: { closeoutRun: true, checksGreen: true, threadsResolved: true },
+          criteria: currentCriteria(),
         })
       );
 
@@ -96,7 +119,7 @@ describe("YeetMergeReady coherence", () => {
       const exit = yield* Effect.exit(
         decodeMergeReady({
           ready: true,
-          criteria: { closeoutRun: true, checksGreen: true, threadsResolved: false },
+          criteria: currentCriteria({ threadsResolved: false }),
         })
       );
 
@@ -108,7 +131,10 @@ describe("YeetMergeReady coherence", () => {
     const mergeReady = YeetMergeReady.make({
       ready: false,
       failing: O.some("threads-resolved"),
-      criteria: YeetMergeReadyCriteria.make({ closeoutRun: true, checksGreen: true, threadsResolved: false }),
+      criteria: YeetMergeReadyCriteria.make({
+        ...currentCriteria({ threadsResolved: false }),
+        greptileScore: O.none(),
+      }),
     });
 
     expect(mergeReady.failing).toStrictEqual(O.some("threads-resolved"));
@@ -124,8 +150,8 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       expect(mergeReady.ready).toBe(false);
-      expect(mergeReady.failing).toStrictEqual(O.some("closeout-run"));
-      expect(mergeReady.criteria.closeoutRun).toBe(false);
+      expect(mergeReady.failing).toStrictEqual(O.some("pr-open"));
+      expect(mergeReady.criteria.prOpen).toBe(false);
     })
   );
 
@@ -139,7 +165,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       expect(mergeReady.ready).toBe(false);
-      expect(mergeReady.failing).toStrictEqual(O.some("checks-green"));
+      expect(mergeReady.failing).toStrictEqual(O.some("pr-open"));
       expect(mergeReady.criteria.closeoutRun).toBe(false);
     })
   );
@@ -148,18 +174,18 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(
         verdictJsonWithMergeReady(
-          '{"ready":false,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
+          '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
         )
       );
 
-      expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+      expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
     })
   );
 
   it.effect("round-trips a current verdict byte-identically", () =>
     Effect.gen(function* () {
       const json = verdictJsonWithMergeReady(
-        '{"ready":false,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
+        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
       );
       const decoded = yield* YeetVerdictJson.decode(json);
 
@@ -172,7 +198,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const exit = yield* Effect.exit(
         YeetVerdictJson.decode(
           verdictJsonWithMergeReady(
-            '{"ready":true,"failing":"checks-green","criteria":{"closeoutRun":true,"checksGreen":false,"threadsResolved":true}}'
+            '{"ready":true,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
           )
         )
       );

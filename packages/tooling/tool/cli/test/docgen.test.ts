@@ -30,6 +30,11 @@ import {
   selectDocgenLocalPackagesForTesting,
   selectQualityWorkerRunpodTemplate,
 } from "@beep/repo-cli/test/Docgen";
+import {
+  readTurboCacheEnvironment,
+  resolveTurboCachePlan,
+  turboCachePlanArgs,
+} from "@beep/repo-cli/test/SharedInternals";
 import { Configuration, DEFAULT_THEME, defaultCompilerOptions } from "@beep/repo-docgen/Configuration";
 import { Process } from "@beep/repo-docgen/Domain";
 import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
@@ -65,7 +70,12 @@ import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import type { DocgenQualityWorkerEvalRunner } from "@beep/repo-cli/test/Docgen";
+import type {
+  DocgenQualityPackageReport,
+  DocgenQualityReview,
+  DocgenQualitySubject,
+  DocgenQualityWorkerEvalRunner,
+} from "@beep/repo-cli/test/Docgen";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -98,6 +108,28 @@ const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
 const DOCTEST_FIXTURE_DIR = new URL("./fixtures/doctest/", import.meta.url).pathname;
 const DOCTEST_FIXTURE_PACKAGE = "packages/doctest-fixture";
 const decodeDoctestReport = S.decodeUnknownEffect(S.fromJsonString(DoctestReport));
+
+const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {
+  const previousValue = Bun.env[name];
+  if (value === undefined) {
+    delete Bun.env[name];
+  } else {
+    Bun.env[name] = value;
+  }
+
+  try {
+    return use();
+  } finally {
+    if (previousValue === undefined) {
+      delete Bun.env[name];
+    } else {
+      Bun.env[name] = previousValue;
+    }
+  }
+};
+
+const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" }));
 
 const stubHandle = ChildProcessSpawner.makeHandle({
   all: Stream.empty,
@@ -234,6 +266,239 @@ const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* ()
   );
   yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
 });
+
+const schemaPackageSourcePath = (path: Path.Path): string =>
+  path.join(process.cwd(), "packages", "foundation", "modeling", "schema", "src", "index.ts");
+
+const writeSchemaTsconfig = Effect.fn("DocgenTest.writeSchemaTsconfig")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(
+    path.join(process.cwd(), "tsconfig.json"),
+    encodeJson({
+      compilerOptions: {
+        module: "es2022",
+        target: "es2022",
+        moduleResolution: "bundler",
+        strict: true,
+        noEmit: true,
+      },
+      include: ["packages/**/*.ts"],
+    })
+  );
+});
+
+const analyzeSchemaPackageQuality = Effect.fn("DocgenTest.analyzeSchemaPackageQuality")(function* (source: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* seedDocgenPackage();
+  yield* fs.writeFileString(schemaPackageSourcePath(path), source);
+  const packages = yield* discoverDocgenWorkspacePackages(process.cwd());
+  return yield* pipe(
+    A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"),
+    O.match({
+      onNone: () => Effect.die(new Error("Expected the seeded @beep/schema package to be discoverable")),
+      onSome: analyzePackageQuality,
+    })
+  );
+});
+
+const qualitySubject = (
+  report: DocgenQualityPackageReport,
+  exportName: string,
+  declarationKind?: string
+): O.Option<DocgenQualitySubject> =>
+  A.findFirst(
+    report.subjects,
+    (entry) =>
+      entry.exportName === exportName && (declarationKind === undefined || entry.declarationKind === declarationKind)
+  );
+
+const qualityReview = (
+  report: DocgenQualityPackageReport,
+  subject: O.Option<DocgenQualitySubject>
+): O.Option<DocgenQualityReview> =>
+  pipe(
+    subject,
+    O.flatMap((entry) => A.findFirst(report.reviews, (review) => review.subjectId === entry.stableIdentity))
+  );
+
+const qualityFindingCodes = (review: O.Option<DocgenQualityReview>): ReadonlyArray<string> =>
+  pipe(
+    review,
+    O.map((entry) => A.map(entry.findings, (finding) => finding.code)),
+    O.getOrElse(A.empty)
+  );
+
+const deterministicMissingTags = (subject: O.Option<DocgenQualitySubject>): ReadonlyArray<string> =>
+  pipe(
+    subject,
+    O.map((entry) => entry.deterministicMissingTags),
+    O.getOrElse(A.empty)
+  );
+
+const richQualitySubjectSource = `/**
+ * Package docs.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Parses a value into the normalized schema fixture.
+ *
+ * @example
+ * \`\`\`ts
+ * import { parseValue } from "@beep/schema"
+ * const result = parseValue(" hello ")
+ * void result
+ * \`\`\`
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseValue = (value: string): string => value.trim();
+`;
+
+const companionAliasQualitySource = `import * as Schema from "effect/Schema";
+
+/**
+ * Validated account status schema.
+ *
+ * @example
+ * \`\`\`ts
+ * import { AccountStatus } from "@beep/schema"
+ *
+ * console.log(AccountStatus)
+ * \`\`\`
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AccountStatus = {
+  Type: "active" as const,
+};
+
+/**
+ * {@inheritDoc AccountStatus}
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AccountStatus = typeof AccountStatus.Type;
+
+/**
+ * Account access mode schema.
+ *
+ * @example
+ * \`\`\`ts
+ * import { AccountMode } from "@beep/schema"
+ *
+ * console.log(AccountMode)
+ * \`\`\`
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AccountMode = {
+  Type: "read" as const,
+};
+
+/**
+ * Account feature flag schema.
+ *
+ * @example
+ * \`\`\`ts
+ * import { AccountFlag } from "@beep/schema"
+ *
+ * console.log(AccountFlag)
+ * \`\`\`
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AccountFlag = {
+  Type: true as const,
+};
+
+/**
+ * Type for {@link AccountMode}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AccountMode = typeof AccountMode.Type;
+
+/**
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AccountFlag = typeof AccountFlag.Type;
+
+/**
+ * Account flag collection schema.
+ *
+ * @example
+ * \`\`\`ts
+ * import { AccountFlags } from "@beep/schema"
+ *
+ * console.log(AccountFlags)
+ * \`\`\`
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AccountFlags = {
+  Type: ["read"] as const,
+};
+
+/**
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AccountFlags = typeof AccountFlags.Type;
+
+/**
+ * Account graph schema.
+ *
+ * @example
+ * \`\`\`ts
+ * import { AccountGraph } from "@beep/schema"
+ *
+ * console.log(AccountGraph)
+ * \`\`\`
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AccountGraph = {
+  Type: "graph" as const,
+};
+
+/**
+ * Schema companion interface for {@link AccountGraph}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export interface AccountGraph<Node extends Schema.Schema.Any> extends Schema.Schema<Node> {}
+
+/**
+ * A namespace for {@link AccountMode} companion types.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export declare namespace AccountMode {
+  /**
+   * Encoded account mode.
+   *
+   * @category schemas
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AccountMode.Type;
+}
+
+/**
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AccountAccess = typeof AccountMode.Type;
+`;
 
 const writeDoctestCommandFixtureRepo = Effect.fn("DocgenTest.writeDoctestCommandFixtureRepo")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -414,6 +679,13 @@ describe("Docgen operations", () => {
       "turbo",
       "run",
       "docgen",
+      ...expectedTurboCacheArgs([
+        "--filter=...@beep/schema",
+        "--concurrency=1",
+        "--summarize",
+        "--ui=stream",
+        "--no-daemon",
+      ]),
       "--filter=...@beep/schema",
       "--concurrency=1",
       "--summarize",
@@ -421,6 +693,25 @@ describe("Docgen operations", () => {
       "--no-daemon",
     ]);
   });
+
+  it("pins direct docgen Turbo invocations to a requested local-only cache", () =>
+    withEnvVar("CI", undefined, () =>
+      withEnvVar("TURBO_CACHE", "local:rw", () => {
+        const args = docgenLocalTurboArgsForTesting(
+          [
+            DocgenLocalSelectedPackage.make({
+              name: "@beep/schema",
+              path: "packages/foundation/modeling/schema",
+              reasons: ["packages/foundation/modeling/schema/src/index.ts"],
+            }),
+          ],
+          1
+        );
+
+        expect(args).toContain("--cache=local:rw");
+        expect(args).not.toContain("--cache=local:rw,remote:r");
+      })
+    ));
 
   it("writes and verifies package-level docgen proof manifests", () =>
     Effect.runPromise(
@@ -644,7 +935,16 @@ export const ProofFixture = 1;
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(output).toContain("- mode: full");
           expect(output).toContain("- package concurrency: 6");
-          expect(output).toContain("- full turbo command: node_modules/.bin/turbo run docgen --concurrency=6");
+          expect(output).toContain(
+            A.join(
+              [
+                "- full turbo command: node_modules/.bin/turbo run docgen",
+                ...expectedTurboCacheArgs(["--concurrency=6"]),
+                "--concurrency=6",
+              ],
+              " "
+            )
+          );
           expect(output).toContain("- full aggregate command: bun run docs:aggregate");
         })
       )
@@ -703,7 +1003,14 @@ export const ProofFixture = 1;
 
         expect(plan.mode).toBe("full");
         expect(spawned).toEqual([
-          `${repoRoot}/node_modules/.bin/turbo run docgen --concurrency=6`,
+          A.join(
+            [
+              `${repoRoot}/node_modules/.bin/turbo run docgen`,
+              ...expectedTurboCacheArgs(["--concurrency=6"]),
+              "--concurrency=6",
+            ],
+            " "
+          ),
           "bun run docs:aggregate",
         ]);
       })
@@ -1322,85 +1629,21 @@ export const ProofFixture = 1;
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const tmpDir = process.cwd();
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            encodeJson({
-              name: "@beep/test-root",
-              private: true,
-              workspaces: ["packages/foundation/*/*"],
-            })
-          );
-          yield* fs.writeFileString(
-            path.join(tmpDir, "tsconfig.json"),
-            encodeJson({
-              compilerOptions: {
-                module: "es2022",
-                target: "es2022",
-                moduleResolution: "bundler",
-                strict: true,
-                noEmit: true,
-              },
-              include: ["packages/**/*.ts"],
-            })
-          );
+          yield* writeSchemaTsconfig();
+          const report = yield* analyzeSchemaPackageQuality(richQualitySubjectSource);
+          const subject = qualitySubject(report, "parseValue");
+          const review = qualityReview(report, subject);
+          const subjectValue = O.getOrUndefined(subject);
+          const reviewValue = O.getOrUndefined(review);
 
-          const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
-          yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-          yield* fs.writeFileString(
-            path.join(packageDir, "package.json"),
-            encodeJson({
-              name: "@beep/schema",
-              version: "0.0.0",
-            })
-          );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
-          yield* fs.writeFileString(
-            path.join(packageDir, "src", "index.ts"),
-            `/**
- * Package docs.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-
-/**
- * Parses a value into the normalized schema fixture.
- *
- * @example
- * \`\`\`ts
- * import { parseValue } from "@beep/schema"
- * const result = parseValue(" hello ")
- * void result
- * \`\`\`
- * @category parsing
- * @since 0.0.0
- */
-export const parseValue = (value: string): string => value.trim();
-`
-          );
-
-          const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
-          const target = O.getOrUndefined(A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"));
-
-          expect(target).toBeDefined();
-
-          const report = yield* analyzePackageQuality(target!);
-          const subject = O.getOrUndefined(A.findFirst(report.subjects, (entry) => entry.exportName === "parseValue"));
-          const review = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === subject?.stableIdentity)
-          );
-
-          expect(subject?.description).toContain("Parses a value");
-          expect(subject?.parsedExamples).toHaveLength(1);
-          expect(subject?.sourceAnchor).toContain("packages/foundation/modeling/schema/src/index.ts:");
-          expect(subject?.contentHash).toMatch(/^[a-f0-9]{64}$/);
-          expect(subject?.declarationKind).toBe("const");
-          expect(review?.tier).toBe("warn");
-          expect(A.map(review?.findings ?? [], (finding) => finding.code)).toContain("example-only-voids-result");
-          expect(A.map(review?.findings ?? [], (finding) => finding.code)).toContain("example-discards-result");
+          expect(subjectValue?.description).toContain("Parses a value");
+          expect(subjectValue?.parsedExamples).toHaveLength(1);
+          expect(subjectValue?.sourceAnchor).toContain("packages/foundation/modeling/schema/src/index.ts:");
+          expect(subjectValue?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+          expect(subjectValue?.declarationKind).toBe("const");
+          expect(reviewValue?.tier).toBe("warn");
+          expect(qualityFindingCodes(review)).toContain("example-only-voids-result");
+          expect(qualityFindingCodes(review)).toContain("example-discards-result");
         })
       )
     ));
@@ -1462,11 +1705,14 @@ export const parseValue = (value: string): string => value.trim();
           );
 
           const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
-          const target = O.getOrUndefined(A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"));
-
-          expect(target).toBeDefined();
-
-          const report = yield* analyzePackageQuality(target!);
+          const target = yield* pipe(
+            A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"),
+            O.match({
+              onNone: () => Effect.die(new Error("Expected the seeded @beep/schema package to be discoverable")),
+              onSome: Effect.succeed,
+            })
+          );
+          const report = yield* analyzePackageQuality(target);
           const subject = O.getOrUndefined(A.findFirst(report.subjects, (entry) => entry.exportName === "parseValue"));
           const review = O.getOrUndefined(
             A.findFirst(report.reviews, (entry) => entry.subjectId === subject?.stableIdentity)
@@ -1785,272 +2031,35 @@ export type Elem<T> = T extends readonly (infer U)[] ? U : never;
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const tmpDir = process.cwd();
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            encodeJson({
-              name: "@beep/test-root",
-              private: true,
-              workspaces: ["packages/foundation/*/*"],
-            })
-          );
+          const report = yield* analyzeSchemaPackageQuality(companionAliasQualitySource);
+          const typeSubject = qualitySubject(report, "AccountStatus", "type");
+          const linkedTypeSubject = qualitySubject(report, "AccountMode", "type");
+          const bareTypeSubject = qualitySubject(report, "AccountAccess", "type");
+          const bareCompanionTypeSubject = qualitySubject(report, "AccountFlag", "type");
+          const schemaTypeCompanionSubject = qualitySubject(report, "AccountFlags", "type");
+          const companionNamespaceSubject = qualitySubject(report, "AccountMode", "namespace");
+          const companionInterfaceSubject = qualitySubject(report, "AccountGraph", "interface");
 
-          const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
-          yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-          yield* fs.writeFileString(
-            path.join(packageDir, "package.json"),
-            encodeJson({
-              name: "@beep/schema",
-              version: "0.0.0",
-            })
+          expect(deterministicMissingTags(typeSubject)).not.toContain("@example");
+          expect(deterministicMissingTags(linkedTypeSubject)).not.toContain("@example");
+          expect(deterministicMissingTags(bareCompanionTypeSubject)).not.toContain("@example");
+          expect(deterministicMissingTags(schemaTypeCompanionSubject)).not.toContain("@example");
+          expect(deterministicMissingTags(companionNamespaceSubject)).not.toContain("@example");
+          expect(deterministicMissingTags(companionInterfaceSubject)).not.toContain("@example");
+          expect(deterministicMissingTags(bareTypeSubject)).toContain("@example");
+          expect(qualityFindingCodes(qualityReview(report, typeSubject))).not.toContain("missing-example");
+          expect(qualityFindingCodes(qualityReview(report, linkedTypeSubject))).not.toContain("missing-example");
+          expect(qualityFindingCodes(qualityReview(report, bareCompanionTypeSubject))).not.toContain("missing-example");
+          expect(qualityFindingCodes(qualityReview(report, schemaTypeCompanionSubject))).not.toContain(
+            "missing-example"
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
-          yield* fs.writeFileString(
-            path.join(packageDir, "src", "index.ts"),
-            `import * as Schema from "effect/Schema";
-
-/**
- * Validated account status schema.
- *
- * @example
- * \`\`\`ts
- * import { AccountStatus } from "@beep/schema"
- *
- * console.log(AccountStatus)
- * \`\`\`
- * @category schemas
- * @since 0.0.0
- */
-export const AccountStatus = {
-  Type: "active" as const,
-};
-
-/**
- * {@inheritDoc AccountStatus}
- *
- * @category schemas
- * @since 0.0.0
- */
-export type AccountStatus = typeof AccountStatus.Type;
-
-/**
- * Account access mode schema.
- *
- * @example
- * \`\`\`ts
- * import { AccountMode } from "@beep/schema"
- *
- * console.log(AccountMode)
- * \`\`\`
- * @category schemas
- * @since 0.0.0
- */
-export const AccountMode = {
-  Type: "read" as const,
-};
-
-/**
- * Account feature flag schema.
- *
- * @example
- * \`\`\`ts
- * import { AccountFlag } from "@beep/schema"
- *
- * console.log(AccountFlag)
- * \`\`\`
- * @category schemas
- * @since 0.0.0
- */
-export const AccountFlag = {
-  Type: true as const,
-};
-
-/**
- * Type for {@link AccountMode}.
- *
- * @category schemas
- * @since 0.0.0
- */
-export type AccountMode = typeof AccountMode.Type;
-
-/**
- * @category schemas
- * @since 0.0.0
- */
-export type AccountFlag = typeof AccountFlag.Type;
-
-/**
- * Account flag collection schema.
- *
- * @example
- * \`\`\`ts
- * import { AccountFlags } from "@beep/schema"
- *
- * console.log(AccountFlags)
- * \`\`\`
- * @category schemas
- * @since 0.0.0
- */
-export const AccountFlags = {
-  Type: ["read"] as const,
-};
-
-/**
- * @category schemas
- * @since 0.0.0
- */
-export type AccountFlags = typeof AccountFlags.Type;
-
-/**
- * Account graph schema.
- *
- * @example
- * \`\`\`ts
- * import { AccountGraph } from "@beep/schema"
- *
- * console.log(AccountGraph)
- * \`\`\`
- * @category schemas
- * @since 0.0.0
- */
-export const AccountGraph = {
-  Type: "graph" as const,
-};
-
-/**
- * Schema companion interface for {@link AccountGraph}.
- *
- * @category schemas
- * @since 0.0.0
- */
-export interface AccountGraph<Node extends Schema.Schema.Any> extends Schema.Schema<Node> {}
-
-/**
- * A namespace for {@link AccountMode} companion types.
- *
- * @category schemas
- * @since 0.0.0
- */
-export declare namespace AccountMode {
-  /**
-   * Encoded account mode.
-   *
-   * @category schemas
-   * @since 0.0.0
-   */
-  export type Encoded = typeof AccountMode.Type;
-}
-
-/**
- * @category schemas
- * @since 0.0.0
- */
-export type AccountAccess = typeof AccountMode.Type;
-`
+          expect(qualityFindingCodes(qualityReview(report, companionNamespaceSubject))).not.toContain(
+            "missing-example"
           );
-
-          const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
-          const target = O.getOrUndefined(A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"));
-
-          expect(target).toBeDefined();
-
-          const report = yield* analyzePackageQuality(target!);
-          const typeSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountStatus" && entry.declarationKind === "type"
-            )
+          expect(qualityFindingCodes(qualityReview(report, companionInterfaceSubject))).not.toContain(
+            "missing-example"
           );
-          const linkedTypeSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountMode" && entry.declarationKind === "type"
-            )
-          );
-          const bareTypeSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountAccess" && entry.declarationKind === "type"
-            )
-          );
-          const bareCompanionTypeSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountFlag" && entry.declarationKind === "type"
-            )
-          );
-          const schemaTypeCompanionSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountFlags" && entry.declarationKind === "type"
-            )
-          );
-          const companionNamespaceSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountMode" && entry.declarationKind === "namespace"
-            )
-          );
-          const companionInterfaceSubject = O.getOrUndefined(
-            A.findFirst(
-              report.subjects,
-              (entry) => entry.exportName === "AccountGraph" && entry.declarationKind === "interface"
-            )
-          );
-          const review = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === typeSubject?.stableIdentity)
-          );
-          const linkedReview = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === linkedTypeSubject?.stableIdentity)
-          );
-          const bareReview = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === bareTypeSubject?.stableIdentity)
-          );
-          const bareCompanionReview = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === bareCompanionTypeSubject?.stableIdentity)
-          );
-          const schemaTypeCompanionReview = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === schemaTypeCompanionSubject?.stableIdentity)
-          );
-          const companionNamespaceReview = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === companionNamespaceSubject?.stableIdentity)
-          );
-          const companionInterfaceReview = O.getOrUndefined(
-            A.findFirst(report.reviews, (entry) => entry.subjectId === companionInterfaceSubject?.stableIdentity)
-          );
-          const findingCodes = A.map(review?.findings ?? [], (finding) => finding.code);
-          const linkedFindingCodes = A.map(linkedReview?.findings ?? [], (finding) => finding.code);
-          const bareFindingCodes = A.map(bareReview?.findings ?? [], (finding) => finding.code);
-          const bareCompanionFindingCodes = A.map(bareCompanionReview?.findings ?? [], (finding) => finding.code);
-          const schemaTypeCompanionFindingCodes = A.map(
-            schemaTypeCompanionReview?.findings ?? [],
-            (finding) => finding.code
-          );
-          const companionNamespaceFindingCodes = A.map(
-            companionNamespaceReview?.findings ?? [],
-            (finding) => finding.code
-          );
-          const companionInterfaceFindingCodes = A.map(
-            companionInterfaceReview?.findings ?? [],
-            (finding) => finding.code
-          );
-
-          expect(typeSubject?.deterministicMissingTags).not.toContain("@example");
-          expect(linkedTypeSubject?.deterministicMissingTags).not.toContain("@example");
-          expect(bareCompanionTypeSubject?.deterministicMissingTags).not.toContain("@example");
-          expect(schemaTypeCompanionSubject?.deterministicMissingTags).not.toContain("@example");
-          expect(companionNamespaceSubject?.deterministicMissingTags).not.toContain("@example");
-          expect(companionInterfaceSubject?.deterministicMissingTags).not.toContain("@example");
-          expect(bareTypeSubject?.deterministicMissingTags).toContain("@example");
-          expect(findingCodes).not.toContain("missing-example");
-          expect(linkedFindingCodes).not.toContain("missing-example");
-          expect(bareCompanionFindingCodes).not.toContain("missing-example");
-          expect(schemaTypeCompanionFindingCodes).not.toContain("missing-example");
-          expect(companionNamespaceFindingCodes).not.toContain("missing-example");
-          expect(companionInterfaceFindingCodes).not.toContain("missing-example");
-          expect(bareFindingCodes).toContain("missing-example");
+          expect(qualityFindingCodes(qualityReview(report, bareTypeSubject))).toContain("missing-example");
         })
       )
     ));

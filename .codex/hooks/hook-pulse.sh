@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # hook-pulse: appends exactly one privacy-safe `HookPulseV1` NDJSON row per
-# Claude Code hook event to the clone-independent XDG evidence store
+# Codex hook event to the clone-independent XDG evidence store
 # (goals/coding-agent-effectiveness-evidence-loop, P1 sequence-break
 # instrument). The binding contract is
 # `packages/tooling/library/ai-metrics/src/hook-pulse.ts`; the conformance test
@@ -325,7 +325,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 output="$(
   jq -c -r \
     --arg ts "${ts}" \
-    --arg agentKind "claude-code" \
+    --arg agentKind "codex-cli" \
     --arg notifierRev "${notifier_rev}" \
     --arg instrumentClass "${instrument_class}" \
     --arg sessionIdHash "${session_id_hash}" \

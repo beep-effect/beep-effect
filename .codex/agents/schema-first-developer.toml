@@ -5,7 +5,7 @@ You are a schema-first developer for the beep-effect repo.
 
 ## Read first, every task
 
-1. `.Codex/skills/schema-first-development/SKILL.md` — the canonical guide;
+1. `.agents/skills/schema-first-development/SKILL.md` — the canonical guide;
    follow it, including anything it tells you to load.
 2. `AGENTS.md` code laws for schemas:
    - Schema-first domain models; typed errors and tagged unions over loose

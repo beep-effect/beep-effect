@@ -610,6 +610,20 @@ const noteOrNull = O.match({ onNone: () => null, onSome: redactAiMetricsSensitiv
 
 const epochMillisParam = (value: number): string => globalThis.String(value);
 
+const queryWindowedAggregates = Effect.fn("AiMetrics.scorecard.queryWindowedAggregates")(function* (
+  input: AiMetricsWeeklyReportInput,
+  statement: string,
+  failureMessage: string
+) {
+  const duckdb = yield* DuckDb;
+  return yield* duckdb
+    .query(statement, {
+      windowEndEpochMillis: epochMillisParam(input.windowEndEpochMillis),
+      windowStartEpochMillis: epochMillisParam(input.windowStartEpochMillis),
+    })
+    .pipe(Effect.mapError((cause) => scorecardFailure(failureMessage, cause)));
+});
+
 const ensureTaskExists = Effect.fn("AiMetrics.scorecard.ensureTaskExists")(function* (agentTaskId: string) {
   const duckdb = yield* DuckDb;
   const rows = yield* duckdb
@@ -1041,10 +1055,9 @@ export const recordAiMetricsBenchmarkRun: (
 const readTaskAggregates = Effect.fn("AiMetrics.scorecard.readTaskAggregates")(function* (
   input: AiMetricsWeeklyReportInput
 ) {
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb
-    .query(
-      `SELECT
+  const rows = yield* queryWindowedAggregates(
+    input,
+    `SELECT
          t.config_snapshot_id AS "configSnapshotId",
          count(DISTINCT t.agent_task_id)::INTEGER AS "taskCount",
          count(DISTINCT labels.label_id)::INTEGER AS "labelCount",
@@ -1065,12 +1078,8 @@ const readTaskAggregates = Effect.fn("AiMetrics.scorecard.readTaskAggregates")(f
          AND t.created_at_epoch_ms < $windowEndEpochMillis
        GROUP BY t.config_snapshot_id
        ORDER BY t.config_snapshot_id`,
-      {
-        windowEndEpochMillis: epochMillisParam(input.windowEndEpochMillis),
-        windowStartEpochMillis: epochMillisParam(input.windowStartEpochMillis),
-      }
-    )
-    .pipe(Effect.mapError((cause) => scorecardFailure("Failed to read AI metrics task aggregates.", cause)));
+    "Failed to read AI metrics task aggregates."
+  );
 
   return yield* TaskAggregateRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics task aggregates.", cause))
@@ -1080,10 +1089,9 @@ const readTaskAggregates = Effect.fn("AiMetrics.scorecard.readTaskAggregates")(f
 const readBenchmarkAggregates = Effect.fn("AiMetrics.scorecard.readBenchmarkAggregates")(function* (
   input: AiMetricsWeeklyReportInput
 ) {
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb
-    .query(
-      `SELECT
+  const rows = yield* queryWindowedAggregates(
+    input,
+    `SELECT
          config_snapshot_id AS "configSnapshotId",
          count(*)::INTEGER AS "benchmarkRunCount",
          COALESCE(avg(CASE WHEN passed THEN 1.0 ELSE 0.0 END), 0.5)::DOUBLE AS "benchmarkPassRate",
@@ -1099,12 +1107,8 @@ const readBenchmarkAggregates = Effect.fn("AiMetrics.scorecard.readBenchmarkAggr
          AND recorded_at_epoch_ms < $windowEndEpochMillis
        GROUP BY config_snapshot_id
        ORDER BY config_snapshot_id`,
-      {
-        windowEndEpochMillis: epochMillisParam(input.windowEndEpochMillis),
-        windowStartEpochMillis: epochMillisParam(input.windowStartEpochMillis),
-      }
-    )
-    .pipe(Effect.mapError((cause) => scorecardFailure("Failed to read AI metrics benchmark aggregates.", cause)));
+    "Failed to read AI metrics benchmark aggregates."
+  );
 
   return yield* BenchmarkAggregateRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics benchmark aggregates.", cause))

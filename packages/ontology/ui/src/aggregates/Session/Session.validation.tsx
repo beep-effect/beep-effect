@@ -26,6 +26,11 @@ import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/
 import type { OntologyRepairProposal, RunOntologyValidationResult } from "@beep/ontology-use-cases/aggregates/Session";
 import type { JSX } from "react";
 
+type OntologyProvenanceExport = O.Option<{
+  readonly provPath: string;
+  readonly datasetPath: string;
+}>;
+
 const severityVariant = (severity: string): "default" | "secondary" | "destructive" | "outline" =>
   severity === "violation" ? "destructive" : severity === "warning" ? "default" : "secondary";
 
@@ -45,6 +50,39 @@ const validationMessageView = (status: OntologyValidationStatus, message: string
 );
 
 const validationRunningView = (): JSX.Element => <p className="text-sm text-muted-foreground">Validation running.</p>;
+
+const validationActions = (
+  canRunValidation: boolean,
+  runValidation: (input: undefined) => void,
+  exportProvenance: (input: undefined) => void
+): JSX.Element => (
+  <div className="grid grid-cols-2 gap-2">
+    <Button size="sm" type="button" disabled={!canRunValidation} onClick={() => runValidation(undefined)}>
+      Validate
+    </Button>
+    <Button
+      size="sm"
+      type="button"
+      variant="outline"
+      disabled={!canRunValidation}
+      onClick={() => exportProvenance(undefined)}
+    >
+      Export
+    </Button>
+  </div>
+);
+
+const provenanceExportView = (provenanceExport: OntologyProvenanceExport): JSX.Element | null =>
+  O.match(provenanceExport, {
+    onNone: () => null,
+    onSome: (exported) => (
+      <div className="rounded-md border p-2 text-xs">
+        <div className="mb-1 font-medium">Exports</div>
+        <div className="break-all font-mono text-muted-foreground">{exported.provPath}</div>
+        <div className="break-all font-mono text-muted-foreground">{exported.datasetPath}</div>
+      </div>
+    ),
+  });
 
 const validationResultView = (
   result: RunOntologyValidationResult,
@@ -145,6 +183,29 @@ const validationStatusBadge = (
   });
 };
 
+const useOntologyValidationState = () => ({
+  session: useAtomValue(ontologySessionAtom),
+  validationResult: useAtomValue(ontologyValidationResultAtom),
+  validationError: useAtomValue(ontologyValidationErrorAtom),
+  validationStatus: useAtomValue(ontologyValidationStatusAtom),
+  provenanceExport: useAtomValue(ontologyProvenanceExportAtom),
+});
+
+const useOntologyValidationActions = () => {
+  const setSearchQuery = useAtomSet(ontologySearchQueryAtom);
+  const setSelectedIri = useAtomSet(selectedOntologyResourceIriAtom);
+  const applyRepair = useAtomSet(applyOntologyRepairAtom);
+  const runValidation = useAtomSet(runOntologyValidationAtom);
+  const exportProvenance = useAtomSet(exportOntologyProvenanceAtom);
+
+  const selectValidationFocus = (iri: string): void => {
+    setSelectedIri(O.some(iri));
+    setSearchQuery(iri);
+  };
+
+  return { applyRepair, exportProvenance, runValidation, selectValidationFocus };
+};
+
 /**
  * Validation actions, results, verified repairs, and provenance export.
  *
@@ -160,22 +221,10 @@ const validationStatusBadge = (
  * @since 0.0.0
  */
 export function OntologyValidationRegion(): JSX.Element {
-  const session = useAtomValue(ontologySessionAtom);
-  const validationResult = useAtomValue(ontologyValidationResultAtom);
-  const validationError = useAtomValue(ontologyValidationErrorAtom);
-  const validationStatus = useAtomValue(ontologyValidationStatusAtom);
-  const provenanceExport = useAtomValue(ontologyProvenanceExportAtom);
-  const setSearchQuery = useAtomSet(ontologySearchQueryAtom);
-  const setSelectedIri = useAtomSet(selectedOntologyResourceIriAtom);
-  const applyRepair = useAtomSet(applyOntologyRepairAtom);
-  const runValidation = useAtomSet(runOntologyValidationAtom);
-  const exportProvenance = useAtomSet(exportOntologyProvenanceAtom);
+  const { provenanceExport, session, validationError, validationResult, validationStatus } =
+    useOntologyValidationState();
+  const { applyRepair, exportProvenance, runValidation, selectValidationFocus } = useOntologyValidationActions();
   const canRunValidation = O.isSome(session);
-
-  const selectValidationFocus = (iri: string): void => {
-    setSelectedIri(O.some(iri));
-    setSearchQuery(iri);
-  };
 
   return (
     <section className="border-b p-3">
@@ -184,31 +233,9 @@ export function OntologyValidationRegion(): JSX.Element {
         {validationStatusBadge(validationStatus, validationResult)}
       </div>
       <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <Button size="sm" type="button" disabled={!canRunValidation} onClick={() => runValidation(undefined)}>
-            Validate
-          </Button>
-          <Button
-            size="sm"
-            type="button"
-            variant="outline"
-            disabled={!canRunValidation}
-            onClick={() => exportProvenance(undefined)}
-          >
-            Export
-          </Button>
-        </div>
+        {validationActions(canRunValidation, runValidation, exportProvenance)}
         {validationPanel(validationStatus, validationError, validationResult, selectValidationFocus, applyRepair)}
-        {O.match(provenanceExport, {
-          onNone: () => null,
-          onSome: (exported) => (
-            <div className="rounded-md border p-2 text-xs">
-              <div className="mb-1 font-medium">Exports</div>
-              <div className="break-all font-mono text-muted-foreground">{exported.provPath}</div>
-              <div className="break-all font-mono text-muted-foreground">{exported.datasetPath}</div>
-            </div>
-          ),
-        })}
+        {provenanceExportView(provenanceExport)}
       </div>
     </section>
   );

@@ -23,7 +23,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Label PR by size
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const files = await github.paginate(github.rest.pulls.listFiles, {
@@ -102,12 +102,12 @@ jobs:
             uses_turbo: "true"
             install_typos: "true"
     env:
-      # Pull requests stay local-only even when repository secrets are
-      # available. Trusted main pushes receive read-write remote-cache access.
-      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      # Same-repository pull requests receive read-only cache access; forks
+      # stay local-only. Trusted main pushes receive read-write access.
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
       # Stream task logs line-by-line so a wedged lane task shows its last
       # live output instead of buffering everything behind a group header.
       TURBO_LOG_ORDER: stream
@@ -121,7 +121,7 @@ jobs:
       LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -139,6 +139,10 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$goals_only" == "true" ]]; then
+            should_run=false
+          fi
           if [[ "${{ matrix.id }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
             if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
@@ -194,12 +198,23 @@ jobs:
         with:
           cache-turbo: ${{ matrix.uses_turbo }}
           cache-write: "false"
+          turbo-cache-key-suffix: -${{ matrix.id }}
 
       - name: Install typos
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
         uses: taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c # v2.85.9
         with:
           tool: typos-cli@1.44.0
+
+      - name: Verify regenerate merge-driver bootstrap
+        if: matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/setup-regenerate-merge-driver.sh "$PWD"
+          configured="$(git config --local --get merge.regenerate.driver)"
+          [[ "$configured" == *"scripts/regenerate-merge-driver.sh"* ]]
+          [[ "$(git check-attr merge -- tsconfig.json)" == "tsconfig.json: merge: regenerate" ]]
 
       - name: Run verification lane
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -267,6 +282,14 @@ jobs:
             bun run beep ci append-turbo-summary
           fi
 
+      - name: Save post-lane Turbo fallback
+        if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()
+        continue-on-error: true
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping ${{ matrix.name }} for this change set."
@@ -279,7 +302,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 100
           persist-credentials: false
@@ -345,13 +368,13 @@ jobs:
     permissions:
       contents: read
     env:
-      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -396,7 +419,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 100
           persist-credentials: false
@@ -456,10 +479,10 @@ jobs:
         id: fallow
         shell: bash
         env:
-          TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-          TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-          TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+          TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_API || '' }}
+          TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && vars.TURBO_TEAM || '' }}
+          TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_READ_TOKEN && 'local:rw,remote:r' || 'local:rw' }}
         run: |
           # Lane body (blocking audit/dead-code, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope
@@ -509,7 +532,7 @@ jobs:
 
       - name: Upload Fallow envelopes
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}
           path: .beep/fallow/**
@@ -523,7 +546,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -547,7 +570,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -583,10 +606,10 @@ jobs:
     permissions:
       contents: read
     env:
-      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      TURBO_API: ${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ vars.TURBO_API && vars.TURBO_TEAM && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
       EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
@@ -597,7 +620,7 @@ jobs:
       LIVEBLOCKS_SECRET_KEY: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -624,7 +647,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -685,7 +708,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -745,7 +768,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -818,7 +841,7 @@ jobs:
 
       - name: Dependency review
         if: github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           deny-licenses: AGPL-3.0, GPL-3.0
@@ -832,7 +855,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
 
@@ -849,14 +872,14 @@ jobs:
 
       - name: Setup Cachix (read-only)
         if: github.event_name != 'push'
-        uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # v15
+        uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
           name: beep-effect
         continue-on-error: true
 
       - name: Setup Cachix (trusted push)
         if: github.event_name == 'push'
-        uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # v15
+        uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
           name: beep-effect
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
@@ -874,7 +897,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           filter: blob:none

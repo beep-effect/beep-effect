@@ -1025,68 +1025,49 @@ export const listAiMetricsRetentionInventory = Effect.fn("AiMetrics.listAiMetric
   return planToInventory(input, plan);
 });
 
-const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(function* (plan: RetentionPlan) {
-  const duckdb = yield* DuckDb;
-  if (
-    A.isReadonlyArrayEmpty(plan.ingestRunIds) &&
-    A.isReadonlyArrayEmpty(plan.rawArchiveItems) &&
-    A.isReadonlyArrayEmpty(plan.labelIds) &&
-    A.isReadonlyArrayEmpty(plan.benchmarkRunIds) &&
-    A.isReadonlyArrayEmpty(plan.scorecardIds)
-  ) {
+const deleteRowsWithIds = Effect.fn("AiMetrics.retention.deleteRowsWithIds")(function* (
+  ids: string,
+  statement: string
+) {
+  if (Str.isEmpty(ids)) {
     return;
   }
 
-  const runIds = sqlStringList(plan.ingestRunIds);
-  const archiveRunObjectIds = sqlStringList(A.map(plan.rawArchiveItems, (item) => item.archiveRunObjectId));
-  const labelIds = sqlStringList(plan.labelIds);
-  const benchmarkRunIds = sqlStringList(plan.benchmarkRunIds);
-  const scorecardIds = sqlStringList(plan.scorecardIds);
-  if (Str.isNonEmpty(labelIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_outcome_labels
-	                   WHERE label_id IN (${labelIds})`);
+  const duckdb = yield* DuckDb;
+  yield* duckdb.run(statement);
+});
+
+const deleteIngestRunRows = Effect.fn("AiMetrics.retention.deleteIngestRunRows")(function* (runIds: string) {
+  if (Str.isEmpty(runIds)) {
+    return;
   }
-  if (Str.isNonEmpty(benchmarkRunIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_benchmark_runs
-	                   WHERE benchmark_run_id IN (${benchmarkRunIds})`);
-  }
-  if (Str.isNonEmpty(scorecardIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_scorecards
-	                   WHERE scorecard_id IN (${scorecardIds})`);
-  }
-  if (Str.isNonEmpty(runIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_turns
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_source_files
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_model_calls
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_tool_invocations
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_ingest_runs
-	                   WHERE ingest_run_id IN (${runIds})`);
-    // Sessions are pruned last, and keyed on neither the prune set nor the run column.
-    // A session row is content-addressed and upserted OR REPLACE, so its `ingest_run_id`
-    // names the run that LAST saw the transcript, not the one that created it -- pruning by
-    // that column would delete a row whose turns from other runs survive, and the exporter
-    // joins sessions INNER, so those turns would leave every future export silently.
-    //
-    // Scoping it to the prune set instead leaks the mirror image: a row kept because it
-    // still had turns is tagged with an already-pruned run, so when the last of its turns
-    // goes in a later prune, no predicate matches it again and the empty row lives forever
-    // -- pinning its agent task alive through the GC below. Running after the ingest-run
-    // delete lets this ask the only two questions that matter: are there turns left, and
-    // does the run this row points at still exist. That also sweeps up rows already leaked
-    // by an earlier prune.
-    yield* duckdb.run(`DELETE
+
+  const duckdb = yield* DuckDb;
+  yield* Effect.forEach(
+    [
+      `DELETE FROM ai_metrics_turns WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_source_files WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_model_calls WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_tool_invocations WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_ingest_runs WHERE ingest_run_id IN (${runIds})`,
+    ],
+    (statement) => duckdb.run(statement),
+    { concurrency: 1, discard: true }
+  );
+  // Sessions are pruned last, and keyed on neither the prune set nor the run column.
+  // A session row is content-addressed and upserted OR REPLACE, so its `ingest_run_id`
+  // names the run that LAST saw the transcript, not the one that created it -- pruning by
+  // that column would delete a row whose turns from other runs survive, and the exporter
+  // joins sessions INNER, so those turns would leave every future export silently.
+  //
+  // Scoping it to the prune set instead leaks the mirror image: a row kept because it
+  // still had turns is tagged with an already-pruned run, so when the last of its turns
+  // goes in a later prune, no predicate matches it again and the empty row lives forever
+  // -- pinning its agent task alive through the GC below. Running after the ingest-run
+  // delete lets this ask the only two questions that matter: are there turns left, and
+  // does the run this row points at still exist. That also sweeps up rows already leaked
+  // by an earlier prune.
+  yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_sessions
 	                   WHERE NOT EXISTS (
 	                       SELECT 1
@@ -1098,22 +1079,43 @@ const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(fun
 	                       FROM ai_metrics_ingest_runs
 	                       WHERE ai_metrics_ingest_runs.ingest_run_id = ai_metrics_sessions.ingest_run_id
 	                     )`);
+});
+
+const pruneAgentTasks = Effect.fn("AiMetrics.retention.pruneAgentTasks")(function* (runIds: string, labelIds: string) {
+  if (Str.isEmpty(runIds) && Str.isEmpty(labelIds)) {
+    return;
   }
-  if (Str.isNonEmpty(runIds) || Str.isNonEmpty(labelIds)) {
-    yield* duckdb.run(`DELETE
+
+  const duckdb = yield* DuckDb;
+  yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_agent_tasks AS task
 	                   WHERE NOT EXISTS (SELECT 1
 	                                     FROM ai_metrics_sessions AS session
 		                   WHERE session.agent_task_id = task.agent_task_id)
 		                 AND NOT EXISTS (SELECT 1
 		                                 FROM ai_metrics_outcome_labels AS label
-		                                 WHERE label.agent_task_id = task.agent_task_id)`);
-  }
-  if (Str.isNonEmpty(archiveRunObjectIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_raw_archive_objects
-	                   WHERE archive_run_object_id IN (${archiveRunObjectIds})`);
-  }
+	                                 WHERE label.agent_task_id = task.agent_task_id)`);
+});
+
+const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(function* (plan: RetentionPlan) {
+  const runIds = sqlStringList(plan.ingestRunIds);
+  const labelIds = sqlStringList(plan.labelIds);
+
+  yield* deleteRowsWithIds(labelIds, `DELETE FROM ai_metrics_outcome_labels WHERE label_id IN (${labelIds})`);
+  const benchmarkRunIds = sqlStringList(plan.benchmarkRunIds);
+  yield* deleteRowsWithIds(
+    benchmarkRunIds,
+    `DELETE FROM ai_metrics_benchmark_runs WHERE benchmark_run_id IN (${benchmarkRunIds})`
+  );
+  const scorecardIds = sqlStringList(plan.scorecardIds);
+  yield* deleteRowsWithIds(scorecardIds, `DELETE FROM ai_metrics_scorecards WHERE scorecard_id IN (${scorecardIds})`);
+  yield* deleteIngestRunRows(runIds);
+  yield* pruneAgentTasks(runIds, labelIds);
+  const archiveRunObjectIds = sqlStringList(A.map(plan.rawArchiveItems, (item) => item.archiveRunObjectId));
+  yield* deleteRowsWithIds(
+    archiveRunObjectIds,
+    `DELETE FROM ai_metrics_raw_archive_objects WHERE archive_run_object_id IN (${archiveRunObjectIds})`
+  );
 });
 
 const removePlanPaths = Effect.fn("AiMetrics.retention.removePlanPaths")(function* (
