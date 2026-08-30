@@ -2643,6 +2643,7 @@ const resolveVerificationArchiveRoot = Effect.fn("CorpusRestoration.resolveVerif
  */
 export const restorationArchiveTesting = {
   archiveInventorySignature,
+  availableRestorationBytesAt,
   collectorRelativePath,
   filesystemRootFor,
   indexArchiveTerminals,
@@ -2656,6 +2657,7 @@ export const restorationArchiveTesting = {
   partialArchiveOpenFlag,
   pathsOverlap,
   prefixMatches,
+  reconcileCollectorRecord,
   reapedCoordinationPath,
   requireContainedPath,
   sameDeviceAndInode,
@@ -2664,6 +2666,7 @@ export const restorationArchiveTesting = {
   sourceIdentity,
   sourceIdentityToken,
   sourceStat,
+  validateCanonicalArchivePaths,
   writerReapClaimPath,
   writerReapClaimTombstonePath,
 } as const;

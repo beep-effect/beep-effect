@@ -1,10 +1,45 @@
+import { CollectorManifestRecord, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus";
 import { restorationArchiveTesting as RA } from "@beep/repo-cli/test/Corpus";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 
 const provideTestLayer = provideScopedLayer(NodeServices.layer);
+
+const preserveOptions = (
+  sourceRoot: string,
+  rootArchivePath: string,
+  corpusRoot: string,
+  sourceManifestPath: string
+): RestorationPreserveOptions =>
+  RestorationPreserveOptions.make({
+    absentRecycleTreePath: `${sourceRoot}-absent`,
+    capacityCeilingBytes: PosInt.make(1),
+    chunkSizeBytes: PosInt.make(1),
+    collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+    corpusRoot,
+    crashPoint: "none",
+    expectedCollectorCopiedCount: NonNegativeInt.make(0),
+    expectedCollectorErrorCount: NonNegativeInt.make(0),
+    expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(0),
+    expectedCollectorResumedCount: NonNegativeInt.make(0),
+    expectedCollectorRowCount: NonNegativeInt.make(0),
+    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(0),
+    expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+    expectedMutatedDestinationCount: NonNegativeInt.make(0),
+    expectedRootArchiveBytes: NonNegativeInt.make(0),
+    expectedSourceDirectoryCount: NonNegativeInt.make(0),
+    expectedSourceFileCount: NonNegativeInt.make(0),
+    expectedSourceTreeBytes: NonNegativeInt.make(0),
+    minimumFreeAfterBytes: NonNegativeInt.make(0),
+    rootArchivePath,
+    runLabel: "archive-boundary-test",
+    sourceManifestPath,
+    sourceRoot,
+  });
 
 describe("restoration archive boundary helpers", () => {
   it.effect(
@@ -42,6 +77,80 @@ describe("restoration archive boundary helpers", () => {
         expect(yield* RA.prefixMatches(source, short, 6, 2)).toBe(false);
         expect(yield* RA.maybeCrash("before-copy", "after-copy")).toBeUndefined();
         expect(yield* RA.maybeCrash("before-copy", "before-copy").pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects overlapping canonical inputs and invalid collector destinations",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-canonical-overlap-" });
+        const sourceRoot = path.join(root, "source");
+        const corpusRoot = path.join(root, "corpus");
+        const rootArchive = path.join(sourceRoot, "root.zip");
+        const manifest = path.join(root, "collector.jsonl");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        yield* fs.makeDirectory(corpusRoot, { recursive: true });
+        yield* fs.writeFileString(rootArchive, "archive");
+        yield* fs.writeFileString(manifest, "");
+
+        expect(
+          yield* RA.validateCanonicalArchivePaths(preserveOptions(sourceRoot, rootArchive, corpusRoot, manifest)).pipe(
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+
+        const separateArchive = path.join(root, "separate.zip");
+        yield* fs.writeFileString(separateArchive, "archive");
+        expect(
+          yield* RA.validateCanonicalArchivePaths(
+            preserveOptions(sourceRoot, separateArchive, sourceRoot, manifest)
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        expect(
+          yield* RA.reconcileCollectorRecord(
+            CollectorManifestRecord.cases.error.make({
+              reason: "unreadable",
+              src: "C:\\source\\unreadable.bin",
+              status: "error",
+            }),
+            sourceRoot,
+            2
+          )
+        ).toEqual({ kind: "collector-error" });
+        expect(
+          yield* RA.reconcileCollectorRecord(
+            CollectorManifestRecord.cases["excluded-secret"].make({
+              src: "C:\\source\\secret.bin",
+              status: "excluded-secret",
+            }),
+            sourceRoot,
+            2
+          )
+        ).toEqual({ kind: "ignored" });
+        expect(
+          yield* RA.reconcileCollectorRecord(
+            CollectorManifestRecord.cases.copied.make({
+              dst: "C:\\root",
+              size: NonNegativeInt.make(0),
+              src: "C:\\source\\bad.bin",
+              status: "copied",
+            }),
+            sourceRoot,
+            2
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        const availableBytes = yield* RA.availableRestorationBytesAt(root);
+        expect(availableBytes).toBeGreaterThan(0);
+        expect(yield* RA.availableRestorationBytesAt(path.join(root, "missing")).pipe(Effect.exit)).toMatchObject({
           _tag: "Failure",
         });
       },
