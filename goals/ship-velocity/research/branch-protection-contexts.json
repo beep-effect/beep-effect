@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "branch-protection-contexts/v1",
+  "capturedAt": "2026-08-27T13:46:59Z",
+  "repository": "beep-effect/beep-effect",
+  "branch": "main",
+  "rulesetId": 10240248,
+  "rulesetName": "main branch protection",
+  "enforcement": "active",
+  "strictRequiredStatusChecksPolicy": false,
+  "requiredStatusChecks": [
+    "Lint",
+    "Heavy / Lint Policy",
+    "Heavy / Check",
+    "Test Unit",
+    "Heavy / Test Integration",
+    "Heavy / Docgen",
+    "Codegen Drift",
+    "Repo Sanity",
+    "Heavy / Coverage Regression",
+    "Knip",
+    "Commitlint",
+    "Secret Scanning",
+    "Security",
+    "SAST",
+    "Nix Shell",
+    "Professional Desktop IPC Stdio",
+    "Heavy / Doctest"
+  ]
+}

@@ -67,7 +67,6 @@ export class GenerateWithFeedbackPolicy extends S.Class<GenerateWithFeedbackPoli
 /**
  * Constructor input accepted by {@link GenerateWithFeedbackPolicy}.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -101,12 +100,20 @@ Generate a corrected response that follows the requested schema exactly.`);
  * output additionally updates the prompt stored in a `Ref`, while transport
  * and timeout failures retry the unchanged prompt.
  *
- * **Example** (Inspect the feedback generator)
+ * **Example** (Compose generation with schema feedback)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { generateObjectWithFeedback } from "@effect-ontology/Service/GenerateWithFeedback"
  *
- * console.log(generateObjectWithFeedback)
+ * const Founder = S.Struct({ founder: S.String })
+ * const program = generateObjectWithFeedback({
+ *   objectName: "Founder",
+ *   serviceName: "EntityExtractor",
+ *   prompt: "Extract the founder from: Ada founded Acme.",
+ *   schema: Founder
+ * })
+ * console.log(program)
  * ```
  *
  * @category utilities
@@ -121,7 +128,7 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
   AiError.AiError | Cause.TimeoutError | S.SchemaError,
   LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"]
 > {
-  const policy = yield* S.decodeEffect(GenerateWithFeedbackPolicy)(options);
+  const policy = yield* GenerateWithFeedbackPolicy.decodeEffect(options);
   const retryPolicy = yield* RetryPolicy.decodeEffect({ ...policy.retryPolicy, serviceName: policy.serviceName });
   const llm = yield* LanguageModel.LanguageModel;
   const promptRef = yield* Ref.make(makePrompt(options.prompt, policy.enablePromptCaching));

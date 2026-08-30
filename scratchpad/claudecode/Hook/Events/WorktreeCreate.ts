@@ -1,12 +1,10 @@
 /**
- * WorktreeCreate hook event.
+ * Fires when Claude Code is about to create a git worktree (for example
+ * for an isolated subagent). Command hooks print the path on stdout;
+ * HTTP hooks return `hookSpecificOutput.worktreePath`. Does not support
+ * a matcher. See https://code.claude.com/docs/en/hooks#worktreecreate.
  *
- * Fires when Claude Code is about to create a git worktree (e.g. for an
- * isolated subagent). Command-based hooks must print the worktree path
- * to stdout; HTTP-based hooks return the path as
- * `hookSpecificOutput.worktreePath`. Does not support a matcher.
- * See https://code.claude.com/docs/en/hooks#worktreecreate.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -21,18 +19,28 @@ import { type HookDefinition, type HookProcessOutput, rawStdout } from "../Runne
 const $I = $ScratchpadId.create("claudecode/Hook/Events/WorktreeCreate");
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a WorktreeCreate hook, including the requested
+ * worktree `name`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a worktree request)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.WorktreeCreate.Input)
+ * const input = S.decodeUnknownSync(Hook.WorktreeCreate.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "WorktreeCreate",
+ *   name: "feature-branch",
+ * })
+ *
+ * console.log(input.name) // "feature-branch"
  * ```
  *
+ * @see {@link created} for the command-hook response channel.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`WorktreeCreateInput`)(
@@ -47,18 +55,23 @@ export class Input extends S.Class<Input>($I`WorktreeCreateInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific JSON payload used by HTTP WorktreeCreate hooks.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect a JSON path payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.WorktreeCreate.HookSpecificOutput)
+ * const specific = Hook.WorktreeCreate.HookSpecificOutput.make({
+ *   hookEventName: "WorktreeCreate",
+ *   worktreePath: "/tmp/feature-worktree",
+ * })
+ *
+ * console.log(specific.worktreePath) // "/tmp/feature-worktree"
  * ```
  *
+ * @see {@link createdHttp} for the constructor that wraps this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`WorktreeCreateHookSpecificOutput`)(
@@ -72,18 +85,21 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`WorktreeC
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response used by HTTP WorktreeCreate hooks. Command hooks should
+ * return {@link created} (`HookProcessOutput`) instead.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty JSON output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.WorktreeCreate.Output)
+ * const output = Hook.WorktreeCreate.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link createdHttp} for filling `worktreePath`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`WorktreeCreateOutput`)(
@@ -101,32 +117,50 @@ export class Output extends S.Class<Output>($I`WorktreeCreateOutput`)(
 ) {}
 
 /**
- * Indicate that the worktree was created at the given path.
+ * Publish a created worktree path on stdout for command-based hooks.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * This returns `HookProcessOutput`, not JSON. Returning it from an HTTP
+ * hook will not publish the path; use {@link createdHttp} instead.
+ *
+ * **Example** (Print the path for a command hook)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.WorktreeCreate.created)
+ * const output = Hook.WorktreeCreate.created("/tmp/feature-worktree")
+ * console.log(output._tag) // "HookProcessOutput"
+ * console.log(output.exitCode) // 0
+ * console.log(O.getOrUndefined(output.stdout)) // "/tmp/feature-worktree\n"
  * ```
  *
+ * @see {@link createdHttp} for the JSON channel used by HTTP hooks.
  * @category constructors
  * @since 0.0.0
  */
 export const created = (worktreePath: string): HookProcessOutput => rawStdout(`${worktreePath}\n`);
 
 /**
- * Build the JSON form used by HTTP WorktreeCreate hooks.
+ * Publish a created worktree path as JSON for HTTP-based hooks.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * Returning this from a command hook will not print the path on stdout;
+ * use {@link created} instead.
+ *
+ * **Example** (Return JSON for an HTTP hook)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.WorktreeCreate.createdHttp)
+ * const output = Hook.WorktreeCreate.createdHttp("/tmp/feature-worktree")
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.worktreePath) // "/tmp/feature-worktree"
  * ```
  *
+ * @see {@link created} for the stdout channel used by command hooks.
  * @category constructors
  * @since 0.0.0
  */
@@ -141,18 +175,29 @@ export const createdHttp = (worktreePath: string): Output =>
   });
 
 /**
- * Constructor for `define`.
+ * Build a runnable WorktreeCreate hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * The handler may return JSON {@link Output} or `HookProcessOutput`. Use
+ * {@link created} for command hooks and {@link createdHttp} for HTTP hooks.
+ *
+ * **Example** (Define a command WorktreeCreate hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.WorktreeCreate.define)
+ * const hook = Hook.WorktreeCreate.define({
+ *   handler: () => Effect.succeed(Hook.WorktreeCreate.created("/tmp/feature-worktree")),
+ * })
+ *
+ * console.log(hook.event) // "WorktreeCreate"
  * ```
  *
+ * @see {@link created} for the command-hook return shape.
+ * @see {@link createdHttp} for the HTTP-hook return shape.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

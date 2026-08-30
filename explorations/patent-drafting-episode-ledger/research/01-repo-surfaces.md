@@ -1,5 +1,8 @@
 # Lane A — Repo Composition Inventory
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 **Date:** 2026-08-06 · **Packet:** `explorations/patent-drafting-episode-ledger`
 · **Lane:** A (repo composition inventory, per `DECISIONS.md` 2026-08-06
 "research depth") · **Tree:** branch `docs/patent-drafting-episode-ledger-open`,

@@ -1,0 +1,684 @@
+# beep-ci-ops — competency questions (S2 v2, post-grill application pass 2026-08-27)
+# Admission law (TWO-KIND, capped — final-grill round 2): a term enters the T-Box as a
+# DECISION TERM (a Must/Should CQ requires it) OR a SEMANTIC-SUPPORT TERM (required to
+# define/constrain/disambiguate a NAMED decision term through a checkable dependency;
+# recorded as `supports=` in the pre-glossary notes, validator-reachable from CQ roots).
+# This suite is the ontology's acceptance suite; certainty = CQ regression green under
+# KGCL-managed evolution.
+# Terminology (final-grill round 1): VerificationEvidence (vernacular altLabel "proof"),
+# AssuranceTier (vernacular altLabel "certainty tier"), OperationalChangeEvent
+# (vernacular altLabel "control intervention"). Vernacular survives in prose/NL; the
+# ontology TERM is the reasoner-facing name.
+# Prefix: ciops: <https://oip.law/ontology/ci-ops#> (namespace settled by operator
+# ruling 2026-08-27 — see DECISIONS.md; the TERM SET still ratifies at S8)
+#
+# PARAMETER-BINDING CONVENTION (round-1 repair; hardened round 2 after seat E's
+# executed counterexamples): a CQ whose natural language says "a given X" is
+# PARAMETERIZED. Its query carries VALUES block(s) holding example individuals, each
+# marked "# harness binds"; at execution the harness replaces EVERY marked block's rows
+# with the caller's actual values. RULES: (1) ONE ROW ONLY — the harness substitutes
+# exactly one parameter tuple per invocation; batching multiple givens into one VALUES
+# is FORBIDDEN (seat E proved it merges aggregate answers and collapses ASK results);
+# (2) datatypes are preserved — parameters are RDF terms, and typed literals (e.g.
+# xsd:dateTime) must be substituted WITH their datatype or FILTER comparisons silently
+# drop solutions; (3) when a query contains multiple marked blocks (e.g. CQ-012's
+# subquery), the harness substitutes the SAME tuple into all of them. A VALUES block
+# NOT marked "# harness binds" (e.g. CQ-008's grant-state restriction) is a fixed
+# domain restriction, never replaced. The committed rows double as seeded-A-Box smoke
+# inputs.
+
+- id: CQ-001
+  source_use_case: UC-001
+  natural_language: "What verification lanes exist, and of what kind is each (turbo task, script, collected gate)?"
+  type: enumerative
+  priority: must_have
+  sample_answer:
+    - lane: ciops:LaneBuild
+      kind: ciops:TurboTaskLane
+    - lane: ciops:LaneCheapGates
+      kind: ciops:CollectedGateLane
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?lane ?kind WHERE {
+      ?lane rdf:type ciops:VerificationLane ;
+            ciops:hasLaneKind ?kind .
+    }
+  expected_result: non_empty
+  required_classes: [VerificationLane, LaneKind]
+  required_properties: [hasLaneKind]
+
+- id: CQ-002
+  source_use_case: UC-001
+  natural_language: "Which WorkUnits (lane x scope) are admissible for a given episode's diff and target tier?"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - workUnit: "ciops:wu-lint-affected-from-main"
+      lane: "ciops:LaneLint"
+      tier: ciops:TierLocalFullProof
+  derivation_method: inference
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?workUnit ?lane ?tier WHERE {
+      VALUES ?episode { ciops:ep-example }  # harness binds
+      ?workUnit rdf:type ciops:WorkUnit ;
+                ciops:admissibleFor ?episode ;
+                ciops:executesLane ?lane .
+      ?episode ciops:targetsTier ?tier .
+      ?tier ciops:requiresLane ?lane .
+    }
+  expected_result: non_empty
+  required_classes: [WorkUnit, VerificationEpisode, AssuranceTier]
+  required_properties: [admissibleFor, executesLane, targetsTier, requiresLane]
+
+- id: CQ-003
+  source_use_case: UC-001
+  natural_language: "What is the measured cost estimate (P50/P95 wall ms, memory class, provenance) of a WorkUnit?"
+  type: quantitative
+  priority: must_have
+  sample_answer:
+    - workUnit: "ciops:wu-test-schema"
+      p50Ms: 143000
+      provenance: measured
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?workUnit ?p50 ?p95 ?mem ?prov WHERE {
+      ?workUnit ciops:hasCostEstimate ?c .
+      ?c ciops:p50Ms ?p50 ; ciops:p95Ms ?p95 ;
+         ciops:hasMemoryClass ?mem ; ciops:hasCostProvenance ?prov .
+    }
+  expected_result: non_empty
+  required_classes: [CostEstimate, MemoryClass, CostProvenance]
+  required_properties: [hasCostEstimate, p50Ms, p95Ms, hasMemoryClass, hasCostProvenance]
+
+- id: CQ-004
+  source_use_case: UC-001
+  natural_language: "Which packages are affected by a given change set via dependency closure (touched packages included)? Hash-surface radiation is CQ-011's question."
+  type: relational
+  priority: must_have
+  sample_answer:
+    - package: "ciops:pkg-beep-schema"
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT DISTINCT ?pkg WHERE {
+      VALUES ?change { ciops:cs-example }  # harness binds
+      {
+        ?change ciops:touchesPackage ?pkg .
+      }
+      UNION
+      {
+        ?change ciops:touchesPackage ?touched .
+        ?pkg ciops:dependsOnTransitive ?touched .
+      }
+    }
+  expected_result: non_empty
+  required_classes: [ChangeSet, PackageRef]
+  required_properties: [touchesPackage, dependsOnTransitive]
+  notes: "dependsOnTransitive is the Datalog fixpoint over dependsOn — the closed-world transitive closure OWL RL cannot enumerate natively; rule-compiled per the reasoning-stack ruling. Touched packages are affected by definition (round-1 seat A repair). Round-2 seat E repair (Oxigraph-proven): the previous BIND(?touched AS ?pkg) arm evaluated bottom-up without the outer solution mapping and returned UNBOUND rows — the touched pattern is now repeated inside each UNION arm."
+
+- id: CQ-005
+  source_use_case: UC-003
+  natural_language: "Which verification evidence records (vernacular: proofs) remain valid for a given tree state and cache epoch?"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - proof: "ciops:proof-build-abc123"
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?proof WHERE {
+      VALUES (?tree ?epoch) { (ciops:tree-example ciops:epoch-example) }  # harness binds
+      ?proof ciops:validInEpoch ?epoch ;
+             ciops:provesTree ?tree .
+      FILTER NOT EXISTS { ?event ciops:invalidates ?proof }
+    }
+  expected_result: non_empty
+  required_classes: [VerificationEvidence, CacheEpoch, TreeState, InvalidationEvent]
+  required_properties: [validInEpoch, provesTree, invalidates]
+
+- id: CQ-006
+  source_use_case: UC-004
+  natural_language: "For a given tree state and cache epoch, which lane obligations remain unmet toward a given target assurance tier (vernacular: certainty tier)? (Held tier = the highest tier whose remainder is empty, computed by evaluating this query per tier — documented external iteration.)"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - missing: "ciops:LaneFullPrePush"
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?lane WHERE {
+      VALUES (?target ?tree ?epoch) { (ciops:TierCiMergeGreen ciops:tree-example ciops:epoch-example) }  # harness binds
+      ?target ciops:requiresLane ?lane .
+      FILTER NOT EXISTS {
+        ?proof ciops:dischargesObligation ?lane ;
+               ciops:provesTree ?tree ;
+               ciops:validInEpoch ?epoch .
+        FILTER NOT EXISTS { ?event ciops:invalidates ?proof }
+      }
+    }
+  expected_result: non_empty
+  required_classes: [AssuranceTier, VerificationEvidence, TreeState, CacheEpoch]
+  required_properties: [requiresLane, dischargesObligation, provesTree, validInEpoch, invalidates]
+  notes: "Obligation discharge is now correlated to the GIVEN tree x epoch (round-1 seat A: any-tree proofs previously suppressed obligations). Round-2 seat E repair (Oxigraph-proven): an INVALIDATED proof could still discharge — the inner pattern now excludes proofs with an invalidates edge, aligning with CQ-005's validity semantics. S6 completeness precondition (seat D, Won't-IDE audit): a VerificationEvidence may dischargesObligation ONLY when produced by an in-scope VerificationLane execution — SHACL-enforced at S6 so out-of-scope greens cannot close obligations. S4 normalization mandate (final grill): the tier→lane obligation (requiresLane) conflates VerificationObligation with procedure — the obligation/procedure split is worksheet-decided at S4."
+
+- id: CQ-007
+  source_use_case: UC-005
+  natural_language: "For a given episode, what is the time-to-certainty and its decomposition into queue wait, lock wait, execution, repair gap, and CI wait?"
+  type: quantitative
+  priority: must_have
+  sample_answer:
+    - episode: "ciops:ep-2026-08-13-committed-idea"
+      totalMs: 630000
+      queueWaitMs: 45000
+      lockWaitMs: 120000
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?ep ?total ?queue ?lock ?exec ?repair ?ci WHERE {
+      VALUES ?ep { ciops:ep-example }  # harness binds
+      ?ep ciops:timeToCertaintyMs ?total ;
+          ciops:queueWaitMs ?queue ;
+          ciops:lockWaitMs ?lock ; ciops:executionMs ?exec ;
+          ciops:repairGapMs ?repair ; ciops:ciWaitMs ?ci .
+    }
+  expected_result: non_empty
+  required_classes: [VerificationEpisode]
+  required_properties: [timeToCertaintyMs, queueWaitMs, lockWaitMs, executionMs, repairGapMs, ciWaitMs]
+  notes: "Round-1 repairs (seat A): queue wait was in the NL but absent from query and glossary — queueWaitMs admitted (this Must CQ requires it; also closes seat D's queue-wait-vanishes KPI game). Derivation relabeled direct_lookup: the decomposition values are MATERIALIZED by the KPI ETL (documented external aggregation); SPARQL reads them."
+
+- id: CQ-008
+  source_use_case: UC-002
+  natural_language: "Which contended resources exist, and which ACTIVE seat grants currently hold each? (queued waiters are SeatRequests — CQ-021's question, never a grant state)"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - resource: ciops:MachineProofLock
+      holder: "ciops:grant-beep-effect6-1443"
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?res ?grant WHERE {
+      ?res rdf:type ciops:ContendedResource .
+      ?grant rdf:type ciops:SeatGrant ;
+             ciops:contendsFor ?res ;
+             ciops:hasGrantState ciops:ActiveGrant .
+    }
+  expected_result: non_empty
+  required_classes: [ContendedResource, SeatGrant, GrantState]
+  required_properties: [contendsFor, hasGrantState]
+  notes: "Round-3 seat H repair (H-10, Oxigraph-proven): the old query left ?grant untyped and enumerated WaitingGrant, so a bare SeatRequest satisfied the Must grant query and the settled ticket/lease split was prose, not semantics. The holder branch now requires rdf:type SeatGrant and ActiveGrant only; WaitingGrant is REMOVED from the GrantState domain (a waiting contender IS a SeatRequest under the split — the deployed store has no waiting lease record). Regression fixture: cq008-ticket-not-grant.ttl (rows_eq_0)."
+
+- id: CQ-009
+  source_use_case: UC-002
+  natural_language: "Are any two active origin-keyed admission grants sharing the same origin? (deployed origin-exclusion law; must be zero)"
+  type: constraint
+  priority: must_have
+  sample_answer: []
+  derivation_method: inference
+  notes: "Round-3 CORRECTION (seats H+J convergent, both source- and Oxigraph-proven): the deployed #870 exclusion is ORIGIN-keyed, never checkout-keyed — originKey derives from the per-origin proof lock (remote.origin.url basename, ProofState.ts proofLockPathForContext), isTicketSkippable blocks admission when ANY lease shares a nonempty originKey (QualityScheduler.ts:614-628, kind-independent), and checkoutRoot is a separate owner attribute with NO uniqueness check. Two full-proofs on different checkouts of one origin are illegal deployed state; the old checkout-joined query returned zero rows on exactly that state. The query now joins on hasOriginKey (verbatim originKey; empty string = origin-exempt, e.g. review-fix, which is only class-capped). This is kind-independent: merged-preview also carries the origin key (seat J U2). occupiesCheckout is REMOVED from the model (no CQ requires it; S4 may re-propose checkoutRoot with a warrant). Regression fixture: cq009-two-grants.ttl (same origin, DIFFERENT checkouts)."
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?g1 ?g2 ?origin WHERE {
+      ?g1 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+          ciops:hasOriginKey ?origin .
+      ?g2 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+          ciops:hasOriginKey ?origin .
+      FILTER (?g1 != ?g2)
+      FILTER (?origin != "")
+    }
+  expected_result: zero_rows
+  required_classes: [SeatGrant, GrantState]
+  required_properties: [hasOriginKey, hasGrantState]
+
+- id: CQ-010
+  source_use_case: UC-002
+  natural_language: "Was any WorkUnit admitted whose admission charge exceeded the remaining token capacity at admission? (deployed-policy invariant; must be zero)"
+  type: constraint
+  priority: must_have
+  sample_answer: []
+  derivation_method: direct_lookup
+  notes: "TRI-SPLIT RESHAPE (final-grill round 2): predictedP95Duration (distribution fact) != AdmissionCharge (policy quantity; deployed carrier = #870 weightTokens) != hard execution limit (guarantee; S7 projection-contract territory, never OWL). The old form compared p95Ms against an invented maxGrantCostMs and called it a Must invariant — a category error. This Must CQ now audits the DEPLOYED charge-vs-capacity invariant: admissionChargeTokens comes from the lease record verbatim; capacityAtAdmissionTokens is ETL-materialized from the admission snapshot at grant time (external-computation precedent). The p95-vs-budget comparison survives as CQ-026, a separately-named Should-level heuristic screen, explicitly non-guarantee. The numeric comparison is a SPARQL FILTER at query level (round-1 relabel retained). Round-3 seat H repairs (Oxigraph-proven): (H-02) plain-string quantities compared lexically and made overruns green — the FILTER now treats a non-numeric datatype as a violation (isNumeric guard; fixture cq010-string-tokens.ttl); (W-06 family) capacityAtAdmissionTokens is PINNED as remaining capacity BEFORE the new charge (the deployed check is activeTokenTotal + weight <= capacityTokens, QualityScheduler.ts:661-663; a post-grant snapshot already includes the new lease in activeTokens and would false-red this CQ — the ETL must reconstruct the pre-grant remainder, never subtract from a post-grant snapshot)."
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?wu ?charge ?capacity WHERE {
+      ?wu ciops:admittedBy ?grant .
+      ?grant ciops:admissionChargeTokens ?charge ;
+             ciops:capacityAtAdmissionTokens ?capacity .
+      FILTER ( !isNumeric(?charge) || !isNumeric(?capacity) || ?charge > ?capacity )
+    }
+  expected_result: zero_rows
+  required_classes: [WorkUnit, SeatGrant]
+  required_properties: [admittedBy, admissionChargeTokens, capacityAtAdmissionTokens]
+
+- id: CQ-011
+  source_use_case: UC-003
+  natural_language: "What invalidation events occurred in a window, and what is each one's blast radius (lanes x packages)?"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - event: "ciops:ev-biome-bump-2026-08-20"
+      lane: ciops:LaneLint
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    SELECT ?event ?lane ?pkg WHERE {
+      VALUES (?since ?until) { ("2026-08-01T00:00:00Z"^^xsd:dateTime "2026-08-31T23:59:59Z"^^xsd:dateTime) }  # harness binds
+      ?event ciops:occurredAt ?at .
+      FILTER (?at >= ?since && ?at <= ?until)
+      ?event ciops:touchesHashSurface ?surface .
+      ?surface ciops:feedsLane ?lane .
+      ?event ciops:radiatesToPackage ?pkg .
+    }
+  expected_result: non_empty
+  required_classes: [InvalidationEvent, HashSurface, VerificationLane, PackageRef]
+  required_properties: [touchesHashSurface, feedsLane, radiatesToPackage, occurredAt]
+  notes: "Encodes the biome-bump insight: a root tool pin's surface feeds ONLY its lane; global.inputs membership is a HashSurface fact, not fate. Round-1 repair (seat A): the NL's window had no query support — occurredAt (xsd:dateTime on InvalidationEvent) admitted via this Must CQ."
+
+- id: CQ-012
+  source_use_case: UC-005
+  natural_language: "Within a given window, what fraction of total episode time is queue wait, lock contention, execution, repair, and CI wait? (Shares are void unless decomposedEpisodes = windowEpisodes.)"
+  type: quantitative
+  priority: must_have
+  sample_answer:
+    - queueShare: 0.08
+      lockShare: 0.17
+      execShare: 0.47
+      decomposedEpisodes: 23
+      windowEpisodes: 23
+  derivation_method: aggregation
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    SELECT (SUM(?queue)/SUM(?total) AS ?queueShare)
+           (SUM(?lock)/SUM(?total) AS ?lockShare)
+           (SUM(?exec)/SUM(?total) AS ?execShare)
+           (SUM(?repair)/SUM(?total) AS ?repairShare)
+           (SUM(?ci)/SUM(?total) AS ?ciShare)
+           (SUM(?total) AS ?grandTotalMs)
+           (COUNT(?ep) AS ?decomposedEpisodes)
+           (MAX(?windowN) AS ?windowEpisodes) WHERE {
+      VALUES (?since ?until) { ("2026-08-01T00:00:00Z"^^xsd:dateTime "2026-08-31T23:59:59Z"^^xsd:dateTime) }  # harness binds
+      {
+        SELECT (COUNT(?ep2) AS ?windowN) WHERE {
+          VALUES (?since2 ?until2) { ("2026-08-01T00:00:00Z"^^xsd:dateTime "2026-08-31T23:59:59Z"^^xsd:dateTime) }  # harness binds
+          ?ep2 ciops:episodeStartedAt ?at2 .
+          FILTER (?at2 >= ?since2 && ?at2 <= ?until2)
+        }
+      }
+      ?ep ciops:episodeStartedAt ?at .
+      FILTER (?at >= ?since && ?at <= ?until)
+      ?ep ciops:queueWaitMs ?queue ;
+          ciops:lockWaitMs ?lock ; ciops:executionMs ?exec ;
+          ciops:repairGapMs ?repair ; ciops:ciWaitMs ?ci ;
+          ciops:timeToCertaintyMs ?total .
+    }
+    HAVING (SUM(?total) > 0)
+  expected_result: non_empty
+  required_classes: [VerificationEpisode]
+  required_properties: [queueWaitMs, lockWaitMs, executionMs, repairGapMs, ciWaitMs, timeToCertaintyMs, episodeStartedAt]
+  notes: "Round-1 repair (seat A): window + in-query shares; episodeStartedAt admitted for window membership. Round-2 repairs: (seat G) queueWaitMs — the property admitted to close the queue-wait game — is now IN the attribution instrument, decisive post-#870 where queue replaces bounce; (seat E, Oxigraph-proven) partially decomposed episodes silently vanished from every sum, so the query now reports decomposedEpisodes vs windowEpisodes (subquery with its own harness-bound window per the multi-block convention) and the harness FAILS the run when they differ; HAVING SUM(?total) > 0 kills the all-unbound zero-denominator row. One-row binding contract prevents cross-window merging."
+
+- id: CQ-013
+  source_use_case: UC-005
+  natural_language: "Which failure signatures most delay certainty (ranked by attributed delay), and which lane surfaces each signature cheapest? (Cheapest = earliest under the ascending-cost execution order.)"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - signature: "ciops:sig-full-pre-push-step-exit"
+      attributedDelayMs: 5400000
+      cheapestLane: ciops:LaneCheapGates
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?sig ?delay ?lane ?p50 WHERE {
+      ?sig ciops:attributedDelayMs ?delay .
+      OPTIONAL {
+        ?sig ciops:surfacedByLane ?lane .
+        ?lane ciops:hasCostEstimate ?c . ?c ciops:p50Ms ?p50 .
+        FILTER NOT EXISTS {
+          ?sig ciops:surfacedByLane ?lane2 .
+          ?lane2 ciops:hasCostEstimate ?c2 . ?c2 ciops:p50Ms ?p502 .
+          FILTER (?p502 < ?p50)
+        }
+      }
+    } ORDER BY DESC(?delay)
+  expected_result: non_empty
+  required_classes: [FailureSignature, VerificationLane]
+  required_properties: [surfacedByLane, attributedDelayMs, hasCostEstimate, p50Ms]
+  notes: "Round-1 repair (seat A): the old MIN-per-group neither ranked by delay nor selected a lane. attributedDelayMs (data property on FailureSignature, computed by the KPI ETL — external-computation boundary like estimatedFailureProbability) admitted via this Must CQ; the cheapest surfacing lane is selected in-query (ties: all minimal lanes survive, set-valued argmin — seat E verified). Round-2 seat E repair (Oxigraph-proven): the lane join is now OPTIONAL so a delayed signature with NO surfacing lane appears with unbound ?lane — the strongest coverage hole is visible instead of silently excluded. Round-3 seat H (H-11): the argmin's inner NOT-EXISTS also assumes every candidate lane's estimate carries p50Ms — that predicate is now DECLARED CLOSED in closed-world.yaml (census/default provenance fills, an estimate without a P50 violates the ingestion contract; SHACL-shaped at S6). HONEST FLAG (seat G): the NL was rewritten in the same round-1 pass that minted attributedDelayMs — mild retroactive-CQ per the ORSD hazard; S5 must ratify or strike this term explicitly. The full projection-ordering question is now CQ-020 (final-grill admission)."
+
+- id: CQ-014
+  source_use_case: UC-003
+  natural_language: "When did a given tree state's current cache epoch begin, relative to its held proofs?"
+  type: temporal
+  priority: should_have
+  sample_answer:
+    - epoch: "ciops:epoch-abc"
+      beganAt: "2026-08-27T09:00:00Z"
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?epoch ?began ?proof ?provedAt WHERE {
+      VALUES ?tree { ciops:tree-example }  # harness binds
+      ?tree ciops:hasCurrentEpoch ?epoch .
+      ?epoch ciops:beganAt ?began .
+      ?proof ciops:validInEpoch ?epoch ; ciops:recordedAt ?provedAt .
+    }
+  expected_result: non_empty
+  required_classes: [CacheEpoch, VerificationEvidence, TreeState]
+  required_properties: [beganAt, recordedAt, hasCurrentEpoch]
+  notes: "Round-1 repair (seat A): the old query joined EVERY epoch to its proofs with no branch criterion — hasCurrentEpoch (TreeState -> CacheEpoch) admitted via this Should CQ to make 'current' queryable."
+
+- id: CQ-015
+  source_use_case: UC-004
+  natural_language: "Is a given proof transferable to another checkout (same epoch, shared cache) so one agent's green licenses another's skip?"
+  type: boolean
+  priority: should_have
+  sample_answer:
+    - transferable: true
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    ASK {
+      VALUES (?proof ?other) { (ciops:proof-example ciops:checkout-example) }  # harness binds
+      ?proof ciops:validInEpoch ?epoch ; ciops:cachedIn ?cache .
+      ?other ciops:mountsCache ?cache ; ciops:inEpoch ?epoch .
+    }
+  expected_result: boolean
+  required_classes: [VerificationEvidence, Checkout, SharedCache]
+  required_properties: [cachedIn, mountsCache, inEpoch]
+  notes: "Round-1 repair (seat A): both the proof and the target checkout are caller-bound givens; the caller supplies a checkout other than the proof's origin (origin-checkout modeling deferred — no term admitted without a CQ needing it). Partner-review caveat (B11, verified against turbo.json): same-epoch + shared-cache is NECESSARY, not sufficient — turbo task validity keys on declared task-input/hash surfaces (global.inputs + per-task inputs). CacheEpoch identity must be pinned at task-hash granularity during S4/S5, or this ASK overclaims and licenses unsafe skips. Round-2 seat E: expected_result 'boolean' checks TYPE only — the fixture harness must assert the VALUE against both a transferable seed (true) and a non-transferable seed (false); a type-only oracle passes any legal ASK."
+
+- id: CQ-016
+  source_use_case: UC-005
+  natural_language: "For each tagged operational change event (vernacular: control intervention), when did it land — the KPI-series partition point? (Before/after KPI distributions are computed by the ETL over episodes partitioned at landedAt; the ontology supplies the partition points.)"
+  type: quantitative
+  priority: should_have
+  sample_answer:
+    - intervention: "ciops:iv-shared-turbo-cache"
+      landedAt: "2026-08-20T00:00:00Z"
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?iv ?landedAt WHERE {
+      ?iv a ciops:OperationalChangeEvent ; ciops:landedAt ?landedAt .
+    }
+  expected_result: non_empty
+  required_classes: [OperationalChangeEvent]
+  required_properties: [landedAt]
+  notes: "Round-1 repair (seat A): the NL previously promised the distributions themselves and the sample carried unbindable p50Before/AfterMs — reshaped so the CQ asks exactly what the query answers, with the ETL boundary documented (external-computation precedent). Final-grill round 3 (observational naming): class renamed OperationalChangeEvent — OBSERVATIONAL by default; causal ControlIntervention status requires supporting design (paired pre/post evidence + adoption census), never the mere fact of landing. 'Control intervention' survives as DECISIONS vernacular / altLabel. Wall-clock landedAt is the partition point, but INTERVENTION MEMBERSHIP is adoption-qualified (HEAD ancestry), per kpi-measurement-rules.md."
+
+- id: CQ-017
+  source_use_case: UC-004
+  natural_language: "Which lane obligations are required for CI-merge assurance but not local-full assurance, and vice versa (the asymmetry map)?"
+  type: relational
+  priority: should_have
+  sample_answer:
+    - lane: "ciops:LaneSecretScanBaseRef"
+      onlyIn: ciops:TierCiMergeGreen
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?lane ?onlyIn WHERE {
+      {
+        ciops:TierCiMergeGreen ciops:requiresLane ?lane .
+        FILTER NOT EXISTS { ciops:TierLocalFullProof ciops:requiresLane ?lane }
+        BIND(ciops:TierCiMergeGreen AS ?onlyIn)
+      }
+      UNION
+      {
+        ciops:TierLocalFullProof ciops:requiresLane ?lane .
+        FILTER NOT EXISTS { ciops:TierCiMergeGreen ciops:requiresLane ?lane }
+        BIND(ciops:TierLocalFullProof AS ?onlyIn)
+      }
+    }
+  expected_result: non_empty
+  notes: "Round-1 repair (seat A): the old query implemented only the CI-minus-local half and never bound onlyIn — both directions of the asymmetry map now project."
+  required_classes: [AssuranceTier, VerificationLane]
+  required_properties: [requiresLane]
+
+- id: CQ-018
+  source_use_case: UC-001
+  natural_language: "What is the estimated failure probability of a WorkUnit given the current diff's features?"
+  type: quantitative
+  priority: could_have
+  sample_answer:
+    - workUnit: "ciops:wu-check-affected"
+      failureProbability: 0.62
+  derivation_method: external_join
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?wu ?p WHERE {
+      ?wu ciops:estimatedFailureProbability ?p .
+    }
+  expected_result: non_empty
+  required_classes: [WorkUnit]
+  required_properties: []
+  notes: "Expressivity boundary (scope.md): the probability is COMPUTED by the external cost model and stored as a data property; OWL never infers it. Round-3 (seats H+I convergent, I-03/H-09): a could_have CQ licenses NO T-Box term under the two-kind law — estimatedFailureProbability is DEFERRED (removed from required_properties and the pre-glossary) until this CQ is promoted to Must/Should by a real scheduling decision that consumes the probability. The sparql sketch stays as design intent only."
+
+- id: CQ-019
+  source_use_case: UC-003
+  natural_language: "Does any subject trust the affected set of a fail-open computation — and does any verification evidence or schedule proposal carry a narrowed scope (materialized OR derived through its steps' WorkUnits) without scope provenance, or a provenance edge pointing at a non-computation? (must be zero on all arms)"
+  type: constraint
+  priority: must_have
+  sample_answer: []
+  derivation_method: inference
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?subject ?violation WHERE {
+      {
+        ?computation ciops:hasAffectedOutcome ?failureMode .
+        ?failureMode a ciops:FailOpenOutcome .
+        ?subject ciops:scopedByComputation ?computation .
+        BIND("fail-open-trust" AS ?violation)
+      }
+      UNION
+      {
+        VALUES ?stype { ciops:VerificationEvidence ciops:ScheduleProposal }
+        ?subject a ?stype ; ciops:hasScope ?scope .
+        FILTER (?scope != ciops:FullRepoScope)
+        FILTER NOT EXISTS { ?subject ciops:scopedByComputation ?comp }
+        BIND("scope-provenance-gap" AS ?violation)
+      }
+      UNION
+      {
+        ?subject a ciops:ScheduleProposal ; ciops:hasStep ?st .
+        ?st ciops:schedulesWorkUnit ?swu .
+        ?swu ciops:hasScope ?sscope .
+        FILTER (?sscope != ciops:FullRepoScope)
+        FILTER NOT EXISTS { ?subject ciops:scopedByComputation ?c2 }
+        BIND("derived-scope-provenance-gap" AS ?violation)
+      }
+      UNION
+      {
+        ?subject ciops:scopedByComputation ?target .
+        FILTER NOT EXISTS { ?target ciops:hasAffectedOutcome ?outcome }
+        BIND("dangling-provenance-target" AS ?violation)
+      }
+    }
+  expected_result: zero_rows
+  required_classes: [AffectedComputation, FailOpenOutcome, VerificationEvidence, ScheduleProposal, Scope]
+  required_properties: [hasAffectedOutcome, scopedByComputation, hasScope]
+  notes: "Added 2026-08-27 from R4-deep contrarian finding 3: turbo affected reasons are typed (__typename) and several are fail-open (select the whole graph). Round-1 repairs (seats A + D): (1) NL reshaped to the constraint clauses only — the fail-open INVENTORY is the diagnostic obtained by dropping the ?subject clause, not part of this test; (2) scopedByComputation DEFINED as 'trusts the affected set of' — an honest fail-open response (epoch-invalidating FullRepoScope re-verification) does NOT carry scopedByComputation and therefore stays green. APPLICATION PASS (final-grill Q2): hasScope + ScheduleProposal are ADMITTED, so seat G's CLOSED SCOPE-PROVENANCE is now EXECUTABLE — arm 1 catches any subject trusting a fail-open set; arm 2 catches a typed VerificationEvidence/ScheduleProposal whose scope is narrower than FullRepoScope with NO scopedByComputation edge (the laundering seat G proved the round-1 letter permitted). hasScope is DERIVED FROM THE SUBJECT'S WORKUNITS' SCOPES at ingestion, never from the trust edge; every AffectedComputation carries a typed outcome from the closed pair FailOpenOutcome/FailClosedOutcome (FailClosedOutcome is a semantic-support term). Arm 2's negation runs under the closed-world declaration for scopedByComputation (closed-world.yaml). The schedule half is no longer unenforced. BIND-in-UNION-arm is legal here (each BIND references only constants — the round-2 CQ-004 bug pattern needed the OUTER solution mapping; Oxigraph-verified by the suite run). ROUND-3 seat H repairs (all Oxigraph-proven): (H-01) arm 3 added — a ScheduleProposal whose STEPS schedule narrowed WorkUnits is caught even when the materialized proposal-level hasScope edge was omitted (the derived-edge laundering hole; fixture cq019-derived-scope-gap.ttl); (W-01) the NL's first clause is universal again — arm 1 deliberately catches ANY subject trusting fail-open, matching the round-2 no-type-guard disposition; (W-02) arm 4 added — a scopedByComputation edge whose target carries no typed outcome is itself a violation (dangling-provenance laundering; fixture cq019-dangling-target.ttl), running under closed hasAffectedOutcome (closed-world.yaml)."
+
+- id: CQ-020
+  source_use_case: UC-001
+  natural_language: "For a given episode, what ordered WorkUnit sequence does its CURRENT schedule proposal prescribe, and what scope does each step carry?"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - proposal: "ciops:sp-2026-08-27-1443"
+      step: "ciops:st-1"
+      idx: 1
+      wu: "ciops:wu-lint-affected-from-main"
+      scope: ciops:AffectedScope
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?proposal ?step ?idx ?wu ?scope WHERE {
+      VALUES ?ep { ciops:ep-example }  # harness binds
+      ?ep ciops:hasCurrentProposal ?proposal .
+      ?proposal a ciops:ScheduleProposal ; ciops:hasStep ?step .
+      ?step ciops:stepIndex ?idx ; ciops:schedulesWorkUnit ?wu .
+      ?wu ciops:hasScope ?scope .
+    } ORDER BY ?idx
+  expected_result: non_empty
+  required_classes: [ScheduleProposal, ScheduleStep, WorkUnit, Scope, VerificationEpisode]
+  required_properties: [hasCurrentProposal, hasStep, stepIndex, schedulesWorkUnit, hasScope]
+  notes: "Final-grill Q1/Q2 admission (projection-ordering Must CQ + schedule-as-A-Box). The projection's OUTPUT becomes A-Box: an emitted ScheduleProposal records the ordered WorkUnits with per-step scope, making the schedule auditable by CQ (this query) and governable by CQ-019's closed scope-provenance. direct_lookup: ordering is COMPUTED by the deterministic S7 projection (NFR-1) and materialized; SPARQL reads it — OWL never computes the order. Round-3 seat H repair (H-03, Oxigraph-proven): the old query matched EVERY proposal ever emitted for the episode and merged their step sequences without projecting the proposal — 'current' was unqueryable. hasCurrentProposal (VerificationEpisode -> ScheduleProposal; the hasCurrentEpoch precedent) makes currency queryable; the projection re-points it when a new proposal supersedes; ?proposal is projected so no cross-proposal merge can hide. proposedFor was REMOVED (no CQ requires the inverse edge)."
+
+- id: CQ-021
+  source_use_case: UC-002
+  natural_language: "Which seat requests are queued for admission — with what work kind, priority class, admission charge, enqueue time — and which agent owns each?"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - req: "ciops:req-2026-08-27-full-proof"
+      agent: "ciops:agent-beep-effect8"
+      kind: ciops:FullProofWork
+      priority: ciops:VerifyPriority
+      charge: 3
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?req ?agent ?kind ?priority ?charge ?enqueuedAt WHERE {
+      ?req rdf:type ciops:SeatRequest ;
+           ciops:requestedBy ?agent ;
+           ciops:hasWorkKind ?kind ;
+           ciops:hasPriorityClass ?priority ;
+           ciops:admissionChargeTokens ?charge ;
+           ciops:enqueuedAt ?enqueuedAt .
+    }
+  expected_result: non_empty
+  required_classes: [SeatRequest, Agent, AdmissionWorkKind, AdmissionPriorityClass]
+  required_properties: [requestedBy, hasWorkKind, hasPriorityClass, admissionChargeTokens, enqueuedAt]
+  notes: "Final-grill Q1 admission (seat-queue Must CQ). DEPLOYED carriers, extracted never invented: SeatRequest = YeetAdmissionTicket (yeet-admission-ticket/v1; enqueuedAtMillis -> enqueuedAt xsd:dateTime, ETL-converted), admissionChargeTokens = weightTokens verbatim (the tri-split's AdmissionCharge carrier: full-proof 3, merged-preview 5, review-fix 1, publish 1 per admissionTokenWeight — the 'one token ~ 5 GiB' gloss is the DEFAULT slotSizeGib in a capacity formula that also subtracts reserveGib and hard-floors, never a per-token physical measurement [seat J W1]; the publish kind is RESERVED and UNUSED by deployed callers — a publish's embedded proof requests full-proof at publish priority [seat J W4]), work kind / priority = the deployed AdmissionWorkKind/AdmissionPriority LiteralKits (closed domains; see literal-domains.md). This admits Agent + SeatRequest as decision terms, closing the round-0 admission-law warns; Agent identity is PROCESS-grain (pid+procStart+checkoutRoot — many invocations of one coding agent are distinct pairs [seat J N4]). ROUND-3 CORRECTION (seats H+J convergent, H-05/J-B4 — proven against the running scheduler): there is NO stored ticket->lease edge — admission COPIES owner fields into the lease, DELETES the ticket file, and the lease body carries neither nonce nor enqueuedAtMillis (linkage survives only in the lease FILENAME stem nonce-pid); ticket and lease never coexist in an atomic store snapshot. The invented grantedFrom edge and its NOT-EXISTS are REMOVED: an ingested SeatRequest IS a queued ticket (the store's own semantics), so the query needs no granted-exclusion. Granted-wait history is NOT promised from the live store (self-erasing handoff — recorded as a measurement limitation in kpi-measurement-rules.md and as a candidate scheduler improvement). The ticket/lease record split is the ruled SeatRequest/SeatGrant split — S4 worksheet refines, the split itself is settled."
+
+- id: CQ-022
+  source_use_case: UC-002
+  natural_language: "Which in-flight WorkUnit executions does a given committed failure obsolete, and is each a clean or dirty cancel candidate?"
+  type: relational
+  priority: must_have
+  sample_answer:
+    - exec: "ciops:exec-lint-run-1"
+      cancelClass: ciops:CleanCancel
+  derivation_method: inference
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?exec ?cancelClass WHERE {
+      VALUES ?failure { ciops:fail-example }  # harness binds
+      ?failure rdf:type ciops:CommittedFailure ; ciops:inAttempt ?attempt .
+      ?exec rdf:type ciops:WorkUnitExecution ;
+            ciops:inAttempt ?attempt ;
+            ciops:hasExecutionState ciops:RunningExecution ;
+            ciops:hasCancelClass ?cancelClass .
+    }
+  expected_result: non_empty
+  required_classes: [CommittedFailure, WorkUnitExecution, VerificationAttempt, ExecutionState, CancelClass]
+  required_properties: [inAttempt, hasExecutionState, hasCancelClass]
+  notes: "Final-grill Q1 admission (stopping Must CQ). Obsoletion is STRUCTURAL: once a failure commits in an attempt, every still-running execution OF THAT ATTEMPT can no longer improve its verdict — the query derives the cancel-candidate set; S7's stopping rule consumes it. ROUND-3 seat H repair (H-06, Oxigraph-proven): the old query joined failure and execution only through the EPISODE, and an episode is a multi-attempt red streak — a healthy retry in attempt 2 was returned as a cancel candidate because attempt 1 had failed. VerificationAttempt is admitted (carrier: attemptId UUID on yeet-attempt-journal/v1 events) with inAttempt on both CommittedFailure and WorkUnitExecution; the join is now attempt-scoped (regression fixture cq022-cross-attempt.ttl, rows_eq_0). failsEpisode/servesEpisode were REMOVED (no CQ requires them post-repair; attempt->episode membership is ETL bookkeeping until a CQ needs the edge). Carrier precision (seat J W3): the committed-failure signal is verdict.failedStepId NESTED in the attempt-finished event — optional, on the verdict record, NOT a journal step record. CancelClass is the clean/dirty split from the ruling: CleanCancel = interruption leaves no corrupt state (read-only verification lanes); DirtyCancel = mutating executions (e.g. publish phases) that must drain. WorkUnitExecution vs WorkUnit is the ruled spec/execution split. ExecutionState/CancelClass are closed domains (literal-domains.md)."
+
+- id: CQ-023
+  source_use_case: UC-002
+  natural_language: "Is any seat request waiting beyond its policy's declared starvation bound without a modeled exception? (starvation invariant; must be zero — good P95 does not imply no starvation)"
+  type: constraint
+  priority: must_have
+  sample_answer: []
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?req ?waited ?bound WHERE {
+      ?req rdf:type ciops:SeatRequest ;
+           ciops:observedQueueWaitMs ?waited ;
+           ciops:governedBy ?policy .
+      ?policy ciops:starvationBoundMs ?bound .
+      FILTER ( !isNumeric(?waited) || !isNumeric(?bound) || ?waited > ?bound )
+      FILTER NOT EXISTS { ?req ciops:hasStarvationException ciops:HardFloorException }
+    }
+  expected_result: zero_rows
+  required_classes: [SeatRequest, AdmissionPolicy, StarvationException]
+  required_properties: [observedQueueWaitMs, governedBy, starvationBoundMs, hasStarvationException]
+  notes: "Final-grill round 2 (starvation HARD INVARIANT + Must CQ; review 2's 96-fast/4-starved counterexample). ROUND-3 CORRECTIONS (seats H+J convergent): (1) BOUND SOURCE — the deployed scheduler provides NO waiting-time guarantee: publishAgingSeconds only promotes a verify ticket's SORT RANK after 120s (effectivePriorityRank, QualityScheduler.ts:600-601), and seat H proved a ticket still queued after five aging windows with capacity occupied. starvationBoundMs is therefore a DECLARED OPERATIONAL POLICY fact the packet/S7 sets (v1 example 120000ms in the seed; the operator declares the fleet value) — it is the MONITOR'S threshold, precisely because the scheduler cannot guarantee it; a violation row is an operational finding to act on, which is what the ruled hard invariant means (S7 inherits it as admissibility). publishAgingSeconds remains an extracted A-Box fact but is NOT the bound's carrier. (2) EXCEPTIONS — QuarantineException was REMOVED (seat J B1: deployed 'quarantined' is corrupt-record file paths, reaped-dead owners are deleted — no owner-quarantine state exists); the domain is {HardFloorException} and the negation is PINNED to that closed member so an invented exception IRI cannot suppress a violation (seat H-12; fixture cq023-invented-exception.ttl). HardFloorException is ETL-DERIVED per-request from the snapshot-GLOBAL hardFloorEngaged flag (availableGib < hardFloorGib => capacity 0 for everyone — legal degradation) [seat J W5]. (3) NUMERIC GUARD (seat H-02): non-numeric quantities are violations, never lexically-green. (4) SCOPE — this CQ covers QUEUED requests at snapshot; granted-wait history is not promised (the store handoff self-erases; CQ-021 notes). observedQueueWaitMs = snapshot_instant - enqueuedAtMillis, ETL-materialized, NOW-free in-query. KPI reporting carries starvation BESIDE percentiles, never inside them (kpi-measurement-rules.md)."
+
+- id: CQ-024
+  source_use_case: UC-004
+  natural_language: "Under what resolved cache posture did each WorkUnit execution run (local-only, local-write-remote-read, or caller-controlled)?"
+  type: relational
+  priority: should_have
+  sample_answer:
+    - exec: "ciops:exec-lint-run-2"
+      posture: ciops:LocalWriteRemoteRead
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?exec ?posture WHERE {
+      ?exec rdf:type ciops:WorkUnitExecution ;
+            ciops:hasCachePosture ?posture .
+    }
+  expected_result: non_empty
+  required_classes: [WorkUnitExecution, CachePosture]
+  required_properties: [hasCachePosture]
+  notes: "Final-grill round 3 (cache-posture Should CQ). ROUND-3 CORRECTIONS (seats H W-04 + J W2): (1) posture is resolved PER INVOCATION (resolveTurboCachePlan), so hasCachePosture lives on WorkUnitExecution, never on the reusable WorkUnit specification; (2) the deployed plan union has THREE arms, not two — LocalOnly ('local:rw'), LocalWriteRemoteRead ('local:rw,remote:r'), and CallerControlled (CI or an explicit --cache= argument, where the CLI does NOT rewrite the flags); the closed domain gains CallerControlled. Fail-closed precision: 'every other configuration fails closed to local-only' applies to the ENV-QUAD resolution path only — CI and explicit cache args are caller-controlled, not rewritten (TurboCache.ts resolver; the TURBO_CACHE env accepts only the remote-read posture as input, 'local:rw' is the fail-closed OUTPUT). Posture decides evidence transferability economics (CQ-015's shared-cache reads) and remote-hit scheduling value."
+
+- id: CQ-025
+  source_use_case: UC-005
+  natural_language: "For each completed WorkUnit execution, what was the actual wall cost versus the estimated P50/P95 (cost-calibration pairs)?"
+  type: quantitative
+  priority: should_have
+  sample_answer:
+    - exec: "ciops:exec-lint-run-2"
+      actual: 150000
+      p50: 143000
+      p95: 200000
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?exec ?actual ?p50 ?p95 WHERE {
+      ?exec rdf:type ciops:WorkUnitExecution ;
+            ciops:hasExecutionState ciops:CompletedExecution ;
+            ciops:actualWallMs ?actual ;
+            ciops:usedCostEstimate ?c .
+      ?c ciops:p50Ms ?p50 ; ciops:p95Ms ?p95 .
+    }
+  expected_result: non_empty
+  required_classes: [WorkUnitExecution, CostEstimate]
+  required_properties: [actualWallMs, usedCostEstimate, hasExecutionState, p50Ms, p95Ms]
+  notes: "Final-grill round 3 (cost-charging Should CQ). Calibration is the honesty loop for every estimate the projection consumes. ROUND-3 CORRECTIONS: (seat J B2) the actualWallMs carrier is verdict.lanes[].durationMs (per-lane wall, nested in the attempt-finished verdict) — journal 'step records with elapsedMs' DO NOT EXIST; attempt-level verdict.elapsedMs charges the whole attempt (prepare+feedback+proof+publish) and may map to actualWallMs ONLY when the WorkUnitExecution is the whole attempt. (seat H W-05, Oxigraph-proven) joining any hasCostEstimate currently attached to the WorkUnit produced multiple calibration pairs per execution when estimates were revised — usedCostEstimate now links each execution to the IMMUTABLE estimate snapshot recorded at admission (ETL stamps it; estimates are never edited in place). The calibration STATISTICS (bias, P95 coverage) are ETL territory; this CQ supplies the pairs. Rides the spec/execution split."
+
+- id: CQ-026
+  source_use_case: UC-002
+  natural_language: "Does any admitted WorkUnit's predicted P95 duration exceed its budget's soft P95 screen? (heuristic screen, explicitly NON-GUARANTEE — a distribution fact compared to an advisory budget, never a hard limit)"
+  type: constraint
+  priority: should_have
+  sample_answer: []
+  derivation_method: direct_lookup
+  sparql: |
+    PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+    SELECT ?grant ?p95 ?softMax WHERE {
+      ?grant ciops:usedCostEstimate ?c .
+      ?c ciops:p95Ms ?p95 .
+      ?grant ciops:hasBudget ?b . ?b ciops:softP95BudgetMs ?softMax .
+      FILTER ( !isNumeric(?p95) || !isNumeric(?softMax) || ?p95 > ?softMax )
+    }
+  expected_result: zero_rows
+  required_classes: [SeatGrant, ResourceBudget, CostEstimate]
+  required_properties: [usedCostEstimate, hasBudget, softP95BudgetMs, p95Ms]
+  notes: "The DEMOTED half of old CQ-010 (tri-split ruling): the p95-vs-budget comparison survives as this separately-named Should-level heuristic screen. softP95BudgetMs (né maxGrantCostMs — renamed because 'max' claimed a guarantee) is an ADVISORY duration budget: exceeding it flags a scheduling smell, licenses nothing, and guarantees nothing — predictedP95Duration is a distribution fact, the admission charge is CQ-010's token quantity, and hard execution limits are S7 projection-contract territory that never enter OWL. ROUND-3 repairs: (seat H W-05) the screen now reads the grant's usedCostEstimate — the immutable estimate snapshot that governed admission — never whatever estimate is currently attached to the WorkUnit; (seat H-02) isNumeric guard so a plain-string p95 cannot be lexically green (fixture cq026-string-budget.ttl)."
+
+# Won't Have (recorded, per MoSCoW):
+# - "How much does an episode cost in dollars?" — machine-time only in v1.
+# - "What should a human developer's IDE run on save?" — yeet/CI events only.
+# - "Which ontology terms generalize to other repos?" — closed-world over beep-effect.

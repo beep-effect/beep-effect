@@ -123,13 +123,13 @@ jobs:
             updater-suffixes: '[".msi.zip",".nsis.zip"]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.version) || github.ref }}
 
       - name: Verify release tag checkout
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const { execFileSync } = require("node:child_process");
@@ -241,7 +241,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Stage desktop bundle artifact
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           ARTIFACT_PATHS: ${{ steps.tauri.outputs.artifactPaths }}
           RELEASE_DESKTOP_ASSET_ARCH: ${{ matrix.asset-arch }}
@@ -346,7 +346,7 @@ jobs:
             );
 
       - name: Upload desktop bundle artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: desktop-release-${{ matrix.release-target }}
           path: ${{ runner.temp }}/desktop-release-${{ matrix.release-target }}
@@ -367,7 +367,7 @@ jobs:
       RELEASE_DESKTOP_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 1
 
@@ -388,7 +388,7 @@ jobs:
 
       - name: Download desktop bundle artifacts
         if: ${{ needs.release-desktop.result == 'success' }}
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: desktop-release-*
           path: ${{ runner.temp }}/desktop-release-artifacts

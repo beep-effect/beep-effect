@@ -1,0 +1,1875 @@
+{
+  "pack": "jsonc",
+  "modules": [
+    {
+      "file": "jsonc/Jsonc.ts",
+      "pack": "jsonc",
+      "exportCount": 11,
+      "owningExportCount": 11,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncEdit.ts",
+      "pack": "jsonc",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFingerprint.ts",
+      "pack": "jsonc",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFormatter.ts",
+      "pack": "jsonc",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncModifier.ts",
+      "pack": "jsonc",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "pack": "jsonc",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncVisitor.ts",
+      "pack": "jsonc",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/index.ts",
+      "pack": "jsonc",
+      "exportCount": 9,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": true,
+      "findings": []
+    },
+    {
+      "file": "jsonc/internal/limits.ts",
+      "pack": "jsonc",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "pack": "jsonc",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "pack": "jsonc",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/scanner.ts",
+      "pack": "jsonc",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/skip.ts",
+      "pack": "jsonc",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncParseErrorCode",
+      "line": 33,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncParseErrorCode",
+      "line": 40,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncParseErrorDetail",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncParseError",
+      "line": 65,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncParseOptions",
+      "line": 90,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncStringifyErrorCode",
+      "line": 109,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncStringifyErrorCode",
+      "line": 116,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncStringifyOptions",
+      "line": 129,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncStringifyError",
+      "line": 144,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "JsoncBoundCodec",
+      "line": 240,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/Jsonc.ts",
+      "name": "Jsonc",
+      "line": 268,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncEdit.ts",
+      "name": "JsoncRange",
+      "line": 23,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncEdit.ts",
+      "name": "JsoncFormattingOptions",
+      "line": 45,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncEdit.ts",
+      "name": "JsoncFormattingOptionsLike",
+      "line": 63,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncEdit.ts",
+      "name": "JsoncEdit",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFingerprint.ts",
+      "name": "JsoncCanonicalizeErrorCode",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFingerprint.ts",
+      "name": "JsoncCanonicalizeErrorCode",
+      "line": 62,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFingerprint.ts",
+      "name": "JsoncCanonicalizeError",
+      "line": 74,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFingerprint.ts",
+      "name": "JsoncTextHashOptions",
+      "line": 95,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFingerprint.ts",
+      "name": "JsoncFingerprint",
+      "line": 288,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@effect",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncFormatter.ts",
+      "name": "JsoncFormatter",
+      "line": 19,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncModifier.ts",
+      "name": "JsoncModificationError",
+      "line": 37,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@remarks",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncModifier.ts",
+      "name": "JsoncModifyOptions",
+      "line": 54,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncModifier.ts",
+      "name": "JsoncModifier",
+      "line": 69,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "name": "JsoncSegment",
+      "line": 20,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "name": "JsoncPath",
+      "line": 28,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "name": "JsoncNodeType",
+      "line": 37,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "name": "JsoncNodeType",
+      "line": 44,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "name": "JsoncNode",
+      "line": 65,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncNode.ts",
+      "name": "makeNodeUnsafe",
+      "line": 165,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@4"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncVisitor.ts",
+      "name": "JsoncVisitorEvent",
+      "line": 40,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncVisitor.ts",
+      "name": "JsoncVisitorEvent",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/JsoncVisitor.ts",
+      "name": "JsoncVisitor",
+      "line": 71,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncBoundCodec",
+      "line": 28,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonc",
+      "tags": [
+        "@example",
+        "@effected",
+        "@see",
+        "@link",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-carrier",
+          "detail": "Re-export JSDoc uses a retired @example or @remarks carrier."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "Jsonc, JsoncParseError, JsoncParseErrorCode, JsoncParseErrorDetail, JsoncParseOptions, JsoncStringifyError, JsoncStringifyErrorCode, JsoncStringifyOptions",
+      "line": 29,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncFormattingOptionsLike",
+      "line": 39,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncEdit, JsoncFormattingOptions, JsoncRange",
+      "line": 40,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncCanonicalizeError, JsoncCanonicalizeErrorCode, JsoncFingerprint, JsoncTextHashOptions",
+      "line": 41,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncFormatter",
+      "line": 47,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncModificationError, JsoncModifier, JsoncModifyOptions",
+      "line": 48,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment",
+      "line": 49,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/index.ts",
+      "name": "JsoncVisitor, JsoncVisitorEvent",
+      "line": 50,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonc/internal/limits.ts",
+      "name": "MAX_NESTING_DEPTH",
+      "line": 22,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@effected"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "name": "Located",
+      "line": 17,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "name": "Insert",
+      "line": 38,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "name": "Mismatch",
+      "line": 50,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "name": "NoOp",
+      "line": 57,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "name": "NavigateResult",
+      "line": 62,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/navigate.ts",
+      "name": "navigate",
+      "line": 69,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "JSONC_PARSE_ERROR_CODES",
+      "line": 28,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "ParseCode",
+      "line": 49,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "RawParseError",
+      "line": 52,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "ParseFlags",
+      "line": 59,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "ParseValueResult",
+      "line": 66,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "ParseTreeResult",
+      "line": 72,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "scanErrorToCode",
+      "line": 81,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "parseValue",
+      "line": 563,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/parser.ts",
+      "name": "parseTree",
+      "line": 569,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/scanner.ts",
+      "name": "SyntaxKind",
+      "line": 15,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/scanner.ts",
+      "name": "ScanError",
+      "line": 35,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/scanner.ts",
+      "name": "Scanner",
+      "line": 46,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/scanner.ts",
+      "name": "createScanner",
+      "line": 75,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [
+        "@link",
+        "@param"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/skip.ts",
+      "name": "SkipCursor",
+      "line": 21,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonc",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonc/internal/skip.ts",
+      "name": "skipBalancedValue",
+      "line": 46,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonc",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}

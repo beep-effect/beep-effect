@@ -3,7 +3,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, FileSystem, Inspectable, Layer } from "effect";
+import { Console, Effect, FileSystem, Inspectable, Layer, Runtime } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -13,6 +13,17 @@ import { parse } from "jsonc-parser";
 import type { ParseError } from "jsonc-parser";
 
 const $I = $RepoCliId.create("goals/fallow-zero-dead-code/ops/validate-packet");
+
+class PacketValidationFailed extends S.TaggedError<PacketValidationFailed>($I`PacketValidationFailed`)(
+  "PacketValidationFailed",
+  {},
+  $I.annote("PacketValidationFailed", {
+    description: "Packet validation failed after its diagnostics were reported.",
+  })
+) {
+  override readonly [Runtime.errorExitCode] = 1;
+  override readonly [Runtime.errorReported] = false;
+}
 
 const packetRoot = "goals/fallow-zero-dead-code";
 const validatorVersion = "fallow-zero-dead-code-validator/v1";
@@ -464,9 +475,7 @@ const program = Effect.gen(function* () {
 
   yield* Console.error("fallow-zero-dead-code packet failed:");
   yield* Effect.forEach(diagnostics, (diagnostic) => Console.error(`- ${diagnostic}`));
-  yield* Effect.sync(() => {
-    process.exitCode = 1;
-  });
+  return yield* PacketValidationFailed.make({});
 });
 
 NodeRuntime.runMain(program.pipe(Effect.provide(Layer.mergeAll(NodeServices.layer))));

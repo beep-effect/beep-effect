@@ -1,0 +1,7 @@
+# Seat E regression: an INVALIDATED proof must NOT discharge — LaneA must come back.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneA .
+ciops:proof-old ciops:dischargesObligation ciops:LaneA ;
+    ciops:provesTree ciops:tree-example ;
+    ciops:validInEpoch ciops:epoch-example .
+ciops:event-x ciops:invalidates ciops:proof-old .

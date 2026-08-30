@@ -30,6 +30,8 @@
   "dependencies": {
     "@beep/brand": "workspace:^",
     "@beep/ui": "workspace:^",
+    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/jetbrains-mono": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

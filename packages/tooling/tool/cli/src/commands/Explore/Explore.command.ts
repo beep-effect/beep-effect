@@ -15,6 +15,7 @@ import { Effect } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { PacketEventStoreLive } from "../Goals/PacketCore/PacketEventStore.ts";
+import { exploreAtlasCommand } from "./Atlas.ts";
 import { runExploreCheck } from "./Check.ts";
 
 const checkFlag = Flag.boolean("check").pipe(
@@ -50,5 +51,6 @@ export const exploreCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Read-only packet-stream checks over explorations and goals (advisory)"),
+  Command.withSubcommands([exploreAtlasCommand]),
   Command.provide(PacketEventStoreLive)
 );

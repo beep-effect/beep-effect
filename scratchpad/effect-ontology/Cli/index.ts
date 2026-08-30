@@ -122,18 +122,32 @@ const CliLive = Layer.mergeAll(
 // =============================================================================
 
 /**
- * Run the CLI with provided arguments
+ * Runs the `effect-onto` root command against an argv vector using `CliLive`.
  *
- * **Example** (Inspect run cli)
+ * **Gotchas**
+ *
+ * Link ingestion is swapped to {@link LinkIngestionService.Disabled} when
+ * `POSTGRES_HOST` is unset. Commands that persist URLs then no-op at the
+ * database boundary.
+ *
+ * **Example** (Name extract argv for the root runner)
  *
  * ```ts
  * import { runCli } from "@effect-ontology/Cli/index"
  *
- * console.log(runCli)
+ * const argv = [
+ *   "effect-onto",
+ *   "extract",
+ *   "ontologies/people.ttl",
+ *   "--text",
+ *   "Ada Lovelace was a mathematician"
+ * ]
+ * console.log(runCli.length) // 1
+ * console.log(argv[1]) // "extract"
+ * console.log(argv.includes("--text")) // true
  * ```
  *
- * @param args - Command line arguments (typically Bun.argv)
- * @category layers
+ * @category cli-commands
  * @since 0.0.0
  */
 export const runCli = (args: ReadonlyArray<string>) => {

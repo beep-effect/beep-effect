@@ -486,7 +486,10 @@ turbo work, so they are cheap to run mid-loop.
   dead or pid-reused state is reaped automatically, and malformed state is
   quarantined visibly. Inspect with `bun run beep quality scheduler status`
   and repair with `bun run beep quality scheduler reap [--apply]` (dry-run by
-  default). `Ctrl-C` while queued removes the ticket.
+  default). `Ctrl-C` while queued removes the ticket. Admission transitions
+  are journaled best-effort to `$XDG_RUNTIME_DIR/beep/admit/journal.ndjson`
+  (ring-buffered NDJSON; admitted and released events keyed by ticket nonce
+  and pid), so granted queue-wait survives lease release.
   `verify --tier review-fix` remains the cheaper loop lane while a full proof
   is active (one token, never the origin lock); `--tier cheap-gates` takes
   neither admission nor the lock.

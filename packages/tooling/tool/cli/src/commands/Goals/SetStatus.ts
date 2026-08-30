@@ -80,37 +80,55 @@ const applyMigrationPlan = Effect.fn("Goals.applyMigrationPlan")(function* (
   }
 });
 
+type GoalsMigrationCounts = {
+  readonly backfills: number;
+  readonly changedManifests: number;
+  readonly changedReadmes: number;
+  readonly parked: number;
+};
+
+const emptyGoalsMigrationCounts: GoalsMigrationCounts = {
+  backfills: 0,
+  changedManifests: 0,
+  changedReadmes: 0,
+  parked: 0,
+};
+
+const addGoalsMigrationCounts = (left: GoalsMigrationCounts, right: GoalsMigrationCounts): GoalsMigrationCounts => ({
+  backfills: left.backfills + right.backfills,
+  changedManifests: left.changedManifests + right.changedManifests,
+  changedReadmes: left.changedReadmes + right.changedReadmes,
+  parked: left.parked + right.parked,
+});
+
+const processGoalMigration = Effect.fn("Goals.processGoalMigration")(function* (
+  record: GoalPacketRecord,
+  write: boolean
+) {
+  const plan = planGoalPacketMigration(record);
+  if (plan.parked !== undefined) {
+    yield* Console.error(`[goals:migrate] PARKED ${plan.slug}: ${plan.parked}`);
+    return { ...emptyGoalsMigrationCounts, parked: 1 };
+  }
+
+  yield* applyMigrationPlan(record, plan, write);
+  return {
+    backfills: plan.manifestText !== undefined && plan.isBackfill === true ? 1 : 0,
+    changedManifests: plan.manifestText !== undefined && plan.isBackfill !== true ? 1 : 0,
+    changedReadmes: plan.readmeText === undefined ? 0 : 1,
+    parked: 0,
+  };
+});
+
 const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (options: { readonly write: boolean }) {
   const records = yield* listGoalPackets();
-
-  let changedManifests = 0;
-  let changedReadmes = 0;
-  let backfills = 0;
-  let parked = 0;
-
-  for (const record of records) {
-    const plan = planGoalPacketMigration(record);
-    if (plan.parked !== undefined) {
-      parked += 1;
-      yield* Console.error(`[goals:migrate] PARKED ${plan.slug}: ${plan.parked}`);
-      continue;
-    }
-    if (plan.manifestText !== undefined) {
-      if (plan.isBackfill === true) {
-        backfills += 1;
-      } else {
-        changedManifests += 1;
-      }
-    }
-    if (plan.readmeText !== undefined) {
-      changedReadmes += 1;
-    }
-    yield* applyMigrationPlan(record, plan, options.write);
-  }
+  let counts = emptyGoalsMigrationCounts;
+  for (const record of records)
+    counts = addGoalsMigrationCounts(counts, yield* processGoalMigration(record, options.write));
 
   const mode = options.write ? "applied" : "planned (dry-run; rerun with --write to apply)";
   yield* Console.log(
-    `[goals:migrate] ${mode}: ${changedManifests} manifest edit(s), ${backfills} backfill(s), ${changedReadmes} README edit(s), ${parked} parked.`
+    `[goals:migrate] ${mode}: ${counts.changedManifests} manifest edit(s), ${counts.backfills} backfill(s), ${counts.changedReadmes} README edit(s), ${counts.parked} parked.`
   );
 });
 
@@ -185,7 +203,7 @@ export const goalStagePosition = (
   );
 };
 
-const shortTip = (id: string): string => pipe(id, Str.slice(0, 12));
+const shortTip: (id: string) => string = Str.slice(0, 12);
 
 /**
  * Render one planned packet event as an operator preview line.

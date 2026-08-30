@@ -5,9 +5,10 @@ Lambdas (`infra/src/CiTurboCache.ts`). The deployment is deliberately
 asymmetric — either token may **read**, only the trusted token may **write**,
 and the writer is a separate function behind a signed invocation.
 
-Workstations and agent checkouts are **readers only**. No local checkout ever
-holds the trusted write token; remote writes belong to the main-push CI jobs,
-which run full task graphs on every merge and warm the cache for everyone else.
+Workstations, agent checkouts, and same-repository pull-request jobs are
+**readers only**. Fork pull requests stay local-only. No local checkout ever
+holds the trusted write token; remote writes belong to main-push CI and the
+protected cache-warm workflow.
 
 ## The per-checkout contract
 
@@ -68,13 +69,13 @@ covered by `packages/tooling/tool/cli/test/turbo-cache.test.ts`:
 | Any quad member missing or blank | `--cache=local:rw` |
 | Quad complete, any other posture (including `remote:rw`) | `--cache=local:rw` |
 
-A remote-read plan whose values are still `op://` references makes the lane run
-under `op run`. If the 1Password session is missing, expired, or denied at run
-time, the lane degrades to `--cache=local:rw` and keeps going — it never fails
-for want of a cache. The same fail-closed rule applies in the environment: on a
-*direct* turbo spawn, scrubbing an unresolved credential also pins
-`TURBO_CACHE` to local-only, so turbo is never asked to read a remote cache it
-has no usable token for.
+A remote-read plan whose values are still `op://` references probes each
+reference once per CLI process and runs the lane under `op run` only when every
+reference resolves. A missing, expired, or denied 1Password session degrades to
+`--cache=local:rw` and keeps going — a cache credential never blocks quality
+work. The same fail-closed rule applies in the environment: on a *direct* turbo
+spawn, scrubbing an unresolved credential also pins `TURBO_CACHE` to local-only,
+so turbo is never asked to read a remote cache it cannot authenticate to.
 
 That scrub deliberately does **not** apply to an `op run`-wrapped spawn.
 `op run` resolves `op://` references out of the environment it is handed, not
@@ -103,9 +104,25 @@ spawn, they never receive a remote posture they could not use anyway.
   when `bun.lock` differs from base. Those runs cannot read from any cache;
   that is a deliberate false-green control, not a misconfiguration.
 
+## Warm and inspect the cache
+
+`bun run beep cache warm` is the write-capable operation. It requires a clean
+exact `origin/main` checkout, the repository's pinned Bun version, and ephemeral
+`TURBO_API`, `TURBO_TOKEN`, and `TURBO_TEAM` values. It refuses unresolved
+`op://` write-token references. `.github/workflows/cache-warm.yml` supplies
+those values only through its protected environment and runs twice monthly or
+on manual dispatch.
+
+`bun run beep cache probe` runs a cold remote-read pass followed by a warm
+local-only pass. `bun run beep cache dashboard` decodes Turbo summaries,
+reports first-touch remote-eligible hit rate plus p50/p95 by cache mode, excludes
+forced or disabled runs, and fails its correctness tripwires when a changed
+source task is incorrectly reused.
+
 ## Related
 
 - `goals/ship-velocity/research/c4-turbo-cache.md` — the audit this implements.
 - `infra/lambda/turbo-cache/README.md` — token/method matrix on the server.
-- `.github/workflows/check.yml` — CI's own posture (push jobs write, PR jobs
-  are local-only pending ship-velocity C2).
+- `.github/workflows/check.yml` — push jobs write, same-repository PR jobs read,
+  and fork PR jobs stay local-only.
+- `.github/workflows/cache-warm.yml` — protected scheduled/manual warm path.

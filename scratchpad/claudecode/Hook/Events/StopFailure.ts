@@ -1,19 +1,16 @@
 /**
- * StopFailure hook event.
+ * Fires when a turn ends due to an API error (rate limit, auth, billing)
+ * rather than a normal stop. Observability-only: Claude Code ignores
+ * both the JSON output and the process exit code. Matcher is on
+ * `error`. See https://code.claude.com/docs/en/hooks#stopfailure.
  *
- * Fires when a turn ends due to an API error (rate limit, auth, billing,
- * etc.) rather than a normal stop. Observability-only — the hook's
- * output and exit code are both ignored by Claude Code. Supports a
- * matcher on `error`.
- * See https://code.claude.com/docs/en/hooks#stopfailure.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
@@ -21,18 +18,20 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/StopFailure");
 
 /**
- * Schema for `ErrorType`.
+ * Failure category reported when a turn ends abnormally.
  *
- * **Example** (Inspect the ErrorType schema)
+ * **Example** (Decode a rate-limit error)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.StopFailure.ErrorType)
+ * const error = S.decodeUnknownSync(Hook.StopFailure.ErrorType)("rate_limit")
+ * console.log(error) // "rate_limit"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this error.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const ErrorType = LiteralKit([
@@ -53,35 +52,37 @@ export const ErrorType = LiteralKit([
 );
 
 /**
- * Type-level model for `ErrorType`.
+ * Decoded value produced by {@link ErrorType}.
  *
- * **Example** (Use ErrorType as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.StopFailure.ErrorType
- * ```
- *
+ * @see {@link ErrorType} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type ErrorType = typeof ErrorType.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a StopFailure hook, including the `error` category
+ * and optional details.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a rate-limit stop)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.StopFailure.Input)
+ * const input = S.decodeUnknownSync(Hook.StopFailure.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "StopFailure",
+ *   error: "rate_limit",
+ * })
+ *
+ * console.log(input.error) // "rate_limit"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `error`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`StopFailureInput`)(
@@ -98,18 +99,26 @@ export class Input extends S.Class<Input>($I`StopFailureInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a StopFailure handler may return. Claude Code ignores
+ * both this JSON and the process exit code.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * Exiting non-zero or setting `continue: false` does not retry or handle
+ * the API failure.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.StopFailure.Output)
+ * const output = Hook.StopFailure.Output.make()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`StopFailureOutput`)(
@@ -126,35 +135,51 @@ export class Output extends S.Class<Output>($I`StopFailureOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body and the
+ * process status.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.StopFailure.passthrough)
+ * const output = Hook.StopFailure.passthrough()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link define} for wrapping this result in a handler.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `define`.
+ * Build a runnable StopFailure hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores both JSON output and the process exit code.
+ *
+ * **Example** (Define a StopFailure hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.StopFailure.define)
+ * const hook = Hook.StopFailure.define({
+ *   handler: () => Effect.succeed(Hook.StopFailure.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "StopFailure"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `error`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -169,14 +194,21 @@ export const define = <E, R>(config: {
 /**
  * Build a StopFailure hook that only handles matching `error` values.
  *
- * **Example** (Build StopFailure hook that only handles matching `error` values)
+ * **Example** (Observe rate-limit failures)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.StopFailure.onMatcher)
+ * const hook = Hook.StopFailure.onMatcher({
+ *   matcher: "rate_limit",
+ *   handler: () => Effect.succeed(Hook.StopFailure.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "StopFailure"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

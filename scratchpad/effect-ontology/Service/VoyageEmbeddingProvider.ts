@@ -72,6 +72,7 @@ export const VoyageModel = LiteralKit([
   "voyage-multilingual-2",
   "voyage-law-2",
 ]).pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("VoyageModel", {
     description: "Voyage embedding models with known output dimensions.",
   })
@@ -306,18 +307,20 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
 /**
  * Voyage embedding provider configuration
  *
- *
- * **Example** (Use the VoyageProviderConfig contract)
+ * **Example** (Configure a Voyage provider)
  *
  * ```ts
- * import type { VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import { Duration, Effect, Redacted } from "effect"
+ * import { VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * const acceptsVoyageProviderConfig = (_value: VoyageProviderConfig): void => undefined
- *
- * console.log(acceptsVoyageProviderConfig)
+ * const config = VoyageProviderConfig.make({
+ *   apiKey: Redacted.make("sk-test"),
+ *   timeout: Duration.seconds(10)
+ * })
+ * console.log(config.model)
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`VoyageProviderConfig`)(
@@ -337,10 +340,14 @@ export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`Voyag
  * **Example** (Reference Voyage provider input)
  *
  * ```ts
+ * import { Duration, Effect, Redacted } from "effect"
  * import type { VoyageProviderConfigInput } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * const accept = (_config: VoyageProviderConfigInput): void => undefined
- * console.log(accept)
+ * const input: VoyageProviderConfigInput = {
+ *   apiKey: Redacted.make("sk-test"),
+ *   timeout: Duration.seconds(10)
+ * }
+ * console.log(input.timeout)
  * ```
  *
  * @category type-level
@@ -354,9 +361,16 @@ export type VoyageProviderConfigInput = (typeof VoyageProviderConfig)["~type.mak
  * **Example** (Inspect make voyage provider)
  *
  * ```ts
- * import { makeVoyageProvider } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import { Duration, Effect, Redacted } from "effect"
+ * import { makeVoyageProvider, VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(makeVoyageProvider)
+ * const provider = makeVoyageProvider(
+ *   VoyageProviderConfig.make({
+ *     apiKey: Redacted.make("sk-test"),
+ *     timeout: Duration.seconds(10)
+ *   })
+ * )
+ * console.log(Effect.isEffect(provider)) // true
  * ```
  *
  * @category constructors
@@ -543,9 +557,16 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
  * **Example** (Inspect voyage embedding provider live)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { VoyageEmbeddingProviderLive } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(VoyageEmbeddingProviderLive)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(VoyageEmbeddingProviderLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -571,7 +592,7 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
         ),
       onSome: Effect.succeed,
     });
-    const model = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+    const model = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
@@ -595,9 +616,16 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
  * **Example** (Inspect voyage embedding provider default)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { VoyageEmbeddingProviderDefault } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(VoyageEmbeddingProviderDefault)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(VoyageEmbeddingProviderDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { A, Str } from "@beep/utils";
-import { pipe } from "effect";
+import { flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { fontStack } from "./Brand.css.ts";
 import type {
@@ -24,8 +24,11 @@ const WORDMARK_GLYPH_WIDTH = 11;
 const round = (value: number): number => Number(value.toFixed(4));
 
 // XML text escaping (& < >); attribute escaping additionally covers both quote kinds.
-const escapeXmlText = (value: string): string =>
-  pipe(value, Str.replaceAll("&", "&amp;"), Str.replaceAll("<", "&lt;"), Str.replaceAll(">", "&gt;"));
+const escapeXmlText: (value: string) => string = flow(
+  Str.replaceAll("&", "&amp;"),
+  Str.replaceAll("<", "&lt;"),
+  Str.replaceAll(">", "&gt;")
+);
 
 const escapeXmlAttribute = (value: string): string =>
   pipe(escapeXmlText(value), Str.replaceAll('"', "&quot;"), Str.replaceAll("'", "&#39;"));

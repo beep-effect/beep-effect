@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for `Plugin.define` and `Plugin.write` — verifies the builder
  * normalizes config, and the writer materializes the canonical
@@ -6,13 +5,14 @@
  * harness.
  *
  * Because `writeFileString` and `makeDirectory` in the mock close
- * over plain JavaScript `Map`/`Set` instances, tests can assert on
+ * over Effect mutable hash collections, tests can assert on
  * the recorded writes without threading a Ref through the layer.
  *
  * @since 0.1.0
  */
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 
 import { PluginWriteError } from "../../../claudecode/Errors.ts";
@@ -21,6 +21,12 @@ import * as Define from "../../../claudecode/Plugin/Define.ts";
 import * as Load from "../../../claudecode/Plugin/Load.ts";
 import { PluginManifest } from "../../../claudecode/Plugin/Manifest.ts";
 import * as Testing from "../../../claudecode/Testing.ts";
+
+const snapshotFile = (snapshot: Testing.MockFileSystemSnapshot, path: string): string | undefined =>
+  O.getOrUndefined(HashMap.get(snapshot.files, path));
+
+const snapshotHasFile = (snapshot: Testing.MockFileSystemSnapshot, path: string): boolean =>
+  HashMap.has(snapshot.files, path);
 
 // ---------------------------------------------------------------------------
 // Plugin.define — synchronous builder
@@ -116,7 +122,7 @@ describe("Plugin.write — directory layout", () => {
       const snapshot = fileSystem.snapshot();
 
       expect(snapshot.directories).toContain("/dest/.claude-plugin");
-      const manifestContent = snapshot.files.get("/dest/.claude-plugin/plugin.json");
+      const manifestContent = snapshotFile(snapshot, "/dest/.claude-plugin/plugin.json");
       expect(manifestContent).toBeDefined();
       expect(manifestContent).toContain('"name": "my-plugin"');
       expect(manifestContent).toContain('"version": "0.1.0"');
@@ -145,9 +151,9 @@ describe("Plugin.write — directory layout", () => {
       const snapshot = fileSystem.snapshot();
 
       expect(snapshot.directories).toContain("/dest/commands");
-      expect(snapshot.files.get("/dest/commands/greet.md")).toContain("description: Say hi");
-      expect(snapshot.files.get("/dest/commands/greet.md")).toContain("# /greet");
-      expect(snapshot.files.get("/dest/commands/ship.md")).toContain("description: Ship it");
+      expect(snapshotFile(snapshot, "/dest/commands/greet.md")).toContain("description: Say hi");
+      expect(snapshotFile(snapshot, "/dest/commands/greet.md")).toContain("# /greet");
+      expect(snapshotFile(snapshot, "/dest/commands/ship.md")).toContain("description: Ship it");
     })
   );
 
@@ -178,8 +184,8 @@ describe("Plugin.write — directory layout", () => {
       const fileSystem = yield* Testing.writePluginToMemory(def, "/dest");
       const snapshot = fileSystem.snapshot();
 
-      expect(snapshot.files.get("/dest/custom/commands/review.md")).toContain("# Review");
-      expect(snapshot.files.get("/dest/knowledge/greet/SKILL.md")).toContain("name: greet");
+      expect(snapshotFile(snapshot, "/dest/custom/commands/review.md")).toContain("# Review");
+      expect(snapshotFile(snapshot, "/dest/knowledge/greet/SKILL.md")).toContain("name: greet");
     })
   );
 
@@ -199,8 +205,8 @@ describe("Plugin.write — directory layout", () => {
       const snapshot = fileSystem.snapshot();
 
       expect(snapshot.directories).toContain("/dest/agents");
-      expect(snapshot.files.get("/dest/agents/reviewer.md")).toContain("name: reviewer");
-      expect(snapshot.files.get("/dest/agents/reviewer.md")).toContain("# reviewer");
+      expect(snapshotFile(snapshot, "/dest/agents/reviewer.md")).toContain("name: reviewer");
+      expect(snapshotFile(snapshot, "/dest/agents/reviewer.md")).toContain("# reviewer");
     })
   );
 
@@ -227,8 +233,8 @@ describe("Plugin.write — directory layout", () => {
       expect(snapshot.directories).toContain("/dest/skills");
       expect(snapshot.directories).toContain("/dest/skills/pdf-processor");
       expect(snapshot.directories).toContain("/dest/skills/code-reviewer");
-      expect(snapshot.files.get("/dest/skills/pdf-processor/SKILL.md")).toContain("name: pdf-processor");
-      expect(snapshot.files.get("/dest/skills/code-reviewer/SKILL.md")).toContain("name: code-reviewer");
+      expect(snapshotFile(snapshot, "/dest/skills/pdf-processor/SKILL.md")).toContain("name: pdf-processor");
+      expect(snapshotFile(snapshot, "/dest/skills/code-reviewer/SKILL.md")).toContain("name: code-reviewer");
     })
   );
 
@@ -248,7 +254,7 @@ describe("Plugin.write — directory layout", () => {
       const snapshot = fileSystem.snapshot();
 
       expect(snapshot.directories).toContain("/dest/output-styles");
-      expect(snapshot.files.get("/dest/output-styles/terse.md")).toContain("name: terse");
+      expect(snapshotFile(snapshot, "/dest/output-styles/terse.md")).toContain("name: terse");
     })
   );
 
@@ -269,7 +275,7 @@ describe("Plugin.write — directory layout", () => {
       const snapshot = fileSystem.snapshot();
 
       expect(snapshot.directories).toContain("/dest/hooks");
-      const hooksContent = snapshot.files.get("/dest/hooks/hooks.json");
+      const hooksContent = snapshotFile(snapshot, "/dest/hooks/hooks.json");
       expect(hooksContent).toBeDefined();
       expect(hooksContent).toContain('"PostToolUse"');
       expect(hooksContent).toContain('"command": "./fmt.sh"');
@@ -289,7 +295,7 @@ describe("Plugin.write — directory layout", () => {
       const fileSystem = yield* Testing.writePluginToMemory(def, "/dest");
       const snapshot = fileSystem.snapshot();
 
-      const mcpContent = snapshot.files.get("/dest/.mcp.json");
+      const mcpContent = snapshotFile(snapshot, "/dest/.mcp.json");
       expect(mcpContent).toBeDefined();
       expect(mcpContent).toContain('"mcpServers"');
       expect(mcpContent).toContain('"mcp-fs"');
@@ -313,7 +319,7 @@ describe("Plugin.write — directory layout", () => {
       });
       const fileSystem = yield* Testing.writePluginToMemory(def, "/dest");
       const snapshot = fileSystem.snapshot();
-      const mcpContent = snapshot.files.get("/dest/.mcp.json");
+      const mcpContent = snapshotFile(snapshot, "/dest/.mcp.json");
 
       expect(mcpContent).toBeDefined();
       expect(mcpContent).toContain('"oauth"');
@@ -333,7 +339,7 @@ describe("Plugin.write — directory layout", () => {
       expect(snapshot.directories).not.toContain("/dest/skills");
       expect(snapshot.directories).not.toContain("/dest/output-styles");
       expect(snapshot.directories).not.toContain("/dest/hooks");
-      expect(snapshot.files.has("/dest/.mcp.json")).toBe(false);
+      expect(snapshotHasFile(snapshot, "/dest/.mcp.json")).toBe(false);
     })
   );
 
@@ -352,13 +358,13 @@ describe("Plugin.write — directory layout", () => {
       yield* Define.write(loaded, "/dest").pipe(Effect.provide(fileSystem.layer));
 
       const snapshot = fileSystem.snapshot();
-      expect(snapshot.files.get("/dest/.lsp.json")).toBe(
+      expect(snapshotFile(snapshot, "/dest/.lsp.json")).toBe(
         '{"go":{"command":"gopls","extensionToLanguage":{".go":"go"}}}'
       );
-      expect(snapshot.files.get("/dest/themes/dark.json")).toBe('{"name":"dark"}');
-      expect(snapshot.files.get("/dest/monitors/monitors.json")).toBe('{"monitors":[]}');
-      expect(snapshot.files.get("/dest/bin/helper")).toBe("#!/usr/bin/env bash\n");
-      expect(snapshot.files.get("/dest/settings.json")).toBe("{}");
+      expect(snapshotFile(snapshot, "/dest/themes/dark.json")).toBe('{"name":"dark"}');
+      expect(snapshotFile(snapshot, "/dest/monitors/monitors.json")).toBe('{"monitors":[]}');
+      expect(snapshotFile(snapshot, "/dest/bin/helper")).toBe("#!/usr/bin/env bash\n");
+      expect(snapshotFile(snapshot, "/dest/settings.json")).toBe("{}");
     })
   );
 });
@@ -385,7 +391,7 @@ describe("Plugin.write — errors", () => {
       const raised = yield* Effect.flip(Define.write(def, "/dest").pipe(Effect.provide(fileSystem.layer)));
 
       expect(raised).toBeInstanceOf(PluginWriteError);
-      expect(fileSystem.snapshot().files.has("/outside.md")).toBe(false);
+      expect(snapshotHasFile(fileSystem.snapshot(), "/outside.md")).toBe(false);
     })
   );
 
@@ -435,3 +441,4 @@ describe("Plugin.write — errors", () => {
     })
   );
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

@@ -5,14 +5,13 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $PostgresId } from "@beep/identity";
 import { A, O, Str } from "@beep/utils";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { formatToMillis } from "drizzle-orm/migrator.utils";
 import * as PgEffectSessionMigrator from "drizzle-orm/pg-core/effect";
-import { Context, Effect, flow, Layer, Order, pipe } from "effect";
+import { Context, Crypto, Effect, Encoding, flow, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Statement from "effect/unstable/sql/Statement";
@@ -552,12 +551,20 @@ const reconcileLegacyMigrationNames = Effect.fn("Postgres.reconcileLegacyMigrati
 // The drizzle v1 journal matches pending migrations by name alone, and its
 // matcher treats a falsy name as "always run" — so the schema rejects unnamed
 // entries before they can silently re-apply on every boot.
-const migrationMetaFromBundleEntry = (entry: MigrationBundleEntry): MigrationMeta => ({
-  bps: true,
-  folderMillis: formatToMillis(Str.slice(0, 14)(entry.name)),
-  hash: createHash("sha256").update(entry.sql).digest("hex"),
-  name: entry.name,
-  sql: pipe(entry.sql, Str.split("--> statement-breakpoint"), A.flatMap(splitLegacyMigrationStatement)),
+const migrationMetaFromBundleEntry = Effect.fn("Postgres.migrationMetaFromBundleEntry")(function* (
+  entry: MigrationBundleEntry
+): Effect.fn.Return<MigrationMeta, PostgresError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", new TextEncoder().encode(entry.sql))
+    .pipe(Effect.mapError((cause) => PostgresError.fromUnknown("migrateBundle", cause)));
+  return {
+    bps: true,
+    folderMillis: formatToMillis(Str.slice(0, 14)(entry.name)),
+    hash: Encoding.encodeHex(digest),
+    name: entry.name,
+    sql: pipe(entry.sql, Str.split("--> statement-breakpoint"), A.flatMap(splitLegacyMigrationStatement)),
+  };
 });
 
 const decodeMigrationBundleConfig = S.decodeUnknownEffect(MigrationBundleConfig);
@@ -593,29 +600,27 @@ export const migrateBundle: {
   <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
     db: PostgresDrizzleDatabase<TSchema, TRelations>,
     config: MigrationBundleConfig
-  ): Effect.Effect<undefined, PostgresError>;
+  ): Effect.Effect<undefined, PostgresError, Crypto.Crypto>;
   (
     config: MigrationBundleConfig
   ): <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
     db: PostgresDrizzleDatabase<TSchema, TRelations>
-  ) => Effect.Effect<undefined, PostgresError>;
+  ) => Effect.Effect<undefined, PostgresError, Crypto.Crypto>;
 } = dual(
   2,
   <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
     db: PostgresDrizzleDatabase<TSchema, TRelations>,
     config: MigrationBundleConfig
-  ): Effect.Effect<undefined, PostgresError> =>
+  ): Effect.Effect<undefined, PostgresError, Crypto.Crypto> =>
     decodeMigrationBundleConfig(config).pipe(
       Effect.mapError((cause) => PostgresError.fromUnknown("migrateBundle", cause)),
-      Effect.map((decoded) => ({
-        config: decoded,
-        // String ordering mirrors readMigrationFiles' folder ordering.
-        migrations: pipe(
-          decoded.migrations,
-          A.sortWith((entry) => entry.name, Order.String),
-          A.map(migrationMetaFromBundleEntry)
-        ),
-      })),
+      Effect.flatMap((decoded) =>
+        Effect.forEach(
+          A.sortWith(decoded.migrations, (entry) => entry.name, Order.String),
+          migrationMetaFromBundleEntry,
+          { concurrency: "unbounded" }
+        ).pipe(Effect.map((migrations) => ({ config: decoded, migrations })))
+      ),
       Effect.flatMap(
         Effect.fn(function* ({ config: decoded, migrations }) {
           const legacyNameSets = pipe(

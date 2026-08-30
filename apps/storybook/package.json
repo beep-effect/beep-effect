@@ -16,8 +16,8 @@
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "bun run storybook:build",
     "beep:check": "tsgo -p tsconfig.check.json && tsc -p tsconfig.stories.json --noEmit",
-    "beep:lint": "biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ ../../packages/foundation/ui-system/*/stories/",
-    "beep:lint:fix": "biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ ../../packages/foundation/ui-system/*/stories/ --write",
+    "beep:lint": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/'",
+    "beep:lint:fix": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/ --write'",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
@@ -29,10 +29,10 @@
     "storybook:start": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
     "test": "bun run beep:test",
     "test:storybook": "bun run scripts/run-storybook-tests.mjs",
-    "test:storybook:dock-react": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/dock-react/stories",
-    "test:storybook:editor": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/editor/stories",
-    "test:storybook:graph-3d": "bun run scripts/run-storybook-tests.mjs ../../packages/drivers/graph-3d/stories",
-    "test:storybook:ui": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/ui/stories"
+    "test:storybook:dock-react": "bun run scripts/run-storybook-tests.mjs \"$(git rev-parse --show-toplevel)/packages/foundation/ui-system/dock-react/stories\"",
+    "test:storybook:editor": "bun run scripts/run-storybook-tests.mjs \"$(git rev-parse --show-toplevel)/packages/foundation/ui-system/editor/stories\"",
+    "test:storybook:graph-3d": "bun run scripts/run-storybook-tests.mjs \"$(git rev-parse --show-toplevel)/packages/drivers/graph-3d/stories\"",
+    "test:storybook:ui": "bun run scripts/run-storybook-tests.mjs \"$(git rev-parse --show-toplevel)/packages/foundation/ui-system/ui/stories\""
   },
   "dependencies": {
     "@beep/graph-3d": "workspace:^",

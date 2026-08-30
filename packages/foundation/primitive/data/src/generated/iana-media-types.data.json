@@ -11504,17 +11504,17 @@
       "name": "dsr-es202050",
       "registryName": "dsr-es202050"
     },
-    "audio/dsr-es202211": {
-      "type": "audio/dsr-es202211",
+    "audio/dsr-es202411": {
+      "type": "audio/dsr-es202411",
       "topLevel": "audio",
-      "name": "dsr-es202211",
-      "registryName": "dsr-es202211"
+      "name": "dsr-es202411",
+      "registryName": "dsr-es202411"
     },
-    "audio/dsr-es202212": {
-      "type": "audio/dsr-es202212",
+    "audio/dsr-es202412": {
+      "type": "audio/dsr-es202412",
       "topLevel": "audio",
-      "name": "dsr-es202212",
-      "registryName": "dsr-es202212"
+      "name": "dsr-es202412",
+      "registryName": "dsr-es202412"
     },
     "audio/dv": {
       "type": "audio/dv",

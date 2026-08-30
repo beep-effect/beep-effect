@@ -1,11 +1,10 @@
 /**
- * Stop hook event.
+ * Fires when Claude finishes responding and is about to end its turn. A
+ * handler can return `block` with a reason to force Claude to continue
+ * instead of stopping. Does not support a matcher. See
+ * https://code.claude.com/docs/en/hooks#stop.
  *
- * Fires when Claude finishes responding and is about to end its turn.
- * A handler can return `block` with a reason to force Claude to continue
- * the conversation instead of stopping. Does not support a matcher.
- * See https://code.claude.com/docs/en/hooks#stop.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -23,18 +22,25 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/Stop");
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `BackgroundTask`.
+ * Background task still running when a turn is about to stop.
  *
- * **Example** (Inspect the BackgroundTask schema)
+ * **Example** (Decode a background task)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Stop.BackgroundTask)
+ * const task = S.decodeUnknownSync(Hook.Stop.BackgroundTask)({
+ *   id: "task-1",
+ *   type: "bash",
+ *   status: "running",
+ * })
+ *
+ * console.log(task.id) // "task-1"
  * ```
  *
+ * @see {@link Input} for the stop payload that lists these tasks.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class BackgroundTask extends S.Class<BackgroundTask>($I`BackgroundTask`)(
@@ -55,18 +61,27 @@ export class BackgroundTask extends S.Class<BackgroundTask>($I`BackgroundTask`)(
 ) {}
 
 /**
- * Schema for `SessionCron`.
+ * Scheduled prompt still armed in the session when a turn is about to
+ * stop.
  *
- * **Example** (Inspect the SessionCron schema)
+ * **Example** (Decode a session cron)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Stop.SessionCron)
+ * const cron = S.decodeUnknownSync(Hook.Stop.SessionCron)({
+ *   id: "cron-1",
+ *   schedule: "0 * * * *",
+ *   recurring: true,
+ *   prompt: "Check CI",
+ * })
+ *
+ * console.log(cron.schedule) // "0 * * * *"
  * ```
  *
+ * @see {@link Input} for the stop payload that lists these crons.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class SessionCron extends S.Class<SessionCron>($I`SessionCron`)(
@@ -82,18 +97,28 @@ export class SessionCron extends S.Class<SessionCron>($I`SessionCron`)(
 ) {}
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a Stop hook, including whether a stop hook is
+ * already active and any background tasks or session crons.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a turn-end payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Stop.Input)
+ * const input = S.decodeUnknownSync(Hook.Stop.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "Stop",
+ *   stop_hook_active: false,
+ * })
+ *
+ * console.log(input.stop_hook_active) // false
  * ```
  *
+ * @see {@link block} for forcing Claude to continue this turn.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`StopInput`)(
@@ -115,18 +140,24 @@ export class Input extends S.Class<Input>($I`StopInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that injects `additionalContext` at turn end.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect additional context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Stop.HookSpecificOutput)
+ * const specific = Hook.Stop.HookSpecificOutput.make({
+ *   hookEventName: "Stop",
+ *   additionalContext: O.some("The CI job is still red"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "The CI job is still red"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`StopHookSpecificOutput`)(
@@ -140,18 +171,22 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`StopHookS
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a Stop handler returns. `decision: "block"` forces the
+ * turn to continue; empty output lets Claude stop.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Stop.Output)
+ * const output = Hook.Stop.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link allowStop} for letting the turn end.
+ * @see {@link block} for forcing continuation.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`StopOutput`)(
@@ -175,16 +210,21 @@ export class Output extends S.Class<Output>($I`StopOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Allow Claude to stop its turn (the default).
+ * Allow Claude to stop its turn (the default). Equivalent to empty
+ * `Output.make()`.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Let the turn end)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Stop.allowStop)
+ * const output = Hook.Stop.allowStop()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for forcing Claude to continue.
+ * @see {@link addContext} for injecting context without continuing.
  * @category constructors
  * @since 0.0.0
  */
@@ -192,34 +232,48 @@ export const allowStop = (): Output => Output.make();
 
 /**
  * Force Claude to continue responding by emitting `decision: "block"`.
- * The `reason` is fed back to Claude as instructions for the continuation.
+ * The `reason` is fed back to Claude as instructions for the
+ * continuation.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * This is not a halt. Unlike ConfigChange/PreCompact `block`, Stop
+ * `block` means "keep going".
+ *
+ * **Example** (Keep investigating)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Stop.block)
+ * const output = Hook.Stop.block("continue investigating X")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "continue investigating X"
  * ```
  *
+ * @see {@link allowStop} for letting the turn end.
  * @category constructors
  * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
- * Constructor for `addContext`.
+ * Inject additional context at turn end without forcing continuation.
  *
- * **Example** (Use addContext)
+ * **Example** (Leave a reminder as the turn ends)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Stop.addContext)
+ * const output = Hook.Stop.addContext("The CI job is still red")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "The CI job is still red"
  * ```
  *
+ * @see {@link block} for forcing continuation instead.
+ * @see {@link allowStop} for ending the turn with no extra context.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
@@ -237,18 +291,23 @@ export const addContext = (additionalContext: string): Output =>
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable Stop hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a Stop hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Stop.define)
+ * const hook = Hook.Stop.define({
+ *   handler: () => Effect.succeed(Hook.Stop.allowStop()),
+ * })
+ *
+ * console.log(hook.event) // "Stop"
  * ```
  *
+ * @see {@link block} for the continuation decision a handler may return.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

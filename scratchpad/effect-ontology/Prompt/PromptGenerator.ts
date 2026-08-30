@@ -20,30 +20,15 @@ import * as Str from "effect/String";
 import * as Prompt from "effect/unstable/ai/Prompt";
 import { Entity } from "../Domain/Model/Entity.ts";
 import { ImageForPrompt } from "../Domain/Model/Image.ts";
-import { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { ClassDefinition, PropertyDefinition, partitionPropertiesByRangeType } from "../Domain/Model/Ontology.ts";
 import { dual2, dual3, dual4 } from "../Utils/Dual.ts";
+import { extractLocalNameFromIri } from "../Utils/Iri.ts";
+import type { PromptDoc } from "./Doc.ts";
+import { Doc } from "./Doc.ts";
 import type { RuleSet } from "./RuleSet.ts";
 import { makeEntityRuleSet, makeMentionRuleSet, makeRelationRuleSet } from "./RuleSet.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Prompt/PromptGenerator");
-
-/** Internal plain-text document assembled before rendering a prompt message. */
-type PromptDoc = string;
-
-const Doc = {
-  empty: "",
-  text: (value: string): PromptDoc => value,
-  vsep: (documents: ReadonlyArray<PromptDoc>): PromptDoc => A.join(documents, "\n"),
-  render: (document: PromptDoc, _options?: unknown): string => document,
-};
-
-const extractLocalNameFromIri = (iri: string): string =>
-  pipe(
-    Str.split(/[/#]/)(iri),
-    A.filter(Str.isNonEmpty),
-    A.last,
-    O.getOrElse(() => iri)
-  );
 
 const optionText = (fallback: string): ((value: O.Option<string>) => string) => O.getOrElse(() => fallback);
 
@@ -71,16 +56,19 @@ const PromptRole = LiteralKit(["user", "assistant"]).pipe(
 /**
  * Ontology definitions and prior-stage values available while building a prompt.
  *
- * **Example** (Create entity-extraction context)
+ * **Example** (Create an empty-ontology mention context)
  *
  * ```ts
  * import { OntologyPromptContext } from "@effect-ontology/Prompt/PromptGenerator"
+ * import * as O from "effect/Option"
  *
  * const context = OntologyPromptContext.make({
  *   classes: [],
  *   objectProperties: [],
  *   datatypeProperties: []
  * })
+ * console.log(context.classes.length) // 0
+ * console.log(O.isNone(context.imageContexts)) // true
  * ```
  *
  * @category models
@@ -837,6 +825,23 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
   return Doc.vsep(lines);
 };
 
+const buildCoreSystemSections = (ruleSet: RuleSet, ctx: OntologyPromptContext): Array<PromptDoc> => {
+  const sections = [buildTaskSection(ruleSet.stage), Doc.empty, buildRulesSection(ruleSet)];
+
+  if (ruleSet.stage === "entity") {
+    sections.push(Doc.empty, buildDulHierarchySection(ctx));
+    sections.push(Doc.empty, buildNamespacePrefixSection(ctx));
+    sections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
+    sections.push(Doc.empty, buildOntologySection(ctx));
+  } else if (ruleSet.stage === "relation") {
+    sections.push(Doc.empty, buildEntitiesSection(ctx));
+    sections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
+    sections.push(Doc.empty, buildPropertiesSection(ctx));
+  }
+
+  return sections;
+};
+
 // =============================================================================
 // Public API
 // =============================================================================
@@ -870,27 +875,7 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
  */
 export const generateStructuredPrompt = dual3(
   (text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): StructuredPrompt => {
-    // Build system message sections (cacheable)
-    const systemSections: Array<PromptDoc> = [
-      buildTaskSection(ruleSet.stage),
-      Doc.empty,
-      // Critical rules FIRST so they aren't lost in context
-      buildRulesSection(ruleSet),
-    ];
-
-    // Stage-specific sections
-    if (ruleSet.stage === "entity") {
-      // Add DUL hierarchy section for Object vs Event distinction
-      systemSections.push(Doc.empty, buildDulHierarchySection(ctx));
-      // Add namespace prefix section for entity extraction (explains local name usage)
-      systemSections.push(Doc.empty, buildNamespacePrefixSection(ctx));
-      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-      systemSections.push(Doc.empty, buildOntologySection(ctx));
-    } else if (ruleSet.stage === "relation") {
-      systemSections.push(Doc.empty, buildEntitiesSection(ctx));
-      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-      systemSections.push(Doc.empty, buildPropertiesSection(ctx));
-    }
+    const systemSections = buildCoreSystemSections(ruleSet, ctx);
 
     // Common sections - Output Format closes the instructions
     systemSections.push(Doc.empty, buildOutputFormatSection(ruleSet.stage));
@@ -956,26 +941,7 @@ export const generateStructuredPromptWithExamples = dual4(
     ctx: OntologyPromptContext,
     examples: ReadonlyArray<ScoredExample>
   ): StructuredPromptWithExamples => {
-    // Build base system message sections (cacheable)
-    const systemSections: Array<PromptDoc> = [
-      buildTaskSection(ruleSet.stage),
-      Doc.empty,
-      // Critical rules FIRST so they aren't lost in context
-      buildRulesSection(ruleSet),
-    ];
-
-    // Stage-specific sections
-    if (ruleSet.stage === "entity") {
-      // Add DUL hierarchy section for Object vs Event distinction
-      systemSections.push(Doc.empty, buildDulHierarchySection(ctx));
-      systemSections.push(Doc.empty, buildNamespacePrefixSection(ctx));
-      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-      systemSections.push(Doc.empty, buildOntologySection(ctx));
-    } else if (ruleSet.stage === "relation") {
-      systemSections.push(Doc.empty, buildEntitiesSection(ctx));
-      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-      systemSections.push(Doc.empty, buildPropertiesSection(ctx));
-    }
+    const systemSections = buildCoreSystemSections(ruleSet, ctx);
 
     // Add negative examples as warnings in system message
     const negativeSection = buildNegativeExamplesSection(examples);
@@ -1149,8 +1115,7 @@ export const generateStructuredRelationPrompt = dual3(
     const entityIds = A.map(entities, (entity) => entity.id);
     const ruleSet = makeRelationRuleSet(entityIds, properties);
 
-    const objectProperties = A.filter(properties, (property) => property.rangeType === "object");
-    const datatypeProperties = A.filter(properties, (property) => property.rangeType === "datatype");
+    const { objectProperties, datatypeProperties } = partitionPropertiesByRangeType(properties);
 
     return generateStructuredPrompt(
       text,

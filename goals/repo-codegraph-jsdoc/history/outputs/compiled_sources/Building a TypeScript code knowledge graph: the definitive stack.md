@@ -1,5 +1,8 @@
 # Building a TypeScript code knowledge graph: the definitive stack
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 **FalkorDB, Claude Sonnet 4.5, Voyage Code 3, and ts-morph form the optimal foundation for a hybrid AST-JSDoc knowledge graph system in a Turborepo monorepo.** This stack delivers zero-config embedded development, research-backed graph schema design, and incremental indexing that avoids full-repo recomputation. The recommendations below are grounded in benchmarks, production evidence from systems like Sourcegraph and CodeQL, and the ICSE 2025 paper proving that graph-structured code context significantly outperforms flat retrieval for AI code generation.
 
 The system architecture centers on a proven pattern: tree-sitter for fast incremental parsing, ts-morph for deep type resolution, FalkorDB for graph storage with native vector search, and an MCP server that extracts sub-graphs to ground AI coding agents. Every choice below optimizes for quality first, with cost as secondary consideration.

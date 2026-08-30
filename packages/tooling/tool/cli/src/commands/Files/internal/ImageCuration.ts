@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import {
   FaceDetectionImageRequest,
   FaceDetectionModelConfig,
@@ -15,10 +14,22 @@ import {
 } from "@beep/face-detection";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
+import {
+  Console,
+  Crypto,
+  Effect,
+  Encoding,
+  FileSystem,
+  MutableHashMap,
+  MutableHashSet,
+  Order,
+  Path,
+  pipe,
+} from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import sharp from "sharp";
+import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { hashFileSha256 as hashFileSha256Hex } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 import { isSupportedMetadataImageExtension, normalizeBareExtension } from "../Files.media.ts";
@@ -44,7 +55,6 @@ import {
 import { FileSha256Hash } from "./Media.schemas.ts";
 import type { LoadedFaceDetector } from "@beep/face-detection";
 import type { Terminal } from "effect";
-import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ImageAuditOptions } from "./ImageAudit.schemas.ts";
 import type {
@@ -73,6 +83,8 @@ interface AuditSourceCollection {
   readonly files: ReadonlyArray<AuditSourceFile>;
   readonly skipped: ReadonlyArray<ImageAuditSkippedEntry>;
 }
+
+type AuditSourceResult = readonly [file: O.Option<AuditSourceFile>, skipped: O.Option<ImageAuditSkippedEntry>];
 
 interface AuditedPixels {
   readonly colorHash: string;
@@ -240,6 +252,51 @@ const canonicalizeImageTargetPath = Effect.fn("Files.canonicalizeImageTargetPath
   }
 });
 
+const skippedAuditSource = (sourceName: string, sourcePath: string, message: string): AuditSourceResult => [
+  O.none(),
+  O.some(ImageAuditSkippedEntry.make({ message, sourceName, sourcePath })),
+];
+
+const collectAuditSource = Effect.fn("Files.collectImageAuditSource")(function* (
+  canonicalDirectory: string,
+  name: string
+): Effect.fn.Return<AuditSourceResult, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sourcePath = path.join(canonicalDirectory, name);
+  const canonicalPath = yield* fs.realPath(sourcePath).pipe(Effect.option);
+
+  if (O.isNone(canonicalPath) || canonicalPath.value !== sourcePath) {
+    return skippedAuditSource(name, sourcePath, "Symlinks and unresolvable entries are not audited.");
+  }
+
+  const stat = yield* fs
+    .stat(sourcePath)
+    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stat image audit source", sourcePath, { cause })));
+  if (stat.type !== "File") {
+    return skippedAuditSource(name, sourcePath, "Only direct regular image files are audited.");
+  }
+  if (Number(stat.size) > maxAuditSourceBytes) {
+    return skippedAuditSource(name, sourcePath, `Image exceeds the ${maxAuditSourceBytes}-byte audit limit.`);
+  }
+
+  const extension = path.extname(name);
+  if (!isSupportedMetadataImageExtension(normalizeBareExtension(extension))) {
+    return skippedAuditSource(name, sourcePath, "File extension is not supported by the image audit decoder.");
+  }
+
+  return [
+    O.some({
+      extension,
+      name,
+      path: sourcePath,
+      relativePath: path.relative(canonicalDirectory, sourcePath),
+      size: `${stat.size}`,
+    }),
+    O.none(),
+  ];
+});
+
 const collectAuditSources = Effect.fn("Files.collectImageAuditSources")(function* (
   directory: string
 ): Effect.fn.Return<AuditSourceCollection, FilesCommandError, FileSystem.FileSystem | Path.Path> {
@@ -274,76 +331,15 @@ const collectAuditSources = Effect.fn("Files.collectImageAuditSources")(function
         formatPlatformError("Failed to read image audit directory", canonicalDirectory, { cause })
       )
     );
-  let files = A.empty<AuditSourceFile>();
-  let skipped = A.empty<ImageAuditSkippedEntry>();
-
-  for (const name of A.sort(names, Order.String)) {
-    const sourcePath = path.join(canonicalDirectory, name);
-    const canonicalPath = yield* fs.realPath(sourcePath).pipe(Effect.option);
-
-    if (O.isNone(canonicalPath) || canonicalPath.value !== sourcePath) {
-      skipped = A.append(
-        skipped,
-        ImageAuditSkippedEntry.make({
-          message: "Symlinks and unresolvable entries are not audited.",
-          sourceName: name,
-          sourcePath,
-        })
-      );
-      continue;
+  const results = yield* Effect.forEach(
+    A.sort(names, Order.String),
+    (name) => collectAuditSource(canonicalDirectory, name),
+    {
+      concurrency: 1,
     }
-
-    const stat = yield* fs
-      .stat(sourcePath)
-      .pipe(
-        Effect.mapError((cause) => formatPlatformError("Failed to stat image audit source", sourcePath, { cause }))
-      );
-
-    if (stat.type !== "File") {
-      skipped = A.append(
-        skipped,
-        ImageAuditSkippedEntry.make({
-          message: "Only direct regular image files are audited.",
-          sourceName: name,
-          sourcePath,
-        })
-      );
-      continue;
-    }
-
-    if (Number(stat.size) > maxAuditSourceBytes) {
-      skipped = A.append(
-        skipped,
-        ImageAuditSkippedEntry.make({
-          message: `Image exceeds the ${maxAuditSourceBytes}-byte audit limit.`,
-          sourceName: name,
-          sourcePath,
-        })
-      );
-      continue;
-    }
-
-    const extension = path.extname(name);
-    if (!isSupportedMetadataImageExtension(normalizeBareExtension(extension))) {
-      skipped = A.append(
-        skipped,
-        ImageAuditSkippedEntry.make({
-          message: "File extension is not supported by the image audit decoder.",
-          sourceName: name,
-          sourcePath,
-        })
-      );
-      continue;
-    }
-
-    files = A.append(files, {
-      extension,
-      name,
-      path: sourcePath,
-      relativePath: path.relative(canonicalDirectory, sourcePath),
-      size: `${stat.size}`,
-    });
-  }
+  );
+  const files = A.getSomes(A.map(results, ([file]) => file));
+  const skipped = A.getSomes(A.map(results, ([, skippedEntry]) => skippedEntry));
 
   return {
     canonicalDirectory,
@@ -499,7 +495,7 @@ const imageAuditMetadataPresence = (metadata: SharpMetadata): ImageAuditMetadata
 
 const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   source: AuditSourceFile
-): Effect.fn.Return<AuditedPixels, FilesCommandError> {
+): Effect.fn.Return<AuditedPixels, FilesCommandError, Crypto.Crypto> {
   const metadata = yield* Effect.tryPromise({
     try: () => sharp(source.path, { failOn: "error", limitInputPixels: maxAuditPixels }).metadata(),
     catch: FilesCommandError.new(`Failed to decode image audit pixels for "${source.path}"`),
@@ -555,7 +551,12 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   const decodedHeader = new TextEncoder().encode(
     `${decoded.info.width}x${decoded.info.height}x${decoded.info.channels}:`
   );
-  const decodedHash = createHash("sha256").update(decodedHeader).update(decoded.data).digest("hex");
+  const crypto = yield* Crypto.Crypto;
+  const decodedHash = Encoding.encodeHex(
+    yield* crypto
+      .digest("SHA-256", concatBytes([decodedHeader, decoded.data]))
+      .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`))
+  );
 
   return {
     colorHash: colorHashFromRgb(color.data, color.info.channels),
@@ -624,65 +625,91 @@ const colorHashDistance = (left: string, right: string): number => {
   return roundMetric(length === 0 ? 1 : total / (length * 15));
 };
 
-const candidateSimilarityPairs = (entries: ReadonlyArray<ImageAuditEntry>) => {
-  let pairs = A.empty<ImageAuditSimilarityPair>();
-  for (let leftIndex = 0; leftIndex < entries.length; leftIndex += 1) {
-    const left = entries[leftIndex];
-    if (left === undefined) continue;
-    for (let rightIndex = leftIndex + 1; rightIndex < entries.length; rightIndex += 1) {
-      const right = entries[rightIndex];
-      if (right === undefined) continue;
-      const perceptualDistance = hexHammingDistance(left.perceptualHash, right.perceptualHash);
-      if (perceptualDistance > 24) continue;
-      const colorDistance = colorHashDistance(left.colorHash, right.colorHash);
-      if (colorDistance > 0.42) continue;
-      pairs = A.append(
-        pairs,
-        ImageAuditSimilarityPair.make({
-          colorDistance,
-          perceptualDistance,
-          sourceNameA: left.sourceName,
-          sourceNameB: right.sourceName,
-        })
-      );
-    }
-  }
-  return pairs;
+const candidateSimilarityPair = (left: ImageAuditEntry, right: ImageAuditEntry): O.Option<ImageAuditSimilarityPair> => {
+  const perceptualDistance = hexHammingDistance(left.perceptualHash, right.perceptualHash);
+  if (perceptualDistance > 24) return O.none();
+  const colorDistance = colorHashDistance(left.colorHash, right.colorHash);
+  if (colorDistance > 0.42) return O.none();
+  return O.some(
+    ImageAuditSimilarityPair.make({
+      colorDistance,
+      perceptualDistance,
+      sourceNameA: left.sourceName,
+      sourceNameB: right.sourceName,
+    })
+  );
 };
+
+const candidateSimilarityPairs = (entries: ReadonlyArray<ImageAuditEntry>): ReadonlyArray<ImageAuditSimilarityPair> =>
+  A.flatMap(entries, (left, leftIndex) =>
+    A.getSomes(A.map(A.drop(entries, leftIndex + 1), (right) => candidateSimilarityPair(left, right)))
+  );
+
+const findClusterRoot = (parents: Array<number>, index: number): number => {
+  let current = index;
+  while (parents[current] !== current) current = parents[current] ?? current;
+  let compressed = index;
+  while (parents[compressed] !== current) {
+    const next = parents[compressed] ?? current;
+    parents[compressed] = current;
+    compressed = next;
+  }
+  return current;
+};
+
+const connectDuplicatePair = (
+  parents: Array<number>,
+  indexByName: MutableHashMap.MutableHashMap<string, number>,
+  pair: ImageAuditSimilarityPair
+): void => {
+  if (pair.perceptualDistance > 12 || pair.colorDistance > 0.3) return;
+  const left = MutableHashMap.get(indexByName, pair.sourceNameA);
+  const right = MutableHashMap.get(indexByName, pair.sourceNameB);
+  if (O.isNone(left) || O.isNone(right)) return;
+  const leftRoot = findClusterRoot(parents, left.value);
+  const rightRoot = findClusterRoot(parents, right.value);
+  if (leftRoot !== rightRoot) parents[rightRoot] = leftRoot;
+};
+
+const duplicateClusterParents = (
+  entries: ReadonlyArray<ImageAuditEntry>,
+  pairs: ReadonlyArray<ImageAuditSimilarityPair>,
+  indexByName: MutableHashMap.MutableHashMap<string, number>
+): Array<number> => {
+  const parents = A.map(entries, (_entry, index) => index);
+  A.forEach(pairs, (pair) => connectDuplicatePair(parents, indexByName, pair));
+  return parents;
+};
+
+const duplicateClusterGroup = (names: ReadonlyArray<string>): O.Option<A.NonEmptyReadonlyArray<string>> =>
+  A.match(names, {
+    onEmpty: O.none<A.NonEmptyReadonlyArray<string>>,
+    onNonEmpty: (nonEmptyNames) =>
+      A.length(nonEmptyNames) > 1 ? O.some(nonEmptyNames) : O.none<A.NonEmptyReadonlyArray<string>>(),
+  });
+
+const sortDuplicateClusterGroup = (names: A.NonEmptyReadonlyArray<string>): A.NonEmptyReadonlyArray<string> =>
+  A.match(A.sort(names, Order.String), {
+    onEmpty: () => names,
+    onNonEmpty: (sortedNames) => sortedNames,
+  });
+
+const duplicateClusterGroupOrder: Order.Order<A.NonEmptyReadonlyArray<string>> = Order.mapInput(
+  Order.String,
+  (names: A.NonEmptyReadonlyArray<string>) => A.headNonEmpty(names)
+);
 
 const duplicateClusters = (
   entries: ReadonlyArray<ImageAuditEntry>,
   pairs: ReadonlyArray<ImageAuditSimilarityPair>
 ): ReadonlyArray<ImageAuditCluster> => {
   const indexByName = MutableHashMap.empty<string, number>();
-  const parents = entries.map((_entry, index) => index);
-  entries.forEach((entry, index) => MutableHashMap.set(indexByName, entry.sourceName, index));
-
-  const find = (index: number): number => {
-    let current = index;
-    while (parents[current] !== current) current = parents[current] ?? current;
-    let compressed = index;
-    while (parents[compressed] !== current) {
-      const next = parents[compressed] ?? current;
-      parents[compressed] = current;
-      compressed = next;
-    }
-    return current;
-  };
-
-  for (const pair of pairs) {
-    if (pair.perceptualDistance > 12 || pair.colorDistance > 0.3) continue;
-    const left = MutableHashMap.get(indexByName, pair.sourceNameA);
-    const right = MutableHashMap.get(indexByName, pair.sourceNameB);
-    if (O.isNone(left) || O.isNone(right)) continue;
-    const leftRoot = find(left.value);
-    const rightRoot = find(right.value);
-    if (leftRoot !== rightRoot) parents[rightRoot] = leftRoot;
-  }
+  A.forEach(entries, (entry, index) => MutableHashMap.set(indexByName, entry.sourceName, index));
+  const parents = duplicateClusterParents(entries, pairs, indexByName);
 
   const grouped = MutableHashMap.empty<number, ReadonlyArray<string>>();
-  entries.forEach((entry, index) => {
-    const root = find(index);
+  A.forEach(entries, (entry, index) => {
+    const root = findClusterRoot(parents, index);
     MutableHashMap.set(
       grouped,
       root,
@@ -690,16 +717,18 @@ const duplicateClusters = (
     );
   });
 
-  return A.fromIterable(MutableHashMap.values(grouped))
-    .filter((names) => names.length > 1)
-    .map((names) => A.sort(names, Order.String))
-    .sort((left, right) => (left[0] ?? "").localeCompare(right[0] ?? ""))
-    .map((names, index) =>
-      ImageAuditCluster.make({
-        id: `duplicate-${`${index + 1}`.padStart(3, "0")}`,
-        sourceNames: names as [string, ...Array<string>],
-      })
-    );
+  let nonEmptyGroups = A.empty<A.NonEmptyReadonlyArray<string>>();
+  for (const names of MutableHashMap.values(grouped)) {
+    const group = duplicateClusterGroup(names);
+    if (O.isSome(group)) nonEmptyGroups = A.append(nonEmptyGroups, group.value);
+  }
+  const sortedGroups = pipe(nonEmptyGroups, A.map(sortDuplicateClusterGroup), A.sort(duplicateClusterGroupOrder));
+  return A.map(sortedGroups, (names, index) =>
+    ImageAuditCluster.make({
+      id: `duplicate-${`${index + 1}`.padStart(3, "0")}`,
+      sourceNames: names,
+    })
+  );
 };
 
 const candidateSessionClusters = (entries: ReadonlyArray<ImageAuditEntry>): ReadonlyArray<ImageAuditCluster> => {
@@ -1166,6 +1195,42 @@ const canonicalizePreparedCurationEntries = Effect.fn("Files.canonicalizePrepare
   return canonicalEntries;
 });
 
+const requireSafeCurationDestination = Effect.fn("Files.requireSafeImageCurationDestination")(function* (
+  path: Pick<ImagePathOperations, "isAbsolute" | "relative">,
+  manifestPath: string,
+  decisionDocumentPath: string,
+  outputDirectory: string,
+  outputPaths: MutableHashSet.MutableHashSet<string>,
+  entry: PreparedCurationEntry
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!pathsOverlap(path, outputDirectory, entry.outputPath)) {
+    return yield* FilesCommandError.make({
+      message: `Image curation derivative must remain inside output directory "${outputDirectory}": "${entry.outputPath}".`,
+    });
+  }
+  if (MutableHashSet.has(outputPaths, entry.outputPath)) {
+    return yield* FilesCommandError.make({
+      message: `Duplicate image curation output path: "${entry.outputPath}"`,
+    });
+  }
+  MutableHashSet.add(outputPaths, entry.outputPath);
+
+  if (
+    pathsOverlap(path, decisionDocumentPath, entry.outputPath) ||
+    pathsOverlap(path, entry.outputPath, decisionDocumentPath)
+  ) {
+    return yield* FilesCommandError.make({
+      message: `Image curation derivative must not overlap decision ledger "${decisionDocumentPath}".`,
+    });
+  }
+
+  if (pathsOverlap(path, manifestPath, entry.outputPath) || pathsOverlap(path, entry.outputPath, manifestPath)) {
+    return yield* FilesCommandError.make({
+      message: `Image curation manifest must not overlap generated derivative "${entry.outputPath}".`,
+    });
+  }
+});
+
 const requireSafeCurationDestinations = Effect.fn("Files.requireSafeImageCurationDestinations")(function* (
   path: Pick<ImagePathOperations, "isAbsolute" | "relative">,
   manifestPath: string,
@@ -1175,34 +1240,14 @@ const requireSafeCurationDestinations = Effect.fn("Files.requireSafeImageCuratio
 ): Effect.fn.Return<void, FilesCommandError> {
   const outputPaths = MutableHashSet.empty<string>();
   for (const entry of entries) {
-    if (!pathsOverlap(path, outputDirectory, entry.outputPath)) {
-      return yield* FilesCommandError.make({
-        message: `Image curation derivative must remain inside output directory "${outputDirectory}": "${entry.outputPath}".`,
-      });
-    }
-    if (MutableHashSet.has(outputPaths, entry.outputPath)) {
-      return yield* FilesCommandError.make({
-        message: `Duplicate image curation output path: "${entry.outputPath}"`,
-      });
-    }
-    MutableHashSet.add(outputPaths, entry.outputPath);
-
-    const outputOverlapsDecision =
-      pathsOverlap(path, decisionDocumentPath, entry.outputPath) ||
-      pathsOverlap(path, entry.outputPath, decisionDocumentPath);
-    if (outputOverlapsDecision) {
-      return yield* FilesCommandError.make({
-        message: `Image curation derivative must not overlap decision ledger "${decisionDocumentPath}".`,
-      });
-    }
-
-    const manifestOverlapsOutput =
-      pathsOverlap(path, manifestPath, entry.outputPath) || pathsOverlap(path, entry.outputPath, manifestPath);
-    if (manifestOverlapsOutput) {
-      return yield* FilesCommandError.make({
-        message: `Image curation manifest must not overlap generated derivative "${entry.outputPath}".`,
-      });
-    }
+    yield* requireSafeCurationDestination(
+      path,
+      manifestPath,
+      decisionDocumentPath,
+      outputDirectory,
+      outputPaths,
+      entry
+    );
   }
 });
 

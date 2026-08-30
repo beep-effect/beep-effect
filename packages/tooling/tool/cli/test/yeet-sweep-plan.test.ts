@@ -495,7 +495,9 @@ describe("executeSweep", () => {
         const context = sweepContext(root);
         const report = yield* executeSweep(context);
         expect(A.map(report.steps, (step) => step.id)).toEqual([...SweepStepId.Options]);
-        expect(A.map(report.steps, (step) => step.outcome.status)).toEqual(A.map(report.steps, () => "executed"));
+        expect(A.map(report.steps, (step) => step.outcome.status)).toEqual(
+          A.map(report.steps, (step) => (step.id === "tmpfs-worktrees" ? "skipped" : "executed"))
+        );
 
         const fs = yield* FileSystem.FileSystem;
         const written = yield* fs.readFileString(yield* sweepReportPath(context));

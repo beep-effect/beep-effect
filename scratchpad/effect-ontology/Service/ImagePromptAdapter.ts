@@ -118,9 +118,15 @@ export interface ImagePromptAdapterService {
  * **Example** (Inspect image prompt adapter)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ImagePromptAdapter } from "@effect-ontology/Service/ImagePromptAdapter"
  *
- * console.log(ImagePromptAdapter)
+ * const program = Effect.gen(function* () {
+ *   const adapter = yield* ImagePromptAdapter
+ *   return adapter
+ * }).pipe(Effect.provide(ImagePromptAdapter.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -258,7 +264,7 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
  * ```ts
  * import { imagesToPromptParts } from "@effect-ontology/Service/ImagePromptAdapter"
  *
- * console.log(imagesToPromptParts)
+ * console.log(imagesToPromptParts([]).length) // 0
  * ```
  *
  * @param images - Images to convert
@@ -287,7 +293,7 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
  * ```ts
  * import { buildMultimodalContent } from "@effect-ontology/Service/ImagePromptAdapter"
  *
- * console.log(buildMultimodalContent)
+ * console.log(buildMultimodalContent("Ada founded Acme.", []).length) // 1
  * ```
  *
  * @param text - Text content

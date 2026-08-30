@@ -43,6 +43,8 @@ import {
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   reapAdmissionState,
+  runTmpfsReap,
+  TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
@@ -2749,6 +2751,54 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
   Command.withSubcommands([schedulerStatusCommand, schedulerReapCommand])
 );
 
+const renderTmpfsCandidateLine = (candidate: TmpfsReapReport["candidates"][number]): string => {
+  const bytes = pipe(
+    O.fromUndefinedOr(candidate.bytes),
+    O.map((value) => ` bytes=${value}`),
+    O.getOrElse(() => "")
+  );
+  const skip = pipe(
+    O.fromUndefinedOr(candidate.skipReason),
+    O.map((reason) => ` reason=${reason}`),
+    O.getOrElse(() => "")
+  );
+  return `- ${candidate.action} class=${candidate.reapClass} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
+};
+
+const tmpfsReapCommand = Command.make(
+  "tmpfs-reap",
+  {
+    apply: Flag.boolean("apply").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Apply eligible removals (default: loud dry-run only)")
+    ),
+    json: Flag.boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the encoded tmpfs-reap/v1 report as JSON")
+    ),
+  },
+  Effect.fn(function* ({ apply, json }) {
+    const report = yield* runTmpfsReap({ apply });
+    if (json) {
+      const encoded = yield* S.encodeUnknownEffect(TmpfsReapReport)(report);
+      yield* printLines([yield* jsonStringifyPretty(encoded)]);
+      return;
+    }
+    yield* printLines([
+      apply
+        ? "TMPFS REAP APPLY — removing only classified, idle artifacts with zero live references"
+        : "TMPFS REAP DRY RUN — nothing will be removed; pass --apply to reap eligible artifacts",
+      ...A.map(report.candidates, renderTmpfsCandidateLine),
+      `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
+      ...A.map(report.warnings, (warning) => `warning: ${warning}`),
+    ]);
+  })
+).pipe(
+  Command.withDescription(
+    "Dry-run-first janitor for idle tmpfs worktrees and tool artifacts; pass --apply from the janitor timer"
+  )
+);
+
 /**
  * Quality command group for repo operational checks.
  *
@@ -2786,6 +2836,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality knip --write-baseline",
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
     "- bun run beep quality profile detect",
+    "- bun run beep quality tmpfs-reap [--apply] [--json]",
     "- bun run beep quality package-verify @beep/repo-cli",
     "- bun run beep quality changeset-graph",
     "- bun run beep quality fallow audit --advisory",
@@ -2808,6 +2859,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     turboConfigProofCommand,
     qualityProfileCommand,
     qualitySchedulerCommand,
+    tmpfsReapCommand,
     packageVerifyCommand,
     changesetGraphCommand,
     changesetStatusCommand,

@@ -410,6 +410,7 @@ export class RepoStepRunResult extends S.Class<RepoStepRunResult>($I`RepoStepRun
     startedAt: S.optionalKey(S.String),
     endedAt: S.optionalKey(S.String),
     elapsedMs: S.optionalKey(S.Finite),
+    peakRssKb: S.optionalKey(S.Finite),
     output: S.optionalKey(S.String),
     rawOutputRef: S.optionalKey(S.String),
     truncated: S.optionalKey(S.Boolean),

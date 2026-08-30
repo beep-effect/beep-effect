@@ -13,15 +13,16 @@ import { migrateOnBoot } from "./MigrationRunner.ts";
  * Verifies the current PostgreSQL client and applies every pending canonical
  * effect-ontology migration in that same context.
  *
- * **Example** (Inspect database initialization)
+ * **Example** (Run connectivity then migrateOnBoot)
  *
  * ```ts
  * import { databaseReady } from "@effect-ontology/Runtime/Persistence/DatabaseReady"
+ * import { migrateOnBoot } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
  *
- * console.log(databaseReady)
+ * console.log(databaseReady() !== migrateOnBoot) // true
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const databaseReady = Effect.fn("DatabaseReady.databaseReady")(function* () {

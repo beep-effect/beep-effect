@@ -56,7 +56,7 @@ harness hooks and machine-local state, not notifications someone might read.
   red) and transfers the pill to the resulting head. The pill clears when the failing local
   shard re-runs green, when the repaired head's hosted check reports green, or via an
   attributed, expiring waive `(shard, reason, actor, expiry)`. Scoped to
-  the 16 required contexts + named local shards only. SessionStart inheritance: a fresh session
+  the 17 required contexts + named local shards only. SessionStart inheritance: a fresh session
   in a poisoned checkout receives the capsule immediately — spawning a new session is not an
   escape hatch.
 - **A4 Dead-owner takeover + warm fixer** (ADHD survivor 3; `research/adhd-ideation.md` §deepen3).
@@ -86,7 +86,7 @@ harness hooks and machine-local state, not notifications someone might read.
 
 ## Workstream B — Local green ⇒ remote green (full parity)
 
-Target: local verify green ⇒ all 16 required contexts green, first push. Exclusions are
+Target: local verify green ⇒ all 17 required contexts green, first push. Exclusions are
 explicit: Greptile, Vercel, and PR Size are non-required; the Security context's
 dependency-review sub-gate is `required: true, replay: "none"` — hosted-only by design (GitHub
 dependency graph + license policy), so it sits outside the hard local-guarantee metric and is

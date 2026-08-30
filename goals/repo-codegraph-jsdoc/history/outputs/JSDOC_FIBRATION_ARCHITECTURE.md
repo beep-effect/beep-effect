@@ -1,5 +1,8 @@
 # JSDoc Tag Database — Fibration Refactor & Agent Pipeline Architecture
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 ## Status
 
 ARCHITECTURAL DECISION RECORD — Captures design decisions from collaborative sessions (2026-03-01 through 2026-03-02). The Grothendieck fibration is **already implemented** via `JSDocTagDefinition.make()` + `mapFields` + `.annotate()`. Remaining work: pipeline metadata annotations, `toAgentOutputSchema`, agent pipeline, MCP server. Integrates with `repo-codegraph-canonical` spec (P1–P4 phases).

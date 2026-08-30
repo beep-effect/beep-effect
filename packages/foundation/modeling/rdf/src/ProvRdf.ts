@@ -460,9 +460,8 @@ const ensureUniqueRecordSubjects = (
 ): Result.Result<ReadonlyArray<ReadonlyArray<Quad>>, ProvRdfCodecError> =>
   pipe(
     parts,
-    A.map((recordQuads) =>
-      pipe(
-        recordQuads,
+    A.map(
+      flow(
         A.findFirst((value) => samePredicate(value.predicate, RDF_TYPE)),
         O.match({
           /* istanbul ignore next -- every successful record encoder emits its RDF type quad */

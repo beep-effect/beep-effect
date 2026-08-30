@@ -1,5 +1,8 @@
 # P0 Inventory — cognee roles, MCP surfaces, codegraph installer
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Read-only inventory for `shared-memory-code-kg-wiring`. Repo paths relative to
 `/home/elpresidank/YeeBois/projects/beep-effect16`. **Snapshot 2026-08-06
 16:47–16:55 CDT**; three surfaces changed *during* the sweep (see Blockers).
