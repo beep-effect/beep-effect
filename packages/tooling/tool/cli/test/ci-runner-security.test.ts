@@ -70,15 +70,25 @@ describe("CI runner security", () => {
       yield* fs.remove(outputPath);
 
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "history", "reflections"), { recursive: true });
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
-      yield* fs.writeFileString(
-        path.join(tempRoot, "goals", "example", "history", "reflections", "closeout.md"),
-        "# Closeout\n"
-      );
       git(["add", "."]);
       git(["commit", "-m", "goal metadata"]);
       assert.strictEqual(profile("pull_request"), "goals_only=true");
+      const metadataHead = git(["rev-parse", "HEAD"]);
+
+      for (const directory of ["docs", "designs", "history", "research"] as const) {
+        git(["reset", "--hard", metadataHead]);
+        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
+          "# Executable test fixture\n"
+        );
+        git(["add", "."]);
+        git(["commit", "-m", `nested ${directory} markdown fixture`]);
+        assert.strictEqual(profile("pull_request"), "goals_only=false");
+      }
+
+      git(["reset", "--hard", metadataHead]);
 
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "fixtures"));
       yield* fs.writeFileString(

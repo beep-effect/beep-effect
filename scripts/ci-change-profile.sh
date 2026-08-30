@@ -13,7 +13,6 @@ if [[ "$event_name" == "pull_request" ]]; then
   goals_document_pattern='^('
   goals_document_pattern+='goals/(INDEX|README)\.md'
   goals_document_pattern+='|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\.md'
-  goals_document_pattern+='|goals/[^/]+/(docs|designs|history|research)/.*\.md'
   goals_document_pattern+='|goals/[^/]+/ops/manifest\.json'
   goals_document_pattern+=')$'
   if [[ -n "$changed_files" ]] && ! grep -Eqv "$goals_document_pattern" <<< "$changed_files"; then
