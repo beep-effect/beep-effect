@@ -449,3 +449,25 @@ Candidate totality after sittings 1–2: 26 accepted-via, 7 leaf-of-ratified-dom
 the gate: the 104 LEDGER entries (next sitting), fact-classes (derived), the 149
 archived observation rows (mechanical parked-run-2), the seat round, TAXONOMY, and
 `apply_s5_dispositions.py`.
+
+## 2026-08-30 — S5 sitting 3 (LEDGER docket policy, four rulings + proceed arc)
+
+- **Four-ruling docket policy RATIFIED** for all 104 LEDGER entries:
+  `run-2-obligation` (subject parked, or needs runtime corpus / CQ-suite extension),
+  `standing-constraint` (domains distinct, no alignment without explicit mapping),
+  `taxonomy-input` (parameterization facts about accepted terms), `moot` (subject
+  rejected as A-Box). Classifier committed at
+  `ontology/extraction/s5/scripts/build_ledger_docket.py`; measured 76 / 20 / 7 / 1,
+  emitting 27 constraints to `s5/CONSTRAINTS.yaml`.
+- **The six flagged entries ruled**: fallow-laws-I02 standing-constraint
+  (result-attribution scope ≠ execution scope binds hasScope); literalkits-I04
+  standing-constraint + run-2 leg; turbo-tasks-I04/I01, fallow-laws-I01,
+  literalkits-I08 run-2-obligation.
+- **Constraints are machine-checkable**: seat prompts embed CONSTRAINTS.yaml and the
+  `--s5` gate requires every constraint referenced by TAXONOMY or explicitly waived.
+- **Proceed arc approved**: docket → DISPOSITIONS → gate → six-seat round without
+  further sittings unless a surprise surfaces; steward returns for seat divergences
+  and final ratification.
+- Alias rulings folded into the builder: QualityScheduler schema spellings
+  (FullProofWork/MergedPreviewWork/PublishWork/ReviewFixWork) are the accepted
+  AdmissionWorkKind leaves; TierCiMergeGreen is parked AssuranceTier vocabulary.

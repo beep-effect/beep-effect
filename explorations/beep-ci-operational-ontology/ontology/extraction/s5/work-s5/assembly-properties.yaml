@@ -1,0 +1,74 @@
+terms:
+  - term: activeTokens
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:013"
+    parameters:
+      - property: activeTokens
+        range: "domain=AdmissionSnapshot; range=xsd:integer"
+        range_kind: recorded-value
+    constraint_refs: []
+  - term: admissionChargeTokens
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:007"
+    parameters:
+      - property: admissionChargeTokens
+        range: "domain=SeatRequest | SeatGrant; range=xsd:integer"
+        range_kind: recorded-value
+    constraint_refs:
+      - "con:admission-scheduler-I08"
+  - term: admittedBy
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:021"
+    parameters:
+      - property: admittedBy
+        range: "domain=WorkUnitSpecification; range=SeatGrant"
+        range_kind: class
+    constraint_refs: []
+  - term: capacityAtAdmissionTokens
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:014"
+    parameters:
+      - property: capacityAtAdmissionTokens
+        range: "domain=SeatGrant; range=xsd:integer"
+        range_kind: recorded-value
+    constraint_refs:
+      - "con:admission-scheduler-I03"
+  - term: enqueuedAt
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:016"
+    parameters:
+      - property: enqueuedAt
+        range: "domain=SeatRequest; range=xsd:dateTime"
+        range_kind: recorded-value
+    constraint_refs: []
+  - term: hasOriginKey
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:018"
+    parameters:
+      - property: hasOriginKey
+        range: "domain=SeatRequest | SeatGrant; range=xsd:string"
+        range_kind: datatype
+    constraint_refs: []
+  - term: observedQueueWaitMs
+    kind: property
+    parents: []
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:017"
+    parameters:
+      - property: observedQueueWaitMs
+        range: "domain=SeatRequest; range=xsd:integer"
+        range_kind: recorded-value
+    constraint_refs: []
+waived_constraints_proposed: []
