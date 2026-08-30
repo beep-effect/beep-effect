@@ -1,0 +1,21 @@
+# ProseObservation — QUOTATION. Span-preserving quotes from prose (docs, comments,
+# design records). Authority: the source text itself — never a parser fact, never an
+# interpretation. The ONLY hand-captured observation kind.
+# File layout: one record per file, work/prose-observations/po-<sha12>.yaml.
+id: "po:sha256:<full-64-hex>"    # RECOMPUTED by the validator —
+#   sha256(json.dumps([commit, path, start_line, end_line, quote],
+#     sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+#   A random or stale id cannot match (content-consistency, not authorship). Quote must be a substantive excerpt
+#   (>=10 chars stripped); span lines 1 <= start <= end.
+schema_version: 1
+repository: {commit: "<sha>", path: "<doc path>"}
+source_span: {start_line: 0, end_line: 0}
+quote: ""                        # VERBATIM MODULO WHITESPACE — the exact accepted
+                                 # normalization: leading/trailing whitespace is TRIMMED
+                                 # from the quote, then every interior whitespace run in
+                                 # quote and span collapses to one space before matching;
+                                 # NO other change (wording, punctuation, case) is legal. Under
+                                 # --repo the validator requires the normalized quote to
+                                 # occur inside the named span, so fabricated prose
+                                 # cannot become canonical evidence
+epistemic_status: quoted_prose

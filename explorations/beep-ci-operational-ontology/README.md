@@ -21,6 +21,20 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
+**§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
+`ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
+observations, 692 hypotheses, 235 analysis pairs + 235 blinded pairs, 232 proposals,
+five adversarial rounds, mechanical `--gate` PASSED, **31 terms ratified** by the
+steward (rat-001..031), 216 conceded, 57.75% unresolved-fraction waiver ratified. The
+run is rotated and replayable from
+[`ontology/extraction/s4/beep-ci-ops/runs/`](./ontology/extraction/s4/beep-ci-ops/runs/)
+(manifest, index, observations, the vendored judging engine, replay notes). **NEXT:
+S5 adversarial taxonomy** over the 104-entry `LEDGER.yaml` + the 149 unresolved
+dispositions rows + the 31 ratified terms; after that, auditor run 2 (`first_run:
+false`, prior index `orun-2026-08-29T08:20:55Z.index.yaml`) once the corpus extension
+ingests the journal/verdict runtime records the waiver parked, with adapter v1.1.0
+(limitations recorded in the adapters README). Do NOT rerun §4b.
+
 **The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
 ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
 fidelity) landed 26 blockers / 18 warns — including two structural catches: the
@@ -36,13 +50,9 @@ blockers / 1 aggregated S5-visibility warn, real `--s4-lane` mode. Full map:
 frozen contract (corpus `469136d2a8`), every output passed the `--s4-lane` validator
 independently, and the §5 merge landed — **337 candidates / 1,038 facts / 104 ledger
 entries** at [`ontology/extraction/s4/`](./ontology/extraction/s4/)
-(`CANDIDATES.yaml` / `FACTS.yaml` / `LEDGER.yaml` is the S4→S5 queue). Remaining
-WORK: the §4b NORMALIZATION GATE (the `ontology-foundational-auditor` skill run as
-written — adapter observations, blinded + adversary seats, mechanical `--gate`,
-STEWARD ratification by the operator) — precondition: re-sync the stale
-Codex skills mirror (lacks the auditor's `_shared/schemas/`, which exist in the
-canonical Claude skills installation) or pass explicit `$SKILL`/`$SHARED` paths; then S5 adversarial
-taxonomy over the ledger.
+(`CANDIDATES.yaml` / `FACTS.yaml` / `LEDGER.yaml` is the S4→S5 queue). The §4b
+normalization gate that followed is recorded above; the mirror-resync precondition it
+named is moot now that the judging engine is vendored with the archived run.
 
 Superseded context below (kept for the trail):
 

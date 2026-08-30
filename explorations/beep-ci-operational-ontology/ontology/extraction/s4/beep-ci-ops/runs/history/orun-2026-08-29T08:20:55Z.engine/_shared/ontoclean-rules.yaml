@@ -1,0 +1,22 @@
+# OntoClean automated checks over a proposed taxonomy + class meta-properties.
+# These discipline human analysis; assigning meta-properties remains conceptual work.
+# Encode class_meta as {rigidity: rigid|anti_rigid|semi_rigid|unresolved,
+# identity: supplies|carries|none|unresolved,
+# dependence: none|relational|intrinsic|unresolved}.
+checks:
+  - rule: anti-rigid superclass with rigid subclass
+    action: BLOCK
+  - rule: conflicting supplied identity criteria in one taxonomy
+    action: BLOCK
+  - rule: Role with no declared relational-dependence rationale
+    action: BLOCK
+  - rule: Phase classified as relationally defined
+    action: REVIEW
+  - rule: Kind with no identity provider
+    action: BLOCK
+  - rule: class marked both identity-supplying and identity-free
+    action: BLOCK
+  - rule: unresolved rigidity on a core sortal in a proposal SUBMITTED FOR RATIFICATION (fires at the step-8 gate, not at acceptance)
+    action: BLOCK
+  - rule: subclass edge whose child can leave the parent while persisting
+    action: REVIEW   # anti-rigidity smell on the edge itself

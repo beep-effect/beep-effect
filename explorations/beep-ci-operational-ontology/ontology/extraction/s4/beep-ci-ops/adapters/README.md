@@ -45,3 +45,21 @@ that fail the gate, so under-emission falls through to the honest
    wrapper does both). Harmless in the recorded run — the gate verifies every
    record's commit equals the manifest commit and HEAD — but v1.1.0 adopts
    the wrapper's check.
+
+## Engine identity (why the `.ts` bytes are pinned by the sidecar, not the manifest)
+
+The run manifest pins the Python wrapper (`adapter-typescript.py`,
+`script_sha256_12` `eef82542944b`), and the wrapper verifies the TypeScript
+engine against the `adapter-typescript.ts.sha256` sidecar at runtime. Neither
+the manifest nor the record ids bind the engine bytes themselves, so an edit to
+the `.ts` file plus its sidecar would pass the wrapper's check while still
+claiming `adapter-typescript@1.0.0`. The v1.0.0 engine is therefore recorded
+here as well:
+
+- `adapter-typescript.ts` sha256
+  `fc6dec099697c4edfaadb813fe64e605cdf7322a591f2fb3b5203b17b12a8d69`
+  (equal to the committed sidecar).
+
+v1.1.0 embeds the expected engine digest in the wrapper source (so the
+manifest-pinned wrapper transitively pins the engine) and bumps the adapter
+version whenever the engine changes.
