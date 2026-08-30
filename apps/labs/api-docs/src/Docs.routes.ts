@@ -186,7 +186,10 @@ const ScalarScriptRoute = HttpRouter.add("GET", SCALAR_SCRIPT_PATH, readScalarSc
  *
  * **Details**
  *
- * Routes are mounted directly at `/` and `/apis/:slug`; callers must not add an API prefix before merging the layer.
+ * Routes are mounted directly at `/`, `/apis/:slug`, and the versioned
+ * `/assets/scalar-api-reference-<version>.js` path. Callers must not add an API
+ * prefix before merging the layer because doing so would also break the
+ * same-origin Scalar asset URL embedded in committed-spec pages.
  *
  * **Example** (Inspect the route layer)
  *

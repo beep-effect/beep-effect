@@ -1,5 +1,26 @@
 # Opportunities
 
+## 2026-08-30 — browser-QA judge conflicts with published-PR ownership fencing
+
+- Work: launched the documented read-only Codex vision judge against a
+  captured browser-QA round on the published security PR checkout.
+- Evidence: the companion thread could start but every artifact and image read
+  was rejected because the checkout belongs to the publishing session, so it
+  could not emit a compliant `qa-inventory/v1` verdict.
+- Prevention: allow explicitly read-only QA judge threads to read immutable
+  round artifacts owned by the publishing session, or provide an owner-session
+  judge mode that does not create a separately fenced repository session.
+
+## 2026-08-30 — browser-QA extraction example uses a retired flag
+
+- Work: extracted the recorded trusted-discard browser scenario after a green
+  Playwright capture.
+- Evidence: `bun run beep qa extract --round 1` failed with `Unrecognized
+  flag: --round`; the installed CLI accepts `--session <round-directory>`.
+- Prevention: update the browser-QA skill's extract, judge-pack, and related
+  examples from round-number flags to the current session-directory contract,
+  or retain a backwards-compatible `--round` alias.
+
 ## 2026-08-30 — focused V8 coverage cannot merge the hostile-depth fixture
 
 - Work: measured focused coverage after hardening packet-event identity against

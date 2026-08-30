@@ -13,6 +13,17 @@ BUN_VERSION="$(tr -d '[:space:]' < .bun-version)"
 export BUN_INSTALL="${HOME}/.bun"
 export PATH="${BUN_INSTALL}/bin:${PATH}"
 
+bootstrap_cache="${XDG_CACHE_HOME:-${HOME}/.cache}/beep/cloud-agent-install"
+install -d -m 0700 "${bootstrap_cache}"
+bootstrap_workdirs=()
+cleanup_bootstrap_workdirs() {
+  local workdir
+  for workdir in "${bootstrap_workdirs[@]}"; do
+    [ -z "${workdir}" ] || rm -rf -- "${workdir}"
+  done
+}
+trap cleanup_bootstrap_workdirs EXIT
+
 # 1. Install the pinned Bun toolchain when it is missing or the wrong version.
 if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version 2>/dev/null)" != "${BUN_VERSION}" ]; then
   if [ "$(uname -m)" != "x86_64" ]; then
@@ -20,7 +31,8 @@ if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version 2>/dev/null)" != "${BU
     exit 1
   fi
   bun_archive_sha256="$(tr -d '[:space:]' < .bun-linux-x64.sha256)"
-  bun_work="$(mktemp -d)"
+  bun_work="$(mktemp -d "${bootstrap_cache}/bun.XXXXXX")"
+  bootstrap_workdirs+=("${bun_work}")
   bun_archive="${bun_work}/bun-linux-x64.zip"
   curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     --output "${bun_archive}" \
@@ -84,8 +96,9 @@ OP_GPG_KEY_URL="https://downloads.1password.com/linux/keys/1password.asc"
 # OP_SERVICE_ACCOUNT_TOKEN without a fresh signature check, and would not pick up
 # a bumped OP_PINNED_VERSION. install runs once per environment build (then the
 # snapshot is reused), so re-verifying every run is cheap and fully fail-closed.
+op_work="$(mktemp -d "${bootstrap_cache}/op.XXXXXX")"
+bootstrap_workdirs+=("${op_work}")
 set +e
-op_work="$(mktemp -d)"
 op_ver="v${OP_PINNED_VERSION}"
 op_ok=0
 if curl -fsSLo "${op_work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/${op_ver}/op_linux_amd64_${op_ver}.zip" \

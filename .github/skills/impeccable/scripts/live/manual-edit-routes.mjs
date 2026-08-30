@@ -1,4 +1,4 @@
-import { commitManualEdits } from "../live-commit-manual-edits.mjs";
+import { commitManualEdits as commitManualEditsWithAgent } from "../live-commit-manual-edits.mjs";
 import { buildManualEditEvidence } from "../live-manual-edit-evidence.mjs";
 import { validateEvent } from "./event-validation.mjs";
 import { summarizeManualApplyFailures, summarizeManualDiagnostics, summarizeManualLogFile } from "./manual-apply.mjs";
@@ -16,11 +16,25 @@ export function createManualEditRoutes({
   recordManualEditActivity,
   getManualEditStatus,
   chatAgentLikelyActive,
+  commitManualEdits = commitManualEditsWithAgent,
   cwd = () => process.cwd(),
   env = () => process.env,
 } = {}) {
   const projectCwd = () => (typeof cwd === "function" ? cwd() : cwd || process.cwd());
   const currentEnv = () => (typeof env === "function" ? env() : env || process.env);
+  const copyAgentEnvironment = { ...currentEnv() };
+  delete copyAgentEnvironment.IMPECCABLE_LIVE_COMMIT_CAPABILITY;
+
+  const authorizeHostMutation = (req, res, { activityType, error, message }) => {
+    const expectedCapability = String(currentEnv().IMPECCABLE_LIVE_COMMIT_CAPABILITY || "").trim();
+    const providedCapability = String(req.headers["x-impeccable-commit-capability"] || "").trim();
+    if (expectedCapability && providedCapability === expectedCapability) return true;
+    recordManualEditActivity(activityType, {
+      reason: expectedCapability ? "operator_capability_mismatch" : "operator_capability_unconfigured",
+    });
+    sendJson(res, 403, { error, message });
+    return false;
+  };
 
   return function handleManualEditRoute(req, res, url) {
     const p = url.pathname;
@@ -107,14 +121,14 @@ export function createManualEditRoutes({
       // The page-visible session token may stage edits, but it is not enough
       // to launch a host-side agent or mutate repository files. An operator
       // must provide a separate capability outside the inspected page.
-      const expectedCommitCapability = String(currentEnv().IMPECCABLE_LIVE_COMMIT_CAPABILITY || "").trim();
-      const providedCommitCapability = String(req.headers["x-impeccable-commit-capability"] || "").trim();
-      if (!expectedCommitCapability || providedCommitCapability !== expectedCommitCapability) {
-        sendJson(res, 403, {
+      if (
+        !authorizeHostMutation(req, res, {
+          activityType: "manual_edit_commit_denied",
           error: "manual_edit_commit_requires_operator_capability",
           message:
             "Edits remain staged. Set IMPECCABLE_LIVE_COMMIT_CAPABILITY outside the page and submit the matching header from a trusted operator client.",
-        });
+        })
+      ) {
         return true;
       }
       const pageUrl = url.searchParams.get("pageUrl");
@@ -175,8 +189,7 @@ export function createManualEditRoutes({
               transaction = existingTransaction;
             }
           }
-          const envValue = { ...currentEnv() };
-          delete envValue.IMPECCABLE_LIVE_COMMIT_CAPABILITY;
+          const envValue = copyAgentEnvironment;
           const requestedMode = (envValue.IMPECCABLE_LIVE_COPY_AGENT || "auto").trim().toLowerCase();
           const useChatRoute = requestedMode === "chat" || (requestedMode === "auto" && chatAgentLikelyActive());
           if (useChatRoute) {
@@ -315,6 +328,16 @@ export function createManualEditRoutes({
           res.end("Unauthorized");
           return;
         }
+        if (
+          !authorizeHostMutation(req, res, {
+            activityType: "manual_edit_repair_rollback_denied",
+            error: "manual_edit_rollback_requires_operator_capability",
+            message:
+              "Source rollback requires IMPECCABLE_LIVE_COMMIT_CAPABILITY from a trusted operator client.",
+          })
+        ) {
+          return;
+        }
         const pageUrl = payload.pageUrl || url.searchParams.get("pageUrl") || null;
         const action = String(payload.action || url.searchParams.get("action") || "")
           .trim()
@@ -347,6 +370,16 @@ export function createManualEditRoutes({
       if (token !== getToken()) {
         res.writeHead(401);
         res.end("Unauthorized");
+        return true;
+      }
+      if (
+        !authorizeHostMutation(req, res, {
+          activityType: "manual_edit_discard_denied",
+          error: "manual_edit_discard_requires_operator_capability",
+          message:
+            "Discard may restore source snapshots and requires IMPECCABLE_LIVE_COMMIT_CAPABILITY from a trusted operator client.",
+        })
+      ) {
         return true;
       }
       const pageUrl = url.searchParams.get("pageUrl");

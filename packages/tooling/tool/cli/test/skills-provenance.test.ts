@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import {
   decodeSkillEffective,
   decodeSkillLicense,
@@ -338,20 +339,349 @@ layer(TestLayer)("skills provenance service", (it) => {
       const copyAgent = yield* fs.readFileString(
         path.join(repoRoot, ".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs")
       );
+      const githubCopyAgent = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live-copy-edit-agent.mjs")
+      );
+      const commitAgent = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live-commit-manual-edits.mjs")
+      );
+      const githubCommitAgent = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live-commit-manual-edits.mjs")
+      );
+      const liveInstructions = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live/instructions.mjs")
+      );
+      const githubLiveInstructions = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live/instructions.mjs")
+      );
+      const liveServer = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live-server.mjs")
+      );
+      const githubLiveServer = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live-server.mjs")
+      );
+      const trustedApplyClient = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live-apply-manual-edits.mjs")
+      );
+      const githubTrustedApplyClient = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live-apply-manual-edits.mjs")
+      );
+      const browserClient = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live-browser.js")
+      );
+      const githubBrowserClient = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live-browser.js")
+      );
       const adapterRunner = yield* fs.readFileString(
         path.join(repoRoot, ".claude/skills/ontology-foundational-auditor/scripts/run_adapter_sandbox.sh")
+      );
+      const ontologySkill = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/ontology-foundational-auditor/SKILL.md")
       );
 
       expect(impeccableRoute).toBe(githubRoute);
       expect(impeccableRoute).toContain("IMPECCABLE_LIVE_COMMIT_CAPABILITY");
       expect(impeccableRoute).toContain("x-impeccable-commit-capability");
-      expect(impeccableRoute).toContain("delete envValue.IMPECCABLE_LIVE_COMMIT_CAPABILITY");
+      expect(impeccableRoute).toContain("delete copyAgentEnvironment.IMPECCABLE_LIVE_COMMIT_CAPABILITY");
+      expect(trustedApplyClient).toBe(githubTrustedApplyClient);
+      expect(trustedApplyClient).toContain('"x-impeccable-commit-capability": capability');
+      expect(trustedApplyClient).toContain('args.includes("--rollback")');
+      expect(trustedApplyClient).toContain('args.includes("--discard")');
+      expect(trustedApplyClient).not.toContain("console.log(capability)");
+      expect(browserClient).toBe(githubBrowserClient);
+      expect(browserClient).not.toContain('"/manual-edit-commit?token="');
+      expect(browserClient).not.toContain('"/manual-edit-repair-decision?token="');
+      expect(browserClient).not.toContain('"/manual-edit-discard?token="');
+      expect(browserClient).not.toContain("live-apply-manual-edits.mjs");
+      expect(browserClient).not.toContain("trustedManualApplyCommand");
+      expect(browserClient).not.toContain("Show the trusted operator repair command");
+      expect(browserClient).toContain("Return to the trusted terminal to authorize repair");
+      expect(copyAgent).toBe(githubCopyAgent);
+      expect(commitAgent).toBe(githubCommitAgent);
+      expect(liveInstructions).toBe(githubLiveInstructions);
+      expect(liveServer).toBe(githubLiveServer);
       expect(copyAgent).not.toContain("impeccable:manual-edit-validate");
       expect(copyAgent).not.toContain("spawnSync(script");
       expect(adapterRunner).toContain("--unshare-all");
       expect(adapterRunner).toContain('--ro-bind "${repo}" /repo');
       expect(adapterRunner).toContain("--clearenv");
       expect(adapterRunner).toContain("adapter must live outside the audited repository");
+      expect(adapterRunner).toContain("adapter file is writable by another user");
+      expect(adapterRunner).toContain('realpath -ms -- "${target_input}"');
+      expect(ontologySkill).toContain('TRUSTED_ADAPTER_SHA256=$(sha256sum "$TRUSTED_ADAPTER"');
+      expect(ontologySkill).not.toContain("find $ONT/adapters -type f");
     })
+  );
+
+  it.effect("executes the adapter sandbox trust and output containment checks", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "adapter-sandbox-" });
+        const auditedRepo = path.join(fixtureRoot, "repo");
+        const trustedDirectory = path.join(fixtureRoot, "trusted");
+        const adapter = path.join(trustedDirectory, "adapter.py");
+        const binDirectory = path.join(fixtureRoot, "bin");
+        const capturePath = path.join(fixtureRoot, "bwrap.argv");
+        const outsideDirectory = path.join(fixtureRoot, "outside");
+        yield* Effect.forEach(
+          [auditedRepo, trustedDirectory, binDirectory, outsideDirectory],
+          (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
+          { discard: true }
+        );
+        yield* fs.writeFileString(adapter, "#!/usr/bin/env python3\n");
+        yield* fs.chmod(adapter, 0o644);
+        const writeExecutable = Effect.fnUntraced(function* (filePath: string, source: string) {
+          yield* fs.writeFileString(filePath, source);
+          yield* fs.chmod(filePath, 0o755);
+        });
+        yield* writeExecutable(
+          path.join(binDirectory, "prlimit"),
+          '#!/bin/sh\nwhile [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done\n[ "$#" -gt 0 ] || exit 64\nshift\nexec "$@"\n'
+        );
+        yield* writeExecutable(path.join(binDirectory, "bwrap"), '#!/bin/sh\nprintf "%s\\n" "$@" > "$BWRAP_CAPTURE"\n');
+        const runner = path.join(
+          repoRoot,
+          ".claude/skills/ontology-foundational-auditor/scripts/run_adapter_sandbox.sh"
+        );
+        const run = (target: string) =>
+          Bun.spawnSync([runner, adapter, auditedRepo, "observe", target], {
+            cwd: auditedRepo,
+            env: {
+              ...process.env,
+              BWRAP_CAPTURE: capturePath,
+              PATH: `${binDirectory}:${process.env.PATH ?? ""}`,
+            },
+            stderr: "pipe",
+            stdout: "pipe",
+          });
+
+        yield* fs.chmod(adapter, 0o666);
+        expect(run(path.join(auditedRepo, "writable-adapter-output")).exitCode).toBe(65);
+        yield* fs.chmod(adapter, 0o644);
+
+        const outsideOutput = path.join(outsideDirectory, "must-not-be-created");
+        expect(run(outsideOutput).exitCode).toBe(65);
+        expect(yield* fs.exists(outsideOutput)).toBe(false);
+
+        const linkedOutput = path.join(auditedRepo, "linked-output");
+        yield* fs.symlink(outsideDirectory, linkedOutput);
+        expect(run(linkedOutput).exitCode).toBe(65);
+
+        const validOutput = path.join(auditedRepo, "observations");
+        expect(run(validOutput).exitCode).toBe(0);
+        expect(yield* fs.exists(validOutput)).toBe(true);
+        const bwrapArguments = yield* fs.readFileString(capturePath);
+        expect(bwrapArguments).toContain(`${validOutput}\n/out\n`);
+        expect(bwrapArguments).toContain(`${auditedRepo}\n/repo\n`);
+      })
+    )
+  );
+
+  it.effect("enforces the manual-edit operator capability across host mutation routes", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const probeRoot = yield* fs.makeTempDirectoryScoped({ prefix: "impeccable-provider-probe-" });
+        const probeBin = path.join(probeRoot, "bin");
+        const probeCapture = path.join(probeRoot, "probe.env");
+        yield* fs.makeDirectory(probeBin, { recursive: true });
+        const fakeCodex = path.join(probeBin, "codex");
+        yield* fs.writeFileString(
+          fakeCodex,
+          '#!/bin/sh\nif [ -n "${IMPECCABLE_LIVE_COMMIT_CAPABILITY:-}" ]; then printf "leaked\\n" >> "$PROBE_CAPTURE"; exit 1; fi\nprintf "clean\\n" >> "$PROBE_CAPTURE"\nexit 0\n'
+        );
+        yield* fs.chmod(fakeCodex, 0o755);
+        const routeModule = yield* Effect.promise(
+          () =>
+            import(
+              pathToFileURL(path.join(repoRoot, ".claude/skills/impeccable/scripts/live/manual-edit-routes.mjs")).href
+            )
+        );
+        const copyAgentModule = yield* Effect.promise(
+          () =>
+            import(
+              pathToFileURL(path.join(repoRoot, ".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs")).href
+            )
+        );
+        const activities: Array<{ readonly payload: Record<string, unknown>; readonly type: string }> = [];
+        let commitCalls = 0;
+        let childEnvironment: Record<string, string | undefined> | undefined;
+        const transactionCalls = { cancel: 0, clear: 0, count: 0, read: 0, rollback: 0, write: 0 };
+        const manualApply = {
+          cancelPendingEvents: () => {
+            transactionCalls.cancel += 1;
+            return [];
+          },
+          clearTransaction: () => {
+            transactionCalls.clear += 1;
+          },
+          countOps: () => {
+            transactionCalls.count += 1;
+            return 0;
+          },
+          readTransaction: () => {
+            transactionCalls.read += 1;
+            return null;
+          },
+          rollbackTransaction: () => {
+            transactionCalls.rollback += 1;
+            return null;
+          },
+          writeTransaction: () => {
+            transactionCalls.write += 1;
+            return null;
+          },
+        };
+        const invoke = ({
+          body,
+          expectedCapability,
+          providedCapability,
+          route = "/manual-edit-commit?token=page-token",
+        }: {
+          readonly body?: string;
+          readonly expectedCapability: string;
+          readonly providedCapability?: string;
+          readonly route?: string;
+        }) =>
+          new Promise<{ readonly status: number }>((resolve) => {
+            let status = 0;
+            const response = {
+              end: () => {
+                resolve({ status });
+              },
+              writeHead: (statusCode: number) => {
+                status = statusCode;
+              },
+            };
+            const request = {
+              headers: providedCapability ? { "x-impeccable-commit-capability": providedCapability } : {},
+              method: "POST",
+              on: (event: string, listener: (chunk?: string) => void) => {
+                if (event === "data" && body) listener(body);
+                if (event === "end") queueMicrotask(listener);
+                return request;
+              },
+            };
+            const handle = routeModule.createManualEditRoutes({
+              chatAgentLikelyActive: () => false,
+              commitManualEdits: async ({ env }: { readonly env: Record<string, string | undefined> }) => {
+                commitCalls += 1;
+                childEnvironment = env;
+                const firstSelection = copyAgentModule.chooseCopyEditAgent({ env: { ...env } });
+                const cachedSelection = copyAgentModule.chooseCopyEditAgent({ env: { ...env } });
+                if (firstSelection !== "codex" || cachedSelection !== "codex") {
+                  throw new Error("sanitized provider probe did not select the fixture Codex executable");
+                }
+                return { applied: [], cleared: 0, failed: [], files: [], reason: "no_pending_edits", warnings: [] };
+              },
+              cwd: probeRoot,
+              env: () => ({
+                IMPECCABLE_LIVE_COMMIT_CAPABILITY: expectedCapability,
+                IMPECCABLE_LIVE_COPY_AGENT: "auto",
+                PATH: `${probeBin}:${process.env.PATH ?? ""}`,
+                PROBE_CAPTURE: probeCapture,
+                VISIBLE_VALUE: "kept",
+              }),
+              getManualEditStatus: () => ({ perPage: {}, totalCount: 0 }),
+              getToken: () => "page-token",
+              manualApply,
+              recordManualEditActivity: (type: string, payload: Record<string, unknown>) => {
+                activities.push({ payload, type });
+              },
+            });
+            expect(handle(request, response, new URL(`http://127.0.0.1${route}`))).toBe(true);
+          });
+
+        expect((yield* Effect.promise(() => invoke({ expectedCapability: "" }))).status).toBe(403);
+        expect((yield* Effect.promise(() => invoke({ expectedCapability: "expected" }))).status).toBe(403);
+        expect(
+          (yield* Effect.promise(() => invoke({ expectedCapability: "expected", providedCapability: "wrong" }))).status
+        ).toBe(403);
+        expect(
+          (yield* Effect.promise(() =>
+            invoke({
+              body: JSON.stringify({ action: "rollback", token: "page-token" }),
+              expectedCapability: "expected",
+              route: "/manual-edit-repair-decision?token=page-token",
+            })
+          )).status
+        ).toBe(403);
+        expect(
+          (yield* Effect.promise(() =>
+            invoke({ expectedCapability: "expected", route: "/manual-edit-discard?token=page-token" })
+          )).status
+        ).toBe(403);
+        expect(transactionCalls).toEqual({ cancel: 0, clear: 0, count: 0, read: 0, rollback: 0, write: 0 });
+        const accepted = yield* Effect.promise(() =>
+          invoke({ expectedCapability: "expected", providedCapability: "expected" })
+        );
+
+        expect(accepted.status).toBe(200);
+        expect(commitCalls).toBe(1);
+        expect(childEnvironment?.IMPECCABLE_LIVE_COMMIT_CAPABILITY).toBeUndefined();
+        expect(childEnvironment?.VISIBLE_VALUE).toBe("kept");
+        expect(yield* fs.readFileString(probeCapture)).toBe("clean\n");
+        const postCheckTarget = path.join(probeRoot, "post-check.js");
+        yield* fs.writeFileString(postCheckTarget, "export {};\n");
+        let postCheckEnvironment: Record<string, string | undefined> | undefined;
+        const postChecks = copyAgentModule.runCopyEditPostApplyChecks({
+          cwd: probeRoot,
+          env: childEnvironment,
+          files: ["post-check.js"],
+          spawnSyncCommand: (
+            _command: string,
+            _args: ReadonlyArray<string>,
+            options: { readonly env: Record<string, string | undefined> }
+          ) => {
+            postCheckEnvironment = options.env;
+            return { status: 0 };
+          },
+        });
+        expect(postChecks.ok).toBe(true);
+        expect(postCheckEnvironment).toBe(childEnvironment);
+        expect(postCheckEnvironment?.IMPECCABLE_LIVE_COMMIT_CAPABILITY).toBeUndefined();
+        const rollbackCallsBeforeTrustedActions = transactionCalls.rollback;
+        expect(
+          (yield* Effect.promise(() =>
+            invoke({
+              body: JSON.stringify({ action: "rollback", token: "page-token" }),
+              expectedCapability: "expected",
+              providedCapability: "expected",
+              route: "/manual-edit-repair-decision?token=page-token",
+            })
+          )).status
+        ).toBe(200);
+        expect(transactionCalls.rollback).toBe(rollbackCallsBeforeTrustedActions + 1);
+        expect(
+          (yield* Effect.promise(() =>
+            invoke({
+              expectedCapability: "expected",
+              providedCapability: "expected",
+              route: "/manual-edit-discard?token=page-token",
+            })
+          )).status
+        ).toBe(200);
+        expect(transactionCalls.rollback).toBe(rollbackCallsBeforeTrustedActions + 2);
+        expect(transactionCalls.cancel).toBe(1);
+        const denials = A.filter(activities, (activity) => activity.type === "manual_edit_commit_denied");
+        expect(denials).toEqual([
+          { payload: { reason: "operator_capability_unconfigured" }, type: "manual_edit_commit_denied" },
+          { payload: { reason: "operator_capability_mismatch" }, type: "manual_edit_commit_denied" },
+          { payload: { reason: "operator_capability_mismatch" }, type: "manual_edit_commit_denied" },
+        ]);
+        expect(A.filter(activities, (activity) => activity.type === "manual_edit_repair_rollback_denied")).toEqual([
+          { payload: { reason: "operator_capability_mismatch" }, type: "manual_edit_repair_rollback_denied" },
+        ]);
+        expect(A.filter(activities, (activity) => activity.type === "manual_edit_discard_denied")).toEqual([
+          { payload: { reason: "operator_capability_mismatch" }, type: "manual_edit_discard_denied" },
+        ]);
+        expect(JSON.stringify(activities)).not.toContain("expected");
+      })
+    )
   );
 });

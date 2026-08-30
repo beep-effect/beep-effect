@@ -814,6 +814,54 @@ describe("tmpfs reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("never follows a nested head-install checkout symlink outside the install root", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpRoot = path.join(root, "tmp");
+        const cacheRoot = path.join(root, "cache");
+        const repo = path.join(root, "repo");
+        const install = path.join(cacheRoot, "beep", "head-install", "beep-yeet-head-install-linked");
+        const checkout = path.join(install, "checkout");
+        const outsideWorktree = path.join(root, "outside-worktree");
+        yield* Effect.forEach(
+          [tmpRoot, repo, install],
+          (directory) => fs.makeDirectory(directory, { recursive: true }),
+          { discard: true }
+        );
+        yield* runCommand("git", ["init", "--quiet"], repo);
+        yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
+        yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
+        yield* runCommand("git", ["add", "README.md"], repo);
+        yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
+        yield* runCommand("git", ["worktree", "add", "--quiet", "-b", "outside-install", outsideWorktree], repo);
+        yield* fs.writeFileString(path.join(outsideWorktree, "preserve.txt"), "do not delete\n");
+        yield* fs.symlink(outsideWorktree, checkout);
+        yield* runCommand("touch", ["-d", fixtureTimestamp(2), install], root);
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot,
+          classes: ["head-install"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot,
+        });
+
+        expect(report.reapedCount).toBe(1);
+        expect(yield* fs.exists(install)).toBe(false);
+        expect(yield* fs.readFileString(path.join(outsideWorktree, "preserve.txt"))).toBe("do not delete\n");
+        expect(A.some(report.warnings, Str.includes(`Skipped unsafe nested head-install checkout ${checkout}`))).toBe(
+          true
+        );
+        const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
+        expect(Str.includes(outsideWorktree)(worktreeList)).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("removes a real linked worktree through git and prunes its registration", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -906,6 +954,47 @@ describe("tmpfs reap", () => {
         expect(yield* fs.readFileString(path.join(outsideWorktree, "preserve.txt"))).toBe("do not delete\n");
         const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
         expect(Str.includes(outsideWorktree)(worktreeList)).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("revalidates a discovered candidate immediately before removal", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpRoot = path.join(root, "tmp");
+        const cacheRoot = path.join(root, "cache");
+        const candidate = path.join(tmpRoot, "beep-knowledge-refs-race");
+        const outside = path.join(root, "outside-preserve");
+        yield* Effect.forEach(
+          [candidate, cacheRoot, outside],
+          (directory) => fs.makeDirectory(directory, { recursive: true }),
+          { discard: true }
+        );
+        yield* fs.writeFileString(path.join(candidate, "old.txt"), "old candidate\n");
+        yield* fs.writeFileString(path.join(outside, "preserve.txt"), "do not delete\n");
+        yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidate], root);
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot,
+          classes: ["scoped-temp"],
+          listProcessCommandLines: () =>
+            Effect.gen(function* () {
+              yield* fs.remove(candidate, { force: true, recursive: true });
+              yield* fs.symlink(outside, candidate);
+              return A.empty<string>();
+            }),
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot,
+        });
+
+        expect(report.reapedCount).toBe(0);
+        expect(A.some(report.warnings, Str.includes(`${candidate}: path changed or escaped its discovery root`))).toBe(
+          true
+        );
+        expect(yield* fs.readFileString(path.join(outside, "preserve.txt"))).toBe("do not delete\n");
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

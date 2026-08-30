@@ -41,6 +41,7 @@ case "${adapter}" in
 esac
 
 adapter_owner="$(stat -c '%u' -- "${adapter}")"
+adapter_mode="$(stat -c '%a' -- "${adapter}")"
 parent_owner="$(stat -c '%u' -- "${adapter_parent}")"
 parent_mode="$(stat -c '%a' -- "${adapter_parent}")"
 if [ "${adapter_owner}" != "$(id -u)" ] || [ "${parent_owner}" != "$(id -u)" ]; then
@@ -51,6 +52,19 @@ if (( (8#${parent_mode} & 8#022) != 0 )); then
   echo "refusing: trusted adapter directory is writable by another user" >&2
   exit 65
 fi
+if (( (8#${adapter_mode} & 8#022) != 0 )); then
+  echo "refusing: trusted adapter file is writable by another user" >&2
+  exit 65
+fi
+
+lib64_runtime="$(realpath -- /lib64 2>/dev/null || true)"
+case "${lib64_runtime}" in
+  /usr/*) lib64_target="${lib64_runtime#/}" ;;
+  *)
+    echo "refusing: the host /lib64 runtime does not resolve beneath /usr" >&2
+    exit 69
+    ;;
+esac
 
 common=(
   --unshare-all
@@ -64,7 +78,7 @@ common=(
   --ro-bind /usr /usr
   --symlink usr/bin /bin
   --symlink usr/lib /lib
-  --symlink usr/lib /lib64
+  --symlink "${lib64_target}" /lib64
   --proc /proc
   --dev /dev
   --tmpfs /tmp
@@ -86,16 +100,36 @@ case "${mode}" in
     sandbox_args=("${common[@]}" --ro-bind "${golden}" /golden /usr/bin/python3 /adapter.py --self-check /golden)
     ;;
   observe)
-    mkdir -p -- "${target_input}"
-    [ ! -L "${target_input}" ] || {
-      echo "refusing: observation output is a symbolic link" >&2
-      exit 65
-    }
-    output="$(realpath -- "${target_input}")"
-    case "${output}" in
+    output_lexical="$(realpath -ms -- "${target_input}")"
+    case "${output_lexical}" in
       "${repo}"/*) ;;
       *)
         echo "refusing: observation output must be inside the audited repository" >&2
+        exit 65
+        ;;
+    esac
+    output_probe="${output_lexical}"
+    while [ "${output_probe}" != "${repo}" ]; do
+      [ ! -L "${output_probe}" ] || {
+        echo "refusing: observation output contains a symbolic-link component" >&2
+        exit 65
+      }
+      output_probe="$(dirname -- "${output_probe}")"
+    done
+    mkdir -p -- "${output_lexical}"
+    output_probe="${output_lexical}"
+    while [ "${output_probe}" != "${repo}" ]; do
+      [ ! -L "${output_probe}" ] || {
+        echo "refusing: observation output changed to a symbolic link" >&2
+        exit 65
+      }
+      output_probe="$(dirname -- "${output_probe}")"
+    done
+    output="$(realpath -e -- "${output_lexical}")"
+    case "${output}" in
+      "${repo}"/*) ;;
+      *)
+        echo "refusing: observation output escaped the audited repository" >&2
         exit 65
         ;;
     esac

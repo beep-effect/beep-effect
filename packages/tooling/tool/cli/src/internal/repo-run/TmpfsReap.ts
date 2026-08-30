@@ -875,9 +875,16 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
   if (!Str.Equivalence(candidate.reapClass, "head-install")) {
     return A.empty();
   }
+  const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
   const checkout = pathService.join(candidate.path, "checkout");
-  const nested = yield* discoverGitWorktree(candidate.root, checkout, candidate.idleSinceMillis);
+  const canonicalCheckout = yield* canonicalDirectoryWithin(candidate.path, checkout);
+  if (O.isNone(canonicalCheckout)) {
+    return (yield* fs.exists(checkout).pipe(Effect.orElseSucceed(() => false)))
+      ? [`Skipped unsafe nested head-install checkout ${checkout}.`]
+      : A.empty();
+  }
+  const nested = yield* discoverGitWorktree(candidate.path, canonicalCheckout.value, candidate.idleSinceMillis);
   if (O.isNone(nested) || O.isNone(nested.value.parentRepo)) {
     return A.empty();
   }
@@ -930,6 +937,9 @@ const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
+  if (!(yield* candidatePathIsStillSafe(candidate))) {
+    return emptyApplyOutcome(`Skipped ${candidate.path}: worktree path changed or escaped its discovery root.`);
+  }
   if (O.isNone(candidate.parentRepo)) {
     return emptyApplyOutcome(`Skipped unclassified Git worktree ${candidate.path}.`);
   }

@@ -49,10 +49,23 @@
       "remediation": {
         "status": "implemented",
         "changedFiles": [
+          ".claude/skills/impeccable/agents/impeccable_manual_edit_applier.toml",
+          ".claude/skills/impeccable/reference/degraded/manual-edit-applier.md",
+          ".claude/skills/impeccable/reference/live.md",
+          ".claude/skills/impeccable/scripts/live-apply-manual-edits.mjs",
+          ".claude/skills/impeccable/scripts/live-browser.js",
+          ".claude/skills/impeccable/scripts/live-commit-manual-edits.mjs",
           ".claude/skills/impeccable/scripts/live/manual-edit-routes.mjs",
+          ".claude/skills/impeccable/scripts/live/instructions.mjs",
           ".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs",
           ".claude/skills/impeccable/scripts/live-server.mjs",
+          ".github/skills/impeccable/reference/degraded/manual-edit-applier.md",
+          ".github/skills/impeccable/reference/live.md",
+          ".github/skills/impeccable/scripts/live-apply-manual-edits.mjs",
+          ".github/skills/impeccable/scripts/live-browser.js",
+          ".github/skills/impeccable/scripts/live-commit-manual-edits.mjs",
           ".github/skills/impeccable/scripts/live/manual-edit-routes.mjs",
+          ".github/skills/impeccable/scripts/live/instructions.mjs",
           ".github/skills/impeccable/scripts/live-copy-edit-agent.mjs",
           ".github/skills/impeccable/scripts/live-server.mjs",
           "packages/tooling/tool/cli/test/skills-provenance.test.ts"
@@ -61,7 +74,7 @@
           "targeted skill security regression test",
           "bun run beep yeet verify"
         ],
-        "summary": "A separate operator capability gates host mutation, and repository-defined validation commands are not executed."
+        "summary": "A separate operator capability gates every page-reachable host mutation; the page emits no executable command, and repository-defined validation commands are not executed."
       }
     },
     {
@@ -183,7 +196,7 @@
           "bash -n .cursor/install.sh",
           "targeted bootstrap security regression test"
         ],
-        "summary": "Verification requires an anchored GnuPG status record for the exact fingerprint."
+        "summary": "Verification requires an anchored GnuPG status record for the exact fingerprint, and temporary-work allocation fails before any download path is derived."
       }
     },
     {
@@ -264,7 +277,9 @@
         "status": "implemented",
         "changedFiles": [
           "AGENTS.md",
+          "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
           "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",
           "packages/tooling/tool/cli/src/internal/repo-run/RunScope.ts",
           "packages/tooling/tool/cli/test/quality-scheduler.test.ts"
         ],
@@ -272,7 +287,7 @@
           "quality scheduler race regression test",
           "@beep/repo-cli package verification"
         ],
-        "summary": "Only scopes backed by a verified dead lease may be stopped, and the loaded-scope census capability was removed."
+        "summary": "Only nonce-bound scopes backed by a verified dead lease and absent from live-lease ownership may be stopped; unsupported and already-collected states converge without broad stop authority."
       }
     },
     {
@@ -294,6 +309,7 @@
       "remediation": {
         "status": "implemented",
         "changedFiles": [
+          "apps/labs/api-docs/DESIGN.md",
           "apps/labs/api-docs/src/Docs.routes.ts",
           "apps/labs/api-docs/test/Docs.routes.test.ts"
         ],

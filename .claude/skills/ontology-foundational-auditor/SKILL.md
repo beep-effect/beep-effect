@@ -254,14 +254,20 @@ MODEL="<model-id-recorded-in-manifest>"
 # executed. Author or audit each adapter in a fresh, user-owned 0700 directory
 # outside the audited repository. Adapters use the Python standard library so
 # the sandbox needs no package cache or writable environment.
-TRUSTED_ADAPTER_DIR=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/ontology-adapter.XXXXXX")
+TRUSTED_ADAPTER_BASE="${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/beep}"
+mkdir -p "$TRUSTED_ADAPTER_BASE"
+chmod 700 "$TRUSTED_ADAPTER_BASE"
+TRUSTED_ADAPTER_DIR=$(mktemp -d "$TRUSTED_ADAPTER_BASE/ontology-adapter.XXXXXX")
 chmod 700 "$TRUSTED_ADAPTER_DIR"
 TRUSTED_ADAPTER=$TRUSTED_ADAPTER_DIR/adapter-typescript.py  # author here; do not seed from $ONT/adapters
 RUN_ADAPTER="$SKILL/scripts/run_adapter_sandbox.sh"
 [ -e $WORK/run-manifest.yaml ] || cp $SHARED/schemas/run-manifest.schema.yaml $WORK/run-manifest.yaml   # NEVER overwrite an existing manifest — it is run provenance
-# then EDIT every field; find -type f (a bare glob hits the golden/ directory)
+# then EDIT every field. Pin script_sha256_12 from the exact trusted bytes that
+# will execute; the manifest script path still names the later repo snapshot.
 sha256sum $ONT/docs/competency-questions.yaml $ONT/docs/scope.md $SKILL/prompts/*.md
-find $ONT/adapters -type f -exec sha256sum {} +
+TRUSTED_ADAPTER_SHA256=$(sha256sum "$TRUSTED_ADAPTER" | awk '{print $1}')
+printf 'manifest script_sha256_12: %.12s\n' "$TRUSTED_ADAPTER_SHA256"
+find $ONT/adapters/golden -type f -exec sha256sum {} +
 
 # Step 2 — Observe: prove the trusted adapter on its golden fixture FIRST, then
 # run it in a read-only, no-network bubblewrap sandbox with a scrubbed
@@ -278,6 +284,7 @@ ADAPTER=$ONT/adapters/adapter-typescript.py   # committed provenance copy; never
 "$RUN_ADAPTER" "$TRUSTED_ADAPTER" . observe $WORK/observations
 install -m 0644 "$TRUSTED_ADAPTER" "$ADAPTER"
 cmp -s "$TRUSTED_ADAPTER" "$ADAPTER" || { echo "refusing: committed adapter differs from trusted bytes"; exit 1; }
+[ "$(sha256sum "$ADAPTER" | awk '{print $1}')" = "$TRUSTED_ADAPTER_SHA256" ] || { echo "refusing: installed adapter digest differs from trusted bytes"; exit 1; }
 VAL $ONT --repo .
 #   record id = full digest, computed INSIDE the adapter with the CANONICAL
 #   serialization the validator RECOMPUTES (see source-observation.schema.yaml):
