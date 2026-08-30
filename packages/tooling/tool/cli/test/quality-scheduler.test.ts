@@ -15,7 +15,9 @@ import {
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  provideRuntimeRootForTesting,
   RunScopeRecord,
+  RuntimeRootChoice,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
@@ -152,11 +154,11 @@ const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
       quarantine: path.join(root, "quarantine"),
     };
     return yield* use(tempRoot).pipe(
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       provideScopedLayer(
         ConfigProvider.layer(
           ConfigProvider.fromUnknown({
             BEEP_RUN_SCOPES: runScopesEnabled ? "1" : "0",
-            XDG_RUNTIME_DIR: runtimeDir,
           })
         )
       ),
@@ -901,6 +903,10 @@ describe("quality-scheduler", () => {
               });
               expect(snapshot.tickets).toHaveLength(1);
               yield* Fiber.interrupt(queued);
+              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+              const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
+              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
+              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("tasksCurrent");
             }),
           128,
           true

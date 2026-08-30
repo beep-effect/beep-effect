@@ -48,6 +48,9 @@
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/md/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {

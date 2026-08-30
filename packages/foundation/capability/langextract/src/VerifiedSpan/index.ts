@@ -24,3 +24,8 @@ export * from "./VerifiedSpan.errors.ts";
  * @category models
  */
 export * from "./VerifiedSpan.model.ts";
+/**
+ * @since 0.0.0
+ * @category normalization
+ */
+export { normalizeTextLocator } from "./VerifiedSpan.normalization.ts";

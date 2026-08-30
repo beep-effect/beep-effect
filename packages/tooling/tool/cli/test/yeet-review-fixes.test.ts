@@ -1,5 +1,10 @@
-import { tmpdir } from "node:os";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { userInfo } from "node:os";
+import {
+  canonicalRuntimeRootForTesting,
+  MemoryStats,
+  provideRuntimeRootForTesting,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import {
   emptyTurboPlanSnapshot,
   loadYeetInboxView,
@@ -96,7 +101,7 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
     }).pipe(
       // Coordinator locks and admission leases both live under the temp
       // runtime root, so removing tmpDir cleans every artifact.
-      provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_RUNTIME_DIR: `${tmpDir}/runtime` }))),
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
       provideScopedLayer(memoryStatsTestLayer)
     )
   );
@@ -269,25 +274,38 @@ describe("yeet review fixes", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("uses only absolute runtime roots and an ephemeral fallback", () =>
+  it("uses one canonical runtime root and supports an isolated override", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const repositoryIdentity = "https://github.com/acme/repo.git";
         const resolveWithEnvironment = (environment: Readonly<Record<string, string>>) =>
           proofCoordinatorLockPath(repositoryIdentity).pipe(
-            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment))
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
+            provideScopedLayer(FileSystem.layerNoop({}))
           );
-        const fallbackPrefix = path.join(tmpdir(), "beep-yeet-proof-locks-");
-        const configuredRoot = path.join(tmpdir(), "configured-yeet-runtime");
+        const canonicalPrefix = path.join(
+          canonicalRuntimeRootForTesting(process.platform, userInfo().homedir),
+          "beep-yeet-proof-locks-"
+        );
+        const configuredRoot = path.join(
+          canonicalRuntimeRootForTesting(process.platform, userInfo().homedir),
+          "configured-yeet-runtime"
+        );
 
         const missing = yield* resolveWithEnvironment({});
         const relative = yield* resolveWithEnvironment({ XDG_RUNTIME_DIR: "relative-runtime" });
         const configured = yield* resolveWithEnvironment({ XDG_RUNTIME_DIR: configuredRoot });
 
-        expect(missing).toContain(fallbackPrefix);
-        expect(relative).toContain(fallbackPrefix);
-        expect(configured).toContain(path.join(configuredRoot, "beep-yeet-proof-locks-"));
+        expect(missing).toContain(canonicalPrefix);
+        expect(relative).toContain(canonicalPrefix);
+        expect(configured).toContain(canonicalPrefix);
+
+        const overridden = yield* proofCoordinatorLockPath(repositoryIdentity).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: configuredRoot })),
+          provideScopedLayer(FileSystem.layerNoop({}))
+        );
+        expect(overridden).toContain(path.join(configuredRoot, "beep-yeet-proof-locks-"));
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 

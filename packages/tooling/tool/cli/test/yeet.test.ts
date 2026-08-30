@@ -6,6 +6,7 @@ import {
   FindingAttributionSummary,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
 } from "@beep/repo-cli/test/Quality";
+import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
   acquireFullProofLock,
   appendYeetAttemptJournalEvent,
@@ -64,6 +65,7 @@ import {
   repoProofStepDefinition,
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
+  retirePublishedPrLease,
   retirePublishedPrLeaseAtPathForTesting,
   retirePublishedPrLeaseReceipt,
   runYeetFallowFeedbackForTesting,
@@ -190,7 +192,7 @@ const withTempDirectory = <Result, Error, Requirements>(
     (tmpDir) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true });
+        yield* fs.remove(tmpDir, { force: true, recursive: true });
       })
   ).pipe(provideScopedLayer(PlatformLayer));
 
@@ -618,6 +620,39 @@ esac
             status: "retired",
           });
           expect(receipt.generationId).not.toBe(finalReceipt.generationId);
+        })
+      )
+    ));
+
+  it("retires the public lease idempotently and rejects a mismatched terminal target", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bin = path.join(tmpDir, "bin");
+          const leasePath = path.join(tmpDir, ".beep", "inbox", "pr-lease.json");
+          yield* fs.makeDirectory(bin);
+          yield* fs.writeFileString(
+            path.join(bin, "gh"),
+            '#!/bin/sh\nprintf \'%s\\n\' \'{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}\'\n'
+          );
+          yield* fs.chmod(path.join(bin, "gh"), 0o755);
+
+          const receipt = yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            writePublishedPrLease(tempContext)
+          );
+          yield* retirePublishedPrLease(tempContext, receipt.prNumber, receipt.headSha, "merged");
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ status: "retired" });
+
+          yield* retirePublishedPrLease(tempContext, receipt.prNumber, receipt.headSha, "merged-again");
+          expect(
+            Exit.isFailure(
+              yield* Effect.exit(retirePublishedPrLease(tempContext, receipt.prNumber, "mismatched-head", "merged"))
+            )
+          ).toBe(true);
         })
       )
     ));
@@ -2940,7 +2975,7 @@ describe("yeet publish scope helpers", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("resolves the coordinator root from XDG_RUNTIME_DIR and falls back to the system temp directory", () =>
+  it("ignores launcher XDG variants and supports an isolated test root", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const path = yield* Path.Path;
@@ -2955,12 +2990,16 @@ describe("yeet publish scope helpers", () => {
         const relative = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: "relative/runtime-root" });
         const empty = yield* withRuntimeConfig({ XDG_RUNTIME_DIR: "" });
         const absent = yield* withRuntimeConfig({});
+        const overridden = yield* proofCoordinatorLockPath("git@github.com:acme/repo.git").pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: configuredRoot }))
+        );
 
-        expect(path.dirname(path.dirname(configured))).toBe(configuredRoot);
         expect(configured).toMatch(/beep-yeet-proof-locks-[a-f0-9]{12}-uid-[0-9]+\/[a-f0-9]{12}\.lock$/u);
+        expect(configured).toBe(absent);
         expect(relative).toBe(absent);
         expect(empty).toBe(absent);
-        expect(absent).not.toBe(configured);
+        expect(path.dirname(path.dirname(overridden))).toBe(configuredRoot);
+        expect(overridden).not.toBe(absent);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
