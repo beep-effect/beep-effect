@@ -3,16 +3,19 @@
 # S5 ratification.
 # STATUSES PROJECTED by ../s5/scripts/apply_s5_dispositions.py from the ratified
 # S5 dispositions (DECISIONS.md sittings 1-4). Do not hand-edit.
+# S6 STATUSES PROJECTED by ../s6/scripts/apply_s6_dispositions.py after the
+# steward sitting recorded in ABOX.yaml. Do not hand-edit these transitions.
 - candidate: AdmissionPolicy
   kind: class
-  definition: A governing set of capacity, floor, aging, heartbeat, and class-cap parameters used for weighted admission.
+  definition: A governing set of capacity, floor, aging, heartbeat, and class-cap parameters used for
+    weighted admission.
   admission_kind: decision
   cq_justification:
   - CQ-023
   decision_relevance: Identifies the policy against which queued-wait and starvation findings are evaluated.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:248-283 — 'Admission policy knobs
-    with the chartered production defaults.'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:248-283 — 'Admission policy
+    knobs with the chartered production defaults.'
   already_in_glossary: true
   status: accepted
   source_lanes:
@@ -23,7 +26,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-021
-  decision_relevance: Supplies the priority value returned for every queued SeatRequest and interpreted by aging.
+  decision_relevance: Supplies the priority value returned for every queued SeatRequest and interpreted
+    by aging.
   evidence:
   - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
     "verify"])'
@@ -33,17 +37,17 @@
   - s4-admission-scheduler
 - candidate: AdmissionSnapshot
   kind: class
-  definition: A point-in-time information artifact containing live capacity, leases, tickets, dead records, and
-    quarantined records.
+  definition: A point-in-time information artifact containing live capacity, leases, tickets, dead records,
+    and quarantined records.
   admission_kind: semantic-support
   supports:
   - capacityAtAdmissionTokens
   - hasStarvationException
-  decision_relevance: Provides the state inputs from which pre-grant remaining capacity and hard-floor exception
-    facts must be derived.
+  decision_relevance: Provides the state inputs from which pre-grant remaining capacity and hard-floor
+    exception facts must be derived.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:323-360 — 'Point-in-time view of
-    the machine-wide admission state.'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:323-360 — 'Point-in-time
+    view of the machine-wide admission state.'
   already_in_glossary: false
   status: accepted
   source_lanes:
@@ -64,12 +68,13 @@
   - s4-admission-scheduler
 - candidate: AffectedComputation
   kind: class
-  definition: One execution of Turbo affected-set determination whose raw query result is decoded for Yeet planning.
+  definition: One execution of Turbo affected-set determination whose raw query result is decoded for
+    Yeet planning.
   admission_kind: decision
   cq_justification:
   - CQ-019
-  decision_relevance: Identifies the computation whose affected-set provenance must be checked before narrowed verification
-    scope is trusted.
+  decision_relevance: Identifies the computation whose affected-set provenance must be checked before
+    narrowed verification scope is trusted.
   evidence:
   - packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:254-262 — 'turbo query affected'
   already_in_glossary: true
@@ -84,23 +89,23 @@
   - CQ-021
   decision_relevance: Provides the owner returned for each queued SeatRequest.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''pid: S.Finite, procStart:
-    S.String ... checkoutRoot: S.String'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''pid: S.Finite,
+    procStart: S.String ... checkoutRoot: S.String'''
   already_in_glossary: true
   status: accepted
   source_lanes:
   - s4-admission-scheduler
 - candidate: ArchitectureBoundaryRule
   kind: class
-  definition: A binding normative constraint over package or import dependencies whose contradiction requires the
-    proposal or rule to change.
+  definition: A binding normative constraint over package or import dependencies whose contradiction requires
+    the proposal or rule to change.
   admission_kind: semantic-support
   supports:
   - FallowDeadCodeLane
   decision_relevance: Defines the doctrine against which the Fallow dead-code lane can report a BoundaryViolation.
   evidence:
-  - standards/ARCHITECTURE.md:3-7 — 'If a proposed slice, package, adapter, or dependency contradicts this document,
-    the proposal must change or this document must be amended.'
+  - standards/ARCHITECTURE.md:3-7 — 'If a proposed slice, package, adapter, or dependency contradicts
+    this document, the proposal must change or this document must be amended.'
   - standards/ARCHITECTURE.md:255-270 — 'Forbidden by default'
   already_in_glossary: false
   status: merged
@@ -123,30 +128,31 @@
   - s4-fallow-laws
 - candidate: CachePosture
   kind: class
-  definition: A resolved cache decision for one Turbo invocation that is local-only, local-write-remote-read, or
-    caller-controlled.
+  definition: A resolved cache decision for one Turbo invocation that is local-only, local-write-remote-read,
+    or caller-controlled.
   admission_kind: decision
   cq_justification:
   - CQ-024
-  decision_relevance: Makes each execution's cache-transfer posture queryable for evidence-transfer and scheduling
-    economics.
+  decision_relevance: Makes each execution's cache-transfer posture queryable for evidence-transfer and
+    scheduling economics.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — ''description: "The resolved local Turbo
-    cache decision for one invocation."'''
-  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:309-313 — 'export const TurboCachePlanTag = LiteralKit(["caller-controlled",
-    "local-only", "remote-read"]).pipe('
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — ''description: "The resolved local
+    Turbo cache decision for one invocation."'''
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:309-313 — 'export const TurboCachePlanTag
+    = LiteralKit(["caller-controlled", "local-only", "remote-read"]).pipe('
   already_in_glossary: true
   status: accepted
   source_lanes:
   - s4-yeet-internals
 - candidate: CommittedFailure
   kind: class
-  definition: A failed verification-step result whose identifier is present in the terminal verdict embedded by
-    an attempt-finished journal event.
+  definition: A failed verification-step result whose identifier is present in the terminal verdict embedded
+    by an attempt-finished journal event.
   admission_kind: decision
   cq_justification:
   - CQ-022
-  decision_relevance: Identifies the same-attempt stopping signal that makes still-running executions obsolete.
+  decision_relevance: Identifies the same-attempt stopping signal that makes still-running executions
+    obsolete.
   evidence:
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failedStepId: S.optionalKey(S.String),'''
@@ -163,21 +169,22 @@
   - CQ-008
   decision_relevance: Lets the projection enumerate resources and the active grants holding each.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:673-686 — 'Gate coordinating one origin-scoped
-    resource (the per-origin full-proof lock)'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:673-686 — 'Gate coordinating one
+    origin-scoped resource (the per-origin full-proof lock)'
   already_in_glossary: true
   status: accepted
   source_lanes:
   - s4-admission-scheduler
 - candidate: CorruptAdmissionRecord
   kind: class
-  definition: An undecodable ticket or lease information artifact moved out of live admission state into quarantine.
+  definition: An undecodable ticket or lease information artifact moved out of live admission state into
+    quarantine.
   admission_kind: semantic-support
   supports:
   - SeatRequest
   - SeatGrant
-  decision_relevance: Prevents corrupt JSON files from being counted as queued requests, active grants, or starvation
-    exceptions.
+  decision_relevance: Prevents corrupt JSON files from being counted as queued requests, active grants,
+    or starvation exceptions.
   evidence:
   - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:483-497 — ''return { kind: "malformed"
     };'''
@@ -187,41 +194,43 @@
   - s4-admission-scheduler
 - candidate: FailureSignature
   kind: class
-  definition: An equivalence class of verification failures determined by a failed step identifier together with
-    its Yeet failure kind.
+  definition: An equivalence class of verification failures determined by a failed step identifier together
+    with its Yeet failure kind.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Supports ranking the recurrent failure signatures that contribute the most delay to certainty.
+  decision_relevance: Supports ranking the recurrent failure signatures that contribute the most delay
+    to certainty.
   evidence:
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failedStepId: S.optionalKey(S.String),'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failureKind: YeetFailureKind.pipe(S.optionalKey),'''
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:170-179 — 'export const YeetFailureKind = LiteralKit(["step-exit",
-    "handler-error"]).pipe('
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:170-179 — 'export const YeetFailureKind
+    = LiteralKit(["step-exit", "handler-error"]).pipe('
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
   - s4-yeet-internals
 - candidate: FallowBoundaryRuleProvenance
   kind: class
-  definition: An information artifact linking a generated Fallow boundary rule to its source, doctrine, catalog,
-    and enforcement-scope references.
+  definition: An information artifact linking a generated Fallow boundary rule to its source, doctrine,
+    catalog, and enforcement-scope references.
   admission_kind: semantic-support
   supports:
   - FallowDeadCodeLane
-  decision_relevance: Constrains which generated boundary rules may ground a boundary result from the Fallow dead-code
-    lane.
+  decision_relevance: Constrains which generated boundary rules may ground a boundary result from the
+    Fallow dead-code lane.
   evidence:
   - 'standards/fallow.boundaries.provenance.schema.json:4-13 — ''"title": "Fallow Boundary Rule Provenance"'''
-  - standards/fallow.boundaries.provenance.schema.json:35-44 — '"sourceRefs", "doctrineRefs", "catalogRefs", "promotionEligible"'
+  - standards/fallow.boundaries.provenance.schema.json:35-44 — '"sourceRefs", "doctrineRefs", "catalogRefs",
+    "promotionEligible"'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-fallow-laws
 - candidate: GrantState
   kind: class
-  definition: The closed lifecycle classification of a SeatGrant as active in the live lease store or released into
-    ETL history.
+  definition: The closed lifecycle classification of a SeatGrant as active in the live lease store or
+    released into ETL history.
   admission_kind: decision
   cq_justification:
   - CQ-008
@@ -258,7 +267,8 @@
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:12 — 'PackageRef,class,CQ-004,"@beep/*
     workspace package identity"'
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:5 — '@beep/hubspot 4'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:5 — '@beep/hubspot
+    4'
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
@@ -274,8 +284,8 @@
   decision_relevance: Identifies active admission holders used by resource, origin-exclusion, and charge-feasibility
     decisions.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — ''One active admission
-    lease: heavy work currently charged against capacity.'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — ''One active
+    admission lease: heavy work currently charged against capacity.'''
   already_in_glossary: true
   status: accepted
   source_lanes:
@@ -287,40 +297,41 @@
   cq_justification:
   - CQ-021
   - CQ-023
-  decision_relevance: Identifies the queued contenders whose charge, priority, wait, and starvation status the projection
-    must inspect.
+  decision_relevance: Identifies the queued contenders whose charge, priority, wait, and starvation status
+    the projection must inspect.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:188-230 — ''One durable queue ticket:
-    a contender waiting for admission.'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:188-230 — ''One durable
+    queue ticket: a contender waiting for admission.'''
   already_in_glossary: true
   status: accepted
   source_lanes:
   - s4-admission-scheduler
 - candidate: StarvationException
   kind: class
-  definition: The closed class of modeled legal-degradation states that may exempt a queued request from the starvation
-    invariant.
+  definition: The closed class of modeled legal-degradation states that may exempt a queued request from
+    the starvation invariant.
   admission_kind: decision
   cq_justification:
   - CQ-023
   decision_relevance: Constrains the only exception that may suppress a CQ-023 starvation violation.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged: availableGib
-    < config.hardFloorGib'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
   already_in_glossary: true
   status: accepted
   source_lanes:
   - s4-admission-scheduler
 - candidate: TurboConfiguration
   kind: class
-  definition: An information artifact that declares Turbo task, affected-selection, hash-input, and cache behavior.
+  definition: An information artifact that declares Turbo task, affected-selection, hash-input, and cache
+    behavior.
   admission_kind: semantic-support
   supports:
   - VerificationLane
   - AffectedComputation
   - HashSurface
-  decision_relevance: Provides the configuration bearer needed to interpret CQ-001, CQ-004, CQ-011, and CQ-019 source
-    facts.
+  decision_relevance: Provides the configuration bearer needed to interpret CQ-001, CQ-004, CQ-011, and
+    CQ-019 source facts.
   evidence:
   - 'turbo.json:3-8 — ''"futureFlags": {'''
   already_in_glossary: false
@@ -333,7 +344,8 @@
   admission_kind: semantic-support
   supports:
   - YeetMonitorLane
-  decision_relevance: Defines a blocking condition collected by YeetMonitorLane before CI-merge assurance can hold.
+  decision_relevance: Defines a blocking condition collected by YeetMonitorLane before CI-merge assurance
+    can hold.
   evidence:
   - AGENTS.md:52-56 — 'Unresolved review threads are a hard merge gate'
   already_in_glossary: false
@@ -342,13 +354,13 @@
   - s4-fallow-laws
 - candidate: VerificationAttempt
   kind: class
-  definition: A verification process occurrence whose start and terminal journal records share one UUID attempt
-    identifier.
+  definition: A verification process occurrence whose start and terminal journal records share one UUID
+    attempt identifier.
   admission_kind: decision
   cq_justification:
   - CQ-022
-  decision_relevance: Provides the attempt-scoped identity required to stop only executions made obsolete by a committed
-    failure in the same attempt.
+  decision_relevance: Provides the attempt-scoped identity required to stop only executions made obsolete
+    by a committed failure in the same attempt.
   evidence:
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:42-53 — ''attemptId: UUID,'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
@@ -360,14 +372,14 @@
   - s4-yeet-internals
 - candidate: VerificationEvidence
   kind: class
-  definition: A recorded validation result used as proof, including schema-validated browser-QA evidence and repo-wide
-    docgen proof.
+  definition: A recorded validation result used as proof, including schema-validated browser-QA evidence
+    and repo-wide docgen proof.
   admission_kind: decision
   cq_justification:
   - CQ-005
   - CQ-006
-  decision_relevance: Lets the projection distinguish completed evidence from the lane or WorkUnit that produced
-    it.
+  decision_relevance: Lets the projection distinguish completed evidence from the lane or WorkUnit that
+    produced it.
   evidence:
   - AGENTS.md:46-48 — 'repo-wide proof'
   - AGENTS.md:81-83 — 'recorded evidence'
@@ -377,32 +389,33 @@
   - s4-fallow-laws
 - candidate: WorkUnit
   kind: class
-  definition: A verification-lane specification paired with an execution scope, exemplified by affected and full-repository
-    docgen invocations.
+  definition: A verification-lane specification paired with an execution scope, exemplified by affected
+    and full-repository docgen invocations.
   admission_kind: decision
   cq_justification:
   - CQ-002
   decision_relevance: Provides the scheduling quantum used to choose a lane and scope for an episode.
   evidence:
   - AGENTS.md:46-48 — 'bounded to `origin/main...HEAD` + dirty files ... repo-wide proof'
-  - 'standards/fallow.pilot.inventory.jsonc:67-73 — ''"command": "bun run fallow:audit -- --base origin/main --gate
-    new-only"'''
+  - 'standards/fallow.pilot.inventory.jsonc:67-73 — ''"command": "bun run fallow:audit -- --base origin/main
+    --gate new-only"'''
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
   - s4-fallow-laws
 - candidate: WorkUnitExecution
   kind: class
-  definition: An occurrence of executing one planned verification lane that is represented by an executed lane record
-    in a Yeet verdict.
+  definition: An occurrence of executing one planned verification lane that is represented by an executed
+    lane record in a Yeet verdict.
   admission_kind: decision
   cq_justification:
   - CQ-022
   - CQ-025
-  decision_relevance: Provides the execution occurrence on which stopping state and measured wall cost are decided.
+  decision_relevance: Provides the execution occurrence on which stopping state and measured wall cost
+    are decided.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its execution
-    status and repair command.'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its
+    execution status and repair command.'
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''status: YeetLaneStatus,'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''durationMs: S.optionalKey(S.Finite),'''
   already_in_glossary: true
@@ -417,7 +430,8 @@
   admission_kind: semantic-support
   supports:
   - capacityAtAdmissionTokens
-  decision_relevance: Provides the already-consumed charge needed to reconstruct the pre-grant remaining capacity.
+  decision_relevance: Provides the already-consumed charge needed to reconstruct the pre-grant remaining
+    capacity.
   evidence:
   - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:611-612 — 'total + lease.weightTokens'
   already_in_glossary: false
@@ -426,8 +440,8 @@
   - s4-admission-scheduler
 - candidate: actualWallMs
   kind: property
-  definition: The measured wall duration in milliseconds of a completed work-unit execution, carried by lane durationMs
-    or by attempt elapsedMs only when the execution is the whole attempt.
+  definition: The measured wall duration in milliseconds of a completed work-unit execution, carried by
+    lane durationMs or by attempt elapsedMs only when the execution is the whole attempt.
   domain: WorkUnitExecution
   range: xsd:integer
   admission_kind: decision
@@ -445,7 +459,8 @@
   - s4-yeet-internals
 - candidate: admissionChargeTokens
   kind: property
-  definition: The integer token charge persisted as weightTokens on a SeatRequest and copied to its admitted SeatGrant.
+  definition: The integer token charge persisted as weightTokens on a SeatRequest and copied to its admitted
+    SeatGrant.
   domain: SeatRequest
   range: xsd:integer
   admission_kind: decision
@@ -454,7 +469,8 @@
   - CQ-021
   decision_relevance: Supports queue inspection and the charge-versus-remaining-capacity invariant.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''weightTokens: S.Finite'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''weightTokens:
+    S.Finite'''
   - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:878-892 — ''weightTokens: ticket.weightTokens'''
   already_in_glossary: true
   status: accepted
@@ -462,17 +478,18 @@
   - s4-admission-scheduler
 - candidate: admissionTokenWeight
   kind: property
-  definition: The deployed default token charge assigned to an AdmissionWorkKind before any small-host clamp.
+  definition: The deployed default token charge assigned to an AdmissionWorkKind before any small-host
+    clamp.
   domain: AdmissionWorkKind
   range: xsd:integer
   admission_kind: semantic-support
   supports:
   - admissionChargeTokens
-  decision_relevance: Defines the nominal charge copied into a request before persisted weightTokens becomes the
-    instance truth.
+  decision_relevance: Defines the nominal charge copied into a request before persisted weightTokens becomes
+    the instance truth.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:82-109 — 'Token weight for each
-    admission kind'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:82-109 — 'Token weight
+    for each admission kind'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -487,20 +504,23 @@
   - capacityAtAdmissionTokens
   decision_relevance: Anchors the grant-time snapshot needed to reconstruct pre-grant remaining capacity.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:155-162 — ''admittedAtMillis: S.Finite'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:155-162 — ''admittedAtMillis:
+    S.Finite'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-admission-scheduler
 - candidate: admittedBy
   kind: property
-  definition: Relates a WorkUnit executed inside the admission bracket to the SeatGrant guarding that execution.
+  definition: Relates a WorkUnit executed inside the admission bracket to the SeatGrant guarding that
+    execution.
   domain: WorkUnit
   range: SeatGrant
   admission_kind: decision
   cq_justification:
   - CQ-010
-  decision_relevance: Connects an admitted WorkUnit to the grant whose charge and remaining capacity CQ-010 audits.
+  decision_relevance: Connects an admitted WorkUnit to the grant whose charge and remaining capacity CQ-010
+    audits.
   evidence:
   - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1083-1090 — 'runs use while heartbeating
     the lease'
@@ -517,7 +537,8 @@
   supports:
   - AffectedComputation
   - HashSurface
-  decision_relevance: Constrains affected-set and hash-surface interpretation for CQ-004, CQ-011, and CQ-019.
+  decision_relevance: Constrains affected-set and hash-surface interpretation for CQ-004, CQ-011, and
+    CQ-019.
   evidence:
   - 'turbo.json:4 — ''"affectedUsingTaskInputs": true,'''
   already_in_glossary: false
@@ -533,8 +554,8 @@
   supports:
   - SeatRequest
   - hasOriginKey
-  decision_relevance: Disambiguates a queued request skipped for a fresh external origin lock from one blocked by
-    capacity.
+  decision_relevance: Disambiguates a queued request skipped for a fresh external origin lock from one
+    blocked by capacity.
   evidence:
   - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:216-225 — ''blockedOnOriginAtMillis:
     S.Finite'''
@@ -554,8 +575,8 @@
   - CQ-010
   decision_relevance: Provides the right-hand quantity in the deployed charge-feasibility invariant.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:648-664 — 'activeTokenTotal(state) + ticket.weightTokens
-    <= capacityTokens'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:648-664 — 'activeTokenTotal(state)
+    + ticket.weightTokens <= capacityTokens'
   already_in_glossary: true
   status: accepted
   source_lanes:
@@ -584,27 +605,29 @@
   admission_kind: semantic-support
   supports:
   - capacityAtAdmissionTokens
-  decision_relevance: Provides the total from which active charges are subtracted to reconstruct pre-grant remaining
-    capacity.
+  decision_relevance: Provides the total from which active charges are subtracted to reconstruct pre-grant
+    remaining capacity.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:347-356 — ''capacityTokens: S.Finite'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:347-356 — ''capacityTokens:
+    S.Finite'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-admission-scheduler
 - candidate: checkoutRoot
   kind: property
-  definition: The checkout-root component of process-grain Agent identity copied onto tickets and leases without
-    uniqueness semantics.
+  definition: The checkout-root component of process-grain Agent identity copied onto tickets and leases
+    without uniqueness semantics.
   domain: Agent
   range: xsd:string
   admission_kind: semantic-support
   supports:
   - Agent
-  decision_relevance: Completes the owner key used to answer which Agent owns each queued request without treating
-    checkout as the exclusion key.
+  decision_relevance: Completes the owner key used to answer which Agent owns each queued request without
+    treating checkout as the exclusion key.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''checkoutRoot: S.String'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''checkoutRoot:
+    S.String'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -617,8 +640,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-008
-  decision_relevance: Lets CQ-008 report which active grant holds each resource, subject to the carrier gap in issue
-    I09.
+  decision_relevance: Lets CQ-008 report which active grant holds each resource, subject to the carrier
+    gap in issue I09.
   evidence:
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:322-330 — ''tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath,
     context, proofSteps)'''
@@ -652,8 +675,8 @@
   decision_relevance: Supplies the direct base edges from which CQ-004's dependency closure is computed.
   evidence:
   - 'explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:55 — ''dependsOn,property,CQ-004,"direct
-    workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint''s base
-    relation (round-3 I-03/H-09 licensing fix)"'''
+    workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint''s
+    base relation (round-3 I-03/H-09 licensing fix)"'''
   - 'packages/drivers/hubspot/package.json:62 — ''"@beep/identity": "workspace:^",'''
   - 'packages/drivers/hubspot/package.json:68 — ''"@beep/test-utils": "workspace:^",'''
   already_in_glossary: true
@@ -688,7 +711,8 @@
   - CQ-021
   decision_relevance: Returns enqueue time for queued requests and anchors observed queue wait.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:216-226 — ''enqueuedAtMillis: S.Finite'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:216-226 — ''enqueuedAtMillis:
+    S.Finite'''
   already_in_glossary: true
   status: accepted
   source_lanes:
@@ -717,7 +741,8 @@
   admission_kind: semantic-support
   supports:
   - HashSurface
-  decision_relevance: Constrains the global-input contribution to CQ-011 invalidation and CQ-015 evidence transferability.
+  decision_relevance: Constrains the global-input contribution to CQ-011 invalidation and CQ-015 evidence
+    transferability.
   evidence:
   - 'turbo.json:6 — ''"globalConfiguration": true'''
   already_in_glossary: false
@@ -732,7 +757,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-023
-  decision_relevance: Selects the declared starvation bound and deployed parameter facts for a queued request.
+  decision_relevance: Selects the declared starvation bound and deployed parameter facts for a queued
+    request.
   evidence:
   - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1108-1125 — ''request: AdmissionRequest
     ... config?: AdmissionConfig ... const resolved = config ?? AdmissionConfig.make({});'''
@@ -752,8 +778,8 @@
   decision_relevance: Provides the structural carrier from which ETL derives HardFloorException and zero-capacity
     state.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged: availableGib
-    < config.hardFloorGib'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -769,8 +795,8 @@
   - hasStarvationException
   decision_relevance: Constrains both capacity feasibility and the global condition used to derive HardFloorException.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:165-174 — 'if (availableGib < config.hardFloorGib)
-    { return 0; }'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:165-174 — 'if (availableGib <
+    config.hardFloorGib) { return 0; }'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -786,9 +812,10 @@
   decision_relevance: Projects the per-invocation cache decision onto the execution queried by the cache-posture
     CQ.
   evidence:
-  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — 'The resolved cache decision for one Turbo
-    invocation.'
-  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:559-560 — 'Resolve the cache plan for one Turbo invocation.'
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — 'The resolved cache decision for
+    one Turbo invocation.'
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:559-560 — 'Resolve the cache plan for one
+    Turbo invocation.'
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
@@ -817,8 +844,8 @@
   admission_kind: semantic-support
   supports:
   - VerificationEvidence
-  decision_relevance: Preserves the check lane's explicit zero-output declaration for CQ-005 and CQ-015 validity
-    reasoning.
+  decision_relevance: Preserves the check lane's explicit zero-output declaration for CQ-005 and CQ-015
+    validity reasoning.
   evidence:
   - 'turbo.json:98 — ''"outputs": []'''
   already_in_glossary: false
@@ -827,18 +854,19 @@
   - s4-turbo-tasks
 - candidate: hasExecutionState
   kind: property
-  definition: Relates a work-unit execution to the packet execution-state member derived from its source execution
-    structure and terminal lane status.
+  definition: Relates a work-unit execution to the packet execution-state member derived from its source
+    execution structure and terminal lane status.
   domain: WorkUnitExecution
   range: ExecutionState
   admission_kind: decision
   cq_justification:
   - CQ-022
   - CQ-025
-  decision_relevance: Lets stopping and cost-calibration queries restrict executions to running or completed occurrences.
+  decision_relevance: Lets stopping and cost-calibration queries restrict executions to running or completed
+    occurrences.
   evidence:
-  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53 — ''description: "Execution status of
-    one planned yeet lane."'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53 — ''description: "Execution
+    status of one planned yeet lane."'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''status: YeetLaneStatus,'''
   already_in_glossary: true
   status: parked-run-2
@@ -852,7 +880,8 @@
   admission_kind: semantic-support
   supports:
   - HashSurface
-  decision_relevance: Preserves global environment inputs that can alter task hashes and invalidation decisions.
+  decision_relevance: Preserves global environment inputs that can alter task hashes and invalidation
+    decisions.
   evidence:
   - 'turbo.json:18 — ''"env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],'''
   already_in_glossary: false
@@ -876,7 +905,8 @@
   - s4-turbo-tasks
 - candidate: hasGlobalPassThroughEnvironmentVariable
   kind: property
-  definition: Relates a Turbo configuration to one globally declared pass-through environment variable pattern.
+  definition: Relates a Turbo configuration to one globally declared pass-through environment variable
+    pattern.
   domain: TurboConfiguration
   range: xsd:string
   admission_kind: semantic-support
@@ -891,8 +921,8 @@
   - s4-turbo-tasks
 - candidate: hasGrantState
   kind: property
-  definition: Relates a SeatGrant to its closed active or released lifecycle state, derived from lease presence
-    and ETL history.
+  definition: Relates a SeatGrant to its closed active or released lifecycle state, derived from lease
+    presence and ETL history.
   domain: SeatGrant
   range: GrantState
   admission_kind: decision
@@ -901,8 +931,8 @@
   - CQ-009
   decision_relevance: Restricts holder and origin-exclusion decisions to active grants.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — 'One active admission
-    lease'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — 'One active
+    admission lease'
   - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1071-1079 — ''yield* fs.remove(admitted.leasePath,
     { force: true }).pipe(Effect.ignore);'''
   already_in_glossary: true
@@ -926,7 +956,8 @@
   - s4-turbo-tasks
 - candidate: hasOriginKey
   kind: property
-  definition: Relates a SeatGrant to the verbatim nonempty originKey used for kind-independent origin exclusion.
+  definition: Relates a SeatGrant to the verbatim nonempty originKey used for kind-independent origin
+    exclusion.
   domain: SeatGrant
   range: xsd:string
   admission_kind: decision
@@ -934,7 +965,8 @@
   - CQ-009
   decision_relevance: Joins active grants by origin to detect prohibited concurrent grants.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:620-628 — 'lease.originKey === ticket.originKey'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:620-628 — 'lease.originKey ===
+    ticket.originKey'
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:313-320 — ''originKey: path.basename(lockPath,
     ".lock")'''
   already_in_glossary: true
@@ -949,7 +981,8 @@
   admission_kind: semantic-support
   supports:
   - VerificationEvidence
-  decision_relevance: Separates pass-through runtime context from lane hash inputs for CQ-015 validity judgments.
+  decision_relevance: Separates pass-through runtime context from lane hash inputs for CQ-015 validity
+    judgments.
   evidence:
   - 'turbo.json:101 — ''"passThroughEnv": ['''
   already_in_glossary: false
@@ -966,24 +999,26 @@
   - CQ-021
   decision_relevance: Returns the base ordering class used before FIFO tie breakers and aging.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''priority: AdmissionPriority'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''priority:
+    AdmissionPriority'''
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
   - s4-admission-scheduler
 - candidate: hasStarvationException
   kind: property
-  definition: Relates a SeatRequest to HardFloorException when its observation snapshot reports the global hard
-    floor engaged.
+  definition: Relates a SeatRequest to HardFloorException when its observation snapshot reports the global
+    hard floor engaged.
   domain: SeatRequest
   range: StarvationException
   admission_kind: decision
   cq_justification:
   - CQ-023
-  decision_relevance: Permits only the modeled hard-floor degradation to exempt a request from the starvation violation.
+  decision_relevance: Permits only the modeled hard-floor degradation to exempt a request from the starvation
+    violation.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged: availableGib
-    < config.hardFloorGib'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
@@ -1011,7 +1046,8 @@
   admission_kind: semantic-support
   supports:
   - VerificationEvidence
-  decision_relevance: Defines the declared artifact surface whose reuse bears on CQ-005 and CQ-015 evidence validity.
+  decision_relevance: Defines the declared artifact surface whose reuse bears on CQ-005 and CQ-015 evidence
+    validity.
   evidence:
   - 'turbo.json:53-54 — ''"outputs": ['''
   already_in_glossary: false
@@ -1035,16 +1071,16 @@
   - s4-admission-scheduler
 - candidate: heartbeatSeconds
   kind: property
-  definition: The AdmissionPolicy interval for ticket and lease heartbeats and the multiplier base for origin-busy
-    stamp freshness.
+  definition: The AdmissionPolicy interval for ticket and lease heartbeats and the multiplier base for
+    origin-busy stamp freshness.
   domain: AdmissionPolicy
   range: xsd:integer
   admission_kind: semantic-support
   supports:
   - SeatRequest
   - hasOriginKey
-  decision_relevance: Constrains how long a mixed-version origin-busy observation allows later origins to skip a
-    blocked request.
+  decision_relevance: Constrains how long a mixed-version origin-busy observation allows later origins
+    to skip a blocked request.
   evidence:
   - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:630-634 — 'nowMillis - ticket.blockedOnOriginAtMillis
     <= 3 * config.heartbeatSeconds * 1000'
@@ -1054,15 +1090,15 @@
   - s4-admission-scheduler
 - candidate: inAttempt
   kind: property
-  definition: Relates a committed failure or work-unit execution carried by a terminal verdict to the UUID-identified
-    verification attempt containing it.
+  definition: Relates a committed failure or work-unit execution carried by a terminal verdict to the
+    UUID-identified verification attempt containing it.
   domain: CommittedFailure | WorkUnitExecution
   range: VerificationAttempt
   admission_kind: decision
   cq_justification:
   - CQ-022
-  decision_relevance: Supplies the same-attempt join that prevents an earlier failure from cancelling executions
-    in a later retry.
+  decision_relevance: Supplies the same-attempt join that prevents an earlier failure from cancelling
+    executions in a later retry.
   evidence:
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''attemptId: UUID,'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
@@ -1080,7 +1116,8 @@
   supports:
   - VerificationLane
   - WorkUnitExecution
-  decision_relevance: Distinguishes finite verification executions from persistent task services during CQ-001 ratification.
+  decision_relevance: Distinguishes finite verification executions from persistent task services during
+    CQ-001 ratification.
   evidence:
   - 'turbo.json:35 — ''"persistent": false,'''
   already_in_glossary: false
@@ -1098,7 +1135,8 @@
   - hasStarvationException
   decision_relevance: Supplies the runtime input to the capacity formula and hard-floor condition.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1259-1273 — ''memAvailableGib: availableGib'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1259-1273 — ''memAvailableGib:
+    availableGib'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -1113,8 +1151,8 @@
   - CQ-023
   decision_relevance: Supplies the observed wait compared with the declared starvation bound.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:975-984 — 'const waitedMillis = info.nowMillis
-    - startMillis;'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:975-984 — 'const waitedMillis
+    = info.nowMillis - startMillis;'
   already_in_glossary: true
   status: accepted
   source_lanes:
@@ -1129,11 +1167,11 @@
   supports:
   - WorkUnitExecution
   - WorkUnit
-  decision_relevance: Preserves the specification-to-execution bridge needed to interpret lane-level cost and state
-    without conflating occurrences with reusable plans.
+  decision_relevance: Preserves the specification-to-execution bridge needed to interpret lane-level cost
+    and state without conflating occurrences with reusable plans.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its execution
-    status and repair command.'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its
+    execution status and repair command.'
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''id: S.String,'''
   already_in_glossary: true
   status: parked-run-2
@@ -1141,8 +1179,8 @@
   - s4-yeet-internals
 - candidate: pid
   kind: property
-  definition: The operating-system process identifier component of process-grain Agent identity copied onto tickets
-    and leases.
+  definition: The operating-system process identifier component of process-grain Agent identity copied
+    onto tickets and leases.
   domain: Agent
   range: xsd:integer
   admission_kind: semantic-support
@@ -1150,15 +1188,16 @@
   - Agent
   decision_relevance: Contributes to the identity of the Agent owning a queued SeatRequest.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-113 — ''pid: S.Finite, procStart:
-    S.String'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-113 — ''pid: S.Finite,
+    procStart: S.String'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-admission-scheduler
 - candidate: procStart
   kind: property
-  definition: The procfs process-start identifier component that distinguishes Agent owners across pid reuse.
+  definition: The procfs process-start identifier component that distinguishes Agent owners across pid
+    reuse.
   domain: Agent
   range: xsd:string
   admission_kind: semantic-support
@@ -1166,8 +1205,8 @@
   - Agent
   decision_relevance: Prevents a reused pid from being treated as the original request owner.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-127 — 'pid plus procStart ...
-    identify the owner across pid reuse'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-127 — 'pid plus procStart
+    ... identify the owner across pid reuse'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -1200,8 +1239,8 @@
   - CQ-021
   decision_relevance: Returns the owner of each queued request.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''pid: S.Finite, procStart:
-    S.String ... checkoutRoot: S.String'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''pid: S.Finite,
+    procStart: S.String ... checkoutRoot: S.String'''
   already_in_glossary: true
   status: parked-run-2
   source_lanes:
@@ -1223,25 +1262,27 @@
   - s4-admission-scheduler
 - candidate: reviewFixClassCap
   kind: property
-  definition: The AdmissionPolicy maximum number of concurrent ReviewFixWork leases before later review-fix tickets
-    become skippable.
+  definition: The AdmissionPolicy maximum number of concurrent ReviewFixWork leases before later review-fix
+    tickets become skippable.
   domain: AdmissionPolicy
   range: xsd:integer
   admission_kind: semantic-support
   supports:
   - SeatRequest
   - SeatGrant
-  decision_relevance: Constrains whether a queued review-fix request may promote while preserving progress for other
-    classes.
+  decision_relevance: Constrains whether a queued review-fix request may promote while preserving progress
+    for other classes.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:636-639 — 'return activeReviewFix >= config.reviewFixClassCap;'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:636-639 — 'return activeReviewFix
+    >= config.reviewFixClassCap;'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-admission-scheduler
 - candidate: slotSizeGib
   kind: property
-  definition: The AdmissionPolicy divisor converting schedulable GiB above reserve into whole capacity tokens.
+  definition: The AdmissionPolicy divisor converting schedulable GiB above reserve into whole capacity
+    tokens.
   domain: AdmissionPolicy
   range: xsd:decimal
   admission_kind: semantic-support
@@ -1249,8 +1290,8 @@
   - capacityAtAdmissionTokens
   decision_relevance: Constrains the live token capacity from which the pre-grant remainder is calculated.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:168-174 — 'Math.floor((availableGib - config.reserveGib)
-    / config.slotSizeGib)'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:168-174 — 'Math.floor((availableGib
+    - config.reserveGib) / config.slotSizeGib)'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -1276,9 +1317,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:97 — '@beep/acp 96'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:97 — '@beep/acp
+    96'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1289,7 +1332,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:116 — '@beep/agents-client
     115'
@@ -1303,7 +1347,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:6 — '@beep/agents-domain
     5'
@@ -1317,7 +1362,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:26 — '@beep/agents-server
     25'
@@ -1331,7 +1377,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:59 — '@beep/agents-tables
     58'
@@ -1345,7 +1392,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:40 — '@beep/agents-use-cases
     39'
@@ -1359,7 +1407,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:34 — '@beep/ai-provider-cli
     33'
@@ -1373,9 +1422,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:25 — '@beep/ai-sync 24'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:25 — '@beep/ai-sync
+    24'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1386,7 +1437,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:89 — '@beep/anthropic
     88'
@@ -1400,9 +1452,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:39 — '@beep/api-docs 38'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:39 — '@beep/api-docs
+    38'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1413,7 +1467,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:83 — '@beep/api-transport
     82'
@@ -1427,7 +1482,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:21 — '@beep/architecture-lab-client
     20'
@@ -1441,7 +1497,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:108 — '@beep/architecture-lab-config
     107'
@@ -1455,7 +1512,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:135 — '@beep/architecture-lab-domain
     134'
@@ -1469,7 +1527,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:118 — '@beep/architecture-lab-proof
     117'
@@ -1483,7 +1542,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:112 — '@beep/architecture-lab-server
     111'
@@ -1497,7 +1557,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:74 — '@beep/architecture-lab-tables
     73'
@@ -1511,7 +1572,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:9 — '@beep/architecture-lab-ui
     8'
@@ -1525,7 +1587,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:93 — '@beep/architecture-lab-use-cases
     92'
@@ -1539,9 +1602,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:84 — '@beep/box 83'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:84 — '@beep/box
+    83'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1552,9 +1617,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:133 — '@beep/brand 132'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:133 — '@beep/brand
+    132'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1565,9 +1632,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:45 — '@beep/chalk 44'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:45 — '@beep/chalk
+    44'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1578,7 +1647,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:134 — '@beep/codegen-kit
     133'
@@ -1592,9 +1662,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:38 — '@beep/colors 37'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:38 — '@beep/colors
+    37'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1605,9 +1677,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:43 — '@beep/cosmos 42'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:43 — '@beep/cosmos
+    42'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1618,9 +1692,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:110 — '@beep/data 109'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:110 — '@beep/data
+    109'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1631,9 +1707,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:15 — '@beep/db-admin 14'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:15 — '@beep/db-admin
+    14'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1644,9 +1722,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:17 — '@beep/discord 16'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:17 — '@beep/discord
+    16'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1657,7 +1737,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:140 — '@beep/doc-text
     139'
@@ -1671,9 +1752,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:22 — '@beep/dock 21'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:22 — '@beep/dock
+    21'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1684,7 +1767,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:35 — '@beep/dock-react
     34'
@@ -1698,7 +1782,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:103 — '@beep/documents-domain
     102'
@@ -1712,7 +1797,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:87 — '@beep/documents-server
     86'
@@ -1726,7 +1812,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:130 — '@beep/documents-tables
     129'
@@ -1740,7 +1827,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:141 — '@beep/documents-use-cases
     140'
@@ -1754,9 +1842,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:81 — '@beep/drizzle 80'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:81 — '@beep/drizzle
+    80'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1767,9 +1857,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:113 — '@beep/duckdb 112'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:113 — '@beep/duckdb
+    112'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1780,9 +1872,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:95 — '@beep/ecfr 94'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:95 — '@beep/ecfr
+    94'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1793,9 +1887,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:28 — '@beep/editor 27'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:28 — '@beep/editor
+    27'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1806,7 +1902,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:52 — '@beep/effect-drizzle
     51'
@@ -1820,7 +1917,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:46 — '@beep/epistemic-client
     45'
@@ -1834,7 +1932,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:119 — '@beep/epistemic-config
     118'
@@ -1848,7 +1947,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:91 — '@beep/epistemic-domain
     90'
@@ -1862,7 +1962,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:105 — '@beep/epistemic-server
     104'
@@ -1876,7 +1977,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:138 — '@beep/epistemic-tables
     137'
@@ -1890,7 +1992,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:69 — '@beep/epistemic-ui
     68'
@@ -1904,7 +2007,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:120 — '@beep/epistemic-use-cases
     119'
@@ -1918,9 +2022,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:58 — '@beep/exiftool 57'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:58 — '@beep/exiftool
+    57'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1931,7 +2037,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:18 — '@beep/face-detection
     17'
@@ -1945,9 +2052,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:101 — '@beep/fc-runs 100'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:101 — '@beep/fc-runs
+    100'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1958,9 +2067,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:114 — '@beep/ffmpeg 113'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:114 — '@beep/ffmpeg
+    113'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -1971,7 +2082,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:32 — '@beep/file-processing
     31'
@@ -1985,7 +2097,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:94 — '@beep/firecrawl
     93'
@@ -1999,7 +2112,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:19 — '@beep/gov-legal-mcp
     18'
@@ -2013,9 +2127,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:109 — '@beep/govinfo 108'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:109 — '@beep/govinfo
+    108'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2026,9 +2142,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:78 — '@beep/graph-3d 77'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:78 — '@beep/graph-3d
+    77'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2039,9 +2157,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:124 — '@beep/html 123'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:124 — '@beep/html
+    123'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2052,9 +2172,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:5 — '@beep/hubspot 4'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:5 — '@beep/hubspot
+    4'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2065,9 +2187,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:79 — '@beep/identity 78'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:79 — '@beep/identity
+    78'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2078,9 +2202,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:99 — '@beep/infra 98'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:99 — '@beep/infra
+    98'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2091,7 +2217,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:62 — '@beep/langextract
     61'
@@ -2105,7 +2232,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:30 — '@beep/law-practice-domain
     29'
@@ -2119,7 +2247,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:14 — '@beep/law-practice-server
     13'
@@ -2133,7 +2262,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:51 — '@beep/law-practice-tables
     50'
@@ -2147,7 +2277,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:68 — '@beep/law-practice-use-cases
     67'
@@ -2161,7 +2292,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:61 — '@beep/lexical-schema
     60'
@@ -2175,9 +2307,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:76 — '@beep/libpff 75'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:76 — '@beep/libpff
+    75'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2188,7 +2322,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:36 — '@beep/lint-rules
     35'
@@ -2202,9 +2337,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:121 — '@beep/m365 120'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:121 — '@beep/m365
+    120'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2215,9 +2352,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:42 — '@beep/m365-mcp 41'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:42 — '@beep/m365-mcp
+    41'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2228,9 +2367,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:13 — '@beep/mcp-kit 12'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:13 — '@beep/mcp-kit
+    12'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2241,9 +2382,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:65 — '@beep/md 64'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:65 — '@beep/md
+    64'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2254,9 +2397,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:125 — '@beep/n3 124'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:125 — '@beep/n3
+    124'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2267,9 +2412,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:98 — '@beep/nlp 97'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:98 — '@beep/nlp
+    97'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2280,9 +2427,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:29 — '@beep/nlp-mcp 28'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:29 — '@beep/nlp-mcp
+    28'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2293,7 +2442,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:88 — '@beep/nlp-processing
     87'
@@ -2307,9 +2457,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:115 — '@beep/obs 114'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:115 — '@beep/obs
+    114'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2320,7 +2472,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:122 — '@beep/observability
     121'
@@ -2334,9 +2487,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:56 — '@beep/oip-web 55'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:56 — '@beep/oip-web
+    55'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2347,7 +2502,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:107 — '@beep/onepassword-cli
     106'
@@ -2361,9 +2517,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:7 — '@beep/ontology 6'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:7 — '@beep/ontology
+    6'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2374,7 +2532,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:92 — '@beep/ontology-client
     91'
@@ -2388,7 +2547,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:33 — '@beep/ontology-config
     32'
@@ -2402,7 +2562,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:60 — '@beep/ontology-domain
     59'
@@ -2416,7 +2577,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:37 — '@beep/ontology-server
     36'
@@ -2430,7 +2592,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:82 — '@beep/ontology-ui
     81'
@@ -2444,7 +2607,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:20 — '@beep/ontology-use-cases
     19'
@@ -2458,9 +2622,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:129 — '@beep/openai 128'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:129 — '@beep/openai
+    128'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2471,7 +2637,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:85 — '@beep/openai-compat
     84'
@@ -2485,9 +2652,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:50 — '@beep/openclaw 49'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:50 — '@beep/openclaw
+    49'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2498,9 +2667,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:96 — '@beep/oxigraph 95'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:96 — '@beep/oxigraph
+    95'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2511,9 +2682,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:11 — '@beep/pacer 10'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:11 — '@beep/pacer
+    10'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2524,7 +2697,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:127 — '@beep/pandoc-ast
     126'
@@ -2538,9 +2712,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:24 — '@beep/pglite 23'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:24 — '@beep/pglite
+    23'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2551,9 +2727,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:48 — '@beep/phoenix 47'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:48 — '@beep/phoenix
+    47'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2564,7 +2742,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:132 — '@beep/postgres
     131'
@@ -2578,7 +2757,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:66 — '@beep/practice-kg-mcp
     65'
@@ -2592,9 +2772,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:136 — '@beep/pretext 135'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:136 — '@beep/pretext
+    135'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2605,7 +2787,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:90 — '@beep/professional-desktop
     89'
@@ -2619,7 +2802,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:137 — '@beep/provenance
     136'
@@ -2633,7 +2817,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:139 — '@beep/qa-capture
     138'
@@ -2647,9 +2832,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:106 — '@beep/rdf 105'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:106 — '@beep/rdf
+    105'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2660,7 +2847,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:8 — '@beep/rdf-canonize
     7'
@@ -2674,7 +2862,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:73 — '@beep/repo-ai-metrics
     72'
@@ -2688,9 +2877,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:23 — '@beep/repo-cli 22'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:23 — '@beep/repo-cli
+    22'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2701,7 +2892,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:128 — '@beep/repo-configs
     127'
@@ -2715,7 +2907,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:31 — '@beep/repo-docgen
     30'
@@ -2729,7 +2922,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:102 — '@beep/repo-utils
     101'
@@ -2743,9 +2937,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:10 — '@beep/root 9'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:10 — '@beep/root
+    9'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2756,9 +2952,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:100 — '@beep/runpod 99'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:100 — '@beep/runpod
+    99'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2769,9 +2967,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:142 — '@beep/sanity 141'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:142 — '@beep/sanity
+    141'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2782,9 +2982,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:104 — '@beep/schema 103'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:104 — '@beep/schema
+    103'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2795,7 +2997,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:64 — '@beep/scratchpad
     63'
@@ -2809,7 +3012,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:71 — '@beep/semantic-web
     70'
@@ -2823,7 +3027,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:54 — '@beep/semantica
     53'
@@ -2837,9 +3042,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:86 — '@beep/shacl 85'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:86 — '@beep/shacl
+    85'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2850,7 +3057,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:16 — '@beep/shared-domain
     15'
@@ -2864,7 +3072,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:63 — '@beep/shared-tables
     62'
@@ -2878,7 +3087,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:49 — '@beep/shared-use-cases
     48'
@@ -2892,7 +3102,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:41 — '@beep/skill-contract
     40'
@@ -2906,7 +3117,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:57 — '@beep/storybook
     56'
@@ -2920,7 +3132,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:67 — '@beep/tailscale
     66'
@@ -2934,7 +3147,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:53 — '@beep/test-utils
     52'
@@ -2948,9 +3162,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:75 — '@beep/tika 74'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:75 — '@beep/tika
+    74'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -2961,7 +3177,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:80 — '@beep/trustgraph-workbench
     79'
@@ -2975,7 +3192,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:123 — '@beep/tsgo-shim
     122'
@@ -2989,9 +3207,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:55 — '@beep/types 54'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:55 — '@beep/types
+    54'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -3002,9 +3222,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:126 — '@beep/ui 125'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:126 — '@beep/ui
+    125'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -3015,9 +3237,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:47 — '@beep/uspto 46'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:47 — '@beep/uspto
+    46'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -3028,7 +3252,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:117 — '@beep/uspto-mcp
     116'
@@ -3042,9 +3267,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:72 — '@beep/utils 71'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:72 — '@beep/utils
+    71'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -3055,7 +3282,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:77 — '@beep/venice-ai
     76'
@@ -3069,9 +3297,11 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:131 — '@beep/wink 130'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:131 — '@beep/wink
+    130'
   already_in_glossary: false
   status: rejected
   source_lanes:
@@ -3082,7 +3312,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:70 — '@beep/workspace-domain
     69'
@@ -3096,7 +3327,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:44 — '@beep/workspace-server
     43'
@@ -3110,7 +3342,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:12 — '@beep/workspace-tables
     11'
@@ -3124,7 +3357,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
   - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:27 — '@beep/workspace-use-cases
     26'
@@ -3138,21 +3372,24 @@
   admission_kind: decision
   cq_justification:
   - CQ-004
-  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency closure.
+  decision_relevance: Provides a package identity that CQ-004 can return from touched-package dependency
+    closure.
   evidence:
-  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:111 — '@beep/xai 110'
+  - explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt:111 — '@beep/xai
+    110'
   already_in_glossary: false
   status: rejected
   source_lanes:
   - s4-package-topology
 - candidate: BrowserQaLane
   kind: individual
-  definition: A recorded gesture-bearing UI verification lane comprising record, extract, judge, and schema validation.
+  definition: A recorded gesture-bearing UI verification lane comprising record, extract, judge, and schema
+    validation.
   admission_kind: decision
   cq_justification:
   - CQ-001
-  decision_relevance: Lets the projection enumerate the browser-QA validation surface when a gesture-bearing UI
-    milestone is in scope.
+  decision_relevance: Lets the projection enumerate the browser-QA validation surface when a gesture-bearing
+    UI milestone is in scope.
   evidence:
   - AGENTS.md:81-83 — 'recorded evidence via `bun run beep qa` (record → extract → judge)'
   already_in_glossary: false
@@ -3161,13 +3398,15 @@
   - s4-fallow-laws
 - candidate: DocgenAffectedWorkUnit
   kind: individual
-  definition: The docgen WorkUnit bounded to the origin/main-to-HEAD change plus dirty files for edit loops.
+  definition: The docgen WorkUnit bounded to the origin/main-to-HEAD change plus dirty files for edit
+    loops.
   admission_kind: decision
   cq_justification:
   - CQ-002
   decision_relevance: Allows the projection to choose affected documentation proof during repair loops.
   evidence:
-  - AGENTS.md:46-48 — '`bun run docgen:local` for edit loops (bounded to `origin/main...HEAD` + dirty files)'
+  - AGENTS.md:46-48 — '`bun run docgen:local` for edit loops (bounded to `origin/main...HEAD` + dirty
+    files)'
   already_in_glossary: false
   status: accepted
   source_lanes:
@@ -3178,8 +3417,8 @@
   admission_kind: decision
   cq_justification:
   - CQ-002
-  decision_relevance: Allows the projection to choose full-repository documentation proof when affected proof is
-    insufficient.
+  decision_relevance: Allows the projection to choose full-repository documentation proof when affected
+    proof is insufficient.
   evidence:
   - AGENTS.md:46-48 — 'full `bun run docgen` only for the repo-wide proof'
   already_in_glossary: false
@@ -3188,31 +3427,32 @@
   - s4-fallow-laws
 - candidate: DocgenLane
   kind: individual
-  definition: The documentation-generation verification lane invoked in affected edit-loop or full-repository proof
-    scope.
+  definition: The documentation-generation verification lane invoked in affected edit-loop or full-repository
+    proof scope.
   admission_kind: decision
   cq_justification:
   - CQ-001
   decision_relevance: Lets the projection enumerate doc generation once and schedule its affected or full-repository
     WorkUnit.
   evidence:
-  - AGENTS.md:46-48 — '`bun run docgen:local` for edit loops ... full `bun run docgen` only for the repo-wide proof'
+  - AGENTS.md:46-48 — '`bun run docgen:local` for edit loops ... full `bun run docgen` only for the repo-wide
+    proof'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-fallow-laws
 - candidate: FallowAuditLane
   kind: individual
-  definition: A Fallow verification lane that audits a base-relative change and gates findings attributed as newly
-    introduced.
+  definition: A Fallow verification lane that audits a base-relative change and gates findings attributed
+    as newly introduced.
   admission_kind: decision
   cq_justification:
   - CQ-001
-  decision_relevance: Lets the projection enumerate the base-relative Fallow audit surface separately from dead-code
-    and health probes.
+  decision_relevance: Lets the projection enumerate the base-relative Fallow audit surface separately
+    from dead-code and health probes.
   evidence:
-  - 'standards/fallow.pilot.inventory.jsonc:67-82 — ''"command": "bun run fallow:audit -- --base origin/main --gate
-    new-only"'''
+  - 'standards/fallow.pilot.inventory.jsonc:67-82 — ''"command": "bun run fallow:audit -- --base origin/main
+    --gate new-only"'''
   - '.fallowrc.jsonc:423-425 — ''"gate": "new-only"'''
   already_in_glossary: false
   status: accepted
@@ -3224,25 +3464,27 @@
   admission_kind: decision
   cq_justification:
   - CQ-002
-  decision_relevance: Makes the named base-relative audit invocation available as a schedulable lane-by-scope unit.
+  decision_relevance: Makes the named base-relative audit invocation available as a schedulable lane-by-scope
+    unit.
   evidence:
-  - 'standards/fallow.pilot.inventory.jsonc:67-73 — ''"command": "bun run fallow:audit -- --base origin/main --gate
-    new-only"'''
+  - 'standards/fallow.pilot.inventory.jsonc:67-73 — ''"command": "bun run fallow:audit -- --base origin/main
+    --gate new-only"'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
   - s4-fallow-laws
 - candidate: FallowDeadCodeLane
   kind: individual
-  definition: A command-invoked Fallow verification lane that reports dead-code and dependency-hygiene diagnostics,
-    including boundary violations.
+  definition: A command-invoked Fallow verification lane that reports dead-code and dependency-hygiene
+    diagnostics, including boundary violations.
   admission_kind: decision
   cq_justification:
   - CQ-001
-  decision_relevance: Lets the projection enumerate the Fallow dead-code validation surface and classify its lane
-    kind.
+  decision_relevance: Lets the projection enumerate the Fallow dead-code validation surface and classify
+    its lane kind.
   evidence:
-  - 'standards/fallow.pilot.inventory.jsonc:31-46 — ''"command": "bunx fallow dead-code --format json --quiet"'''
+  - 'standards/fallow.pilot.inventory.jsonc:31-46 — ''"command": "bunx fallow dead-code --format json
+    --quiet"'''
   - '.fallowrc.jsonc:426-436 — ''"boundary-violation": "error"'''
   already_in_glossary: false
   status: parked-run-2
@@ -3250,12 +3492,13 @@
   - s4-fallow-laws
 - candidate: FallowHealthLane
   kind: individual
-  definition: A command-invoked Fallow verification lane that measures function health, maintainability, and threshold
-    severity.
+  definition: A command-invoked Fallow verification lane that measures function health, maintainability,
+    and threshold severity.
   admission_kind: decision
   cq_justification:
   - CQ-001
-  decision_relevance: Lets the projection enumerate the Fallow health validation surface and classify its lane kind.
+  decision_relevance: Lets the projection enumerate the Fallow health validation surface and classify
+    its lane kind.
   evidence:
   - 'standards/fallow.pilot.inventory.jsonc:92-103 — ''"command": "bunx fallow health --format json --quiet"'''
   - .fallowrc.jsonc:302-312 — 'Complexity ceilings'
@@ -3395,7 +3638,8 @@
   - s4-turbo-tasks
 - candidate: LaneStorybookBuild
   kind: individual
-  definition: The Turbo task named storybook:build, proposed for ratification as a turbo-task verification lane.
+  definition: The Turbo task named storybook:build, proposed for ratification as a turbo-task verification
+    lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3408,7 +3652,8 @@
   - s4-turbo-tasks
 - candidate: LaneStorybookStart
   kind: individual
-  definition: The Turbo task named storybook:start, proposed for ratification as a turbo-task verification lane.
+  definition: The Turbo task named storybook:start, proposed for ratification as a turbo-task verification
+    lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3434,7 +3679,8 @@
   - s4-turbo-tasks
 - candidate: LaneTestIntegration
   kind: individual
-  definition: The Turbo task named test:integration, proposed for ratification as a turbo-task verification lane.
+  definition: The Turbo task named test:integration, proposed for ratification as a turbo-task verification
+    lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3447,8 +3693,8 @@
   - s4-turbo-tasks
 - candidate: LaneTestIntegrationParallel
   kind: individual
-  definition: The Turbo task named test:integration:parallel, proposed for ratification as a turbo-task verification
-    lane.
+  definition: The Turbo task named test:integration:parallel, proposed for ratification as a turbo-task
+    verification lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3461,8 +3707,8 @@
   - s4-turbo-tasks
 - candidate: LaneTestIntegrationSerial
   kind: individual
-  definition: The Turbo task named test:integration:serial, proposed for ratification as a turbo-task verification
-    lane.
+  definition: The Turbo task named test:integration:serial, proposed for ratification as a turbo-task
+    verification lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3475,7 +3721,8 @@
   - s4-turbo-tasks
 - candidate: LaneTestProperty
   kind: individual
-  definition: The Turbo task named test:property, proposed for ratification as a turbo-task verification lane.
+  definition: The Turbo task named test:property, proposed for ratification as a turbo-task verification
+    lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3488,7 +3735,8 @@
   - s4-turbo-tasks
 - candidate: LaneTestStorybook
   kind: individual
-  definition: The Turbo task named test:storybook, proposed for ratification as a turbo-task verification lane.
+  definition: The Turbo task named test:storybook, proposed for ratification as a turbo-task verification
+    lane.
   admission_kind: decision
   cq_justification:
   - CQ-001
@@ -3520,7 +3768,8 @@
   - CQ-008
   decision_relevance: Names the origin-scoped contended resource whose holder CQ-008 can report.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:673-686 — 'the per-origin full-proof lock'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:673-686 — 'the per-origin full-proof
+    lock'
   already_in_glossary: true
   status: accepted
   source_lanes:
@@ -3542,14 +3791,15 @@
   - s4-turbo-tasks
 - candidate: YeetMonitorLane
   kind: individual
-  definition: The collected PR-closeout verification activity that monitors hosted state until merge readiness is
-    reported.
+  definition: The collected PR-closeout verification activity that monitors hosted state until merge readiness
+    is reported.
   admission_kind: decision
   cq_justification:
   - CQ-001
   - CQ-006
   - CQ-017
-  decision_relevance: Supplies the collected merge-readiness lane whose unmet state prevents CI-merge assurance.
+  decision_relevance: Supplies the collected merge-readiness lane whose unmet state prevents CI-merge
+    assurance.
   evidence:
   - 'AGENTS.md:52-56 — ''run `bun run beep yeet monitor` until it reports `merge-ready: yes`'''
   already_in_glossary: false
@@ -3558,11 +3808,13 @@
   - s4-fallow-laws
 - candidate: YeetVerifyLane
   kind: individual
-  definition: The canonical collected repository-quality verification activity executed by the Yeet verify command.
+  definition: The canonical collected repository-quality verification activity executed by the Yeet verify
+    command.
   admission_kind: decision
   cq_justification:
   - CQ-001
-  decision_relevance: Lets the projection enumerate the repository's canonical aggregate verification surface.
+  decision_relevance: Lets the projection enumerate the repository's canonical aggregate verification
+    surface.
   evidence:
   - AGENTS.md:39-41 — 'Yeet is the canonical repo-quality path'
   already_in_glossary: false
@@ -3571,18 +3823,20 @@
   - s4-fallow-laws
 - candidate: YeetWeightedAdmissionV1
   kind: individual
-  definition: The deployed default AdmissionPolicy instance constructed when no scheduler override is supplied.
+  definition: The deployed default AdmissionPolicy instance constructed when no scheduler override is
+    supplied.
   admission_kind: semantic-support
   supports:
   - AdmissionPolicy
   decision_relevance: Hosts the deployed parameter assertions used by capacity, aging, and class-cap decisions.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1108-1125 — 'const resolved = config ??
-    AdmissionConfig.make({});'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1108-1125 — 'const resolved =
+    config ?? AdmissionConfig.make({});'
   already_in_glossary: false
-  status: deferred-s6
+  status: accepted
   source_lanes:
   - s4-admission-scheduler
+  s6_ratification_ref: DECISIONS.md §'2026-08-30 — S6 sitting 2'
 - candidate: publish
   kind: literal-domain-member
   source_domain: AdmissionPriority
@@ -3606,7 +3860,8 @@
   admission_kind: semantic-support
   supports:
   - AdmissionPriorityClass
-  decision_relevance: Defines the base priority of ordinary full-proof, merged-preview, and review-fix requests.
+  decision_relevance: Defines the base priority of ordinary full-proof, merged-preview, and review-fix
+    requests.
   evidence:
   - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
     "verify"])'
@@ -3659,7 +3914,8 @@
   evidence:
   - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
     "merged-preview", "review-fix", "publish"])'
-  - goals/ship-velocity/research/d1-admission-scheduler.md:41-46 — 'The publish kind (1 token) remains in the schema'
+  - goals/ship-velocity/research/d1-admission-scheduler.md:41-46 — 'The publish kind (1 token) remains
+    in the schema'
   already_in_glossary: false
   status: accepted
   source_lanes:
@@ -3667,8 +3923,8 @@
 - candidate: review-fix
   kind: literal-domain-member
   source_domain: AdmissionWorkKind
-  definition: Deployed AdmissionWorkKind literal mapped to ontology member ReviewFixWork, distinct from the same
-    spelling in YeetProofTier.
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member ReviewFixWork, distinct from
+    the same spelling in YeetProofTier.
   admission_kind: semantic-support
   supports:
   - AdmissionWorkKind
@@ -3684,13 +3940,13 @@
 - candidate: CallerControlled
   kind: literal-domain-member
   source_domain: CachePosture
-  definition: The CachePosture member for CI or an invocation with an explicit cache-control argument, where the
-    CLI injects no cache flag.
+  definition: The CachePosture member for CI or an invocation with an explicit cache-control argument,
+    where the CLI injects no cache flag.
   admission_kind: decision
   cq_justification:
   - CQ-024
-  decision_relevance: Prevents caller-owned cache behavior from being misclassified as the CLI's local-only fallback
-    or sanctioned remote-read plan.
+  decision_relevance: Prevents caller-owned cache behavior from being misclassified as the CLI's local-only
+    fallback or sanctioned remote-read plan.
   evidence:
   - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:337-344 — ''_tag: S.tag("caller-controlled"),'''
   - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:602-609 — ''return CallerControlledTurboCache.make({
@@ -3704,12 +3960,13 @@
 - candidate: LocalOnly
   kind: literal-domain-member
   source_domain: CachePosture
-  definition: The CachePosture member whose resolved plan tag is local-only and whose emitted fail-closed cache
-    argument is local:rw, not an honored remote-configuration input.
+  definition: The CachePosture member whose resolved plan tag is local-only and whose emitted fail-closed
+    cache argument is local:rw, not an honored remote-configuration input.
   admission_kind: decision
   cq_justification:
   - CQ-024
-  decision_relevance: Distinguishes executions whose Turbo arguments are forced to machine-local reads and writes.
+  decision_relevance: Distinguishes executions whose Turbo arguments are forced to machine-local reads
+    and writes.
   evidence:
   - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:54-59 — '["local:rw", "LocalOnly"],'
   - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:362-370 — ''_tag: S.tag("local-only"),'''
@@ -3721,11 +3978,13 @@
 - candidate: LocalWriteRemoteRead
   kind: literal-domain-member
   source_domain: CachePosture
-  definition: The CachePosture member whose deployed mode is local:rw,remote:r and whose resolved plan tag is remote-read.
+  definition: The CachePosture member whose deployed mode is local:rw,remote:r and whose resolved plan
+    tag is remote-read.
   admission_kind: decision
   cq_justification:
   - CQ-024
-  decision_relevance: Distinguishes executions that may reuse shared remote evidence while keeping writes local.
+  decision_relevance: Distinguishes executions that may reuse shared remote evidence while keeping writes
+    local.
   evidence:
   - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:54-59 — '["local:rw,remote:r", "LocalWriteRemoteRead"],'
   - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:397-405 — ''_tag: S.tag("remote-read"),'''
@@ -4086,10 +4345,11 @@
   admission_kind: semantic-support
   supports:
   - Checkout
-  decision_relevance: Constrains the Checkout bearer used in evidence-transferability decisions without asserting
-    an exclusion key.
+  decision_relevance: Constrains the Checkout bearer used in evidence-transferability decisions without
+    asserting an exclusion key.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — 'LiteralKit(["clone", "linked-worktree"])'
+  - packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — 'LiteralKit(["clone",
+    "linked-worktree"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4101,10 +4361,11 @@
   admission_kind: semantic-support
   supports:
   - Checkout
-  decision_relevance: Constrains the Checkout bearer used in evidence-transferability decisions without asserting
-    an exclusion key.
+  decision_relevance: Constrains the Checkout bearer used in evidence-transferability decisions without
+    asserting an exclusion key.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — 'LiteralKit(["clone", "linked-worktree"])'
+  - packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — 'LiteralKit(["clone",
+    "linked-worktree"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4117,10 +4378,11 @@
   supports:
   - HashSurface
   - InvalidationEvent
-  decision_relevance: Constrains the changed-input family used to derive verification-evidence invalidation blast
-    radius.
+  decision_relevance: Constrains the changed-input family used to derive verification-evidence invalidation
+    blast radius.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — 'LiteralKit(["repo-code", "goals-packets"])'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — 'LiteralKit(["repo-code",
+    "goals-packets"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4133,10 +4395,11 @@
   supports:
   - HashSurface
   - InvalidationEvent
-  decision_relevance: Constrains the changed-input family used to derive verification-evidence invalidation blast
-    radius.
+  decision_relevance: Constrains the changed-input family used to derive verification-evidence invalidation
+    blast radius.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — 'LiteralKit(["repo-code", "goals-packets"])'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — 'LiteralKit(["repo-code",
+    "goals-packets"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4149,11 +4412,11 @@
   supports:
   - WorkUnitExecution
   - CommittedFailure
-  decision_relevance: Provides a closed source carrier for execution, evidence, or committed-failure state used
-    by stopping and calibration decisions.
+  decision_relevance: Provides a closed source carrier for execution, evidence, or committed-failure state
+    used by stopping and calibration decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — 'LiteralKit(["passed", "failed",
-    "not-run-early-stop"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — 'LiteralKit(["passed",
+    "failed", "not-run-early-stop"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4166,11 +4429,11 @@
   supports:
   - WorkUnitExecution
   - ExecutionState
-  decision_relevance: Provides a closed source carrier for execution, evidence, or committed-failure state used
-    by stopping and calibration decisions.
+  decision_relevance: Provides a closed source carrier for execution, evidence, or committed-failure state
+    used by stopping and calibration decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — 'LiteralKit(["passed", "failed",
-    "not-run-early-stop"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — 'LiteralKit(["passed",
+    "failed", "not-run-early-stop"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4183,11 +4446,11 @@
   supports:
   - WorkUnitExecution
   - VerificationEvidence
-  decision_relevance: Provides a closed source carrier for execution, evidence, or committed-failure state used
-    by stopping and calibration decisions.
+  decision_relevance: Provides a closed source carrier for execution, evidence, or committed-failure state
+    used by stopping and calibration decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — 'LiteralKit(["passed", "failed",
-    "not-run-early-stop"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — 'LiteralKit(["passed",
+    "failed", "not-run-early-stop"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4195,14 +4458,16 @@
 - candidate: install-failure
   kind: literal-domain-member
   source_domain: GithubJobShapeClass
-  definition: The install-failure infrastructure-failure class decidable from a GitHub job record without its log.
+  definition: The install-failure infrastructure-failure class decidable from a GitHub job record without
+    its log.
   admission_kind: semantic-support
   supports:
   - FailureSignature
-  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution and cheapest-surfacing
-    analysis.
+  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution
+    and cheapest-surfacing analysis.
   evidence:
-  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'
+  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss",
+    "install-failure"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4210,14 +4475,16 @@
 - candidate: runner-loss
   kind: literal-domain-member
   source_domain: GithubJobShapeClass
-  definition: The runner-loss infrastructure-failure class decidable from a GitHub job record without its log.
+  definition: The runner-loss infrastructure-failure class decidable from a GitHub job record without
+    its log.
   admission_kind: semantic-support
   supports:
   - FailureSignature
-  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution and cheapest-surfacing
-    analysis.
+  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution
+    and cheapest-surfacing analysis.
   evidence:
-  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'
+  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss",
+    "install-failure"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4225,14 +4492,16 @@
 - candidate: setup-5xx
   kind: literal-domain-member
   source_domain: GithubJobShapeClass
-  definition: The setup-5xx infrastructure-failure class decidable from a GitHub job record without its log.
+  definition: The setup-5xx infrastructure-failure class decidable from a GitHub job record without its
+    log.
   admission_kind: semantic-support
   supports:
   - FailureSignature
-  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution and cheapest-surfacing
-    analysis.
+  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution
+    and cheapest-surfacing analysis.
   evidence:
-  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'
+  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss",
+    "install-failure"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4247,8 +4516,8 @@
   - CQ-009
   decision_relevance: Selects the grants that currently hold resources and participate in origin exclusion.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — 'One active admission
-    lease'
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — 'One active
+    admission lease'
   already_in_glossary: false
   status: accepted
   source_lanes:
@@ -4256,11 +4525,13 @@
 - candidate: ReleasedGrant
   kind: literal-domain-member
   source_domain: GrantState
-  definition: Packet-side GrantState member materialized only in ETL history after an admission lease is removed.
+  definition: Packet-side GrantState member materialized only in ETL history after an admission lease
+    is removed.
   admission_kind: semantic-support
   supports:
   - GrantState
-  decision_relevance: Closes the grant lifecycle without misrepresenting deleted leases as live store records.
+  decision_relevance: Closes the grant lifecycle without misrepresenting deleted leases as live store
+    records.
   evidence:
   - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1071-1079 — ''yield* fs.remove(admitted.leasePath,
     { force: true }).pipe(Effect.ignore);'''
@@ -4291,8 +4562,8 @@
   - CQ-001
   decision_relevance: Enumerates a package verification surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — 'const VERIFY_STEP_NAMES = ["lint",
-    "check", "test"] as const;'
+  - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — 'const VERIFY_STEP_NAMES
+    = ["lint", "check", "test"] as const;'
   - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:43-46 — 'export const PackageVerifyStepName
     = LiteralKit(VERIFY_STEP_NAMES).pipe('
   already_in_glossary: false
@@ -4308,8 +4579,8 @@
   - CQ-001
   decision_relevance: Enumerates a package verification surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — 'const VERIFY_STEP_NAMES = ["lint",
-    "check", "test"] as const;'
+  - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — 'const VERIFY_STEP_NAMES
+    = ["lint", "check", "test"] as const;'
   - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:43-46 — 'export const PackageVerifyStepName
     = LiteralKit(VERIFY_STEP_NAMES).pipe('
   already_in_glossary: false
@@ -4325,8 +4596,8 @@
   - CQ-001
   decision_relevance: Enumerates a package verification surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — 'const VERIFY_STEP_NAMES = ["lint",
-    "check", "test"] as const;'
+  - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — 'const VERIFY_STEP_NAMES
+    = ["lint", "check", "test"] as const;'
   - packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:43-46 — 'export const PackageVerifyStepName
     = LiteralKit(VERIFY_STEP_NAMES).pipe('
   already_in_glossary: false
@@ -4417,8 +4688,8 @@
   - CQ-001
   decision_relevance: Enumerates a canonical quality validation surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check", "test",
-    "lint", "audit", "coverage"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check",
+    "test", "lint", "audit", "coverage"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4432,8 +4703,8 @@
   - CQ-001
   decision_relevance: Enumerates a canonical quality validation surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check", "test",
-    "lint", "audit", "coverage"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check",
+    "test", "lint", "audit", "coverage"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4447,8 +4718,8 @@
   - CQ-001
   decision_relevance: Enumerates a canonical quality validation surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check", "test",
-    "lint", "audit", "coverage"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check",
+    "test", "lint", "audit", "coverage"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4462,8 +4733,8 @@
   - CQ-001
   decision_relevance: Enumerates a canonical quality validation surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check", "test",
-    "lint", "audit", "coverage"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check",
+    "test", "lint", "audit", "coverage"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4477,8 +4748,8 @@
   - CQ-001
   decision_relevance: Enumerates a canonical quality validation surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check", "test",
-    "lint", "audit", "coverage"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check",
+    "test", "lint", "audit", "coverage"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4492,8 +4763,8 @@
   - CQ-001
   decision_relevance: Enumerates a canonical quality validation surface for the CQ-001 lane inventory.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check", "test",
-    "lint", "audit", "coverage"])'
+  - packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — 'LiteralKit(["build", "check",
+    "test", "lint", "audit", "coverage"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4506,11 +4777,11 @@
   supports:
   - CancelClass
   - WorkUnitExecution
-  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight WorkUnit
-    execution.
+  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight
+    WorkUnit execution.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly", "write",
-    "publish"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly",
+    "write", "publish"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4523,11 +4794,11 @@
   supports:
   - CancelClass
   - WorkUnitExecution
-  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight WorkUnit
-    execution.
+  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight
+    WorkUnit execution.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly", "write",
-    "publish"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly",
+    "write", "publish"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4540,11 +4811,11 @@
   supports:
   - CancelClass
   - WorkUnitExecution
-  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight WorkUnit
-    execution.
+  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight
+    WorkUnit execution.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly", "write",
-    "publish"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly",
+    "write", "publish"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4558,10 +4829,11 @@
   - VerificationEvidence
   - CacheEpoch
   - TreeState
-  decision_relevance: Constrains whether a source fingerprint may permit a skipped step while evidence remains valid
-    for the relevant epoch and tree.
+  decision_relevance: Constrains whether a source fingerprint may permit a skipped step while evidence
+    remains valid for the relevant epoch and tree.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — 'LiteralKit(["never", "fingerprint-match"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — 'LiteralKit(["never",
+    "fingerprint-match"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4575,10 +4847,11 @@
   - VerificationEvidence
   - CacheEpoch
   - TreeState
-  decision_relevance: Constrains whether a source fingerprint may permit a skipped step while evidence remains valid
-    for the relevant epoch and tree.
+  decision_relevance: Constrains whether a source fingerprint may permit a skipped step while evidence
+    remains valid for the relevant epoch and tree.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — 'LiteralKit(["never", "fingerprint-match"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — 'LiteralKit(["never",
+    "fingerprint-match"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4591,11 +4864,11 @@
   supports:
   - VerificationEvidence
   - AssuranceTier
-  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target assurance
-    tier.
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates", "quality",
-    "review-fix", "pre-push"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4608,11 +4881,11 @@
   supports:
   - VerificationEvidence
   - AssuranceTier
-  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target assurance
-    tier.
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates", "quality",
-    "review-fix", "pre-push"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4625,11 +4898,11 @@
   supports:
   - VerificationEvidence
   - AssuranceTier
-  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target assurance
-    tier.
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates", "quality",
-    "review-fix", "pre-push"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4642,11 +4915,11 @@
   supports:
   - VerificationEvidence
   - AssuranceTier
-  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target assurance
-    tier.
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
   evidence:
-  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates", "quality",
-    "review-fix", "pre-push"])'
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4654,15 +4927,15 @@
 - candidate: HardFloorException
   kind: literal-domain-member
   source_domain: StarvationException
-  definition: The sole modeled StarvationException, ETL-derived for queued requests when the snapshot-global hard
-    floor is engaged.
+  definition: The sole modeled StarvationException, ETL-derived for queued requests when the snapshot-global
+    hard floor is engaged.
   admission_kind: decision
   cq_justification:
   - CQ-023
   decision_relevance: Pins the only legal exception excluded from the starvation violation query.
   evidence:
-  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged: availableGib
-    < config.hardFloorGib'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4670,12 +4943,13 @@
 - candidate: ts2589-no-location
   kind: literal-domain-member
   source_domain: StepFlakeQuarantinePolicy
-  definition: The ts2589-no-location established environment-only failure signature a quality step may quarantine.
+  definition: The ts2589-no-location established environment-only failure signature a quality step may
+    quarantine.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are queried by
-    CQ-013.
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
   evidence:
   - packages/tooling/tool/cli/src/internal/process/StepExec.ts:191-194 — 'LiteralKit(["ts2589-no-location"])'
   already_in_glossary: false
@@ -4690,12 +4964,13 @@
   supports:
   - Scope
   - HashSurface
-  decision_relevance: Constrains the scope and hash-selection surface represented by scoped verification work.
+  decision_relevance: Constrains the scope and hash-selection surface represented by scoped verification
+    work.
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:27 — 'const TURBO_CONFIG_PROOF_SELECTOR_VALUES
     = ["affected", "filter-range"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:77-80 — 'export const TurboConfigProofSelectorMode
-    = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:77-80 — 'export const
+    TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4708,12 +4983,13 @@
   supports:
   - Scope
   - HashSurface
-  decision_relevance: Constrains the scope and hash-selection surface represented by scoped verification work.
+  decision_relevance: Constrains the scope and hash-selection surface represented by scoped verification
+    work.
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:27 — 'const TURBO_CONFIG_PROOF_SELECTOR_VALUES
     = ["affected", "filter-range"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:77-80 — 'export const TurboConfigProofSelectorMode
-    = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:77-80 — 'export const
+    TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4729,8 +5005,8 @@
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — 'const TURBO_CONFIG_PROOF_TASK_VALUES
     = ["build", "check", "lint", "test", "docgen"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const TurboConfigProofTaskName
-    = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const
+    TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4746,8 +5022,8 @@
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — 'const TURBO_CONFIG_PROOF_TASK_VALUES
     = ["build", "check", "lint", "test", "docgen"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const TurboConfigProofTaskName
-    = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const
+    TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4763,8 +5039,8 @@
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — 'const TURBO_CONFIG_PROOF_TASK_VALUES
     = ["build", "check", "lint", "test", "docgen"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const TurboConfigProofTaskName
-    = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const
+    TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4780,8 +5056,8 @@
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — 'const TURBO_CONFIG_PROOF_TASK_VALUES
     = ["build", "check", "lint", "test", "docgen"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const TurboConfigProofTaskName
-    = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const
+    TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4797,8 +5073,8 @@
   evidence:
   - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — 'const TURBO_CONFIG_PROOF_TASK_VALUES
     = ["build", "check", "lint", "test", "docgen"] as const;'
-  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const TurboConfigProofTaskName
-    = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
+  - packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — 'export const
+    TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4811,11 +5087,11 @@
   supports:
   - CommittedFailure
   - WorkUnitExecution
-  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification stopping
-    and obligation decisions.
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending", "pass",
-    "fail", "skip"])'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4828,11 +5104,11 @@
   supports:
   - VerificationEvidence
   - WorkUnitExecution
-  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification stopping
-    and obligation decisions.
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending", "pass",
-    "fail", "skip"])'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4845,11 +5121,11 @@
   supports:
   - WorkUnitExecution
   - ExecutionState
-  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification stopping
-    and obligation decisions.
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending", "pass",
-    "fail", "skip"])'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4862,11 +5138,11 @@
   supports:
   - WorkUnitExecution
   - ExecutionState
-  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification stopping
-    and obligation decisions.
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending", "pass",
-    "fail", "skip"])'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4874,12 +5150,13 @@
 - candidate: ci-timeout
   kind: literal-domain-member
   source_domain: YeetMonitorFlakeClass
-  definition: The ci-timeout environment-only failure signature the merge loop may rerun once per job per head SHA.
+  definition: The ci-timeout environment-only failure signature the merge loop may rerun once per job
+    per head SHA.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are queried by
-    CQ-013.
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
   evidence:
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:138 — '"ci-timeout",'
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
@@ -4891,13 +5168,13 @@
 - candidate: install-failure
   kind: literal-domain-member
   source_domain: YeetMonitorFlakeClass
-  definition: The install-failure environment-only failure signature the merge loop may rerun once per job per head
-    SHA.
+  definition: The install-failure environment-only failure signature the merge loop may rerun once per
+    job per head SHA.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are queried by
-    CQ-013.
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
   evidence:
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:141 — '"install-failure",'
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
@@ -4909,13 +5186,13 @@
 - candidate: runner-loss
   kind: literal-domain-member
   source_domain: YeetMonitorFlakeClass
-  definition: The runner-loss environment-only failure signature the merge loop may rerun once per job per head
-    SHA.
+  definition: The runner-loss environment-only failure signature the merge loop may rerun once per job
+    per head SHA.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are queried by
-    CQ-013.
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
   evidence:
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:140 — '"runner-loss",'
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
@@ -4927,12 +5204,13 @@
 - candidate: setup-5xx
   kind: literal-domain-member
   source_domain: YeetMonitorFlakeClass
-  definition: The setup-5xx environment-only failure signature the merge loop may rerun once per job per head SHA.
+  definition: The setup-5xx environment-only failure signature the merge loop may rerun once per job per
+    head SHA.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are queried by
-    CQ-013.
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
   evidence:
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:139 — '"setup-5xx",'
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
@@ -4944,13 +5222,13 @@
 - candidate: ts2589-no-location
   kind: literal-domain-member
   source_domain: YeetMonitorFlakeClass
-  definition: The ts2589-no-location environment-only failure signature the merge loop may rerun once per job per
-    head SHA.
+  definition: The ts2589-no-location environment-only failure signature the merge loop may rerun once
+    per job per head SHA.
   admission_kind: decision
   cq_justification:
   - CQ-013
-  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are queried by
-    CQ-013.
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
   evidence:
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:137 — '"ts2589-no-location",'
   - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
@@ -4962,18 +5240,21 @@
 - candidate: cheap-gates
   kind: literal-domain-member
   source_domain: YeetProofTier
-  definition: A YeetProofTier member that selects the cheap-gates proof surface and its cheap-gate lane set.
+  definition: A YeetProofTier member that selects the cheap-gates proof surface and its cheap-gate lane
+    set.
   admission_kind: semantic-support
   supports:
   - AssuranceTier
   - VerificationLane
-  decision_relevance: Constrains which low-cost local proof surface can contribute toward an assurance-tier decision.
+  decision_relevance: Constrains which low-cost local proof surface can contribute toward an assurance-tier
+    decision.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier = LiteralKit(["full",
-    "cheap-gates", "review-fix"]).pipe('
-  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — ''"cheap-gates": () => repoProofStepDefinition("cheap-gates"),'''
-  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — ''"cheap-gates": () => [...changesetStatusLanesForProof(context),
-    ...githubCheckCheapGateLanes(context.repoRoot)],'''
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier
+    = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe('
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — ''"cheap-gates": () =>
+    repoProofStepDefinition("cheap-gates"),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — ''"cheap-gates": () =>
+    [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],'''
   already_in_glossary: false
   status: parked-run-2
   source_lanes:
@@ -4981,17 +5262,17 @@
 - candidate: full
   kind: literal-domain-member
   source_domain: YeetProofTier
-  definition: A YeetProofTier member that selects the pre-push proof surface and, in full-mode planning, follows
-    a cheap-gates step.
+  definition: A YeetProofTier member that selects the pre-push proof surface and, in full-mode planning,
+    follows a cheap-gates step.
   admission_kind: semantic-support
   supports:
   - AssuranceTier
   - VerificationLane
-  decision_relevance: Constrains the ratified mapping from Yeet's local planner tiers to assurance-tier obligations
-    without conflating the domains.
+  decision_relevance: Constrains the ratified mapping from Yeet's local planner tiers to assurance-tier
+    obligations without conflating the domains.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier = LiteralKit(["full",
-    "cheap-gates", "review-fix"]).pipe('
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier
+    = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe('
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — ''full: () => repoProofStepDefinition("pre-push"),'''
   - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:428-431 — 'proofStep(context, "cheap-gates",
     true),'
@@ -5002,19 +5283,19 @@
 - candidate: review-fix
   kind: literal-domain-member
   source_domain: YeetProofTier
-  definition: A YeetProofTier member that selects the review-fix proof surface, binds the base and head, and plans
-    no GitHub-check lanes.
+  definition: A YeetProofTier member that selects the review-fix proof surface, binds the base and head,
+    and plans no GitHub-check lanes.
   admission_kind: semantic-support
   supports:
   - AssuranceTier
   - VerificationLane
-  decision_relevance: Constrains the distinct repair-loop proof posture used when mapping operational evidence to
-    assurance obligations.
+  decision_relevance: Constrains the distinct repair-loop proof posture used when mapping operational
+    evidence to assurance obligations.
   evidence:
-  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier = LiteralKit(["full",
-    "cheap-gates", "review-fix"]).pipe('
-  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:393-397 — ''"review-fix": () => [...args, "--base",
-    context.base, "--head", context.head],'''
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier
+    = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe('
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:393-397 — ''"review-fix": () => [...args,
+    "--base", context.base, "--head", context.head],'''
   - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — ''"review-fix": A.empty<GithubCheckLaneSpec>,'''
   already_in_glossary: false
   status: parked-run-2
