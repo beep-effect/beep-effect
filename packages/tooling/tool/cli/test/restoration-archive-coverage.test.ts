@@ -425,7 +425,6 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.writeFileString(partialPath, "partial");
         const sourceInfo = yield* fs.stat(sourcePath);
         const destinationInfo = yield* fs.stat(destinationPath);
-        const partialInfo = yield* fs.stat(partialPath);
         const object = {
           destinationRelativePath: "payload/source.bin",
           expectedInfo: RA.sourceIdentity(sourceInfo),
