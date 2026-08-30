@@ -117,23 +117,36 @@ def main() -> None:
                  "justification": "archived unresolved observation; run 2 must re-open it"}
                 for r in index if r["outcome"] == "unresolved"]
 
+    def term_disp(name):
+        """Disposition of a name when it denotes a term; None when it is a plain value."""
+        rs = disp_by_name.get(name)
+        if rs is not None:
+            return "ambiguous" if len(rs) > 1 else next(iter(rs))
+        if name in SUBJECT_ALIASES:
+            return SUBJECT_ALIASES[name]
+        if name in ORPHAN_SUBJECTS:
+            return ORPHAN_SUBJECTS[name]
+        return None
+
+    WEAK = {"rejected": 0, "unknown-term": 1, "ambiguous": 1, "parked-run-2": 2,
+            "deferred-s6": 3, "merged-into": 4, "accepted-via": 5}
+
+    def combine(sd, od):
+        """Weakest-fate wins across subject and iri-valued object (PR #905 review)."""
+        if od is None:
+            return sd
+        return sd if WEAK.get(sd, 1) <= WEAK.get(od, 1) else od
+
     groups: dict = {}
     ambiguous = sorted(n for n, rs in disp_by_name.items() if len(rs) > 1)
     for i, fc in enumerate(facts):
-        subj = fc.get("subject")
-        rs = disp_by_name.get(subj)
-        if rs is None and subj in SUBJECT_ALIASES:
-            disp = SUBJECT_ALIASES[subj]
-        elif rs is None and subj in ORPHAN_SUBJECTS:
-            disp = ORPHAN_SUBJECTS[subj]
-        elif rs is None:
-            disp = "orphan"
-        elif len(rs) > 1:
-            # a bare-name subject naming candidates with different fates cannot
-            # be attributed mechanically; fail safe to the parked bucket
-            disp = "ambiguous-subject"
-        else:
-            disp = next(iter(rs))
+        sd = term_disp(fc.get("subject")) or "orphan"
+        # the S4 fact schema carries the object as `value` with a self-describing
+        # value_type; only iri-valued facts reference terms
+        od = term_disp(str(fc.get("value"))) if fc.get("value_type") == "iri" else None
+        if fc.get("value_type") == "iri" and od is None:
+            od = "unknown-term"
+        disp = combine(sd, od)
         groups.setdefault((fc.get("predicate"), disp), []).append(i)
     fact_rows = []
     for (pred, disp), idxs in sorted(groups.items(), key=lambda kv: (str(kv[0][0]), str(kv[0][1]))):
