@@ -29,7 +29,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { expectReportedExit, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import {
+  expectReportedExit,
+  permutedDirectoryReadsFileSystem,
+  withTempWorkingDirectory,
+  writeProjectFile,
+} from "./support/CommandTest.ts";
 import type { Path } from "effect";
 
 const FIXTURES_ROOT = new URL("./fixtures/goals-plan", import.meta.url).pathname;
@@ -393,7 +398,10 @@ describe("goals adopt --plan index parity", () => {
           expect(A.length(manifestWrites)).toBe(0);
           const generated = yield* Effect.forEach(
             A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
-            () => buildPortfolioIndexContent(repoRoot),
+            (index) =>
+              buildPortfolioIndexContent(repoRoot).pipe(
+                Effect.provideService(FileSystem.FileSystem, permutedDirectoryReadsFileSystem(fs, index))
+              ),
             { concurrency: 1 }
           );
           const first = A.head(generated);

@@ -12,6 +12,7 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
+import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -121,7 +122,10 @@ describe("exploration projections", () => {
           const projection = yield* buildExplorationProjection(root);
           const repeated = yield* Effect.forEach(
             A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
-            () => buildExplorationProjection(root),
+            (index) =>
+              buildExplorationProjection(root).pipe(
+                Effect.provideService(FileSystem.FileSystem, permutedDirectoryReadsFileSystem(fs, index))
+              ),
             { concurrency: 1 }
           );
 

@@ -6,6 +6,26 @@ import { expect } from "vitest";
 
 export const NodeTestLayer = Layer.mergeAll(NodeServices.layer);
 
+const permuteDirectoryEntries = (entries: ReadonlyArray<string>, iteration: number): ReadonlyArray<string> => {
+  const size = A.length(entries);
+  if (size === 0) return entries;
+  const pivot = iteration % size;
+  const rotated = A.appendAll(A.drop(entries, pivot), A.take(entries, pivot));
+  return iteration % 2 === 0 ? rotated : A.reverse(rotated);
+};
+
+export const permutedDirectoryReadsFileSystem = (
+  fileSystem: FileSystem.FileSystem,
+  iteration: number
+): FileSystem.FileSystem =>
+  FileSystem.FileSystem.of({
+    ...fileSystem,
+    readDirectory: (path, options) =>
+      fileSystem
+        .readDirectory(path, options)
+        .pipe(Effect.map((entries) => permuteDirectoryEntries(entries, iteration))),
+  });
+
 export const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.scoped(
     Effect.gen(function* () {
