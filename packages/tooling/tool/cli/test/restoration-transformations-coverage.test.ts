@@ -1353,7 +1353,7 @@ else exit 92; fi
       const pdfinfoPath = yield* writeExecutable("pdfinfo", "#!/bin/sh\nprintf 'Pages: 1\\n'\n");
       const pdftoppmPath = yield* writeExecutable(
         "pdftoppm",
-        '#!/bin/sh\nprefix="${@: -1}"\nprintf page > "$prefix-1.png"\n'
+        '#!/bin/sh\nprefix=""\nfor argument do prefix="$argument"; done\nprintf page > "$prefix-1.png"\n'
       );
       const comparePath = yield* writeExecutable("compare", "#!/bin/sh\nprintf '0 (0.25)\\n' >&2\nexit 0\n");
       const optionsFor = (selectedConverter: string) =>
