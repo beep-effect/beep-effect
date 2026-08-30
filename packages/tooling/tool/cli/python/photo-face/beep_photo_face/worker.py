@@ -655,7 +655,10 @@ def load_face_analysis(
     }
     for module in ALLOWED_MODULES:
         model_file = getattr(analysis.models[module], "model_file", None)
-        if model_file is None or Path(model_file).resolve() != expected_model_files[module]:
+        if (
+            model_file is None
+            or Path(model_file).resolve() != expected_model_files[module]
+        ):
             raise WorkerError(
                 "unexpected-model-artifact",
                 (

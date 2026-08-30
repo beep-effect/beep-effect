@@ -52,7 +52,7 @@ const PersonMatchSimilarityScore = S.Finite.check(
  * ```ts
  * import { PersonMatchDisposition } from "@beep/repo-cli/commands/Files"
  *
- * console.log(PersonMatchDisposition.is("solo-match"))
+ * console.log(PersonMatchDisposition.is("unreadable"))
  * // true
  * ```
  *
@@ -76,7 +76,7 @@ export const PersonMatchDisposition = LiteralKit([
 /**
  * The image classification assigned by a person-matching run.
  *
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
 export type PersonMatchDisposition = typeof PersonMatchDisposition.Type;
@@ -111,10 +111,148 @@ export const PersonMatchQualityFlag = LiteralKit([
 /**
  * A quality warning emitted for a detected target face.
  *
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
 export type PersonMatchQualityFlag = typeof PersonMatchQualityFlag.Type;
+
+/**
+ * Enumerates the reasons a reference image can be rejected before identity matching.
+ *
+ * **Example** (Check a reference rejection reason)
+ *
+ * ```ts
+ * import { PersonMatchReferenceRejectionReason } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchReferenceRejectionReason.is("multiple-faces"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchReferenceRejectionReason = LiteralKit([
+  "unreadable-image",
+  "no-face",
+  "multiple-faces",
+  "missing-embedding",
+  "invalid-embedding",
+]).pipe(
+  $I.annoteSchema("PersonMatchReferenceRejectionReason", {
+    description: "A machine-readable reason a reference image did not contribute an identity embedding.",
+  })
+);
+
+/**
+ * A reason a reference image did not contribute an identity embedding.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchReferenceRejectionReason = typeof PersonMatchReferenceRejectionReason.Type;
+
+/**
+ * Enumerates diagnostic reasons attached to candidate-image entries.
+ *
+ * **Example** (Check a candidate diagnostic reason)
+ *
+ * ```ts
+ * import { PersonMatchEntryReason } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchEntryReason.is("image-decode-failed"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchEntryReason = LiteralKit(["image-decode-failed"]).pipe(
+  $I.annoteSchema("PersonMatchEntryReason", {
+    description: "A machine-readable diagnostic reason attached to a candidate-image entry.",
+  })
+);
+
+/**
+ * A diagnostic reason attached to a candidate-image entry.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchEntryReason = typeof PersonMatchEntryReason.Type;
+
+/**
+ * Enumerates stable error codes emitted by the local matching worker.
+ *
+ * **Example** (Check a worker error code)
+ *
+ * ```ts
+ * import { PersonMatchWorkerErrorCode } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchWorkerErrorCode.is("model-integrity-failed"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchWorkerErrorCode = LiteralKit([
+  "invalid-arguments",
+  "non-finite-result",
+  "invalid-directory",
+  "model-integrity-failed",
+  "model-acquisition-incomplete",
+  "model-acquisition-failed",
+  "model-license-not-accepted",
+  "model-module-missing",
+  "unexpected-model-artifact",
+  "unexpected-execution-provider",
+  "missing-embedding",
+  "missing-landmarks",
+  "no-reference-images",
+  "no-accepted-references",
+  "worker-failed",
+]).pipe(
+  $I.annoteSchema("PersonMatchWorkerErrorCode", {
+    description: "A stable error code emitted by the local person-matching worker.",
+  })
+);
+
+/**
+ * A stable error code emitted by the local matching worker.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchWorkerErrorCode = typeof PersonMatchWorkerErrorCode.Type;
+
+/**
+ * Enumerates the pinned ONNX artifacts accepted in worker model provenance.
+ *
+ * **Example** (Check a model artifact name)
+ *
+ * ```ts
+ * import { PersonMatchModelArtifactName } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchModelArtifactName.is("det_10g.onnx"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchModelArtifactName = LiteralKit(["det_10g.onnx", "w600k_r50.onnx"]).pipe(
+  $I.annoteSchema("PersonMatchModelArtifactName", {
+    description: "The filename of a pinned ONNX artifact used by the buffalo_l worker runtime.",
+  })
+);
+
+/**
+ * The filename of a pinned ONNX artifact used by the matching worker.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchModelArtifactName = typeof PersonMatchModelArtifactName.Type;
 
 /**
  * Command inputs for a local person-matching run.
@@ -147,11 +285,11 @@ export type PersonMatchQualityFlag = typeof PersonMatchQualityFlag.Type;
  */
 export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPersonOptions`)(
   {
-    dir: S.String,
-    references: S.String,
-    manifest: S.String,
-    outDir: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
-    cacheDir: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+    dir: S.NonEmptyString,
+    references: S.NonEmptyString,
+    manifest: S.NonEmptyString,
+    outDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+    cacheDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     recursive: S.Boolean,
     detectionThreshold: FaceDetectionConfidence,
     matchThreshold: FaceDetectionConfidence,
@@ -173,16 +311,17 @@ export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPers
  *
  * ```ts
  * import { PersonMatchModelArtifact } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const artifact = S.decodeUnknownSync(PersonMatchModelArtifact)({
- *   name: "buffalo_l.onnx",
- *   path: "/cache/models/buffalo_l.onnx",
+ * const artifact = S.decodeUnknownOption(PersonMatchModelArtifact)({
+ *   name: "det_10g.onnx",
+ *   path: "/cache/models/det_10g.onnx",
  *   sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
  * })
  *
- * console.log(artifact.name)
- * // "buffalo_l.onnx"
+ * console.log(O.isSome(artifact))
+ * // true
  * ```
  *
  * @category models
@@ -190,8 +329,8 @@ export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPers
  */
 export class PersonMatchModelArtifact extends S.Class<PersonMatchModelArtifact>($I`PersonMatchModelArtifact`)(
   {
-    name: S.String,
-    path: S.String,
+    name: PersonMatchModelArtifactName,
+    path: S.NonEmptyString,
     sha256: Sha256Hex,
   },
   $I.annote("PersonMatchModelArtifact", {
@@ -206,19 +345,20 @@ export class PersonMatchModelArtifact extends S.Class<PersonMatchModelArtifact>(
  *
  * ```ts
  * import { PersonMatchModel } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const model = S.decodeUnknownSync(PersonMatchModel)({
+ * const model = S.decodeUnknownOption(PersonMatchModel)({
  *   name: "buffalo_l",
- *   packageVersion: "0.7.3",
- *   providers: ["CUDAExecutionProvider", "CPUExecutionProvider"],
+ *   packageVersion: "1.0.1",
+ *   providers: ["CPUExecutionProvider"],
  *   allowedModules: ["detection", "recognition"],
- *   root: "/cache/models/buffalo_l",
+ *   root: "/cache/insightface",
  *   artifacts: [],
  * })
  *
- * console.log(model.name)
- * // "buffalo_l"
+ * console.log(O.isSome(model))
+ * // true
  * ```
  *
  * @category models
@@ -226,11 +366,11 @@ export class PersonMatchModelArtifact extends S.Class<PersonMatchModelArtifact>(
  */
 export class PersonMatchModel extends S.Class<PersonMatchModel>($I`PersonMatchModel`)(
   {
-    name: S.String,
-    packageVersion: S.String,
-    providers: S.Array(S.String),
-    allowedModules: S.Array(S.String),
-    root: S.String,
+    name: S.Literal("buffalo_l"),
+    packageVersion: S.Literal("1.0.1"),
+    providers: S.Tuple([S.Literal("CPUExecutionProvider")]),
+    allowedModules: S.Tuple([S.Literal("detection"), S.Literal("recognition")]),
+    root: S.NonEmptyString,
     artifacts: S.Array(PersonMatchModelArtifact),
   },
   $I.annote("PersonMatchModel", {
@@ -245,9 +385,10 @@ export class PersonMatchModel extends S.Class<PersonMatchModel>($I`PersonMatchMo
  *
  * ```ts
  * import { PersonMatchParameters } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const parameters = S.decodeUnknownSync(PersonMatchParameters)({
+ * const parameters = S.decodeUnknownOption(PersonMatchParameters)({
  *   detectionThreshold: 0.5,
  *   matchThreshold: 0.45,
  *   reviewThreshold: 0.35,
@@ -255,7 +396,7 @@ export class PersonMatchModel extends S.Class<PersonMatchModel>($I`PersonMatchMo
  *   recursive: true,
  * })
  *
- * console.log(parameters.recursive)
+ * console.log(O.isSome(parameters))
  * // true
  * ```
  *
@@ -284,9 +425,10 @@ export class PersonMatchParameters extends S.Class<PersonMatchParameters>($I`Per
  *
  * ```ts
  * import { PersonMatchReference } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const reference = S.decodeUnknownSync(PersonMatchReference)({
+ * const reference = S.decodeUnknownOption(PersonMatchReference)({
  *   sourceName: "reference-01.jpg",
  *   sourcePath: "/references/reference-01.jpg",
  *   accepted: true,
@@ -294,7 +436,7 @@ export class PersonMatchParameters extends S.Class<PersonMatchParameters>($I`Per
  *   detectionScore: 0.98,
  * })
  *
- * console.log(reference.accepted)
+ * console.log(O.isSome(reference))
  * // true
  * ```
  *
@@ -303,12 +445,12 @@ export class PersonMatchParameters extends S.Class<PersonMatchParameters>($I`Per
  */
 export class PersonMatchReference extends S.Class<PersonMatchReference>($I`PersonMatchReference`)(
   {
-    sourceName: S.String,
-    sourcePath: S.String,
+    sourceName: S.NonEmptyString,
+    sourcePath: S.NonEmptyString,
     accepted: S.Boolean,
     faceCount: NonNegativeInt,
     detectionScore: S.optionalKey(FaceDetectionConfidence),
-    reason: S.optionalKey(S.String),
+    reason: S.optionalKey(PersonMatchReferenceRejectionReason),
   },
   $I.annote("PersonMatchReference", {
     description: "Acceptance and diagnostic metadata for one person-matching reference image.",
@@ -322,12 +464,13 @@ export class PersonMatchReference extends S.Class<PersonMatchReference>($I`Perso
  *
  * ```ts
  * import { PersonMatchFaceBox } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const box = S.decodeUnknownSync(PersonMatchFaceBox)({ x1: 12, y1: 20, x2: 180, y2: 204 })
+ * const box = S.decodeUnknownOption(PersonMatchFaceBox)({ x1: 12, y1: 20, x2: 180, y2: 204 })
  *
- * console.log(box.x1)
- * // 12
+ * console.log(O.isSome(box))
+ * // true
  * ```
  *
  * @category models
@@ -335,10 +478,10 @@ export class PersonMatchReference extends S.Class<PersonMatchReference>($I`Perso
  */
 export class PersonMatchFaceBox extends S.Class<PersonMatchFaceBox>($I`PersonMatchFaceBox`)(
   {
-    x1: S.Finite,
-    y1: S.Finite,
-    x2: S.Finite,
-    y2: S.Finite,
+    x1: NonNegNum,
+    y1: NonNegNum,
+    x2: NonNegNum,
+    y2: NonNegNum,
   },
   $I.annote("PersonMatchFaceBox", {
     description: "An axis-aligned face bounding box in source-image pixel coordinates.",
@@ -352,9 +495,10 @@ export class PersonMatchFaceBox extends S.Class<PersonMatchFaceBox>($I`PersonMat
  *
  * ```ts
  * import { PersonMatchFace } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const face = S.decodeUnknownSync(PersonMatchFace)({
+ * const face = S.decodeUnknownOption(PersonMatchFace)({
  *   box: { x1: 12, y1: 20, x2: 180, y2: 204 },
  *   detectionScore: 0.98,
  *   faceAreaPct: 12.5,
@@ -366,8 +510,8 @@ export class PersonMatchFaceBox extends S.Class<PersonMatchFaceBox>($I`PersonMat
  *   qualityFlags: [],
  * })
  *
- * console.log(face.matchScore)
- * // 0.72
+ * console.log(O.isSome(face))
+ * // true
  * ```
  *
  * @category models
@@ -382,7 +526,7 @@ export class PersonMatchFace extends S.Class<PersonMatchFace>($I`PersonMatchFace
     centroidScore: PersonMatchSimilarityScore,
     top3MedianScore: PersonMatchSimilarityScore,
     bestReferenceScore: PersonMatchSimilarityScore,
-    bestReferenceName: S.String,
+    bestReferenceName: S.NonEmptyString,
     qualityFlags: S.Array(PersonMatchQualityFlag),
   },
   $I.annote("PersonMatchFace", {
@@ -395,23 +539,25 @@ export class PersonMatchFace extends S.Class<PersonMatchFace>($I`PersonMatchFace
  *
  * Optional best-score evidence is absent when no comparable face was available.
  *
- * **Example** (Validate a no-face entry)
+ * **Example** (Validate an unreadable entry)
  *
  * ```ts
  * import { PersonMatchEntry } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const entry = S.decodeUnknownSync(PersonMatchEntry)({
+ * const entry = S.decodeUnknownOption(PersonMatchEntry)({
  *   sourceName: "landscape.jpg",
  *   sourcePath: "/photos/landscape.jpg",
  *   relativePath: "landscape.jpg",
- *   disposition: "no-face",
+ *   disposition: "unreadable",
  *   faceCount: 0,
  *   faces: [],
+ *   reason: "image-decode-failed",
  * })
  *
- * console.log(entry.disposition)
- * // "no-face"
+ * console.log(O.isSome(entry))
+ * // true
  * ```
  *
  * @category models
@@ -419,14 +565,14 @@ export class PersonMatchFace extends S.Class<PersonMatchFace>($I`PersonMatchFace
  */
 export class PersonMatchEntry extends S.Class<PersonMatchEntry>($I`PersonMatchEntry`)(
   {
-    sourceName: S.String,
-    sourcePath: S.String,
-    relativePath: S.String,
+    sourceName: S.NonEmptyString,
+    sourcePath: S.NonEmptyString,
+    relativePath: S.NonEmptyString,
     disposition: PersonMatchDisposition,
     faceCount: NonNegativeInt,
     bestScore: S.optionalKey(PersonMatchSimilarityScore),
     faces: S.Array(PersonMatchFace),
-    reason: S.optionalKey(S.String),
+    reason: S.optionalKey(PersonMatchEntryReason),
   },
   $I.annote("PersonMatchEntry", {
     description: "The matching disposition and face evidence for one source image.",
@@ -440,9 +586,10 @@ export class PersonMatchEntry extends S.Class<PersonMatchEntry>($I`PersonMatchEn
  *
  * ```ts
  * import { PersonMatchSummary } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const summary = S.decodeUnknownSync(PersonMatchSummary)({
+ * const summary = S.decodeUnknownOption(PersonMatchSummary)({
  *   totalCount: 0,
  *   soloMatchCount: 0,
  *   groupMatchCount: 0,
@@ -455,8 +602,8 @@ export class PersonMatchEntry extends S.Class<PersonMatchEntry>($I`PersonMatchEn
  *   rejectedReferenceCount: 0,
  * })
  *
- * console.log(summary.totalCount)
- * // 0
+ * console.log(O.isSome(summary))
+ * // true
  * ```
  *
  * @category models
@@ -487,15 +634,16 @@ export class PersonMatchSummary extends S.Class<PersonMatchSummary>($I`PersonMat
  *
  * ```ts
  * import { PersonMatchWorkerError } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const error = S.decodeUnknownSync(PersonMatchWorkerError)({
- *   code: "model-load-failed",
+ * const error = S.decodeUnknownOption(PersonMatchWorkerError)({
+ *   code: "model-module-missing",
  *   message: "Unable to load the configured face-recognition model.",
  * })
  *
- * console.log(error.code)
- * // "model-load-failed"
+ * console.log(O.isSome(error))
+ * // true
  * ```
  *
  * @category models
@@ -503,8 +651,8 @@ export class PersonMatchSummary extends S.Class<PersonMatchSummary>($I`PersonMat
  */
 export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`PersonMatchWorkerError`)(
   {
-    code: S.String,
-    message: S.String,
+    code: PersonMatchWorkerErrorCode,
+    message: S.NonEmptyString,
   },
   $I.annote("PersonMatchWorkerError", {
     description: "A stable worker error code and human-readable failure message.",
@@ -518,6 +666,7 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  *
  * ```ts
  * import { PersonMatchWorkerSuccess } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const report = {
@@ -525,10 +674,10 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  *   ok: true,
  *   model: {
  *     name: "buffalo_l",
- *     packageVersion: "0.7.3",
+ *     packageVersion: "1.0.1",
  *     providers: ["CPUExecutionProvider"],
  *     allowedModules: ["detection", "recognition"],
- *     root: "/cache/models/buffalo_l",
+ *     root: "/cache/insightface",
  *     artifacts: [],
  *   },
  *   parameters: {
@@ -548,15 +697,16 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  *     reviewCount: 0,
  *     noMatchCount: 0,
  *     noFaceCount: 0,
+ *     unreadableCount: 0,
  *     acceptedReferenceCount: 0,
  *     rejectedReferenceCount: 0,
  *   },
  *   elapsedSeconds: 0,
  * }
  *
- * const decoded = S.decodeUnknownSync(PersonMatchWorkerSuccess)(report)
+ * const decoded = S.decodeUnknownOption(PersonMatchWorkerSuccess)(report)
  *
- * console.log(decoded.ok)
+ * console.log(O.isSome(decoded))
  * // true
  * ```
  *
@@ -586,20 +736,21 @@ export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>(
  *
  * ```ts
  * import { PersonMatchWorkerFailure } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const failure = S.decodeUnknownSync(PersonMatchWorkerFailure)({
+ * const failure = S.decodeUnknownOption(PersonMatchWorkerFailure)({
  *   schemaVersion: "beep.files.match-person.worker.v1",
  *   ok: false,
  *   error: {
- *     code: "model-load-failed",
+ *     code: "model-module-missing",
  *     message: "Unable to load the configured face-recognition model.",
  *   },
  *   elapsedSeconds: 0.12,
  * })
  *
- * console.log(failure.ok)
- * // false
+ * console.log(O.isSome(failure))
+ * // true
  * ```
  *
  * @category models
@@ -624,17 +775,18 @@ export class PersonMatchWorkerFailure extends S.Class<PersonMatchWorkerFailure>(
  *
  * ```ts
  * import { PersonMatchWorkerReport } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const report = S.decodeUnknownSync(PersonMatchWorkerReport)({
+ * const report = S.decodeUnknownOption(PersonMatchWorkerReport)({
  *   schemaVersion: "beep.files.match-person.worker.v1",
  *   ok: false,
- *   error: { code: "invalid-input", message: "No reference images were found." },
+ *   error: { code: "no-reference-images", message: "No reference images were found." },
  *   elapsedSeconds: 0,
  * })
  *
- * console.log(report.ok)
- * // false
+ * console.log(O.isSome(report))
+ * // true
  * ```
  *
  * @category schemas
@@ -649,7 +801,7 @@ export const PersonMatchWorkerReport = S.Union([PersonMatchWorkerSuccess, Person
 /**
  * A decoded success or failure response from the person-matching Python worker.
  *
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
 export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
@@ -663,6 +815,7 @@ export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
  *
  * ```ts
  * import { PersonMatchReport } from "@beep/repo-cli/commands/Files"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const report = {
@@ -670,10 +823,10 @@ export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
  *   ok: true,
  *   model: {
  *     name: "buffalo_l",
- *     packageVersion: "0.7.3",
+ *     packageVersion: "1.0.1",
  *     providers: ["CPUExecutionProvider"],
  *     allowedModules: ["detection", "recognition"],
- *     root: "/cache/models/buffalo_l",
+ *     root: "/cache/insightface",
  *     artifacts: [],
  *   },
  *   parameters: {
@@ -693,6 +846,7 @@ export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
  *     reviewCount: 0,
  *     noMatchCount: 0,
  *     noFaceCount: 0,
+ *     unreadableCount: 0,
  *     acceptedReferenceCount: 0,
  *     rejectedReferenceCount: 0,
  *   },
@@ -701,9 +855,9 @@ export type PersonMatchWorkerReport = typeof PersonMatchWorkerReport.Type;
  *   manifestWritten: true,
  * }
  *
- * const decoded = S.decodeUnknownSync(PersonMatchReport)(report)
+ * const decoded = S.decodeUnknownOption(PersonMatchReport)(report)
  *
- * console.log(decoded.manifestWritten)
+ * console.log(O.isSome(decoded))
  * // true
  * ```
  *
@@ -720,9 +874,9 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
     entries: S.Array(PersonMatchEntry),
     summary: PersonMatchSummary,
     elapsedSeconds: NonNegNum,
-    manifestPath: S.String,
+    manifestPath: S.NonEmptyString,
     manifestWritten: S.Boolean,
-    outputDirectory: S.optionalKey(S.String),
+    outputDirectory: S.optionalKey(S.NonEmptyString),
   },
   $I.annote("PersonMatchReport", {
     description: "The versioned public manifest emitted by the person-matching command.",
@@ -739,7 +893,7 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
  * import { Effect } from "effect"
  *
  * const decoded = decodePersonMatchWorkerReportJson(
- *   '{"schemaVersion":"beep.files.match-person.worker.v1","ok":false,"error":{"code":"invalid-input","message":"No reference images were found."},"elapsedSeconds":0}'
+ *   '{"schemaVersion":"beep.files.match-person.worker.v1","ok":false,"error":{"code":"no-reference-images","message":"No reference images were found."},"elapsedSeconds":0}'
  * )
  *
  * console.log(Effect.isEffect(decoded))

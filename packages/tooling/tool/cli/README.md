@@ -257,12 +257,16 @@ bun run files match-person \
 ```
 
 The InsightFace source code is MIT-licensed, but its published model weights
-are restricted to non-commercial research use. The command refuses to acquire
-or run `buffalo_l` unless `--accept-model-license` is present. The first run
-creates an isolated `uv` environment and downloads the hash-verified model into
-`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`; neither is stored in the
-repository. Set `BEEP_UV_PATH` to an absolute trusted `uv` executable when it
-is not installed in a standard system location or `$HOME/.local/bin`.
+are restricted to non-commercial research use. Review the upstream
+[`buffalo_l` model licensing terms](https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md)
+before passing `--accept-model-license`; the command refuses to acquire or run
+the model without that explicit acknowledgement. The first run creates an
+isolated `uv` environment and downloads the hash-verified model into
+`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`. That default keeps both the
+environment and model outside the repository; an explicit `--cache-dir`
+controls their location. Set `BEEP_UV_PATH` to an absolute trusted `uv`
+executable when it is not installed in a standard system location or
+`$HOME/.local/bin`.
 
 References must contain exactly one detected face. Use several clear photos
 covering different ages, expressions, lighting, eyewear, and hair styles. A
@@ -271,6 +275,10 @@ faces; cosine similarity scores are model-specific measurements, not
 probabilities. The precision-first defaults are `0.50` for a match and `0.35`
 for the lower review boundary. Calibrate those thresholds against a labeled
 sample from the actual library before relying on a large scan.
+
+The scanner includes JPG/JPEG, PNG, and WebP files. Other formats, including
+HEIC and TIFF, are skipped and therefore do not appear in manifest totals;
+normalize or convert them first when they need to participate in the scan.
 
 The source library is immutable. `--out-dir` only copies useful candidates into
 reviewable buckets while preserving their relative paths:
@@ -282,10 +290,19 @@ reviewable buckets while preserving their relative paths:
 | `quality-review/` | The target matches, but its face is small, blurry, dark, bright, or strongly turned |
 | `identity-review/` | Similarity falls between the review and match thresholds |
 
-No-match and no-face images remain only in the manifest. Existing manifest or
-copied files are preserved unless `--overwrite` is supplied. Add `--recursive`
-to scan nested candidate and reference directories, and `--json` to print the
-schema-versioned report after writing it.
+No-match, no-face, and unreadable images remain only in the manifest; unreadable
+entries include a reason and are counted separately from images where face
+detection ran successfully but found no face. Copies and the manifest are
+staged first, committed one file at a time without partial file contents, and
+rolled back together after handled in-process commit failures. An incomplete
+rollback reports the retained recovery directory; the operation is not a
+crash-consistent filesystem transaction. Existing manifest or copied files are
+preserved unless `--overwrite` is supplied. The manifest, output, and cache
+paths must not overlap. Do not mutate the candidate, reference, output, or
+manifest paths concurrently with a run. Add `--recursive` to scan nested
+candidate and reference directories. Accepted recursive reference photos must
+have unique file names so per-face evidence is unambiguous. Add `--json` to
+print the schema-versioned report after writing it.
 
 This is target-person verification, not a claim of Google Photos parity.
 Google can combine proprietary models and contextual album signals that are

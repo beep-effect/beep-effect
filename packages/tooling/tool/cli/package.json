@@ -155,9 +155,11 @@
     "beep:build": "tsc -p tsconfig.json && bun run babel",
     "beep:check": "tsgo -p tsconfig.check.json",
     "beep:test": "bunx --bun vitest run",
+    "beep:test:python": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads pytest",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:lint:python": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff check python/photo-face && uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff format --check python/photo-face",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:python && bun run beep:lint && bun run beep:lint:python",
     "audit": "bun run --if-present beep:audit"
   },
   "dependencies": {

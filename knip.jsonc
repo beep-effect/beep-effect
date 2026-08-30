@@ -144,10 +144,11 @@
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls"
   ],
-  // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy invoked from app scripts —
-  // binaries not provided as a resolvable dependency import. readlink is a POSIX/coreutils
-  // system binary (root `instructions:drift` script), never an npm-installable dependency.
-  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink"],
+  // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy, and uv = the
+  // system Python project runner — binaries not provided as resolvable dependency imports.
+  // readlink is a POSIX/coreutils system binary (root `instructions:drift` script), never an
+  // npm-installable dependency.
+  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink", "uv"],
   // Scratchpad is a private experiment workspace kept in the root install graph
   // for dependency/TS trials but excluded from Knip's package graph. Scaffolded
   // test fixtures are likewise deliberately outside dependency-drift review.

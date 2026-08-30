@@ -6,10 +6,15 @@
  */
 
 import { fileURLToPath } from "node:url";
-import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { A, Str } from "@beep/utils";
-import { Config, Console, Effect, FileSystem, flow, Match, Path, pipe } from "effect";
+import { Config, Console, Effect, FileSystem, flow, Match, MutableHashSet, Number as Num, Path, pipe } from "effect";
 import * as O from "effect/Option";
+import {
+  CommandJsonOutput,
+  DEFAULT_JSON_PRETTY_MAX_LENGTH,
+  encodeCommandJson,
+  renderPrettyCommandJson,
+} from "../../../internal/cli/Json.ts";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 import {
@@ -22,6 +27,7 @@ import type {
   MatchPersonOptions,
   PersonMatchDisposition,
   PersonMatchEntry,
+  PersonMatchModelArtifactName,
   PersonMatchWorkerReport,
   PersonMatchWorkerSuccess,
 } from "./MatchPerson.schemas.ts";
@@ -31,7 +37,16 @@ const workerOutputBound = OutputBound.make({
   maxChars: 268_435_456,
   truncatedNotice: "\n[files match-person output truncated]",
 });
+const workerModelRuntimeName = "beep_buffalo_l_v1";
+const workerModelArtifactSha256: Readonly<Record<PersonMatchModelArtifactName, string>> = {
+  "det_10g.onnx": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+  "w600k_r50.onnx": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
+};
+const workerScoreRoundingTolerance = 0.000001;
 const trustedUvRoots = ["/usr/bin", "/usr/local/bin"] as const;
+
+const approximatelyEqualWorkerScore = (left: number, right: number): boolean =>
+  Math.abs(left - right) <= workerScoreRoundingTolerance;
 
 interface CanonicalMatchPersonInputs {
   readonly cacheRoot: string;
@@ -47,6 +62,16 @@ interface CanonicalMatchPersonInputs {
 interface PersonMatchCopyPlanEntry {
   readonly sourcePath: string;
   readonly targetPath: string;
+}
+
+interface PersonMatchCommitRecord {
+  backedUp: boolean;
+  readonly backupPath: string;
+  committed: boolean;
+  readonly description: string;
+  readonly stagedPath: string;
+  readonly targetPath: string;
+  readonly temporaryDirectory: string;
 }
 
 interface MatchPersonPathOperations {
@@ -242,7 +267,7 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
   if (!options.acceptModelLicense) {
     return yield* FilesCommandError.make({
       message:
-        "InsightFace buffalo_l weights are limited to non-commercial research use. Re-run with --accept-model-license after reviewing those terms.",
+        "InsightFace buffalo_l weights are limited to non-commercial research use. Review https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md, then re-run with --accept-model-license.",
     });
   }
   yield* validateThresholds(options);
@@ -291,6 +316,21 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
   ) {
     return yield* FilesCommandError.make({
       message: "The person-match output directory must be outside the candidate and reference directories.",
+    });
+  }
+  if (pathsOverlap(path, cacheRoot, manifestPath)) {
+    return yield* FilesCommandError.make({
+      message: "The person-match manifest and cache paths must not overlap.",
+    });
+  }
+  if (
+    O.exists(
+      outputDirectory,
+      (directory) => pathsOverlap(path, directory, manifestPath) || pathsOverlap(path, directory, cacheRoot)
+    )
+  ) {
+    return yield* FilesCommandError.make({
+      message: "The person-match output directory must not overlap the manifest or cache paths.",
     });
   }
 
@@ -379,7 +419,9 @@ const runWorker = Effect.fn("Files.runMatchPersonWorker")(function* (
     });
   }
 
-  const decoded = yield* decodePersonMatchWorkerReportJson(result.stdout).pipe(Effect.option);
+  const decoded = yield* decodePersonMatchWorkerReportJson(result.stdout, { onExcessProperty: "error" }).pipe(
+    Effect.option
+  );
   if (O.isNone(decoded)) {
     const diagnostic = Str.trim(result.stderr);
     return yield* FilesCommandError.make({
@@ -392,6 +434,19 @@ const runWorker = Effect.fn("Files.runMatchPersonWorker")(function* (
     return yield* FilesCommandError.make({
       message: workerFailureMessage(decoded.value, result.stderr, result.exitCode),
     });
+  }
+
+  if (options.recursive) {
+    const acceptedReferenceNames = MutableHashSet.empty<string>();
+    for (const reference of decoded.value.references) {
+      if (!reference.accepted) continue;
+      if (MutableHashSet.has(acceptedReferenceNames, reference.sourceName)) {
+        return yield* FilesCommandError.make({
+          message: `Recursive person-match references contain duplicate accepted file names: "${reference.sourceName}". Rename one reference so face evidence remains unambiguous.`,
+        });
+      }
+      MutableHashSet.add(acceptedReferenceNames, reference.sourceName);
+    }
   }
   return decoded.value;
 });
@@ -418,6 +473,198 @@ const safeRelativePath = (
     ? O.none()
     : O.some(normalized);
 };
+
+const validateWorkerSemantics = Effect.fn("Files.validatePersonMatchWorkerSemantics")(function* (
+  worker: PersonMatchWorkerSuccess,
+  inputs: CanonicalMatchPersonInputs,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, FilesCommandError, Path.Path> {
+  const path = yield* Path.Path;
+  if (
+    worker.parameters.detectionThreshold !== options.detectionThreshold ||
+    worker.parameters.matchThreshold !== options.matchThreshold ||
+    worker.parameters.reviewThreshold !== options.reviewThreshold ||
+    worker.parameters.minFaceAreaPct !== options.minFaceAreaPct ||
+    worker.parameters.recursive !== options.recursive
+  ) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker reported parameters that do not match the requested scan.",
+    });
+  }
+  if (path.resolve(worker.model.root) !== inputs.modelRoot) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker reported a model root outside the selected cache.",
+    });
+  }
+  const artifactNames = MutableHashSet.empty<string>();
+  for (const artifact of worker.model.artifacts) {
+    if (MutableHashSet.has(artifactNames, artifact.name)) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker reported duplicate model artifact provenance for "${artifact.name}".`,
+      });
+    }
+    MutableHashSet.add(artifactNames, artifact.name);
+    const expectedArtifactPath = path.join(inputs.modelRoot, "models", workerModelRuntimeName, artifact.name);
+    if (
+      path.resolve(artifact.path) !== expectedArtifactPath ||
+      artifact.sha256 !== workerModelArtifactSha256[artifact.name]
+    ) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker reported unexpected model artifact provenance for "${artifact.name}".`,
+      });
+    }
+  }
+  if (
+    worker.model.artifacts.length !== 2 ||
+    !MutableHashSet.has(artifactNames, "det_10g.onnx") ||
+    !MutableHashSet.has(artifactNames, "w600k_r50.onnx")
+  ) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker did not report the exact pinned detector and recognizer artifacts.",
+    });
+  }
+
+  const acceptedReferenceNames = MutableHashSet.empty<string>();
+  const referencePaths = MutableHashSet.empty<string>();
+  let acceptedReferenceCount = 0;
+  for (const reference of worker.references) {
+    const referencePath = path.resolve(reference.sourcePath);
+    if (
+      !pathContains(path, inputs.referenceDirectory, referencePath) ||
+      reference.sourceName !== path.basename(referencePath) ||
+      MutableHashSet.has(referencePaths, referencePath)
+    ) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned an invalid or duplicate reference path: "${reference.sourcePath}".`,
+      });
+    }
+    MutableHashSet.add(referencePaths, referencePath);
+    if (reference.accepted) {
+      acceptedReferenceCount += 1;
+      MutableHashSet.add(acceptedReferenceNames, reference.sourceName);
+      if (reference.faceCount !== 1 || reference.detectionScore === undefined || reference.reason !== undefined) {
+        return yield* FilesCommandError.make({
+          message: `Person-match worker returned inconsistent accepted reference evidence for "${reference.sourcePath}".`,
+        });
+      }
+    } else if (reference.reason === undefined) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker omitted the rejection reason for reference "${reference.sourcePath}".`,
+      });
+    }
+  }
+
+  const sourcePaths = MutableHashSet.empty<string>();
+  const relativePaths = MutableHashSet.empty<string>();
+  for (const entry of worker.entries) {
+    const safeRelative = safeRelativePath(path, entry.relativePath);
+    if (O.isNone(safeRelative)) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned an unsafe relative path: "${entry.relativePath}"`,
+      });
+    }
+    const expectedSourcePath = path.resolve(inputs.candidateDirectory, safeRelative.value);
+    const reportedSourcePath = path.resolve(entry.sourcePath);
+    if (reportedSourcePath !== expectedSourcePath || entry.sourceName !== path.basename(expectedSourcePath)) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned mismatched source and relative paths for "${entry.relativePath}".`,
+      });
+    }
+    if (MutableHashSet.has(sourcePaths, reportedSourcePath) || MutableHashSet.has(relativePaths, safeRelative.value)) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned a duplicate candidate entry for "${entry.relativePath}".`,
+      });
+    }
+    MutableHashSet.add(sourcePaths, reportedSourcePath);
+    MutableHashSet.add(relativePaths, safeRelative.value);
+
+    if (entry.faceCount !== entry.faces.length) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned a face-count mismatch for "${entry.relativePath}".`,
+      });
+    }
+    const hasNoComparableFace = entry.disposition === "no-face" || entry.disposition === "unreadable";
+    if (
+      (hasNoComparableFace && (entry.faceCount !== 0 || entry.bestScore !== undefined)) ||
+      (!hasNoComparableFace && (entry.faceCount === 0 || entry.bestScore === undefined))
+    ) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned incoherent face evidence for "${entry.relativePath}".`,
+      });
+    }
+    if (
+      (entry.disposition === "unreadable" && entry.reason !== "image-decode-failed") ||
+      (entry.disposition !== "unreadable" && entry.reason !== undefined)
+    ) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned an incoherent candidate reason for "${entry.relativePath}".`,
+      });
+    }
+    let maximumMatchScore = -1;
+    for (const face of entry.faces) {
+      if (!MutableHashSet.has(acceptedReferenceNames, face.bestReferenceName)) {
+        return yield* FilesCommandError.make({
+          message: `Person-match worker referenced an unaccepted identity source for "${entry.relativePath}".`,
+        });
+      }
+      if (!approximatelyEqualWorkerScore(face.matchScore, Num.max(face.centroidScore, face.top3MedianScore))) {
+        return yield* FilesCommandError.make({
+          message: `Person-match worker returned incoherent aggregate face scores for "${entry.relativePath}".`,
+        });
+      }
+      maximumMatchScore = Num.max(maximumMatchScore, face.matchScore);
+    }
+    if (hasNoComparableFace) continue;
+    if (entry.bestScore === undefined || !approximatelyEqualWorkerScore(entry.bestScore, maximumMatchScore)) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned an incoherent best score for "${entry.relativePath}".`,
+      });
+    }
+
+    const couldMeetMatchThreshold = maximumMatchScore >= options.matchThreshold - workerScoreRoundingTolerance;
+    const mustMeetMatchThreshold = maximumMatchScore > options.matchThreshold + workerScoreRoundingTolerance;
+    const couldMeetReviewThreshold = maximumMatchScore >= options.reviewThreshold - workerScoreRoundingTolerance;
+    const couldMissReviewThreshold = maximumMatchScore <= options.reviewThreshold + workerScoreRoundingTolerance;
+    const hasQualityFlags = A.some(entry.faces, (face) => A.isReadonlyArrayNonEmpty(face.qualityFlags));
+    const dispositionIsCoherent = Match.value(entry.disposition).pipe(
+      Match.when("solo-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && !hasQualityFlags),
+      Match.when("low-quality-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && hasQualityFlags),
+      Match.when("group-match", () => entry.faceCount > 1 && couldMeetMatchThreshold),
+      Match.when("review", () => !mustMeetMatchThreshold && couldMeetReviewThreshold),
+      Match.when("no-match", () => couldMissReviewThreshold),
+      Match.exhaustive
+    );
+    if (!dispositionIsCoherent) {
+      return yield* FilesCommandError.make({
+        message: `Person-match worker returned a disposition inconsistent with its thresholds or quality evidence for "${entry.relativePath}".`,
+      });
+    }
+  }
+
+  const dispositionCounts: ReadonlyArray<readonly [PersonMatchDisposition, number]> = [
+    ["solo-match", worker.summary.soloMatchCount],
+    ["group-match", worker.summary.groupMatchCount],
+    ["low-quality-match", worker.summary.lowQualityMatchCount],
+    ["review", worker.summary.reviewCount],
+    ["no-match", worker.summary.noMatchCount],
+    ["no-face", worker.summary.noFaceCount],
+    ["unreadable", worker.summary.unreadableCount],
+  ];
+  if (
+    worker.summary.totalCount !== worker.entries.length ||
+    worker.summary.acceptedReferenceCount !== acceptedReferenceCount ||
+    worker.summary.rejectedReferenceCount !== worker.references.length - acceptedReferenceCount ||
+    A.some(
+      dispositionCounts,
+      ([disposition, expected]) =>
+        A.length(A.filter(worker.entries, (entry) => entry.disposition === disposition)) !== expected
+    )
+  ) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker summary counts do not match its reference and candidate entries.",
+    });
+  }
+});
 
 const buildCopyPlan = Effect.fn("Files.buildPersonMatchCopyPlan")(function* (
   entries: ReadonlyArray<PersonMatchEntry>,
@@ -504,46 +751,145 @@ const buildCopyPlan = Effect.fn("Files.buildPersonMatchCopyPlan")(function* (
   return plan;
 });
 
-const applyCopyPlan = Effect.fn("Files.applyPersonMatchCopyPlan")(function* (
-  plan: ReadonlyArray<PersonMatchCopyPlanEntry>
-): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  for (const entry of plan) {
-    const parent = path.dirname(entry.targetPath);
-    yield* fs
-      .makeDirectory(parent, { recursive: true })
-      .pipe(
-        Effect.mapError((cause) =>
-          formatPlatformError("Failed to create person-match output directory", parent, { cause })
-        )
-      );
-    yield* fs
-      .copyFile(entry.sourcePath, entry.targetPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          formatPlatformError("Failed to copy person-match output", entry.targetPath, { cause })
-        )
-      );
-  }
-});
-
-const writeManifest = Effect.fn("Files.writePersonMatchManifest")(function* (
-  report: PersonMatchReport,
-  overwrite: boolean
-): Effect.fn.Return<
-  string,
-  FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
+const renderManifest = Effect.fn("Files.renderPersonMatchManifest")(function* (
+  report: PersonMatchReport
+): Effect.fn.Return<string, FilesCommandError> {
   const encoded = yield* encodePersonMatchReport(report).pipe(
     Effect.mapError((cause) => FilesCommandError.new(cause, "Failed to encode person-match report"))
   );
-  const rendered = yield* renderBiomeJson(report.manifestPath, encoded).pipe(
-    Effect.mapError((cause) => FilesCommandError.new(cause, "Failed to render person-match report JSON"))
+  const encodedJson = yield* encodeCommandJson(encoded).pipe(
+    Effect.mapError((cause) => FilesCommandError.new(cause, "Failed to encode person-match report JSON"))
   );
+  return renderPrettyCommandJson(encodedJson, { maxLength: DEFAULT_JSON_PRETTY_MAX_LENGTH });
+});
+
+const fileIdentitySnapshot = (info: FileSystem.File.Info): string =>
+  A.join(
+    [
+      `${info.dev}`,
+      pipe(
+        info.ino,
+        O.map(String),
+        O.getOrElse(() => "unknown-inode")
+      ),
+      `${info.size}`,
+      pipe(
+        info.mtime,
+        O.map((value) => `${value.getTime()}`),
+        O.getOrElse(() => "unknown-mtime")
+      ),
+    ],
+    ":"
+  );
+
+const stageCopy = Effect.fn("Files.stagePersonMatchCopy")(function* (
+  entry: PersonMatchCopyPlanEntry
+): Effect.fn.Return<PersonMatchCommitRecord, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const parent = path.dirname(entry.targetPath);
+  yield* fs
+    .makeDirectory(parent, { recursive: true })
+    .pipe(
+      Effect.mapError((cause) =>
+        formatPlatformError("Failed to create person-match output directory", parent, { cause })
+      )
+    );
+  const temporaryDirectory = yield* fs
+    .makeTempDirectory({ directory: parent, prefix: ".beep-files-person-match-copy-" })
+    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stage person-match output", parent, { cause })));
+
+  return yield* Effect.onError(
+    Effect.gen(function* () {
+      const currentSourcePath = yield* fs.realPath(entry.sourcePath).pipe(
+        Effect.mapError((cause) =>
+          formatPlatformError("Failed to re-resolve person-match source before staging", entry.sourcePath, {
+            cause,
+          })
+        )
+      );
+      if (currentSourcePath !== entry.sourcePath) {
+        return yield* FilesCommandError.make({
+          message: `Person-match source changed or became an alias during the scan: "${entry.sourcePath}"`,
+        });
+      }
+
+      const sourceStat = yield* fs.stat(currentSourcePath).pipe(
+        Effect.mapError((cause) =>
+          formatPlatformError("Failed to inspect person-match source metadata before staging", currentSourcePath, {
+            cause,
+          })
+        )
+      );
+      if (sourceStat.type !== "File") {
+        return yield* FilesCommandError.make({
+          message: `Person-match source is no longer a regular file: "${currentSourcePath}"`,
+        });
+      }
+
+      const stagedPath = path.join(temporaryDirectory, ".staged-output");
+      yield* fs
+        .copyFile(currentSourcePath, stagedPath)
+        .pipe(
+          Effect.mapError((cause) => formatPlatformError("Failed to stage person-match output", stagedPath, { cause }))
+        );
+      const sourceAfterCopy = yield* fs
+        .realPath(entry.sourcePath)
+        .pipe(
+          Effect.mapError((cause) =>
+            formatPlatformError("Failed to re-resolve person-match source after staging", entry.sourcePath, { cause })
+          )
+        );
+      if (sourceAfterCopy !== currentSourcePath) {
+        return yield* FilesCommandError.make({
+          message: `Person-match source path identity changed while it was being staged: "${entry.sourcePath}"`,
+        });
+      }
+      const sourceStatAfterCopy = yield* fs.stat(sourceAfterCopy).pipe(
+        Effect.mapError((cause) =>
+          formatPlatformError("Failed to inspect person-match source metadata after staging", sourceAfterCopy, {
+            cause,
+          })
+        )
+      );
+      const stagedStat = yield* fs
+        .stat(stagedPath)
+        .pipe(
+          Effect.mapError((cause) =>
+            formatPlatformError("Failed to stat staged person-match output", stagedPath, { cause })
+          )
+        );
+      if (
+        sourceStatAfterCopy.type !== "File" ||
+        stagedStat.type !== "File" ||
+        fileIdentitySnapshot(sourceStatAfterCopy) !== fileIdentitySnapshot(sourceStat) ||
+        stagedStat.size !== sourceStat.size
+      ) {
+        return yield* FilesCommandError.make({
+          message: `Person-match source metadata changed while it was being staged: "${entry.sourcePath}"`,
+        });
+      }
+
+      return {
+        backupPath: path.join(temporaryDirectory, ".previous-output"),
+        backedUp: false,
+        committed: false,
+        description: "person-match output",
+        stagedPath,
+        targetPath: entry.targetPath,
+        temporaryDirectory,
+      };
+    }),
+    () => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
+  );
+});
+
+const stageManifest = Effect.fn("Files.stagePersonMatchManifest")(function* (
+  report: PersonMatchReport,
+  rendered: string
+): Effect.fn.Return<PersonMatchCommitRecord, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const parent = path.dirname(report.manifestPath);
   yield* fs
     .makeDirectory(parent, { recursive: true })
@@ -552,61 +898,199 @@ const writeManifest = Effect.fn("Files.writePersonMatchManifest")(function* (
         formatPlatformError("Failed to create person-match manifest directory", parent, { cause })
       )
     );
+  const temporaryDirectory = yield* fs
+    .makeTempDirectory({ directory: parent, prefix: ".beep-files-person-match-manifest-" })
+    .pipe(Effect.mapError((cause) => formatPlatformError("Failed to stage person-match manifest", parent, { cause })));
 
-  yield* Effect.acquireUseRelease(
-    fs
-      .makeTempDirectory({ directory: parent, prefix: ".beep-files-person-match-" })
-      .pipe(
-        Effect.mapError((cause) => formatPlatformError("Failed to stage person-match manifest", parent, { cause }))
-      ),
-    Effect.fnUntraced(function* (temporaryDirectory) {
-      const temporaryPath = path.join(temporaryDirectory, path.basename(report.manifestPath));
+  return yield* Effect.onError(
+    Effect.gen(function* () {
+      const stagedPath = path.join(temporaryDirectory, ".staged-manifest");
       yield* fs
-        .writeFileString(temporaryPath, rendered)
+        .writeFileString(stagedPath, rendered)
         .pipe(
           Effect.mapError((cause) =>
-            formatPlatformError("Failed to write staged person-match manifest", temporaryPath, { cause })
+            formatPlatformError("Failed to write staged person-match manifest", stagedPath, { cause })
           )
         );
-      const targetExists = yield* fs
-        .exists(report.manifestPath)
-        .pipe(
-          Effect.mapError((cause) =>
-            formatPlatformError("Failed to recheck person-match manifest", report.manifestPath, { cause })
-          )
+      return {
+        backupPath: path.join(temporaryDirectory, ".previous-manifest"),
+        backedUp: false,
+        committed: false,
+        description: "person-match manifest",
+        stagedPath,
+        targetPath: report.manifestPath,
+        temporaryDirectory,
+      };
+    }),
+    () => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
+  );
+});
+
+const inspectCommitDestination = Effect.fn("Files.inspectPersonMatchCommitDestination")(function* (
+  record: PersonMatchCommitRecord,
+  overwrite: boolean
+): Effect.fn.Return<boolean, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const canonicalTarget = yield* canonicalizeTargetPath(record.targetPath, record.description);
+  if (canonicalTarget !== record.targetPath) {
+    return yield* FilesCommandError.make({
+      message: `Refusing a symlinked or aliased ${record.description}: "${record.targetPath}"`,
+    });
+  }
+  const exists = yield* fs
+    .exists(record.targetPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        formatPlatformError(`Failed to recheck ${record.description}`, record.targetPath, { cause })
+      )
+    );
+  if (!exists) return false;
+
+  const stat = yield* fs
+    .stat(record.targetPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        formatPlatformError(`Failed to inspect ${record.description} metadata`, record.targetPath, { cause })
+      )
+    );
+  if (stat.type !== "File") {
+    return yield* FilesCommandError.make({
+      message: `Refusing to replace a non-file ${record.description}: "${record.targetPath}"`,
+    });
+  }
+  if (!overwrite) {
+    return yield* FilesCommandError.make({
+      message: `Refusing to replace ${record.description} created during the scan: "${record.targetPath}"`,
+    });
+  }
+  return true;
+});
+
+const rollbackCommit = Effect.fn("Files.rollbackPersonMatchCommit")(function* (
+  records: ReadonlyArray<PersonMatchCommitRecord>
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  let failures = A.empty<string>();
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index];
+    if (record === undefined) continue;
+    if (record.committed) {
+      const removed = yield* fs.remove(record.targetPath, { force: true }).pipe(
+        Effect.as(true),
+        Effect.orElseSucceed(() => false)
+      );
+      if (removed) {
+        record.committed = false;
+      } else {
+        failures = A.append(
+          failures,
+          `could not remove newly committed "${record.targetPath}"; staging retained at "${record.temporaryDirectory}"`
         );
-      if (targetExists) {
-        const targetStat = yield* fs
-          .stat(report.manifestPath)
+      }
+    }
+    if (record.backedUp) {
+      const restored = yield* fs.rename(record.backupPath, record.targetPath).pipe(
+        Effect.as(true),
+        Effect.orElseSucceed(() => false)
+      );
+      if (restored) {
+        record.backedUp = false;
+      } else {
+        failures = A.append(
+          failures,
+          `could not restore "${record.backupPath}" to "${record.targetPath}"; staging retained at "${record.temporaryDirectory}"`
+        );
+      }
+    }
+  }
+  if (A.isReadonlyArrayNonEmpty(failures)) {
+    return yield* FilesCommandError.make({
+      message: `Person-match rollback was incomplete: ${A.join(failures, "; ")}.`,
+    });
+  }
+});
+
+const cleanupCommitStaging = Effect.fn("Files.cleanupPersonMatchCommitStaging")(function* (
+  records: ReadonlyArray<PersonMatchCommitRecord>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const cleaned = MutableHashSet.empty<string>();
+  for (const record of records) {
+    if (record.backedUp || record.committed || MutableHashSet.has(cleaned, record.temporaryDirectory)) continue;
+    MutableHashSet.add(cleaned, record.temporaryDirectory);
+    yield* fs.remove(record.temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore);
+  }
+});
+
+const commitStagedFiles = Effect.fn("Files.commitPersonMatchStagedFiles")(function* (
+  records: ReadonlyArray<PersonMatchCommitRecord>,
+  overwrite: boolean
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* Effect.uninterruptible(
+    Effect.gen(function* () {
+      for (const record of records) {
+        const targetExists = yield* inspectCommitDestination(record, overwrite);
+        if (!targetExists) continue;
+        yield* fs
+          .rename(record.targetPath, record.backupPath)
           .pipe(
             Effect.mapError((cause) =>
-              formatPlatformError("Failed to restat person-match manifest", report.manifestPath, { cause })
+              formatPlatformError(`Failed to back up existing ${record.description}`, record.targetPath, { cause })
             )
           );
-        if (targetStat.type !== "File") {
-          return yield* FilesCommandError.make({
-            message: `Refusing to replace a non-file person-match manifest: "${report.manifestPath}"`,
-          });
-        }
-        if (!overwrite) {
-          return yield* FilesCommandError.make({
-            message: `Refusing to replace a person-match manifest created during the scan: "${report.manifestPath}"`,
-          });
-        }
+        record.backedUp = true;
       }
 
-      const commit = overwrite
-        ? fs.rename(temporaryPath, report.manifestPath)
-        : fs.link(temporaryPath, report.manifestPath);
-      yield* commit.pipe(
-        Effect.mapError((cause) =>
-          formatPlatformError("Failed to atomically commit person-match manifest", report.manifestPath, { cause })
+      for (const record of records) {
+        yield* fs
+          .link(record.stagedPath, record.targetPath)
+          .pipe(
+            Effect.mapError((cause) =>
+              formatPlatformError(`Failed to atomically commit ${record.description}`, record.targetPath, { cause })
+            )
+          );
+        record.committed = true;
+      }
+    }).pipe(
+      Effect.catch((commitError) =>
+        rollbackCommit(records).pipe(
+          Effect.matchEffect({
+            onFailure: (rollbackError) =>
+              FilesCommandError.make({
+                cause: commitError,
+                message: `${commitError.message} ${rollbackError.message}`,
+              }),
+            onSuccess: () => Effect.fail(commitError),
+          })
         )
-      );
-    }),
-    (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
+      )
+    )
   );
-  return rendered;
+});
+
+const materializeReport = Effect.fn("Files.materializePersonMatchReport")(function* (
+  report: PersonMatchReport,
+  copyPlan: ReadonlyArray<PersonMatchCopyPlanEntry>,
+  overwrite: boolean
+): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const rendered = yield* renderManifest(report);
+  const records: Array<PersonMatchCommitRecord> = [];
+  return yield* Effect.ensuring(
+    Effect.gen(function* () {
+      for (const entry of copyPlan) {
+        records.push(yield* stageCopy(entry));
+      }
+      records.push(yield* stageManifest(report, rendered));
+      yield* commitStagedFiles(records, overwrite);
+      for (const record of records) {
+        record.committed = false;
+        record.backedUp = false;
+      }
+      return rendered;
+    }),
+    Effect.suspend(() => cleanupCommitStaging(records))
+  );
 });
 
 /**
@@ -614,14 +1098,17 @@ const writeManifest = Effect.fn("Files.writePersonMatchManifest")(function* (
  *
  * **Details**
  *
- * The Python environment, verified InsightFace models, and dependency cache
- * live outside the repository. Candidate photos remain immutable; optional
- * materialization copies only accepted and review-lane images, and raw face
- * embeddings never cross the worker boundary.
+ * The default Python environment, verified InsightFace models, and dependency
+ * cache live outside the repository; `--cache-dir` selects another location.
+ * Candidate photos remain immutable; optional materialization copies only
+ * accepted and review-lane images, and raw face embeddings never cross the
+ * worker boundary.
  *
  * **Example** (Reference the operation)
  *
  * ```ts
+ * import { runMatchPerson } from "@beep/repo-cli/commands/Files"
+ *
  * const operation = runMatchPerson
  * console.log(typeof operation)
  * ```
@@ -646,21 +1133,16 @@ export const runMatchPerson = Effect.fn("Files.runMatchPerson")(function* (
   }
 
   const worker = yield* runWorker(options, inputs);
+  yield* validateWorkerSemantics(worker, inputs, options);
   if (worker.summary.acceptedReferenceCount === 0) {
     return yield* FilesCommandError.make({
       message: "Person-match worker did not accept any single-face reference images.",
     });
   }
 
-  if (O.isSome(inputs.outputDirectory)) {
-    const copyPlan = yield* buildCopyPlan(
-      worker.entries,
-      inputs.candidateDirectory,
-      inputs.outputDirectory.value,
-      options.overwrite
-    );
-    yield* applyCopyPlan(copyPlan);
-  }
+  const copyPlan = O.isSome(inputs.outputDirectory)
+    ? yield* buildCopyPlan(worker.entries, inputs.candidateDirectory, inputs.outputDirectory.value, options.overwrite)
+    : A.empty<PersonMatchCopyPlanEntry>();
 
   const report = PersonMatchReport.make({
     schemaVersion: "beep.files.match-person.v1",
@@ -675,13 +1157,14 @@ export const runMatchPerson = Effect.fn("Files.runMatchPerson")(function* (
     manifestWritten: true,
     ...(O.isSome(inputs.outputDirectory) ? { outputDirectory: inputs.outputDirectory.value } : {}),
   });
-  const rendered = yield* writeManifest(report, options.overwrite);
+  const rendered = yield* materializeReport(report, copyPlan, options.overwrite);
 
   if (options.json) {
-    yield* Console.log(Str.trimEnd(rendered));
+    const writeJson = yield* CommandJsonOutput;
+    yield* writeJson(rendered);
   } else {
     yield* Console.log(
-      `files match-person: ${report.summary.soloMatchCount} solo match(es), ${report.summary.groupMatchCount} group review(s), ${report.summary.lowQualityMatchCount} quality review(s), ${report.summary.reviewCount} identity review(s), ${report.summary.noMatchCount} no-match, ${report.summary.noFaceCount} no-face.`
+      `files match-person: ${report.summary.soloMatchCount} solo match(es), ${report.summary.groupMatchCount} group review(s), ${report.summary.lowQualityMatchCount} quality review(s), ${report.summary.reviewCount} identity review(s), ${report.summary.noMatchCount} no-match, ${report.summary.noFaceCount} no-face, ${report.summary.unreadableCount} unreadable.`
     );
     yield* Console.log(`files match-person: wrote "${report.manifestPath}".`);
   }
