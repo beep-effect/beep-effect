@@ -111,7 +111,7 @@ Source: [Use network upload to import PST files](https://learn.microsoft.com/en-
 ### 1.3 Step 2 — AzCopy upload
 
 ```text
-azcopy.exe copy "<Source directory of PST files>" "<SAS URL>"
+azcopy.exe copy "<Source directory of PST files>" "<SAS URL>" --recursive=true
 ```
 
 Rules:

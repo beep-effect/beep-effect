@@ -203,6 +203,9 @@ E3 routes (overkill), defer-to-quote (blocks the import window needlessly).
 instead of skipping. The Box quote (Governance-on-Business eligibility and
 price, Business Plus, Enterprise Plus bundling, Shield) is gathered in
 parallel; any upgrade is a later ratified decision with real prices.
+The quote must also price external-collaborator economics on Business —
+client collaborators must not silently require paid seats (r7 flags this
+as unverified).
 
 **Rationale:** Structure, collaborations, versioning, and Box Sign work
 today; blocking visibly preserves honesty about what the plan lacks.
@@ -217,7 +220,10 @@ practice).
 **Answer:** A dedicated Box service identity owns the canonical tree; the
 attorney collaborates at client-folder level (co-owner/editor); Benjamin
 retains admin. The CCG platform-app approval flow on the Business plan is a
-verification item before build.
+verification item before build. Box Sign requests must preserve the
+attorney's sender/on-behalf context even under service-account ownership —
+the exact mechanism (managed user, on-behalf header, or sender field) is a
+goal-design question, not optional.
 
 **Rationale:** Stable owner for webhooks and Sign requests; survives
 personnel/device changes; matches r7 §F. The probed status quo (everything
@@ -232,8 +238,10 @@ personal root).
 
 **Answer:** No. Box is the sole document store; the M365 Copilot → Box
 connector (enabled the same day) provides the cross-store search surface.
-The `@beep/m365` write-verbs goal shrinks to mail/contacts — no driveItem
-upload, no `Sites.Selected`.
+The `@beep/m365` write-verbs goal shrinks to contacts only — no driveItem
+upload, no `Sites.Selected`, and no Graph mail-write lane: historical mail
+arrives exclusively via the Purview import, and no decision approves Graph
+message creation.
 
 **Rationale:** R3 required a named site + purpose before provisioning
 `Sites.Selected`; no consumer existed. Rejected: handbook-site-only (the
@@ -262,8 +270,12 @@ upkeep) and org contacts.
 pattern (FetchHttpClient + Schema decode + LiteralKit errors + `S.Redacted`
 config): auth-code token helper with a local exact-match HTTPS redirect,
 clients/invoices/payments read verbs plus invoice-PDF retrieval for Box
-delivery; webhooks follow later. The existing all-scopes dev app stays
-dev-only; the production app is registered least-privilege at graduation.
+delivery — gated on validating the actual PDF endpoint first (r7 lists it
+UNVERIFIED); webhooks follow later. The token helper must handle
+FreshBooks' single-use refresh-token rotation: persist each rotated
+refresh token atomically before using it, or the integration bricks itself
+on the first race. The existing all-scopes dev app stays dev-only; the
+production app is registered least-privilege at graduation.
 
 **Rationale:** Versioned-code decision needs a repo home for the
 invoice-to-Box flow. Rejected: MCP-only (no code home) and
