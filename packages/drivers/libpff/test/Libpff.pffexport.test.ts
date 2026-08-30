@@ -171,6 +171,7 @@ required_bind_seen=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --ro-bind|--bind)
+      [ "$1" != "--ro-bind" ] || [ "$2" != "/" ] || [ "$3" != "/" ] || exit 98
       mount_hosts+=("$2")
       mount_targets+=("$3")
       if [ "$1" = "--ro-bind" ] && [ "$2" = "$required_bind" ] && [ "$3" = "$required_bind" ]; then

@@ -622,7 +622,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
 
     const binds: Array<string> = [];
     for (const interpreter of [prefix, canonicalInterpreter]) {
+      if (sandboxRuntimeCovers(interpreter)) continue;
       const runtimePrefix = runtimePrefixFor(interpreter);
+      if (runtimePrefix === path.parse(runtimePrefix).root) {
+        return yield* makeLibpffError("config", { cause: "sandbox runtime bind cannot expose the host root" });
+      }
       if (!sandboxRuntimeCovers(runtimePrefix) && !A.contains(binds, runtimePrefix)) {
         binds.push(runtimePrefix);
       }
