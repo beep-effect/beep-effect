@@ -368,3 +368,12 @@ ratifies.
   source spans before preserving a higher-tier status, and covers mixed source and candidate
   choices. Prevention: translate decision phrases such as "unique across variants" into explicit
   cross-tier ambiguity and multiple-choice tests before the first hosted review.
+
+- **2026-08-30 — Yeet rejected GitHub's empty encoding of an absent review decision.** The
+  pull request had every required check green, zero unresolved threads, a current 5/5 Greptile
+  review, and a ruleset requiring zero approvals, but `yeet status --remote` still reported
+  `merge-ready: no, blocked on review-decision-acceptable`. Direct GraphQL returned `null` while
+  `gh pr view --json reviewDecision` serialized the same state as `""`; status and watch accepted
+  only `undefined`/`null` or `APPROVED`. Fix: normalize the empty string as absence in both paths
+  and cover the CLI encoding with regressions. Prevention: boundary fixtures for optional GitHub
+  fields must exercise every representation emitted by both GraphQL and `gh` JSON.

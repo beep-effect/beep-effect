@@ -252,6 +252,24 @@ describe("collectYeetWatchSnapshot", () => {
     )
   );
 
+  it.effect("treats gh's empty review decision as absent", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* collectYeetWatchSnapshot(context);
+
+      expect(snapshot.criteria.reviewDecisionAcceptable).toBe(true);
+    }).pipe(
+      provideScopedLayer(
+        scriptedSpawnerLayer([
+          {
+            view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "CLEAN", "") },
+            checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+            threads: { exitCode: 0, output: threadsJson([]) },
+          },
+        ])
+      )
+    )
+  );
+
   it.effect("paginates past 100 review threads before computing resolution", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetWatchSnapshot(context);
