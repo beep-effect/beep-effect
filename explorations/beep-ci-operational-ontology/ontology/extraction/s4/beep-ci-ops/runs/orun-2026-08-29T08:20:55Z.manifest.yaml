@@ -65,7 +65,7 @@ notes: 'Initiative effort directive (operator, 2026-08-27): every codex seat run
   artifacts re-verified. ENGINE RE-LOCK 4 (post-adversary): validator 04b06d94567a -> 6aec64cde23f, contracts fd8cb801a7b3
   -> e1338e75966c; 235 reviews + full tree re-verified. ENGINE RE-LOCK 5 (pre-r2): contracts e1338e75966c -> 586f293df99f.
   ENGINE FREEZE (final): the canonical skill install was emptied mid-run by a parallel restructuring session; the
-  run completes on the pinned mirror snapshot at ~/.agents/skills (validator 6aec64cde23f, contracts e1338e75966c
+  run completes on the pinned Codex skills-mirror snapshot (the agents skills directory under the operator home; validator 6aec64cde23f, contracts e1338e75966c
   — byte-identical to the digests this manifest pinned at the adversary stage; the transient contracts value 586f293df99f
   observed between re-locks 4 and 5 no longer exists anywhere and is superseded).'
 frozen_inputs:
