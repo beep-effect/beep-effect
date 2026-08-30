@@ -235,21 +235,13 @@ const compareAliases = (
   const nextContextualAliases = contextualAliasTexts(next.contextualAliases);
   const additions = normalizeStringSet([
     ...A.filter(next.aliases, (alias) => !A.contains(previous.aliases, alias)),
-    ...A.filter(
-      next.plainAliases,
-      (alias) => !A.contains(previous.plainAliases, alias) && A.contains(previous.aliases, alias)
-    ),
+    ...A.filter(next.plainAliases, (alias) => !A.contains(previous.plainAliases, alias)),
+    ...A.filter(nextContextualAliases, (alias) => !A.contains(previousContextualAliases, alias)),
   ]);
   const removals = normalizeStringSet([
     ...A.filter(previous.aliases, (alias) => !A.contains(next.aliases, alias)),
-    ...A.filter(
-      previous.plainAliases,
-      (alias) =>
-        !A.contains(next.plainAliases, alias) &&
-        A.contains(next.aliases, alias) &&
-        A.contains(previousContextualAliases, alias) &&
-        A.contains(nextContextualAliases, alias)
-    ),
+    ...A.filter(previous.plainAliases, (alias) => !A.contains(next.plainAliases, alias)),
+    ...A.filter(previousContextualAliases, (alias) => !A.contains(nextContextualAliases, alias)),
   ]);
 
   return [

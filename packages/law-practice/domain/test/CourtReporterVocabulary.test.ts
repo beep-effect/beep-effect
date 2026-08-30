@@ -380,6 +380,29 @@ describe("CourtReporterVocabulary", () => {
     expect(removal.compatibility).toBe("incompatible");
   });
 
+  it("rejects direct transitions between plain-only and contextual-only aliases", () => {
+    const contextualAlias = ContextualAlias.make({ alias: "Fixture Rep.", context: "Fixture context" });
+    const plainOnly = reporter(currentReporter, {
+      aliases: [contextualAlias.alias],
+      contextualAliases: [],
+    });
+    const contextualOnly = reporter(currentReporter, {
+      aliases: [],
+      contextualAliases: [contextualAlias],
+    });
+    const toContextual = classify({ reporters: [plainOnly] }, { reporters: [contextualOnly] });
+    const toPlain = classify({ reporters: [contextualOnly] }, { reporters: [plainOnly] });
+
+    expect(A.map(toContextual.changes, ({ kind }) => kind)).toEqual(
+      expect.arrayContaining(["aliasAddition", "aliasRemoval"])
+    );
+    expect(A.map(toPlain.changes, ({ kind }) => kind)).toEqual(
+      expect.arrayContaining(["aliasAddition", "aliasRemoval"])
+    );
+    expect(toContextual.compatibility).toBe("incompatible");
+    expect(toPlain.compatibility).toBe("incompatible");
+  });
+
   it("publishes distinct reporter context for reused aliases with matching names", () => {
     const arkansasReporters = A.filter(findReportersByAlias("Ark."), ({ name }) => name === "Arkansas Reports");
     const contexts = pipe(
