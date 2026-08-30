@@ -208,7 +208,12 @@ type PipelineStage = typeof PipelineStage.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const BatchExtractionWorkflow = Workflow.make("batch-extraction", {
+export const BatchExtractionWorkflow: Workflow.Workflow<
+  "batch-extraction",
+  typeof BatchWorkflowPayload,
+  typeof BatchState,
+  typeof AnyWorkflowError
+> = Workflow.make("batch-extraction", {
   payload: BatchWorkflowPayload,
   success: BatchState,
   error: AnyWorkflowError,
