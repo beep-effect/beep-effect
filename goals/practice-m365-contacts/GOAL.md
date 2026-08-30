@@ -37,9 +37,13 @@ Scope:
 
 Workflow:
 
-1. P0: operator-attended app registration (certificate credential, admin
-   consent, RBAC-for-Applications to the attorney's mailbox); census the CSV
-   headers/counts only — contact content never enters the repo.
+1. P0: operator-attended app registration (certificate credential). Mailbox
+   access comes exclusively through the Exchange RBAC-for-Applications
+   assignment scoped to the attorney's mailbox — never admin-consent the
+   unscoped tenant-wide `Contacts.ReadWrite` Entra application role beside
+   it (Entra + Application RBAC grants are additive); prove the scope with
+   `Test-ServicePrincipalAuthorization`. Census the CSV headers/counts only
+   — contact content never enters the repo.
 2. Schema → service contract → implementation. Config split first: no shape
    may mix PKCE scopes with app-only credentials; app-only uses exactly
    Graph `/.default` and never `/me` routes.
@@ -47,7 +51,8 @@ Workflow:
 4. Contact POSTs are non-idempotent: never blind-replay; ambiguous transport
    failures surface as ambiguous-write errors.
 5. Seeding job dry-runs first (creates / dedup skips / conflicts report),
-   then seeds with rollback tags.
+   then discovers-or-creates the dedicated contact folder idempotently and
+   seeds it with rollback tags.
 6. Run `bun run beep quality package-verify @beep/m365` before handing back.
 7. At P4 Close, write the reflection via `/reflect`;
    `bun run beep lint reflection-artifacts` must pass.

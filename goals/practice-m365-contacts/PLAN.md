@@ -8,15 +8,17 @@ Status: `pending`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Operator-attended Entra app registration (certificate credential) with admin consent and RBAC-for-Applications scoping to the attorney's mailbox; confirm the seeding job's home; census the salvaged CSV columns (counts and headers only — no contact content in the repo). | Registration + scoping evidence in `history/`; job home chosen; CSV census recorded. |
+| P0 Research | pending | Operator-attended Entra app registration (certificate credential); mailbox access granted exclusively via the Exchange RBAC-for-Applications assignment scoped to the attorney's mailbox (never the unscoped tenant-wide Entra contacts role — grants are additive), proven with `Test-ServicePrincipalAuthorization`; confirm the seeding job's home; census the salvaged CSV columns (counts and headers only — no contact content in the repo). | Registration + scoped-grant proof in `history/`; job home chosen; CSV census recorded. |
 | P1 Implement | pending | Auth-lane config split and confidential-client constructor → write-safe HTTP executor → contact schemas + create/list verbs → seeding job with dedup/tagging. Schema → service contract → implementation, in that order. | Acceptance criteria for lanes, verbs, and the dry-run seeding report are met. |
 | P2 Verify | pending | Fixture proofs for both lanes; credential-gated live smoke (mutation opt-in, self-cleaning); executed seeding run with rollback path recorded; package-verify handoff. | Verification matrix green; seeding receipt in `history/`. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `bun run beep yeet monitor` reports `merge-ready: yes` (the aggregate hard gate); zero unresolved review threads. |
+| P4 Close | pending | Land the closeout reflection and packet-state flip in the same PR as the final work (same-PR packet-state flips) — these edits ride that PR before its publish, never a post-merge follow-up. | The final work PR contains the reflection and status flip; P3's merge-ready verdict covers it. |
 
 ## P4 Closeout Checklist
 
-Before marking the packet closed (and `status` → `completed-retained`):
+Run this checklist before the final work PR publishes — the reflection and
+the `status` → `completed-retained` flip land in that same PR (same-PR
+packet-state flips), never as a post-merge follow-up:
 
 1. Write a closeout reflection via the `/reflect` skill to
    `history/reflections/<YYYY-MM-DD>-<agent>.md`; its YAML frontmatter must

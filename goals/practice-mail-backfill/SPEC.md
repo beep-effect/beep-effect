@@ -67,6 +67,14 @@ Higher sources outrank lower sources when they conflict.
   auto-expanding-archive documentation conflict must be resolved — never
   assume. Expect ~24 GB/day/mailbox throughput, ≤20 GB per PST, and up to
   30 days for archive expansion.
+- **Preservation gate**: tranche uploads read only from the preserved
+  salvage estate — P2 requires the preservation gate of
+  `goals/oppold-corpus-salvage-restoration` to have passed for the mail
+  media, and the staging manifest must derive from that preserved estate's
+  verified census (an incomplete staging set would otherwise reconcile
+  cleanly against itself). P0/P1 (quote, dry-run assignment, support case,
+  runbook authoring, archive enablement) are deliberately not gated and run
+  in parallel.
 - **Reconciliation before anything else**: each tranche's imported counts
   are reconciled against the staged manifest before the next tranche starts
   or any hold/retention change is contemplated.
@@ -108,6 +116,9 @@ spec binds to them without restating.
 
 ## Stop Conditions
 
+- A tranche upload is attempted before the preservation gate of
+  `goals/oppold-corpus-salvage-restoration` has passed for the mail media
+  (stop; the gate is a hard prerequisite, not a scheduling preference).
 - The dry-run license assignment shows a service-plan conflict beside
   Business Premium (report; the alternative SKU decision goes back to the
   operator).

@@ -10,13 +10,15 @@ Status: `pending`
 | --- | --- | --- | --- |
 | P0 Research | pending | Endpoint-validation spike against the dev app: invoice-PDF endpoint verdict, live request limits, webhook retry/disable schedule; study the `@beep/hubspot` pattern surface. | Spike report in `history/`; retrieval-verb go/no-go decided. |
 | P1 Implement | pending | Scaffold via `bun run beep create-package`; schemas (accounts/businesses, clients, invoices, payments; `account_id` vs `business_id` modeled) → service contract → token helper with single-refresh-owner rotation → read verbs (+ PDF retrieval if P0 verified it). | Acceptance criteria for the package surface are met. |
-| P2 Verify | pending | Fixture proofs; concurrent-refresh serialization test; credential-gated read-only live smoke; package-verify handoff. | Verification matrix green. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P2 Verify | pending | Fixture proofs; concurrent-refresh serialization test; credential-gated read-only live smoke; `bun run beep quality package-verify @beep/freshbooks`. | Verification matrix green. |
+| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `bun run beep yeet monitor` reports `merge-ready: yes` (the aggregate hard gate); zero unresolved review threads. |
+| P4 Close | pending | Land the closeout reflection and packet-state flip in the same PR as the final work (same-PR packet-state flips) — these edits ride that PR before its publish, never a post-merge follow-up. | The final work PR contains the reflection and status flip; P3's merge-ready verdict covers it. |
 
 ## P4 Closeout Checklist
 
-Before marking the packet closed (and `status` → `completed-retained`):
+Run this checklist before the final work PR publishes — the reflection and
+the `status` → `completed-retained` flip land in that same PR (same-PR
+packet-state flips), never as a post-merge follow-up:
 
 1. Write a closeout reflection via the `/reflect` skill to
    `history/reflections/<YYYY-MM-DD>-<agent>.md`; its YAML frontmatter must

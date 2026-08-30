@@ -4,8 +4,9 @@
 
 Extend `@beep/m365` with an explicit two-lane token provider (the existing
 delegated PKCE lane plus a NET-NEW confidential-client lane,
-certificate-first) and schema-first contacts write verbs behind per-lane
-decoded scope configs, then seed a dedicated contact folder in the
+certificate-first) and schema-first contacts write verbs — contact
+create/list plus contact-folder create/list — behind per-lane decoded scope
+configs, then seed a dedicated contact folder in the
 attorney's mailbox from the salvaged contact-export CSVs — dedup by
 normalized email (fallback name+company), never overwriting hand-edited
 contacts, every seeded contact tagged for rollback.
@@ -58,14 +59,26 @@ Higher sources outrank lower sources when they conflict.
 - **Scope configs**: replace the four-entry write-scope blacklist with
   separate decoded delegated and app-only lane configs — a blacklist cannot
   prove read-only behavior.
-- **RBAC for Applications** (r7 correction): scope app-only
-  `Contacts.ReadWrite` to the attorney's mailbox via RBAC for Applications;
-  `ApplicationAccessPolicy` is legacy and must not appear in new code or
-  runbooks.
+- **RBAC for Applications** (r7 correction; r3 §5): mailbox access is
+  granted exclusively through the Exchange RBAC-for-Applications role
+  assignment (`Application Contacts.ReadWrite` on the Exchange service
+  principal, management scope limited to the attorney's mailbox), verified
+  with `Test-ServicePrincipalAuthorization`. Never admin-consent the
+  unscoped tenant-wide `Contacts.ReadWrite` Entra application role beside
+  it — Entra and Application RBAC permissions are additive, so the unscoped
+  grant would restore organization-wide access and defeat the mailbox
+  scope. `ApplicationAccessPolicy` is legacy and must not appear in new
+  code or runbooks.
 - **Write-safe HTTP**: contact POSTs are non-idempotent and must never be
   blind-replayed; an ambiguous transport failure after a write fails as an
   ambiguous-write error forcing caller reconciliation. App-only calls can
   never use `/me` routes.
+- **Dedicated-folder provisioning**: folder-targeted contact creates
+  require an existing `contactFolders/{folderId}` (r3 §3.1), so the driver
+  surface includes contact-folder create/list beside contact create/list,
+  and the seeding job discovers-or-creates the dedicated folder by name
+  idempotently — recording its id in the run evidence — before any contact
+  write.
 - **Seeding semantics** (ratified contacts-import decision): dedup key =
   normalized email, fallback name+company; existing hand-edited contacts are
   never overwritten; seeded contacts carry a tag/marker enabling clean
@@ -89,11 +102,13 @@ This spec binds to them without restating.
 - [ ] Either auth lane injects into the unchanged REST service boundary in
       tests, and no configuration shape can mix PKCE scopes with app-only
       credentials.
-- [ ] Contact create/list verbs are fixture-proven for both lanes (method,
-      URL, content type, body, decoded response, non-retry behavior).
+- [ ] Contact and contact-folder create/list verbs are fixture-proven for
+      both lanes (method, URL, content type, body, decoded response,
+      non-retry behavior).
 - [ ] The seeding job dry-runs against the CSVs (report: creates, dedup
-      skips, conflicts) before any write; the executed run seeds the
-      dedicated folder with tagged contacts and a recorded rollback path.
+      skips, conflicts) before any write; the executed run
+      discovers-or-creates the dedicated folder and seeds it with tagged
+      contacts and a recorded rollback path.
 - [ ] `bun run beep quality package-verify @beep/m365` passes.
 - [ ] No unrelated refactors or formatting churn.
 
