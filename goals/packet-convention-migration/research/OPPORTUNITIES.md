@@ -1054,3 +1054,58 @@
   and filesystem outputs under `withTempRepo`, leaving console-capture behavior
   to command-harness tests.
 - **Owner:** Repo CLI test fixture capability typing and naming.
+
+## 2026-08-30 — In-progress Actions job logs can return BlobNotFound while the runner is active
+
+- **What happened:** while the final required Lint job remained live, an
+  attempt to inspect its partial log for progress failed even though the Jobs
+  API still reported the verification step as `in_progress`.
+- **Evidence:** `gh api --allow-escape-sequences
+  repos/beep-effect/beep-effect/actions/jobs/99317444130/logs` returned HTTP 404
+  with Azure storage error `BlobNotFound`; the same job's metadata reported
+  `status: in_progress` and active step `Run verification lane` for PR #906.
+- **What would have prevented it:** expose streaming in-progress logs through a
+  stable endpoint, or have the monitor surface the current Actions step plus a
+  clear “partial logs unavailable” state instead of requiring a separate
+  download probe.
+- **Disposition:** hosted observability friction only; retain the attached
+  required-check watcher and wait for the terminal job result.
+- **Owner:** Actions log availability and Yeet hosted-progress diagnostics.
+
+## 2026-08-30 — Goal-ledger validation commands are not self-discovering at file scope
+
+- **What happened:** validating the final one-file ledger change hit two local
+  command-contract failures: the formatter accepted the path but processed no
+  files, and a previously used goal-index command was not a registered Bun
+  script in this checkout.
+- **Evidence:** `bunx biome check
+  goals/packet-convention-migration/research/OPPORTUNITIES.md` exited 1 with
+  `No files were processed` and listed the Markdown path as ignored;
+  `bun run repo-cli goals index --check` exited 1 with
+  `error: Script not found "repo-cli"`. `git diff --check` and
+  `bun run beep explore atlas --check` both passed for the same change.
+- **What would have prevented it:** document one canonical goal-packet
+  validation command that covers Markdown formatting, packet projections, and
+  goal indexing, and make invalid legacy aliases print the supported `beep`
+  equivalent.
+- **Disposition:** validation-discovery friction; use the live root script and
+  CLI help to find the supported goal-index route, while treating ignored
+  Markdown as outside Biome's configured scope.
+- **Owner:** goal tooling command discoverability and Markdown validation scope.
+
+## 2026-08-30 — Bunx Markdown lint resolves to an unconfigured mise shim
+
+- **What happened:** after Biome correctly reported goal Markdown outside its
+  scope, the direct Markdown-lint fallback did not launch the package tool; it
+  was intercepted by a host shim that had no selected version.
+- **Evidence:** `bunx markdownlint-cli2
+  goals/packet-convention-migration/research/OPPORTUNITIES.md` exited 1 with
+  `mise ERROR No version is set for shim: markdownlint-cli2` and suggested a
+  global installation. No installation was attempted.
+- **What would have prevented it:** provide a repository-owned Markdown lint
+  script with a pinned dependency and documented path filtering, so validation
+  does not depend on host shim precedence or a mutable global toolchain.
+- **Disposition:** host-tool routing friction; rely on the repository's
+  successful diff, goal-index, Atlas, and CI lint gates instead of changing the
+  operator's global environment during closeout.
+- **Owner:** repository Markdown lint entrypoint and Bunx/mise shim precedence.
