@@ -11,6 +11,10 @@
 # Documentation examples
 # docs/**
 
+# False positives in Todox scope prose describing excluded backend work.
+8c9692ae1f702eaf4e55d8815215b4cd37df0f1b:apps/todox/PRODUCT.md:generic-api-key:87
+8c9692ae1f702eaf4e55d8815215b4cd37df0f1b:goals/todox-marketing-site/SPEC.md:generic-api-key:39
+
 # False positives from imported upstream test fixtures in local subtree commits.
 4f6b06621704b4f5b7f578f57914e6d9e7f4d376:packages/client/test/client/crossAppAccess.test.ts:generic-api-key:13
 4f6b06621704b4f5b7f578f57914e6d9e7f4d376:packages/client/test/client/crossAppAccess.test.ts:generic-api-key:24
