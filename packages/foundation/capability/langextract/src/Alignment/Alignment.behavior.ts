@@ -87,10 +87,46 @@ interface NormalizedSourceOffsets {
 
 interface PreparedAlignmentSource {
   readonly lesser: NormalizedSourceOffsets;
+  readonly minimalFold: ReadonlyArray<NormalizedSourceOffsets>;
   readonly source: AlignmentSource;
 }
 
 type NormalizedSegment = readonly [sourceStart: number, sourceEnd: number, text: string];
+
+type MinimalFoldMode = "drop-end-of-line-hyphen" | "keep-end-of-line-hyphen";
+
+const MINIMAL_FOLD_MODES: ReadonlyArray<MinimalFoldMode> = ["drop-end-of-line-hyphen", "keep-end-of-line-hyphen"];
+const MINIMAL_FOLD_SEGMENTS = /(-[^\S\r\n]*(?:\r\n|[\n\r])[^\S\r\n]*)|(\s+)|([^\s-]+)|(-)/gu;
+
+const normalizedSegment = (sourceStart: number, sourceEnd: number, text: string): NormalizedSegment => [
+  sourceStart,
+  sourceEnd,
+  text,
+];
+
+const normalizedSourceOffsets = (segments: ReadonlyArray<NormalizedSegment>): NormalizedSourceOffsets => ({
+  ends: A.flatMap(segments, ([, sourceEnd, text]) => {
+    const codeUnits = A.take(Str.split(text, ""), Str.length(text));
+    return A.map(codeUnits, () => sourceEnd);
+  }),
+  starts: A.flatMap(segments, ([sourceStart, , text]) => {
+    const codeUnits = A.take(Str.split(text, ""), Str.length(text));
+    return A.map(codeUnits, () => sourceStart);
+  }),
+  text: A.join(
+    A.map(segments, ([, , text]) => text),
+    ""
+  ),
+});
+
+const lowerSegments = (sourceStart: number, text: string): ReadonlyArray<NormalizedSegment> =>
+  pipe(
+    A.mapAccum(A.fromIterable(text), sourceStart, (pointStart, point): readonly [number, NormalizedSegment] => {
+      const pointEnd = Num.sum(pointStart, Str.length(point));
+      return [pointEnd, normalizedSegment(pointStart, pointEnd, lower(point))];
+    }),
+    ([, segments]) => segments
+  );
 
 const lowerWithSourceOffsets = (sourceText: string): NormalizedSourceOffsets =>
   pipe(
@@ -98,20 +134,63 @@ const lowerWithSourceOffsets = (sourceText: string): NormalizedSourceOffsets =>
       const sourceEnd = Num.sum(sourceStart, Str.length(segment));
       return [sourceEnd, [sourceStart, sourceEnd, lower(segment)]];
     }),
-    ([, segments]): NormalizedSourceOffsets => ({
-      ends: A.flatMap(segments, ([, sourceEnd, text]) => {
-        const codeUnits = A.take(Str.split(text, ""), Str.length(text));
-        return A.map(codeUnits, () => sourceEnd);
-      }),
-      starts: A.flatMap(segments, ([sourceStart, , text]) => {
-        const codeUnits = A.take(Str.split(text, ""), Str.length(text));
-        return A.map(codeUnits, () => sourceStart);
-      }),
-      text: A.join(
-        A.map(segments, ([, , text]) => text),
-        ""
-      ),
-    })
+    ([, segments]) => normalizedSourceOffsets(segments)
+  );
+
+const minimalFoldWithSourceOffsets = (sourceText: string, mode: MinimalFoldMode): NormalizedSourceOffsets =>
+  pipe(
+    sourceText,
+    Str.matchAll(MINIMAL_FOLD_SEGMENTS),
+    A.fromIterable,
+    A.flatMap(
+      (match): ReadonlyArray<NormalizedSegment> =>
+        pipe(
+          O.fromUndefinedOr(match.index),
+          O.map((sourceStart): ReadonlyArray<NormalizedSegment> => {
+            const text = match[0];
+            const segmentKind = {
+              endOfLineHyphen: match[1] !== undefined,
+              whitespace: match[2] !== undefined,
+            };
+            return Match.value(segmentKind).pipe(
+              Match.when({ endOfLineHyphen: true }, () =>
+                Match.value(mode).pipe(
+                  Match.when("drop-end-of-line-hyphen", A.empty<NormalizedSegment>),
+                  Match.orElse(() => [normalizedSegment(sourceStart, Num.increment(sourceStart), "-")])
+                )
+              ),
+              Match.when({ whitespace: true }, () => {
+                const sourceEnd = Num.sum(sourceStart, Str.length(text));
+                return [normalizedSegment(sourceStart, sourceEnd, " ")];
+              }),
+              Match.orElse(() => lowerSegments(sourceStart, text))
+            );
+          }),
+          O.getOrElse(A.empty)
+        )
+    ),
+    normalizedSourceOffsets
+  );
+
+const minimalFoldVariants = (sourceText: string): ReadonlyArray<NormalizedSourceOffsets> =>
+  pipe(
+    MINIMAL_FOLD_MODES,
+    A.map((mode) => minimalFoldWithSourceOffsets(sourceText, mode)),
+    A.dedupeWith((left, right) => Eq.equals(left.text, right.text))
+  );
+
+const matchedTextFromNormalized = (
+  normalizedSource: NormalizedSourceOffsets,
+  sourceText: string,
+  normalizedStart: number,
+  normalizedQuery: string
+): O.Option<MatchedText> =>
+  O.map(
+    O.all({
+      end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, Str.length(normalizedQuery)))),
+      start: A.get(normalizedSource.starts, normalizedStart),
+    }),
+    ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
   );
 
 const findLesser = (
@@ -125,13 +204,47 @@ const findLesser = (
   }
 
   return findUniqueMatch(normalizedSource.text, normalizedQuery, (normalizedStart) =>
-    O.map(
-      O.all({
-        end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, Str.length(normalizedQuery)))),
-        start: A.get(normalizedSource.starts, normalizedStart),
-      }),
-      ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
+    matchedTextFromNormalized(normalizedSource, sourceText, normalizedStart, normalizedQuery)
+  );
+};
+
+const sameMatchedText = (left: MatchedText, right: MatchedText): boolean =>
+  Num.Equivalence(left[0], right[0]) && Eq.equals(left[1], right[1]);
+
+const findMinimalFold = (
+  normalizedSources: ReadonlyArray<NormalizedSourceOffsets>,
+  sourceText: string,
+  query: string
+): UniqueMatchSearch => {
+  const normalizedQueries = pipe(
+    minimalFoldVariants(query),
+    A.map((variant) => variant.text),
+    A.filter(Str.isNonEmpty),
+    A.dedupe
+  );
+  const searches = A.flatMap(normalizedSources, (normalizedSource) =>
+    A.map(normalizedQueries, (normalizedQuery) =>
+      findUniqueMatch(normalizedSource.text, normalizedQuery, (normalizedStart) =>
+        matchedTextFromNormalized(normalizedSource, sourceText, normalizedStart, normalizedQuery)
+      )
     )
+  );
+
+  if (A.some(searches, (search) => search.ambiguous)) {
+    return { ambiguous: true, match: O.none() };
+  }
+
+  const matches = pipe(
+    searches,
+    A.map((search) => search.match),
+    A.getSomes,
+    A.dedupeWith(sameMatchedText)
+  );
+
+  return Match.value(A.length(matches)).pipe(
+    Match.when(0, () => noMatch),
+    Match.when(1, () => ({ ambiguous: false, match: A.head(matches) })),
+    Match.orElse(() => ({ ambiguous: true, match: O.none() }))
   );
 };
 
@@ -230,6 +343,7 @@ const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): 
 
 const prepareAlignmentSource = (source: AlignmentSource): PreparedAlignmentSource => ({
   lesser: lowerWithSourceOffsets(source.sourceText),
+  minimalFold: minimalFoldVariants(source.sourceText),
   source,
 });
 
@@ -250,11 +364,21 @@ const bestAlignedMatch = (prepared: PreparedAlignmentSource, query: string): O.O
       return pipe(
         lesser.match,
         O.map((match) => alignedMatch("match_lesser", match)),
-        O.orElse(() =>
-          O.map(findFuzzy(prepared.source.sourceText, query, prepared.source.fuzzyThreshold), (match) =>
-            alignedMatch("match_fuzzy", match)
-          )
-        )
+        O.orElse(() => {
+          const minimalFold = findMinimalFold(prepared.minimalFold, prepared.source.sourceText, query);
+          if (minimalFold.ambiguous) {
+            return O.none();
+          }
+          return pipe(
+            minimalFold.match,
+            O.map((match) => alignedMatch("match_minimal_fold", match)),
+            O.orElse(() =>
+              O.map(findFuzzy(prepared.source.sourceText, query, prepared.source.fuzzyThreshold), (match) =>
+                alignedMatch("match_fuzzy", match)
+              )
+            )
+          );
+        })
       );
     })
   );
@@ -277,6 +401,13 @@ const alignPreparedCandidate = (
         ),
         Match.when("match_lesser", () =>
           GroundedExtraction.cases.match_lesser.make({
+            ...candidateFields(candidate),
+            matchedText: text,
+            span: spanFromMatch([start, text]),
+          })
+        ),
+        Match.when("match_minimal_fold", () =>
+          GroundedExtraction.cases.match_minimal_fold.make({
             ...candidateFields(candidate),
             matchedText: text,
             span: spanFromMatch([start, text]),

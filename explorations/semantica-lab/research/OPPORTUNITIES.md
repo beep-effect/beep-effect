@@ -330,3 +330,22 @@ ratifies.
   relation's semantic value separately from an independently selected verbatim evidence quote,
   or prove a bounded chunk-scoped candidate at `decompose`; do not overload generated relation
   prose as its `TextAnchor`.
+
+- **2026-08-30 — The capability handoff gate read stale dependency declarations.** The first
+  `bun run beep quality package-verify @beep/langextract` passed docgen but its audit build
+  reported that five `@beep/provenance/VerifiedTextAnchor` exports used by untouched
+  `VerifiedSpan` code did not exist. Current provenance source contained every export while its
+  ignored `dist/` declarations did not, so focused source checks and all 86 package tests passed
+  while the build lane failed before reaching the fold-alignment diff. Prevention: package
+  verification should build or freshness-check workspace dependency declarations before the
+  target package audit, and its failure capsule should identify a stale dependency artifact
+  separately from a target-source defect.
+
+- **2026-08-30 — A successful Fallow report failed the Yeet wrapper.** During
+  `bun run beep yeet repair`, `fallow dead-code --check` emitted `status:"ok"`, zero introduced
+  findings, and three baseline rows attributed `not-applicable`, then the wrapper printed
+  `Fallow dead-code failed with status ok` and exited 1. Every later branch-relevant lane passed,
+  including full docgen, affected build/check/lint, and 86 LangExtract tests, but the
+  contradictory wrapper result made the overall repair verdict fail. Prevention: the Fallow
+  wrapper must treat an `ok` envelope with zero introduced findings as success regardless of
+  non-applicable baseline rows, or emit a non-`ok` status explaining the actual gate.
