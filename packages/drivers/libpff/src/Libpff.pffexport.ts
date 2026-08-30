@@ -589,9 +589,13 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       );
     });
     const sandboxExecutable = hostPffexportPath;
+    const executableDirectory = path.dirname(hostPffexportPath);
+    const executableRuntimePrefix = A.contains(["bin", "sbin"], path.basename(executableDirectory))
+      ? path.dirname(executableDirectory)
+      : executableDirectory;
     const executableBind = runtimeCoversPffexport
       ? []
-      : ["--ro-bind", path.dirname(hostPffexportPath), path.dirname(hostPffexportPath)];
+      : ["--ro-bind", executableRuntimePrefix, executableRuntimePrefix];
     return ChildProcess.make(
       bwrapPath,
       [
