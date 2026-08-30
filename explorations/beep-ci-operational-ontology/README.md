@@ -28,12 +28,17 @@ five adversarial rounds, mechanical `--gate` PASSED, **31 terms ratified** by th
 steward (rat-001..031), 216 conceded, 57.75% unresolved-fraction waiver ratified. The
 run is rotated and replayable from
 [`ontology/extraction/s4/beep-ci-ops/runs/`](./ontology/extraction/s4/beep-ci-ops/runs/)
-(manifest, index, observations, the vendored judging engine, replay notes). **NEXT:
-S5 adversarial taxonomy** over the 104-entry `LEDGER.yaml` + the 149 unresolved
-dispositions rows + the 31 ratified terms; after that, auditor run 2 (`first_run:
-false`, prior index `orun-2026-08-29T08:20:55Z.index.yaml`) once the corpus extension
-ingests the journal/verdict runtime records the waiver parked, with adapter v1.1.0
-(limitations recorded in the adapters README). Do NOT rerun §4b.
+(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS
+UNDERWAY**: the contract is binding at
+[`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md), the
+mechanical join pass is committed (`extraction/s5/JOIN.yaml`: 25 accepted-via / 7
+domain leaves / 305 open), and sitting 1's bulk rulings (19 parked domains, the
+138-package census rejection as A-Box ETL material, the 45 parked properties,
+merge-pair + residual-individual passes) are being scribed. **NEXT: finish the S5
+sittings, run the six-seat round, land DISPOSITIONS/TAXONOMY + the `--s5` gate +
+`apply_s5_dispositions.py`.** After S5: auditor run 2 (`first_run: false`, prior index
+`orun-2026-08-29T08:20:55Z.index.yaml`) with the journal/verdict corpus extension and
+adapter v1.1.0. Do NOT rerun §4b.
 
 **The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
 ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
@@ -99,6 +104,25 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-08-30 (thirteenth stint): S5 SCAFFOLDING LANDED. The locked eight-ruling
+  design became [`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md)
+  plus the committed mechanical join pass
+  (`ontology/extraction/s5/scripts/join_s4b.py` → `s5/JOIN.yaml`, idempotent):
+  337 candidates → 25 accepted-via ratified terms, 7 leaves of ratified
+  domains, 305 open (167 individuals — 152 of them the package census, 79
+  literal members across 19 unratified domains, 45 properties, 14 classes).
+  Next: bulk steward sittings over the open buckets, then the six-seat round,
+  the `--s5` gate, and `apply_s5_dispositions.py`.
+
+- 2026-08-30 (twelfth stint): frozen-evidence integrity repair + S5 design grill.
+  PR #865's repo-wide Biome write sweep had rewritten the digest-locked §4b
+  adapter engine and its golden input without the sidecar (engine check broken
+  on main); restored to the pinned bytes and exempted the packet's `adapters/`
+  and `runs/` trees from Biome (PR #899; receipt in the ledger). S5 grill
+  rounds 1–2 settled — eight rulings recorded in DECISIONS.md; next session
+  authors `ontology/docs/s5-taxonomy-contract.md` + the `--s5` gate and runs
+  the join pass before any seat launches.
 
 - 2026-08-29 (eleventh stint): §4b NORMALIZATION GATE COMPLETE + RATIFIED. The
   ontology-foundational-auditor ran AS WRITTEN in a dedicated worktree

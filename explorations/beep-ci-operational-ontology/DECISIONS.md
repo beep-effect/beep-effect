@@ -392,3 +392,60 @@ then (c) S4 lane launch.
   re-open every row.
 - All 31 submittable proposals ACCEPTED (rat-001..031); 216 conceded referents stand withdrawn;
   149 unresolved rows + 104-entry LEDGER = the S5 queue.
+
+## 2026-08-30 — S5 design grill (eight rulings, rounds 1–2, steward: Benjamin)
+
+- **Home:** S5 outputs live at `ontology/extraction/s5/` (stage-N continuity; the
+  taxonomy graduates to the formal T-Box only at S8).
+- **Engine:** bespoke `s5-taxonomy-contract.md` + a `validate_packet.py --s5` gate
+  (disposition totality over 104 LEDGER + 337 candidates + every fact key,
+  join-integrity against rat-001..031, lattice soundness, parked-row protection) —
+  not a rerun of the foundational auditor (its unit is the referent, not the lattice).
+- **Facts:** the 1,038 FACTS rule in bulk classes keyed by (predicate,
+  subject-term disposition); only orphans and conflicts get individual rulings.
+- **Parked rows:** the 149 waiver-parked dispositions auto-rule `parked-run-2`
+  citing the ratified 57.75% waiver; auditor run 2 re-opens them after the
+  journal/verdict corpus extension.
+- **Seat budget:** one round, ~6 seats — assembly lanes per kind cluster (codex
+  Sol max), one independent adversary (codex max), one blinded alternative
+  (grok xhigh) — plus re-review; the §4b join pass shrinks the open surface first.
+- **Literal-domain members:** all 89 appear in TAXONOMY.yaml as leaf records under
+  their ratified domains (membership-check refs), giving S6 its enumerations.
+- **Merges:** duplicate candidates mapping onto one ratified term get a distinct
+  `merged-into` ruling (alias provenance is first-class for S6/KPI projection),
+  never folded into `accepted-via`.
+- **Sitting log:** steward sittings land in DECISIONS.md only (the §4b precedent);
+  DISPOSITIONS.yaml carries the machine-readable outcome per row.
+
+## 2026-08-30 — S5 sittings 1–2 (eight bulk rulings, steward: Benjamin)
+
+Rulings over the join-pass buckets (`ontology/extraction/s5/JOIN.yaml`; rows bind by `seq`):
+
+- **1a (79 literal members, 19 unratified domains):** `parked-run-2`, one row per domain
+  cluster, join_ref = the §4b concede-where-held ruling — conceded means undefendable from
+  the static corpus, not wrong; run 2's journal/verdict corpus re-proposes them.
+- **1b (138 @beep/* package-census individuals):** `rejected` — runtime A-Box data the S6
+  ETL regenerates from the live workspace; never T-Box candidates. CQs get these
+  individuals from the A-Box at query time.
+- **1c (45 unmatched properties):** `parked-run-2` via the ratified 57.75% waiver — the
+  measurement/episode vocabulary awaiting the journal/verdict corpus.
+- **1d (14 open classes):** merge-pair sitting + residue disposition (executed as 2b/2c).
+- **2a (26 lane/work-unit individuals):** `parked-run-2` with their conceded domains.
+- **2b (merge pairs):** `merged-into` — HostedRequiredCheck → RequiredCheckDesignation
+  and ArchitectureBoundaryRule → VerificationObligation, each a distinct row with the
+  reshape OTP + rat as join_ref (alias provenance stays first-class).
+- **2c (the 12 residual classes):** `parked-run-2`, all — episode/occurrence/provenance
+  vocabulary §4b conceded; the seat round therefore does pure lattice assembly over
+  accepted terms, adjudicating no new referents.
+- **2d (singletons):** MachineProofLock `accepted-via` (the ratified
+  named-individual-under-ContendedResource precedent); YeetWeightedAdmissionV1
+  `deferred-s6` (AdmissionPolicy accepted); TurboConfiguration469136d2a872 `rejected`
+  (corpus-pinned config snapshot = A-Box evidence); both `dependsOn` properties
+  `parked-run-2` with a named run-2 renaming obligation (importsDirectly vs
+  declaresDependencyOn — the surfaced S4 merge-key collision).
+
+Candidate totality after sittings 1–2: 26 accepted-via, 7 leaf-of-ratified-domain,
+2 merged-into, 1 deferred-s6, 139 rejected, 162 parked-run-2 = 337. Remaining before
+the gate: the 104 LEDGER entries (next sitting), fact-classes (derived), the 149
+archived observation rows (mechanical parked-run-2), the seat round, TAXONOMY, and
+`apply_s5_dispositions.py`.

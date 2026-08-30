@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "v3-consistency-audit",
+    "title": "v3 Consistency Audit \u2014 Migrate the Uniformity, Not the Architecture",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [
+      "DEFERRED to slice-topology-audit P0 (recommended answers in DECISIONS.md 'deferred rows'): conventions for dir:package-shell-skeleton, BN-19, tests:coverage-ratio-by-tier, tests:typecheck-covers-test-tree",
+      "DEFERRED to slice-topology-audit P0: v4-only policy rows BN-12 (<Concept>/server.ts shims), BN-14 (.ts specifiers), BN-15 (root barrel pure re-export)",
+      "DEFERRED to slice-topology-audit P0: target roles for the lab's WorkItem.client.ts (recommended client .service.ts) and WorkItem.view-model.ts (recommended ui .view-model.ts)"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/slice-topology-audit",
+        "goals/canonical-proof-reconciliation"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-29",
+    "updated": "2026-08-30"
+  }
+}

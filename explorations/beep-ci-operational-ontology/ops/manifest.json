@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "S5 adversarial taxonomy over the 104-entry LEDGER, the 149 unresolved dispositions rows, and the 31 ratified terms (the §4b normalization gate is complete and ratified as of 2026-08-29, PR #889 — do not rerun it)."
+      "Finish the S5 sittings (bulk rulings scribed via the s5-taxonomy-contract), run the six-seat round, and land DISPOSITIONS/TAXONOMY + the --s5 gate; the scaffolding and join pass are already committed — do not redo them, and do not rerun §4b."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-08-29"
+    "updated": "2026-08-30"
   }
 }

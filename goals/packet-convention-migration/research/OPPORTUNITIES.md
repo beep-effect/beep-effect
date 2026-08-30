@@ -633,3 +633,26 @@
   only the unmerged review fixes as a follow-up.
 - **Owner:** merge admission, review-policy enforcement, and closeout lease
   observability.
+
+## 2026-08-30 — Squash-merged recovery branch obscures the true follow-up diff
+
+- **What happened:** reconciling the recreated recovery branch with current
+  `origin/main` initially made the branch appear to delete thousands of lines
+  added by newer PRs because its merge base predates #900's squash commit.
+  Merging `origin/main` then produced five overlaps between the squash-merged
+  recovery baseline and the branch's post-review amendments.
+- **Evidence:** before reconciliation, `git diff --stat origin/main HEAD`
+  reported 62 changed files and 8,470 deletions. `git merge --no-edit
+  origin/main` conflicted in the recovery changeset, `SPEC.md`, this ledger, and
+  two Agent Effectiveness fixtures. After resolving against the current-main
+  baseline, `git diff --name-status origin/main` reports only the eight intended
+  follow-up files.
+- **What would have prevented it:** when a squash-merged PR branch is deleted
+  during active review repair, recreate a fresh follow-up branch directly from
+  the merge commit and apply only the reviewed delta, or provide a Yeet recovery
+  command that computes that delta from the merged PR head and current review
+  head.
+- **Disposition:** resolved publication friction; preserve all newer mainline
+  files and carry only the portable temp helper, its consumers, acceptance
+  wording, changeset, tests, and contemporaneous ledger additions.
+- **Owner:** post-merge review recovery tooling and branch lifecycle guidance.
