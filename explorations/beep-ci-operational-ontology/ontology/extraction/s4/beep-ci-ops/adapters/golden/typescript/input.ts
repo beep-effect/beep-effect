@@ -1,7 +1,6 @@
 /** Golden fixture for adapter-typescript — exercises every emitted shape. */
-
-import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import { LiteralKit } from "@beep/schema";
 
 export const GoldenPriority = LiteralKit("publish", "verify");
 

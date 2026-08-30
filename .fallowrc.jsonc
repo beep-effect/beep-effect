@@ -79,6 +79,9 @@
     "eslint.config.mjs",
     "scripts/changeset-changelog.cjs",
     "packages/tooling/tool/cli/test/global-cleanup.ts",
+    // Vendored Impeccable detector CLI: invoked through the root package script
+    // and editor integrations, with parser dependencies resolved from the root.
+    ".claude/skills/impeccable/scripts/detector/cli/main.mjs",
     // Fallow 3.6.0 resolves an explicit `.ts` suffix exactly and does not yet
     // apply TypeScript's `.ts` -> `.tsx` source fallback. Keep the affected TSX
     // modules reachable without making every TSX file an entry point; the
@@ -97,11 +100,11 @@
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
   "ignorePatterns": [
-    // Impeccable is a vendored agent skill mirrored for Claude Code and GitHub
-    // Copilot. Its standalone detector scripts are invoked by editor hooks and
-    // are not authored workspace source.
-    ".claude/skills/impeccable/**",
+    // The GitHub Copilot Impeccable tree mirrors the analyzed Claude Code source.
     ".github/skills/impeccable/**",
+    // Browser QA operators copy this documented harness template beside the app
+    // under test; it is a distributed resource, not workspace-owned source.
+    ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs",
     "goals/**",
     "scratchpad/**",
     "infra/ci-runners/sdks/**",
@@ -155,6 +158,10 @@
     "packages/drivers/govinfo/src/_generated/**",
     "packages/drivers/runpod/src/_generated/**"
   ],
+  // Impeccable is vendored hook code with many standalone command entries and
+  // public test seams. Analyze its module graph for dependency accounting while
+  // retaining the prior exclusion of source-owned dead-code findings.
+  "ignoreFindings": [".claude/skills/impeccable/**"],
   // Exact compatibility list for authored `.ts` specifiers whose source file
   // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep
   // failing Fallow. Remove these entries when Fallow supports the TS fallback.
@@ -307,6 +314,11 @@
     { "file": "apps/*/src/app/*.tsx", "exports": ["instant"] },
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
+  "duplicates": {
+    // Vendored Impeccable scripts keep their upstream shape; dependency graph
+    // analysis above must not opt that vendor tree into authored-code cloning.
+    "ignore": [".claude/skills/impeccable/**"]
+  },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
     // mechanism in standards/architecture/DECISIONS.md). Only maxCognitive tightens vs
@@ -318,6 +330,9 @@
     "maxCyclomatic": 20,
     "maxCrap": 30,
     "maxUnitSize": 60,
+    // Preserve the vendor tree's prior exclusion from authored-code complexity
+    // while its module graph remains visible to dead-code dependency analysis.
+    "ignore": [".claude/skills/impeccable/**"],
     "thresholdOverrides": [
       {
         "files": [

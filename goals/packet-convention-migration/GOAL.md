@@ -1,41 +1,31 @@
-# GOAL: packet convention migration
+# GOAL: packet convention migration (retained)
 
 Repo root is the current `beep-effect` checkout. Do not assume an absolute
 path; several checkouts exist. All paths below are repo-relative.
 
-Outcome: prove a staged single-packet fork repair, then migrate every legacy
-goal manifest to the canonical v2 convention with explicit reports, honest
-genesis events, fleet lint, and zero `beep explore --check` findings.
+This packet is closed evidence, not an active migration launcher. PR #855
+shipped the fork-repair applier, v2 translator, genesis seeder, and fleet lint.
+D27 authorized one later recovery PR because #855 merged before its promised
+same-PR reflection and lifecycle flip and without a strict final-head Yeet
+verdict.
 
-Read first:
+Read:
 
-- `goals/packet-convention-migration/{README,SPEC,DESIGN,PLAN}.md`
-- `goals/packet-convention-migration/ops/manifest.json`
-- `explorations/packet-system-redesign/{MAP,DECISIONS}.md` D17–D26
-- `AGENTS.md`, schema-first, effect-first, JSDoc, explore, and Yeet guidance
+- `README.md`, `SPEC.md`, `PLAN.md`, and `ops/manifest.json`
+- `history/fleet-migration-report.md` and `history/reflections/`
+- `research/OPPORTUNITIES.md`
+- `explorations/packet-system-redesign/DECISIONS.md` D17–D27
 
-Scope:
+Do not resume, amend, or reapply the merged #855 branch. For regression work,
+run the public preview and fleet checks read-only:
 
-- In: the existing Goals/Explore CLI command trees, focused tests, the packet
-  core fork fixture, deterministic goal-manifest/event/trace migration output,
-  and this goal plus its parent exploration.
-- Out: exploration-manifest migration, generated ATLAS/README regions,
-  candidates 2–5, Amendment J implementation, signing, and fabricated history.
+1. `bun run beep goals set-status --migrate` must plan zero edits.
+2. `bun run beep goals migrate-conventions --preview` must report zero
+   translations, seeds, issues, assumptions, and fleet findings.
+3. `bun run beep explore --check` must report `findings=0`.
+4. `bun run beep goals doctor` must report zero blockers and advisories.
 
-Workflow:
-
-1. Keep `PLAN.md` current and preserve unrelated worktree changes.
-2. Implement schemas before services. Reuse PacketCore's fold, digest, store,
-   and projector; do not create a parallel event format.
-3. Land the repair applier proof before the translator/seeder slice.
-4. Preview the fleet. Any violation blocks apply; warnings and assumptions are
-   explicit. Preserve unknown manifest keys.
-5. Apply once, prove a second preview is empty, and run
-   `bun run beep explore --check` to zero findings.
-6. Publish through Yeet. At P4 use `/reflect`, flip packet state in this PR,
-   and re-prove the final head.
-
-Acceptance is exactly `SPEC.md`. Stop instead of improvising if translation
-would invent meaning, repair would lose a branch, seeding would overwrite a
-stream, or requested proof needs unnamed credentials, cost, or destructive
-state.
+Any new finding is drift to repair in its owning packet or Goals command, not
+authorization to recreate legacy manifests or fabricate event history.
+Candidates 2–5 remain gated work in the parent exploration; they are outside
+this retained goal.
