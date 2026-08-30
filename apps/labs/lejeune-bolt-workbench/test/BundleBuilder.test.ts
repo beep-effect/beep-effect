@@ -5,7 +5,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import { DateTime, Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -193,6 +193,36 @@ describe("LeJeune transactional bundle builder", () => {
       expect(error.stage).toBe("provider-recording");
       expect(yield* fs.exists(publicationRoot)).toBe(false);
       expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
+    }).pipe(provideTestRuntime)
+  );
+
+  it.effect("removes a committed publication when its claiming fiber is interrupted", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-interrupted-publish-" });
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
+      const interruptingFileSystem = FileSystem.FileSystem.of({
+        ...fs,
+        symlink: Effect.fn("LeJeuneBundleBuilderTest.interruptingSymlink")((target, linkPath) =>
+          fs.symlink(target, linkPath).pipe(Effect.andThen(Effect.interrupt))
+        ),
+      });
+
+      const exit = yield* buildBundle(
+        inputFor(bundleRoot, mutableRoot, path.resolve("src/fixtures/provider-recording.json"))
+      ).pipe(Effect.provideService(FileSystem.FileSystem, interruptingFileSystem), Effect.exit);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(yield* fs.exists(publicationRoot)).toBe(false);
+      expect(
+        A.every(
+          yield* fs.readDirectory(parent),
+          (entry) => !Str.includes(".staging-")(entry) && !Str.includes(".payload-")(entry)
+        )
+      ).toBe(true);
     }).pipe(provideTestRuntime)
   );
 

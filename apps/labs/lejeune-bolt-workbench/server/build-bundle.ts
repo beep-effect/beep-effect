@@ -321,9 +321,31 @@ const acquireStagingRoots = Effect.fn("LeJeuneBundle.acquireStagingRoots")(funct
   return StagingRoots.make({ bundle, container, mutable });
 });
 
-const releaseStagingRoots = Effect.fn("LeJeuneBundle.releaseStagingRoots")((staging: StagingRoots) =>
-  removeOwnedStaging(staging.container)
-);
+const publishedContainerFor = (staging: StagingRoots, path: Path.Path): string =>
+  path.join(path.dirname(staging.container), Str.replace(".staging-", ".payload-")(path.basename(staging.container)));
+
+const releaseStagingRoots = Effect.fn("LeJeuneBundle.releaseStagingRoots")(function* (
+  staging: StagingRoots,
+  publicationRoot: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const publishedContainer = publishedContainerFor(staging, path);
+  const publicationTarget = yield* fs.readLink(publicationRoot).pipe(Effect.option);
+  if (O.isSome(publicationTarget) && Str.Equivalence(publicationTarget.value, path.basename(publishedContainer))) {
+    yield* fs
+      .remove(publicationRoot)
+      .pipe(
+        Effect.mapError((cause) =>
+          bundleBuildErrorWithCause("cleanup", "Could not remove an interrupted builder-owned publication link.", cause)
+        )
+      );
+  }
+  yield* Effect.all([removeOwnedStaging(staging.container), removeOwnedStaging(publishedContainer)], {
+    concurrency: 2,
+    discard: true,
+  });
+});
 
 const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function* (
   staging: StagingRoots,
@@ -525,10 +547,7 @@ const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(funct
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* ensurePublicationRootAbsent(publicationRoot);
-  const publishedContainer = path.join(
-    path.dirname(staging.container),
-    Str.replace(".staging-", ".payload-")(path.basename(staging.container))
-  );
+  const publishedContainer = publishedContainerFor(staging, path);
   yield* fs
     .rename(staging.container, publishedContainer)
     .pipe(
@@ -609,7 +628,7 @@ const buildBundleAt = Effect.fn("LeJeuneBundle.buildAt")(function* (
       ),
     (staging, exit) =>
       Exit.match(exit, {
-        onFailure: () => releaseStagingRoots(staging),
+        onFailure: () => releaseStagingRoots(staging, roots.publication),
         onSuccess: () => Effect.void,
       })
   );
