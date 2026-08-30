@@ -696,6 +696,16 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         "repaired",
         O.some({ sha256: sha("typed"), sizeBytes: PosInt.make(1) })
       );
+      yield* RT.appendAttachmentRepair(
+        mailContext,
+        "attempt-2",
+        "object-2",
+        "attachments/typed.bin",
+        "pdf",
+        "derived/typed.pdf",
+        "repaired",
+        O.some({ sha256: sha("typed"), sizeBytes: PosInt.make(1) })
+      );
       expect(yield* fs.readFileString(ledgerPath)).toContain('"derivedSizeBytes":1');
 
       const unterminatedPath = path.join(root, "ledgers/mail/unterminated.jsonl");
@@ -1261,6 +1271,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       objectId,
       recordType: "mail-warning",
     });
+    expect(RT.mailPassReconciles(pass, [child], [warning])).toBe(false);
     const interrupted = TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
       ...identity,
       attemptId: "interrupted-attempt",
