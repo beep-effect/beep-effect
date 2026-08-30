@@ -34,6 +34,7 @@ import {
   Inline,
   InlineChildren,
   ListChildren,
+  ListItemChild,
   ListItemChildren,
   Pre,
   Table,
@@ -649,6 +650,8 @@ ${Md.h3("Inside")}
   it("projects inline and block nodes to escaping-free plain text", () => {
     expect(Inline.toPlainText(Md.strong([Md.text("Strong"), Md.em("Em")]))).toBe("StrongEm");
     expect(Inline.toPlainTextAll([Md.text("One"), Md.code("Two")])).toBe("OneTwo");
+    expect(ListItemChild.toPlainText(Md.text("Inline"))).toBe("Inline");
+    expect(ListItemChild.toPlainText(Md.p("Block"))).toBe("Block");
     expect(renderPlainTextInline(Md.text("Text"))).toBe("Text");
     expect(renderPlainTextInline(Md.rawMarkdown("**Raw**"))).toBe("**Raw**");
     expect(renderPlainTextInline(Md.rawHtml("<b>Raw</b>"))).toBe("<b>Raw</b>");
@@ -722,6 +725,9 @@ ${Md.h3("Inside")}
   });
 
   it("renders core parity, rich extension, frontmatter, and URL policy additions", () => {
+    expect(renderUnsafe(Md.make([], { frontmatter: { control: "\u0001" } }))).toBe(`---json
+{"control":"\\u0001"}
+---`);
     const richDocument = Md.make(
       [
         Md.h1("Rich"),
@@ -822,6 +828,9 @@ Demo video`);
     expect(Result.getOrThrow(renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))).toBe(
       '<p><a href="#">Artifact</a></p>'
     );
+    const rawMarkdownDocument = Md.make([Md.p(Md.rawMarkdown("<trusted>"))]);
+    expect(renderWithUnsafe(markdownAdapter, rawMarkdownDocument)).toBe("<trusted>");
+    expect(renderWithUnsafe(htmlAdapter, rawMarkdownDocument)).toBe("<p>&lt;trusted&gt;</p>");
 
     const telOnly = AllowListUrlPolicySpec.make({
       schemes: ["tel:"],

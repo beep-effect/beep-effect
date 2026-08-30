@@ -684,9 +684,16 @@ esac
           const flockPath = path.join(bin, "flock");
           yield* fs.writeFileString(
             flockPath,
-            '#!/bin/sh\n[ "$1" = "-w" ] || exit 90\n[ "$2" = "5" ] || exit 91\nprintf "attempt\\n" >> "$3.attempts"\nexit 73\n'
+            '#!/bin/sh\n[ "$1" = "-w" ] || exit 90\ncase "$2" in\n  2) exit 73 ;;\n  5) printf "attempt\\n" >> "$3.attempts"; exit 73 ;;\n  *) exit 91 ;;\nesac\n'
           );
           yield* fs.chmod(flockPath, 0o755);
+
+          const publicationContention = yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            writePublishedPrLease(tempContext)
+          ).pipe(Effect.flip);
+          expect(publicationContention.message).toContain("publication lost its generation race");
 
           yield* withEnvVarEffect(
             "PATH",

@@ -69,13 +69,17 @@ describe("withCodecStatics", () => {
   });
 
   it("agrees with its source schema over schema-derived finite numbers", () => {
-    const Selected = Count.pipe(withCodecStatics(["decodeUnknownSync", "encodeSync", "equivalence", "is"]));
+    const Selected = Count.pipe(withCodecStatics(["asserts", "decodeUnknownSync", "encodeSync", "equivalence", "is"]));
+    const assertsCount: (input: unknown) => asserts input is number = Selected.asserts;
 
     fc.assert(
       fc.property(finiteArbitrary, (sampled) => {
         const encoded = Selected.encodeSync(sampled);
         const decoded = Selected.decodeUnknownSync(encoded);
+        const asserted: unknown = decoded;
 
+        assertsCount(asserted);
+        expect(asserted).toBe(decoded);
         expect(Selected.is(sampled)).toBe(true);
         expect(Selected.equivalence(decoded, sampled)).toBe(true);
         expect(Selected.encodeSync(decoded)).toBe(encoded);
@@ -125,13 +129,17 @@ describe("withCodecStatics", () => {
   });
 
   it("rejects duplicate keys and pre-attached custom statics", () => {
+    const customSymbol = Symbol("custom-static");
     const FreshCount = Count.rebuild(Count.ast);
     const WithCustomIs = FreshCount.pipe(withStatics(() => ({ is: () => true })));
+    const WithCustomSymbol = Count.rebuild(Count.ast);
+    Reflect.defineProperty(WithCustomSymbol, customSymbol, { value: true });
     const WithSelectedIs = Count.pipe(withCodecStatics(["is"]));
 
     expect(() => Reflect.apply(withCodecStatics, undefined, [Count, ["is", "is"]])).toThrow(CodecStaticSelectionError);
     expect(() => Reflect.apply(withCodecStatics, undefined, [Count, []])).toThrow(CodecStaticSelectionError);
     expect(() => WithCustomIs.pipe(withCodecStatics(["is"]))).toThrow(CodecStaticSelectionError);
+    expect(() => WithCustomSymbol.pipe(withCodecStatics(["is"]))).toThrow(/Symbol\(custom-static\)/u);
     expect(() => WithSelectedIs.pipe(withCodecStatics(["decodeUnknownSync"]))).toThrow(CodecStaticSelectionError);
     expect(isCodecStaticKey("decodeUnknownJsonStringEffect")).toBe(false);
   });

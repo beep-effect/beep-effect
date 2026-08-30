@@ -256,6 +256,7 @@ const nativeCodecStatic =
   (key: NativeCodecStaticKey): CodecStaticFactory =>
   (schema) => {
     const factory = Reflect.get(S, key);
+    /* v8 ignore next 6 -- every key comes from the closed, type-checked Effect Schema helper registry above. */
     if (!P.isFunction(factory)) {
       throw CodecStaticSelectionError.make({
         reason: "missing-native-static",
@@ -319,8 +320,7 @@ const validateKeys = (keys: ReadonlyArray<CodecStaticKey>): void => {
   }
 };
 
-const propertyKeyLabel = (key: PropertyKey): string =>
-  P.isString(key) ? key : P.isSymbol(key) ? (key.description ?? key.toString()) : `${key}`;
+const propertyKeyLabel = (key: PropertyKey): string => (P.isSymbol(key) ? key.toString() : `${key}`);
 
 const findCustomOwnKey = (source: CodecSchema, rebuilt: CodecSchema): PropertyKey | undefined => {
   for (const key of Reflect.ownKeys(source)) {
@@ -339,6 +339,7 @@ const installOnOwnedSchema = (owned: CodecSchema, keys: ReadonlyArray<CodecStati
       owned,
       { [key]: codecStaticFactories[key](owned) },
       "strict",
+      /* v8 ignore next 7 -- the fresh rebuild and pre-attached-static checks make this defensive callback unreachable. */
       (conflictingKey) => {
         throw CodecStaticSelectionError.make({
           reason: "property-conflict",
@@ -445,6 +446,7 @@ function makeClassStatics(schema: CodecSchema, keys: ReadonlyArray<CodecStaticKe
       statics,
       { [key]: codecStaticFactories[key](schema) },
       "strict",
+      /* v8 ignore next 7 -- validated unique keys are installed into a new empty utility bag. */
       (conflictingKey) => {
         throw CodecStaticSelectionError.make({
           reason: "property-conflict",
