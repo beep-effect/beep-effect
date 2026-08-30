@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, Sha256Hex } from "@beep/schema";
+import { Defect, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -50,6 +50,198 @@ export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`Cor
 
   static readonly mapError = Err.mapToError(this.new);
 }
+
+/**
+ * Error raised when no persisted preservation preflight exists.
+ *
+ * **Example** (Create a missing-preflight error)
+ *
+ * ```ts
+ * import { PreservationPreflightMissingError } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const error = PreservationPreflightMissingError.make({ message: "Run preflight first." })
+ * console.log(error._tag) // "PreservationPreflightMissingError"
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class PreservationPreflightMissingError extends S.TaggedError<PreservationPreflightMissingError>(
+  $I`PreservationPreflightMissingError`
+)(
+  "PreservationPreflightMissingError",
+  { message: S.NonEmptyString },
+  $I.annoteError<PreservationPreflightMissingError>("PreservationPreflightMissingError", {
+    description: "The preservation runner could not find its persisted capacity preflight.",
+  })
+) {}
+
+/**
+ * Error raised when preservation is attempted from a proposed preflight.
+ *
+ * **Example** (Create an unapproved-preflight error)
+ *
+ * ```ts
+ * import { PreservationPreflightUnapprovedError } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const error = PreservationPreflightUnapprovedError.make({ message: "Approval is required." })
+ * console.log(error._tag) // "PreservationPreflightUnapprovedError"
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class PreservationPreflightUnapprovedError extends S.TaggedError<PreservationPreflightUnapprovedError>(
+  $I`PreservationPreflightUnapprovedError`
+)(
+  "PreservationPreflightUnapprovedError",
+  { message: S.NonEmptyString },
+  $I.annoteError<PreservationPreflightUnapprovedError>("PreservationPreflightUnapprovedError", {
+    description: "The persisted preservation preflight has not received an operator-approved byte ceiling.",
+  })
+) {}
+
+/**
+ * Error raised when measured bytes exceed the approved preservation ceiling.
+ *
+ * **Example** (Create a ceiling error)
+ *
+ * ```ts
+ * import { PreservationCeilingExceededError } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const error = PreservationCeilingExceededError.make({
+ *   ceilingBytes: NonNegativeInt.make(1),
+ *   measuredBytes: NonNegativeInt.make(2),
+ *   message: "Too large."
+ * })
+ * console.log(error.measuredBytes) // 2
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class PreservationCeilingExceededError extends S.TaggedError<PreservationCeilingExceededError>(
+  $I`PreservationCeilingExceededError`
+)(
+  "PreservationCeilingExceededError",
+  {
+    ceilingBytes: NonNegativeInt,
+    measuredBytes: NonNegativeInt,
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<PreservationCeilingExceededError>("PreservationCeilingExceededError", {
+    description: "The measured preservation requirement exceeds its explicitly approved byte ceiling.",
+  })
+) {}
+
+/**
+ * Typed archive filesystem failure.
+ *
+ * **Example** (Create an archive I/O error)
+ *
+ * ```ts
+ * import { PreservationArchiveIoError } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const error = PreservationArchiveIoError.make({ cause: "denied", message: "Read failed.", operation: "read", path: "/tmp/source" })
+ * console.log(error.operation) // "read"
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class PreservationArchiveIoError extends S.TaggedError<PreservationArchiveIoError>(
+  $I`PreservationArchiveIoError`
+)(
+  "PreservationArchiveIoError",
+  {
+    cause: Defect({ includeStack: true }),
+    message: S.NonEmptyString,
+    operation: S.NonEmptyString,
+    path: S.NonEmptyString,
+  },
+  $I.annoteError<PreservationArchiveIoError>("PreservationArchiveIoError", {
+    description: "A filesystem or schema-codec operation failed while preserving archive bytes or ledgers.",
+  })
+) {}
+
+/**
+ * Error raised when an independent preservation verification is not clean.
+ *
+ * **Example** (Create a verification failure)
+ *
+ * ```ts
+ * import { PreservationVerificationFailure } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const error = PreservationVerificationFailure.make({
+ *   failedRows: NonNegativeInt.make(1),
+ *   message: "Verification failed."
+ * })
+ * console.log(error.failedRows) // 1
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class PreservationVerificationFailure extends S.TaggedError<PreservationVerificationFailure>(
+  $I`PreservationVerificationFailure`
+)(
+  "PreservationVerificationFailure",
+  {
+    failedRows: NonNegativeInt,
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<PreservationVerificationFailure>("PreservationVerificationFailure", {
+    description: "An independent destination verification pass produced one or more non-verified terminal rows.",
+  })
+) {}
+
+/**
+ * Error raised when an archive run leaves unapproved terminal manifest rows.
+ *
+ * **Example** (Create an unapproved-rows error)
+ *
+ * ```ts
+ * import { PreservationUnapprovedRowsError } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const error = PreservationUnapprovedRowsError.make({
+ *   message: "Unapproved terminal rows remain.",
+ *   unapprovedRows: NonNegativeInt.make(2)
+ * })
+ * console.log(error.unapprovedRows) // 2
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class PreservationUnapprovedRowsError extends S.TaggedError<PreservationUnapprovedRowsError>(
+  $I`PreservationUnapprovedRowsError`
+)(
+  "PreservationUnapprovedRowsError",
+  {
+    message: S.NonEmptyString,
+    unapprovedRows: NonNegativeInt,
+  },
+  $I.annoteError<PreservationUnapprovedRowsError>("PreservationUnapprovedRowsError", {
+    description: "The archive run finished with terminal manifest rows outside the approved pass kinds.",
+  })
+) {}
+
+/**
+ * Failures returned by the T7 preservation command family.
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export type PreservationCommandError =
+  | PreservationArchiveIoError
+  | PreservationCeilingExceededError
+  | PreservationPreflightMissingError
+  | PreservationPreflightUnapprovedError
+  | PreservationUnapprovedRowsError
+  | PreservationVerificationFailure;
 
 /**
  * Error raised when an archive-move source file has no covering provenance row.

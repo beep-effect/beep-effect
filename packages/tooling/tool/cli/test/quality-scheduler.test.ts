@@ -15,7 +15,9 @@ import {
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  provideRuntimeRootForTesting,
   RunScopeRecord,
+  RuntimeRootChoice,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
@@ -152,11 +154,11 @@ const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
       quarantine: path.join(root, "quarantine"),
     };
     return yield* use(tempRoot).pipe(
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       provideScopedLayer(
         ConfigProvider.layer(
           ConfigProvider.fromUnknown({
             BEEP_RUN_SCOPES: runScopesEnabled ? "1" : "0",
-            XDG_RUNTIME_DIR: runtimeDir,
           })
         )
       ),

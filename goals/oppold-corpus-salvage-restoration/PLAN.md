@@ -4,11 +4,12 @@ Mutable execution plan. `SPEC.md` is normative; this file sequences the work.
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
-All four phases are pending:
+P0 is in progress (bar-v2 preservation schemas landed; services, runners, and
+synthetic proofs next); P1-P3 are pending:
 
 - **P0 Preservation gate:** build the bar-v2 archive tooling this week, seed
   the ledgers, run the archive operation, and independently verify it.

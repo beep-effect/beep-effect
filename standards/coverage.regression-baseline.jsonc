@@ -20497,14 +20497,14 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 76.72,
-      "statements": 76.44,
-      "branches": 64.31,
-      "functions": 70.34,
+      "lines": 76.73,
+      "statements": 76.45,
+      "branches": 64.32,
+      "functions": 70.35,
       "uncovered": {
-        "lines": 8282,
-        "statements": 8761,
-        "branches": 4750,
+        "lines": 8283,
+        "statements": 8763,
+        "branches": 4752,
         "functions": 3200
       },
       "files": {
@@ -26241,6 +26241,30 @@
             "lines": 2,
             "statements": 2,
             "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },

@@ -171,8 +171,8 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
  * ```
  *
  * The unit description records the admission root that owns the scope, so a
- * reaper running against a different root (another `XDG_RUNTIME_DIR`, a test
- * fixture, an env-scrubbed session) never mistakes it for a leak.
+ * reaper running against an isolated test root never mistakes its scope for a
+ * leak. Production sessions all use the invariant canonical root.
  *
  * @param ticketId - Admission ticket nonce used to generate a safe unit name.
  * @param ownerRoot - Admission root directory whose lease owns the scope.

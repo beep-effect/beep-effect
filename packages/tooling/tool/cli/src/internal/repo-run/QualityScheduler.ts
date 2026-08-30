@@ -17,7 +17,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { freemem, tmpdir, totalmem, userInfo } from "node:os";
+import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as OptionUtils from "@beep/utils/Option";
 import {
@@ -41,7 +41,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../cli/EnvConfig.ts";
 import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
@@ -60,6 +59,7 @@ import {
   runScopeUnitName,
   stopRunScopeForReap,
 } from "./RunScope.ts";
+import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
@@ -284,19 +284,11 @@ interface AdmissionDirectories {
   readonly root: string;
 }
 
-const admissionRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<string, never, Path.Path> {
-  const path = yield* Path.Path;
-  const configured = yield* configStringOption("XDG_RUNTIME_DIR");
-  return pipe(
-    configured,
-    O.filter(Str.isNonEmpty),
-    O.filter(path.isAbsolute),
-    O.match({
-      // Shared tmpdir fallback gets a uid suffix; XDG_RUNTIME_DIR is per-user.
-      onNone: () => path.join(tmpdir(), `beep-admit-uid-${userInfo().uid}`),
-      onSome: (root) => path.join(root, "beep", "admit"),
-    })
-  );
+const admissionDirectoriesFor = (path: Path.Path, root: string): AdmissionDirectories => ({
+  root,
+  leases: path.join(root, "leases"),
+  queue: path.join(root, "queue"),
+  quarantine: path.join(root, "quarantine"),
 });
 
 /**
@@ -399,13 +391,10 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* admissionRuntimeRoot();
-  const directories: AdmissionDirectories = {
-    root,
-    leases: path.join(root, "leases"),
-    queue: path.join(root, "queue"),
-    quarantine: path.join(root, "quarantine"),
-  };
+  // The base root is shared with the proof-lock coordinator (RuntimeRoot.ts),
+  // so every session on the machine coordinates under one tree.
+  const choice = yield* perUserRuntimeRoot();
+  const directories = admissionDirectoriesFor(path, admissionRootFor(path, choice));
   yield* Effect.forEach(
     [directories.root, directories.leases, directories.queue, directories.quarantine],
     (directory) =>
@@ -1403,9 +1392,9 @@ const derivedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<strin
 const recordedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
   pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }));
 
-// Only scopes that record this reaper's admission root as owner are candidates:
-// a scope from another root (another XDG_RUNTIME_DIR, an env-scrubbed session,
-// a test fixture) is someone else's live work, never a leak from here.
+// Only scopes that record this reaper's admission root as owner are candidates.
+// Production now has one invariant root; a scope from an isolated test fixture
+// is someone else's live work, never a leak from here.
 const ownedByRoot = (ownerRoot: string) =>
   Effect.fnUntraced(function* (
     unitName: string
