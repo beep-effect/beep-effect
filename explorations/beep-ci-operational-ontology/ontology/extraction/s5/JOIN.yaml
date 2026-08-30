@@ -3,1498 +3,1840 @@
 generated_by: scripts/join_s4b.py
 contract: ontology/docs/s5-taxonomy-contract.md
 candidate_count: 337
+duplicate_merge_keys:
+- kind: property
+  source_domain: null
+  candidate: dependsOn
+  occurrences: 2
 bucket_counts:
   accepted-via: 25
   leaf-of-ratified-domain: 7
   open: 305
 rows:
-- candidate: AdmissionPolicy
+- seq: 0
+  candidate: AdmissionPolicy
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: AdmissionPolicy
   join_ref: rat-017
-- candidate: AdmissionPriorityClass
+- seq: 1
+  candidate: AdmissionPriorityClass
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: AdmissionPriorityClass
   join_ref: rat-009
-- candidate: AdmissionSnapshot
+- seq: 2
+  candidate: AdmissionSnapshot
   kind: class
   admission_kind: semantic-support
   bucket: accepted-via
   term: AdmissionSnapshot
   join_ref: rat-019
-- candidate: AdmissionWorkKind
+- seq: 3
+  candidate: AdmissionWorkKind
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: AdmissionWorkKind
   join_ref: rat-018
-- candidate: AffectedComputation
+- seq: 4
+  candidate: AffectedComputation
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: Agent
+- seq: 5
+  candidate: Agent
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: Agent
   join_ref: rat-013
-- candidate: ArchitectureBoundaryRule
+- seq: 6
+  candidate: ArchitectureBoundaryRule
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: BoundaryViolation
+- seq: 7
+  candidate: BoundaryViolation
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: CachePosture
+- seq: 8
+  candidate: CachePosture
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: CachePosture
   join_ref: rat-005
-- candidate: CommittedFailure
+- seq: 9
+  candidate: CommittedFailure
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: ContendedResource
+- seq: 10
+  candidate: ContendedResource
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: ContendedResource
   join_ref: rat-003
-- candidate: CorruptAdmissionRecord
+- seq: 11
+  candidate: CorruptAdmissionRecord
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: FailureSignature
+- seq: 12
+  candidate: FailureSignature
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: FallowBoundaryRuleProvenance
+- seq: 13
+  candidate: FallowBoundaryRuleProvenance
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: GrantState
+- seq: 14
+  candidate: GrantState
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: GrantState
   join_ref: rat-008
-- candidate: HostedRequiredCheck
+- seq: 15
+  candidate: HostedRequiredCheck
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: PackageRef
+- seq: 16
+  candidate: PackageRef
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: SeatGrant
+- seq: 17
+  candidate: SeatGrant
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: SeatGrant
   join_ref: rat-002
-- candidate: SeatRequest
+- seq: 18
+  candidate: SeatRequest
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: SeatRequest
   join_ref: rat-007
-- candidate: StarvationException
+- seq: 19
+  candidate: StarvationException
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: StarvationException
   join_ref: rat-020
-- candidate: TurboConfiguration
+- seq: 20
+  candidate: TurboConfiguration
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: UnresolvedReviewThread
+- seq: 21
+  candidate: UnresolvedReviewThread
   kind: class
   admission_kind: semantic-support
   bucket: open
-- candidate: VerificationAttempt
+- seq: 22
+  candidate: VerificationAttempt
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: VerificationEvidence
+- seq: 23
+  candidate: VerificationEvidence
   kind: class
   admission_kind: decision
   bucket: accepted-via
   term: VerificationEvidence
   join_ref: rat-004
-- candidate: WorkUnit
+- seq: 24
+  candidate: WorkUnit
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: WorkUnitExecution
+- seq: 25
+  candidate: WorkUnitExecution
   kind: class
   admission_kind: decision
   bucket: open
-- candidate: activeTokens
+- seq: 26
+  candidate: activeTokens
   kind: property
   admission_kind: semantic-support
   bucket: accepted-via
   term: activeTokens
   join_ref: rat-014
-- candidate: actualWallMs
+- seq: 27
+  candidate: actualWallMs
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: admissionChargeTokens
+- seq: 28
+  candidate: admissionChargeTokens
   kind: property
   admission_kind: decision
   bucket: accepted-via
   term: admissionChargeTokens
   join_ref: rat-011
-- candidate: admissionTokenWeight
+- seq: 29
+  candidate: admissionTokenWeight
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: admittedAtMillis
+- seq: 30
+  candidate: admittedAtMillis
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: admittedBy
+- seq: 31
+  candidate: admittedBy
   kind: property
   admission_kind: decision
   bucket: accepted-via
   term: admittedBy
   join_ref: rat-010
-- candidate: affectedUsingTaskInputs
+- seq: 32
+  candidate: affectedUsingTaskInputs
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: blockedOnOriginAtMillis
+- seq: 33
+  candidate: blockedOnOriginAtMillis
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: capacityAtAdmissionTokens
+- seq: 34
+  candidate: capacityAtAdmissionTokens
   kind: property
   admission_kind: decision
   bucket: accepted-via
   term: capacityAtAdmissionTokens
   join_ref: rat-012
-- candidate: capacityMaxTokens
+- seq: 35
+  candidate: capacityMaxTokens
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: capacityTokens
+- seq: 36
+  candidate: capacityTokens
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: checkoutRoot
+- seq: 37
+  candidate: checkoutRoot
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: contendsFor
+- seq: 38
+  candidate: contendsFor
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: dependsOn
+- seq: 39
+  candidate: dependsOn
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: dependsOn
+- seq: 40
+  candidate: dependsOn
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: dependsOnTransitive
+- seq: 41
+  candidate: dependsOnTransitive
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: enqueuedAt
+- seq: 42
+  candidate: enqueuedAt
   kind: property
   admission_kind: decision
   bucket: accepted-via
   term: enqueuedAt
   join_ref: rat-015
-- candidate: filterUsingTasks
+- seq: 43
+  candidate: filterUsingTasks
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: globalConfiguration
+- seq: 44
+  candidate: globalConfiguration
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: governedBy
+- seq: 45
+  candidate: governedBy
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: hardFloorEngaged
+- seq: 46
+  candidate: hardFloorEngaged
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hardFloorGib
+- seq: 47
+  candidate: hardFloorGib
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasCachePosture
+- seq: 48
+  candidate: hasCachePosture
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: hasDeclaredTaskDependency
+- seq: 49
+  candidate: hasDeclaredTaskDependency
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasEmptyTaskOutputDeclaration
+- seq: 50
+  candidate: hasEmptyTaskOutputDeclaration
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasExecutionState
+- seq: 51
+  candidate: hasExecutionState
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: hasGlobalHashEnvironmentVariable
+- seq: 52
+  candidate: hasGlobalHashEnvironmentVariable
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasGlobalInputPattern
+- seq: 53
+  candidate: hasGlobalInputPattern
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasGlobalPassThroughEnvironmentVariable
+- seq: 54
+  candidate: hasGlobalPassThroughEnvironmentVariable
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasGrantState
+- seq: 55
+  candidate: hasGrantState
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: hasHashEnvironmentVariable
+- seq: 56
+  candidate: hasHashEnvironmentVariable
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasOriginKey
+- seq: 57
+  candidate: hasOriginKey
   kind: property
   admission_kind: decision
   bucket: accepted-via
   term: hasOriginKey
   join_ref: rat-016
-- candidate: hasPassThroughEnvironmentVariable
+- seq: 58
+  candidate: hasPassThroughEnvironmentVariable
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasPriorityClass
+- seq: 59
+  candidate: hasPriorityClass
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: hasStarvationException
+- seq: 60
+  candidate: hasStarvationException
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: hasTaskInputPattern
+- seq: 61
+  candidate: hasTaskInputPattern
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasTaskOutputPattern
+- seq: 62
+  candidate: hasTaskOutputPattern
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: hasWorkKind
+- seq: 63
+  candidate: hasWorkKind
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: heartbeatSeconds
+- seq: 64
+  candidate: heartbeatSeconds
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: inAttempt
+- seq: 65
+  candidate: inAttempt
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: isPersistentTask
+- seq: 66
+  candidate: isPersistentTask
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: memAvailableGib
+- seq: 67
+  candidate: memAvailableGib
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: observedQueueWaitMs
+- seq: 68
+  candidate: observedQueueWaitMs
   kind: property
   admission_kind: decision
   bucket: accepted-via
   term: observedQueueWaitMs
   join_ref: rat-001
-- candidate: ofWorkUnit
+- seq: 69
+  candidate: ofWorkUnit
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: pid
+- seq: 70
+  candidate: pid
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: procStart
+- seq: 71
+  candidate: procStart
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: publishAgingSeconds
+- seq: 72
+  candidate: publishAgingSeconds
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: requestedBy
+- seq: 73
+  candidate: requestedBy
   kind: property
   admission_kind: decision
   bucket: open
-- candidate: reserveGib
-  kind: property
-  admission_kind: semantic-support
-  bucket: open
-- candidate: reviewFixClassCap
+- seq: 74
+  candidate: reserveGib
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: slotSizeGib
+- seq: 75
+  candidate: reviewFixClassCap
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: taskCacheEnabled
+- seq: 76
+  candidate: slotSizeGib
   kind: property
   admission_kind: semantic-support
   bucket: open
-- candidate: '@beep/acp'
+- seq: 77
+  candidate: taskCacheEnabled
+  kind: property
+  admission_kind: semantic-support
+  bucket: open
+- seq: 78
+  candidate: '@beep/acp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/agents-client'
+- seq: 79
+  candidate: '@beep/agents-client'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/agents-domain'
+- seq: 80
+  candidate: '@beep/agents-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/agents-server'
+- seq: 81
+  candidate: '@beep/agents-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/agents-tables'
+- seq: 82
+  candidate: '@beep/agents-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/agents-use-cases'
+- seq: 83
+  candidate: '@beep/agents-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ai-provider-cli'
+- seq: 84
+  candidate: '@beep/ai-provider-cli'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ai-sync'
+- seq: 85
+  candidate: '@beep/ai-sync'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/anthropic'
+- seq: 86
+  candidate: '@beep/anthropic'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/api-docs'
+- seq: 87
+  candidate: '@beep/api-docs'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/api-transport'
+- seq: 88
+  candidate: '@beep/api-transport'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-client'
+- seq: 89
+  candidate: '@beep/architecture-lab-client'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-config'
+- seq: 90
+  candidate: '@beep/architecture-lab-config'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-domain'
+- seq: 91
+  candidate: '@beep/architecture-lab-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-proof'
+- seq: 92
+  candidate: '@beep/architecture-lab-proof'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-server'
+- seq: 93
+  candidate: '@beep/architecture-lab-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-tables'
+- seq: 94
+  candidate: '@beep/architecture-lab-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-ui'
+- seq: 95
+  candidate: '@beep/architecture-lab-ui'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/architecture-lab-use-cases'
+- seq: 96
+  candidate: '@beep/architecture-lab-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/box'
+- seq: 97
+  candidate: '@beep/box'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/brand'
+- seq: 98
+  candidate: '@beep/brand'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/chalk'
+- seq: 99
+  candidate: '@beep/chalk'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/codegen-kit'
+- seq: 100
+  candidate: '@beep/codegen-kit'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/colors'
+- seq: 101
+  candidate: '@beep/colors'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/cosmos'
+- seq: 102
+  candidate: '@beep/cosmos'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/data'
+- seq: 103
+  candidate: '@beep/data'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/db-admin'
+- seq: 104
+  candidate: '@beep/db-admin'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/discord'
+- seq: 105
+  candidate: '@beep/discord'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/doc-text'
+- seq: 106
+  candidate: '@beep/doc-text'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/dock'
+- seq: 107
+  candidate: '@beep/dock'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/dock-react'
+- seq: 108
+  candidate: '@beep/dock-react'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/documents-domain'
+- seq: 109
+  candidate: '@beep/documents-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/documents-server'
+- seq: 110
+  candidate: '@beep/documents-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/documents-tables'
+- seq: 111
+  candidate: '@beep/documents-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/documents-use-cases'
+- seq: 112
+  candidate: '@beep/documents-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/drizzle'
+- seq: 113
+  candidate: '@beep/drizzle'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/duckdb'
+- seq: 114
+  candidate: '@beep/duckdb'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ecfr'
+- seq: 115
+  candidate: '@beep/ecfr'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/editor'
+- seq: 116
+  candidate: '@beep/editor'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/effect-drizzle'
+- seq: 117
+  candidate: '@beep/effect-drizzle'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-client'
+- seq: 118
+  candidate: '@beep/epistemic-client'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-config'
+- seq: 119
+  candidate: '@beep/epistemic-config'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-domain'
+- seq: 120
+  candidate: '@beep/epistemic-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-server'
+- seq: 121
+  candidate: '@beep/epistemic-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-tables'
+- seq: 122
+  candidate: '@beep/epistemic-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-ui'
+- seq: 123
+  candidate: '@beep/epistemic-ui'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/epistemic-use-cases'
+- seq: 124
+  candidate: '@beep/epistemic-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/exiftool'
+- seq: 125
+  candidate: '@beep/exiftool'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/face-detection'
+- seq: 126
+  candidate: '@beep/face-detection'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/fc-runs'
+- seq: 127
+  candidate: '@beep/fc-runs'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ffmpeg'
+- seq: 128
+  candidate: '@beep/ffmpeg'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/file-processing'
+- seq: 129
+  candidate: '@beep/file-processing'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/firecrawl'
+- seq: 130
+  candidate: '@beep/firecrawl'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/gov-legal-mcp'
+- seq: 131
+  candidate: '@beep/gov-legal-mcp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/govinfo'
+- seq: 132
+  candidate: '@beep/govinfo'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/graph-3d'
+- seq: 133
+  candidate: '@beep/graph-3d'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/html'
+- seq: 134
+  candidate: '@beep/html'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/hubspot'
+- seq: 135
+  candidate: '@beep/hubspot'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/identity'
+- seq: 136
+  candidate: '@beep/identity'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/infra'
+- seq: 137
+  candidate: '@beep/infra'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/langextract'
+- seq: 138
+  candidate: '@beep/langextract'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/law-practice-domain'
+- seq: 139
+  candidate: '@beep/law-practice-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/law-practice-server'
+- seq: 140
+  candidate: '@beep/law-practice-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/law-practice-tables'
+- seq: 141
+  candidate: '@beep/law-practice-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/law-practice-use-cases'
+- seq: 142
+  candidate: '@beep/law-practice-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/lexical-schema'
+- seq: 143
+  candidate: '@beep/lexical-schema'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/libpff'
+- seq: 144
+  candidate: '@beep/libpff'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/lint-rules'
+- seq: 145
+  candidate: '@beep/lint-rules'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/m365'
+- seq: 146
+  candidate: '@beep/m365'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/m365-mcp'
+- seq: 147
+  candidate: '@beep/m365-mcp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/mcp-kit'
+- seq: 148
+  candidate: '@beep/mcp-kit'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/md'
+- seq: 149
+  candidate: '@beep/md'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/n3'
+- seq: 150
+  candidate: '@beep/n3'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/nlp'
+- seq: 151
+  candidate: '@beep/nlp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/nlp-mcp'
+- seq: 152
+  candidate: '@beep/nlp-mcp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/nlp-processing'
+- seq: 153
+  candidate: '@beep/nlp-processing'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/obs'
+- seq: 154
+  candidate: '@beep/obs'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/observability'
+- seq: 155
+  candidate: '@beep/observability'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/oip-web'
+- seq: 156
+  candidate: '@beep/oip-web'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/onepassword-cli'
+- seq: 157
+  candidate: '@beep/onepassword-cli'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology'
+- seq: 158
+  candidate: '@beep/ontology'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology-client'
+- seq: 159
+  candidate: '@beep/ontology-client'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology-config'
+- seq: 160
+  candidate: '@beep/ontology-config'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology-domain'
+- seq: 161
+  candidate: '@beep/ontology-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology-server'
+- seq: 162
+  candidate: '@beep/ontology-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology-ui'
+- seq: 163
+  candidate: '@beep/ontology-ui'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ontology-use-cases'
+- seq: 164
+  candidate: '@beep/ontology-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/openai'
+- seq: 165
+  candidate: '@beep/openai'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/openai-compat'
+- seq: 166
+  candidate: '@beep/openai-compat'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/openclaw'
+- seq: 167
+  candidate: '@beep/openclaw'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/oxigraph'
+- seq: 168
+  candidate: '@beep/oxigraph'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/pacer'
+- seq: 169
+  candidate: '@beep/pacer'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/pandoc-ast'
+- seq: 170
+  candidate: '@beep/pandoc-ast'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/pglite'
+- seq: 171
+  candidate: '@beep/pglite'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/phoenix'
+- seq: 172
+  candidate: '@beep/phoenix'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/postgres'
+- seq: 173
+  candidate: '@beep/postgres'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/practice-kg-mcp'
+- seq: 174
+  candidate: '@beep/practice-kg-mcp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/pretext'
+- seq: 175
+  candidate: '@beep/pretext'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/professional-desktop'
+- seq: 176
+  candidate: '@beep/professional-desktop'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/provenance'
+- seq: 177
+  candidate: '@beep/provenance'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/qa-capture'
+- seq: 178
+  candidate: '@beep/qa-capture'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/rdf'
+- seq: 179
+  candidate: '@beep/rdf'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/rdf-canonize'
+- seq: 180
+  candidate: '@beep/rdf-canonize'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/repo-ai-metrics'
+- seq: 181
+  candidate: '@beep/repo-ai-metrics'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/repo-cli'
+- seq: 182
+  candidate: '@beep/repo-cli'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/repo-configs'
+- seq: 183
+  candidate: '@beep/repo-configs'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/repo-docgen'
+- seq: 184
+  candidate: '@beep/repo-docgen'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/repo-utils'
+- seq: 185
+  candidate: '@beep/repo-utils'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/root'
+- seq: 186
+  candidate: '@beep/root'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/runpod'
+- seq: 187
+  candidate: '@beep/runpod'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/sanity'
+- seq: 188
+  candidate: '@beep/sanity'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/schema'
+- seq: 189
+  candidate: '@beep/schema'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/scratchpad'
+- seq: 190
+  candidate: '@beep/scratchpad'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/semantic-web'
+- seq: 191
+  candidate: '@beep/semantic-web'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/semantica'
+- seq: 192
+  candidate: '@beep/semantica'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/shacl'
+- seq: 193
+  candidate: '@beep/shacl'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/shared-domain'
+- seq: 194
+  candidate: '@beep/shared-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/shared-tables'
+- seq: 195
+  candidate: '@beep/shared-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/shared-use-cases'
+- seq: 196
+  candidate: '@beep/shared-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/skill-contract'
+- seq: 197
+  candidate: '@beep/skill-contract'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/storybook'
+- seq: 198
+  candidate: '@beep/storybook'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/tailscale'
+- seq: 199
+  candidate: '@beep/tailscale'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/test-utils'
+- seq: 200
+  candidate: '@beep/test-utils'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/tika'
+- seq: 201
+  candidate: '@beep/tika'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/trustgraph-workbench'
+- seq: 202
+  candidate: '@beep/trustgraph-workbench'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/tsgo-shim'
+- seq: 203
+  candidate: '@beep/tsgo-shim'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/types'
+- seq: 204
+  candidate: '@beep/types'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/ui'
+- seq: 205
+  candidate: '@beep/ui'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/uspto'
+- seq: 206
+  candidate: '@beep/uspto'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/uspto-mcp'
+- seq: 207
+  candidate: '@beep/uspto-mcp'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/utils'
+- seq: 208
+  candidate: '@beep/utils'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/venice-ai'
+- seq: 209
+  candidate: '@beep/venice-ai'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/wink'
+- seq: 210
+  candidate: '@beep/wink'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/workspace-domain'
+- seq: 211
+  candidate: '@beep/workspace-domain'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/workspace-server'
+- seq: 212
+  candidate: '@beep/workspace-server'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/workspace-tables'
+- seq: 213
+  candidate: '@beep/workspace-tables'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/workspace-use-cases'
+- seq: 214
+  candidate: '@beep/workspace-use-cases'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: '@beep/xai'
+- seq: 215
+  candidate: '@beep/xai'
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: BrowserQaLane
+- seq: 216
+  candidate: BrowserQaLane
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: DocgenAffectedWorkUnit
+- seq: 217
+  candidate: DocgenAffectedWorkUnit
   kind: individual
   admission_kind: decision
   bucket: accepted-via
   term: DocgenAffectedWorkUnit
   join_ref: rat-029
-- candidate: DocgenFullRepoWorkUnit
+- seq: 218
+  candidate: DocgenFullRepoWorkUnit
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: DocgenLane
+- seq: 219
+  candidate: DocgenLane
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: FallowAuditLane
+- seq: 220
+  candidate: FallowAuditLane
   kind: individual
   admission_kind: decision
   bucket: accepted-via
   term: FallowAuditLane
   join_ref: rat-030
-- candidate: FallowAuditOriginMainNewOnlyWorkUnit
+- seq: 221
+  candidate: FallowAuditOriginMainNewOnlyWorkUnit
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: FallowDeadCodeLane
+- seq: 222
+  candidate: FallowDeadCodeLane
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: FallowHealthLane
+- seq: 223
+  candidate: FallowHealthLane
   kind: individual
   admission_kind: decision
   bucket: accepted-via
   term: FallowHealthLane
   join_ref: rat-031
-- candidate: LaneAudit
+- seq: 224
+  candidate: LaneAudit
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneBuild
+- seq: 225
+  candidate: LaneBuild
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneCheck
+- seq: 226
+  candidate: LaneCheck
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneCodegen
+- seq: 227
+  candidate: LaneCodegen
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneCoverage
+- seq: 228
+  candidate: LaneCoverage
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneDev
+- seq: 229
+  candidate: LaneDev
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneDocgen
+- seq: 230
+  candidate: LaneDocgen
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneLint
+- seq: 231
+  candidate: LaneLint
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneLintFix
+- seq: 232
+  candidate: LaneLintFix
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneStorybook
+- seq: 233
+  candidate: LaneStorybook
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneStorybookBuild
+- seq: 234
+  candidate: LaneStorybookBuild
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneStorybookStart
+- seq: 235
+  candidate: LaneStorybookStart
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTest
+- seq: 236
+  candidate: LaneTest
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTestIntegration
+- seq: 237
+  candidate: LaneTestIntegration
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTestIntegrationParallel
+- seq: 238
+  candidate: LaneTestIntegrationParallel
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTestIntegrationSerial
+- seq: 239
+  candidate: LaneTestIntegrationSerial
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTestProperty
+- seq: 240
+  candidate: LaneTestProperty
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTestStorybook
+- seq: 241
+  candidate: LaneTestStorybook
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: LaneTransit
+- seq: 242
+  candidate: LaneTransit
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: MachineProofLock
+- seq: 243
+  candidate: MachineProofLock
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: TurboConfiguration469136d2a872
+- seq: 244
+  candidate: TurboConfiguration469136d2a872
   kind: individual
   admission_kind: semantic-support
   bucket: open
-- candidate: YeetMonitorLane
+- seq: 245
+  candidate: YeetMonitorLane
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: YeetVerifyLane
+- seq: 246
+  candidate: YeetVerifyLane
   kind: individual
   admission_kind: decision
   bucket: open
-- candidate: YeetWeightedAdmissionV1
+- seq: 247
+  candidate: YeetWeightedAdmissionV1
   kind: individual
   admission_kind: semantic-support
   bucket: open
-- candidate: publish
+- seq: 248
+  candidate: publish
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: AdmissionPriority
-- candidate: verify
+- seq: 249
+  candidate: verify
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: AdmissionPriority
-- candidate: full-proof
+- seq: 250
+  candidate: full-proof
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: leaf-of-ratified-domain
   term: AdmissionWorkKind
   join_ref: rat-018
-- candidate: merged-preview
+- seq: 251
+  candidate: merged-preview
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: leaf-of-ratified-domain
   term: AdmissionWorkKind
   join_ref: rat-018
-- candidate: publish
+- seq: 252
+  candidate: publish
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: leaf-of-ratified-domain
   term: AdmissionWorkKind
   join_ref: rat-018
-- candidate: review-fix
+- seq: 253
+  candidate: review-fix
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: leaf-of-ratified-domain
   term: AdmissionWorkKind
   join_ref: rat-018
-- candidate: CallerControlled
+- seq: 254
+  candidate: CallerControlled
   kind: literal-domain-member
   admission_kind: decision
   bucket: accepted-via
   term: CallerControlled
   join_ref: rat-023
-- candidate: LocalOnly
+- seq: 255
+  candidate: LocalOnly
   kind: literal-domain-member
   admission_kind: decision
   bucket: accepted-via
   term: LocalOnly
   join_ref: rat-021
-- candidate: LocalWriteRemoteRead
+- seq: 256
+  candidate: LocalWriteRemoteRead
   kind: literal-domain-member
   admission_kind: decision
   bucket: accepted-via
   term: LocalWriteRemoteRead
   join_ref: rat-022
-- candidate: build
+- seq: 257
+  candidate: build
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: check
+- seq: 258
+  candidate: check
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: codegen
+- seq: 259
+  candidate: codegen
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: commitlint
+- seq: 260
+  candidate: commitlint
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: coverage
+- seq: 261
+  candidate: coverage
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: desktop-ipc
+- seq: 262
+  candidate: desktop-ipc
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: docgen
+- seq: 263
+  candidate: docgen
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: doctest
+- seq: 264
+  candidate: doctest
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: ecosystem
+- seq: 265
+  candidate: ecosystem
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: fallow
+- seq: 266
+  candidate: fallow
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: jsdoc-ratchet
+- seq: 267
+  candidate: jsdoc-ratchet
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: knip
+- seq: 268
+  candidate: knip
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: labs
+- seq: 269
+  candidate: labs
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: lint
+- seq: 270
+  candidate: lint
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: lint-policy
+- seq: 271
+  candidate: lint-policy
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: nix
+- seq: 272
+  candidate: nix
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: property
+- seq: 273
+  candidate: property
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: repo-sanity
+- seq: 274
+  candidate: repo-sanity
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: sast
+- seq: 275
+  candidate: sast
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: secrets
+- seq: 276
+  candidate: secrets
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: security
+- seq: 277
+  candidate: security
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: test-integration
+- seq: 278
+  candidate: test-integration
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: test-unit
+- seq: 279
+  candidate: test-unit
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: CiLaneId
-- candidate: clone
+- seq: 280
+  candidate: clone
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: FleetCheckoutKind
-- candidate: linked-worktree
+- seq: 281
+  candidate: linked-worktree
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: FleetCheckoutKind
-- candidate: goals-packets
+- seq: 282
+  candidate: goals-packets
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GateInputScope
-- candidate: repo-code
+- seq: 283
+  candidate: repo-code
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GateInputScope
-- candidate: failed
+- seq: 284
+  candidate: failed
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GithubCheckLaneRunStatus
-- candidate: not-run-early-stop
+- seq: 285
+  candidate: not-run-early-stop
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GithubCheckLaneRunStatus
-- candidate: passed
+- seq: 286
+  candidate: passed
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GithubCheckLaneRunStatus
-- candidate: install-failure
+- seq: 287
+  candidate: install-failure
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GithubJobShapeClass
-- candidate: runner-loss
+- seq: 288
+  candidate: runner-loss
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GithubJobShapeClass
-- candidate: setup-5xx
+- seq: 289
+  candidate: setup-5xx
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: GithubJobShapeClass
-- candidate: ActiveGrant
+- seq: 290
+  candidate: ActiveGrant
   kind: literal-domain-member
   admission_kind: decision
   bucket: leaf-of-ratified-domain
   term: GrantState
   join_ref: rat-008
-- candidate: ReleasedGrant
+- seq: 291
+  candidate: ReleasedGrant
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: leaf-of-ratified-domain
   term: GrantState
   join_ref: rat-008
-- candidate: TurboTaskLane
+- seq: 292
+  candidate: TurboTaskLane
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: LaneKind
-- candidate: check
+- seq: 293
+  candidate: check
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PackageVerifyStepName
-- candidate: lint
+- seq: 294
+  candidate: lint
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PackageVerifyStepName
-- candidate: test
+- seq: 295
+  candidate: test
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PackageVerifyStepName
-- candidate: chatgpt
+- seq: 296
+  candidate: chatgpt
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PrCloseoutGateName
-- candidate: coderabbit
+- seq: 297
+  candidate: coderabbit
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PrCloseoutGateName
-- candidate: greptile
+- seq: 298
+  candidate: greptile
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PrCloseoutGateName
-- candidate: hosted-checks
+- seq: 299
+  candidate: hosted-checks
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PrCloseoutGateName
-- candidate: review-threads
+- seq: 300
+  candidate: review-threads
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: PrCloseoutGateName
-- candidate: audit
+- seq: 301
+  candidate: audit
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: QualityTaskName
-- candidate: build
+- seq: 302
+  candidate: build
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: QualityTaskName
-- candidate: check
+- seq: 303
+  candidate: check
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: QualityTaskName
-- candidate: coverage
+- seq: 304
+  candidate: coverage
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: QualityTaskName
-- candidate: lint
+- seq: 305
+  candidate: lint
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: QualityTaskName
-- candidate: test
+- seq: 306
+  candidate: test
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: QualityTaskName
-- candidate: publish
+- seq: 307
+  candidate: publish
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoPlanStepMutability
-- candidate: readonly
+- seq: 308
+  candidate: readonly
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoPlanStepMutability
-- candidate: write
+- seq: 309
+  candidate: write
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoPlanStepMutability
-- candidate: fingerprint-match
+- seq: 310
+  candidate: fingerprint-match
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoPlanStepResume
-- candidate: never
+- seq: 311
+  candidate: never
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoPlanStepResume
-- candidate: cheap-gates
+- seq: 312
+  candidate: cheap-gates
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoProofSurface
-- candidate: pre-push
+- seq: 313
+  candidate: pre-push
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoProofSurface
-- candidate: quality
+- seq: 314
+  candidate: quality
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoProofSurface
-- candidate: review-fix
+- seq: 315
+  candidate: review-fix
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: RepoProofSurface
-- candidate: HardFloorException
+- seq: 316
+  candidate: HardFloorException
   kind: literal-domain-member
   admission_kind: decision
   bucket: leaf-of-ratified-domain
   term: StarvationException
   join_ref: rat-020
-- candidate: ts2589-no-location
+- seq: 317
+  candidate: ts2589-no-location
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: StepFlakeQuarantinePolicy
-- candidate: affected
+- seq: 318
+  candidate: affected
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: TurboConfigProofSelectorMode
-- candidate: filter-range
+- seq: 319
+  candidate: filter-range
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: TurboConfigProofSelectorMode
-- candidate: build
+- seq: 320
+  candidate: build
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: TurboConfigProofTaskName
-- candidate: check
+- seq: 321
+  candidate: check
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: TurboConfigProofTaskName
-- candidate: docgen
+- seq: 322
+  candidate: docgen
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: TurboConfigProofTaskName
-- candidate: lint
+- seq: 323
+  candidate: lint
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: TurboConfigProofTaskName
-- candidate: test
+- seq: 324
+  candidate: test
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: TurboConfigProofTaskName
-- candidate: fail
+- seq: 325
+  candidate: fail
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: YeetCheckOutcome
-- candidate: pass
+- seq: 326
+  candidate: pass
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: YeetCheckOutcome
-- candidate: pending
+- seq: 327
+  candidate: pending
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: YeetCheckOutcome
-- candidate: skip
+- seq: 328
+  candidate: skip
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: YeetCheckOutcome
-- candidate: ci-timeout
+- seq: 329
+  candidate: ci-timeout
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: YeetMonitorFlakeClass
-- candidate: install-failure
+- seq: 330
+  candidate: install-failure
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: YeetMonitorFlakeClass
-- candidate: runner-loss
+- seq: 331
+  candidate: runner-loss
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: YeetMonitorFlakeClass
-- candidate: setup-5xx
+- seq: 332
+  candidate: setup-5xx
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: YeetMonitorFlakeClass
-- candidate: ts2589-no-location
+- seq: 333
+  candidate: ts2589-no-location
   kind: literal-domain-member
   admission_kind: decision
   bucket: open
   source_domain: YeetMonitorFlakeClass
-- candidate: cheap-gates
+- seq: 334
+  candidate: cheap-gates
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: YeetProofTier
-- candidate: full
+- seq: 335
+  candidate: full
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
   source_domain: YeetProofTier
-- candidate: review-fix
+- seq: 336
+  candidate: review-fix
   kind: literal-domain-member
   admission_kind: semantic-support
   bucket: open
