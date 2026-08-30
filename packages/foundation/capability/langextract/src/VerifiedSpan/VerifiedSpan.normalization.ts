@@ -33,7 +33,13 @@ const WhitespaceCodePoint = S.String.check(
   })
 );
 
-/** @internal */
+/**
+ * Internal normalized locator text with raw UTF-16 offset maps.
+ *
+ * @category models
+ * @since 0.0.0
+ * @internal
+ */
 export class NormalizedTextWithRawOffsets extends S.Class<NormalizedTextWithRawOffsets>(
   $I`NormalizedTextWithRawOffsets`
 )(
@@ -158,7 +164,14 @@ const appendNormalizedPoint = (
     })
   );
 
-/** @internal */
+/**
+ * Normalize locator text while retaining the raw UTF-16 range behind every
+ * normalized code unit.
+ *
+ * @category utilities
+ * @since 0.0.0
+ * @internal
+ */
 export const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets => {
   // Performance boundary: these parallel offset maps can hold multiple entries per source
   // code unit. Mutation stays inside this allocation boundary; the completed
