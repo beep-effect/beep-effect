@@ -36,20 +36,6 @@
       "command": "bunx",
       "args": ["chrome-devtools-mcp@1.6.0", "--slim"]
     },
-    "basic-memory": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["basic-memory@0.22.1", "mcp", "--project", "beep-shared"]
-    },
-    "codegraph": {
-      "type": "stdio",
-      "command": "codegraph",
-      "args": ["serve", "--mcp"],
-      "env": {
-        "DO_NOT_TRACK": "1",
-        "CODEGRAPH_NO_UPDATE_CHECK": "1"
-      }
-    },
     "webstorm": {
       "url": "http://127.0.0.1:64542/stream",
       "type": "http",
