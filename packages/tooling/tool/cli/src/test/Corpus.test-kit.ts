@@ -11,5 +11,5 @@
  * @category testing
  * @since 0.0.0
  */
-export { withRestorationWriterClaim } from "../commands/Corpus/internal/Restoration.ts";
+export { restorationArchiveTesting, withRestorationWriterClaim } from "../commands/Corpus/internal/Restoration.ts";
 export { restorationTransformationTesting } from "../commands/Corpus/internal/RestorationTransformations.ts";

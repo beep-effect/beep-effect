@@ -2637,6 +2637,30 @@ const resolveVerificationArchiveRoot = Effect.fn("CorpusRestoration.resolveVerif
 });
 
 /**
+ * Test-only semantic probes for preservation identity and path invariants.
+ *
+ * @category testing
+ */
+export const restorationArchiveTesting = {
+  collectorRelativePath,
+  filesystemRootFor,
+  indexArchiveTerminals,
+  isArchiveTerminalRecord,
+  isContainedPath,
+  nonNegative,
+  objectIdFor,
+  parseProcStatStartTime,
+  partialArchiveOpenFlag,
+  pathsOverlap,
+  sameDeviceAndInode,
+  sameSourceIdentity,
+  sameSourceIdentityExceptMtime,
+  sourceIdentity,
+  sourceIdentityToken,
+  sourceStat,
+} as const;
+
+/**
  * Independently reparse and verify a sealed preservation manifest against destination bytes.
  *
  * @param options - Corpus root and immutable preservation run label.

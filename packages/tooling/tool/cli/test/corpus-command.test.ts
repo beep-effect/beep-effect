@@ -36,7 +36,11 @@ import {
   verifyRestorationArchive,
   verifySalvage,
 } from "@beep/repo-cli/commands/Corpus";
-import { restorationTransformationTesting as RT, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
+import {
+  restorationArchiveTesting as RA,
+  restorationTransformationTesting as RT,
+  withRestorationWriterClaim,
+} from "@beep/repo-cli/test/Corpus";
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -108,7 +112,138 @@ describe("corpus evidence schemas", () => {
   });
 });
 
+const mutatedEvidenceValue = (value: unknown): O.Option<unknown> => {
+  if (typeof value === "string") return O.some(`${value}/mutated`);
+  if (typeof value === "number") return O.some(value + 1);
+  if (typeof value === "boolean") return O.some(!value);
+  if (Array.isArray(value)) return O.some(A.append(value, value[0] ?? "mutated"));
+  if (value === undefined) return O.some("mutated");
+  return O.none();
+};
+
+const systematicEvidenceMutations = (
+  records: ReadonlyArray<TransformationLedgerRecord>
+): ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> =>
+  A.flatMap(records, (record, recordIndex) =>
+    A.filterMap(Object.entries(record), ([field, value]) =>
+      O.map(mutatedEvidenceValue(value), (mutatedValue) => {
+        const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
+        const target = mutated[recordIndex];
+        if (target !== undefined) target[field] = mutatedValue;
+        return mutated as unknown as ReadonlyArray<TransformationLedgerRecord>;
+      })
+    )
+  );
+
+const exerciseEvidenceVariant = (
+  summary: TransformationLedgerRecord,
+  variant: ReadonlyArray<TransformationLedgerRecord>
+) => {
+  if (!S.is(TransformationLedgerRecord.cases["family-run-summary"])(summary)) return Effect.void;
+  const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
+  const interruptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-interrupted"]));
+  const passes = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-pass"]));
+  const exceptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-exception"]));
+  const warnings = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-warning"]));
+  const children = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-child-pass"]));
+  const repairs = A.filter(variant, S.is(TransformationLedgerRecord.cases["attachment-type-repair"]));
+  const terminals = RT.attemptTerminalBindings(variant);
+
+  A.forEach([".", "..", "safe-attempt", "unsafe/attempt", "unsafe\\attempt"], RT.safeAttemptId);
+  A.forEach(passes, (pass) => RT.mailPassReconciles(pass, children, warnings));
+  A.forEach(exceptions, RT.mailExceptionIsApproved);
+  RT.attachmentRepairsReconcile(repairs, children, terminals);
+  RT.mailTerminalIdentitiesReconcile(A.appendAll(passes, exceptions));
+  RT.mailOwnedEvidenceReconciles(passes, exceptions, interruptions, children, warnings);
+  RT.mailTerminalCountsReconcile(summary, passes, exceptions);
+  RT.mailSegmentReconciles(summary, variant);
+  RT.recycleSegmentReconciles(summary, variant);
+  RT.legacySegmentReconciles(summary, variant);
+  RT.familyRunStartReconciles(summary, variant);
+  RT.attemptSettlementsReconcile(starts, interruptions, terminals);
+  RT.attemptBindingsReconcile(starts, interruptions, terminals);
+  RT.attemptRetryOrdinalsReconcile(starts);
+  RT.latestAttemptsAreTerminal(starts, terminals);
+  RT.resumableAttemptLifecycleReconciles(variant);
+  RT.transformationAttemptLifecycleReconciles(summary, variant);
+  RT.transformationSegmentReconciles(summary.family, summary, variant);
+  RT.strictEvidenceSha256(A.map(variant, (record) => JSON.stringify(record)));
+
+  return Effect.all(
+    [
+      RT.requireStrictFamilyTerminalRows({ family: "mail" }, variant).pipe(Effect.exit),
+      RT.requireStrictFamilySegment({ family: "mail" }, variant).pipe(Effect.exit),
+    ],
+    { discard: true }
+  );
+};
+
+const exerciseEvidenceMutations = (records: ReadonlyArray<TransformationLedgerRecord>) =>
+  Effect.gen(function* () {
+    const summary = yield* A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"])).pipe(
+      Effect.fromOption
+    );
+    const variants: ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> = [
+      records,
+      A.reverse(records),
+      A.drop(records, 1),
+      A.dropRight(records, 1),
+      A.appendAll(records, records),
+      [],
+      ...systematicEvidenceMutations(records),
+    ];
+    yield* Effect.forEach(variants, (variant) => exerciseEvidenceVariant(summary, variant), { discard: true });
+  });
+
 describe("corpus restoration evidence invariants", () => {
+  it.effect(
+    "exercises preservation identity, path, and resumable-state boundaries",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-restoration-invariant-test-" });
+        const filePath = path.join(root, "source.bin");
+        yield* fs.writeFileString(filePath, "fixture");
+        const info = yield* fs.stat(filePath);
+        const identity = RA.sourceIdentity(info);
+        const noMtimeIdentity = RA.sourceIdentity({ ...info, mtime: O.none() });
+
+        expect(RA.nonNegative(-1)).toBe(0);
+        expect(RA.nonNegative(1.9)).toBe(1);
+        expect(RA.sourceStat({ ...info, mtime: O.none() }).mtimeMillis).toBe(0);
+        expect(RA.sameSourceIdentity(identity, identity)).toBe(true);
+        expect(RA.sameSourceIdentity(identity, noMtimeIdentity)).toBe(false);
+        expect(RA.sameSourceIdentityExceptMtime(identity, noMtimeIdentity)).toBe(true);
+        expect(RA.sameDeviceAndInode(identity, identity)).toBe(O.isSome(identity.inode));
+        expect(RA.sameDeviceAndInode({ ...identity, inode: O.none() }, identity)).toBe(false);
+        expect(RA.sourceIdentityToken(identity)).toContain("\u0000");
+        expect(RA.objectIdFor("source", "relative/path")).toHaveLength(64);
+
+        expect(RA.isContainedPath(path, root, root)).toBe(true);
+        expect(RA.isContainedPath(path, root, filePath)).toBe(true);
+        expect(RA.isContainedPath(path, root, path.dirname(root))).toBe(false);
+        expect(RA.pathsOverlap(path, root, filePath)).toBe(true);
+        expect(RA.pathsOverlap(path, filePath, path.join(path.dirname(root), "other"))).toBe(false);
+        expect(RA.filesystemRootFor(path, filePath)).toBe(path.parse(filePath).root);
+        expect(O.isNone(RA.parseProcStatStartTime("malformed"))).toBe(true);
+        expect(
+          RA.parseProcStatStartTime(`1 (fixture) S ${A.join(A.map(A.range(0, 19), String), " ")}`).pipe(
+            O.getOrElse(() => "")
+          )
+        ).toBe("18");
+        expect(RA.collectorRelativePath("C:\\root\\nested\\file.bin", 2)).toEqual(O.some("nested/file.bin"));
+        expect(RA.collectorRelativePath("C:\\root\\..\\file.bin", 2)).toEqual(O.none());
+        expect(RA.collectorRelativePath("C:\\root", 2)).toEqual(O.none());
+        expect(RA.partialArchiveOpenFlag({ expectedInfo: O.none(), resumeBytes: 0 })).toBe("wx+");
+        expect(RA.partialArchiveOpenFlag({ expectedInfo: O.some(identity), resumeBytes: 0 })).toBe("r+");
+        expect(RA.partialArchiveOpenFlag({ expectedInfo: O.some(identity), resumeBytes: 1 })).toBe("a");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
   it.effect(
     "fails closed across systematic mutations of real family evidence",
     Effect.fnUntraced(
@@ -167,77 +302,9 @@ describe("corpus restoration evidence invariants", () => {
         );
         const legacyRecords = yield* Effect.forEach(legacyLines, decodeTransformationLedgerRecordJson);
 
-        for (const records of [mailRecords, recycleRecords, legacyRecords]) {
-          const summary = A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"]));
-          if (O.isNone(summary)) return yield* Effect.die("Expected a real family summary fixture.");
-          const variants: Array<ReadonlyArray<TransformationLedgerRecord>> = [
-            records,
-            A.reverse(records),
-            A.drop(records, 1),
-            A.dropRight(records, 1),
-            A.appendAll(records, records),
-            [],
-          ];
-          for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
-            const record = records[recordIndex];
-            if (record === undefined) continue;
-            for (const [field, value] of Object.entries(record)) {
-              const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
-              const target = mutated[recordIndex];
-              if (target === undefined) continue;
-              if (typeof value === "string") target[field] = `${value}/mutated`;
-              else if (typeof value === "number") target[field] = value + 1;
-              else if (typeof value === "boolean") target[field] = !value;
-              else if (Array.isArray(value)) target[field] = A.append(value, value[0] ?? "mutated");
-              else if (value === undefined) target[field] = "mutated";
-              else continue;
-              variants.push(mutated as unknown as ReadonlyArray<TransformationLedgerRecord>);
-            }
-          }
-
-          for (const variant of variants) {
-            const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
-            const interruptions = A.filter(
-              variant,
-              S.is(TransformationLedgerRecord.cases["family-attempt-interrupted"])
-            );
-            const passes = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-pass"]));
-            const exceptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-exception"]));
-            const warnings = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-warning"]));
-            const children = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-child-pass"]));
-            const repairs = A.filter(variant, S.is(TransformationLedgerRecord.cases["attachment-type-repair"]));
-            const terminals = RT.attemptTerminalBindings(variant);
-
-            for (const attemptId of [".", "..", "safe-attempt", "unsafe/attempt", "unsafe\\attempt"]) {
-              RT.safeAttemptId(attemptId);
-            }
-            for (const pass of passes) RT.mailPassReconciles(pass, children, warnings);
-            for (const exception of exceptions) RT.mailExceptionIsApproved(exception);
-            RT.attachmentRepairsReconcile(repairs, children, terminals);
-            RT.mailTerminalIdentitiesReconcile(A.appendAll(passes, exceptions));
-            RT.mailOwnedEvidenceReconciles(passes, exceptions, interruptions, children, warnings);
-            RT.mailTerminalCountsReconcile(summary.value, passes, exceptions);
-            RT.mailSegmentReconciles(summary.value, variant);
-            RT.recycleSegmentReconciles(summary.value, variant);
-            RT.legacySegmentReconciles(summary.value, variant);
-            RT.familyRunStartReconciles(summary.value, variant);
-            RT.attemptSettlementsReconcile(starts, interruptions, terminals);
-            RT.attemptBindingsReconcile(starts, interruptions, terminals);
-            RT.attemptRetryOrdinalsReconcile(starts);
-            RT.latestAttemptsAreTerminal(starts, terminals);
-            RT.resumableAttemptLifecycleReconciles(variant);
-            RT.transformationAttemptLifecycleReconciles(summary.value, variant);
-            RT.transformationSegmentReconciles(summary.value.family, summary.value, variant);
-            RT.strictEvidenceSha256(A.map(variant, (record) => JSON.stringify(record)));
-            yield* RT.requireStrictFamilyTerminalRows(
-              {
-                family: "mail",
-              },
-              variant
-            ).pipe(Effect.exit);
-            yield* RT.requireStrictFamilySegment({ family: "mail" }, variant).pipe(Effect.exit);
-          }
-        }
+        yield* Effect.forEach([mailRecords, recycleRecords, legacyRecords], exerciseEvidenceMutations, {
+          discard: true,
+        });
       },
       Effect.scoped,
       provideTestLayer
@@ -1670,6 +1737,60 @@ describe("corpus restoration preservation", () => {
       provideTestLayer
     ),
     120_000
+  );
+
+  it.effect(
+    "fails closed for live, malformed, oversized, symlinked, and unsafe writer claims",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-writer-claim-adversarial-test-" });
+        const claimDirectory = path.join(root, "writer-claims");
+        const claimName = ".preservation-writer.claim";
+        const claimPath = path.join(claimDirectory, claimName);
+        yield* fs.makeDirectory(claimDirectory, { recursive: true });
+
+        const liveError = yield* withRestorationWriterClaim(
+          claimDirectory,
+          claimName,
+          withRestorationWriterClaim(claimDirectory, claimName, Effect.void).pipe(Effect.flip)
+        );
+        expect(liveError.message).toContain("currently owns");
+
+        yield* fs.writeFileString(claimPath, "not-json\n");
+        const malformedError = yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void).pipe(
+          Effect.flip
+        );
+        expect(malformedError.message).toContain("unreadable");
+        yield* fs.remove(claimPath);
+
+        yield* fs.writeFileString(claimPath, "x".repeat(16 * 1024 + 1));
+        const oversizedError = yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void).pipe(
+          Effect.flip
+        );
+        expect(oversizedError.message).toContain("bounded size");
+        yield* fs.remove(claimPath);
+
+        const outside = path.join(root, "outside-claim");
+        yield* fs.writeFileString(outside, "not-json\n");
+        yield* fs.symlink(outside, claimPath);
+        const symlinkError = yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void).pipe(
+          Effect.flip
+        );
+        expect(symlinkError.message).toContain("canonical");
+        yield* fs.remove(claimPath);
+
+        for (const unsafeName of ["", ".", "..", "nested/claim"]) {
+          const unsafeError = yield* withRestorationWriterClaim(claimDirectory, unsafeName, Effect.void).pipe(
+            Effect.flip
+          );
+          expect(unsafeError.message).toContain("safe filesystem basename");
+        }
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
   it.effect(
