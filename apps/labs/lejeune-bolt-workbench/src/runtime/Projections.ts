@@ -30,8 +30,13 @@ const RDF_TYPE = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#t
 const OWL_CLASS = Rdf.makeNamedNode("http://www.w3.org/2002/07/owl#Class");
 const DCTERMS_SOURCE = Rdf.makeNamedNode("http://purl.org/dc/terms/source");
 
-const PgliteQuoteLineRow = S.Struct({ id: S.String, quantity: S.Finite });
-const PgliteRuleRow = S.Struct({ case_id: S.String, disposition: S.String, rule_id: S.String });
+const PgliteQuoteLineRow = S.Struct({ id: S.String, product_variant_id: S.String, quantity: S.Finite });
+const PgliteRuleRow = S.Struct({
+  case_id: S.String,
+  disposition: S.String,
+  requires_human: S.Boolean,
+  rule_id: S.String,
+});
 const PgliteSyntheticRow = S.Struct({ id: S.String, kind: S.String, label: S.String, observed_at: S.String });
 const DuckCountRow = S.Struct({ count: S.Finite });
 const DuckDocumentDigestRow = S.Struct({ digest: S.String, id: S.String });
@@ -154,17 +159,20 @@ const decodeRows = <Schema extends S.Codec<unknown>>(stage: string, schema: Sche
 const readPgliteProjection = Effect.fnUntraced(function* () {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
   const quoteRows = yield* sql
-    .unsafe("SELECT id, quantity FROM quote_lines ORDER BY id")
+    .unsafe("SELECT id, product_variant_id, quantity FROM quote_lines ORDER BY id")
     .pipe(Effect.flatMap((rows) => decodeRows("pglite-quote-lines", S.Array(PgliteQuoteLineRow), rows)));
   const ruleRows = yield* sql
-    .unsafe("SELECT case_id, rule_id, disposition FROM rule_results ORDER BY rule_id, case_id")
+    .unsafe("SELECT case_id, rule_id, disposition, requires_human FROM rule_results ORDER BY rule_id, case_id")
     .pipe(Effect.flatMap((rows) => decodeRows("pglite-rules", S.Array(PgliteRuleRow), rows)));
   const syntheticRows = yield* sql
     .unsafe("SELECT id, kind, label, observed_at FROM synthetic_records ORDER BY id")
     .pipe(Effect.flatMap((rows) => decodeRows("pglite-synthetic", S.Array(PgliteSyntheticRow), rows)));
   return {
-    quoteLines: A.map(quoteRows, (row) => `${row.id}|${row.quantity}`),
-    ruleDispositions: A.map(ruleRows, (row) => `${row.rule_id}|${row.case_id}|${row.disposition}`),
+    quoteLines: A.map(quoteRows, (row) => `${row.id}|${row.product_variant_id}|${row.quantity}`),
+    ruleDispositions: A.map(
+      ruleRows,
+      (row) => `${row.rule_id}|${row.case_id}|${row.disposition}|${row.requires_human}`
+    ),
     syntheticRecords: A.map(syntheticRows, (row) => `${row.id}|${row.kind}|${row.label}|${row.observed_at}`),
   };
 });

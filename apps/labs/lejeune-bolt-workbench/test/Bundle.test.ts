@@ -11,6 +11,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
+import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { strToU8 } from "fflate";
 import {
   CanonicalNormalizedFixtures,
@@ -297,12 +298,51 @@ describe("LeJeune deterministic fixture bundle", () => {
         "SupplierOffer",
         "Tool",
       ]);
-      expect(first.quoteLines).toEqual(["rfq-a-line-a-1|180", "rfq-b-line-b-1|860"]);
+      expect(first.quoteLines).toEqual([
+        "rfq-a-line-a-1|rfq-a-tc-assembly|180",
+        "rfq-b-line-b-1|rfq-b-a490-heavy-hex|860",
+      ]);
       expect(first.citations).toHaveLength(4);
       expect(first.syntheticRecords).toHaveLength(4);
       expect(first.ruleDispositions).toHaveLength(6);
     })
   );
+
+  for (const [column, corruption] of [
+    [
+      "quote product variant",
+      "UPDATE quote_lines SET product_variant_id = 'wrong-variant' WHERE id = 'rfq-a-line-a-1'",
+    ],
+    [
+      "rule human-review flag",
+      "UPDATE rule_results SET requires_human = true WHERE case_id = 'rfq-a-a490-hdg-positive'",
+    ],
+  ] as const) {
+    it.live(
+      `rejects persisted ${column} corruption`,
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const rules = yield* evaluateRules(fixtures);
+        const referenceData = buildReferenceData(fixtures);
+        const input = ProjectionInput.make({
+          certificates: referenceData.certificates,
+          fixtures,
+          offers: referenceData.offers,
+          rules,
+        });
+        const failure = yield* Effect.flip(
+          Effect.gen(function* () {
+            const expected = yield* buildProjectionSnapshot(input);
+            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+            yield* sql.unsafe(corruption);
+            return yield* verifyDurableProjectionSnapshot(expected);
+          }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
+        );
+        expect(failure._tag).toBe("ProjectionError");
+      })
+    );
+  }
 
   it.effect(
     "rejects same-count corpus body corruption even when citations and the A490 result remain unchanged",

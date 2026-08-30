@@ -820,14 +820,17 @@ export class ProjectionSnapshot extends S.Class<ProjectionSnapshot>($I`Projectio
       S.Literal("SupplierOffer"),
       S.Literal("Tool"),
     ]),
-    quoteLines: S.Tuple([S.Literal("rfq-a-line-a-1|180"), S.Literal("rfq-b-line-b-1|860")]),
+    quoteLines: S.Tuple([
+      S.Literal("rfq-a-line-a-1|rfq-a-tc-assembly|180"),
+      S.Literal("rfq-b-line-b-1|rfq-b-a490-heavy-hex|860"),
+    ]),
     ruleDispositions: S.Tuple([
-      S.Literal("a490-hdg-refusal|rfq-a-a490-hdg-positive|pass"),
-      S.Literal("a490-hdg-refusal|rfq-b-a490-hdg-refusal|refuse"),
-      S.Literal("dti-strength-match|rfq-a-dti-strength-positive|pass"),
-      S.Literal("dti-strength-match|rfq-b-dti-strength-mismatch|mismatch"),
-      S.Literal("matched-assembly|rfq-a-matched-assembly-positive|pass"),
-      S.Literal("matched-assembly|rfq-b-matched-assembly-mismatch|mismatch"),
+      S.Literal("a490-hdg-refusal|rfq-a-a490-hdg-positive|pass|false"),
+      S.Literal("a490-hdg-refusal|rfq-b-a490-hdg-refusal|refuse|true"),
+      S.Literal("dti-strength-match|rfq-a-dti-strength-positive|pass|false"),
+      S.Literal("dti-strength-match|rfq-b-dti-strength-mismatch|mismatch|true"),
+      S.Literal("matched-assembly|rfq-a-matched-assembly-positive|pass|false"),
+      S.Literal("matched-assembly|rfq-b-matched-assembly-mismatch|mismatch|true"),
     ]),
     syntheticRecords: S.Tuple([
       S.Literal("synthetic-cert-rfq-a|LotCertificate|SYNTHETIC|2026-08-27T12:00:00.000Z"),
@@ -1013,12 +1016,13 @@ const CanonicalRuleResults: readonly [RuleResult, RuleResult, RuleResult, RuleRe
   }),
 ];
 
-const ruleProjectionRow = (rule: RuleResult): string => `${rule.ruleId}|${rule.caseId}|${rule.disposition}`;
+const ruleProjectionRow = (rule: RuleResult): string =>
+  `${rule.ruleId}|${rule.caseId}|${rule.disposition}|${rule.requiresHuman}`;
 
 const CanonicalRuleProjectionRows = A.sort(A.map(CanonicalRuleResults, ruleProjectionRow), Str.Order);
 
 const quoteLineProjectionRow = (fixture: NormalizedFixture): string =>
-  `${fixture.quoteLine.id}|${fixture.quoteLine.quantity}`;
+  `${fixture.quoteLine.id}|${fixture.quoteLine.productVariantId}|${fixture.quoteLine.quantity}`;
 
 const supplierOfferProjectionRow = (offer: SupplierOffer): string =>
   `${offer.id}|SupplierOffer|${offer.recordLabel}|${offer.observedAt}`;
