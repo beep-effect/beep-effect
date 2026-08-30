@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # Local backpressure adapter for Claude Code, Codex, and Grok-compatible tails.
 # The hook never calls GitHub or git. Its hot path reads only .beep/inbox state.
-# Only Bash, Write, Edit, and NotebookEdit can directly mutate this checkout, so
-# lease and one-shot P0 fences apply only to those tools. Harness tools evolve;
-# every other name is context-only except the ratified P0 new-work launches.
+# Bash, Write, Edit, NotebookEdit, MultiEdit, and apply_patch can directly mutate
+# this checkout, so lease and one-shot P0 fences apply only to those tools.
+# Harness tools evolve; every other name is context-only except the ratified P0
+# new-work launches.
 # A live Yeet lease process descended from this hook's parent belongs to the
 # launching harness session; the next unlocked hook refresh records that owner.
+# A busy mutex reports its OS holder. If no live lease owner remains, one hook
+# generation-fences an inode replacement so queued retirements can drain.
 set -u
 
 harness="${1:-claude}"
@@ -72,7 +75,7 @@ pretool_checkout_mutating=false
 if [ "$event" = "PreToolUse" ]; then
   pretool_tool_name="$(printf '%s' "$payload" | jq -r '.tool_name // empty' 2>/dev/null || true)"
   case "$pretool_tool_name" in
-    Bash|Write|Edit|NotebookEdit) pretool_checkout_mutating=true ;;
+    Bash|Write|Edit|NotebookEdit|MultiEdit|apply_patch) pretool_checkout_mutating=true ;;
     *) pretool_checkout_mutating=false ;;
   esac
 fi
@@ -139,6 +142,146 @@ proc_has_ancestor() {
     lineage_depth="$((lineage_depth + 1))"
   done
   [ "$lineage_pid" = "$lineage_ancestor" ]
+}
+
+file_inode() {
+  local inode_path="$1" inode=''
+  inode="$(stat -Lc '%i' "$inode_path" 2>/dev/null || true)"
+  if [ -z "$inode" ]; then
+    inode="$(stat -f '%i' "$inode_path" 2>/dev/null || true)"
+  fi
+  [ -n "$inode" ] || return 1
+  printf '%s' "$inode"
+}
+
+mutex_holder_details() {
+  local lock_path="$1" lock_inode='' holders='' holder_pid='' holder_comm='unknown'
+  lock_inode="$(file_inode "$lock_path" || true)"
+  if [ -n "$lock_inode" ] && command -v lslocks >/dev/null 2>&1; then
+    holders="$(lslocks -n -r -o PID,COMMAND,INODE 2>/dev/null | awk -v inode="$lock_inode" '
+      $3 == inode {
+        if (seen++) printf ", "
+        printf "pid %s (%s)", $1, $2
+      }
+    ')"
+  fi
+  if [ -z "$holders" ] && [ -n "$lock_inode" ] && [ -r /proc/locks ]; then
+    holder_pid="$(awk -v inode="$lock_inode" '$6 ~ (":" inode "$") { print $5; exit }' /proc/locks 2>/dev/null || true)"
+    if [ -n "$holder_pid" ] && [ -r "/proc/$holder_pid/comm" ]; then
+      holder_comm="$(tr -d '\n' <"/proc/$holder_pid/comm" 2>/dev/null || printf 'unknown')"
+    fi
+    if [ -n "$holder_pid" ]; then
+      holders="pid $holder_pid ($holder_comm)"
+    fi
+  fi
+  if [ -n "$holders" ]; then
+    printf '%s' "$holders"
+  elif [ -n "$lock_inode" ]; then
+    printf 'unknown holder (inode %s)' "$lock_inode"
+  else
+    printf 'unknown holder'
+  fi
+}
+
+mutex_recovery_allowed() {
+  local unavailable_lease="$inbox/pr-lease.json" unavailable_status='' unavailable_pid=''
+  local unavailable_start='' unavailable_observed_start='' unavailable_observed_state=''
+  if [ ! -e "$unavailable_lease" ]; then
+    return 0
+  fi
+  [ -f "$unavailable_lease" ] && [ ! -L "$unavailable_lease" ] && [ -r "$unavailable_lease" ] || return 1
+  unavailable_status="$(jq -r 'select(.schemaVersion == "yeet-pr-lease/v1") | .status // "active"' "$unavailable_lease" 2>/dev/null || true)"
+  case "$unavailable_status" in
+    retired) return 0 ;;
+    active|claiming) ;;
+    *) return 1 ;;
+  esac
+  unavailable_pid="$(jq -r '.pid // empty' "$unavailable_lease" 2>/dev/null || true)"
+  unavailable_start="$(jq -r '.procStart // empty' "$unavailable_lease" 2>/dev/null || true)"
+  case "$unavailable_pid" in ''|*[!0-9]*) return 1 ;; esac
+  [ -n "$unavailable_start" ] || return 1
+  unavailable_observed_start="$(proc_start "$unavailable_pid" || true)"
+  unavailable_observed_state="$(proc_state "$unavailable_pid" || true)"
+  if [ "$unavailable_observed_start" = "$unavailable_start" ]; then
+    case "$unavailable_observed_state" in
+      Z|X|x) return 0 ;;
+      *) return 1 ;;
+    esac
+  fi
+  return 0
+}
+
+claim_mutex_recovery() {
+  local recovery_inode="$1" existing_claim='' claim_owner='' claim_rest='' claim_start=''
+  local observed_start='' observed_state=''
+  mutex_recovery_claim="$inbox/hook-mutex-recovery-$recovery_inode"
+  mutex_recovery_claim_start="$(proc_start "$$" || true)"
+  [ -n "$mutex_recovery_claim_start" ] || return 1
+  mutex_recovery_claim_target="$$:$mutex_recovery_claim_start:$recovery_inode"
+  if ln -s "$mutex_recovery_claim_target" "$mutex_recovery_claim" 2>/dev/null; then
+    return 0
+  fi
+  [ -L "$mutex_recovery_claim" ] || return 1
+  existing_claim="$(readlink "$mutex_recovery_claim" 2>/dev/null || true)"
+  claim_owner="${existing_claim%%:*}"
+  claim_rest="${existing_claim#*:}"
+  claim_start="${claim_rest%%:*}"
+  case "$claim_owner" in ''|*[!0-9]*) return 1 ;; esac
+  [ -n "$claim_start" ] || return 1
+  observed_start="$(proc_start "$claim_owner" || true)"
+  observed_state="$(proc_state "$claim_owner" || true)"
+  if [ "$observed_start" = "$claim_start" ]; then
+    case "$observed_state" in Z|X|x) ;; *) return 1 ;; esac
+  fi
+  rm -f "$mutex_recovery_claim" 2>/dev/null || return 1
+  ln -s "$mutex_recovery_claim_target" "$mutex_recovery_claim" 2>/dev/null
+}
+
+release_mutex_recovery_claim() {
+  [ -L "$mutex_recovery_claim" ] || return 0
+  [ "$(readlink "$mutex_recovery_claim" 2>/dev/null || true)" = "$mutex_recovery_claim_target" ] || return 0
+  rm -f "$mutex_recovery_claim" 2>/dev/null || true
+}
+
+reopen_and_lock_current_mutex() {
+  exec 9>&-
+  exec 9>"$inbox/hook-mutex.lock" 2>/dev/null || return 1
+  flock -w 1 9 2>/dev/null
+}
+
+recover_hook_mutex() {
+  local opened_inode="$1" current_inode='' replacement='' recovery_result=1
+  [ -n "$opened_inode" ] || return 1
+  mutex_recovery_allowed || return 1
+  if ! claim_mutex_recovery "$opened_inode"; then
+    reopen_and_lock_current_mutex
+    return
+  fi
+  current_inode="$(file_inode "$inbox/hook-mutex.lock" || true)"
+  if [ "$current_inode" != "$opened_inode" ]; then
+    release_mutex_recovery_claim
+    reopen_and_lock_current_mutex
+    return
+  fi
+  if ! mutex_recovery_allowed; then
+    release_mutex_recovery_claim
+    return 1
+  fi
+  replacement="$(mktemp "$inbox/.hook-mutex-replacement.XXXXXX" 2>/dev/null || true)"
+  if [ -z "$replacement" ]; then
+    release_mutex_recovery_claim
+    return 1
+  fi
+  chmod 600 "$replacement" 2>/dev/null || true
+  if mv -f "$replacement" "$inbox/hook-mutex.lock" 2>/dev/null; then
+    if reopen_and_lock_current_mutex; then
+      recovery_result=0
+    fi
+  else
+    rm -f "$replacement" 2>/dev/null || true
+  fi
+  release_mutex_recovery_claim
+  return "$recovery_result"
 }
 
 active_ack_ids() {
@@ -217,24 +360,40 @@ deny_mutating_nonowner_while_mutex_unavailable() {
   }; then
     return 0
   fi
-  context="[lease-mutex-busy] Published PR ownership cannot be verified while its mutex is busy. Retry this checkout-mutating tool after the active ownership generation settles."
+  context="[lease-mutex-busy] Published PR ownership cannot be verified while its mutex is busy. Retry this checkout-mutating tool after the active ownership generation settles. Mutex holder: $mutex_holder."
   jq -cn --arg context "$context" \
     '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
 }
 
+context_nonmutating_while_mutex_unavailable() {
+  [ "$event" = "PreToolUse" ] || return 0
+  [ "$pretool_checkout_mutating" = false ] || return 0
+  context="[lease-mutex-busy] Checkout ownership state is temporarily busy, but this context-only tool remains available. Mutex holder: $mutex_holder."
+  jq -cn --arg context "$context" \
+    '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$context}}'
+}
+
 # Every adapter shares this checkout-local critical section. A contended or
-# unavailable lock fails closed for non-owner mutation and retries at the next
-# hook boundary.
+# unavailable lock fails closed for non-owner mutation. If the lease owner is
+# dead or absent, one inode-keyed claimant replaces the wedged lock and all
+# concurrent invocations reopen the same current inode before proceeding.
+mutex_holder='unknown holder'
 exec 9>"$inbox/hook-mutex.lock" 2>/dev/null || {
   deny_mutating_nonowner_while_mutex_unavailable
+  context_nonmutating_while_mutex_unavailable
   block_stop_while_mutex_unavailable
   exit 0
 }
 if command -v flock >/dev/null 2>&1; then
+  mutex_opened_inode="$(file_inode "/proc/$$/fd/9" || file_inode "$inbox/hook-mutex.lock" || true)"
   if ! flock -w 1 9 2>/dev/null; then
-    deny_mutating_nonowner_while_mutex_unavailable
-    block_stop_while_mutex_unavailable
-    exit 0
+    mutex_holder="$(mutex_holder_details "$inbox/hook-mutex.lock")"
+    if ! recover_hook_mutex "$mutex_opened_inode"; then
+      deny_mutating_nonowner_while_mutex_unavailable
+      context_nonmutating_while_mutex_unavailable
+      block_stop_while_mutex_unavailable
+      exit 0
+    fi
   fi
 fi
 
@@ -550,10 +709,11 @@ case "$harness:$event" in
       p0_new_work=false
 
       # A2-A3 in goals/ship-velocity/SPEC.md ratified re-arming only for
-      # unrelated new work. Agent/Task can launch checkout-mutating children;
-      # Skill, plan/discovery, cancellation, MCP, and unknown tools cannot.
+      # unrelated new work. Agent/Task/spawn_agent can launch checkout-mutating
+      # children; Skill, plan/discovery, cancellation, MCP, and unknown tools
+      # cannot.
       case "$pretool_tool_name" in
-        Agent|Task)
+        Agent|Task|spawn_agent)
           p0_new_work=true
           ;;
         Bash)
@@ -566,7 +726,11 @@ case "$harness:$event" in
       esac
 
       if [ "$p0_new_work" = true ]; then
-        deny_context="[p0-new-work] Unacknowledged P0 work keeps this checkout in incident mode; starting unrelated Agent/Task or workspace/bootstrap work is blocked until ACK.
+        if [ "$incident_id" != "$row_id" ]; then
+          state="$(printf '%s' "$state" | jq -c --arg id "$row_id" '.incidentId = $id')"
+          write_state
+        fi
+        deny_context="[p0-new-work] Unacknowledged P0 work keeps this checkout in incident mode; starting unrelated Agent/Task/spawn_agent or workspace/bootstrap work is blocked until ACK.
 $context"
         jq -cn --arg context "$deny_context" \
           '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'

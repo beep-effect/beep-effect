@@ -198,7 +198,7 @@ describe("Yeet inbox harness adapter", () => {
 
           const liveLease = yield* encodeUnknown(lease(1, liveOtherStart, "other", "live"));
           yield* fs.writeFileString(leasePath, `${liveLease}\n`);
-          for (const toolName of ["Write", "Edit", "Bash", "NotebookEdit"]) {
+          for (const toolName of ["Write", "Edit", "Bash", "NotebookEdit", "MultiEdit", "apply_patch"]) {
             const fenced = decodeObject(
               (yield* runHook(root, "codex", {
                 cwd: root,
@@ -287,6 +287,8 @@ describe("Yeet inbox harness adapter", () => {
             "Write",
             "Edit",
             "NotebookEdit",
+            "MultiEdit",
+            "apply_patch",
             "Read",
             "Skill",
             "TaskStop",
@@ -478,14 +480,27 @@ describe("Yeet inbox harness adapter", () => {
             "hookSpecificOutput.permissionDecisionReason",
             expect.stringContaining("[lease-mutex-busy]")
           );
-          const discovery = yield* runHook(root, "codex", {
-            cwd: root,
-            hook_event_name: "PreToolUse",
-            session_id: "zombie",
-            tool_input: {},
-            tool_name: "ToolSearch",
+          expect(result).toHaveProperty(
+            "hookSpecificOutput.permissionDecisionReason",
+            expect.stringContaining(`pid ${holder.pid} (flock)`)
+          );
+          const discovery = decodeObject(
+            (yield* runHook(root, "codex", {
+              cwd: root,
+              hook_event_name: "PreToolUse",
+              session_id: "zombie",
+              tool_input: {},
+              tool_name: "ToolSearch",
+            })).stdout
+          );
+          expect(discovery).toMatchObject({
+            hookSpecificOutput: { additionalContext: expect.stringContaining("[lease-mutex-busy]") },
           });
-          expect(discovery).toMatchObject({ exitCode: 0, stderr: "", stdout: "" });
+          expect(discovery).toHaveProperty(
+            "hookSpecificOutput.additionalContext",
+            expect.stringContaining(`pid ${holder.pid} (flock)`)
+          );
+          expect(discovery).not.toHaveProperty("hookSpecificOutput.permissionDecision");
           const stop = decodeObject(
             (yield* runHook(root, "codex", {
               cwd: root,
@@ -498,6 +513,100 @@ describe("Yeet inbox harness adapter", () => {
         })
       ).pipe(provideTestLayer),
     15_000
+  );
+
+  itEffect(
+    "recreates a wedged mutex once and drains a dead-owner retirement across concurrent hooks",
+    () =>
+      withInbox(({ ack, root }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const inbox = path.join(root, ".beep", "inbox");
+          const leasePath = path.join(inbox, "pr-lease.json");
+          const lockPath = path.join(inbox, "hook-mutex.lock");
+          const retirementQueue = path.join(inbox, "pr-lease-retirements");
+          yield* Effect.all([ack("coverage-live"), ack("thread-live"), ack("drift-live")]);
+
+          const lease = yield* encodeUnknown({
+            schemaVersion: "yeet-pr-lease/v1",
+            generationId: "wedged-retirement",
+            sessionId: "yeet:999999:dead",
+            pid: 999_999,
+            procStart: "dead",
+            checkoutRoot: root,
+            branch: "feature/lease",
+            headSha: "abc123",
+            prNumber: 900,
+            acquiredAt: "2026-08-27T00:00:00Z",
+            refreshedAt: "2026-08-27T00:00:00Z",
+            status: "active",
+          });
+          const retirement = yield* encodeUnknown({
+            schemaVersion: "yeet-pr-lease-retirement/v1",
+            generationId: "wedged-retirement",
+            headSha: "abc123",
+            prNumber: 900,
+            reason: "publish-exited",
+            requestedAt: "2026-08-27T00:00:01Z",
+          });
+          yield* Effect.all([
+            fs.writeFileString(leasePath, `${lease}\n`),
+            fs.makeDirectory(retirementQueue, { recursive: true }),
+          ]);
+          yield* fs.writeFileString(path.join(retirementQueue, "request.json"), `${retirement}\n`);
+
+          const holder = yield* ChildProcess.make("flock", [lockPath, "sleep", "8"], {
+            cwd: root,
+            stdin: "ignore",
+            stdout: "ignore",
+            stderr: "ignore",
+          });
+          yield* Effect.gen(function* () {
+            yield* Effect.sleep("100 millis");
+            const originalInode = O.getOrThrow((yield* fs.stat(lockPath)).ino);
+            const results = yield* Effect.all(
+              [
+                runHook(root, "codex", {
+                  cwd: root,
+                  hook_event_name: "PreToolUse",
+                  session_id: "recovery-a",
+                  tool_input: { command: "bun run test" },
+                  tool_name: "Bash",
+                }),
+                runHook(root, "codex", {
+                  cwd: root,
+                  hook_event_name: "PreToolUse",
+                  session_id: "recovery-b",
+                  tool_input: { command: "bun run test" },
+                  tool_name: "Bash",
+                }),
+              ],
+              { concurrency: "unbounded" }
+            );
+
+            for (const result of results) {
+              expect(result).toMatchObject({ exitCode: 0, stderr: "", stdout: "" });
+            }
+            expect(O.getOrThrow((yield* fs.stat(lockPath)).ino)).not.toBe(originalInode);
+            expect(decodeObject(yield* fs.readFileString(leasePath))).toMatchObject({
+              generationId: "wedged-retirement",
+              status: "retired",
+              retireReason: "requested:publish-exited",
+            });
+            expect(yield* fs.readDirectory(retirementQueue)).toEqual([]);
+
+            const probe = yield* ChildProcess.make("flock", ["-n", lockPath, "true"], {
+              cwd: root,
+              stdin: "ignore",
+              stdout: "ignore",
+              stderr: "ignore",
+            });
+            expect(yield* probe.exitCode).toBe(0);
+          }).pipe(Effect.ensuring(holder.kill({ forceKillAfter: "100 millis" }).pipe(Effect.ignore)));
+        })
+      ).pipe(provideTestLayer),
+    20_000
   );
 
   itEffect(
@@ -521,7 +630,7 @@ describe("Yeet inbox harness adapter", () => {
             expect(available).not.toHaveProperty("hookSpecificOutput.permissionDecision");
           }
 
-          for (const toolName of ["Bash", "Write"]) {
+          for (const toolName of ["Bash", "Write", "Edit", "NotebookEdit", "MultiEdit", "apply_patch"]) {
             const payload = {
               cwd: root,
               hook_event_name: "PreToolUse",
@@ -547,40 +656,46 @@ describe("Yeet inbox harness adapter", () => {
             expect(second).not.toHaveProperty("hookSpecificOutput.permissionDecision");
           }
 
-          const unrelatedBash = decodeObject(
-            (yield* runHook(root, "codex", {
-              cwd: root,
-              hook_event_name: "PreToolUse",
-              session_id: "repair-session",
-              tool_input: { command: "git switch -c unrelated" },
-              tool_name: "Bash",
-            })).stdout
-          );
-          expect(unrelatedBash).toMatchObject({
-            hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny" },
-          });
-          expect(unrelatedBash).toHaveProperty(
-            "hookSpecificOutput.permissionDecisionReason",
-            expect.stringContaining("[p0-new-work]")
-          );
-
-          for (const toolName of ["Agent", "Task"]) {
-            const newWork = decodeObject(
+          for (const [index, newWorkInput] of [
+            { toolInput: { command: "git switch -c unrelated" }, toolName: "Bash" },
+            { toolInput: {}, toolName: "Agent" },
+            { toolInput: {}, toolName: "Task" },
+            { toolInput: {}, toolName: "spawn_agent" },
+          ].entries()) {
+            const sessionId = `new-work-${index}`;
+            const newWorkResult = decodeObject(
               (yield* runHook(root, "codex", {
                 cwd: root,
                 hook_event_name: "PreToolUse",
-                session_id: "repair-session",
-                tool_input: {},
-                tool_name: toolName,
+                session_id: sessionId,
+                tool_input: newWorkInput.toolInput,
+                tool_name: newWorkInput.toolName,
               })).stdout
             );
-            expect(newWork).toMatchObject({
+            expect(newWorkResult).toMatchObject({
               hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny" },
             });
-            expect(newWork).toHaveProperty(
+            expect(newWorkResult).toHaveProperty(
               "hookSpecificOutput.permissionDecisionReason",
               expect.stringContaining("[p0-new-work]")
             );
+
+            const repair = decodeObject(
+              (yield* runHook(root, "codex", {
+                cwd: root,
+                hook_event_name: "PreToolUse",
+                session_id: sessionId,
+                tool_input: { command: "bun run test" },
+                tool_name: "Bash",
+              })).stdout
+            );
+            expect(repair).toMatchObject({
+              hookSpecificOutput: {
+                hookEventName: "PreToolUse",
+                additionalContext: expect.stringContaining("coverage-live"),
+              },
+            });
+            expect(repair).not.toHaveProperty("hookSpecificOutput.permissionDecision");
           }
 
           const stop = decodeObject(
