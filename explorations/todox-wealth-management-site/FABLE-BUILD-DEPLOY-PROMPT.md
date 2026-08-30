@@ -357,8 +357,8 @@ does not actually teach.
 
 ## Implementation boundaries
 
-- Work inside the existing `apps/todox` workspace. Do not create
-  `apps/todox.ai` or another app.
+- Work inside the existing `apps/todox` workspace. Do not create another app
+  workspace for the public domain.
 - Keep app internals app-local through `@/*`. Do not create package-root
   exports or turn the app into a shared runtime package.
 - Preserve Next.js App Router conventions and server components by default.
@@ -406,8 +406,8 @@ Follow Impeccable's bounded finish:
 6. Run the shipped Impeccable finish reviewer with fresh context and the full
    evidence packet. Obey `recapture`, `rebuild`, `fix`, or `ship` exactly. Do
    not self-certify around its verdict.
-7. After the last correction, run the shipped Impeccable documenter so
-   `apps/todox/DESIGN.md` and its required sidecar describe the built world,
+7. After the last correction, run the shipped Impeccable documenter so the
+   app's design-system document and required sidecar describe the built world,
    not the initial intention. Persist the small app-local surface brief.
 8. Scan every shipping raster for provenance as required by Impeccable.
 

@@ -20,7 +20,8 @@ carries Impeccable's direction contract, finish review, and DESIGN.md.
 Seeded from the exploration brief's no-gos
 ([`BRIEF.md`](../../explorations/todox-wealth-management-site/BRIEF.md)):
 
-- No new `apps/todox.ai`; the existing `apps/todox` workspace is the target.
+- Do not create a second app workspace for the public domain. The existing
+  `apps/todox` workspace is the target.
 - No claim that Todox is deployed, generally available, pilot-ready, or used
   by a named wealth firm; no live-integration, certification, retention,
   security-guarantee, time-saving, ROI, or customer-outcome claims.
@@ -70,7 +71,7 @@ Seeded from the exploration brief's no-gos
 ## Target Surfaces
 
 - `apps/todox/src/**`, app-local assets and config the page needs.
-- `apps/todox/DESIGN.md` (written at finish by the Impeccable documenter) and
+- The app's finish-time design-system document and its
   `apps/todox/.impeccable/**` working artifacts.
 - This packet's own files (plan, evidence, history).
 

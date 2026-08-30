@@ -51,7 +51,8 @@ and more useful than an absolute offline claim.
 "Request a private walkthrough" as the primary action.
 
 **Rationale:** The user selected a focused narrative rather than a broad site
-suite and chose the existing workspace rather than creating `apps/todox.ai`.
+suite and chose the existing workspace rather than creating a second workspace
+for the public domain.
 
 ## 2026-08-27 — creative authority
 

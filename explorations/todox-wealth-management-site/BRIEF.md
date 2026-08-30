@@ -168,7 +168,8 @@ implementation files.
 - No app design or implementation by this research pass. The later Fable shape
   handoff may create only confirmed product context and required Impeccable
   working artifacts before it stops.
-- No new `apps/todox.ai`; use the existing `apps/todox` workspace later.
+- Do not create a second app workspace for the public domain. Use the existing
+  `apps/todox` workspace later.
 - No claim that Todox is deployed, generally available, pilot-ready, or used
   by a named wealth firm.
 - No named firms, individuals, testimonials, AUM figures, rankings, customer

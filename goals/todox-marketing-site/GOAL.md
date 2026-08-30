@@ -28,8 +28,8 @@ packet prose.
 
 Scope:
 
-- In: `apps/todox/**` (src, assets, app config the page needs),
-  `apps/todox/.impeccable/**`, `apps/todox/DESIGN.md` at finish, this
+- In: `apps/todox/**` (src, assets, app config the page needs), app-local
+  Impeccable artifacts, the finish-time design-system document, and this
   packet's plan/evidence files.
 - Out: other packages or apps; backend, connectors, auth, forms beyond the
   mailto CTA; additional routes; competitor or pricing content; exploration

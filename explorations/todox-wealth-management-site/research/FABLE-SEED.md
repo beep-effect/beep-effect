@@ -33,7 +33,7 @@ visual provocation, not as a hidden design spec.
    package configuration, or any other implementation file.
 6. Resume the normal `new-work` build only after separate approval and this
    exploration has been decomposed and graduated into an implementation goal.
-   Do not create `apps/todox.ai`.
+   Do not create a second app workspace for the public domain.
 
 There is intentionally no prewritten app `PRODUCT.md`, `DESIGN.md`, or surface
 brief. This packet's `BRIEF.md` is research input to Impeccable `shape`, not the
